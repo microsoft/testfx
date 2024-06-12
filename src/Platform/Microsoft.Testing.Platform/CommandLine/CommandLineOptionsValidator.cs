@@ -28,7 +28,7 @@ internal static class CommandLineOptionsValidator
                 stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t- {error}");
             }
 
-            return ValidationResult.Invalid(stringBuilder.ToString());
+            return ValidationResult.Invalid(stringBuilder.ToTrimmedString());
         }
 
         var extensionOptionsByProvider = extensionCommandLineOptionsProviders.ToDictionary(p => p, p => p.GetCommandLineOptions());
@@ -96,7 +96,7 @@ internal static class CommandLineOptionsValidator
         }
 
         return stringBuilder?.Length > 0
-            ? ValidationResult.Invalid(stringBuilder.ToString())
+            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
     }
 
@@ -117,7 +117,7 @@ internal static class CommandLineOptionsValidator
                 stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsReserved, reservedOption, string.Join("', '", faultyProviderNames)));
             }
 
-            return ValidationResult.Invalid(stringBuilder.ToString());
+            return ValidationResult.Invalid(stringBuilder.ToTrimmedString());
         }
 
         return ValidationResult.Valid();
@@ -141,7 +141,7 @@ internal static class CommandLineOptionsValidator
         }
 
         return stringBuilder?.Length > 0
-            ? ValidationResult.Invalid(stringBuilder.ToString())
+            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
     }
 
@@ -161,7 +161,7 @@ internal static class CommandLineOptionsValidator
         }
 
         return stringBuilder?.Length > 0
-            ? ValidationResult.Invalid(stringBuilder.ToString())
+            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
     }
 
@@ -197,7 +197,7 @@ internal static class CommandLineOptionsValidator
         }
 
         return stringBuilder?.Length > 0
-            ? ValidationResult.Invalid(stringBuilder.ToString())
+            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
     }
 
@@ -220,7 +220,7 @@ internal static class CommandLineOptionsValidator
         }
 
         return stringBuilder?.Length > 0
-            ? ValidationResult.Invalid(stringBuilder.ToString())
+            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
     }
 
@@ -242,7 +242,12 @@ internal static class CommandLineOptionsValidator
         }
 
         return stringBuilder?.Length > 0
-            ? ValidationResult.Invalid(stringBuilder.ToString())
+            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
     }
+
+    private static string ToTrimmedString(this StringBuilder stringBuilder)
+#pragma warning disable RS0030 // Do not use banned APIs
+        => stringBuilder.ToString().TrimEnd(Environment.NewLine.ToCharArray());
+#pragma warning restore RS0030 // Do not use banned APIs
 }

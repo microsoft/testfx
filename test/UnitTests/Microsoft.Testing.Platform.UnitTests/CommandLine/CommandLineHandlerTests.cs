@@ -97,7 +97,7 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual($"Option '--diagnostic-verbosity' has invalid arguments: '--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical'){Environment.NewLine}", result.ErrorMessage);
+        Assert.AreEqual("Option '--diagnostic-verbosity' has invalid arguments: '--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')", result.ErrorMessage);
     }
 
     public async Task ParseAndValidateAsync_InvalidArgumentArity_ReturnsFalse()
@@ -112,7 +112,7 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual($"Option '--help' from provider 'Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments{Environment.NewLine}", result.ErrorMessage);
+        Assert.AreEqual("Option '--help' from provider 'Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments", result.ErrorMessage);
     }
 
     public async Task ParseAndValidateAsync_ReservedOptions_ReturnsFalse()
@@ -131,7 +131,7 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual($"Option '--help' is reserved and cannot be used by providers: 'help'{Environment.NewLine}", result.ErrorMessage);
+        Assert.AreEqual("Option '--help' is reserved and cannot be used by providers: 'help'", result.ErrorMessage);
     }
 
     public async Task ParseAndValidateAsync_ReservedOptionsPrefix_ReturnsFalse()
@@ -150,7 +150,7 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual($"Option `--internal-customextension` from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) is using the reserved prefix '--internal'{Environment.NewLine}", result.ErrorMessage);
+        Assert.AreEqual("Option `--internal-customextension` from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) is using the reserved prefix '--internal'", result.ErrorMessage);
     }
 
     public async Task ParseAndValidateAsync_UnknownOption_ReturnsFalse()
@@ -170,7 +170,7 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual($"Unknown option '--x'{Environment.NewLine}", result.ErrorMessage);
+        Assert.AreEqual("Unknown option '--x'", result.ErrorMessage);
     }
 
     public async Task ParseAndValidateAsync_InvalidValidConfiguration_ReturnsFalse()
@@ -189,7 +189,7 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual($"Invalid configuration for provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider). Error: Invalid configuration errorMessage{Environment.NewLine}{Environment.NewLine}", result.ErrorMessage);
+        Assert.AreEqual("Invalid configuration for provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider). Error: Invalid configuration errorMessage", result.ErrorMessage);
     }
 
     public void IsHelpInvoked_HelpOptionSet_ReturnsTrue()

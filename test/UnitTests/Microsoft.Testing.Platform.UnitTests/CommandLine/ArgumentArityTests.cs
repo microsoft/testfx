@@ -43,7 +43,7 @@ public class ArgumentArityTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual($"Option '--zeroArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments{Environment.NewLine}", result.ErrorMessage, StringComparer.Ordinal);
+        Assert.AreEqual("Option '--zeroArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments", result.ErrorMessage, StringComparer.Ordinal);
     }
 
     public async Task ParseAndValidate_WhenOptionWithArityExactlyOneIsCalledWithTwoArguments_ReturnsFalse()
@@ -58,7 +58,7 @@ public class ArgumentArityTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("a", result.ErrorMessage);
+        Assert.AreEqual("Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments", result.ErrorMessage);
     }
 
     public async Task ParseAndValidate_WhenOptionWithArityExactlyOneIsCalledWithoutArguments_ReturnsFalse()
@@ -73,7 +73,7 @@ public class ArgumentArityTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual($"Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments{Environment.NewLine}", result.ErrorMessage);
+        Assert.AreEqual("Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments", result.ErrorMessage);
     }
 
     public async Task ParseAndValidate_WhenOptionWithArityZeroOrOneIsCalledWithTwoArguments_ReturnsFalse()
@@ -88,7 +88,7 @@ public class ArgumentArityTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual($"Option '--zeroOrOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments{Environment.NewLine}", result.ErrorMessage);
+        Assert.AreEqual("Option '--zeroOrOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments", result.ErrorMessage);
     }
 
     public async Task ParseAndValidate_WhenOptionWithArityOneOrMoreIsCalledWithoutArguments_ReturnsFalse()
@@ -103,7 +103,7 @@ public class ArgumentArityTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual($"Option '--oneOrMoreArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments{Environment.NewLine}", result.ErrorMessage);
+        Assert.AreEqual("Option '--oneOrMoreArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments", result.ErrorMessage);
     }
 
     public async Task ParseAndValidate_WhenOptionsGetsTheExpectedNumberOfArguments_ReturnsTrue()
