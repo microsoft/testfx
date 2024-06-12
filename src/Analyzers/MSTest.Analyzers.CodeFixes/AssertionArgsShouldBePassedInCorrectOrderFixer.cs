@@ -9,6 +9,9 @@ using Analyzer.Utilities;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Editing;
 
 using MSTest.Analyzers.Helpers;
@@ -28,9 +31,11 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
 
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
-        SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-        SyntaxNode node = root.FindNode(context.Span);
-        if (node == null)
+        Diagnostic diagnostic = context.Diagnostics[0];
+        TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
+
+       
+        if (root.FindNode(diagnosticSpan) is not InvocationExpressionSyntax invocationExpr)
         {
             return;
         }
@@ -40,44 +45,29 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
             context.RegisterCodeFix(
                 CodeAction.Create(
                     CodeFixResources.FixAssertionArgsOrder,
-                    ct => FixAssertionArgsOrderAsync(context.Document, root, node, isParameterLess: false, shouldBeStatic: true, ct),
+                    ct => SwapArgumentsAsync(context.Document, root, invocationExpr, ct),
                     nameof(AssertionArgsShouldBePassedInCorrectOrderFixer)),
                 context.Diagnostics);
         }
     }
 
-    public static async Task<Solution> FixAssertionArgsOrderAsync(Document document, SyntaxNode root, SyntaxNode node,
-        bool isParameterLess, bool shouldBeStatic, CancellationToken cancellationToken)
+    private async Task<Document> SwapArgumentsAsync(Document document, SyntaxNode root, InvocationExpressionSyntax invocationExpr, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        SemanticModel? semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-        if (semanticModel is null)
+        ArgumentListSyntax argumentList = invocationExpr.ArgumentList;
+        SeparatedSyntaxList<ArgumentSyntax> arguments = argumentList.Arguments;
+
+        SeparatedSyntaxList<ArgumentSyntax> newArgumentList = SyntaxFactory.SeparatedList<ArgumentSyntax>(new SyntaxNodeOrToken[]
         {
-            return document.Project.Solution;
-        }
+            arguments[1],
+            SyntaxFactory.Token(SyntaxKind.CommaToken),
+            arguments[0],
+        });
 
-        var methodSymbol = (IMethodSymbol?)semanticModel.GetDeclaredSymbol(node, cancellationToken);
-        if (methodSymbol is null)
-        {
-            return document.Project.Solution;
-        }
+        InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(SyntaxFactory.ArgumentList(newArgumentList));
+        SyntaxNode newRoot = root.ReplaceNode(invocationExpr, newInvocationExpr);
 
-        var wellKnownTypeProvider = WellKnownTypeProvider.GetOrCreate(semanticModel.Compilation);
-        var syntaxGenerator = SyntaxGenerator.GetGenerator(document);
-
-        SyntaxNode fixedMethodDeclarationNode = syntaxGenerator.MethodDeclaration(
-            methodSymbol.Name,
-            GetParameters(syntaxGenerator, isParameterLess, wellKnownTypeProvider),
-            typeParameters: null,
-            GetReturnType(syntaxGenerator, methodSymbol, wellKnownTypeProvider),
-            Accessibility.Public,
-            GetModifiers(methodSymbol, shouldBeStatic),
-            GetStatements(node, syntaxGenerator));
-
-        // Copy the attributes from the old method to the new method.
-        fixedMethodDeclarationNode = syntaxGenerator.AddAttributes(fixedMethodDeclarationNode, syntaxGenerator.GetAttributes(node));
-
-        return document.WithSyntaxRoot(root.ReplaceNode(node, fixedMethodDeclarationNode)).Project.Solution;
+        return document.WithSyntaxRoot(newRoot);
     }
 }
