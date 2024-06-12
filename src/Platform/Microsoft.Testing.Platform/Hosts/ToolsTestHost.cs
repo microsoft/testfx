@@ -19,16 +19,12 @@ namespace Microsoft.Testing.Platform.Hosts;
 internal sealed class ToolsTestHost(
     ToolsInformation toolsInformation,
     ServiceProvider serviceProvider,
-    CommandLineParseResult parseResult,
-    ICommandLineOptionsProvider[] extensionsCommandLineOptionsProviders,
-    ICommandLineHandler commandLineHandler,
+    CommandLineHandler commandLineHandler,
     IPlatformOutputDevice platformOutputDevice) : ITestHost, IOutputDeviceDataProducer
 {
     private readonly ToolsInformation _toolsInformation = toolsInformation;
     private readonly ServiceProvider _serviceProvider = serviceProvider;
-    private readonly CommandLineParseResult _parseResult = parseResult;
-    private readonly ICommandLineOptionsProvider[] _extensionsCommandLineOptionsProviders = extensionsCommandLineOptionsProviders;
-    private readonly ICommandLineHandler _commandLineHandler = commandLineHandler;
+    private readonly CommandLineHandler _commandLineHandler = commandLineHandler;
     private readonly IPlatformOutputDevice _platformOutputDevice = platformOutputDevice;
 
     /// <inheritdoc />
@@ -50,12 +46,12 @@ internal sealed class ToolsTestHost(
     {
         IConsole console = _serviceProvider.GetConsole();
 
-        if (_parseResult.ToolName is null)
+        if (_commandLineHandler.ParseResult.ToolName is null)
         {
             throw new InvalidOperationException("Tool name is null.");
         }
 
-        string toolNameToRun = _parseResult.ToolName;
+        string toolNameToRun = _commandLineHandler.ParseResult.ToolName;
 
         // TODO: Apply the override or do not support it for Tools?
         // TODO: Verify reserved tool names?
@@ -100,13 +96,13 @@ internal sealed class ToolsTestHost(
         error = null;
 
         // This is unexpected
-        if (_parseResult is null)
+        if (_commandLineHandler.ParseResult is null)
         {
             return false;
         }
 
         StringBuilder stringBuilder = new();
-        foreach (OptionRecord optionRecord in _parseResult.Options)
+        foreach (OptionRecord optionRecord in _commandLineHandler.ParseResult.Options)
         {
             if (!GetAllCommandLineOptionsProviderByOptionName(optionRecord.Option).Any())
             {
@@ -129,14 +125,8 @@ internal sealed class ToolsTestHost(
     {
         error = null;
 
-        // This is unexpected
-        if (_parseResult is null)
-        {
-            return false;
-        }
-
         StringBuilder stringBuilder = new();
-        foreach (IGrouping<string, OptionRecord> optionRecord in _parseResult.Options.GroupBy(x => x.Option))
+        foreach (IGrouping<string, OptionRecord> optionRecord in _commandLineHandler.ParseResult.Options.GroupBy(x => x.Option))
         {
             string optionName = optionRecord.Key;
             int arity = optionRecord.Count();
@@ -150,11 +140,11 @@ internal sealed class ToolsTestHost(
             }
         }
 
-        foreach (ICommandLineOptionsProvider extension in _extensionsCommandLineOptionsProviders)
+        foreach (ICommandLineOptionsProvider extension in _commandLineHandler.ExtensionsCommandLineOptionsProviders)
         {
             foreach (CommandLineOption option in extension.GetCommandLineOptions())
             {
-                if (_parseResult.Options.Count(x => x.Option == option.Name) < option.Arity.Min)
+                if (_commandLineHandler.ParseResult.Options.Count(x => x.Option == option.Name) < option.Arity.Min)
                 {
                     stringBuilder.AppendLine(
                         CultureInfo.InvariantCulture,
@@ -174,14 +164,8 @@ internal sealed class ToolsTestHost(
 
     private async Task<ValidationResult> ValidateOptionsArgumentsAsync(ITool tool)
     {
-        // This is unexpected
-        if (_parseResult is null)
-        {
-            return ValidationResult.Invalid("Parse result should not be null");
-        }
-
         StringBuilder stringBuilder = new();
-        foreach (OptionRecord optionRecord in _parseResult.Options)
+        foreach (OptionRecord optionRecord in _commandLineHandler.ParseResult.Options)
         {
             ICommandLineOptionsProvider extension = GetAllCommandLineOptionsProviderByOptionName(optionRecord.Option).Single();
             ValidationResult result = await extension.ValidateOptionArgumentsAsync(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Option), optionRecord.Arguments);
@@ -198,7 +182,7 @@ internal sealed class ToolsTestHost(
 
     private IEnumerable<ICommandLineOptionsProvider> GetAllCommandLineOptionsProviderByOptionName(string optionName)
     {
-        foreach (ICommandLineOptionsProvider commandLineOptionsProvider in _extensionsCommandLineOptionsProviders)
+        foreach (ICommandLineOptionsProvider commandLineOptionsProvider in _commandLineHandler.ExtensionsCommandLineOptionsProviders)
         {
             if (commandLineOptionsProvider.GetCommandLineOptions().Any(option => option.Name == optionName))
             {

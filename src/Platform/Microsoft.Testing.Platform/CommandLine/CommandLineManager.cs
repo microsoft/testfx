@@ -23,7 +23,7 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, IEnviro
         _commandLineProviderFactory.Add(commandLineProviderFactory);
     }
 
-    internal async Task<CommandLineHandler> BuildAsync(string[] args, IPlatformOutputDevice platformOutputDisplay, CommandLineParseResult parseResult)
+    internal async Task<CommandLineHandler> BuildAsync(IPlatformOutputDevice platformOutputDisplay, CommandLineParseResult parseResult)
     {
         List<ICommandLineOptionsProvider> commandLineOptionsProviders = [];
         foreach (Func<ICommandLineOptionsProvider> commandLineProviderFactory in _commandLineProviderFactory)
@@ -44,7 +44,7 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, IEnviro
             new PlatformCommandLineProvider()
         ];
 
-        return new CommandLineHandler(args, parseResult, commandLineOptionsProviders.ToArray(),
+        return new CommandLineHandler(parseResult, commandLineOptionsProviders.ToArray(),
             systemCommandLineOptionsProviders, _testApplicationModuleInfo, _runtimeFeature, platformOutputDisplay, _environment, _processHandler);
     }
 }
