@@ -192,10 +192,10 @@ extends:
 
             - ${{ if eq(parameters.SkipTests, False) }}:
               # -ci is allowing to import some environment variables and some required configurations
-              # --excludeCIBinarylog avoids overwriting build binlog with binlog from tests
+               # --nobl avoids overwriting build binlog with binlog from tests
               - script: |
                   chmod +x ./test.sh
-                  ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --excludeCIBinarylog
+                  ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
                 name: Test
                 displayName: Tests
 
