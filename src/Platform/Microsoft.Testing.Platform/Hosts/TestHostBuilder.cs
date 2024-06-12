@@ -63,7 +63,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
     public ITestHostOrchestratorManager TestHostOrchestratorManager { get; } = new TestHostOrchestratorManager();
 
     public async Task<ITestHost> BuildAsync(
-        string[] args,
         ApplicationLoggingState loggingState,
         TestApplicationOptions testApplicationOptions,
         IUnhandledExceptionsHandler unhandledExceptionsHandler,
@@ -198,10 +197,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Build the command line service - we need special treatment because is possible that an extension query it during the creation.
         // Add Retry default argument commandlines
-        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(args, platformOutputDevice, loggingState.CommandLineParseResult);
-
-        // If command line is not valid we return immediately.
-        bool hasValidCommandLineOptions = await commandLineHandler.ValidateAsync();
+        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(platformOutputDevice, loggingState.CommandLineParseResult);
 
         // Create the test framework capabilities
         ITestFrameworkCapabilities testFrameworkCapabilities = TestFramework.TestFrameworkCapabilitiesFactory(serviceProvider);
@@ -213,10 +209,17 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Register the test framework capabilities to be used by services
         serviceProvider.AddService(testFrameworkCapabilities);
 
-        if (!loggingState.CommandLineParseResult.HasTool && !hasValidCommandLineOptions)
+        // If command line is not valid we return immediately.
+        ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(
+            loggingState.CommandLineParseResult,
+            commandLineHandler.SystemCommandLineOptionsProviders,
+            commandLineHandler.ExtensionsCommandLineOptionsProviders,
+            commandLineHandler);
+
+        if (!loggingState.CommandLineParseResult.HasTool && !commandLineValidationResult.IsValid)
         {
             await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice, testFrameworkCapabilities);
-            await commandLineHandler.DisplayValidationErrorAsync();
+            await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(commandLineValidationResult.ErrorMessage));
             await commandLineHandler.PrintHelpAsync();
             return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine);
         }
@@ -282,13 +285,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             // Add the platform output device to the service provider.
             serviceProvider.TryAddService(platformOutputDevice);
 
-            ToolsTestHost toolsTestHost = new(
-                toolsInformation,
-                serviceProvider,
-                loggingState.CommandLineParseResult,
-                commandLineHandler.ExtensionsCommandLineOptionsProviders,
-                commandLineHandler,
-                platformOutputDevice);
+            ToolsTestHost toolsTestHost = new(toolsInformation, serviceProvider, commandLineHandler, platformOutputDevice);
 
             await LogTestHostCreatedAsync(
                 serviceProvider,
