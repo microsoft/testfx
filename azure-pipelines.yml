@@ -92,7 +92,7 @@ stages:
             filePath: './eng/install-windows-sdk.ps1'
             failOnStderr: true
             showWarnings: true
-        
+
         - task: PowerShell@2
           displayName: 'Install procdump'
           inputs:
@@ -130,7 +130,7 @@ stages:
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
-          demands: ImageOverride -equals build.ubuntu.2004.amd64.open          
+          demands: ImageOverride -equals build.ubuntu.2004.amd64.open
         strategy:
           matrix:
             Release:
@@ -143,6 +143,7 @@ stages:
             -prepareMachine
             /p:Test=false
             /p:NonWindowsBuild=true
+            /p:FastAcceptanceTest=true
           displayName: Build
 
         - ${{ if eq(parameters.SkipTests, False) }}:
