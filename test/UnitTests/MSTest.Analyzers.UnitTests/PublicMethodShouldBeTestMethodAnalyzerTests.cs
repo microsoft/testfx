@@ -30,6 +30,24 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenMethodIsPublicButWithInvalidTestMethodSignature_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public static void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+
     public async Task WhenMethodIsPublicAndMarkedAsTestMethod_NoDiagnostic()
     {
         string code = """

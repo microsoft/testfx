@@ -40,17 +40,26 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzer : DiagnosticAnalyzer
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol)
                 && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
             {
+                bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
+                INamedTypeSymbol? taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
+                INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testMethodAttributeSymbol, testClassAttributeSymbol),
+                    context => AnalyzeSymbol(context, testMethodAttributeSymbol, testClassAttributeSymbol, taskSymbol, valueTaskSymbol, canDiscoverInternals),
                     SymbolKind.Method);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol? taskSymbol,
+        INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
         if (methodSymbol.GetResultantVisibility() != SymbolVisibility.Public)
+        {
+            return;
+        }
+
+        if (!methodSymbol.HasValidTestMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals))
         {
             return;
         }
