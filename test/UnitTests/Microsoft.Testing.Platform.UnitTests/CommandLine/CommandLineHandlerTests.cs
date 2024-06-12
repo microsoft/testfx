@@ -51,7 +51,7 @@ public class CommandLineHandlerTests : TestBase
             });
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
@@ -66,7 +66,7 @@ public class CommandLineHandlerTests : TestBase
              _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsTrue(result);
@@ -185,7 +185,7 @@ public class CommandLineHandlerTests : TestBase
            extensionCommandLineOptionsProviders, [], _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
@@ -204,7 +204,7 @@ public class CommandLineHandlerTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
@@ -223,7 +223,7 @@ public class CommandLineHandlerTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
@@ -246,7 +246,7 @@ public class CommandLineHandlerTests : TestBase
             _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
@@ -269,7 +269,7 @@ public class CommandLineHandlerTests : TestBase
             _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
@@ -290,11 +290,11 @@ public class CommandLineHandlerTests : TestBase
             _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, string? errorMessage) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
-        Assert.IsTrue(errorMessage!.Equals($"Unknown option '--x'{Environment.NewLine}", StringComparison.Ordinal));
+        Assert.IsTrue(string.Equals(commandLineHandler._validationError, $"Unknown option '--x'{Environment.NewLine}", StringComparison.Ordinal));
     }
 
     public async Task ParseAndValidateAsync_InvalidValidConfiguration_ReturnsFalse()
@@ -315,7 +315,7 @@ public class CommandLineHandlerTests : TestBase
             _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsFalse(result);

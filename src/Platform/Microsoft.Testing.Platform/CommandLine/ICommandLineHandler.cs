@@ -12,6 +12,4 @@ internal interface ICommandLineHandler
     bool IsHelpInvoked();
 
     Task PrintHelpAsync(ITool[]? availableTools = null);
-
-    Task<(bool IsValid, string? ValidationError)> TryParseAndValidateAsync();
 }
