@@ -44,10 +44,10 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly bool _underProcessMonitor;
 
-    private int _totalTests;
-    private int _totalPassedTests;
-    private int _totalFailedTests;
-    private int _totalSkippedTests;
+    private volatile int _totalTests;
+    private volatile int _totalPassedTests;
+    private volatile int _totalFailedTests;
+    private volatile int _totalSkippedTests;
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
     private TestRequestExecutionTimeInfo? _testRequestExecutionTimeInfo;
