@@ -14,11 +14,11 @@ public class DataRowTests : CLITestBase
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~DataRowSimple");
 
         ValidatePassedTestsContain(
-            "DataRowTestMethod (BaseString1)",
-            "DataRowTestMethod (BaseString2)",
-            "DataRowTestMethod (BaseString3)",
-            "DataRowTestMethod (DerivedString1)",
-            "DataRowTestMethod (DerivedString2)");
+            "DataRowTestMethod (\"BaseString1\")",
+            "DataRowTestMethod (\"BaseString2\")",
+            "DataRowTestMethod (\"BaseString3\")",
+            "DataRowTestMethod (\"DerivedString1\")",
+            "DataRowTestMethod (\"DerivedString2\")");
 
         // 3 tests of BaseClass.DataRowTestMethod - 3 data row results and no parent result
         // 2 tests of DerivedClass.DataRowTestMethod - 2 data row results and no parent result
@@ -41,8 +41,8 @@ public class DataRowTests : CLITestBase
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
 
         ValidatePassedTestsContain(
-            "DataRowTestMethod (DerivedString1)",
-            "DataRowTestMethod (DerivedString2)");
+            "DataRowTestMethod (\"DerivedString1\")",
+            "DataRowTestMethod (\"DerivedString2\")");
 
         // 2 tests of DerivedClass.DataRowTestMethod - 2 datarow result and no parent result
         ValidatePassedTestsCount(2);
@@ -54,8 +54,8 @@ public class DataRowTests : CLITestBase
 
         ValidatePassedTestsContain(
             "DataRowTestMethodWithSomeOptionalParameters (123)",
-            "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString1)",
-            "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString2,DerivedOptionalString3)");
+            "DataRowTestMethodWithSomeOptionalParameters (123,\"DerivedOptionalString1\")",
+            "DataRowTestMethodWithSomeOptionalParameters (123,\"DerivedOptionalString2\",\"DerivedOptionalString3\")");
 
         // 3 tests of DerivedClass.DataRowTestMethodWithSomeOptionalParameters - 3 datarow result and no parent result
         ValidatePassedTestsCount(3);
@@ -68,8 +68,8 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsContain(
             "DataRowTestMethodWithAllOptionalParameters ()",
             "DataRowTestMethodWithAllOptionalParameters (123)",
-            "DataRowTestMethodWithAllOptionalParameters (123,DerivedOptionalString4)",
-            "DataRowTestMethodWithAllOptionalParameters (123,DerivedOptionalString5,DerivedOptionalString6)");
+            "DataRowTestMethodWithAllOptionalParameters (123,\"DerivedOptionalString4\")",
+            "DataRowTestMethodWithAllOptionalParameters (123,\"DerivedOptionalString5\",\"DerivedOptionalString6\")");
 
         // 4 tests of DerivedClass.DataRowTestMethodWithAllOptionalParameters - 4 datarow result and no parent result
         ValidatePassedTestsCount(4);
@@ -81,9 +81,9 @@ public class DataRowTests : CLITestBase
 
         ValidatePassedTestsContain(
             "DataRowTestMethodWithParamsParameters (2)",
-            "DataRowTestMethodWithParamsParameters (2,DerivedSingleParamsArg)",
-            "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2)",
-            "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2,DerivedParamsArg3)");
+            "DataRowTestMethodWithParamsParameters (2,\"DerivedSingleParamsArg\")",
+            "DataRowTestMethodWithParamsParameters (2,\"DerivedParamsArg1\",\"DerivedParamsArg2\")",
+            "DataRowTestMethodWithParamsParameters (2,\"DerivedParamsArg1\",\"DerivedParamsArg2\",\"DerivedParamsArg3\")");
 
         // 4 tests of DerivedClass.DataRowTestMethodWithParamsParameters - 4 datarow result and no parent result
         ValidatePassedTestsCount(4);
@@ -97,7 +97,7 @@ public class DataRowTests : CLITestBase
             false,
             "DataRowTestMethodFailsWithInvalidArguments ()",
             "DataRowTestMethodFailsWithInvalidArguments (2)",
-            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
+            "DataRowTestMethodFailsWithInvalidArguments (2,\"DerivedRequiredArgument\",\"DerivedOptionalArgument\",\"DerivedExtraArgument\")");
 
         // 3 tests of DerivedClass.DataRowTestMethodFailsWithInvalidArguments - 3 datarow result and no parent result
         ValidateFailedTestsCount(3);
@@ -136,35 +136,35 @@ public class DataRowTests : CLITestBase
             "DataRowEnum_ULong (Alfa)",
             "DataRowEnum_ULong (Beta)",
             "DataRowEnum_ULong (Gamma)",
-            "DataRowEnums_Nullable_SByte ()",
+            "DataRowEnums_Nullable_SByte (null)",
             "DataRowEnums_Nullable_SByte (Alfa)",
             "DataRowEnums_Nullable_SByte (Beta)",
             "DataRowEnums_Nullable_SByte (Gamma)",
-            "DataRowEnums_Nullable_Byte ()",
+            "DataRowEnums_Nullable_Byte (null)",
             "DataRowEnums_Nullable_Byte (Alfa)",
             "DataRowEnums_Nullable_Byte (Beta)",
             "DataRowEnums_Nullable_Byte (Gamma)",
-            "DataRowEnums_Nullable_Short ()",
+            "DataRowEnums_Nullable_Short (null)",
             "DataRowEnums_Nullable_Short (Alfa)",
             "DataRowEnums_Nullable_Short (Beta)",
             "DataRowEnums_Nullable_Short (Gamma)",
-            "DataRowEnums_Nullable_UShort ()",
+            "DataRowEnums_Nullable_UShort (null)",
             "DataRowEnums_Nullable_UShort (Alfa)",
             "DataRowEnums_Nullable_UShort (Beta)",
             "DataRowEnums_Nullable_UShort (Gamma)",
-            "DataRowEnums_Nullable_Int ()",
+            "DataRowEnums_Nullable_Int (null)",
             "DataRowEnums_Nullable_Int (Alfa)",
             "DataRowEnums_Nullable_Int (Beta)",
             "DataRowEnums_Nullable_Int (Gamma)",
-            "DataRowEnums_Nullable_UInt ()",
+            "DataRowEnums_Nullable_UInt (null)",
             "DataRowEnums_Nullable_UInt (Alfa)",
             "DataRowEnums_Nullable_UInt (Beta)",
             "DataRowEnums_Nullable_UInt (Gamma)",
-            "DataRowEnums_Nullable_Long ()",
+            "DataRowEnums_Nullable_Long (null)",
             "DataRowEnums_Nullable_Long (Alfa)",
             "DataRowEnums_Nullable_Long (Beta)",
             "DataRowEnums_Nullable_Long (Gamma)",
-            "DataRowEnums_Nullable_ULong ()",
+            "DataRowEnums_Nullable_ULong (null)",
             "DataRowEnums_Nullable_ULong (Alfa)",
             "DataRowEnums_Nullable_ULong (Beta)",
             "DataRowEnums_Nullable_ULong (Gamma)",
@@ -204,23 +204,23 @@ public class DataRowTests : CLITestBase
             "DataRow1 (20)",
             "DataRow1 (30)",
             "DataRow1 (40)",
-            "DataRow2 (10,String parameter,True,False)",
-            "DataRow2 (20,String parameter,True,False)",
-            "DataRow2 (30,String parameter,True,False)",
-            "DataRow2 (40,String parameter,True,False)",
+            "DataRow2 (10,\"String parameter\",True,False)",
+            "DataRow2 (20,\"String parameter\",True,False)",
+            "DataRow2 (30,\"String parameter\",True,False)",
+            "DataRow2 (40,\"String parameter\",True,False)",
             "DataRowTestDouble (10.01,20.01)",
             "DataRowTestDouble (10.02,20.02)",
-            "DataRowTestMixed (1,10,10,10,10,10,10,10,10)",
-            "DataRowTestMixed (2,10,10,10,10,10,10,10,10)",
-            "DataRowTestMixed (3,10,10,10,10,10,10,10,10)",
-            "DataRowTestMixed (4,10,10,10,10,10,10,10,10)",
-            "NullValueInData (john.doe@example.com,abc123,)",
-            "NullValueInData (john.doe@example.com,abc123,/unit/test)",
-            "NullValue ()",
-            "OneStringArray ([])",
-            "TwoStringArrays ([],[1.4,message])",
-            "OneObjectArray ([,1])",
-            "TwoObjectArrays ([,1],[3])",
+            "DataRowTestMixed (1,10,10,10,10,10,10,10,\"10\")",
+            "DataRowTestMixed (2,10,10,10,10,10,10,10,\"10\")",
+            "DataRowTestMixed (3,10,10,10,10,10,10,10,\"10\")",
+            "DataRowTestMixed (4,10,10,10,10,10,10,10,\"10\")",
+            "NullValueInData (\"john.doe@example.com\",\"abc123\",null)",
+            "NullValueInData (\"john.doe@example.com\",\"abc123\",\"/unit/test\")",
+            "NullValue (null)",
+            "OneStringArray ([\"\"])",
+            "TwoStringArrays ([\"\"],[\"1.4\",\"message\"])",
+            "OneObjectArray ([\"\",1])",
+            "TwoObjectArrays ([\"\",1],[3])",
             "ThreeObjectArrays ([1],[2],[3])",
             "FourObjectArrays ([1],[2],[3],[4])",
             "FiveObjectArrays ([1],[2],[3],[4],[5])",
@@ -241,6 +241,6 @@ public class DataRowTests : CLITestBase
             false,
             "DataRowTestMethodFailsWithInvalidArguments ()",
             "DataRowTestMethodFailsWithInvalidArguments (2)",
-            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
+            "DataRowTestMethodFailsWithInvalidArguments (2,\"DerivedRequiredArgument\",\"DerivedOptionalArgument\",\"DerivedExtraArgument\")");
     }
 }

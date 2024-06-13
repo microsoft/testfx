@@ -11,9 +11,9 @@ internal interface IFileSystem
 
     void Move(string sourceFileName, string destFileName);
 
-    Stream NewFileStream(string path, FileMode mode);
+    IFileStream NewFileStream(string path, FileMode mode);
 
-    Stream NewFileStream(string path, FileMode mode, FileAccess access);
+    IFileStream NewFileStream(string path, FileMode mode, FileAccess access);
 
     string ReadAllText(string path);
 }

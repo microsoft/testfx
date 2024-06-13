@@ -42,8 +42,8 @@ internal sealed partial class JsonConfigurationSource
 
             ConfigurationFile = configFileName;
 
-            using Stream fileStream = _fileSystem.NewFileStream(configFileName, FileMode.Open, FileAccess.Read);
-            (_singleValueData, _propertyToAllChildren) = JsonConfigurationFileParser.Parse(fileStream);
+            using IFileStream fileStream = _fileSystem.NewFileStream(configFileName, FileMode.Open, FileAccess.Read);
+            (_singleValueData, _propertyToAllChildren) = JsonConfigurationFileParser.Parse(fileStream.Stream);
         }
 
         public bool TryGet(string key, out string? value)

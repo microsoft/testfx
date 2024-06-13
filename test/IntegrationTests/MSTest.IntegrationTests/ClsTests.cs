@@ -25,8 +25,8 @@ public class ClsTests : CLITestBase
             testResults,
             "TestMethod",
             "IntDataRow (10)",
-            "StringDataRow (some string)",
-            "StringDataRow2 (some string)",
-            "StringDataRow2 (some other string)");
+            "StringDataRow (\"some string\")",
+            "StringDataRow2 (\"some string\")",
+            "StringDataRow2 (\"some other string\")");
     }
 }

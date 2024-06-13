@@ -46,14 +46,12 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
         if (syncFileLoggerProvider is not null)
         {
             ILogger logger = syncFileLoggerProvider.CreateLogger(nameof(ConfigurationManager));
-            if (logger.IsEnabled(LogLevel.Trace))
+            if (logger.IsEnabled(LogLevel.Trace)
+                && defaultJsonConfiguration?.ConfigurationFile != null)
             {
-                if (defaultJsonConfiguration?.ConfigurationFile != null)
-                {
-                    using Stream configFileStream = _fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open);
-                    StreamReader streamReader = new(configFileStream);
-                    await logger.LogTraceAsync($"Configuration file ('{defaultJsonConfiguration.ConfigurationFile}') content:\n{await streamReader.ReadToEndAsync()}");
-                }
+                using IFileStream configFileStream = _fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open);
+                StreamReader streamReader = new(configFileStream.Stream);
+                await logger.LogTraceAsync($"Configuration file ('{defaultJsonConfiguration.ConfigurationFile}') content:\n{await streamReader.ReadToEndAsync()}");
             }
         }
 

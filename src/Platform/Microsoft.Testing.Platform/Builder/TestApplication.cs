@@ -114,7 +114,7 @@ public sealed class TestApplication : ITestApplication
         }
 
         // All checks are fine, create the TestApplication.
-        return new TestApplicationBuilder(args, loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler);
+        return new TestApplicationBuilder(loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler);
     }
 
     private static async Task LogInformationAsync(

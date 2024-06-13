@@ -12,6 +12,16 @@ internal sealed class SystemFileStream : IFileStream
         _stream = new FileStream(path, mode, access, share);
     }
 
+    public SystemFileStream(string path, FileMode mode, FileAccess access)
+    {
+        _stream = new FileStream(path, mode, access);
+    }
+
+    public SystemFileStream(string path, FileMode mode)
+    {
+        _stream = new FileStream(path, mode);
+    }
+
     public Stream Stream => _stream;
 
     public string Name => _stream.Name;
