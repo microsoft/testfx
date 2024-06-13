@@ -129,7 +129,6 @@ internal static class CommandLineParser
             };
 
             currentOption = currentOption.TrimStart('-');
-
         }
 
         static bool TryUnescape(string input, string? option, IEnvironment environment, out string? unescapedArg, out string? error)
