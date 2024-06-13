@@ -211,6 +211,30 @@ public class TestMethodInfoTests : TestContainer
         Verify(result.TestContextMessages.Contains("SeaShore"));
     }
 
+    public void Invoke_WhenTestMethodThrowsMissingMethodException_TestOutcomeIsFailedAndExceptionIsPreserved()
+    {
+        DummyTestClass.TestMethodBody = _ =>
+        {
+            var input = new
+            {
+                Field1 = "StringWith\0Null",
+                Field2 = "NormalString",
+            };
+
+            Activator.CreateInstance(input.GetType());
+        };
+
+        var method = new TestMethodInfo(
+            _methodInfo,
+            _testClassInfo,
+            _testMethodOptions);
+
+        UTF.TestResult result = method.Invoke(null);
+
+        Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
+        Verify(result.TestFailureException is MissingMethodException);
+    }
+
     #endregion
 
     #region TestClass constructor setup
