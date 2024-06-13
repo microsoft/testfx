@@ -458,16 +458,16 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                             await ConsoleWriteLineAsync($" {duration}", ConsoleColor.Gray);
                         }
 
-                        _totalTests++;
-                        _totalPassedTests++;
+                        Interlocked.Increment(ref _totalTests);
+                        Interlocked.Increment(ref _totalPassedTests);
                         break;
 
                     case SkippedTestNodeStateProperty:
                         await ConsoleWriteAsync(PlatformResources.SkippedLowercase, ConsoleColor.Yellow);
                         await ConsoleWriteAsync($" {testNodeStateChanged.TestNode.DisplayName}");
                         await ConsoleWriteLineAsync($" {duration}", ConsoleColor.Gray);
-                        _totalTests++;
-                        _totalSkippedTests++;
+                        Interlocked.Increment(ref _totalTests);
+                        Interlocked.Increment(ref _totalSkippedTests);
                         break;
                 }
 
@@ -523,8 +523,8 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
         await ConsoleWriteAsync(_environment.NewLine);
 
-        _totalTests++;
-        _totalFailedTests++;
+        Interlocked.Increment(ref _totalTests);
+        Interlocked.Increment(ref _totalFailedTests);
     }
 
     private async Task ConsoleWriteAsync(string? text, ConsoleColor? color = null)
