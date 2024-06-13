@@ -73,15 +73,10 @@ internal static class FixtureUtils
             }
         }
 
-        if (methodSymbol is { ReturnsVoid: true, IsAsync: true }
-            || (!methodSymbol.ReturnsVoid
+        return methodSymbol is not { ReturnsVoid: true, IsAsync: true }
+            && !(!methodSymbol.ReturnsVoid
             && (taskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, taskSymbol))
-            && (valueTaskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, valueTaskSymbol))))
-        {
-            return false;
-        }
-
-        return true;
+            && (valueTaskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, valueTaskSymbol)));
     }
 
     public static bool IsInheritanceModeSet(this IMethodSymbol methodSymbol, INamedTypeSymbol? inheritanceBehaviorSymbol,
