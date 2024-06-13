@@ -26,7 +26,6 @@ namespace Microsoft.Testing.Platform.Builder;
 /// </summary>
 internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 {
-    private readonly string[] _args;
     private readonly DateTimeOffset _createBuilderStart;
     private readonly ApplicationLoggingState _loggingState;
     private readonly TestApplicationOptions _testApplicationOptions;
@@ -37,14 +36,12 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     private Func<IServiceProvider, ITestFrameworkCapabilities>? _testFrameworkCapabilitiesFactory;
 
     internal TestApplicationBuilder(
-        string[] args,
         ApplicationLoggingState loggingState,
         DateTimeOffset createBuilderStart,
         TestApplicationOptions testApplicationOptions,
         IUnhandledExceptionsHandler unhandledExceptionsHandler)
     {
         _testHostBuilder = new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()));
-        _args = args;
         _createBuilderStart = createBuilderStart;
         _loggingState = loggingState;
         _testApplicationOptions = testApplicationOptions;
@@ -110,12 +107,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderApplicationAlreadyRegistered);
         }
 
-        _testHost = await _testHostBuilder.BuildAsync(
-            _args,
-            _loggingState,
-            _testApplicationOptions,
-            _unhandledExceptionsHandler,
-            _createBuilderStart);
+        _testHost = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart);
 
         return new TestApplication(_testHost);
     }
