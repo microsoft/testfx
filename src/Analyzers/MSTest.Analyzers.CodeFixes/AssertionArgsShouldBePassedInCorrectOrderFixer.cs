@@ -64,6 +64,11 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
             arguments[0],
         });
 
+        for (int i = 2; i < arguments.Count; i++)
+        {
+            newArgumentList = newArgumentList.Add(arguments[i]);
+        }
+
         InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(SyntaxFactory.ArgumentList(newArgumentList));
         SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
         SyntaxNode newRoot = root.ReplaceNode(invocationExpr, newInvocationExpr);
