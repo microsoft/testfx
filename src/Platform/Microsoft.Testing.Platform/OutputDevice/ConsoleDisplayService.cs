@@ -44,10 +44,10 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly bool _underProcessMonitor;
 
-    private volatile int _totalTests;
-    private volatile int _totalPassedTests;
-    private volatile int _totalFailedTests;
-    private volatile int _totalSkippedTests;
+    private int _totalTests;
+    private int _totalPassedTests;
+    private int _totalFailedTests;
+    private int _totalSkippedTests;
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
     private TestRequestExecutionTimeInfo? _testRequestExecutionTimeInfo;
@@ -243,17 +243,22 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
             if (!_firstCallTo_OnSessionStartingAsync)
             {
-                bool runFailed = _totalFailedTests > 0;
+                int totalTests = Thread.VolatileRead(ref _totalTests);
+                int failedTests = Thread.VolatileRead(ref _totalFailedTests);
+                int passedTests = Thread.VolatileRead(ref _totalPassedTests);
+                int skippedTests = Thread.VolatileRead(ref _totalSkippedTests);
+
+                bool runFailed = failedTests > 0;
                 string passedOrFailedOrAborted = string.Format(CultureInfo.CurrentCulture, "{0}!", runFailed ? PlatformResources.Failed : PlatformResources.Passed);
-                passedOrFailedOrAborted = _totalTests == 0 ? PlatformResources.ZeroTestsRan : passedOrFailedOrAborted;
+                passedOrFailedOrAborted = totalTests == 0 ? PlatformResources.ZeroTestsRan : passedOrFailedOrAborted;
                 passedOrFailedOrAborted = _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested ? PlatformResources.Aborted : passedOrFailedOrAborted;
-                passedOrFailedOrAborted = _totalTests < _minimumExpectedTest ? string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, _totalTests, _minimumExpectedTest) : passedOrFailedOrAborted;
+                passedOrFailedOrAborted = totalTests < _minimumExpectedTest ? string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, _minimumExpectedTest) : passedOrFailedOrAborted;
                 ConsoleColor currentForeground = _console.GetForegroundColor();
                 ConsoleColor consoleColor = runFailed ? ConsoleColor.Red : ConsoleColor.Green;
                 try
                 {
                     _console.SetForegroundColor(consoleColor);
-                    _console.WriteLine($"{passedOrFailedOrAborted} - {PlatformResources.Failed}: {_totalFailedTests}, {PlatformResources.Passed}: {_totalPassedTests}, {PlatformResources.Skipped}: {_totalSkippedTests}, {PlatformResources.Total}: {_totalTests}{(_testRequestExecutionTimeInfo is not null ? $", Duration: {ToHumanReadableDuration(_testRequestExecutionTimeInfo.Value.TimingInfo.Duration.TotalMilliseconds)}" : string.Empty)} - {Path.GetFileName(moduleOutput)} {(runtimeInformation is null ? string.Empty : $"({runtimeInformation})")}");
+                    _console.WriteLine($"{passedOrFailedOrAborted} - {PlatformResources.Failed}: {failedTests}, {PlatformResources.Passed}: {passedTests}, {PlatformResources.Skipped}: {skippedTests}, {PlatformResources.Total}: {totalTests}{(_testRequestExecutionTimeInfo is not null ? $", Duration: {ToHumanReadableDuration(_testRequestExecutionTimeInfo.Value.TimingInfo.Duration.TotalMilliseconds)}" : string.Empty)} - {Path.GetFileName(moduleOutput)} {(runtimeInformation is null ? string.Empty : $"({runtimeInformation})")}");
                 }
                 finally
                 {
