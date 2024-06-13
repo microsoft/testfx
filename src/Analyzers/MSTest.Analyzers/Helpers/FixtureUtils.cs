@@ -56,8 +56,7 @@ internal static class FixtureUtils
         if (methodSymbol.MethodKind != MethodKind.Ordinary
             || methodSymbol.IsGenericMethod
             || methodSymbol.IsStatic
-            || methodSymbol.IsAbstract
-            || methodSymbol is { ReturnsVoid: true, IsAsync: true })
+            || methodSymbol.IsAbstract)
         {
             return false;
         }
@@ -74,7 +73,7 @@ internal static class FixtureUtils
             }
         }
 
-        return (methodSymbol.ReturnsVoid && taskSymbol is null && valueTaskSymbol is null)
+        return methodSymbol is { ReturnsVoid: true, IsAsync: false }
                 || SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, taskSymbol)
                 || SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, valueTaskSymbol);
     }
