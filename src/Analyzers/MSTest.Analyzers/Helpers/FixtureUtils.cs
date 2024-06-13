@@ -51,8 +51,16 @@ internal static class FixtureUtils
     }
 
     public static bool HasValidTestMethodSignature(this IMethodSymbol methodSymbol, INamedTypeSymbol? taskSymbol,
-    INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
+        INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
+        if (methodSymbol.MethodKind != MethodKind.Ordinary
+            || methodSymbol.IsGenericMethod
+            || methodSymbol.IsStatic
+            || methodSymbol.IsAbstract)
+        {
+            return false;
+        }
+
         if (methodSymbol.GetResultantVisibility() is { } resultantVisibility)
         {
             if (!canDiscoverInternals && (resultantVisibility != SymbolVisibility.Public || methodSymbol.DeclaredAccessibility != Accessibility.Public))
@@ -73,10 +81,7 @@ internal static class FixtureUtils
             return false;
         }
 
-        return methodSymbol.MethodKind == MethodKind.Ordinary
-            && !methodSymbol.IsGenericMethod
-            && !methodSymbol.IsStatic
-            && !methodSymbol.IsAbstract;
+        return true;
     }
 
     public static bool IsInheritanceModeSet(this IMethodSymbol methodSymbol, INamedTypeSymbol? inheritanceBehaviorSymbol,
