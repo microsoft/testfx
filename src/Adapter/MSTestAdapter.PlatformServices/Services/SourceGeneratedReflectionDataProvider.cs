@@ -11,7 +11,28 @@ public class SourceGeneratedReflectionDataProvider
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public Assembly Assembly { get; init; }
 
-    public Type[] Types { get; set; }
+    public Type[] Types { get; internal set; }
+
+    public Dictionary<string, Type> TypesByName { get; internal set; }
+
+    public Dictionary<Type, Attribute[]> TypeAttributes { get; internal set; }
+
+    public object[] AssemblyAttributes { get; internal set; }
+
+    // All properties that are TestContext
+    // All properties that are mentioned in DynamicData
+    public Dictionary<Type, PropertyInfo[]> TypeProperties { get; internal set; }
+
+    // All TestMethods, Initialize and Cleanup methods.
+    public Dictionary<Type, MethodInfo[]> TypeMethods { get; internal set; }
+
+    public Dictionary<Type, Dictionary<string, Attribute[]>> TypeMethodAttributes { get; internal set; }
+
+    public Dictionary<Type, ConstructorInfo[]> TypeConstructors { get; internal set; }
+
+    public Dictionary<Type, Dictionary<string, PropertyInfo>> TypePropertiesByName { get; internal set; }
+
+    public Dictionary<Type, MyConstructorInfo[]> TypeConstructorsInvoker { get; internal set; }
 
     internal Assembly GetAssembly(string assemblyName) => assemblyName != Assembly.Location
             ? throw new ArgumentException($"Only '{Assembly.Location}' is allowed to run in source gen mode.")

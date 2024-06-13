@@ -8,8 +8,16 @@ namespace MSTestAdapter.Try.UnitTests;
 [TestClass]
 public class UnitTest1
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public void TestMethod1()
+    {
+    }
+
+    [TestMethod]
+    [DataRow(1, 2, 3)]
+    public void TestMethod2(int a, int b, int c)
     {
     }
 }

@@ -16,6 +16,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using Resource = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resource;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 

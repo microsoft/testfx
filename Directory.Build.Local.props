@@ -38,6 +38,11 @@
     <MicrosoftTestingTargetFrameworks>net6.0;net7.0;net8.0</MicrosoftTestingTargetFrameworks>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- Enable trimming, single file and other analyzers for selected projects to ensure native aot compatibility. -->
+    <EnableIotAnalyzers>true</EnableIotAnalyzers>
+  </PropertyGroup>
+
   <!-- Build config -->
   <PropertyGroup>
     <!-- Prevent warning about deprecated target frameworks -->

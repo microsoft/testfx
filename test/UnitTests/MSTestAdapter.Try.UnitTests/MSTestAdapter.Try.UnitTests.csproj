@@ -27,6 +27,10 @@
 
   <ItemGroup>
     <PackageReference Include="Moq" />
+    <PackageReference Include="MSTest.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>

@@ -19,6 +19,13 @@ internal static class DiaSessionOperations
     /// <remarks>Initializes DiaSession.</remarks>
     static DiaSessionOperations()
     {
+#if NET8_0_OR_GREATER
+        if (!System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported)
+        {
+            throw new NotSupportedException("Dia is not allowed when dynamic code is not supported");
+        }
+#endif
+
         const string diaSessionTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaSession, Microsoft.VisualStudio.TestPlatform.ObjectModel";
         const string diaNavigationDataTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaNavigationData,  Microsoft.VisualStudio.TestPlatform.ObjectModel";
 
@@ -37,7 +44,9 @@ internal static class DiaSessionOperations
         if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
             string messageFormatOnException = string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
+#pragma warning disable IL2077 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
             return SafeInvoke(() => Activator.CreateInstance(s_typeDiaSession, source));
+#pragma warning restore IL2077 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
         }
 
         return null;
@@ -89,15 +98,21 @@ internal static class DiaSessionOperations
     /// <param name="diaNavigationData">Type name of DiaNavigationData class.</param>
     internal static void Initialize(string diaSession, string diaNavigationData)
     {
+        // We won't reach this code, in we will generate this info in source generator,
+        // and we won't use navigation session to get method locations from PDBs.
+#pragma warning disable IL2057 // Unrecognized value passed to the typeName parameter of 'System.Type.GetType(String)'
         s_typeDiaSession = Type.GetType(diaSession, false);
         s_typeDiaNavigationData = Type.GetType(diaNavigationData, false);
+#pragma warning restore IL2057 // Unrecognized value passed to the typeName parameter of 'System.Type.GetType(String)'
 
+#pragma warning disable IL2077 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
         if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
             s_methodGetNavigationData = s_typeDiaSession.GetRuntimeMethod("GetNavigationData", [typeof(string), typeof(string)]);
             s_propertyFileName = s_typeDiaNavigationData.GetRuntimeProperty("FileName");
             s_propertyMinLineNumber = s_typeDiaNavigationData.GetRuntimeProperty("MinLineNumber");
         }
+#pragma warning restore IL2077 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
     }
 
     private static object? SafeInvoke<T>(Func<T> action)

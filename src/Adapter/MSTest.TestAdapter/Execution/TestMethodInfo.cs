@@ -175,7 +175,7 @@ public class TestMethodInfo : ITestMethod
                 // If this is the params parameter, instantiate a new object of that type
                 if (argumentIndex == parametersInfo.Length - 1)
                 {
-                    paramsValues = Activator.CreateInstance(parametersInfo[argumentIndex].ParameterType, [arguments.Length - argumentIndex]);
+                    paramsValues = PlatformServiceProvider.Instance.ReflectionOperations.CreateInstance(parametersInfo[argumentIndex].ParameterType, [arguments.Length - argumentIndex]);
                     newParameters[argumentIndex] = paramsValues;
                 }
 
@@ -199,7 +199,7 @@ public class TestMethodInfo : ITestMethod
             // If this is the params parameters, set it to an empty
             // array of that type as DefaultValue is DBNull
             newParameters[parameterNotProvidedIndex] = hasParamsValue && parameterNotProvidedIndex == parametersInfo.Length - 1
-                ? Activator.CreateInstance(parametersInfo[parameterNotProvidedIndex].ParameterType, 0)
+                ? PlatformServiceProvider.Instance.ReflectionOperations.CreateInstance(parametersInfo[parameterNotProvidedIndex].ParameterType, [0])
                 : parametersInfo[parameterNotProvidedIndex].DefaultValue;
         }
 

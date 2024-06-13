@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -12,10 +12,10 @@ using Moq;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
-public class TestablePlatformServiceProvider : IPlatformServiceProvider
+internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 {
     // Using the actual reflection operations implementation since this does not need mocking for existing tests.
-    private IReflectionOperations _reflectionOperations;
+    private IReflectionOperations2 _reflectionOperations;
 
     public TestablePlatformServiceProvider()
     {
@@ -93,7 +93,7 @@ public class TestablePlatformServiceProvider : IPlatformServiceProvider
         set;
     }
 
-    public Mock<IReflectionOperations> MockReflectionOperations
+    public Mock<IReflectionOperations2> MockReflectionOperations
     {
         get;
         set;
@@ -113,7 +113,7 @@ public class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public IThreadOperations ThreadOperations => MockThreadOperations.Object;
 
-    public IReflectionOperations ReflectionOperations => MockReflectionOperations != null ? MockReflectionOperations.Object : (_reflectionOperations ??= new ReflectionOperations());
+    public IReflectionOperations2 ReflectionOperations => MockReflectionOperations != null ? MockReflectionOperations.Object : (_reflectionOperations ??= new ReflectionOperations2());
 
     public ITestDataSource TestDataSource => MockTestDataSource.Object;
 
@@ -126,5 +126,5 @@ public class TestablePlatformServiceProvider : IPlatformServiceProvider
     [SuppressMessage("Naming", "CA1725:Parameter names should match base declaration", Justification = "Part of the public API")]
     public ITraceListenerManager GetTraceListenerManager(TextWriter standardOutputWriter, TextWriter standardErrorWriter) => MockTraceListenerManager.Object;
 
-    public void SetupMockReflectionOperations() => MockReflectionOperations = new Mock<IReflectionOperations>();
+    public void SetupMockReflectionOperations() => MockReflectionOperations = new Mock<IReflectionOperations2>();
 }

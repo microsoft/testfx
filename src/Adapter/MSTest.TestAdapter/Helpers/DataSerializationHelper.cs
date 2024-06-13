@@ -100,7 +100,7 @@ internal static class DataSerializationHelper
     private static DataContractJsonSerializer GetSerializer(string assemblyQualifiedName)
         => SerializerCache.GetOrAdd(
             assemblyQualifiedName,
-            _ => new DataContractJsonSerializer(Type.GetType(assemblyQualifiedName) ?? typeof(object), SerializerSettings));
+            _ => new DataContractJsonSerializer(PlatformServiceProvider.Instance.ReflectionOperations.GetType(assemblyQualifiedName) ?? typeof(object), SerializerSettings));
 
     private static DataContractJsonSerializer GetSerializer(Type type)
         => SerializerCache.GetOrAdd(

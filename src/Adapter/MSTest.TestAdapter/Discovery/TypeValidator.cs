@@ -106,7 +106,7 @@ internal class TypeValidator
     {
         DebugEx.Assert(type != null, "HasCorrectTestContextSignature type is null");
 
-        IEnumerable<PropertyInfo> propertyInfoEnumerable = type.GetTypeInfo().DeclaredProperties;
+        IEnumerable<PropertyInfo> propertyInfoEnumerable = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperties(type);
         var propertyInfo = new List<PropertyInfo>();
 
         foreach (PropertyInfo pinfo in propertyInfoEnumerable)
