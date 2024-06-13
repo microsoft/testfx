@@ -4,6 +4,7 @@
 using System.Collections.Immutable;
 
 using Analyzer.Utilities;
+using Analyzer.Utilities.Extensions;
 
 using Microsoft.CodeAnalysis;
 
@@ -47,6 +48,34 @@ internal static class FixtureUtils
             && HasCorrectParameters(methodSymbol, testContextSymbol)
             && methodSymbol.IsPublicAndHasCorrectResultantVisibility(canDiscoverInternals)
             && HasValidReturnType(methodSymbol, taskSymbol, valueTaskSymbol);
+    }
+
+    public static bool HasValidTestMethodSignature(this IMethodSymbol methodSymbol, INamedTypeSymbol? taskSymbol,
+        INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
+    {
+        if (methodSymbol.MethodKind != MethodKind.Ordinary
+            || methodSymbol.IsGenericMethod
+            || methodSymbol.IsStatic
+            || methodSymbol.IsAbstract)
+        {
+            return false;
+        }
+
+        if (methodSymbol.GetResultantVisibility() is { } resultantVisibility)
+        {
+            if (!canDiscoverInternals && (resultantVisibility != SymbolVisibility.Public || methodSymbol.DeclaredAccessibility != Accessibility.Public))
+            {
+                return false;
+            }
+            else if (canDiscoverInternals && resultantVisibility == SymbolVisibility.Private)
+            {
+                return false;
+            }
+        }
+
+        return methodSymbol is { ReturnsVoid: true, IsAsync: false }
+                || SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, taskSymbol)
+                || SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, valueTaskSymbol);
     }
 
     public static bool IsInheritanceModeSet(this IMethodSymbol methodSymbol, INamedTypeSymbol? inheritanceBehaviorSymbol,
