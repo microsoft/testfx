@@ -6,7 +6,7 @@ using Microsoft.Testing.TestInfrastructure;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AssertionArgsShouldBePassedInCorrectOrderAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.AssertionArgsShouldBePassedInCorrectOrderFixer>;
 
 namespace MSTest.Analyzers.UnitTests;
 
@@ -87,7 +87,81 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    string s = "";
+                    bool b = true;
+                    int i = 42;
+
+                    Assert.AreEqual("", s);
+                    Assert.AreEqual(true, b);
+                    Assert.AreEqual(1, i);
+
+                    Assert.AreNotEqual("", s);
+                    Assert.AreNotEqual(true, b);
+                    Assert.AreNotEqual(1, i);
+
+                    Assert.AreSame("", s);
+                    Assert.AreSame(true, b);
+                    Assert.AreSame(1, i);
+
+                    Assert.AreNotSame("", s);
+                    Assert.AreNotSame(true, b);
+                    Assert.AreNotSame(1, i);
+
+                    Assert.AreEqual("", s, EqualityComparer<string>.Default);
+                    Assert.AreEqual("", s, "some message");
+                    Assert.AreEqual("", s, EqualityComparer<string>.Default, "some message");
+                    Assert.AreEqual("", s, "some message", 1, "input");
+                    Assert.AreEqual("", s, EqualityComparer<string>.Default, "some message", 1, "input");
+
+                    Assert.AreNotEqual("", s, EqualityComparer<string>.Default);
+                    Assert.AreNotEqual("", s, "some message");
+                    Assert.AreNotEqual("", s, EqualityComparer<string>.Default, "some message");
+                    Assert.AreNotEqual("", s, "some message", 1, "input");
+                    Assert.AreNotEqual("", s, EqualityComparer<string>.Default, "some message", 1, "input");
+
+                    Assert.AreSame("", s, "some message");
+                    Assert.AreSame("", s, "some message", 1, "input");
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    string s = "";
+                    bool b = true;
+                    int i = 42;
+            
+                    Assert.AreEqual("", s);
+                    Assert.AreEqual(true, b);
+                    Assert.AreEqual(1, i);
+
+                    Assert.AreNotEqual("", s);
+                    Assert.AreNotEqual(true, b);
+                    Assert.AreNotEqual(1, i);
+            
+                    Assert.AreSame("", s);
+                    Assert.AreSame(true, b);
+                    Assert.AreSame(1, i);
+
+                    Assert.AreNotSame("", s);
+                    Assert.AreNotSame(true, b);
+                    Assert.AreNotSame(1, i);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            fixedCode);
     }
 
     public async Task LiteralUsingNamedArgument()
