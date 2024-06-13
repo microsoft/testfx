@@ -84,15 +84,14 @@ internal class AssemblyEnumerator : MarshalByRefObject
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
         IReadOnlyList<Type> types = GetTypes(assembly, assemblyFileName, warningMessages);
-        bool discoverInternals = assembly.GetCustomAttribute<DiscoverInternalsAttribute>() != null;
-        TestIdGenerationStrategy testIdGenerationStrategy = assembly.GetCustomAttribute<TestIdGenerationStrategyAttribute>()?.Strategy
-            ?? TestIdGenerationStrategy.FullyQualified;
+        bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
+        TestIdGenerationStrategy testIdGenerationStrategy = ReflectHelper.GetTestIdGenerationStrategy(assembly);
 
         // Set the test ID generation strategy for the data row attribute so we can improve display name without causing
         // a breaking change.
         DataRowAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
 
-        TestDataSourceDiscoveryOption testDataSourceDiscovery = assembly.GetCustomAttribute<TestDataSourceDiscoveryAttribute>()?.DiscoveryOption
+        TestDataSourceDiscoveryOption testDataSourceDiscovery = ReflectHelper.GetTestDataSourceDiscoveryOption(assembly)
 #pragma warning disable CS0618 // Type or member is obsolete
 
             // When using legacy strategy, there is no point in trying to "read" data during discovery
@@ -128,7 +127,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     {
         try
         {
-            return assembly.DefinedTypes.Select(typeInfo => typeInfo.AsType()).ToList();
+            return PlatformServiceProvider.Instance.ReflectionOperations.GetDefinedTypes(assembly);
         }
         catch (ReflectionTypeLoadException ex)
         {

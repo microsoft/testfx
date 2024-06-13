@@ -263,6 +263,33 @@ internal class ReflectHelper : MarshalByRefObject
             .FirstOrDefault();
 
     /// <summary>
+    /// Gets the test id generation strategy set on an assembly.
+    /// </summary>
+    /// <param name="assembly"> The test assembly. </param>
+    internal static TestIdGenerationStrategy GetTestIdGenerationStrategy(Assembly assembly)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(TestIdGenerationStrategyAttribute))
+            .OfType<TestIdGenerationStrategyAttribute>()
+            .FirstOrDefault()?.Strategy ?? TestIdGenerationStrategy.FullyQualified;
+
+    /// <summary>
+    /// Gets discover internals assembly level attribute.
+    /// </summary>
+    /// <param name="assembly"> The test assembly. </param>
+    internal static DiscoverInternalsAttribute? GetDiscoverInternalsAttribute(Assembly assembly)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DiscoverInternalsAttribute))
+            .OfType<DiscoverInternalsAttribute>()
+            .FirstOrDefault();
+
+    /// <summary>
+    /// Gets TestDataSourceDiscovery assembly level attribute.
+    /// </summary>
+    /// <param name="assembly"> The test assembly. </param>
+    internal static TestDataSourceDiscoveryOption? GetTestDataSourceDiscoveryOption(Assembly assembly)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceDiscoveryAttribute))
+            .OfType<TestDataSourceDiscoveryAttribute>()
+            .FirstOrDefault()?.DiscoveryOption;
+
+    /// <summary>
     /// Get the parallelization behavior for a test method.
     /// </summary>
     /// <param name="testMethod">Test method.</param>

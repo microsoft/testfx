@@ -201,6 +201,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Playground", "samples\Playg
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Acceptance.IntegrationTests", "test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj", "{BCB42780-C559-40B6-8C4A-85EBC464AAA8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTestAdapter.Try.UnitTests", "test\UnitTests\MSTestAdapter.Try.UnitTests\MSTestAdapter.Try.UnitTests.csproj", "{DAD858A8-6BBB-4E68-896C-29B6BFBCBB92}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -427,6 +429,10 @@ Global
 		{BCB42780-C559-40B6-8C4A-85EBC464AAA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BCB42780-C559-40B6-8C4A-85EBC464AAA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BCB42780-C559-40B6-8C4A-85EBC464AAA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DAD858A8-6BBB-4E68-896C-29B6BFBCBB92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAD858A8-6BBB-4E68-896C-29B6BFBCBB92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAD858A8-6BBB-4E68-896C-29B6BFBCBB92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAD858A8-6BBB-4E68-896C-29B6BFBCBB92}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -503,6 +509,7 @@ Global
 		{7E9D98E7-733C-4D6B-A5AC-087D588A40ED} = {CB0CC552-2017-40C0-934A-C8A3B00EF650}
 		{8A41B37E-0732-4F28-B214-A44233B447FE} = {92F8E9A2-903E-4025-99BC-7DC478D5466D}
 		{BCB42780-C559-40B6-8C4A-85EBC464AAA8} = {FF69998C-C661-4EF0-804B-845675B3602E}
+		{DAD858A8-6BBB-4E68-896C-29B6BFBCBB92} = {BB874DF1-44FE-415A-B634-A6B829107890}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}

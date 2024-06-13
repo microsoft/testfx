@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>exe</OutputType>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <NetStandardNetFrameworkHolder>net48</NetStandardNetFrameworkHolder>
+    <TargetFrameworks>net462;$(NetStandardNetFrameworkHolder);netcoreapp3.1;net6.0;$(WinUiMinimum)</TargetFrameworks>
+    <IsNetCoreApp Condition=" '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == '$(WinUiMinimum)' ">true</IsNetCoreApp>
+    <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests</RootNamespace>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests</AssemblyName>
+  </PropertyGroup>
+
+  <!-- Properties specific to WinUI -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
+    <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == '$(NetStandardNetFrameworkHolder)' ">
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" SetTargetFramework="TargetFramework=netstandard2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Moq" />
+  </ItemGroup>
+
+</Project>

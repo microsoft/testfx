@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -14,6 +14,8 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
 {
     private static IPlatformServiceProvider? s_instance;
 
+    private readonly bool _useNativeProvider;
+
     private ITestSource? _testSource;
     private IFileOperations? _fileOperations;
     private IAdapterTraceLogger? _traceLogger;
@@ -21,13 +23,14 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     private ISettingsProvider? _settingsProvider;
     private ITestDataSource? _testDataSource;
     private IThreadOperations? _threadOperations;
-    private IReflectionOperations? _reflectionOperations;
+    private IReflectionOperations2? _reflectionOperations;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
     /// </summary>
     private PlatformServiceProvider()
     {
+        _useNativeProvider = Environment.GetEnvironmentVariable("MSTEST_NATIVE") != "1";
     }
 
     /// <summary>
@@ -43,7 +46,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets an instance to the platform service for file operations.
     /// </summary>
-    public IFileOperations FileOperations => _fileOperations ??= new FileOperations();
+    public IFileOperations FileOperations => _fileOperations ??= _useNativeProvider ? new NativeFileOperations() : new FileOperations();
 
     /// <summary>
     /// Gets an instance to the platform service for trace logging.
@@ -68,7 +71,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets an instance to the platform service for reflection operations specific to a platform.
     /// </summary>
-    public IReflectionOperations ReflectionOperations => _reflectionOperations ??= new ReflectionOperations();
+    public IReflectionOperations2 ReflectionOperations => _reflectionOperations ??= _useNativeProvider ? new ReflectionOperations2() : new NativeReflectionOperations();
 
     /// <summary>
     /// Gets or sets the instance for the platform service.
