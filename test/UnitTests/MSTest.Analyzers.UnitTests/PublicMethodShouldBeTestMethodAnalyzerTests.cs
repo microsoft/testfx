@@ -47,7 +47,6 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-
     public async Task WhenMethodIsPublicAndMarkedAsTestMethod_NoDiagnostic()
     {
         string code = """
