@@ -263,17 +263,17 @@
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerDescription">
         <source>Public methods should be test methods (marked with `[TestMethod]`).</source>
-        <target state="new">Public methods should be test methods (marked with `[TestMethod]`).</target>
+        <target state="translated">Veřejné metody by měly být testovací metody (označené jako [TestMethod]).</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerFormat">
         <source>Public method '{0}' should be a test method</source>
-        <target state="new">Public method '{0}' should be a test method</target>
+        <target state="translated">Veřejná metoda {0} by měla být testovací metoda.</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerTitle">
         <source>Public methods should be test methods</source>
-        <target state="new">Public methods should be test methods</target>
+        <target state="translated">Veřejné metody by měly být testovací metody</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
