@@ -1,4 +1,4 @@
-To  add ana analyzer code fix
+# Adding analyzer code fix
 
  - you should add it under src/Analyzers/MSTest.Analyzers.CodeFixes
  - match the rule id, add name for your fix and add your fixer logic.
