@@ -9,5 +9,5 @@ Add your fixer logic and match the analyzer rule id with your analyzer.
 `Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;` by `MSTest.Analyzers."fixerName">;`
 
 `VerifyCS.VerifyCodeFixAsync` by `VerifyCS.VerifyAnalyzerAsync`
- 
+
 you can use this PR as refrence:[https://github.com/microsoft/testfx/pull/3091]
