@@ -238,7 +238,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                         Lazy<TestMethodInfo?> testMethodInfo = GetTestMethodInfo(sourceLevelParameters, test);
 
                         // Add fixture tests like AssemblyInitialize, AssemblyCleanup, ClassInitialize, ClassCleanup.
-                        if (MSTestSettings.CurrentSettings.FixturesEnabled && testMethodInfo.Value is not null)
+                        if (MSTestSettings.CurrentSettings.ConsiderFixturesAsSpecialTests && testMethodInfo.Value is not null)
                         {
                             AddFixtureTests(testMethodInfo.Value, tests, fixturesTests);
                         }
@@ -313,12 +313,14 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             if (testMethodInfo.Parent.Parent.AssemblyInitializeMethod is not null)
             {
-                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName, className, classFullName, assemblyLocation, Constants.AssemblyInitializeFixtureTrait));
+                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName, className,
+                    classFullName, assemblyLocation, Constants.AssemblyInitializeFixtureTrait));
             }
 
             if (testMethodInfo.Parent.Parent.AssemblyCleanupMethod is not null)
             {
-                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName, className, classFullName, assemblyLocation, Constants.AssemblyCleanupFixtureTrait));
+                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName, className,
+                    classFullName, assemblyLocation, Constants.AssemblyCleanupFixtureTrait));
             }
         }
 
@@ -328,12 +330,14 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             if (testMethodInfo.Parent.ClassInitializeMethod is not null)
             {
-                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassInitializeMethod, assemblyName, className, classFullName, assemblyLocation, Constants.ClassInitializeFixtureTrait));
+                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassInitializeMethod, assemblyName, className, classFullName,
+                    assemblyLocation, Constants.ClassInitializeFixtureTrait));
             }
 
             if (testMethodInfo.Parent.ClassCleanupMethod is not null)
             {
-                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassCleanupMethod, assemblyName, className, classFullName, assemblyLocation, Constants.ClassCleanupFixtureTrait));
+                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassCleanupMethod, assemblyName, className, classFullName,
+                    assemblyLocation, Constants.ClassCleanupFixtureTrait));
             }
         }
 
@@ -341,7 +345,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             string assemblyLocation, string fixtureType)
         {
             string methodName = GetMethodName(methodInfo);
-            string[] hierarchy = [null!, assemblyName, $"[{Constants.AssemblyFixturesHierarchyName}]", methodName];
+            string[] hierarchy = [null!, assemblyName, Constants.AssemblyFixturesHierarchyClassName, methodName];
             return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy);
         }
 
@@ -361,16 +365,16 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 : methodInfo.Name;
         }
 
-        static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string methodType, string methodName, string[] hierarchy)
+        static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy)
         {
             var method = new TestMethod(classFullName, methodName,
                 hierarchy, methodName, classFullName, assemblyLocation, false,
                 TestIdGenerationStrategy.FullyQualified);
             return new UnitTestElement(method)
             {
-                DisplayName = $"[{methodType}].{methodName}",
+                DisplayName = $"[{fixtureType}] {methodName}",
                 Ignored = true,
-                Traits = [new Trait(Constants.FixturesTestTrait, methodType)],
+                Traits = [new Trait(Constants.FixturesTestTrait, fixtureType)],
             };
         }
     }

@@ -151,7 +151,7 @@ public class FixturesTests : CLITestBase
         </EnvironmentVariables>
     </RunConfiguration>
     <MSTest>
-        <FixturesEnabled>{fixturesEnabled}</FixturesEnabled>
+        <ConsiderFixturesAsSpecialTests>{fixturesEnabled}</ConsiderFixturesAsSpecialTests>
     </MSTest>
 </RunSettings>
 ";

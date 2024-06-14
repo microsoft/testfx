@@ -11,9 +11,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal static class Constants
 {
     /// <summary>
-    /// Assembly.
+    /// The 3rd level entry (class) name in the hierarchy array.
     /// </summary>
-    internal const string AssemblyFixturesHierarchyName = "Assembly";
+    internal const string AssemblyFixturesHierarchyClassName = "[Assembly]";
 
     /// <summary>
     /// Discover fixtures or not.

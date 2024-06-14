@@ -192,9 +192,11 @@ public class MSTestSettings
     public bool TreatClassAndAssemblyCleanupWarningsAsErrors { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating whether initialize and cleanup methods are added in test results or not.
+    /// Gets a value indicating whether AssemblyInitialize, AssemblyCleanup, ClassInitialize and ClassCleanup methods are
+    /// reported as special tests (cannot be executed). When this feature is enabled, these methods will be reported as
+    /// separate entries in the TRX reports, in Test Explorer or in CLI.
     /// </summary>
-    public bool FixturesEnabled { get; private set; }
+    internal bool ConsiderFixturesAsSpecialTests { get; private set; }
 
     /// <summary>
     /// Populate settings based on existing settings object.
@@ -227,7 +229,7 @@ public class MSTestSettings
         CurrentSettings.ClassCleanupTimeout = settings.ClassCleanupTimeout;
         CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
         CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
-        CurrentSettings.FixturesEnabled = settings.FixturesEnabled;
+        CurrentSettings.ConsiderFixturesAsSpecialTests = settings.ConsiderFixturesAsSpecialTests;
     }
 
     /// <summary>
@@ -559,11 +561,11 @@ public class MSTestSettings
                             break;
                         }
 
-                    case "FIXTURESENABLED":
+                    case "CONSIDERFIXTURESASSPECIALTESTS":
                         {
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
-                                settings.FixturesEnabled = result;
+                                settings.ConsiderFixturesAsSpecialTests = result;
                             }
 
                             break;
