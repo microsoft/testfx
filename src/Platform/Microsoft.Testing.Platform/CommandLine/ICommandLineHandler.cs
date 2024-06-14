@@ -7,11 +7,7 @@ namespace Microsoft.Testing.Platform.CommandLine;
 
 internal interface ICommandLineHandler
 {
-    string[] Arguments { get; }
-
     bool IsHelpInvoked();
 
     Task PrintHelpAsync(ITool[]? availableTools = null);
-
-    Task<(bool IsValid, string? ValidationError)> TryParseAndValidateAsync();
 }

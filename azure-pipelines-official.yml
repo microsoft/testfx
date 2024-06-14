@@ -123,7 +123,7 @@ extends:
                 filePath: './eng/install-windows-sdk.ps1'
                 failOnStderr: true
                 showWarnings: true
-            
+
             - task: PowerShell@2
               displayName: 'Install procdump'
               inputs:
@@ -143,9 +143,11 @@ extends:
 
             - ${{ if eq(parameters.SkipTests, False) }}:
               # -ci is allowing to import some environment variables and some required configurations
+              # -nobl avoids overwriting build binlog with binlog from tests
               - script: Test.cmd
                   -configuration $(_BuildConfig)
                   -ci
+                  -nobl
                 name: Test
                 displayName: Test
 
@@ -190,9 +192,10 @@ extends:
 
             - ${{ if eq(parameters.SkipTests, False) }}:
               # -ci is allowing to import some environment variables and some required configurations
+               # --nobl avoids overwriting build binlog with binlog from tests
               - script: |
                   chmod +x ./test.sh
-                  ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest
+                  ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
                 name: Test
                 displayName: Tests
 
