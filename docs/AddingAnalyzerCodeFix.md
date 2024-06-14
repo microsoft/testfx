@@ -4,7 +4,7 @@ You should add it under src/Analyzers/MSTest.Analyzers.CodeFixes.
 
 Add your fixer logic and match the analyzer rule id with your analyzer.
 
-## To Update unit tests you should replace
+## To update unit tests you should replace
 
 `Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;` by `MSTest.Analyzers."fixerName">;`
 
