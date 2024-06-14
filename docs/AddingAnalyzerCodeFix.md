@@ -3,7 +3,7 @@
  - you should add it under src/Analyzers/MSTest.Analyzers.CodeFixes
  - match the rule id, add name for your fix and add your fixer logic.
 
-to add test you can update existing tests(if it's already there) and replace:
+## Updating unit tests you should replace:
  - `Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;` by `MSTest.Analyzers."fixerName">;`
  - `VerifyCS.VerifyCodeFixAsync` by `VerifyCS.VerifyAnalyzerAsync`
 
