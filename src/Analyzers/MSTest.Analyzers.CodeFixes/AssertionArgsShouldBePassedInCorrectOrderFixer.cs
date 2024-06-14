@@ -3,6 +3,7 @@
 
 using System.Collections.Immutable;
 using System.Composition;
+using System.Xml.Linq;
 
 using Analyzer.Utilities;
 
@@ -11,6 +12,7 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Operations;
 using Microsoft.CodeAnalysis.Text;
 
 using MSTest.Analyzers.Helpers;
@@ -57,22 +59,33 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
         ArgumentListSyntax argumentList = invocationExpr.ArgumentList;
         SeparatedSyntaxList<ArgumentSyntax> arguments = argumentList.Arguments;
 
-        SeparatedSyntaxList<ArgumentSyntax> newArgumentList = SyntaxFactory.SeparatedList<ArgumentSyntax>(new SyntaxNodeOrToken[]
-        {
-            arguments[1],
-            SyntaxFactory.Token(SyntaxKind.CommaToken),
-            arguments[0],
-        });
+        ArgumentSyntax expectedArg = arguments.FirstOrDefault(arg => IsExpectedArgument(arg));
+        ArgumentSyntax actualArg = arguments.FirstOrDefault(arg => IsActualArgument(arg));
 
-        for (int i = 2; i < arguments.Count; i++)
+        // Handle positional arguments if named arguments are not found
+        if (expectedArg == null || actualArg == null)
         {
-            newArgumentList = newArgumentList.Add(arguments[i]);
+            expectedArg = arguments[0];
+            actualArg = arguments[1];
         }
 
-        InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(SyntaxFactory.ArgumentList(newArgumentList));
+        var newArguments = arguments.ToList();
+        int expectedIndex = arguments.IndexOf(expectedArg);
+        int actualIndex = arguments.IndexOf(actualArg);
+
+        ArgumentSyntax tmpExpectedArg = expectedArg;
+        newArguments[expectedIndex] = expectedArg.WithExpression(actualArg.Expression);
+        newArguments[actualIndex] = actualArg.WithExpression(tmpExpectedArg.Expression);
+
+        InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(newArguments)));
         SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
         SyntaxNode newRoot = root.ReplaceNode(invocationExpr, newInvocationExpr);
 
         return document.WithSyntaxRoot(newRoot);
     }
+
+    private static bool IsActualArgument(ArgumentSyntax argument) => string.Equals(argument.NameColon?.Name.Identifier.Text, "actual", StringComparison.Ordinal);
+
+    private static bool IsExpectedArgument(ArgumentSyntax argument) => string.Equals(argument.NameColon?.Name.Identifier.Text, "expected", StringComparison.Ordinal)
+                                                                       || string.Equals(argument.NameColon?.Name.Identifier.Text, "notExpected", StringComparison.Ordinal);
 }

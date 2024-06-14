@@ -179,7 +179,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
                     bool b = true;
                     int i = 42;
 
-                    [|Assert.AreEqual(actual: "", expected: s)|];
+                    [|Assert.AreEqual(message: "message", actual: "", expected: s)|];
                     [|Assert.AreEqual(actual: true, expected: b)|];
                     [|Assert.AreEqual(actual: 1, expected: i)|];
 
@@ -203,7 +203,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
                     bool b = true;
                     int i = 42;
             
-                    Assert.AreEqual(actual: s, expected: "");
+                    Assert.AreEqual(message: "message", actual: s, expected: "");
                     Assert.AreEqual(actual: b, expected: true);
                     Assert.AreEqual(actual: i, expected: 1);
 
@@ -222,10 +222,65 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    string s = "";
+                    bool b = true;
+                    int i = 42;
+
+                    Assert.AreEqual(message: "message", actual: s, expected: "");
+                    Assert.AreEqual(actual: b, expected: true);
+                    Assert.AreEqual(actual: i, expected: 1);
+            
+                    Assert.AreNotEqual(actual: s, notExpected: "");
+                    Assert.AreNotEqual(actual: b, notExpected: true);
+                    Assert.AreNotEqual(actual: i, notExpected: 1);
+            
+                    Assert.AreSame(actual: s, expected: "");
+                    Assert.AreSame(actual: b, expected: true);
+                    Assert.AreSame(actual: i, expected: 1);
+            
+                    Assert.AreNotSame(actual: s, notExpected: "");
+                    Assert.AreNotSame(actual: b, notExpected: true);
+                    Assert.AreNotSame(actual: i, notExpected: 1);
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    string s = "";
+                    bool b = true;
+                    int i = 42;
+            
+                    Assert.AreEqual(message: "message", actual: s, expected: "");
+                    Assert.AreEqual(actual: b, expected: true);
+                    Assert.AreEqual(actual: i, expected: 1);
+
+                    Assert.AreNotEqual(actual: s, notExpected: "");
+                    Assert.AreNotEqual(actual: b, notExpected: true);
+                    Assert.AreNotEqual(actual: i, notExpected: 1);
+            
+                    Assert.AreSame(actual: s, expected: "");
+                    Assert.AreSame(actual: b, expected: true);
+                    Assert.AreSame(actual: i, expected: 1);
+
+                    Assert.AreNotSame(actual: s, notExpected: "");
+                    Assert.AreNotSame(actual: b, notExpected: true);
+                    Assert.AreNotSame(actual: i, notExpected: 1);
+                }
+            }
+            """;
+
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            code);
+            fixedCode);
     }
 
     public async Task ConstantValue()
