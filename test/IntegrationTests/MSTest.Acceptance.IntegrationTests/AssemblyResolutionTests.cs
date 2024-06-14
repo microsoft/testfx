@@ -57,8 +57,8 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : IAsyncInitializable, IDisposable
     {
         public const string ProjectName = "AssemblyResolution.Main";
-        private const string TargetFramework = "net6.0";
         private const string TestProjectName = "AssemblyResolution.Test";
+        private static readonly string TargetFramework = TargetFrameworks.NetCurrent.Arguments;
 
         private readonly TempDirectory _testAssetDirectory = new();
 
@@ -136,7 +136,7 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
                 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
                 namespace AssemblyResolution.Test;
-                
+
                 [TestClass]
                 public class UnitTest1
                 {

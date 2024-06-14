@@ -87,6 +87,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
         TestIdGenerationStrategy testIdGenerationStrategy = assembly.GetCustomAttribute<TestIdGenerationStrategyAttribute>()?.Strategy
             ?? TestIdGenerationStrategy.FullyQualified;
 
+        // Set the test ID generation strategy for the data row attribute so we can improve display name without causing
+        // a breaking change.
+        DataRowAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
+
         TestDataSourceDiscoveryOption testDataSourceDiscovery = assembly.GetCustomAttribute<TestDataSourceDiscoveryAttribute>()?.DiscoveryOption
 #pragma warning disable CS0618 // Type or member is obsolete
 

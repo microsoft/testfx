@@ -155,11 +155,11 @@ Registered command line providers:
     Description: MSTest Framework for Microsoft Testing Platform
     Options:
       --settings
-        Arity: 0\.\.1
+        Arity: 1
         Hidden: False
-        Description: The path, relative or absolute, to the \.runsettings file\.For more information and examples on how to configure test run, see https://learn\.microsoft\.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
+        Description: The path, relative or absolute, to the \.runsettings file\. For more information and examples on how to configure test run, see https://learn\.microsoft\.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
       --filter
-        Arity: 0\.\.1
+        Arity: 1
         Hidden: False
         Description: Filters tests using the given expression\. For more information, see the Filter option details section\. For more information and examples on how to use selective unit test filtering, see https://learn\.microsoft\.com/dotnet/core/testing/selective-unit-tests\.
 """;

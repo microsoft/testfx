@@ -63,7 +63,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
     public ITestHostOrchestratorManager TestHostOrchestratorManager { get; } = new TestHostOrchestratorManager();
 
     public async Task<ITestHost> BuildAsync(
-        string[] args,
         ApplicationLoggingState loggingState,
         TestApplicationOptions testApplicationOptions,
         IUnhandledExceptionsHandler unhandledExceptionsHandler,
@@ -198,10 +197,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Build the command line service - we need special treatment because is possible that an extension query it during the creation.
         // Add Retry default argument commandlines
-        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(args, platformOutputDevice, loggingState.CommandLineParseResult);
-
-        // If command line is not valid we return immediately.
-        (bool parseSucceeded, string? validationError) = await commandLineHandler.TryParseAndValidateAsync();
+        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(platformOutputDevice, loggingState.CommandLineParseResult);
 
         // Create the test framework capabilities
         ITestFrameworkCapabilities testFrameworkCapabilities = TestFramework.TestFrameworkCapabilitiesFactory(serviceProvider);
@@ -213,11 +209,17 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Register the test framework capabilities to be used by services
         serviceProvider.AddService(testFrameworkCapabilities);
 
-        if (!loggingState.CommandLineParseResult.HasTool && !parseSucceeded)
+        // If command line is not valid we return immediately.
+        ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(
+            loggingState.CommandLineParseResult,
+            commandLineHandler.SystemCommandLineOptionsProviders,
+            commandLineHandler.ExtensionsCommandLineOptionsProviders,
+            commandLineHandler);
+
+        if (!loggingState.CommandLineParseResult.HasTool && !commandLineValidationResult.IsValid)
         {
             await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice, testFrameworkCapabilities);
-            ArgumentGuard.IsNotNull(validationError);
-            await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(validationError));
+            await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(commandLineValidationResult.ErrorMessage));
             await commandLineHandler.PrintHelpAsync();
             return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine);
         }
@@ -283,13 +285,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             // Add the platform output device to the service provider.
             serviceProvider.TryAddService(platformOutputDevice);
 
-            ToolsTestHost toolsTestHost = new(
-                toolsInformation,
-                serviceProvider,
-                loggingState.CommandLineParseResult,
-                commandLineHandler.ExtensionsCommandLineOptionsProviders,
-                commandLineHandler,
-                platformOutputDevice);
+            ToolsTestHost toolsTestHost = new(toolsInformation, serviceProvider, commandLineHandler, platformOutputDevice);
 
             await LogTestHostCreatedAsync(
                 serviceProvider,
@@ -474,7 +470,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             }
         }
 
-        await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), cancellationToken);
+        await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), cancellationToken);
     }
 
     private static async Task<NamedPipeClient?> ConnectToDotnetTestPipeIfAvailableAsync(CommandLineHandler commandLineHandler, CTRLPlusCCancellationTokenSource cancellationTokenSource)
