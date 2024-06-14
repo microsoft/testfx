@@ -232,7 +232,8 @@ public class TestMethodInfoTests : TestContainer
         UTF.TestResult result = method.Invoke(null);
 
         Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(result.TestFailureException is MissingMethodException);
+        Verify(result.TestFailureException is TestFailedException);
+        Verify(result.TestFailureException.InnerException is MissingMethodException);
     }
 
     #endregion
