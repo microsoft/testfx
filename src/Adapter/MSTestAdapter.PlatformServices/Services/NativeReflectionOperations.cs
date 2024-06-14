@@ -93,8 +93,8 @@ public class NativeReflectionOperations : IReflectionOperations2
             bool same = true;
             for (int i = 0; i < parameters.Length; i++)
             {
-                // How is the real activator doing this?
-                if (constructor.Parameters[i] != parameters[i].GetType())
+                // TODO: How is the real activator doing this?
+                if (constructor.Parameters[i] != parameters[i]!.GetType())
                 {
                     same = false;
                     break;

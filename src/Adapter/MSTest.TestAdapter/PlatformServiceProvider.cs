@@ -30,8 +30,16 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     private PlatformServiceProvider()
     {
-        _useNativeProvider = Environment.GetEnvironmentVariable("MSTEST_NATIVE") == "1";
-        // Set the provider that is used by DynamicDataAttribute when generating data, to allow subsituting functionality
+        if (
+#if NET8_0_OR_GREATER
+            System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported == false ||
+#endif
+    Environment.GetEnvironmentVariable("MSTEST_NATIVE") == "1")
+        {
+            _useNativeProvider = true;
+        }
+
+        // Set the provider that is used by DynamicDataAttribute when generating data, to allow substituting functionality
         // in TestFramework without having to put all the stuff in that library.
         TestTools.UnitTesting.DynamicDataProvider.Instance = _useNativeProvider ? new NativeDynamicDataOperations() : new DynamicDataOperations();
     }

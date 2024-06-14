@@ -19,12 +19,14 @@ internal static class DiaSessionOperations
     /// <remarks>Initializes DiaSession.</remarks>
     static DiaSessionOperations()
     {
+        if (
 #if NET8_0_OR_GREATER
-        if (!System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported)
+            System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported == false ||
+#endif
+            Environment.GetEnvironmentVariable("MSTEST_NATIVE") == "1")
         {
             throw new NotSupportedException("Dia is not allowed when dynamic code is not supported");
         }
-#endif
 
         const string diaSessionTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaSession, Microsoft.VisualStudio.TestPlatform.ObjectModel";
         const string diaNavigationDataTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaNavigationData,  Microsoft.VisualStudio.TestPlatform.ObjectModel";

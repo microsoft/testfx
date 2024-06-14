@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using MSTestAdapter.Try.UnitTests;
+using MSTestAdapter.Try1.UnitTests;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
@@ -17,6 +17,8 @@ public static class Program
         var rdp = new SourceGeneratedReflectionDataProvider
         {
             Assembly = typeof(Program).Assembly,
+            AssemblyName = typeof(Program).Assembly.GetName().Name,
+            AssemblyFileName = typeof(Program).Assembly.GetName().Name + ".dll",
             AssemblyAttributes = typeof(Program).Assembly.GetCustomAttributes(inherit: true),
             Types = new[]
             {
@@ -63,7 +65,10 @@ public static class Program
 
             TypeMethods = new()
             {
-                [typeof(UnitTest1)] = new[] { typeof(UnitTest1).GetMethod(nameof(UnitTest1.TestMethod1)) },
+                [typeof(UnitTest1)] = new[] {
+                    typeof(UnitTest1).GetMethod(nameof(UnitTest1.TestMethod2)),
+                    typeof(UnitTest1).GetMethod(nameof(UnitTest1.TestMethod1)),
+                },
             },
             TypeMethodAttributes = new()
             {
@@ -72,6 +77,12 @@ public static class Program
                     [nameof(UnitTest1.TestMethod1)] = new[]
                     {
                         new TestMethodAttribute(),
+                    },
+                    [nameof(UnitTest1.TestMethod2)] = new Attribute[]
+                    {
+                        new TestMethodAttribute(),
+                        new DataRowAttribute(2, 3, 2),
+                        new DataRowAttribute(3, 4, 3),
                     },
                 },
             },

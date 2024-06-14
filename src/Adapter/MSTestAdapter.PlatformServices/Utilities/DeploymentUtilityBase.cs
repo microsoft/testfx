@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
@@ -129,6 +129,15 @@ internal abstract class DeploymentUtilityBase
     /// <returns>Returns a list of deployment warnings.</returns>
     protected IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, string resultsDirectory)
     {
+        if (
+#if NET8_0_OR_GREATER
+            System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported == false ||
+#endif
+    Environment.GetEnvironmentVariable("MSTEST_NATIVE") == "1")
+        {
+            throw new InvalidOperationException("Deployment is not supported in source gen mode");
+        }
+
         Validate.IsFalse(StringEx.IsNullOrWhiteSpace(deploymentDirectory), "Deployment directory is null or empty");
         Validate.IsTrue(FileUtility.DoesDirectoryExist(deploymentDirectory), $"Deployment directory {deploymentDirectory} does not exist");
         Validate.IsFalse(StringEx.IsNullOrWhiteSpace(testSource), "TestSource directory is null/empty");
@@ -186,7 +195,10 @@ internal abstract class DeploymentUtilityBase
 
                     // Ignore the test platform files.
                     string tempFile = Path.GetFileName(fileToDeploy);
+                    // We throw when we run in source gen mode.
+#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
                     string assemblyName = Path.GetFileName(GetType().GetTypeInfo().Assembly.Location);
+#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
                     if (tempFile.Equals(assemblyName, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;

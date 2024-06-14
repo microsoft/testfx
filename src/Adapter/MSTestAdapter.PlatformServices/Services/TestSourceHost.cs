@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -192,7 +194,7 @@ public class TestSourceHost : ITestSourceHost
     /// </param>
     /// <returns>  An instance of the type created in the host. </returns>
     /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
-    public object? CreateInstanceForType(Type type, object?[]? args) =>
+    public object? CreateInstanceForType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type, object?[]? args) =>
 #if NETFRAMEWORK
         // Honor DisableAppDomain setting if it is present in runsettings
         _isAppDomainCreationDisabled
@@ -386,17 +388,27 @@ public class TestSourceHost : ITestSourceHost
 #endif
         }
 
-        // Adding adapter folder to resolution paths
-        if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)!))
+        // We check for the empty path, and in single file mode, or on source gen mode we don't allow
+        // loading dependencies than from the current folder, which is what the default loader handles by itself.
+#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
+        if (!string.IsNullOrEmpty(typeof(TestSourceHost).Assembly.Location))
         {
-            resolutionPaths.Add(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)!);
+            // Adding adapter folder to resolution paths
+            if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)!))
+            {
+                resolutionPaths.Add(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)!);
+            }
         }
 
-        // Adding TestPlatform folder to resolution paths
-        if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location)!))
+        if (!string.IsNullOrEmpty(typeof(AssemblyHelper).Assembly.Location))
         {
-            resolutionPaths.Add(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location)!);
+            // Adding TestPlatform folder to resolution paths
+            if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location)!))
+            {
+                resolutionPaths.Add(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location)!);
+            }
         }
+#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
 
         return resolutionPaths;
     }

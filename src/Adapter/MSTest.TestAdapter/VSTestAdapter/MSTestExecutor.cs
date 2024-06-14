@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Runtime.InteropServices;
@@ -49,6 +49,11 @@ public class MSTestExecutor : ITestExecutor
         ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
         ValidateArg.NotNullOrEmpty(tests, "tests");
 
+        foreach (var test in tests)
+        {
+            Console.WriteLine(test.Source + "---" + test.FullyQualifiedName);
+        }
+
         if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle))
         {
             return;
@@ -59,6 +64,9 @@ public class MSTestExecutor : ITestExecutor
 
     public void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
     {
+        // TODO: this is coming from vstest bridge, fixing here so I don't have to recompile just yet.
+        sources = new[] { Path.Combine(AppContext.BaseDirectory, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.dll") };
+
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from sources.");
         ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
         ValidateArg.NotNullOrEmpty(sources, "sources");

@@ -3,7 +3,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace MSTestAdapter.Try.UnitTests;
+namespace MSTestAdapter.Try1.UnitTests;
 
 [TestClass]
 public class UnitTest1
@@ -12,12 +12,10 @@ public class UnitTest1
 
     [TestMethod]
     public void TestMethod1()
-    {
-    }
+     => Assert.AreEqual(1, 1);
 
     [TestMethod]
     [DataRow(1, 2, 3)]
     public void TestMethod2(int a, int b, int c)
-    {
-    }
+        => Assert.AreEqual(a, b);
 }

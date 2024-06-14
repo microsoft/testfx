@@ -24,12 +24,28 @@ public class FileOperations : IFileOperations
 
 #if WIN_UI
     private readonly bool _isPackaged;
+#endif
+
+    internal FileOperations(bool skipNativeCheck)
+    {
+        if (!skipNativeCheck && (
+#if NET8_0_OR_GREATER
+    System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported == false ||
+#endif
+    Environment.GetEnvironmentVariable("MSTEST_NATIVE") == "1"))
+        {
+            throw new NotSupportedException("Dia is not allowed when dynamic code is not supported");
+        }
+
+#if WIN_UI
+        _isPackaged = AppModel.IsPackagedProcess();
+#endif
+    }
 
     public FileOperations()
+        : this(false)
     {
-        _isPackaged = AppModel.IsPackagedProcess();
     }
-#endif
 
     /// <summary>
     /// Loads an assembly.
@@ -71,7 +87,10 @@ public class FileOperations : IFileOperations
     /// <returns>Path to the .DLL of the assembly.</returns>
     public string? GetAssemblyPath(Assembly assembly)
 #if NETSTANDARD || NETCOREAPP || NETFRAMEWORK
+        // This method will never be called in native, we are providing a different provider for file operations.
+#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
         => assembly.Location;
+#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
 #elif WINDOWS_UWP
         => null; // TODO: what are the options here?
 #endif

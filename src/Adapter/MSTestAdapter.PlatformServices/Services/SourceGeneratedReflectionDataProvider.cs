@@ -11,6 +11,10 @@ public class SourceGeneratedReflectionDataProvider
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public Assembly Assembly { get; init; }
 
+    public string AssemblyFileName { get; internal set; }
+
+    public string AssemblyName { get; internal set; }
+
     public Type[] Types { get; internal set; }
 
     public Dictionary<string, Type> TypesByName { get; internal set; }
@@ -34,8 +38,9 @@ public class SourceGeneratedReflectionDataProvider
 
     public Dictionary<Type, MyConstructorInfo[]> TypeConstructorsInvoker { get; internal set; }
 
-    internal Assembly GetAssembly(string assemblyName) => assemblyName != Assembly.Location
-            ? throw new ArgumentException($"Only '{Assembly.Location}' is allowed to run in source gen mode.")
+    internal Assembly GetAssembly(string assemblyPath) => Path.GetFileName(assemblyPath) != AssemblyFileName
+            ? throw new ArgumentException($"Assembly '{assemblyPath}' is not allowed. " +
+                $"Only '{AssemblyFileName}' is allowed to run in source gen mode.")
             : Assembly;
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 }

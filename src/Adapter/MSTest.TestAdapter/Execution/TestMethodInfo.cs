@@ -733,6 +733,7 @@ public class TestMethodInfo : ITestMethod
         object? classInstance = null;
         try
         {
+            Console.WriteLine($"Invoking ctor of {Parent.Constructor.DeclaringType!.FullName}");
             classInstance = Parent.Constructor.Invoke(null);
         }
         catch (Exception ex)
