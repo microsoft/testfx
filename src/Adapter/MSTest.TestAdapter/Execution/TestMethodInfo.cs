@@ -398,10 +398,10 @@ public class TestMethodInfo : ITestMethod
 
         // If we are in hot reload context and the exception is a MissingMethodException and the first line of the stack
         // trace contains the method name then it's likely that the current method was removed and the test is failing.
-        // For cases where the content of the test would throw a MissingMethodException, the first line of the strack trace
+        // For cases where the content of the test would throw a MissingMethodException, the first line of the stack trace
         // would not be the test method name, so we can safely assume this is a proper test failure.
         if (ex is MissingMethodException missingMethodException
-            && RuntimeContext.IsInHotReloadContext()
+            && RuntimeContext.IsHotReloadEnabled
             && missingMethodException.StackTrace?.IndexOf(Environment.NewLine, StringComparison.Ordinal) is { } lineReturnIndex
             && lineReturnIndex >= 0
             && missingMethodException.StackTrace.Substring(0, lineReturnIndex).Contains($"{className}.{methodName}"))

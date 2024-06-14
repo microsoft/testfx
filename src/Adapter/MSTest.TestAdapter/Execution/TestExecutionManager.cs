@@ -179,7 +179,7 @@ public class TestExecutionManager
             try
             {
                 if (testResult.Outcome != TestOutcome.NotFound
-                    || !RuntimeContext.IsInHotReloadContext())
+                    || !RuntimeContext.IsHotReloadEnabled)
                 {
                     testExecutionRecorder.RecordResult(testResult);
                 }
