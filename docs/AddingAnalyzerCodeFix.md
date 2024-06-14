@@ -1,9 +1,10 @@
 To  add ana analyzer code fix
-- you should add it under src/Analyzers/MSTest.Analyzers.CodeFixes
-- match the rule id, add name for your fix and add your fixer logic.
+
+ - you should add it under src/Analyzers/MSTest.Analyzers.CodeFixes
+ - match the rule id, add name for your fix and add your fixer logic.
 
 to add test you can update existing tests(if it's already there) and replace:
-- `Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;` by `MSTest.Analyzers."fixerName">;`
-- `VerifyCS.VerifyCodeFixAsync` by `VerifyCS.VerifyAnalyzerAsync`
+ - `Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;` by `MSTest.Analyzers."fixerName">;`
+ - `VerifyCS.VerifyCodeFixAsync` by `VerifyCS.VerifyAnalyzerAsync`
 
-- you can use this PR as refrence: https://github.com/microsoft/testfx/pull/3091
+you can use this PR as refrence: [https://github.com/microsoft/testfx/pull/3091]
