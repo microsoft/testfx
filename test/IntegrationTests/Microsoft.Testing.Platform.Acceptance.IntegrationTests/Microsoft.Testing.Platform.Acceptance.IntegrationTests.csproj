@@ -8,6 +8,7 @@
     <GenerateProgramFile>false</GenerateProgramFile>
     <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --retry-failed-tests 3</TestRunnerAdditionalArguments>
     <OutputType>Exe</OutputType>
+    <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -41,9 +42,13 @@
     <None Update="Microsoft.Testing.Platform.Acceptance.IntegrationTests.testingplatformconfig.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="testsbaseline.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.Testing.Internal.Framework" />
+    <Using Include="Microsoft.Testing.Platform.Builder" />
+    <Using Include="Microsoft.Testing.Platform.Extensions" />
+    <Using Include="Microsoft.Testing.TestInfrastructure" />
   </ItemGroup>
 
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">
