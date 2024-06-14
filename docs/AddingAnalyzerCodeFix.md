@@ -10,4 +10,4 @@ Add your fixer logic and match the analyzer rule id with your analyzer.
 
 `VerifyCS.VerifyCodeFixAsync` by `VerifyCS.VerifyAnalyzerAsync`
  
-you can use this PR as refrence: [https://github.com/microsoft/testfx/pull/3091]
+you can use this PR as refrence:[https://github.com/microsoft/testfx/pull/3091]
