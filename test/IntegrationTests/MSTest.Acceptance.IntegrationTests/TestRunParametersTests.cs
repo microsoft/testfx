@@ -18,10 +18,21 @@ public sealed class TestRunParametersTests : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task CanProvideTestRunParameters(string tfm)
+    public async Task TestRunParameters_WhenProvidingMultipleArgumentsToTheOption(string tfm)
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --test-parameter MyParameter2=MyValue2 MyParameter3=MyValue3");
+
+        // Assert
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task TestRunParameters_WhenProvidingMultipleMultipleTimesTheOptionAndArgument(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --test-parameter MyParameter2=MyValue2 --test-parameter MyParameter3=MyValue3");
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
