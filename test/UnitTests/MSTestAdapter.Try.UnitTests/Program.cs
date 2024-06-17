@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -65,7 +67,8 @@ public static class Program
 
             TypeMethods = new()
             {
-                [typeof(UnitTest1)] = new[] {
+                [typeof(UnitTest1)] = new[]
+                {
                     typeof(UnitTest1).GetMethod(nameof(UnitTest1.TestMethod2)),
                     typeof(UnitTest1).GetMethod(nameof(UnitTest1.TestMethod1)),
                 },
@@ -88,7 +91,7 @@ public static class Program
             },
         };
 
-        bool useNative = true;
+        bool useNative = !RuntimeFeature.IsDynamicCodeSupported;
         if (useNative)
         {
             Environment.SetEnvironmentVariable("MSTEST_NATIVE", "1");

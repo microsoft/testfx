@@ -16,6 +16,21 @@ public class UnitTest1
 
     [TestMethod]
     [DataRow(1, 2, 3)]
+    [DataRow(3, 4, 3)]
     public void TestMethod2(int a, int b, int c)
         => Assert.AreEqual(a, b);
+
+    [TestMethod]
+    [DynamicData(nameof(Get))]
+    public void TestMethod3(MyObject obj)
+    => Assert.AreEqual(10, obj.Id);
+
+    public static IEnumerable<object[]> Get { get; } = [
+            new[] { new MyObject { Id = 10 } }
+        ];
+}
+
+public class MyObject
+{
+    public int Id { get; set; }
 }
