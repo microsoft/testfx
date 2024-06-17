@@ -713,7 +713,7 @@ internal sealed class Json
             return false;
         }
 
-        value = element.EnumerateArray().Select(x => Deserialize<T>(x)).ToArray();
+        value = element.EnumerateArray().Select(Deserialize<T>).ToArray();
         return true;
     }
 

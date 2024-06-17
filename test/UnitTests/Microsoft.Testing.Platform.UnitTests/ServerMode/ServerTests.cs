@@ -65,7 +65,7 @@ public class ServerTests : TestBase
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter());
         var testApplication = (TestApplication)await builder.BuildAsync();
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
-        var serverTask = Task.Run(() => testApplication.RunAsync());
+        var serverTask = Task.Run(testApplication.RunAsync);
 
         using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
         using TcpClient client = await server.WaitForConnectionAsync(timeout.Token);
@@ -149,7 +149,7 @@ public class ServerTests : TestBase
         });
         var testApplication = (TestApplication)await builder.BuildAsync();
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
-        var serverTask = Task.Run(() => testApplication.RunAsync());
+        var serverTask = Task.Run(testApplication.RunAsync);
 
         using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
         using TcpClient client = await server.WaitForConnectionAsync(timeout.Token);
