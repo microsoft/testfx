@@ -54,8 +54,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        ArgumentListSyntax argumentList = invocationExpr.ArgumentList;
-        SeparatedSyntaxList<ArgumentSyntax> arguments = argumentList.Arguments;
+        SeparatedSyntaxList<ArgumentSyntax> arguments = invocationExpr.ArgumentList.Arguments;
 
         ArgumentSyntax expectedArg = arguments.FirstOrDefault(arg => IsExpectedArgument(arg));
         ArgumentSyntax actualArg = arguments.FirstOrDefault(arg => IsActualArgument(arg));
