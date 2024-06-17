@@ -162,6 +162,12 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Filters tests using the given expression\. For more information, see the Filter option details section\. For more information and examples on how to use selective unit test filtering, see https://learn\.microsoft\.com/dotnet/core/testing/selective-unit-tests\.
+      --test-parameter
+        Arity: 1\.\.2147483647
+        Hidden: False
+        Description: Specify or override a key-value pair parameter\. For more information and examples, see https://learn\.microsoft\.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters
+Registered tools:
+  There are no registered tools.
 """;
 
         testHostResult.AssertOutputMatchesRegex(RegexMatchPattern);

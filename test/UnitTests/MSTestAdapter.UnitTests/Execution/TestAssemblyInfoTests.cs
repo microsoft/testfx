@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -303,11 +303,10 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyCleanupShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
     {
-        DummyTestClass.AssemblyCleanupMethodBody = () =>
-            // This helper calls inner helper, and the inner helper ctor throws.
-            // We want to see the real exception on screen, and not TypeInitializationException
-            // which has no info about what failed.
-            FailingStaticHelper.DoWork();
+        // This helper calls inner helper, and the inner helper ctor throws.
+        // We want to see the real exception on screen, and not TypeInitializationException
+        // which has no info about what failed.
+        DummyTestClass.AssemblyCleanupMethodBody = FailingStaticHelper.DoWork;
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod");
 
         string actualErrorMessage = _testAssemblyInfo.RunAssemblyCleanup();

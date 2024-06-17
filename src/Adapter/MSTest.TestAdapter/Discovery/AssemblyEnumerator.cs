@@ -124,11 +124,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The file name of the assembly.</param>
     /// <param name="warningMessages">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>Gets the types defined in the provided assembly.</returns>
-    internal static IReadOnlyList<Type> GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
+    internal static Type[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
     {
         try
         {
-            return assembly.DefinedTypes.Select(typeInfo => typeInfo.AsType()).ToList();
+            return assembly.GetTypes();
         }
         catch (ReflectionTypeLoadException ex)
         {

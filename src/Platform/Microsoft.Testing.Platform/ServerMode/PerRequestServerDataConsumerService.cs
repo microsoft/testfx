@@ -143,7 +143,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         try
         {
             // We subscribe to the per request application lifetime
-            using CancellationTokenRegistration registration = cancellationToken.Register(() => _testSessionEnd.SetCanceled());
+            using CancellationTokenRegistration registration = cancellationToken.Register(_testSessionEnd.SetCanceled);
 
             // When batch timer expire or we're at the end of the session we can unblock the message drain
             ArgumentGuard.IsNotNull(_task);

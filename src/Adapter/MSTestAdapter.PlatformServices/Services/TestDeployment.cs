@@ -134,7 +134,7 @@ public class TestDeployment : ITestDeployment
 
         _adapterSettings = MSTestSettingsProvider.Settings;
         bool canDeploy = CanDeploy();
-        bool hasDeploymentItems = tests.Any(test => DeploymentItemUtility.HasDeploymentItems(test));
+        bool hasDeploymentItems = tests.Any(DeploymentItemUtility.HasDeploymentItems);
 
         // deployment directories should not be created in this case,simply return
         if (!canDeploy && hasDeploymentItems)

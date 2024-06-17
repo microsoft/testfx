@@ -178,7 +178,8 @@ public class TestExecutionManager
 
             try
             {
-                if (testResult.Outcome != TestOutcome.NotFound || !IsInHotReloadMode())
+                if (testResult.Outcome != TestOutcome.NotFound
+                    || !RuntimeContext.IsHotReloadEnabled)
                 {
                     testExecutionRecorder.RecordResult(testResult);
                 }
@@ -189,11 +190,6 @@ public class TestExecutionManager
             }
         }
     }
-
-    // TODO: We should be using a capability from the runner instead of looking at environment variables.
-    private static bool IsInHotReloadMode()
-        => Environment.GetEnvironmentVariable("DOTNET_WATCH") == "1"
-        || Environment.GetEnvironmentVariable("TESTINGPLATFORM_HOTRELOAD_ENABLED") == "1";
 
     private static bool MatchTestFilter(ITestCaseFilterExpression? filterExpression, TestCase test, TestMethodFilter testMethodFilter)
     {
