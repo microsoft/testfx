@@ -3,8 +3,8 @@
   <file datatype="xml" source-language="en" target-language="es" original="../CodeFixResources.resx">
     <body>
       <trans-unit id="FixAssertionArgsOrder">
-        <source>Fix assertion args order</source>
-        <target state="new">Fix assertion args order</target>
+        <source>Fix actual/expected arguments order</source>
+        <target state="new">Fix actual/expected arguments order</target>
         <note />
       </trans-unit>
       <trans-unit id="FixSignatureCodeFix">
