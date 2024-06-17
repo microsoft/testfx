@@ -221,7 +221,14 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                     await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Version: {tool.Version}"));
                     await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Description: {tool.Description}"));
                     await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("    Tool command line providers:"));
-                    await DisplayProvidersAsync(groupedToolExtensions[tool.Name], 3);
+                    if (groupedToolExtensions.TryGetValue(tool.Name, out List<IToolCommandLineOptionsProvider>? providers))
+                    {
+                        await DisplayProvidersAsync(providers, 3);
+                    }
+                    else
+                    {
+                        await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("      There are no registered command line providers."));
+                    }
                 }
             }
         }
