@@ -85,5 +85,5 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
 
     private static bool IsExpectedArgument(ArgumentSyntax argument) =>
         string.Equals(argument.NameColon?.Name.Identifier.Text, "expected", StringComparison.Ordinal)
-                                                                       || string.Equals(argument.NameColon?.Name.Identifier.Text, "notExpected", StringComparison.Ordinal);
+        || string.Equals(argument.NameColon?.Name.Identifier.Text, "notExpected", StringComparison.Ordinal);
 }
