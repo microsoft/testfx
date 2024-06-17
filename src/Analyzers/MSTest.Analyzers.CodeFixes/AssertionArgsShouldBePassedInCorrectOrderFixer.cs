@@ -70,9 +70,8 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
         int expectedIndex = arguments.IndexOf(expectedArg);
         int actualIndex = arguments.IndexOf(actualArg);
 
-        ArgumentSyntax tmpExpectedArg = expectedArg;
         newArguments[expectedIndex] = expectedArg.WithExpression(actualArg.Expression);
-        newArguments[actualIndex] = actualArg.WithExpression(tmpExpectedArg.Expression);
+        newArguments[actualIndex] = actualArg.WithExpression(expectedArg.Expression);
 
         InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(newArguments)));
         SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
@@ -81,8 +80,10 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
         return document.WithSyntaxRoot(newRoot);
     }
 
-    private static bool IsActualArgument(ArgumentSyntax argument) => string.Equals(argument.NameColon?.Name.Identifier.Text, "actual", StringComparison.Ordinal);
+    private static bool IsActualArgument(ArgumentSyntax argument) =>
+        string.Equals(argument.NameColon?.Name.Identifier.Text, "actual", StringComparison.Ordinal);
 
-    private static bool IsExpectedArgument(ArgumentSyntax argument) => string.Equals(argument.NameColon?.Name.Identifier.Text, "expected", StringComparison.Ordinal)
+    private static bool IsExpectedArgument(ArgumentSyntax argument) =>
+        string.Equals(argument.NameColon?.Name.Identifier.Text, "expected", StringComparison.Ordinal)
                                                                        || string.Equals(argument.NameColon?.Name.Identifier.Text, "notExpected", StringComparison.Ordinal);
 }
