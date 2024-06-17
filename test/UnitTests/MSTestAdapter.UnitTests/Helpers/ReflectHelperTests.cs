@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -259,6 +260,32 @@ public class ReflectHelperTests : TestContainer
             Returns(attributes);
 
         Verify(!rh.IsNonDerivedAttributeDefined<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
+    }
+
+    public void GettingAttributesShouldNotReturnInheritedAttributesWhenAskingForNonInheritedAttributes()
+    {
+        // This test checks that we get non-inherited attributes when asking for the same type.
+        // Reflect helper is internally caching the attributes so we don't ask Reflection for them over and over,
+        // and in the past there was a bug that stored the first ask for the attributes in the cache, not differentiating
+        // if you asked for inherited, or non-inherited attributes. So if that bug is again put in place you would get 2 attributes
+        // in both answers.
+        var rh = new ReflectHelper();
+        var mockMemberInfo = new Mock<MemberInfo>();
+        var attributes = new Attribute[] { new TestableExtendedTestMethod() };
+
+        _testablePlatformServiceProvider.MockReflectionOperations.
+            Setup(ro => ro.GetCustomAttributes(It.IsAny<Type>(), /* inherit */ true)).
+            Returns(new object[] { new TestClassAttribute(), new TestClassAttribute() });
+
+        _testablePlatformServiceProvider.MockReflectionOperations.
+            Setup(ro => ro.GetCustomAttributes(It.IsAny<Type>(), /* inherit */ false)).
+            Returns(new object[] { new TestClassAttribute() });
+
+        var inheritedAttributes = rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: true).ToArray();
+        var nonInheritedAttributes = rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: false).ToArray();
+
+        Verify(inheritedAttributes.Length == 2);
+        Verify(nonInheritedAttributes.Length == 1);
     }
 
     internal class AttributeMockingHelper
