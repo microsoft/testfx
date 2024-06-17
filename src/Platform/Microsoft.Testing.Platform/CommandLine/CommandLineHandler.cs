@@ -144,7 +144,8 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                 }
                 else
                 {
-                    await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Arity: {option.Arity.Min}..{option.Arity.Max}"));
+                    string maxArityValue = option.Arity.Max == int.MaxValue ? "N" : $"{option.Arity.Max}";
+                    await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Arity: {option.Arity.Min}..{maxArityValue}"));
                 }
 
                 await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Hidden: {option.IsHidden}"));
