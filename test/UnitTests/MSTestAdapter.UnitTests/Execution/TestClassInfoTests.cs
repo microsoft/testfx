@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -98,8 +98,8 @@ public class TestClassInfoTests : TestContainer
 
     public void TestClassInfoClassCleanupMethodShouldNotInvokeWhenNoTestClassInitializedIsCalled()
     {
-        int classcleanupCallCount = 0;
-        DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+        int classCleanupCallCount = 0;
+        DummyTestClass.ClassCleanupMethodBody = () => classCleanupCallCount++;
 
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
@@ -107,13 +107,13 @@ public class TestClassInfoTests : TestContainer
         string ret = _testClassInfo.RunClassCleanup(); // call cleanup without calling init
 
         Verify(ret is null);
-        Verify(classcleanupCallCount == 0);
+        Verify(classCleanupCallCount == 0);
     }
 
     public void TestClassInfoClassCleanupMethodShouldNotInvokeBaseClassCleanupMethodsWhenNoTestClassInitializedIsCalled()
     {
-        int classcleanupCallCount = 0;
-        DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+        int classCleanupCallCount = 0;
+        DummyBaseTestClass.ClassCleanupMethodBody = () => classCleanupCallCount++;
 
         _testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
             new Tuple<MethodInfo, MethodInfo>(
@@ -124,7 +124,7 @@ public class TestClassInfoTests : TestContainer
         string ret = _testClassInfo.RunClassCleanup(); // call cleanup without calling init
 
         Verify(ret is null);
-        Verify(classcleanupCallCount == 0);
+        Verify(classCleanupCallCount == 0);
     }
 
     public void TestClassInfoClassCleanupMethodShouldInvokeWhenTestClassInitializedIsCalled()
@@ -144,8 +144,8 @@ public class TestClassInfoTests : TestContainer
 
     public void TestClassInfoClassCleanupMethodShouldInvokeBaseClassCleanupMethodWhenTestClassInitializedIsCalled()
     {
-        int classcleanupCallCount = 0;
-        DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+        int classCleanupCallCount = 0;
+        DummyBaseTestClass.ClassCleanupMethodBody = () => classCleanupCallCount++;
 
         _testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
             new Tuple<MethodInfo, MethodInfo>(
@@ -156,7 +156,7 @@ public class TestClassInfoTests : TestContainer
         string ret = _testClassInfo.RunClassCleanup();
 
         Verify(ret is null);
-        Verify(classcleanupCallCount == 1);
+        Verify(classCleanupCallCount == 1);
     }
 
     public void TestClassInfoHasExecutableCleanupMethodShouldReturnFalseIfClassDoesNotHaveCleanupMethod() => Verify(!_testClassInfo.HasExecutableCleanupMethod);
@@ -462,8 +462,8 @@ public class TestClassInfoTests : TestContainer
     public void RunClassCleanupShouldInvokeIfClassCleanupMethod()
     {
         // Arrange
-        int classcleanupCallCount = 0;
-        DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+        int classCleanupCallCount = 0;
+        DummyTestClass.ClassCleanupMethodBody = () => classCleanupCallCount++;
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
         // Act
@@ -471,14 +471,14 @@ public class TestClassInfoTests : TestContainer
 
         // Assert
         Verify(classCleanup is null);
-        Verify(classcleanupCallCount == 1);
+        Verify(classCleanupCallCount == 1);
     }
 
     public void RunClassCleanupShouldNotInvokeIfClassCleanupIsNull()
     {
         // Arrange
-        int classcleanupCallCount = 0;
-        DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+        int classCleanupCallCount = 0;
+        DummyTestClass.ClassCleanupMethodBody = () => classCleanupCallCount++;
         _testClassInfo.ClassCleanupMethod = null;
 
         // Act
@@ -486,7 +486,7 @@ public class TestClassInfoTests : TestContainer
 
         // Assert
         Verify(classCleanup is null);
-        Verify(classcleanupCallCount == 0);
+        Verify(classCleanupCallCount == 0);
     }
 
     public void RunClassCleanupShouldReturnAssertFailureExceptionDetails()
@@ -555,8 +555,8 @@ public class TestClassInfoTests : TestContainer
     public void RunBaseClassCleanupEvenIfThereIsNoDerivedClassCleanup()
     {
         // Arrange
-        int classcleanupCallCount = 0;
-        DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+        int classCleanupCallCount = 0;
+        DummyBaseTestClass.ClassCleanupMethodBody = () => classCleanupCallCount++;
         MethodInfo baseClassCleanupMethod = typeof(DummyBaseTestClass).GetMethod(nameof(DummyBaseTestClass.CleanupClassMethod));
         _testClassInfo.ClassCleanupMethod = null;
         _testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(Tuple.Create((MethodInfo)null, baseClassCleanupMethod));
@@ -568,16 +568,15 @@ public class TestClassInfoTests : TestContainer
         // Assert
         Verify(_testClassInfo.HasExecutableCleanupMethod);
         Verify(classCleanup is null);
-        Verify(classcleanupCallCount == 1, "DummyBaseTestClass.CleanupClassMethod call count");
+        Verify(classCleanupCallCount == 1, "DummyBaseTestClass.CleanupClassMethod call count");
     }
 
     public void RunClassCleanupShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
     {
-        DummyTestClass.ClassCleanupMethodBody = () =>
-            // This helper calls inner helper, and the inner helper ctor throws.
-            // We want to see the real exception on screen, and not TypeInitializationException
-            // which has no info about what failed.
-            FailingStaticHelper.DoWork();
+        // This helper calls inner helper, and the inner helper ctor throws.
+        // We want to see the real exception on screen, and not TypeInitializationException
+        // which has no info about what failed.
+        DummyTestClass.ClassCleanupMethodBody = FailingStaticHelper.DoWork;
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
 
         string errorMessage = _testClassInfo.RunClassCleanup();

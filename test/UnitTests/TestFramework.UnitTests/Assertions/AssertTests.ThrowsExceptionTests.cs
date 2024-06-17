@@ -84,7 +84,7 @@ public partial class AssertTests
     {
         Task t = Assert.ThrowsExceptionAsync<ArgumentException>(
             async () => await Task.Delay(5).ConfigureAwait(false));
-        Exception ex = VerifyThrows(() => t.Wait());
+        Exception ex = VerifyThrows(t.Wait);
 
         Verify(ex is not null);
 
@@ -103,7 +103,7 @@ public partial class AssertTests
                 await Task.Delay(5).ConfigureAwait(false);
                 throw new FormatException();
             });
-        Exception ex = VerifyThrows(() => t.Wait());
+        Exception ex = VerifyThrows(t.Wait);
 
         Verify(ex is not null);
 
@@ -119,7 +119,7 @@ public partial class AssertTests
         Task t = Assert.ThrowsExceptionAsync<ArgumentException>(
             async () => await Task.Delay(5).ConfigureAwait(false),
             "The world is not on fire.");
-        Exception ex = VerifyThrows(() => t.Wait());
+        Exception ex = VerifyThrows(t.Wait);
 
         Verify(ex is not null);
 
@@ -139,7 +139,7 @@ public partial class AssertTests
                 throw new FormatException();
             },
             "Happily ever after.");
-        Exception ex = VerifyThrows(() => t.Wait());
+        Exception ex = VerifyThrows(t.Wait);
 
         Verify(ex is not null);
 
@@ -194,7 +194,7 @@ public partial class AssertTests
             "ta",
             "da",
             123);
-        Exception ex = VerifyThrows(() => t.Wait());
+        Exception ex = VerifyThrows(t.Wait);
 
         Verify(ex is not null);
 
@@ -216,7 +216,7 @@ public partial class AssertTests
             "Happily ever after. {0} {1}.",
             "The",
             "End");
-        Exception ex = VerifyThrows(() => t.Wait());
+        Exception ex = VerifyThrows(t.Wait);
 
         Verify(ex is not null);
 
