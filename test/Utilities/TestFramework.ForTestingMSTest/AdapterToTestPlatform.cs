@@ -164,8 +164,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
             LogMessage(logger, TestMessageLevel.Informational, $"Discovering tests in assembly '{assemblyName}'");
 
             var assembly = Assembly.LoadFrom(assemblyName);
-            IEnumerable<TypeInfo> assemblyTestContainerTypes = assembly.DefinedTypes.Where(typeInfo =>
-                IsTestContainer(typeInfo));
+            IEnumerable<TypeInfo> assemblyTestContainerTypes = assembly.DefinedTypes.Where(IsTestContainer);
 
             // TODO: Fail if no container?
             foreach (TypeInfo? testContainerType in assemblyTestContainerTypes)

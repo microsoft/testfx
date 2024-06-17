@@ -25,7 +25,7 @@ public class SystemAsyncMonitorTests : TestBase
         var stopwatch = Stopwatch.StartNew();
         for (int i = 0; i < 3; i++)
         {
-            tasks.Add(Task.Run(() => TestLock()));
+            tasks.Add(Task.Run(TestLock));
         }
 
         await Task.WhenAll(tasks.ToArray());
