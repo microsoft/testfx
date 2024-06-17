@@ -194,6 +194,9 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
                     [|Assert.AreNotSame(actual: "", notExpected: s)|];
                     [|Assert.AreNotSame(actual: true, notExpected: b)|];
                     [|Assert.AreNotSame(actual: 1, notExpected: i)|];
+
+                    [|Assert.AreEqual(expected: s, "")|];
+                    [|Assert.AreEqual(s, actual: "")|];
                 }
 
                 [TestMethod]
@@ -218,6 +221,9 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
                     Assert.AreNotSame(actual: s, notExpected: "");
                     Assert.AreNotSame(actual: b, notExpected: true);
                     Assert.AreNotSame(actual: i, notExpected: 1);
+
+                    Assert.AreEqual(expected: "", s);
+                    Assert.AreEqual("", actual: s);
                 }
             }
             """;
@@ -250,6 +256,9 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
                     Assert.AreNotSame(actual: s, notExpected: "");
                     Assert.AreNotSame(actual: b, notExpected: true);
                     Assert.AreNotSame(actual: i, notExpected: 1);
+
+                    Assert.AreEqual(expected: "", s);
+                    Assert.AreEqual("", actual: s);
                 }
 
                 [TestMethod]
@@ -274,6 +283,9 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
                     Assert.AreNotSame(actual: s, notExpected: "");
                     Assert.AreNotSame(actual: b, notExpected: true);
                     Assert.AreNotSame(actual: i, notExpected: 1);
+
+                    Assert.AreEqual(expected: "", s);
+                    Assert.AreEqual("", actual: s);
                 }
             }
             """;
