@@ -23,6 +23,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 internal class UnitTestRunner : MarshalByRefObject
 {
+    private readonly Dictionary<string, TestMethodInfo> _fixtureTests = new();
+
     /// <summary>
     /// Type cache.
     /// </summary>
@@ -97,6 +99,44 @@ internal class UnitTestRunner : MarshalByRefObject
             _reflectHelper);
     }
 
+    internal FixtureTestResult GetFixtureTestResult(TestMethod testMethod, string fixtureType)
+    {
+        // For the fixture methods, we need to return the appropriate result.
+        // Get matching testMethodInfo from the cache and return UnitTestOutcome for the fixture test.
+        if (_fixtureTests.TryGetValue(testMethod.AssemblyName + testMethod.FullClassName, out TestMethodInfo? testMethodInfo))
+        {
+            if (fixtureType == Constants.ClassInitializeFixtureTrait)
+            {
+                return testMethodInfo.Parent.IsClassInitializeExecuted
+                    ? new(true, GetOutcome(testMethodInfo.Parent.ClassInitializationException), testMethodInfo.Parent.ClassInitializationException?.Message)
+                    : new(true, ObjectModel.UnitTestOutcome.Inconclusive, null);
+            }
+
+            if (fixtureType == Constants.ClassCleanupFixtureTrait)
+            {
+                return testMethodInfo.Parent.IsClassInitializeExecuted
+                ? new(testMethodInfo.Parent.IsClassInitializeExecuted, GetOutcome(testMethodInfo.Parent.ClassCleanupException), testMethodInfo.Parent.ClassCleanupException?.Message)
+                : new(true, ObjectModel.UnitTestOutcome.Inconclusive, null);
+            }
+        }
+
+        if (_fixtureTests.TryGetValue(testMethod.AssemblyName, out testMethodInfo))
+        {
+            if (fixtureType == Constants.AssemblyInitializeFixtureTrait)
+            {
+                return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyInitializationException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
+            }
+            else if (fixtureType == Constants.AssemblyCleanupFixtureTrait)
+            {
+                return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyCleanupException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
+            }
+        }
+
+        return new(false, ObjectModel.UnitTestOutcome.Inconclusive, null);
+
+        static ObjectModel.UnitTestOutcome GetOutcome(Exception? exception) => exception == null ? ObjectModel.UnitTestOutcome.Passed : ObjectModel.UnitTestOutcome.Failed;
+    }
+
     /// <summary>
     /// Runs a single test.
     /// </summary>
@@ -141,6 +181,11 @@ internal class UnitTestRunner : MarshalByRefObject
             }
 
             DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
+
+            // Keep track of all non-runnable methods so that we can return the appropriate result at the end.
+            _fixtureTests[testMethod.AssemblyName] = testMethodInfo;
+            _fixtureTests[testMethod.AssemblyName + testMethod.FullClassName] = testMethodInfo;
+
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
             UnitTestResult[] result = testMethodRunner.Execute();
             RunRequiredCleanups(testContext, testMethodInfo, testMethod, result);
@@ -293,8 +338,9 @@ internal class UnitTestRunner : MarshalByRefObject
             ClassCleanupBehavior lifecycleFromAssembly,
             ReflectHelper reflectHelper)
         {
+            IEnumerable<UnitTestElement> runnableTests = testsToRun.Where(t => t.Traits is null || !t.Traits.Any(t => t.Name == Constants.FixturesTestTrait));
             _remainingTestsByClass =
-                new(testsToRun.GroupBy(t => t.TestMethod.FullClassName)
+                new(runnableTests.GroupBy(t => t.TestMethod.FullClassName)
                     .ToDictionary(
                         g => g.Key,
                         g => new HashSet<string>(g.Select(t => t.TestMethod.UniqueName))));

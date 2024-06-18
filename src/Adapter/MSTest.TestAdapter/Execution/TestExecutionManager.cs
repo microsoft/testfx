@@ -196,6 +196,12 @@ public class TestExecutionManager
         if (filterExpression != null
             && !filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)))
         {
+            // If this is a fixture test, return true. Fixture tests are not filtered out and are always available for the status.
+            if (test.Traits.Any(t => t.Name == Constants.FixturesTestTrait))
+            {
+                return true;
+            }
+
             // Skip test if not fitting filter criteria.
             return false;
         }
@@ -375,6 +381,9 @@ public class TestExecutionManager
         IDictionary<string, object> sourceLevelParameters,
         UnitTestRunner testRunner)
     {
+        bool hasAnyRunnableTests = false;
+        var fixtureTests = new List<TestCase>();
+
         foreach (TestCase currentTest in tests)
         {
             if (_cancellationToken is { Canceled: true })
@@ -382,6 +391,15 @@ public class TestExecutionManager
                 break;
             }
 
+            // If it is a fixture test, add it to the list of fixture tests and do not execute it.
+            // It is executed by test itself.
+            if (currentTest.Traits.Any(t => t.Name == Constants.FixturesTestTrait))
+            {
+                fixtureTests.Add(currentTest);
+                continue;
+            }
+
+            hasAnyRunnableTests = true;
             var unitTestElement = currentTest.ToUnitTestElement(source);
 
             testExecutionRecorder.RecordStart(currentTest);
@@ -400,6 +418,30 @@ public class TestExecutionManager
             DateTimeOffset endTime = DateTimeOffset.Now;
 
             SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
+        }
+
+        // Once all tests have been executed, update the status of fixture tests.
+        foreach (TestCase currentTest in fixtureTests)
+        {
+            testExecutionRecorder.RecordStart(currentTest);
+
+            // If there were only fixture tests, send an inconclusive result.
+            if (!hasAnyRunnableTests)
+            {
+                var result = new UnitTestResult(ObjectModel.UnitTestOutcome.Inconclusive, null);
+                SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
+                continue;
+            }
+
+            Trait trait = currentTest.Traits.First(t => t.Name == Constants.FixturesTestTrait);
+            var unitTestElement = currentTest.ToUnitTestElement(source);
+            FixtureTestResult fixtureTestResult = testRunner.GetFixtureTestResult(unitTestElement.TestMethod, trait.Value);
+
+            if (fixtureTestResult.IsExecuted)
+            {
+                var result = new UnitTestResult(fixtureTestResult.Outcome, null);
+                SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
+            }
         }
     }
 
