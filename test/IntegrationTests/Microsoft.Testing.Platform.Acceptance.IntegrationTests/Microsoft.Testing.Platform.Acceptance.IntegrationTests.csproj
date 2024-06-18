@@ -24,6 +24,8 @@
   <!-- Packages needed for the test assets but that we don't want to reference -->
   <ItemGroup>
     <PackageDownload Include="Microsoft.Testing.Extensions.HangDump" Version="[$(MicrosoftTestingPlatformVersion)]" />
+    <PackageDownload Include="Microsoft.Testing.Extensions.HotReload" Version="[$(MicrosoftTestingPlatformVersion)]" />
+    <PackageDownload Include="Microsoft.Testing.Extensions.Retry" Version="[$(MicrosoftTestingPlatformVersion)]" />
     <PackageDownload Include="Microsoft.Testing.Extensions.Telemetry" Version="[$(MicrosoftTestingPlatformVersion)]" />
     <PackageDownload Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="[$(MicrosoftTestingPlatformVersion)]" />
     <PackageDownload Include="Microsoft.Testing.Extensions.VSTestBridge" Version="[$(MicrosoftTestingPlatformVersion)]" />
@@ -65,6 +67,8 @@
     <Copy SkipUnchangedFiles="true" SourceFiles="@(MicrosoftTestingInternalFrameworkSourceGenerationPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
 
     <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.hangdump\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.hangdump.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.hangdump.$(MicrosoftTestingPlatformVersion).nupkg" />
+    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.hotreload\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.hotreload.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.hotreload.$(MicrosoftTestingPlatformVersion).nupkg" />
+    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.retry\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.retry.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.retry.$(MicrosoftTestingPlatformVersion).nupkg" />
     <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.telemetry\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.telemetry.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.telemetry.$(MicrosoftTestingPlatformVersion).nupkg" />
     <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.trxreport.abstractions\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.trxreport.abstractions.$(microsofttestingplatformversion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.trxreport.abstractions.$(MicrosoftTestingPlatformVersion).nupkg" />
     <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.vstestbridge\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.vstestbridge.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.vstestbridge.$(MicrosoftTestingPlatformVersion).nupkg" />
