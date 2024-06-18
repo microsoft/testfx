@@ -182,6 +182,9 @@ internal class UnitTestDiscoverer
             }
 
             // If there are runnable tests, then add all fixture tests to the discovery sink.
+            // Scenarios:
+            // 1. Execute only a fixture test => In this case, we do not need to track any other fixture tests. Selected fixture test will be tracked as will be marked as skipped.
+            // 2. Execute a runnable test => In this case, case add all fixture tests. We will update status of only those fixtures which are triggered by the selected test.
             if (hasAnyRunnableTests)
             {
                 foreach (TestCase testCase in fixtureTests)

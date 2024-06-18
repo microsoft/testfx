@@ -1,2 +1,2 @@
 ﻿#nullable enable
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.FixturesEnabled.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.ConsiderFixturesAsSpecialTests.get -> bool

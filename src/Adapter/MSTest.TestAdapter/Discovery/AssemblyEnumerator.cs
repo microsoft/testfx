@@ -78,6 +78,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
         var warningMessages = new List<string>();
         var tests = new List<UnitTestElement>();
+        // Contains list of assembly/class names for which we have already added fixture tests.
         var fixturesTests = new HashSet<string>();
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
@@ -173,13 +174,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 if (!map.ContainsKey(line))
                 {
                     map.Add(line, null);
-                    _ = errorDetails.AppendLine(line);
+                    errorDetails.AppendLine(line);
                 }
             }
         }
         else
         {
-            _ = errorDetails.AppendLine(ex.Message);
+            errorDetails.AppendLine(ex.Message);
         }
 
         return errorDetails.ToString();
@@ -307,10 +308,12 @@ internal class AssemblyEnumerator : MarshalByRefObject
         string className = testMethodInfo.Parent.ClassType.Name;
         string classFullName = testMethodInfo.Parent.ClassType.FullName!;
 
+        // Check if fixtures for this assembly has already been added.
         if (!fixtureTests.Contains(assemblyLocation))
         {
             _ = fixtureTests.Add(assemblyLocation);
 
+            // Add AssemblyInitialize and AssemblyCleanup fixture tests if they exist.
             if (testMethodInfo.Parent.Parent.AssemblyInitializeMethod is not null)
             {
                 tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName, className,
@@ -324,10 +327,12 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
         }
 
+        // Check if fixtures for this class has already been added.
         if (!fixtureTests.Contains(assemblyLocation + classFullName))
         {
             _ = fixtureTests.Add(assemblyLocation + classFullName);
 
+            // Add ClassInitialize and ClassCleanup fixture tests if they exist.
             if (testMethodInfo.Parent.ClassInitializeMethod is not null)
             {
                 tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassInitializeMethod, assemblyName, className, classFullName,

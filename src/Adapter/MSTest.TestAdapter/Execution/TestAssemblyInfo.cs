@@ -96,9 +96,9 @@ public class TestAssemblyInfo
     public Exception? AssemblyInitializationException { get; internal set; }
 
     /// <summary>
-    /// Gets or sets the assembly cleanup exception.
+    /// Gets the assembly cleanup exception.
     /// </summary>
-    internal Exception? AssemblyCleanupException { get; set; }
+    internal Exception? AssemblyCleanupException { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether this assembly has an executable <c>AssemblyCleanup</c> method.
