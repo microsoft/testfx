@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-internal interface IProcess
+internal interface IProcess : IDisposable
 {
     public event EventHandler Exited;
 
