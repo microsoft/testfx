@@ -652,7 +652,7 @@ public class TestMethodInfo : ITestMethod
 
         return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
-            new CancellationTokenSource(),
+            TestMethodOptions.TestContext!.Context.CancellationTokenSource,
             timeout,
             methodInfo,
             new InstanceExecutionContextScope(classInstance, Parent.ClassType),
@@ -670,7 +670,7 @@ public class TestMethodInfo : ITestMethod
 
         return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
-            new CancellationTokenSource(),
+            TestMethodOptions.TestContext!.Context.CancellationTokenSource,
             timeout,
             methodInfo,
             new InstanceExecutionContextScope(classInstance, Parent.ClassType, remainingCleanupCount),
