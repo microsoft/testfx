@@ -1,2 +1,1 @@
 ﻿#nullable enable
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.ConsiderFixturesAsSpecialTests.get -> bool

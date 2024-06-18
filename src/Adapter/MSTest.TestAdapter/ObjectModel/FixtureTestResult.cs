@@ -14,17 +14,17 @@ internal sealed class FixtureTestResult
     }
 
     /// <summary>
-    /// Gets or sets a value indicating whether the test is executed or not.
+    /// Gets a value indicating whether the test is executed or not.
     /// </summary>
     public bool IsExecuted { get; }
 
     /// <summary>
-    /// Gets or sets the outcome of the test.
+    /// Gets the outcome of the test.
     /// </summary>
     public UnitTestOutcome Outcome { get; }
 
     /// <summary>
-    /// Gets or sets the exception message if any.
+    /// Gets the exception message if any.
     /// </summary>
     public string? ExceptionMessage { get; }
 }
