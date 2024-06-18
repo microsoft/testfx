@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-internal sealed class SystemProcess : IProcess
+internal sealed class SystemProcess : IProcess, IDisposable
 {
     private readonly Process _process;
 
@@ -51,4 +51,6 @@ internal sealed class SystemProcess : IProcess
     public void Kill()
         => _process.Kill();
 #endif
+
+    public void Dispose() => _process.Dispose();
 }
