@@ -448,7 +448,7 @@ Registered tools:
     Tool command line providers:
       TrxCompareTool
         Name: TRX comparer tool
-        Version: 3.5.0-dev
+        Version: *
         Description: This tool allows to compare and highights differences between 2 TRX reports
         Options:
           --baseline-trx
