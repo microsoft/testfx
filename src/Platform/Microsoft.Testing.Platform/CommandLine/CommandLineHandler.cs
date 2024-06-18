@@ -270,17 +270,17 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                     ? $"dotnet exec {Path.GetFileName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}"
                     : PlatformResources.HelpTestApplicationRunner;
 
-        async Task<bool> PrintOptionsAsync(IEnumerable<ICommandLineOptionsProvider> optionProviders, int leftPaddingDepth, bool builtInOnly = false)
+        async Task<bool> PrintOptionsAsync(IEnumerable<ICommandLineOptionsProvider> optionProviders, int leftPaddingDepth,
+            bool builtInOnly = false)
         {
-            IEnumerable<CommandLineOption> options =
+            CommandLineOption[] options =
                 optionProviders
                .SelectMany(provider => provider.GetCommandLineOptions())
-               .Where(option => !option.IsHidden)
-               .OrderBy(option => option.Name);
+               .Where(option => !option.IsHidden && option.IsBuiltIn == builtInOnly)
+               .OrderBy(option => option.Name)
+               .ToArray();
 
-            options = builtInOnly ? options.Where(option => option.IsBuiltIn) : options.Where(option => !option.IsBuiltIn);
-
-            if (!options.Any())
+            if (options.Length == 0)
             {
                 return false;
             }
@@ -292,7 +292,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                 await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{new string(' ', leftPaddingDepth * 2)}--{option.Name}{new string(' ', maxOptionNameLength - option.Name.Length)} {option.Description}"));
             }
 
-            return options.Any();
+            return options.Length != 0;
         }
 
         async Task PrintApplicationUsageAsync(string applicationName)
@@ -306,11 +306,17 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                 !SystemCommandLineOptionsProviders.OfType<IToolCommandLineOptionsProvider>().Any(),
                 "System command line options should not have any tool option registered.");
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpOptions));
-            await PrintOptionsAsync(SystemCommandLineOptionsProviders.Union(ExtensionsCommandLineOptionsProviders), 1, builtInOnly: true);
+            ICommandLineOptionsProvider[] nonToolsExtensionProviders =
+                ExtensionsCommandLineOptionsProviders
+                .Where(provider => provider is not IToolCommandLineOptionsProvider)
+                .ToArray();
+            // By default, only system options are built-in but some extensions (e.g. retry) are considered as built-in too,
+            // so we need to union the 2 collections before printing the options.
+            await PrintOptionsAsync(SystemCommandLineOptionsProviders.Union(nonToolsExtensionProviders), 1, builtInOnly: true);
             await _platformOutputDevice.DisplayAsync(this, EmptyText);
 
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpExtensionOptions));
-            if (!await PrintOptionsAsync(ExtensionsCommandLineOptionsProviders.Where(provider => provider is not IToolCommandLineOptionsProvider), 1))
+            if (!await PrintOptionsAsync(nonToolsExtensionProviders, 1))
             {
                 await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpNoExtensionRegistered));
             }
