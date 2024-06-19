@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 internal class UnitTestRunner : MarshalByRefObject
 {
-    private readonly Dictionary<string, TestMethodInfo> _fixtureTests = new();
+    private readonly ConcurrentDictionary<string, TestMethodInfo> _fixtureTests = new();
 
     /// <summary>
     /// Type cache.
@@ -183,8 +183,8 @@ internal class UnitTestRunner : MarshalByRefObject
             DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
 
             // Keep track of all non-runnable methods so that we can return the appropriate result at the end.
-            _fixtureTests[testMethod.AssemblyName] = testMethodInfo;
-            _fixtureTests[testMethod.AssemblyName + testMethod.FullClassName] = testMethodInfo;
+            _fixtureTests.TryAdd(testMethod.AssemblyName, testMethodInfo);
+            _fixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo);
 
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
             UnitTestResult[] result = testMethodRunner.Execute();
