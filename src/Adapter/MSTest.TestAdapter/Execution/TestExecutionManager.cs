@@ -337,7 +337,17 @@ public class TestExecutionManager
                     }));
                 }
 
-                Task.WaitAll(tasks.ToArray());
+                try
+                {
+                    Task.WaitAll(tasks.ToArray());
+                }
+                catch (Exception ex)
+                {
+                    string exceptionToString = ex.ToString();
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("Error occurred while executing tests in parallel{0}{1}", Environment.NewLine, exceptionToString);
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, exceptionToString);
+                    throw;
+                }
             }
 
             // Queue the non parallel set
