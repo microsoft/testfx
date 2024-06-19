@@ -1,9 +1,0 @@
-<!--
-      This file contains .Local. in the name and it's imported conditionally in the default directory one because this repo is used
-      as submodule in other repos and we don't want to import this file in those repos.
--->
-<Project>
-
-  
-
-</Project>

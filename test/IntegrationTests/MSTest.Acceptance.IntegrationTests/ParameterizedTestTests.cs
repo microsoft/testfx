@@ -95,20 +95,18 @@ public class ParameterizedTestTests : AcceptanceTestBase
                 SourceCodeDynamicData
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
             yield return (DataSourceAssetName, DataSourceAssetName,
                 SourceCodeDataSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
         private const string SourceCodeDynamicData = """
 #file DynamicData.csproj
 <Project Sdk="Microsoft.NET.Sdk">
-    
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
@@ -154,7 +152,7 @@ public class TestClass
         private const string SourceCodeDataSource = """
 #file DataSource.csproj
 <Project Sdk="Microsoft.NET.Sdk">
-    
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>

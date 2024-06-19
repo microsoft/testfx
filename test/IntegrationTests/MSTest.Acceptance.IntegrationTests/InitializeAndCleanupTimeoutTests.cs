@@ -237,7 +237,6 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
                 .PatchCodeWithReplace("$ProjectName$", CodeWithNoTimeout)
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (CodeWithOneSecTimeout, CodeWithOneSecTimeout,
@@ -246,7 +245,6 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
                 .PatchCodeWithReplace("$ProjectName$", CodeWithOneSecTimeout)
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (CodeWithSixtySecTimeout, CodeWithSixtySecTimeout,
@@ -255,7 +253,6 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
                 .PatchCodeWithReplace("$ProjectName$", CodeWithSixtySecTimeout)
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 

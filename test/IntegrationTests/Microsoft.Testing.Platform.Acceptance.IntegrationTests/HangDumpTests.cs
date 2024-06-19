@@ -101,7 +101,7 @@ public sealed class HangDumpTests : AcceptanceTestBase
             yield return (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         }
 
         private const string Sources = """
@@ -117,7 +117,7 @@ public sealed class HangDumpTests : AcceptanceTestBase
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 </Project>
 
