@@ -286,8 +286,7 @@ public class TestExecutionManager
         if (!MSTestSettings.CurrentSettings.DisableParallelization && sourceSettings.CanParallelizeAssembly && parallelWorkers > 0)
         {
             // Parallelization is enabled. Let's do further classification for sets.
-            var logger = (IMessageLogger)frameworkHandle;
-            logger.SendMessage(
+            frameworkHandle.SendMessage(
                 TestMessageLevel.Informational,
                 string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
 
@@ -295,7 +294,7 @@ public class TestExecutionManager
             IEnumerable<IGrouping<bool, TestCase>> testSets = [];
 
             // Parallel and not parallel sets.
-            testSets = testsToRun.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, false));
+            testSets = testsToRun.GroupBy(t => t.GetPropertyValue(Constants.DoNotParallelizeProperty, false));
 
             IGrouping<bool, TestCase>? parallelizableTestSet = testSets.FirstOrDefault(g => !g.Key);
             IGrouping<bool, TestCase>? nonParallelizableTestSet = testSets.FirstOrDefault(g => g.Key);
@@ -312,7 +311,7 @@ public class TestExecutionManager
                         break;
 
                     case ExecutionScope.ClassLevel:
-                        queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.TestClassNameProperty) as string));
+                        queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(Constants.TestClassNameProperty) as string));
                         break;
                 }
 
