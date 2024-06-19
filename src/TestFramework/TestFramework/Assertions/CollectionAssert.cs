@@ -533,7 +533,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual)
-        => AreEquivalent(expected, actual, new ObjectComparer(), string.Empty, null);
+        => AreEquivalent(expected, actual, new ObjectEqualityComparer(), string.Empty, null);
 
     /// <summary>
     /// Tests whether two collections contain the same elements and throws an
@@ -560,7 +560,7 @@ public sealed class CollectionAssert
     public static void AreEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
         string? message)
-        => AreEquivalent(expected, actual, new ObjectComparer(), message, null);
+        => AreEquivalent(expected, actual, new ObjectEqualityComparer(), message, null);
 
     /// <summary>
     /// Tests whether two collections contain the same elements and throws an
@@ -590,7 +590,7 @@ public sealed class CollectionAssert
     public static void AreEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
         string? message, params object?[]? parameters)
-        => AreEquivalent(expected, actual, new ObjectComparer(), message, parameters);
+        => AreEquivalent(expected, actual, new ObjectEqualityComparer(), message, parameters);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
@@ -612,7 +612,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreNotEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual)
-        => AreNotEquivalent(expected, actual, new ObjectComparer(), string.Empty, null);
+        => AreNotEquivalent(expected, actual, new ObjectEqualityComparer(), string.Empty, null);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
@@ -640,7 +640,7 @@ public sealed class CollectionAssert
     public static void AreNotEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
         string? message)
-        => AreNotEquivalent(expected, actual, new ObjectComparer(), message, null);
+        => AreNotEquivalent(expected, actual, new ObjectEqualityComparer(), message, null);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
@@ -671,7 +671,7 @@ public sealed class CollectionAssert
     public static void AreNotEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
         string? message, params object?[]? parameters)
-        => AreNotEquivalent(expected, actual, new ObjectComparer(), message, parameters);
+        => AreNotEquivalent(expected, actual, new ObjectEqualityComparer(), message, parameters);
 
     /// <summary>
     /// Tests whether two collections contain the same elements and throws an
@@ -694,7 +694,7 @@ public sealed class CollectionAssert
     /// or if any element was found in one of the collections but not the other.
     /// </exception>
     public static void AreEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual, [NotNull] IComparer? comparer)
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual, [NotNull] IEqualityComparer<object>? comparer)
         => AreEquivalent(expected, actual, comparer, string.Empty, null);
 
     /// <summary>
@@ -723,7 +723,7 @@ public sealed class CollectionAssert
     /// or if any element was found in one of the collections but not the other.
     /// </exception>
     public static void AreEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual, [NotNull] IComparer? comparer,
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual, [NotNull] IEqualityComparer<object>? comparer,
         string? message)
         => AreEquivalent(expected, actual, comparer, message, null);
 
@@ -756,7 +756,7 @@ public sealed class CollectionAssert
     /// or if any element was found in one of the collections but not the other.
     /// </exception>
     public static void AreEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual, [NotNull] IComparer? comparer,
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual, [NotNull] IEqualityComparer<object>? comparer,
         string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
@@ -793,7 +793,7 @@ public sealed class CollectionAssert
         }
 
         // Search for a mismatched element.
-        if (FindMismatchedElement(expected, actual, out int expectedCount, out int actualCount, out object? mismatchedElement))
+        if (FindMismatchedElement(expected, actual, comparer, out int expectedCount, out int actualCount, out object? mismatchedElement))
         {
             string userMessage = Assert.BuildUserMessage(message, parameters);
             string finalMessage = string.Format(
@@ -831,7 +831,7 @@ public sealed class CollectionAssert
     /// occurrences of each element.
     /// </exception>
     public static void AreNotEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual, [NotNull] IComparer? comparer)
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual, [NotNull] IEqualityComparer<object>? comparer)
         => AreNotEquivalent(expected, actual, comparer, string.Empty, null);
 
     /// <summary>
@@ -861,7 +861,7 @@ public sealed class CollectionAssert
     /// occurrences of each element.
     /// </exception>
     public static void AreNotEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual, [NotNull] IComparer? comparer,
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual, [NotNull] IEqualityComparer<object>? comparer,
         string? message)
         => AreNotEquivalent(expected, actual, comparer, message, null);
 
@@ -895,7 +895,7 @@ public sealed class CollectionAssert
     /// occurrences of each element.
     /// </exception>
     public static void AreNotEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual, [NotNull] IComparer? comparer,
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual, [NotNull] IEqualityComparer<object>? comparer,
         string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
@@ -936,7 +936,7 @@ public sealed class CollectionAssert
         }
 
         // Search for a mismatched element.
-        if (!FindMismatchedElement(expected, actual, out _, out _, out _))
+        if (!FindMismatchedElement(expected, actual, comparer, out _, out _, out _))
         {
             string userMessage = Assert.BuildUserMessage(message, parameters);
             string finalMessage = string.Format(
@@ -1436,8 +1436,8 @@ public sealed class CollectionAssert
         // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
 
         // Count the occurrences of each object in both collections.
-        Dictionary<object, int> subsetElements = GetElementCounts(subset, out int subsetNulls);
-        Dictionary<object, int> supersetElements = GetElementCounts(superset, out int supersetNulls);
+        Dictionary<object, int> subsetElements = GetElementCounts(subset, new ObjectEqualityComparer(), out int subsetNulls);
+        Dictionary<object, int> supersetElements = GetElementCounts(superset, new ObjectEqualityComparer(), out int supersetNulls);
 
         if (subsetNulls > supersetNulls)
         {
@@ -1475,11 +1475,11 @@ public sealed class CollectionAssert
     /// A dictionary containing the number of occurrences of each element
     /// in the specified collection.
     /// </returns>
-    private static Dictionary<object, int> GetElementCounts(ICollection collection, out int nullCount)
+    private static Dictionary<object, int> GetElementCounts(ICollection collection, IEqualityComparer<object> comparer, out int nullCount)
     {
         DebugEx.Assert(collection != null, "Collection is Null.");
 
-        Dictionary<object, int> elementCounts = [];
+        var elementCounts = new Dictionary<object, int>(comparer);
         nullCount = 0;
 
         foreach (object? element in collection)
@@ -1530,7 +1530,7 @@ public sealed class CollectionAssert
     /// <returns>
     /// true if a mismatched element was found; false otherwise.
     /// </returns>
-    private static bool FindMismatchedElement(ICollection expected, ICollection actual, out int expectedCount,
+    private static bool FindMismatchedElement(ICollection expected, ICollection actual, IEqualityComparer<object> comparer, out int expectedCount,
         out int actualCount, out object? mismatchedElement)
     {
         // $ CONSIDER: The current algorithm counts the number of occurrences of each
@@ -1540,8 +1540,8 @@ public sealed class CollectionAssert
         // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
 
         // Count the occurrences of each object in the both collections
-        Dictionary<object, int> expectedElements = GetElementCounts(expected, out int expectedNulls);
-        Dictionary<object, int> actualElements = GetElementCounts(actual, out int actualNulls);
+        Dictionary<object, int> expectedElements = GetElementCounts(expected, comparer, out int expectedNulls);
+        Dictionary<object, int> actualElements = GetElementCounts(actual, comparer, out int actualNulls);
 
         if (actualNulls != expectedNulls)
         {
@@ -1623,6 +1623,13 @@ public sealed class CollectionAssert
     private class ObjectComparer : IComparer
     {
         int IComparer.Compare(object? x, object? y) => Equals(x, y) ? 0 : -1;
+    }
+
+    private class ObjectEqualityComparer : IEqualityComparer<object>
+    {
+        public new bool Equals(object? x, object? y) => Equals(x, y);
+
+        public int GetHashCode(object obj) => throw new NotImplementedException();
     }
 
     #endregion
