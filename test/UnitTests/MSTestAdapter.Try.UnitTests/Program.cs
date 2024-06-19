@@ -4,8 +4,7 @@
 using System.Runtime.CompilerServices;
 
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Native;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using MSTestAdapter.Try1.UnitTests;
@@ -20,7 +19,6 @@ public static class Program
         {
             Assembly = typeof(Program).Assembly,
             AssemblyName = typeof(Program).Assembly.GetName().Name,
-            AssemblyFileName = typeof(Program).Assembly.GetName().Name + ".dll",
             AssemblyAttributes = typeof(Program).Assembly.GetCustomAttributes(inherit: true),
             Types = new[]
             {
@@ -94,9 +92,7 @@ public static class Program
         bool useNative = !RuntimeFeature.IsDynamicCodeSupported;
         if (useNative)
         {
-            Environment.SetEnvironmentVariable("MSTEST_NATIVE", "1");
-            ((NativeFileOperations)PlatformServiceProvider.Instance.FileOperations).ReflectionDataProvider = rdp;
-            ((NativeReflectionOperations)PlatformServiceProvider.Instance.ReflectionOperations).ReflectionDataProvider = rdp;
+            ReflectionMetadataHook.SetMetadata(rdp);
         }
 
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);

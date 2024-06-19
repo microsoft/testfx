@@ -128,4 +128,10 @@
   <!-- SDK bottom import -->
   <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
+  <ItemGroup>
+    <None Remove="Native\MyConstructorInfo.cs" />
+    <None Remove="Native\NativeFileOperations.cs" />
+    <None Remove="Native\NativeReflectionOperations.cs" />
+    <None Remove="Native\SourceGeneratedReflectionDataProvider.cs" />
+  </ItemGroup>
 </Project>

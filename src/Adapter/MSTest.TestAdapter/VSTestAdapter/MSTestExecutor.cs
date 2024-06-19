@@ -64,9 +64,6 @@ public class MSTestExecutor : ITestExecutor
 
     public void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
     {
-        // TODO: this is coming from vstest bridge, fixing here so I don't have to recompile just yet.
-        sources = new[] { Path.Combine(AppContext.BaseDirectory, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.dll") };
-
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from sources.");
         ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
         ValidateArg.NotNullOrEmpty(sources, "sources");

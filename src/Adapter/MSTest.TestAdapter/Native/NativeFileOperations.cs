@@ -3,9 +3,10 @@
 
 using System.Reflection;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Native;
 
 #pragma warning disable RS0016 // Add public types and members to the declared API
 public class NativeFileOperations : IFileOperations

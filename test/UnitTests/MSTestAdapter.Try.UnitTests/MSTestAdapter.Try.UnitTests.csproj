@@ -11,7 +11,7 @@
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests</AssemblyName>
 
-    <!--<PublishAot>true</PublishAot>-->
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <!-- Properties specific to WinUI -->

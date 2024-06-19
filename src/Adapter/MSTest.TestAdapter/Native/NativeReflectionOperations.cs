@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 #if NETFRAMEWORK
 #endif
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Native;
 
 #pragma warning disable RS0016 // Add public types and members to the declared API
 public class NativeReflectionOperations : IReflectionOperations2
@@ -74,7 +74,12 @@ public class NativeReflectionOperations : IReflectionOperations2
     public MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters) => throw new NotImplementedException();
 
     public PropertyInfo? GetRuntimeProperty(Type classType, string propertyName)
-        => ReflectionDataProvider.TypePropertiesByName[classType]?[propertyName];
+    {
+        Dictionary<string, PropertyInfo> type = ReflectionDataProvider.TypePropertiesByName[classType];
+
+        // We as asking for TestContext here, it may not be there.
+        return type.TryGetValue(propertyName, out PropertyInfo? propertyInfo) ? propertyInfo : null;
+    }
 
     public Type? GetType(string typeName)
         => ReflectionDataProvider.TypesByName[typeName];
