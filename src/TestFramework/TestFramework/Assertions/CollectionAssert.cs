@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -848,13 +847,13 @@ public sealed class CollectionAssert
     /// The second collection to compare. This is the collection produced by
     /// the code under test.
     /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
     /// contains the same elements as <paramref name="expected"/>. The message
     /// is shown in test results.
-    /// </param>
-    /// <param name="comparer">
-    /// The compare implementation to use when comparing elements of the collection.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
@@ -879,6 +878,9 @@ public sealed class CollectionAssert
     /// The second collection to compare. This is the collection produced by
     /// the code under test.
     /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
     /// contains the same elements as <paramref name="expected"/>. The message
@@ -886,9 +888,6 @@ public sealed class CollectionAssert
     /// </param>
     /// <param name="parameters">
     /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <param name="comparer">
-    /// The compare implementation to use when comparing elements of the collection.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
