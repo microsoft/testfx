@@ -593,87 +593,6 @@ public sealed class CollectionAssert
         => AreEquivalent(expected, actual, new ObjectEqualityComparer(), message, parameters);
 
     /// <summary>
-    /// Tests whether two collections contain the different elements and throws an
-    /// exception if the two collections contain identical elements without regard
-    /// to order.
-    /// </summary>
-    /// <param name="expected">
-    /// The first collection to compare. This contains the elements the test
-    /// expects to be different than the actual collection.
-    /// </param>
-    /// <param name="actual">
-    /// The second collection to compare. This is the collection produced by
-    /// the code under test.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
-    /// or if collections contain the same elements, including the same number of duplicate
-    /// occurrences of each element.
-    /// </exception>
-    public static void AreNotEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual)
-        => AreNotEquivalent(expected, actual, new ObjectEqualityComparer(), string.Empty, null);
-
-    /// <summary>
-    /// Tests whether two collections contain the different elements and throws an
-    /// exception if the two collections contain identical elements without regard
-    /// to order.
-    /// </summary>
-    /// <param name="expected">
-    /// The first collection to compare. This contains the elements the test
-    /// expects to be different than the actual collection.
-    /// </param>
-    /// <param name="actual">
-    /// The second collection to compare. This is the collection produced by
-    /// the code under test.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="actual"/>
-    /// contains the same elements as <paramref name="expected"/>. The message
-    /// is shown in test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
-    /// or if collections contain the same elements, including the same number of duplicate
-    /// occurrences of each element.
-    /// </exception>
-    public static void AreNotEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
-        string? message)
-        => AreNotEquivalent(expected, actual, new ObjectEqualityComparer(), message, null);
-
-    /// <summary>
-    /// Tests whether two collections contain the different elements and throws an
-    /// exception if the two collections contain identical elements without regard
-    /// to order.
-    /// </summary>
-    /// <param name="expected">
-    /// The first collection to compare. This contains the elements the test
-    /// expects to be different than the actual collection.
-    /// </param>
-    /// <param name="actual">
-    /// The second collection to compare. This is the collection produced by
-    /// the code under test.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="actual"/>
-    /// contains the same elements as <paramref name="expected"/>. The message
-    /// is shown in test results.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
-    /// or if collections contain the same elements, including the same number of duplicate
-    /// occurrences of each element.
-    /// </exception>
-    public static void AreNotEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
-        string? message, params object?[]? parameters)
-        => AreNotEquivalent(expected, actual, new ObjectEqualityComparer(), message, parameters);
-
-    /// <summary>
     /// Tests whether two collections contain the same elements and throws an
     /// exception if either collection contains an element not in the other
     /// collection.
@@ -808,6 +727,87 @@ public sealed class CollectionAssert
 
         // All the elements and counts matched.
     }
+
+    /// <summary>
+    /// Tests whether two collections contain the different elements and throws an
+    /// exception if the two collections contain identical elements without regard
+    /// to order.
+    /// </summary>
+    /// <param name="expected">
+    /// The first collection to compare. This contains the elements the test
+    /// expects to be different than the actual collection.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by
+    /// the code under test.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if collections contain the same elements, including the same number of duplicate
+    /// occurrences of each element.
+    /// </exception>
+    public static void AreNotEquivalent(
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual)
+        => AreNotEquivalent(expected, actual, new ObjectEqualityComparer(), string.Empty, null);
+
+    /// <summary>
+    /// Tests whether two collections contain the different elements and throws an
+    /// exception if the two collections contain identical elements without regard
+    /// to order.
+    /// </summary>
+    /// <param name="expected">
+    /// The first collection to compare. This contains the elements the test
+    /// expects to be different than the actual collection.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by
+    /// the code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// contains the same elements as <paramref name="expected"/>. The message
+    /// is shown in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if collections contain the same elements, including the same number of duplicate
+    /// occurrences of each element.
+    /// </exception>
+    public static void AreNotEquivalent(
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
+        string? message)
+        => AreNotEquivalent(expected, actual, new ObjectEqualityComparer(), message, null);
+
+    /// <summary>
+    /// Tests whether two collections contain the different elements and throws an
+    /// exception if the two collections contain identical elements without regard
+    /// to order.
+    /// </summary>
+    /// <param name="expected">
+    /// The first collection to compare. This contains the elements the test
+    /// expects to be different than the actual collection.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by
+    /// the code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// contains the same elements as <paramref name="expected"/>. The message
+    /// is shown in test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if collections contain the same elements, including the same number of duplicate
+    /// occurrences of each element.
+    /// </exception>
+    public static void AreNotEquivalent(
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
+        string? message, params object?[]? parameters)
+        => AreNotEquivalent(expected, actual, new ObjectEqualityComparer(), message, parameters);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
