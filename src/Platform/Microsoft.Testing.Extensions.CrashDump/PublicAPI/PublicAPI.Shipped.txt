@@ -1,0 +1,5 @@
+#nullable enable
+Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook
+Microsoft.Testing.Extensions.CrashDumpExtensions
+static Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! _) -> void
+static Microsoft.Testing.Extensions.CrashDumpExtensions.AddCrashDumpProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, bool ignoreIfNotSupported = false) -> void

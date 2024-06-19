@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="tr" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="CreatingDumpFile">
+        <source>Creating dump file '{0}'</source>
+        <target state="translated">Döküm dosyası '{0}' oluşturuluyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpArtifactDescription">
+        <source>The hang dump file</source>
+        <target state="translated">Askıda kalma dökümü dosyası</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpArtifactDisplayName">
+        <source>Hang dump file</source>
+        <target state="translated">Döküm dosyasını as</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
+        <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
+        <target state="translated">'{0}' ortam değişkeni '{1}' yerine '{2}' olarak ayarlandı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpEnvironmentVariableIsMissingErrorMessage">
+        <source>Environment variable '{0}' is not set</source>
+        <target state="translated">'{0}' ortam değişkeni ayarlı değil</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpExtensionDescription">
+        <source>Produce hang dump files when a test execution exceed a given time.</source>
+        <target state="translated">Bir test yürütmesi belirli bir süreyi aştığında askıda kalan döküm dosyaları üretin.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpExtensionDisplayName">
+        <source>Hang dump</source>
+        <target state="translated">Askı dökümü</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpFileNameOptionDescription">
+        <source>Specify the name of the dump file</source>
+        <target state="translated">Döküm dosyasının adını belirtin</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpOptionDescription">
+        <source>Generate a dump file if the test process hangs</source>
+        <target state="translated">Test işlemi kilitlenirse bir döküm dosyası oluşturun</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTimeoutExpired">
+        <source>Hang dump timeout of '{0}' expired</source>
+        <target state="translated">'{0}' dökümünün askıda kalma zaman aşımı süresi doldu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTimeoutOptionDescription">
+        <source>Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.</source>
+        <target state="translated">Dökümün oluşturulacağı zaman aşımını belirtin. Zaman aşımı değeri şu formatlardan birinde belirtilir: 1,5 saat, 1,5 saat, 1,5 saat, 90 dakika, 90 dakika, 90 dakika, 90 dakika 5400s, 5400sn, 5400saniye, 5400saniye. Varsayılan değer 30m.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
+        <source>'--hangdump-timeout' expects a single timeout argument</source>
+        <target state="translated">'--hangdump-timeout' tek bir zaman aşımı bağımsız değişkeni bekliyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeOptionDescription">
+        <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'</source>
+        <target state="translated">Dökümün türünü belirtin. Geçerli değerler 'Mini', 'Heap', 'Triage' (yalnızca .NET 6+'da mevcuttur) veya 'Full'dur. Varsayılan tür 'Tam'dır</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeOptionInvalidType">
+        <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
+        <target state="translated">'{0}' geçerli bir döküm türü değil. Geçerli seçenekler 'Mini', 'Heap', 'Triage' (yalnızca .NET 6+'da mevcuttur) ve 'Full’dur</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
+        <source>Request of type '{0}' is not supported</source>
+        <target state="translated">'{0}' türündeki istek desteklenmiyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangTestListArtifactDescription">
+        <source>The list of tests that were running at the time of the hang</source>
+        <target state="translated">Askıya alınma anında çalışan testlerin listesi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangTestListArtifactDisplayName">
+        <source>Hang test list</source>
+        <target state="translated">Askıda kalma test listesi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MissingHangDumpMainOption">
+        <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
+        <target state="translated">Bir veya daha fazla askıda kalma dökümü parametresi belirtmenize rağmen bunu etkinleştirmediyseniz komut satırına --hangdump ekleyin</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MutexDoesNotExistErrorMessage">
+        <source>Cannot find mutex '{0}'</source>
+        <target state="translated">Muteks '{0}' bulunamıyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
+        <source>Mutex name wasn't received after '{0}' seconds</source>
+        <target state="translated">Mutex adı '{0}' saniyeden sonra alınamadı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RunningTestsWhileDumping">
+        <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
+        <target state="translated">Döküm alındığında aşağıdaki testler hala çalışıyordu (biçim: [&lt;başlangıçtan bu yana geçen süre&gt;] &lt;ad&gt;):</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

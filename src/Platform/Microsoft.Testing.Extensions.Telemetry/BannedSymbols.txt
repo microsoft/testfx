@@ -1,0 +1,4 @@
+﻿M:System.String.IsNullOrEmpty(System.String); Use 'TAString.IsNullOrEmpty' instead
+M:System.String.IsNullOrWhiteSpace(System.String); Use 'TAString.IsNullOrWhiteSpace' instead
+﻿﻿﻿M:System.Diagnostics.Debug.Assert(System.Boolean); Use 'RoslynDebug.Assert' instead
+M:System.Diagnostics.Debug.Assert(System.Boolean,System.String); Use 'RoslynDebug.Assert' instead

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Microsoft.Testing.Extensions.UnitTests": {
+      "commandName": "Project",
+      "commandLineArgs": "--treenode-filter /*/*/*/**"
+    }
+  }
+}

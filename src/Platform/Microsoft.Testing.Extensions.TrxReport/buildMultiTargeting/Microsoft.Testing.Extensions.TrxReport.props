@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <ItemGroup>
+    <!--
+      !!! IMPORTANT !!!
+      DO NOT CHANGE THE GUID, IT'S A WELL KNOWN EXTENSION POINT AND THIS EXTENSION NEEDS TO BE REGISTERED AT THE END
+      WE HAVE CODE INSIDE THE TASK 'TestingPlatformEntryPoint' TO ENSURE THE ORDER OF THE REGISTRATION BASED ON THIS GUID
+    -->
+    <TestingPlatformBuilderHook Include="2006B3F7-93D2-4D9C-9C69-F41A1F21C9C7" Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
+      <DisplayName>Microsoft.Testing.Extensions.TrxReport</DisplayName>
+      <TypeFullName>Microsoft.Testing.Extensions.TrxReport.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+</Project>

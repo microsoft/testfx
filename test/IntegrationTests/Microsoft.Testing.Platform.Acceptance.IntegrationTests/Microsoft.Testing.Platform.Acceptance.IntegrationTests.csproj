@@ -2,28 +2,18 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
-    <UseVSTestRunner>false</UseVSTestRunner>
-    <ImplicitUsings>true</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <GenerateProgramFile>false</GenerateProgramFile>
     <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --retry-failed-tests 3</TestRunnerAdditionalArguments>
-    <OutputType>Exe</OutputType>
+    <UseVSTestRunner>false</UseVSTestRunner>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="Microsoft.Testing.Extensions.Retry" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Internal.Framework" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" GeneratePathProperty="True" />
   </ItemGroup>
 
   <!-- Packages needed for the test assets but that we don't want to reference -->
   <ItemGroup>
-    <PackageDownload Include="Microsoft.Testing.Extensions.HangDump" Version="[$(MicrosoftTestingPlatformVersion)]" />
     <PackageDownload Include="Microsoft.Testing.Extensions.HotReload" Version="[$(MicrosoftTestingPlatformVersion)]" />
     <PackageDownload Include="Microsoft.Testing.Extensions.Retry" Version="[$(MicrosoftTestingPlatformVersion)]" />
     <PackageDownload Include="Microsoft.Testing.Extensions.Telemetry" Version="[$(MicrosoftTestingPlatformVersion)]" />
@@ -34,16 +24,6 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
-    <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Microsoft.Testing.Platform.Acceptance.IntegrationTests.launcher.config.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Microsoft.Testing.Platform.Acceptance.IntegrationTests.testingplatformconfig.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <ItemGroup>

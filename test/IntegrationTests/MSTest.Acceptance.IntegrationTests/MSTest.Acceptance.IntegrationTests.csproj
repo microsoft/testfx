@@ -3,10 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
     <UseVSTestRunner>false</UseVSTestRunner>
-    <ImplicitUsings>true</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <GenerateProgramFile>false</GenerateProgramFile>
-    <OutputType>Exe</OutputType>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
   </PropertyGroup>
 
@@ -17,11 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" />
-    <PackageReference Include="Microsoft.Testing.Internal.Framework" />
-    <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" />
     <PackageReference Include="StreamJsonRpc" />
   </ItemGroup>
 
@@ -32,20 +23,6 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
-    <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="MSTest.Acceptance.IntegrationTests.testingplatformconfig.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="Microsoft.Testing.Internal.Framework" />
-    <Using Include="Microsoft.Testing.Platform.Builder" />
-    <Using Include="Microsoft.Testing.Platform.Extensions" />
-    <Using Include="Microsoft.Testing.TestInfrastructure" />
   </ItemGroup>
 
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">

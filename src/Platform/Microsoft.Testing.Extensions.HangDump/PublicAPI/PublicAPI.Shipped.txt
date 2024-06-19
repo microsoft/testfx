@@ -1,0 +1,5 @@
+#nullable enable
+Microsoft.Testing.Extensions.HangDumpExtensions
+Microsoft.Testing.Extensions.HangDump.TestingPlatformBuilderHook
+static Microsoft.Testing.Extensions.HangDump.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! _) -> void
+static Microsoft.Testing.Extensions.HangDumpExtensions.AddHangDumpProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void

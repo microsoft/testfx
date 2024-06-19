@@ -4,14 +4,10 @@
 using System.Diagnostics;
 
 using Microsoft.Testing.Extensions;
-using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Internal.Framework.Configurations;
-using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.TestInfrastructure;
 
 // DebuggerUtility.AttachVSToCurrentProcess();
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
@@ -22,6 +18,7 @@ builder.AddTestFramework(new TestFrameworkConfiguration(Debugger.IsAttached ? 1 
 builder.AddCodeCoverageProvider();
 #endif
 builder.AddCrashDumpProvider();
+builder.AddHangDumpProvider();
 builder.AddTrxReportProvider();
 
 // Custom suite tools

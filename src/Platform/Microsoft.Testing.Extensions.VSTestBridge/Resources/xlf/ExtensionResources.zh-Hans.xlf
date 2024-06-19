@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="zh-Hans" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="RunSettingsOptionDescription">
+        <source>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</source>
+        <target state="translated">.runsettings 文件的相对路径或绝对路径。有关如何配置测试运行的详细信息和示例，请参阅 https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RunsettingsFileCannotBeRead">
+        <source>runsettings file '{0}' cannot be read</source>
+        <target state="translated">无法读取 runsettings 文件“{0}”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RunsettingsFileDoesNotExist">
+        <source>runsettings file '{0}' does not exist</source>
+        <target state="translated">runsettings 文件“{0}”不存在</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestCaseFilterOptionDescription">
+        <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
+        <target state="translated">使用给定的表达式筛选测试。有关详细信息，请参阅“筛选器选项详细信息”部分。有关如何使用选择性单元测试筛选的详细信息和示例，请参阅 https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestRunParameterOptionArgumentIsNotParameter">
+        <source>argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</source>
+        <target state="translated">自变量“{0}”不是参数。参数自变量与以下模式“key=value”相匹配。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestRunParameterOptionDescription">
+        <source>Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</source>
+        <target state="translated">指定或替代键值对参数。有关详细信息和示例，请参阅 https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
+        <source>The bridged framework supports only one session at a time. A session with UID {0} is already open.</source>
+        <target state="translated">桥接框架一次仅支持一个会话。已打开具有 UID {0} 的会话。</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
