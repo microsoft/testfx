@@ -183,8 +183,11 @@ internal class UnitTestRunner : MarshalByRefObject
             DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
 
             // Keep track of all non-runnable methods so that we can return the appropriate result at the end.
-            _fixtureTests[testMethod.AssemblyName] = testMethodInfo;
-            _fixtureTests[testMethod.AssemblyName + testMethod.FullClassName] = testMethodInfo;
+            if (testMethod.AssemblyName is not null && testMethod.FullClassName is not null)
+            {
+                _fixtureTests[testMethod.AssemblyName] = testMethodInfo;
+                _fixtureTests[testMethod.AssemblyName + testMethod.FullClassName] = testMethodInfo;
+            }
 
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
             UnitTestResult[] result = testMethodRunner.Execute();
