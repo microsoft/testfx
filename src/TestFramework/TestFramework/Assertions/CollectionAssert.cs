@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -533,7 +534,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual)
-        => AreEquivalent(expected, actual, new ObjectEqualityComparer(), string.Empty, null);
+        => AreEquivalent(expected, actual, EqualityComparer<object>.Default, string.Empty, null);
 
     /// <summary>
     /// Tests whether two collections contain the same elements and throws an
@@ -560,7 +561,7 @@ public sealed class CollectionAssert
     public static void AreEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
         string? message)
-        => AreEquivalent(expected, actual, new ObjectEqualityComparer(), message, null);
+        => AreEquivalent(expected, actual, EqualityComparer<object>.Default, message, null);
 
     /// <summary>
     /// Tests whether two collections contain the same elements and throws an
@@ -590,7 +591,7 @@ public sealed class CollectionAssert
     public static void AreEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
         string? message, params object?[]? parameters)
-        => AreEquivalent(expected, actual, new ObjectEqualityComparer(), message, parameters);
+        => AreEquivalent(expected, actual, EqualityComparer<object>.Default, message, parameters);
 
     /// <summary>
     /// Tests whether two collections contain the same elements and throws an
@@ -748,7 +749,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreNotEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual)
-        => AreNotEquivalent(expected, actual, new ObjectEqualityComparer(), string.Empty, null);
+        => AreNotEquivalent(expected, actual, EqualityComparer<object>.Default, string.Empty, null);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
@@ -776,7 +777,7 @@ public sealed class CollectionAssert
     public static void AreNotEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
         string? message)
-        => AreNotEquivalent(expected, actual, new ObjectEqualityComparer(), message, null);
+        => AreNotEquivalent(expected, actual, EqualityComparer<object>.Default, message, null);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
@@ -807,7 +808,7 @@ public sealed class CollectionAssert
     public static void AreNotEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
         string? message, params object?[]? parameters)
-        => AreNotEquivalent(expected, actual, new ObjectEqualityComparer(), message, parameters);
+        => AreNotEquivalent(expected, actual, EqualityComparer<object>.Default, message, parameters);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
@@ -1436,8 +1437,8 @@ public sealed class CollectionAssert
         // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
 
         // Count the occurrences of each object in both collections.
-        Dictionary<object, int> subsetElements = GetElementCounts(subset, new ObjectEqualityComparer(), out int subsetNulls);
-        Dictionary<object, int> supersetElements = GetElementCounts(superset, new ObjectEqualityComparer(), out int supersetNulls);
+        Dictionary<object, int> subsetElements = GetElementCounts(subset, EqualityComparer<object>.Default, out int subsetNulls);
+        Dictionary<object, int> supersetElements = GetElementCounts(superset, EqualityComparer<object>.Default, out int supersetNulls);
 
         if (subsetNulls > supersetNulls)
         {
@@ -1624,13 +1625,5 @@ public sealed class CollectionAssert
     {
         int IComparer.Compare(object? x, object? y) => Equals(x, y) ? 0 : -1;
     }
-
-    private class ObjectEqualityComparer : IEqualityComparer<object>
-    {
-        public new bool Equals(object? x, object? y) => Equals(x, y);
-
-        public int GetHashCode(object obj) => throw new NotImplementedException();
-    }
-
     #endregion
 }
