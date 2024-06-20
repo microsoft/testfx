@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -242,6 +242,98 @@ public class CollectionAssertTests : TestContainer
         comparer.ToString(); // no warning
     }
 
+    public void CollectionAssertAreEquivalent_SameItemsWithDifferentOrder_DoesNotThrow()
+    {
+        ICollection? collection1 = GetMatchingSuperSet();
+        ICollection? collection2 = GetReversedMatchingSuperSet();
+        CollectionAssert.AreEquivalent(collection1, collection2);
+    }
+
+    public void CollectionAssertAreEquivalent_FailWhenNotEquivalent_WithMessage()
+    {
+        ICollection? collection1 = GetCollection();
+        ICollection? collection2 = GetMatchingSuperSet();
+        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1, collection2, "message"));
+        Verify(ex.Message.Contains("message"));
+    }
+
+    public void CollectionAssertAreEquivalent_FailWhenNotEquivalent_WithMessageAndParams()
+    {
+        ICollection? collection1 = GetCollection();
+        ICollection? collection2 = GetMatchingSuperSet();
+        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1, collection2, "message format {0} {1}", 1, 2));
+        Verify(ex.Message.Contains("message"));
+    }
+
+    public void CollectionAssertAreEquivalent_WithInsensitiveCaseComparer_DoesNotThrow()
+    {
+        ICollection? collection1 = GetMatchingSuperSet();
+        ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
+        CollectionAssert.AreEquivalent(collection1, collection2, new CaseInsensitiveEqualityComparer());
+    }
+
+    public void CollectionAssertAreEquivalent_FailsWithInsensitiveCaseComparer_WithMessage()
+    {
+        ICollection? collection1 = GetCollection();
+        ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
+        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1, collection2, new CaseInsensitiveEqualityComparer(), "message"));
+        Verify(ex.Message.Contains("message"));
+    }
+
+    public void CollectionAssertAreEquivalent_FailsWithInsensitiveCaseComparer_WithMessageAndParams()
+    {
+        ICollection? collection1 = GetCollection();
+        ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
+        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1, collection2, new CaseInsensitiveEqualityComparer(), "message format {0} {1}", 1, 2));
+        Verify(ex.Message.Contains("message"));
+    }
+
+    public void CollectionAssertAreNotEquivalent_SameItemsWithDifferentOrder_DoesNotThrow()
+    {
+        ICollection? collection1 = GetCollection();
+        ICollection? collection2 = GetMatchingSuperSet();
+        CollectionAssert.AreNotEquivalent(collection1, collection2);
+    }
+
+    public void CollectionAssertAreNotEquivalent_FailWhenNotEquivalent_WithMessage()
+    {
+        ICollection? collection1 = GetReversedMatchingSuperSet();
+        ICollection? collection2 = GetMatchingSuperSet();
+        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1, collection2, "message"));
+        Verify(ex.Message.Contains("message"));
+    }
+
+    public void CollectionAssertAreNotEquivalent_FailWhenNotEquivalent_WithMessageAndParams()
+    {
+        ICollection? collection1 = GetReversedMatchingSuperSet();
+        ICollection? collection2 = GetMatchingSuperSet();
+        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1, collection2, "message format {0} {1}", 1, 2));
+        Verify(ex.Message.Contains("message"));
+    }
+
+    public void CollectionAssertAreNotEquivalent_WithInsensitiveCaseComparer_DoesNotThrow()
+    {
+        ICollection? collection1 = GetCollection();
+        ICollection? collection2 = GetMatchingSuperSet();
+        CollectionAssert.AreNotEquivalent(collection1, collection2, EqualityComparer<object>.Default);
+    }
+
+    public void CollectionAssertAreNotEquivalent_FailsWithInsensitiveCaseComparer_WithMessage()
+    {
+        ICollection? collection1 = GetMatchingSuperSet();
+        ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
+        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1, collection2, new CaseInsensitiveNotEqualityComparer(), "message"));
+        Verify(ex.Message.Contains("message"));
+    }
+
+    public void CollectionAssertAreNotEquivalent_FailsWithInsensitiveCaseComparer_WithMessageAndParams()
+    {
+        ICollection? collection1 = GetMatchingSuperSet();
+        ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
+        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1, collection2, new CaseInsensitiveNotEqualityComparer(), "message format {0} {1}", 1, 2));
+        Verify(ex.Message.Contains("message"));
+    }
+
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
     private ICollection? GetCollection() => new[] { "item" };
 
@@ -250,6 +342,10 @@ public class CollectionAssertTests : TestContainer
     private object? GetNotMatchingElement() => "not found";
 
     private ICollection? GetMatchingSuperSet() => new[] { "item", "item2" };
+
+    private ICollection? GetLettersCaseMismatchingSuperSet() => new[] { "Item", "iTem2" };
+
+    private ICollection? GetReversedMatchingSuperSet() => new[] { "item2", "item" };
 
     private ICollection? GetNotMatchingSuperSet() => new[] { "item3" };
 
@@ -261,5 +357,19 @@ public class CollectionAssertTests : TestContainer
     private class ObjectComparer : IComparer
     {
         int IComparer.Compare(object? x, object? y) => Equals(x, y) ? 0 : -1;
+    }
+
+    private class CaseInsensitiveEqualityComparer : IEqualityComparer<string>
+    {
+        public bool Equals(string? x, string? y) => string.Equals(x, y, StringComparison.OrdinalIgnoreCase);
+
+        public int GetHashCode(string obj) => obj.ToUpperInvariant().GetHashCode();
+    }
+
+    private class CaseInsensitiveNotEqualityComparer : IEqualityComparer<string>
+    {
+        public bool Equals(string? x, string? y) => !string.Equals(x, y, StringComparison.OrdinalIgnoreCase);
+
+        public int GetHashCode(string obj) => obj.ToUpperInvariant().GetHashCode();
     }
 }
