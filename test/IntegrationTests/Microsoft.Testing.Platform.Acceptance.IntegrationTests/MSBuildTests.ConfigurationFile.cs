@@ -60,6 +60,7 @@ public class MSBuildTests : AcceptanceTestBase
             SourceCode
                 .PatchCodeWithReplace("$TargetFrameworks$", tfm)
                 .PatchCodeWithReplace("$JsonContent$", ConfigurationContent)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingExtensionsVersion$", MicrosoftTestingExtensionsVersion));
 
         File.Delete(Path.Combine(testAsset.TargetAssetPath, "testingplatformconfig.json"));

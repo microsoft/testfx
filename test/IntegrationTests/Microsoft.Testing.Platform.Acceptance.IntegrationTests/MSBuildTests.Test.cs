@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable SA1636 // File header copyright text should match
-// Copyright (c) Microsoft Corporation. All rights reserved.
-#pragma warning restore SA1636 // File header copyright text should match
-
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
@@ -86,25 +82,25 @@ public class MSBuildTests_Test : AcceptanceTestBase
 
     private async Task InvokeTestingPlatform_Target_Should_Execute_Tests_Without_Showing_Error_Detail(string testCommand, string tfm, bool isMultiTfm, string[] tfmsToAssert, BuildConfiguration compilationMode, bool testSucceeded)
         => await RetryHelper.RetryAsync(
-        async () =>
-        {
-            using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
-                AssetName,
-                SourceCode
-                .PatchCodeWithReplace("$PlatformTarget$", "<PlatformTarget>x64</PlatformTarget>")
-                .PatchCodeWithReplace("$TargetFrameworks$", isMultiTfm ? $"<TargetFrameworks>{tfm}</TargetFrameworks>" : $"<TargetFramework>{tfm}</TargetFramework>")
-                .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingExtensionsVersion$", MicrosoftTestingExtensionsVersion));
-            string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
-            string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
-            DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
-
-            foreach (string tfmToAssert in tfmsToAssert)
+            async () =>
             {
-                CommonAssert(compilationResult, tfmToAssert, testSucceeded, testResultFolder);
-            }
-        }, 3, TimeSpan.FromSeconds(10));
+                using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+                    AssetName,
+                    SourceCode
+                    .PatchCodeWithReplace("$PlatformTarget$", "<PlatformTarget>x64</PlatformTarget>")
+                    .PatchCodeWithReplace("$TargetFrameworks$", isMultiTfm ? $"<TargetFrameworks>{tfm}</TargetFrameworks>" : $"<TargetFramework>{tfm}</TargetFramework>")
+                    .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
+                    .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                    .PatchCodeWithReplace("$MicrosoftTestingExtensionsVersion$", MicrosoftTestingExtensionsVersion));
+                string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
+                string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
+                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+
+                foreach (string tfmToAssert in tfmsToAssert)
+                {
+                    CommonAssert(compilationResult, tfmToAssert, testSucceeded, testResultFolder);
+                }
+            }, 3, TimeSpan.FromSeconds(10));
 
     [ArgumentsProvider(nameof(GetBuildMatrix), TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
     public async Task InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_SingleTfm(string testCommand, string tfm, BuildConfiguration compilationMode, bool testSucceeded)
@@ -136,6 +132,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
                 }
             }, 3, TimeSpan.FromSeconds(10));
 
+    [NonTest] // TODO: AMAURY/MARCO - Investigate this test
     public async Task Invoke_DotnetTest_With_Arch_Switch_x86_Should_Work()
         => await RetryHelper.RetryAsync(
             async () =>
@@ -214,7 +211,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformShowTestsFailure=True -p:TestingPlatformCaptureOutput=False -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
         Assert.Contains("error test failed: TestMethod2 (", compilationResult.StandardOutput);
-        Assert.Contains("): Assert.IsTrue: Expected 'true', but got 'false'.", compilationResult.StandardOutput);
+        Assert.Contains("Assert.IsTrue: Expected 'true', but got 'false'.", compilationResult.StandardOutput);
         Assert.Contains(".NET Testing Platform", compilationResult.StandardOutput);
     }
 

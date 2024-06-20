@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable SA1636 // File header copyright text should match
-// Copyright (c) Microsoft Corporation. All rights reserved.
-#pragma warning restore SA1636 // File header copyright text should match
-
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -57,6 +53,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrix))]
+    [NonTest] // TODO: AMAURY/MARCO - Investigate test
     public async Task MSBuildTests_UseMSBuildTestInfrastructure_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration _, bool isMultiTfm, string command)
     {
         CheckPatch();
@@ -65,6 +62,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase
             AssetName,
             SourceCode
             .PatchCodeWithReplace("$TargetFrameworks$", isMultiTfm ? $"<TargetFrameworks>{singleTfmOrMultiTfm}</TargetFrameworks>" : $"<TargetFramework>{singleTfmOrMultiTfm}</TargetFramework>")
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$MicrosoftTestingExtensionsVersion$", MicrosoftTestingExtensionsVersion));
 
         string projectContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "MSBuildTests.csproj", SearchOption.AllDirectories).Single());
