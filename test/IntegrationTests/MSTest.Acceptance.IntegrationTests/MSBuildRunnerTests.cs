@@ -6,13 +6,13 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
-public class MSBuildMSTestRunnerTests : AcceptanceTestBase
+public class MSBuildRunnerTests : AcceptanceTestBase
 {
     private const string AssetName = "MSTestProject";
     private const string DotnetTestVerb = "test";
     private readonly AcceptanceFixture _acceptanceFixture;
 
-    public MSBuildMSTestRunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
+    public MSBuildRunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
         : base(testExecutionContext)
     {
         _acceptanceFixture = acceptanceFixture;
@@ -51,8 +51,7 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
            <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
            <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
 """ :
-           string.Empty),
-           addPublicFeeds: true);
+           string.Empty));
 
         string projectContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "MSTestProject.csproj", SearchOption.AllDirectories).Single());
         string testSourceContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "UnitTest1.cs", SearchOption.AllDirectories).Single());

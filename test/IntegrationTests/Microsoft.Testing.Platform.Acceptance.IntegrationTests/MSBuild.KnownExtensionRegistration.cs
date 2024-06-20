@@ -1,12 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable SA1636 // File header copyright text should match
-// Copyright (c) Microsoft Corporation. All rights reserved.
-#pragma warning restore SA1636 // File header copyright text should match
-
-using System.Runtime.InteropServices;
-
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 using SL = Microsoft.Build.Logging.StructuredLogger;
@@ -17,7 +11,6 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase
 {
     private readonly AcceptanceFixture _acceptanceFixture;
-    private readonly string _rid = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
     private const string AssetName = "MSBuildTests";
 
     public MSBuildTests_KnownExtensionRegistration(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
@@ -36,12 +29,12 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase
                     SourceCode
                     .PatchCodeWithReplace("$TargetFrameworks$", tfm)
                     .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                    .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
+                    .PatchCodeWithReplace("$MicrosoftTestingExtensionsVersion$", MicrosoftTestingExtensionsVersion));
                 string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
-                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -r {_rid} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-                compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {_rid} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
-                var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: _rid, verb: verb, buildConfiguration: compilationMode);
+                var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
                 TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
                 testHostResult.AssertOutputContains("--crashdump");
                 testHostResult.AssertOutputContains("--report-trx");
@@ -84,8 +77,8 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
-        <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Telemetry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>

@@ -26,9 +26,7 @@ public sealed class PublishAotNonNativeTests : AcceptanceTestBase
                AssetName,
                SourceCode
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{TargetFrameworks.NetCurrent.Arguments}</TargetFramework>")
-               .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
-               addPublicFeeds: true);
+               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c Debug {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
 

@@ -28,8 +28,7 @@ public class DotnetTestCliTests : AcceptanceTestBase
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
             .PatchCodeWithReplace("$OutputType$", string.Empty)
-            .PatchCodeWithReplace("$Extra$", string.Empty),
-            addPublicFeeds: true);
+            .PatchCodeWithReplace("$Extra$", string.Empty));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -m:1 -nodeReuse:false {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
