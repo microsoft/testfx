@@ -11,11 +11,11 @@
   <PropertyGroup>
     <!-- Hot Reload -->
     <EnableMicrosoftTestingExtensionsHotReload Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHotReload>
-    <MicrosoftTestingExtensionsHotReloadVersion Condition=" '$(MicrosoftTestingExtensionsHotReloadVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHotReloadVersion>
+    <MicrosoftTestingExtensionsHotReloadVersion Condition=" '$(MicrosoftTestingExtensionsHotReloadVersion)' == '' " >$(MicrosoftTestingExtensionsVersion)</MicrosoftTestingExtensionsHotReloadVersion>
 
     <!-- Retry -->
     <EnableMicrosoftTestingExtensionsRetry Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsRetry>
-    <MicrosoftTestingExtensionsRetryVersion Condition=" '$(MicrosoftTestingExtensionsRetryVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsRetryVersion>
+    <MicrosoftTestingExtensionsRetryVersion Condition=" '$(MicrosoftTestingExtensionsRetryVersion)' == '' " >$(MicrosoftTestingExtensionsVersion)</MicrosoftTestingExtensionsRetryVersion>
 
     <!-- Crash dump -->
     <EnableMicrosoftTestingExtensionsCrashDump Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsCrashDump>
@@ -29,9 +29,13 @@
   <!-- Core -->
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" VersionOverride="$(MicrosoftNETTestSdkVersion)" Sdk="MSTest" />
+    <!-- Most of the times this dependency is not required but we leave the opportunity to align the version of the platform being used -->
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$(MicrosoftTestingPlatformVersion)" VersionOverride="$(MicrosoftTestingPlatformVersion)" Sdk="MSTest"
+                      Condition=" '$(EnableMicrosoftTestingPlatform)' == 'true' " />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Sdk="MSTest" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Sdk="MSTest" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " Sdk="MSTest" />
+    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Sdk="MSTest"
+                      Condition=" '$(EnableMSTestAnalyzers)' != 'false' " />
   </ItemGroup>
 
   <!-- Extensions -->

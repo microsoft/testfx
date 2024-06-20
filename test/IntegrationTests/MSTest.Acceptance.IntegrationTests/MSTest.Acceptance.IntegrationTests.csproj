@@ -19,10 +19,20 @@
   <!-- Packages needed for the test assets but that we don't want to reference -->
   <ItemGroup>
     <PackageDownload Include="Aspire.Hosting.Testing" Version="[$(AspireHostingTestingVersion)]" />
+    <PackageDownload Include="MSTest.Engine" Version="[$(MSTestEngineVersion)]" />
+    <PackageDownload Include="MSTest.SourceGeneration" Version="[$(MSTestEngineVersion)]" />
   </ItemGroup>
 
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <MicrosoftTestingExtensionsCodeCoveragePackage Include="$(PkgMicrosoft_Testing_Extensions_CodeCoverage)\microsoft.testing.extensions.codecoverage.*.nupkg" />
+    </ItemGroup>
+
+    <Copy SkipUnchangedFiles="true" SourceFiles="@(MicrosoftTestingExtensionsCodeCoveragePackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
+
     <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)aspire.hosting.testing\$(AspireHostingTestingVersion)\aspire.hosting.testing.$(AspireHostingTestingVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/aspire.hosting.testing.$(AspireHostingTestingVersion).nupkg" />
+    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)mstest.engine\$(MSTestEngineVersion)\mstest.engine.$(MSTestEngineVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/mstest.engine.$(MSTestEngineVersion).nupkg" />
+    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)mstest.sourcegeneration\$(MSTestEngineVersion)\mstest.sourcegeneration.$(MSTestEngineVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/mstest.sourcegeneration.$(MSTestEngineVersion).nupkg" />
   </Target>
 
 </Project>
