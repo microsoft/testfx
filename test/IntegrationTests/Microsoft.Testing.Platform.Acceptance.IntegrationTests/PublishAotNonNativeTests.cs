@@ -63,7 +63,6 @@ public sealed class PublishAotNonNativeTests : AcceptanceTestBase
         <PlatformTarget>x64</PlatformTarget>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="MSTest" Version="$MSTestVersion$" />
     </ItemGroup>
 </Project>

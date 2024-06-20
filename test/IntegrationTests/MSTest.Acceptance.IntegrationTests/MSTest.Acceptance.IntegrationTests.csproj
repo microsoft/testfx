@@ -21,10 +21,6 @@
     <PackageDownload Include="Aspire.Hosting.Testing" Version="[$(AspireHostingTestingVersion)]" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
-  </ItemGroup>
-
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">
     <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)aspire.hosting.testing\$(AspireHostingTestingVersion)\aspire.hosting.testing.$(AspireHostingTestingVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/aspire.hosting.testing.$(AspireHostingTestingVersion).nupkg" />
   </Target>
