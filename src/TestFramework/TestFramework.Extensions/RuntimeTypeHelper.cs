@@ -335,7 +335,7 @@ internal class RuntimeTypeHelper
             //              in which case paramOrder[i] == p1.Length - 1 for that element
             //      or the user did not re-order the parameters in which case
             //          the paramOrder array could contain indexes larger than p.Length - 1
-            ////          so any index >= p.Length - 1 is being put in the param array
+            //          so any index >= p.Length - 1 is being put in the param array
 
             c1 = paramArrayType1 != null && paramOrder1[i] >= p1.Length - 1 ? paramArrayType1 : p1[paramOrder1[i]].ParameterType;
 

@@ -261,12 +261,6 @@ namespace Analyzer.Utilities
 
             UnicodeCategory cat = CharUnicodeInfo.GetUnicodeCategory(ch);
 
-            ////return IsLetterChar(cat)
-            ////    || IsDecimalDigitChar(cat)
-            ////    || IsConnectingChar(cat)
-            ////    || IsCombiningChar(cat)
-            ////    || IsFormattingChar(cat);
-
             return cat switch
             {
                 // Letter
