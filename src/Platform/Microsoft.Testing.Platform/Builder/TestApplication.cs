@@ -142,7 +142,8 @@ public sealed class TestApplication : ITestApplication
         await logger.LogInformationAsync("Logging mode: " + (syncWrite ? "synchronous" : "asynchronous"));
         await logger.LogInformationAsync($"Logging level: {loggerLevel}");
         await logger.LogInformationAsync($"CreateBuilderAsync entry time: {createBuilderEntryTime}");
-        await logger.LogInformationAsync($"PID: {processHandler.GetCurrentProcess().Id}");
+        using IProcess currentProcess = processHandler.GetCurrentProcess();
+        await logger.LogInformationAsync($"PID: {currentProcess.Id}");
 
 #if NETCOREAPP
         string runtimeInformation = $"{RuntimeInformation.RuntimeIdentifier} - {RuntimeInformation.FrameworkDescription}";

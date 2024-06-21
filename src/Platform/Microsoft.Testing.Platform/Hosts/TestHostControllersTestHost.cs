@@ -69,7 +69,8 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         var consoleRunStarted = Stopwatch.StartNew();
         IEnvironment environment = ServiceProvider.GetEnvironment();
         IProcessHandler process = ServiceProvider.GetProcessHandler();
-        int currentPID = process.GetCurrentProcess().Id;
+        using IProcess currentProcess = process.GetCurrentProcess();
+        int currentPID = currentProcess.Id;
         ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
         ExecutableInfo executableInfo = testApplicationModuleInfo.GetCurrentExecutableInfo();
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
@@ -79,7 +80,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         IConfiguration configuration = ServiceProvider.GetConfiguration();
         try
         {
-            string processIdString = process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture);
+            string processIdString = currentProcess.Id.ToString(CultureInfo.InvariantCulture);
             List<string> partialCommandLine =
             [
                 .. executableInfo.Arguments,
@@ -111,7 +112,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 EnvironmentVariables =
                 {
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID}", processCorrelationId },
-                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPID}", process.GetCurrentProcess()?.Id.ToString(CultureInfo.InvariantCulture) ?? "null pid" },
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPID}", currentProcess?.Id.ToString(CultureInfo.InvariantCulture) ?? "null pid" },
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPID}", "1" },
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}", testHostControllerIpc.PipeName.Name },
                 },
