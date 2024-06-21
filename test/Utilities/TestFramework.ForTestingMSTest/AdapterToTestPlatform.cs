@@ -118,7 +118,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
         RunTests(testCases, runContext, frameworkHandle);
     }
 
-    private static string MakeFullyQualifiedName(TypeInfo type, MethodInfo method)
+    private static string MakeFullyQualifiedName(Type type, MethodInfo method)
         => $"{type.FullName}.{method.Name}";
 
     private static void LogMessage(IMessageLogger? logger, TestMessageLevel level, string message)
@@ -134,16 +134,16 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
     }
 
     // Looking up base types.
-    private static bool IsTestContainer(Type typeInfo)
+    private static bool IsTestContainer(Type type)
     {
-        while (typeInfo != null)
+        while (type != null)
         {
-            if (typeInfo == typeof(TestContainer))
+            if (type == typeof(TestContainer))
             {
                 return true;
             }
 
-            typeInfo = typeInfo.BaseType;
+            type = type.BaseType;
         }
 
         return false;
@@ -164,18 +164,18 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
             LogMessage(logger, TestMessageLevel.Informational, $"Discovering tests in assembly '{assemblyName}'");
 
             var assembly = Assembly.LoadFrom(assemblyName);
-            IEnumerable<TypeInfo> assemblyTestContainerTypes = assembly.DefinedTypes.Where(IsTestContainer);
+            IEnumerable<Type> assemblyTestContainerTypes = assembly.GetTypes().Where(IsTestContainer);
 
             // TODO: Fail if no container?
-            foreach (TypeInfo? testContainerType in assemblyTestContainerTypes)
+            foreach (Type? testContainerType in assemblyTestContainerTypes)
             {
                 LogMessage(logger, TestMessageLevel.Informational,
                     $"Discovering tests for container '{testContainerType.FullName}'");
 
-                IEnumerable<MethodInfo> testContainerPublicMethods = testContainerType.DeclaredMethods.Where(memberInfo =>
-                    memberInfo.IsPublic
-                    && (memberInfo.ReturnType == typeof(void) || memberInfo.ReturnType == typeof(Task))
-                    && memberInfo.GetParameters().Length == 0);
+                IEnumerable<MethodInfo> testContainerPublicMethods = testContainerType.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public)
+                    .Where(memberInfo =>
+                        (memberInfo.ReturnType == typeof(void) || memberInfo.ReturnType == typeof(Task))
+                        && memberInfo.GetParameters().Length == 0);
 
                 // TODO: Fail if no public method?
                 foreach (MethodInfo? publicMethod in testContainerPublicMethods)
@@ -198,13 +198,13 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
             LogMessage(logger, TestMessageLevel.Informational, $"Trying to find test '{testCase.DisplayName}'");
             var assembly = Assembly.LoadFrom(testCase.Source);
 
-            testContainerType = assembly.GetTypes().Single(typeInfo =>
-                testCase.FullyQualifiedName.StartsWith(typeInfo.FullName, StringComparison.Ordinal));
+            testContainerType = assembly.GetTypes().Single(type =>
+                testCase.FullyQualifiedName.StartsWith(type.FullName, StringComparison.Ordinal));
 
             // Is it better to use Activator.CreateInstance?
             setupMethod = testContainerType.GetConstructor([])!;
             teardownMethod = testContainerType.BaseType.GetMethod("Dispose");
-            TypeInfo type = testContainerType;
+            Type type = testContainerType;
             testMethod = testContainerType.GetMethods(BindingFlags.DeclaredOnly)
                 .Single(methodInfo =>
                     string.Equals(MakeFullyQualifiedName(type, methodInfo), testCase.FullyQualifiedName, StringComparison.Ordinal));
