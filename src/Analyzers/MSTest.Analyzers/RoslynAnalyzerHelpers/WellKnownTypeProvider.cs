@@ -60,7 +60,7 @@ namespace Analyzer.Utilities
         /// </summary>
         private readonly ConcurrentDictionary<string, INamedTypeSymbol?> _fullNameToTypeMap;
 
-#if !NETSTANDARD1_3 // Assuming we're on .NET Standard 2.0 or later, cache the type names that are probably compile time constants.
+        // Assuming we're on .NET Standard 2.0 or later, cache the type names that are probably compile time constants.
         /// <summary>
         /// Static cache of full type names (with namespaces) to namespace name parts,
         /// so we can query <see cref="IAssemblySymbol.NamespaceNames"/>.
@@ -74,7 +74,6 @@ namespace Analyzer.Utilities
         /// </remarks>
         private static readonly ConcurrentDictionary<string, ImmutableArray<string>> _fullTypeNameToNamespaceNames =
             new(StringComparer.Ordinal);
-#endif
 
         /// <summary>
         /// Attempts to get the type by the full type name.
@@ -112,9 +111,7 @@ namespace Analyzer.Utilities
                     INamedTypeSymbol? type = null;
 
                     ImmutableArray<string> namespaceNames;
-#if NETSTANDARD1_3 // Probably in 2.9.x branch; just don't cache.
-                    namespaceNames = GetNamespaceNamesFromFullTypeName(fullTypeName);
-#else // Assuming we're on .NET Standard 2.0 or later, cache the type names that are probably compile time constants.
+                    // Assuming we're on .NET Standard 2.0 or later, cache the type names that are probably compile time constants.
                     if (string.IsInterned(fullTypeName) != null)
                     {
                         namespaceNames = _fullTypeNameToNamespaceNames.GetOrAdd(
@@ -125,7 +122,6 @@ namespace Analyzer.Utilities
                     {
                         namespaceNames = GetNamespaceNamesFromFullTypeName(fullTypeName);
                     }
-#endif
 
                     if (IsSubsetOfCollection(namespaceNames, Compilation.Assembly.NamespaceNames))
                     {
