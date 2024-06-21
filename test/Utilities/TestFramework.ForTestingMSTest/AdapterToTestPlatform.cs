@@ -64,7 +64,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
             {
                 var testResult = new TestResult(testCase);
                 _testRunCancellationTokenSource.Token.ThrowIfCancellationRequested();
-                if (!TryFindMethodsToRun(testCase, frameworkHandle, out TypeInfo? testContainerType, out ConstructorInfo? setupMethod,
+                if (!TryFindMethodsToRun(testCase, frameworkHandle, out Type? testContainerType, out ConstructorInfo? setupMethod,
                     out MethodInfo? teardownMethod, out MethodInfo? testMethod))
                 {
                     testResult.Outcome = TestOutcome.NotFound;
@@ -188,7 +188,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
     }
 
     private static bool TryFindMethodsToRun(TestCase testCase, IMessageLogger? logger,
-        [NotNullWhen(true)] out TypeInfo? testContainerType,
+        [NotNullWhen(true)] out Type? testContainerType,
         [NotNullWhen(true)] out ConstructorInfo? setupMethod,
         [NotNullWhen(true)] out MethodInfo? teardownMethod,
         [NotNullWhen(true)] out MethodInfo? testMethod)
@@ -198,17 +198,16 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
             LogMessage(logger, TestMessageLevel.Informational, $"Trying to find test '{testCase.DisplayName}'");
             var assembly = Assembly.LoadFrom(testCase.Source);
 
-            testContainerType = assembly.DefinedTypes.Single(typeInfo =>
+            testContainerType = assembly.GetTypes().Single(typeInfo =>
                 testCase.FullyQualifiedName.StartsWith(typeInfo.FullName, StringComparison.Ordinal));
 
             // Is it better to use Activator.CreateInstance?
-            setupMethod = testContainerType.DeclaredConstructors.Single(ctorInfo =>
-                ctorInfo.IsPublic
-                && ctorInfo.GetParameters().Length == 0);
+            setupMethod = testContainerType.GetConstructor([])!;
             teardownMethod = testContainerType.BaseType.GetMethod("Dispose");
             TypeInfo type = testContainerType;
-            testMethod = testContainerType.DeclaredMethods.Single(methodInfo =>
-                string.Equals(MakeFullyQualifiedName(type, methodInfo), testCase.FullyQualifiedName, StringComparison.Ordinal));
+            testMethod = testContainerType.GetMethods(BindingFlags.DeclaredOnly)
+                .Single(methodInfo =>
+                    string.Equals(MakeFullyQualifiedName(type, methodInfo), testCase.FullyQualifiedName, StringComparison.Ordinal));
 
             return true;
         }
