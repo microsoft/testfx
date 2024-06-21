@@ -29,7 +29,12 @@
   <!-- Core -->
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" VersionOverride="$(MicrosoftNETTestSdkVersion)" Sdk="MSTest" />
-    <!-- Most of the times this dependency is not required but we leave the opportunity to align the version of the platform being used -->
+    <!--
+      Most of the times this dependency is not required but we leave the opportunity to align the version of the platform being used.
+      At the moment this is mainly used for our acceptance tests because the locally/CI built version ends with -dev or -ci which is
+      considered by NuGet resolver as older than any -preview version. Using this property we can ensure the local version is being
+      selected.
+      -->
     <PackageReference Include="Microsoft.Testing.Platform" Version="$(MicrosoftTestingPlatformVersion)" VersionOverride="$(MicrosoftTestingPlatformVersion)" Sdk="MSTest"
                       Condition=" '$(EnableMicrosoftTestingPlatform)' == 'true' " />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Sdk="MSTest" />
