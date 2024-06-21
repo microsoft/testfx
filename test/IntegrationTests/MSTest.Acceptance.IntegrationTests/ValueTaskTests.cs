@@ -23,8 +23,8 @@ public sealed class ValueTaskTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         // Assert
-        testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 2, Skipped: 0, Total: 2");
+        testHostResult.AssertExitCodeIs(2);
+        testHostResult.AssertOutputContains("Failed! - Failed: 1, Passed: 2, Skipped: 1, Total: 4");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -91,6 +91,20 @@ public class UnitTest1
 
     [TestMethod]
     public ValueTask TestMethod2() => ValueTask.CompletedTask;
+
+    [TestMethod]
+    public async ValueTask FailedTestMethod()
+    {
+        await ValueTask.CompletedTask;
+        Assert.Fail();
+    }
+
+    [TestMethod]
+    public async ValueTask InconclusiveTestMethod()
+    {
+        await ValueTask.CompletedTask;
+        Assert.Inconclusive();
+    }
 }
 """;
     }
