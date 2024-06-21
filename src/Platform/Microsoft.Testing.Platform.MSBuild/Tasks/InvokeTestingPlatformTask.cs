@@ -124,10 +124,11 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         // We look for dotnet muxer only if we're not running with mono.
         if (dotnetRunnerName != MonoRunnerName)
         {
-            if (Path.GetFileName(_currentProcess.MainModule?.FileName) == dotnetRunnerName)
+            ProcessModule? mainModule = _currentProcess.MainModule;
+            if (mainModule != null && Path.GetFileName(mainModule.FileName) == dotnetRunnerName)
             {
-                Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using current process: '{_currentProcess!.MainModule!.FileName}' architecture: '{_currentProcessArchitecture}'");
-                return _currentProcess!.MainModule!.FileName;
+                Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using current process: '{mainModule.FileName}' architecture: '{_currentProcessArchitecture}'");
+                return mainModule.FileName;
             }
 
             if (DotnetHostPath is not null && File.Exists(DotnetHostPath.ItemSpec))
@@ -138,7 +139,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         }
 
         string values = Environment.GetEnvironmentVariable("PATH")!;
-        foreach (string? p in values!.Split(Path.PathSeparator))
+        foreach (string? p in values.Split(Path.PathSeparator))
         {
             string fullPath = Path.Combine(p, dotnetRunnerName);
             if (File.Exists(fullPath))
@@ -202,7 +203,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
         if (!string.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
         {
-            builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments!.ItemSpec} ");
+            builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments.ItemSpec} ");
         }
 
         return builder.ToString();
@@ -332,7 +333,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                     {
                         _moduleInfo = moduleInfo;
                         _outputFileName = $"{Path.GetFileNameWithoutExtension(TargetPath.ItemSpec.Trim())}_{TargetFramework.ItemSpec}_{TestArchitecture.ItemSpec}.log";
-                        _outputFileName = Path.Combine(_moduleInfo.TestResultFolder, _outputFileName)!;
+                        _outputFileName = Path.Combine(_moduleInfo.TestResultFolder, _outputFileName);
                         Log.LogMessage(MessageImportance.Low, $"Initializing module info and output file '{_outputFileName}'");
                         _outputFileStream = new StreamWriter(_fileSystem.CreateNew(_outputFileName), Encoding.Unicode)
                         {

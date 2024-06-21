@@ -200,7 +200,7 @@ internal static class ObjectModelConverters
         // test assembly path.
         if (RoslynString.IsNullOrEmpty(testCase.Source) && !RoslynString.IsNullOrEmpty(testAssemblyPath))
         {
-            testCase.Source = testAssemblyPath!;
+            testCase.Source = testAssemblyPath;
         }
 
         // Because this project is the actually registered test adapter, we need to replace test framework executor
