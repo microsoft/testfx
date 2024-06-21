@@ -269,7 +269,7 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
     private TestClassInfo CreateClassInfo(Type classType, TestMethod testMethod)
     {
-        ConstructorInfo? constructor = classType.GetConstructor(Type.EmptyTypes);
+        ConstructorInfo? constructor = classType.GetConstructor([]);
 
         if (constructor == null)
         {

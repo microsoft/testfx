@@ -202,7 +202,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
                 testCase.FullyQualifiedName.StartsWith(typeInfo.FullName, StringComparison.Ordinal));
 
             // Is it better to use Activator.CreateInstance?
-            setupMethod = testContainerType.GetConstructor(Type.EmptyTypes);
+            setupMethod = testContainerType.GetConstructor([]);
             teardownMethod = testContainerType.BaseType.GetMethod("Dispose");
             TypeInfo type = testContainerType;
             testMethod = testContainerType.DeclaredMethods.Single(methodInfo =>
