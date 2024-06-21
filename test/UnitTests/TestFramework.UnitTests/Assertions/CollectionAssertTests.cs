@@ -269,14 +269,14 @@ public class CollectionAssertTests : TestContainer
     {
         ICollection? collection1 = GetMatchingSuperSet();
         ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
-        CollectionAssert.AreEquivalent(collection1, collection2, new CaseInsensitiveEqualityComparer());
+        CollectionAssert.AreEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveEqualityComparer());
     }
 
     public void CollectionAssertAreEquivalent_FailsWithInsensitiveCaseComparer_WithMessage()
     {
         ICollection? collection1 = GetCollection();
         ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1, collection2, new CaseInsensitiveEqualityComparer(), "message"));
+        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveEqualityComparer(), "message"));
         Verify(ex.Message.Contains("message"));
     }
 
@@ -284,7 +284,7 @@ public class CollectionAssertTests : TestContainer
     {
         ICollection? collection1 = GetCollection();
         ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1, collection2, new CaseInsensitiveEqualityComparer(), "message format {0} {1}", 1, 2));
+        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveEqualityComparer(), "message format {0} {1}", 1, 2));
         Verify(ex.Message.Contains("message"));
     }
 
@@ -315,14 +315,14 @@ public class CollectionAssertTests : TestContainer
     {
         ICollection? collection1 = GetCollection();
         ICollection? collection2 = GetMatchingSuperSet();
-        CollectionAssert.AreNotEquivalent(collection1, collection2, EqualityComparer<object>.Default);
+        CollectionAssert.AreNotEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), EqualityComparer<object>.Default);
     }
 
     public void CollectionAssertAreNotEquivalent_FailsWithInsensitiveCaseComparer_WithMessage()
     {
         ICollection? collection1 = GetMatchingSuperSet();
         ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1, collection2, new CaseInsensitiveNotEqualityComparer(), "message"));
+        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveNotEqualityComparer(), "message"));
         Verify(ex.Message.Contains("message"));
     }
 
@@ -330,7 +330,7 @@ public class CollectionAssertTests : TestContainer
     {
         ICollection? collection1 = GetMatchingSuperSet();
         ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1, collection2, new CaseInsensitiveNotEqualityComparer(), "message format {0} {1}", 1, 2));
+        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveNotEqualityComparer(), "message format {0} {1}", 1, 2));
         Verify(ex.Message.Contains("message"));
     }
 
