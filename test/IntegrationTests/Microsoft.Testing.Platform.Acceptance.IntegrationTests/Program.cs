@@ -19,7 +19,8 @@ builder.AddTestFramework(new TestFrameworkConfiguration(Debugger.IsAttached ? 1 
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverageProvider();
 #endif
-builder.AddCrashDumpProvider();
+builder.AddHangDumpProvider();
+builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
 builder.AddTrxReportProvider();
 builder.AddRetryProvider();
 

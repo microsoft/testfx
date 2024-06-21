@@ -1,6 +1,14 @@
 <Project>
 
-  <Import Condition="Exists('$(MSBuildThisFileDirectory)\..\Directory.Build.targets')" Project="$(MSBuildThisFileDirectory)\..\Directory.Build.targets" />
-  <Import Condition="!Exists('$(MSBuildThisFileDirectory)\..\Directory.Build.targets')" Project="$(MSBuildThisFileDirectory)\Directory.Build.Local.targets" />
+  <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+
+  <PropertyGroup Condition=" '$(UseAssemblyVersion14)' == 'true' ">
+    <!--
+      It appears that AssemblyVersion should always be set to 14.0.0.0 for some backward compatibility cases,
+      but we don't have any information about these cases.
+     -->
+    <AssemblyVersion>14.0.0.0</AssemblyVersion>
+    <AssemblyFileVersion>14.0.0.0</AssemblyFileVersion>
+  </PropertyGroup>
 
 </Project>

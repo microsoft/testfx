@@ -6,8 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.Testing.Internal.Framework;
-using Microsoft.Testing.TestInfrastructure;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UnitTests.UseAsyncSuffixTestFixtureMethodSuppressorTests.WarnForMissingAsyncSuffix,

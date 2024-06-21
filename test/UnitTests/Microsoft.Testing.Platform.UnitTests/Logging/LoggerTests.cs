@@ -3,9 +3,7 @@
 
 using System.Globalization;
 
-using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.TestInfrastructure;
 
 using Moq;
 
