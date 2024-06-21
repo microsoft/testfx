@@ -1,6 +1,6 @@
 # Code sample
 
-You can find a practical example of the concepts discussed in this documentation by opening the solution located at `./Source/TestingPlatformSamples.sln`.
+You can find a practical example of the concepts discussed in this documentation by opening the solution located at [./Source/TestingPlatformSamples.sln](https://github.com/microsoft/testfx/tree/main/docs/testingplatform/Source).
 
 This project demonstrates a basic `TestingFramework` testing framework, showcasing how to utilize the extensibility point and various available services.
 
