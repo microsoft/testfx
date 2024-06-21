@@ -4,74 +4,74 @@
     <body>
       <trans-unit id="CannotFindExpectedCrashDumpFile">
         <source>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</source>
-        <target state="translated">필요한 크래시 덤프 파일 '{0}'을(를) 찾을 수 없습니다. '*.dmp' 패턴과 일치하는 모든 파일이 결과 폴더에 복사됩니다.</target>
+        <target state="new">Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDescription">
         <source>The testhost process crash dump file</source>
-        <target state="translated">testhost 프로세스 크래시 덤프 파일</target>
+        <target state="new">The testhost process crash dump file</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDisplayName">
         <source>Crash dump file</source>
-        <target state="translated">크래시 덤프 파일</target>
+        <target state="new">Crash dump file</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
         <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="translated">[net6.0 이상만] 테스트 실행 프로세스가 예기치 않게 충돌할 때 크래시 덤프 파일 생성</target>
+        <target state="new">[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
         <source>Crash dump</source>
-        <target state="translated">크래시 덤프</target>
+        <target state="new">Crash dump</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file</source>
-        <target state="translated">덤프 파일의 이름 지정</target>
+        <target state="new">Specify the name of the dump file</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
         <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
-        <target state="translated">환경 변수 '{0}'은(는) '{1}'로 설정해야 하지만 값이 '{2}'입니다.</target>
+        <target state="new">Environment variable '{0}' should have been set to '{1}' but value is '{2}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
         <source>Crash dump feature is only available in .NET (Core)</source>
-        <target state="translated">크래시 덤프 기능은 .NET(Core)에서만 사용할 수 있습니다.</target>
+        <target state="new">Crash dump feature is only available in .NET (Core)</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
-        <target state="translated">[net6.0 이상만] 테스트 프로세스가 충돌하는 경우 덤프 파일 생성</target>
+        <target state="new">[net6.0+ only] Generate a dump file if the test process crashes</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
-        <target state="translated">PID가 '{0}'인 테스트 호스트 프로세스가 충돌했습니다. 덤프 파일이 생성되었습니다.</target>
+        <target state="new">Test host process with PID '{0}' crashed, a dump file was generated</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
         <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. 
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
-        <target state="translated">덤프 유형을 지정하십시오. 유효한 값은 'Mini', 'Heap', 'Triage' 또는 'Full'입니다. 기본 유형은 'Full'입니다. 
-자세한 내용은 https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps를 방문하세요.</target>
+        <target state="new">Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. 
+For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
-        <target state="translated">'{0}'은(는) 올바른 덤프 유형이 아닙니다. 유효한 옵션은 'Mini', 'Heap', 'Triage' 및 'Full'입니다.</target>
+        <target state="new">'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">
         <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
-        <target state="translated">'--crashdump-type'에는 단일 덤프 유형이 인수로 필요합니다(예: '--crashdump-type Heap').</target>
+        <target state="new">'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
-        <target state="translated">'{0}' 유형의 요청은 지원되지 않습니다.</target>
+        <target state="new">Requests of type '{0}' is not supported</target>
         <note />
       </trans-unit>
     </body>

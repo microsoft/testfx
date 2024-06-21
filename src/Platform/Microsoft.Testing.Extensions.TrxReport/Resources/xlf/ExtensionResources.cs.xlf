@@ -4,107 +4,107 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Generátor sestav TRX funguje pouze s tvůrci typu Microsoft.Testing.Platform.Builder.TestApplicationBuilder.</target>
+        <target state="new">TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
         <source>The baseline TRX file</source>
-        <target state="translated">Soubor TRX standardních hodnot</target>
+        <target state="new">The baseline TRX file</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolBothFilesMustBeSpecified">
         <source>'--{0}' and '--{1}' must both be specified</source>
-        <target state="translated">Musí být zadaná jak možnost --{0}, tak možnost --{1}.</target>
+        <target state="new">'--{0}' and '--{1}' must both be specified</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolDescription">
         <source>This tool allows to compare and highights differences between 2 TRX reports</source>
-        <target state="translated">Tento nástroj umožňuje porovnat rozdíly mezi 2 sestavami TRX a zobrazit přehled těchto rozdílů.</target>
+        <target state="new">This tool allows to compare and highights differences between 2 TRX reports</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolDisplayName">
         <source>TRX comparer tool</source>
-        <target state="translated">Porovnávač souborů TRX</target>
+        <target state="new">TRX comparer tool</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolOptionExpectsSingleArgument">
         <source>'--{0}' expects a single trx file path as argument</source>
-        <target state="translated">--{0} očekává jako argument jednu cestu k souboru trx.</target>
+        <target state="new">'--{0}' expects a single trx file path as argument</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolOtherFileOptionDescription">
         <source>The TRX file to compare with the baseline</source>
-        <target state="translated">Soubor TRX, který se má porovnat se standardními hodnotami</target>
+        <target state="new">The TRX file to compare with the baseline</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
         <source>Test session</source>
-        <target state="translated">Relace testu</target>
+        <target state="new">Test session</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportArtifactDisplayName">
         <source>TRX Report</source>
-        <target state="translated">Sestava TRX</target>
+        <target state="new">TRX Report</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameExtensionIsNotTrx">
         <source>'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</source>
-        <target state="translated">Argument názvu souboru --report-trx-filename musí končit na .trx (například --report-trx-filename myreport.trx).</target>
+        <target state="new">'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameOptionDescription">
         <source>The name of the generated TRX report</source>
-        <target state="translated">Název vygenerované sestavy TRX</target>
+        <target state="new">The name of the generated TRX report</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameRequiresTrxReport">
         <source>'--report-trx-filename' requires '--report-trx' to be enabled</source>
-        <target state="translated">--report-trx-filename vyžaduje, aby byla povolená možnost --report-trx.</target>
+        <target state="new">'--report-trx-filename' requires '--report-trx' to be enabled</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameShouldNotContainPath">
         <source>file name argument must not contain path (e.g. --report-trx-filename myreport.trx)</source>
-        <target state="translated">Argument názvu souboru nesmí obsahovat cestu (například --report-trx-filename myreport.trx).</target>
+        <target state="new">file name argument must not contain path (e.g. --report-trx-filename myreport.trx)</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFrameworkDoesNotSupportTrxReportCapability">
         <source>The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</source>
-        <target state="translated">Testovací architektura {0} s UID {1} nepodporuje ITrxReportCapability, což vede k chybějícím nebo neúplným sestavám TRX.</target>
+        <target state="new">The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportGeneratorBeforeTestHostProcessStartAsyncNotCalled">
         <source>Method 'BeforeTestHostProcessStartAsync' must be called before 'OnTestHostProcessStartedAsync'</source>
-        <target state="translated">Před metodou OnTestHostProcessStartedAsync musí být volána metoda BeforeTestHostProcessStartAsync.</target>
+        <target state="new">Method 'BeforeTestHostProcessStartAsync' must be called before 'OnTestHostProcessStartedAsync'</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDescription">
         <source>Produce a TRX report for the current test session</source>
-        <target state="translated">Vytvořit sestavu TRX pro aktuální testovací relaci</target>
+        <target state="new">Produce a TRX report for the current test session</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDisplayName">
         <source>TRX report generator</source>
-        <target state="translated">Generátor sestav TRX</target>
+        <target state="new">TRX report generator</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable">
         <source>Required environment variable '{0}' is missing for TRX report generator</source>
-        <target state="translated">Chybí požadovaná proměnná prostředí {0} pro generátor sestav TRX.</target>
+        <target state="new">Required environment variable '{0}' is missing for TRX report generator</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportIsNotValidForDiscovery">
         <source>'--report-trx' cannot be enabled when using '--list-tests'</source>
-        <target state="translated">Možnost --report-trx nejde povolit, pokud se používá možnost --list-tests.</target>
+        <target state="new">'--report-trx' cannot be enabled when using '--list-tests'</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportOptionDescription">
         <source>Enable generating TRX report</source>
-        <target state="translated">Povolit vygenerování sestavy TRX</target>
+        <target state="new">Enable generating TRX report</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
-        <target state="translated">Žádosti typu {0} nejsou podporovány.</target>
+        <target state="new">Requests of type '{0}' is not supported</target>
         <note />
       </trans-unit>
     </body>
