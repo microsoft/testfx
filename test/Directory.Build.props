@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <Import Project="../Directory.Build.props" />
+
+  <!-- Testing -->
+  <PropertyGroup>
+    <!-- At the moment we don't run single file tests we should do it in integration/isolation -->
+    <EnableSingleFileAnalyzer>false</EnableSingleFileAnalyzer>
+    <EnableCodeCoverage Condition=" '$(EnableCodeCoverage)' == '' ">true</EnableCodeCoverage>
+    <DefineConstants Condition=" '$(PublishAot)' == 'true' ">$(DefineConstants);NATIVE_AOT</DefineConstants>
+    <DefineConstants Condition=" '$(EnableCodeCoverage)' == 'True' ">$(DefineConstants);ENABLE_CODECOVERAGE</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Build & pack -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <ImplicitUsings>true</ImplicitUsings>
+    <PublishAot Condition=" '$(PublishAot)' == '' ">false</PublishAot>
+  </PropertyGroup>
+
+</Project>

@@ -1,17 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);net462</TargetFrameworks>
-    <OutputType>Exe</OutputType>
-    <IsPackable>false</IsPackable>
-    <WarningsAsErrors>false</WarningsAsErrors>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <SelfContained>false</SelfContained>
     <UseVSTestRunner>false</UseVSTestRunner>
-    <ImplicitUsings>true</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
 
   <!-- start netstandard2.0 polyfill -->
@@ -21,11 +12,6 @@
   <!-- end netstandard2.0 polyfill -->
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" />
-    <PackageReference Include="Microsoft.Testing.Internal.Framework" />
-    <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" />
     <PackageReference Include="Moq" />
   </ItemGroup>
 
@@ -35,19 +21,6 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
-    <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="testsbaseline.netfx.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="testsbaseline.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Microsoft.Testing.Platform.UnitTests.launcher.config.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

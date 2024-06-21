@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ja" original="../CrashDumpResources.resx">
+    <body>
+      <trans-unit id="CannotFindExpectedCrashDumpFile">
+        <source>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</source>
+        <target state="new">Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpArtifactDescription">
+        <source>The testhost process crash dump file</source>
+        <target state="new">The testhost process crash dump file</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpArtifactDisplayName">
+        <source>Crash dump file</source>
+        <target state="new">Crash dump file</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpDescription">
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
+        <target state="new">[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpDisplayName">
+        <source>Crash dump</source>
+        <target state="new">Crash dump</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpFileNameOptionDescription">
+        <source>Specify the name of the dump file</source>
+        <target state="new">Specify the name of the dump file</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
+        <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
+        <target state="new">Environment variable '{0}' should have been set to '{1}' but value is '{2}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
+        <source>Crash dump feature is only available in .NET (Core)</source>
+        <target state="new">Crash dump feature is only available in .NET (Core)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpOptionDescription">
+        <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
+        <target state="new">[net6.0+ only] Generate a dump file if the test process crashes</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
+        <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
+        <target state="new">Test host process with PID '{0}' crashed, a dump file was generated</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpTypeOptionDescription">
+        <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. 
+For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
+        <target state="new">Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. 
+For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpTypeOptionInvalidType">
+        <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
+        <target state="new">'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpTypeOptionTooManyArguments">
+        <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
+        <target state="new">'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnsupportedRequestTypeErrorMessage">
+        <source>Requests of type '{0}' is not supported</source>
+        <target state="new">Requests of type '{0}' is not supported</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

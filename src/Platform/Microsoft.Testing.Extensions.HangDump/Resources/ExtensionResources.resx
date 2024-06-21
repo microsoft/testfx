@@ -1,0 +1,183 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CreatingDumpFile" xml:space="preserve">
+    <value>Creating dump file '{0}'</value>
+  </data>
+  <data name="HangDumpArtifactDescription" xml:space="preserve">
+    <value>The hang dump file</value>
+  </data>
+  <data name="HangDumpArtifactDisplayName" xml:space="preserve">
+    <value>Hang dump file</value>
+  </data>
+  <data name="HangDumpEnvironmentVariableInvalidValueErrorMessage" xml:space="preserve">
+    <value>Environment variable '{0}' is set to '{1}' instead of '{2}'</value>
+  </data>
+  <data name="HangDumpEnvironmentVariableIsMissingErrorMessage" xml:space="preserve">
+    <value>Environment variable '{0}' is not set</value>
+  </data>
+  <data name="HangDumpExtensionDescription" xml:space="preserve">
+    <value>Produce hang dump files when a test execution exceed a given time.</value>
+  </data>
+  <data name="HangDumpExtensionDisplayName" xml:space="preserve">
+    <value>Hang dump</value>
+  </data>
+  <data name="HangDumpFileNameOptionDescription" xml:space="preserve">
+    <value>Specify the name of the dump file</value>
+  </data>
+  <data name="HangDumpOptionDescription" xml:space="preserve">
+    <value>Generate a dump file if the test process hangs</value>
+  </data>
+  <data name="HangDumpTimeoutExpired" xml:space="preserve">
+    <value>Hang dump timeout of '{0}' expired</value>
+  </data>
+  <data name="HangDumpTimeoutOptionDescription" xml:space="preserve">
+    <value>Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.</value>
+  </data>
+  <data name="HangDumpTimeoutOptionInvalidArgument" xml:space="preserve">
+    <value>'--hangdump-timeout' expects a single timeout argument</value>
+  </data>
+  <data name="HangDumpTypeOptionDescription" xml:space="preserve">
+    <value>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'</value>
+  </data>
+  <data name="HangDumpTypeOptionInvalidType" xml:space="preserve">
+    <value>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</value>
+  </data>
+  <data name="HangDumpUnsupportedRequestTypeErrorMessage" xml:space="preserve">
+    <value>Request of type '{0}' is not supported</value>
+  </data>
+  <data name="HangTestListArtifactDescription" xml:space="preserve">
+    <value>The list of tests that were running at the time of the hang</value>
+  </data>
+  <data name="HangTestListArtifactDisplayName" xml:space="preserve">
+    <value>Hang test list</value>
+  </data>
+  <data name="MissingHangDumpMainOption" xml:space="preserve">
+    <value>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</value>
+  </data>
+  <data name="MutexDoesNotExistErrorMessage" xml:space="preserve">
+    <value>Cannot find mutex '{0}'</value>
+  </data>
+  <data name="MutexNameReceptionTimeoutErrorMessage" xml:space="preserve">
+    <value>Mutex name wasn't received after '{0}' seconds</value>
+  </data>
+  <data name="RunningTestsWhileDumping" xml:space="preserve">
+    <value>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</value>
+  </data>
+</root>

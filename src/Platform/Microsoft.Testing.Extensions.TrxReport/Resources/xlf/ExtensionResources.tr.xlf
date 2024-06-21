@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="tr" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="InvalidTestApplicationBuilderType">
+        <source>TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="new">TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
+        <source>The baseline TRX file</source>
+        <target state="new">The baseline TRX file</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxComparerToolBothFilesMustBeSpecified">
+        <source>'--{0}' and '--{1}' must both be specified</source>
+        <target state="new">'--{0}' and '--{1}' must both be specified</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxComparerToolDescription">
+        <source>This tool allows to compare and highights differences between 2 TRX reports</source>
+        <target state="new">This tool allows to compare and highights differences between 2 TRX reports</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxComparerToolDisplayName">
+        <source>TRX comparer tool</source>
+        <target state="new">TRX comparer tool</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxComparerToolOptionExpectsSingleArgument">
+        <source>'--{0}' expects a single trx file path as argument</source>
+        <target state="new">'--{0}' expects a single trx file path as argument</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxComparerToolOtherFileOptionDescription">
+        <source>The TRX file to compare with the baseline</source>
+        <target state="new">The TRX file to compare with the baseline</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportArtifactDescription">
+        <source>Test session</source>
+        <target state="new">Test session</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportArtifactDisplayName">
+        <source>TRX Report</source>
+        <target state="new">TRX Report</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportFileNameExtensionIsNotTrx">
+        <source>'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</source>
+        <target state="new">'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportFileNameOptionDescription">
+        <source>The name of the generated TRX report</source>
+        <target state="new">The name of the generated TRX report</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportFileNameRequiresTrxReport">
+        <source>'--report-trx-filename' requires '--report-trx' to be enabled</source>
+        <target state="new">'--report-trx-filename' requires '--report-trx' to be enabled</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportFileNameShouldNotContainPath">
+        <source>file name argument must not contain path (e.g. --report-trx-filename myreport.trx)</source>
+        <target state="new">file name argument must not contain path (e.g. --report-trx-filename myreport.trx)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportFrameworkDoesNotSupportTrxReportCapability">
+        <source>The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</source>
+        <target state="new">The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportGeneratorBeforeTestHostProcessStartAsyncNotCalled">
+        <source>Method 'BeforeTestHostProcessStartAsync' must be called before 'OnTestHostProcessStartedAsync'</source>
+        <target state="new">Method 'BeforeTestHostProcessStartAsync' must be called before 'OnTestHostProcessStartedAsync'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportGeneratorDescription">
+        <source>Produce a TRX report for the current test session</source>
+        <target state="new">Produce a TRX report for the current test session</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportGeneratorDisplayName">
+        <source>TRX report generator</source>
+        <target state="new">TRX report generator</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable">
+        <source>Required environment variable '{0}' is missing for TRX report generator</source>
+        <target state="new">Required environment variable '{0}' is missing for TRX report generator</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportIsNotValidForDiscovery">
+        <source>'--report-trx' cannot be enabled when using '--list-tests'</source>
+        <target state="new">'--report-trx' cannot be enabled when using '--list-tests'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportOptionDescription">
+        <source>Enable generating TRX report</source>
+        <target state="new">Enable generating TRX report</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnsupportedRequestTypeErrorMessage">
+        <source>Requests of type '{0}' is not supported</source>
+        <target state="new">Requests of type '{0}' is not supported</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

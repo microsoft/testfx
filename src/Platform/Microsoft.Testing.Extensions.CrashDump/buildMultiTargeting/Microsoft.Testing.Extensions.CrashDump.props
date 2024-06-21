@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <ItemGroup>
+    <!--
+      !!! IMPORTANT !!!
+      DO NOT CHANGE THE GUID, IT'S A WELL KNOWN EXTENSION POINT AND THIS EXTENSION NEEDS TO BE REGISTERED AT THE END
+      WE HAVE CODE INSIDE THE TASK 'TestingPlatformEntryPoint' TO ENSURE THE ORDER OF THE REGISTRATION BASED ON THIS GUID
+    -->
+    <TestingPlatformBuilderHook Include="EC3971EE-91B7-4C77-B4E1-DF606F118FAB" Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
+      <DisplayName>Microsoft.Testing.Extensions.CrashDump</DisplayName>
+      <TypeFullName>Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+</Project>
