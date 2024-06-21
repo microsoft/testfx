@@ -24,13 +24,13 @@ internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
     private static readonly string[] HangDumpTypeOptions = ["Mini", "Heap", "Full"];
 #endif
 
-    private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions = new CommandLineOption[]
-    {
+    private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =
+    [
         new(HangDumpOptionName, ExtensionResources.HangDumpOptionDescription, ArgumentArity.Zero, false),
         new(HangDumpTimeoutOptionName, ExtensionResources.HangDumpTimeoutOptionDescription, ArgumentArity.ExactlyOne, false),
         new(HangDumpFileNameOptionName, ExtensionResources.HangDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
-        new(HangDumpTypeOptionName, ExtensionResources.HangDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false),
-    };
+        new(HangDumpTypeOptionName, ExtensionResources.HangDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
+    ];
 
     private readonly HangDumpConfiguration _hangDumpConfiguration;
 

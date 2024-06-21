@@ -28,7 +28,7 @@ public sealed class RunSettingsCommandLineOptionsProviderTests(ITestExecutionCon
         CommandLineOption option = provider.GetCommandLineOptions().Single();
 
         // Act
-        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, new[] { filePath });
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [filePath]);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -47,7 +47,7 @@ public sealed class RunSettingsCommandLineOptionsProviderTests(ITestExecutionCon
         CommandLineOption option = provider.GetCommandLineOptions().Single();
 
         // Act
-        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, new[] { filePath });
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [filePath]);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -66,7 +66,7 @@ public sealed class RunSettingsCommandLineOptionsProviderTests(ITestExecutionCon
         CommandLineOption option = provider.GetCommandLineOptions().Single();
 
         // Act
-        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, new[] { filePath });
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [filePath]);
 
         // Assert
         Assert.IsTrue(result.IsValid);

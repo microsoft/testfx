@@ -24,7 +24,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     private const string CreateDumpVerboseDiagnosticsVariable = "CreateDumpVerboseDiagnostics";
     private const string EnableMiniDumpValue = "1";
 
-    private readonly string[] _prefixes = new[] { "DOTNET_", "COMPlus_" };
+    private readonly string[] _prefixes = ["DOTNET_", "COMPlus_"];
     private readonly IConfiguration _configuration;
     private readonly IMessageBus _messageBus;
     private readonly ICommandLineOptions _commandLineOptions;

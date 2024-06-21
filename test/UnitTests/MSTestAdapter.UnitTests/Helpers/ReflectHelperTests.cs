@@ -275,11 +275,11 @@ public class ReflectHelperTests : TestContainer
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(It.IsAny<Type>(), /* inherit */ true)).
-            Returns(new object[] { new TestClassAttribute(), new TestClassAttribute() });
+            Returns([new TestClassAttribute(), new TestClassAttribute()]);
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(It.IsAny<Type>(), /* inherit */ false)).
-            Returns(new object[] { new TestClassAttribute() });
+            Returns([new TestClassAttribute()]);
 
         var inheritedAttributes = rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: true).ToArray();
         var nonInheritedAttributes = rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: false).ToArray();
@@ -301,7 +301,7 @@ public class ReflectHelperTests : TestContainer
         /// MemberTypes.TypeInfo for class level
         /// MemberTypes.Method for method level.
         /// </summary>
-        private readonly List<(Type Type, Attribute Attribute, MemberTypes MemberType)> _data = new();
+        private readonly List<(Type Type, Attribute Attribute, MemberTypes MemberType)> _data = [];
         private readonly Mock<IReflectionOperations> _mockReflectionOperations;
 
         public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)

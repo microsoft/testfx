@@ -103,7 +103,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     public string Description => ExtensionResources.HangDumpExtensionDescription;
 
-    public Type[] DataTypesProduced => new[] { typeof(FileArtifact) };
+    public Type[] DataTypesProduced => [typeof(FileArtifact)];
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName) &&
         !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey));

@@ -56,8 +56,8 @@ internal sealed partial class AppInsightsProvider :
 #endif
 #if DEBUG
     // Telemetry properties that are allowed to contain unhashed information.
-    private static readonly HashSet<string> StringWhitelist = new()
-    {
+    private static readonly HashSet<string> StringWhitelist =
+    [
         TelemetryProperties.VersionPropertyName,
         TelemetryProperties.ReporterIdPropertyName,
         TelemetryProperties.SessionId,
@@ -67,8 +67,8 @@ internal sealed partial class AppInsightsProvider :
         TelemetryProperties.HostProperties.RuntimeIdentifierPropertyName,
         TelemetryProperties.HostProperties.ApplicationModePropertyName,
         TelemetryProperties.HostProperties.ExitCodePropertyName,
-        TelemetryProperties.HostProperties.ExtensionsPropertyName,
-    };
+        TelemetryProperties.HostProperties.ExtensionsPropertyName
+    ];
 #endif
 
     private ITelemetryClient? _client;

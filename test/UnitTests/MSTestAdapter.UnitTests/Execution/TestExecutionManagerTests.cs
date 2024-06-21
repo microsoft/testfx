@@ -422,7 +422,7 @@ public class TestExecutionManagerTests : TestContainer
         var testCase = new TestCase("DummyTest", new System.Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
         UnitTestResult unitTestResult1 = new() { DatarowIndex = 0, DisplayName = "DummyTest" };
         UnitTestResult unitTestResult2 = new() { DatarowIndex = 1, DisplayName = "DummyTest" };
-        _testExecutionManager.SendTestResults(testCase, new UnitTestResult[] { unitTestResult1, unitTestResult2 }, default, default, _frameworkHandle);
+        _testExecutionManager.SendTestResults(testCase, [unitTestResult1, unitTestResult2], default, default, _frameworkHandle);
         Verify(_frameworkHandle.TestDisplayNameList[0] == "DummyTest (Data Row 0)");
         Verify(_frameworkHandle.TestDisplayNameList[1] == "DummyTest (Data Row 1)");
     }

@@ -39,7 +39,7 @@ internal sealed class TestRunParametersCommandLineOptionsProvider : ICommandLine
 
     /// <inheritdoc />
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => new[] { new CommandLineOption(TestRunParameterOptionName, ExtensionResources.TestRunParameterOptionDescription, ArgumentArity.OneOrMore, false) };
+        => [new CommandLineOption(TestRunParameterOptionName, ExtensionResources.TestRunParameterOptionDescription, ArgumentArity.OneOrMore, false)];
 
     /// <inheritdoc />
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)

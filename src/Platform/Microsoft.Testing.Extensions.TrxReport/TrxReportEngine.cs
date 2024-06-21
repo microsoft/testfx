@@ -28,16 +28,16 @@ internal sealed partial class TrxReportEngine
     private static readonly Regex InvalidXmlCharReplace = BuildInvalidXmlCharReplace();
     private static readonly MatchEvaluator InvalidXmlEvaluator = new(ReplaceInvalidCharacterWithUniCodeEscapeSequence);
 
-    private static readonly Type[] FailedStates = new[]
-    {
+    private static readonly Type[] FailedStates =
+    [
         typeof(FailedTestNodeStateProperty),
         typeof(CancelledTestNodeStateProperty),
         typeof(ErrorTestNodeStateProperty),
-        typeof(TimeoutTestNodeStateProperty),
-    };
+        typeof(TimeoutTestNodeStateProperty)
+    ];
 
-    private static readonly HashSet<char> InvalidFileNameChars = new()
-    {
+    private static readonly HashSet<char> InvalidFileNameChars =
+    [
         '\"',
         '<',
         '>',
@@ -83,8 +83,8 @@ internal sealed partial class TrxReportEngine
         '(',
         ')',
         '^',
-        ' ',
-    };
+        ' '
+    ];
 
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly IEnvironment _environment;
