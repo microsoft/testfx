@@ -413,7 +413,7 @@ public class TestSourceHost : ITestSourceHost
         try
         {
             List<RecursiveDirectoryPath> additionalSearchDirectories = adapterSettings.GetDirectoryListWithRecursiveProperty(baseDirectory);
-            if (additionalSearchDirectories?.Count > 0)
+            if (additionalSearchDirectories.Count > 0)
             {
                 assemblyResolver.AddSearchDirectoriesFromRunSetting(additionalSearchDirectories);
                 return true;

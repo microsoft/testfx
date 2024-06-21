@@ -63,7 +63,7 @@ public sealed class ObjectModelConvertersTests : TestBase
             CodeFilePath = "FilePath",
         });
         var testNode = testResult.ToTestNode(false, TestClient);
-        Assert.AreEqual("FilePath", testNode.Properties.Single<TestFileLocationProperty>()?.FilePath?.ToString());
+        Assert.AreEqual("FilePath", testNode.Properties.Single<TestFileLocationProperty>().FilePath);
     }
 
     public void ToTestNode_WhenTestResultHasTestNodeUidProperty_TestNodeUidUsesIt()
@@ -117,7 +117,7 @@ public sealed class ObjectModelConvertersTests : TestBase
 
         TrxCategoriesProperty[] trxCategoriesProperty = testNode.Properties.OfType<TrxCategoriesProperty>().ToArray();
         Assert.IsTrue(trxCategoriesProperty.Length == 1);
-        Assert.IsTrue(trxCategoriesProperty[0].Categories?.Length == 1);
+        Assert.IsTrue(trxCategoriesProperty[0].Categories.Length == 1);
         Assert.AreEqual(trxCategoriesProperty[0].Categories[0], "category1");
     }
 
@@ -187,7 +187,7 @@ public sealed class ObjectModelConvertersTests : TestBase
         var testNode = testResult.ToTestNode(false, TestClient);
         var testResultTimingProperty = new TimingProperty(new(startTime, endTime, duration), Array.Empty<StepTimingInfo>());
 
-        Assert.AreEqual<TimingProperty>(testNode.Properties.OfType<TimingProperty>()?[0], testResultTimingProperty);
+        Assert.AreEqual<TimingProperty>(testNode.Properties.OfType<TimingProperty>()[0], testResultTimingProperty);
     }
 
     public void ToTestNode_WhenTestResultOutcomeIsNotFoundWithoutSetErrorMessage_TestNodePropertiesContainErrorTestNodeStatePropertyWithDefaultErrorMessage()
