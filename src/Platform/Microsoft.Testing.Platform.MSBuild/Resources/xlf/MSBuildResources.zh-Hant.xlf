@@ -4,72 +4,72 @@
     <body>
       <trans-unit id="ActualValue">
         <source>Actual value: {0}</source>
-        <target state="translated">實際值: {0}</target>
+        <target state="new">Actual value: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ExpectedValue">
         <source>Expected value: {0}</source>
-        <target state="translated">預期的值: {0}</target>
+        <target state="new">Expected value: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
-        <target state="translated">失敗</target>
+        <target state="new">Failed</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedTestDetail">
         <source>Failed test '{0}', reason '{1}'</source>
-        <target state="translated">測試 '{0}' 失敗，原因 '{1}'</target>
+        <target state="new">Failed test '{0}', reason '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="FullPathToolCalculationFailed">
         <source>Full path tool calculation failed. Runner '{0}'</source>
-        <target state="translated">完整路徑工具計算失敗。執行器 '{0}'</target>
+        <target state="new">Full path tool calculation failed. Runner '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTargetPath">
         <source>Invalid TargetPath, {0}</source>
-        <target state="translated">TargetPath 無效，{0}</target>
+        <target state="new">Invalid TargetPath, {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="MSBuildExtensionsDescription">
         <source>Extension used to pass parameters from MSBuild node and the hosts</source>
-        <target state="translated">用於從 MSBuild 節點和主機傳遞參數的延伸模組</target>
+        <target state="new">Extension used to pass parameters from MSBuild node and the hosts</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
-        <target state="translated">成功</target>
+        <target state="new">Passed</target>
         <note />
       </trans-unit>
       <trans-unit id="RunTests">
         <source>Run tests: '{0}' [{1}|{2}]</source>
-        <target state="translated">執行測試: '{0}' [{1}|{2}]</target>
+        <target state="new">Run tests: '{0}' [{1}|{2}]</target>
         <note />
       </trans-unit>
       <trans-unit id="StackTrace">
         <source>Stack Trace:</source>
-        <target state="translated">堆疊追蹤:</target>
+        <target state="new">Stack Trace:</target>
         <note />
       </trans-unit>
       <trans-unit id="Summary">
         <source>{0}! - Failed: {1}, Passed: {2}, Skipped: {3}, Total: {4}, Duration: {5}</source>
-        <target state="translated">{0}! - 失敗: {1}，通過: {2}，跳過: {3}，總計: {4}，持續時間: {5}</target>
+        <target state="new">{0}! - Failed: {1}, Passed: {2}, Skipped: {3}, Total: {4}, Duration: {5}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestFailed">
         <source>Tests failed: '{0}' [{1}|{2}]</source>
-        <target state="translated">測試失敗: '{0}' [{1}|{2}]</target>
+        <target state="new">Tests failed: '{0}' [{1}|{2}]</target>
         <note />
       </trans-unit>
       <trans-unit id="TestFailedNoDetail">
         <source>Tests failed: {0}</source>
-        <target state="translated">測試失敗: {0}</target>
+        <target state="new">Tests failed: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestsSucceeded">
         <source>Tests succeeded: '{0}' [{1}|{2}]</source>
-        <target state="translated">測試成功: '{0}' [{1}|{2}]</target>
+        <target state="new">Tests succeeded: '{0}' [{1}|{2}]</target>
         <note />
       </trans-unit>
     </body>
