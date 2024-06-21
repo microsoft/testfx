@@ -4,72 +4,72 @@
     <body>
       <trans-unit id="ActualValue">
         <source>Actual value: {0}</source>
-        <target state="translated">Действительное значение: {0}</target>
+        <target state="new">Actual value: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ExpectedValue">
         <source>Expected value: {0}</source>
-        <target state="translated">Ожидаемое значение: {0}</target>
+        <target state="new">Expected value: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
-        <target state="translated">Не выполнено</target>
+        <target state="new">Failed</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedTestDetail">
         <source>Failed test '{0}', reason '{1}'</source>
-        <target state="translated">Неудачный тест "{0}" , причина "{1}"</target>
+        <target state="new">Failed test '{0}', reason '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="FullPathToolCalculationFailed">
         <source>Full path tool calculation failed. Runner '{0}'</source>
-        <target state="translated">Сбой вычисления средства полного пути. Средство выполнения тестов "{0}"</target>
+        <target state="new">Full path tool calculation failed. Runner '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTargetPath">
         <source>Invalid TargetPath, {0}</source>
-        <target state="translated">Недопустимый TargetPath, {0}</target>
+        <target state="new">Invalid TargetPath, {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="MSBuildExtensionsDescription">
         <source>Extension used to pass parameters from MSBuild node and the hosts</source>
-        <target state="translated">Расширение, используемое для передачи параметров с узла MSBuild и из основных элементов</target>
+        <target state="new">Extension used to pass parameters from MSBuild node and the hosts</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
-        <target state="translated">Пройден</target>
+        <target state="new">Passed</target>
         <note />
       </trans-unit>
       <trans-unit id="RunTests">
         <source>Run tests: '{0}' [{1}|{2}]</source>
-        <target state="translated">Запуск тестов: "{0}" [{1}|{2}]</target>
+        <target state="new">Run tests: '{0}' [{1}|{2}]</target>
         <note />
       </trans-unit>
       <trans-unit id="StackTrace">
         <source>Stack Trace:</source>
-        <target state="translated">Трассировка стека:</target>
+        <target state="new">Stack Trace:</target>
         <note />
       </trans-unit>
       <trans-unit id="Summary">
         <source>{0}! - Failed: {1}, Passed: {2}, Skipped: {3}, Total: {4}, Duration: {5}</source>
-        <target state="translated">{0}! — не пройдено: {1}, пройдено: {2}, пропущено: {3}, всего: {4}, длительность: {5}</target>
+        <target state="new">{0}! - Failed: {1}, Passed: {2}, Skipped: {3}, Total: {4}, Duration: {5}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestFailed">
         <source>Tests failed: '{0}' [{1}|{2}]</source>
-        <target state="translated">Неудачных тестов: "{0}" [{1}|{2}]</target>
+        <target state="new">Tests failed: '{0}' [{1}|{2}]</target>
         <note />
       </trans-unit>
       <trans-unit id="TestFailedNoDetail">
         <source>Tests failed: {0}</source>
-        <target state="translated">Неудачных тестов: {0}</target>
+        <target state="new">Tests failed: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestsSucceeded">
         <source>Tests succeeded: '{0}' [{1}|{2}]</source>
-        <target state="translated">Успешно выполненные тесты: "{0}" [{1}|{2}]</target>
+        <target state="new">Tests succeeded: '{0}' [{1}|{2}]</target>
         <note />
       </trans-unit>
     </body>

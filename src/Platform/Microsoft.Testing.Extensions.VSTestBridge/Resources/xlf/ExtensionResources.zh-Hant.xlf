@@ -4,37 +4,37 @@
     <body>
       <trans-unit id="RunSettingsOptionDescription">
         <source>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</source>
-        <target state="translated">.runsettings 檔案的相對或絕對路徑。如需如何設定測試回合的詳細資訊和範例，請參閱 https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</target>
+        <target state="new">The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</target>
         <note />
       </trans-unit>
       <trans-unit id="RunsettingsFileCannotBeRead">
         <source>runsettings file '{0}' cannot be read</source>
-        <target state="translated">無法讀取 runsettings 檔案 '{0}'</target>
+        <target state="new">runsettings file '{0}' cannot be read</target>
         <note />
       </trans-unit>
       <trans-unit id="RunsettingsFileDoesNotExist">
         <source>runsettings file '{0}' does not exist</source>
-        <target state="translated">.runsettings 檔案 '{0}' 不存在</target>
+        <target state="new">runsettings file '{0}' does not exist</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCaseFilterOptionDescription">
         <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
-        <target state="translated">使用指定運算式的篩選測試。如需詳細資訊，請參閱篩選選項詳細資料區段。如需如何使用選擇性單元測試篩選的詳細資訊和範例，請參閱 https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests。</target>
+        <target state="new">Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestRunParameterOptionArgumentIsNotParameter">
         <source>argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</source>
-        <target state="translated">引數 '{0}' 不是參數。參數引數符合下列模式 'key=value'。</target>
+        <target state="new">argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestRunParameterOptionDescription">
         <source>Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</source>
-        <target state="translated">指定或覆寫機碼值組參數。如需詳細資訊和範例，請參閱 https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</target>
+        <target state="new">Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</target>
         <note />
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
         <source>The bridged framework supports only one session at a time. A session with UID {0} is already open.</source>
-        <target state="translated">橋接器架構一次只支援一個工作階段。已開啟具有 UID {0} 的工作階段。</target>
+        <target state="new">The bridged framework supports only one session at a time. A session with UID {0} is already open.</target>
         <note />
       </trans-unit>
     </body>
