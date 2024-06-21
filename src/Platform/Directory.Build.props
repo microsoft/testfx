@@ -4,7 +4,7 @@
   <Import Project="../Directory.Build.props" />
 
   <PropertyGroup>
-    <!-- Platform and extensions are not using the main version -->
+    <!-- Platform and extensions use TestingPlatform version, not MSTest version. -->
     <VersionPrefix>$(TestingPlatformVersionPrefix)</VersionPrefix>
   </PropertyGroup>
 
