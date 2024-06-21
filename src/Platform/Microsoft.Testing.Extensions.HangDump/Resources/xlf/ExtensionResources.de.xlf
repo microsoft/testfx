@@ -4,107 +4,107 @@
     <body>
       <trans-unit id="CreatingDumpFile">
         <source>Creating dump file '{0}'</source>
-        <target state="translated">Speicherabbilddatei "{0}" wird erstellt</target>
+        <target state="new">Creating dump file '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpArtifactDescription">
         <source>The hang dump file</source>
-        <target state="translated">Die Absturzspeicherabbilddatei</target>
+        <target state="new">The hang dump file</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpArtifactDisplayName">
         <source>Hang dump file</source>
-        <target state="translated">Absturzspeicherabbilddatei</target>
+        <target state="new">Hang dump file</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
-        <target state="translated">Umgebungsvariable "{0}" ist auf "{1}" anstatt auf "{2}" festgelegt.</target>
+        <target state="new">Environment variable '{0}' is set to '{1}' instead of '{2}'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableIsMissingErrorMessage">
         <source>Environment variable '{0}' is not set</source>
-        <target state="translated">Die Umgebungsvariable "{0}" wurde nicht festgelegt</target>
+        <target state="new">Environment variable '{0}' is not set</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpExtensionDescription">
         <source>Produce hang dump files when a test execution exceed a given time.</source>
-        <target state="translated">Absturzspeicherabbilddateien erstellen, wenn eine Testausführung eine angegebene Zeit überschreitet.</target>
+        <target state="new">Produce hang dump files when a test execution exceed a given time.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpExtensionDisplayName">
         <source>Hang dump</source>
-        <target state="translated">Absturzspeicherabbild</target>
+        <target state="new">Hang dump</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file</source>
-        <target state="translated">Namen der Speicherabbilddatei angeben</target>
+        <target state="new">Specify the name of the dump file</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs</source>
-        <target state="translated">Speicherabbilddatei generieren, wenn der Testprozess abstürzt</target>
+        <target state="new">Generate a dump file if the test process hangs</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
         <source>Hang dump timeout of '{0}' expired</source>
-        <target state="translated">Timeout für Absturzspeicherabbild von "{0}" abgelaufen</target>
+        <target state="new">Hang dump timeout of '{0}' expired</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.</source>
-        <target state="translated">Geben Sie das Timeout an, nach dem das Speicherabbild generiert wird. Der Timeoutwert wird in einem der folgenden Formate angegeben: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Der Standardwert ist 30m.</target>
+        <target state="new">Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
         <source>'--hangdump-timeout' expects a single timeout argument</source>
-        <target state="translated">"--hangdump-timeout" erwartet ein einzelnes Timeoutargument.</target>
+        <target state="new">'--hangdump-timeout' expects a single timeout argument</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'</source>
-        <target state="translated">Geben Sie den Typ des Speicherabbilds an. Gültige Werte sind "Mini", "Heap", "Triage" (nur in .NET 6 und höher verfügbar) oder "Full". Der Standardtyp ist "Full".</target>
+        <target state="new">Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
-        <target state="translated">"{0}" ist kein gültiger Speicherabbildtyp. Gültige Optionen sind "Mini", "Heap", "Triage" (nur in .NET 6 und höher verfügbar) und "Full".</target>
+        <target state="new">'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
         <source>Request of type '{0}' is not supported</source>
-        <target state="translated">Anforderung vom Typ "{0}" wird nicht unterstützt</target>
+        <target state="new">Request of type '{0}' is not supported</target>
         <note />
       </trans-unit>
       <trans-unit id="HangTestListArtifactDescription">
         <source>The list of tests that were running at the time of the hang</source>
-        <target state="translated">Die Liste der Tests, die zum Zeitpunkt des Absturzes ausgeführt wurden.</target>
+        <target state="new">The list of tests that were running at the time of the hang</target>
         <note />
       </trans-unit>
       <trans-unit id="HangTestListArtifactDisplayName">
         <source>Hang test list</source>
-        <target state="translated">Liste der Tests bei Absturz</target>
+        <target state="new">Hang test list</target>
         <note />
       </trans-unit>
       <trans-unit id="MissingHangDumpMainOption">
         <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
-        <target state="translated">Sie haben mindestens einen Parameter für das Absturzabbild angegeben, aber nicht aktiviert. Fügen Sie der Befehlszeile „--hangdump“ hinzu.</target>
+        <target state="new">You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</target>
         <note />
       </trans-unit>
       <trans-unit id="MutexDoesNotExistErrorMessage">
         <source>Cannot find mutex '{0}'</source>
-        <target state="translated">Mutex "{0}" wurde nicht gefunden</target>
+        <target state="new">Cannot find mutex '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
         <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">Der Mutexname wurde nach "{0}" Sekunden nicht empfangen.</target>
+        <target state="new">Mutex name wasn't received after '{0}' seconds</target>
         <note />
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="translated">Die folgenden Tests wurden noch ausgeführt, als das Speicherabbild erstellt wurde (Format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <target state="new">The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
         <note />
       </trans-unit>
     </body>
