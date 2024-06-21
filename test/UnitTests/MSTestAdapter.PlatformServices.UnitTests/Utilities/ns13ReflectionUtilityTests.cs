@@ -231,7 +231,7 @@ public class ReflectionUtilityTests : TestContainer
         public string Value { get; set; }
     }
 
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
     public class DummySingleAAttribute : Attribute
     {
         public DummySingleAAttribute(string foo)
