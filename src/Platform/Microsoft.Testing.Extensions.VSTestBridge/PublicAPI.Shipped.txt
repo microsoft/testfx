@@ -1,0 +1,57 @@
+#nullable enable
+abstract Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.SynchronizedDiscoverTestsAsync(Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+abstract Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.SynchronizedRunTestsAsync(Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+abstract Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.CloseTestSessionAsync(Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionContext! context) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionResult!>!
+abstract Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.CreateTestSessionAsync(Microsoft.Testing.Platform.Extensions.TestFramework.CreateTestSessionContext! context) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestFramework.CreateTestSessionResult!>!
+abstract Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.Description.get -> string!
+abstract Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.DiscoverTestsAsync(Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+abstract Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.DisplayName.get -> string!
+abstract Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+abstract Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.RunTestsAsync(Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+abstract Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.ExecuteRequestAsync(Microsoft.Testing.Platform.Requests.TestExecutionRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+abstract Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.Uid.get -> string!
+abstract Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.Version.get -> string!
+Microsoft.Testing.Extensions.VSTestBridge.Capabilities.VSTestBridgeExtensionBaseCapabilities
+Microsoft.Testing.Extensions.VSTestBridge.Capabilities.VSTestBridgeExtensionBaseCapabilities.IsTrxEnabled.get -> bool
+Microsoft.Testing.Extensions.VSTestBridge.Capabilities.VSTestBridgeExtensionBaseCapabilities.VSTestBridgeExtensionBaseCapabilities() -> void
+Microsoft.Testing.Extensions.VSTestBridge.Helpers.TestApplicationBuilderExtensions
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequest
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequest.AssemblyPaths.get -> string![]!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequest.DiscoveryContext.get -> Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequest.DiscoverySink.get -> Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.ITestCaseDiscoverySink!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequest.MessageLogger.get -> Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.IMessageLogger!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequest.VSTestFilter.get -> Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestTestExecutionFilter!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequestFactory
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequest
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequest.AssemblyPaths.get -> string![]!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequest.FrameworkHandle.get -> Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IFrameworkHandle!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequest.RunContext.get -> Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunContext!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequest.VSTestFilter.get -> Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestTestExecutionFilter!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequest.VSTestRunTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestTestExecutionFilter! executionFilter, string![]! assemblyPaths, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunContext! runContext, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IFrameworkHandle! frameworkHandle) -> void
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequestFactory
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestTestExecutionFilter
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestTestExecutionFilter.TestCases.get -> System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase!>?
+Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework
+Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.Dispose() -> void
+Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.SynchronizedSingleSessionVSTestBridgedTestFramework(Microsoft.Testing.Platform.Extensions.IExtension! extension, System.Func<System.Collections.Generic.IEnumerable<System.Reflection.Assembly!>!>! getTestAssemblies, System.IServiceProvider! serviceProvider, Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities! capabilities) -> void
+Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase
+Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.DataTypesProduced.get -> System.Type![]!
+Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.ExecuteRequestAsync(Microsoft.Testing.Platform.Extensions.TestFramework.ExecuteRequestContext! context) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.IsTrxEnabled.get -> bool
+Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.ServiceProvider.get -> System.IServiceProvider!
+Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.VSTestBridgedTestFrameworkBase(System.IServiceProvider! serviceProvider, Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities! capabilities) -> void
+override Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+override sealed Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.CloseTestSessionAsync(Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionContext! context) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionResult!>!
+override sealed Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.CreateTestSessionAsync(Microsoft.Testing.Platform.Extensions.TestFramework.CreateTestSessionContext! context) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestFramework.CreateTestSessionResult!>!
+override sealed Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.Description.get -> string!
+override sealed Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.DiscoverTestsAsync(Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+override sealed Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.DisplayName.get -> string!
+override sealed Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.RunTestsAsync(Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+override sealed Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.ExecuteRequestAsync(Microsoft.Testing.Platform.Requests.TestExecutionRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+override sealed Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.Uid.get -> string!
+override sealed Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.Version.get -> string!
+static Microsoft.Testing.Extensions.VSTestBridge.Helpers.TestApplicationBuilderExtensions.AddRunSettingsService(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
+static Microsoft.Testing.Extensions.VSTestBridge.Helpers.TestApplicationBuilderExtensions.AddTestCaseFilterService(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
+static Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequestFactory.CreateRequest(Microsoft.Testing.Platform.Requests.DiscoverTestExecutionRequest! discoverTestExecutionRequest, Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase! adapterExtension, string![]! testAssemblyPaths, System.Threading.CancellationToken cancellationToken) -> Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequest!
+static Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequestFactory.CreateRequest(Microsoft.Testing.Platform.Requests.RunTestExecutionRequest! runTestExecutionRequest, Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase! adapterExtension, string![]! testAssemblyPaths, System.Threading.CancellationToken cancellationToken) -> Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequest!
+virtual Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.Dispose(bool disposing) -> void

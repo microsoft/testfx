@@ -38,7 +38,6 @@ public abstract class AcceptanceTestBase : TestBase
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-    <PackageReference Include="coverlet.collector" Version="6.0.0" />
   </ItemGroup>
 
 </Project>
@@ -68,8 +67,8 @@ public class UnitTest1
         MicrosoftTestingPlatformExtensionsVersion = MicrosoftTestingPlatformVersion;
 #else
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MSTestTestFrameworkPackageNamePrefix);
-        MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsTmpPackages, MicrosoftTestingPlatformNamePrefix);
-        MicrosoftTestingPlatformExtensionsVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MicrosoftTestingPlatformVersion");
+        MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MicrosoftTestingPlatformNamePrefix);
+        MicrosoftTestingExtensionsVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MicrosoftTestingPlatformVersion");
 #endif
     }
 
@@ -86,7 +85,7 @@ public class UnitTest1
 
     public static string MicrosoftTestingPlatformVersion { get; private set; }
 
-    public static string MicrosoftTestingPlatformExtensionsVersion { get; private set; }
+    public static string MicrosoftTestingExtensionsVersion { get; private set; }
 
     internal static IEnumerable<TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration, Verb Verb)>> GetBuildMatrixTfmBuildVerbConfiguration()
     {

@@ -19,19 +19,19 @@ MinimumVisualStudioVersion = 10.0.40219.1
 
     private const string SlnGlobalSectionTemplate = @"
 Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{0}
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {{C0047A98-3108-4928-8D43-FB6F8A49E3AB}}
-	EndGlobalSection
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Any CPU = Debug|Any CPU
+        Release|Any CPU = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {0}
+    EndGlobalSection
+    GlobalSection(SolutionProperties) = preSolution
+        HideSolutionNode = FALSE
+    EndGlobalSection
+    GlobalSection(ExtensibilityGlobals) = postSolution
+        SolutionGuid = {{C0047A98-3108-4928-8D43-FB6F8A49E3AB}}
+    EndGlobalSection
 EndGlobal
 ";
 
@@ -73,10 +73,10 @@ EndGlobal
 EndProject{4}", projectGuid, projectName, newProject.ProjectFile, configGuid, Environment.NewLine);
 
         _globals.AppendFormat(CultureInfo.InvariantCulture, @"{{{0}}}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{{{0}}}.Debug|Any CPU.Build.0 = Debug|Any CPU{1}", configGuid, Environment.NewLine);
+        {{{0}}}.Debug|Any CPU.Build.0 = Debug|Any CPU{1}", configGuid, Environment.NewLine);
 
         _globals.AppendFormat(CultureInfo.InvariantCulture, @"{{{0}}}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{{{0}}}.Release|Any CPU.Build.0 = Release|Any CPU{1}", configGuid, Environment.NewLine);
+        {{{0}}}.Release|Any CPU.Build.0 = Release|Any CPU{1}", configGuid, Environment.NewLine);
 
         AddOrUpdateFileContent(_solutionFileName, MergeSolutionContent());
         return newProject;

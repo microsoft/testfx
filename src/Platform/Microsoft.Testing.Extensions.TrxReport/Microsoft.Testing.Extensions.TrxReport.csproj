@@ -1,0 +1,73 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
+    <RootNamespace>Microsoft.Testing.Extensions.TestReports</RootNamespace>
+    <!--A file (CrashDumpCommandLineOptions.cs) is shared as a link file between projects. To avoid conflicts between both projects,
+    different namespace is used for the shared file.-->
+    <DefineConstants>$(DefineConstants);USE_TRX_NAMESPACE</DefineConstants>
+  </PropertyGroup>
+
+  <!-- NuGet properties -->
+  <PropertyGroup>
+    <PackageDescription>
+      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+This package extends Microsoft Testing Platform to provide TRX test reports.]]>
+    </PackageDescription>
+  </PropertyGroup>
+
+  <!-- NuGet package layout -->
+  <!-- NuGet folders https://learn.microsoft.com/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->
+  <ItemGroup>
+    <Content Include="buildMultiTargeting/**">
+      <Pack>true</Pack>
+      <PackagePath>buildMultiTargeting</PackagePath>
+    </Content>
+    <TfmSpecificPackageFile Include="buildTransitive/**">
+      <PackagePath>buildTransitive/$(TargetFramework)</PackagePath>
+    </TfmSpecificPackageFile>
+    <TfmSpecificPackageFile Include="build/**">
+      <PackagePath>build/$(TargetFramework)</PackagePath>
+    </TfmSpecificPackageFile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CrashDump\CrashDumpCommandLineOptions.cs" Link="CrashDumpCommandLineOptions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport.Abstractions\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Internal.Framework" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HangDump" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources\ExtensionResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ExtensionResources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\ExtensionResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ExtensionResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

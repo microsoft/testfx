@@ -287,7 +287,6 @@ public sealed class ThreadingTests : AcceptanceTestBase
   <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 
   <ItemGroup>
@@ -413,7 +412,6 @@ public static class Program
   <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 
   <ItemGroup>
@@ -523,7 +521,6 @@ public class LifecycleAttributesVoid
   <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 
   <ItemGroup>
@@ -639,7 +636,6 @@ public class LifecycleAttributesTask
   <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 
   <ItemGroup>

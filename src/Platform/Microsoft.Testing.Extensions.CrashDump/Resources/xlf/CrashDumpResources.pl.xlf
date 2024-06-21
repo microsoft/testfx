@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="pl" original="../CrashDumpResources.resx">
+    <body>
+      <trans-unit id="CannotFindExpectedCrashDumpFile">
+        <source>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</source>
+        <target state="translated">Nie można odnaleźć oczekiwanego pliku zrzutu awaryjnego „{0}”. Wszystkie pliki zgodne ze wzorcem „*.dmp” zostaną skopiowane do folderu wyników</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpArtifactDescription">
+        <source>The testhost process crash dump file</source>
+        <target state="translated">Plik zrzutu awaryjnego procesu testhost</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpArtifactDisplayName">
+        <source>Crash dump file</source>
+        <target state="translated">Plik zrzutu awaryjnego</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpDescription">
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
+        <target state="translated">[tylko net6.0+ ] Tworzenie plików zrzutu awaryjnego w przypadku nieoczekiwanej awarii procesu wykonywania testu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpDisplayName">
+        <source>Crash dump</source>
+        <target state="translated">Zrzut awaryjny</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpFileNameOptionDescription">
+        <source>Specify the name of the dump file</source>
+        <target state="translated">Określ nazwę pliku zrzutu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
+        <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
+        <target state="translated">Zmienna środowiskowa „{0}” powinna być ustawiona na „{1}”, ale wartość to „{2}”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
+        <source>Crash dump feature is only available in .NET (Core)</source>
+        <target state="translated">Funkcja zrzutu awaryjnego jest dostępna tylko na platformie .NET (Core)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpOptionDescription">
+        <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
+        <target state="translated">[tylko net6.0+ ] Wygeneruj plik zrzutu w przypadku awarii procesu testowego</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
+        <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
+        <target state="translated">Proces hosta testowego o identyfikatorze PID „{0}{0}” uległ awarii, wygenerowano plik zrzutu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpTypeOptionDescription">
+        <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. 
+For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
+        <target state="translated">Określ typ zrzutu. Prawidłowe wartości to „Mini”, „Sterta”, „Klasyfikacja” i „Pełne” Typ domyślny to „Full”. 
+Aby uzyskać więcej informacji, odwiedź stronę https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpTypeOptionInvalidType">
+        <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
+        <target state="translated">Typ „{0}” nie jest prawidłowym typem zrzutu. Prawidłowe opcje to „Mini”, „Sterta”, „Klasyfikacja” i „Pełne”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpTypeOptionTooManyArguments">
+        <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
+        <target state="translated">Element „--crashdump-type” oczekuje pojedynczego typu zrzutu jako argumentu (np. „--crashdump-type Heap”)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnsupportedRequestTypeErrorMessage">
+        <source>Requests of type '{0}' is not supported</source>
+        <target state="translated">Żądania typu „{0}” nie są obsługiwane</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

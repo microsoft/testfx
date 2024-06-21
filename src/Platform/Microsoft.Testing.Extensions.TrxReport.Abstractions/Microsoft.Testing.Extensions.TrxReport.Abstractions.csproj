@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+    <!-- Framework specific API -->
+    <AdditionalFiles Include="PublicAPI/netstandard2.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <AdditionalFiles Include="PublicAPI/netstandard2.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <AdditionalFiles Include="PublicAPI/net/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' != 'netstandard2.0' " />
+    <AdditionalFiles Include="PublicAPI/net/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != 'netstandard2.0' " />
+    <!-- API that is common to all frameworks that we build for. -->
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Polyfill">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

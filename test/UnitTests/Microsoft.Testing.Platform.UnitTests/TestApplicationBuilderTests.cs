@@ -3,9 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
@@ -13,7 +11,6 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
-using Microsoft.Testing.TestInfrastructure;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 

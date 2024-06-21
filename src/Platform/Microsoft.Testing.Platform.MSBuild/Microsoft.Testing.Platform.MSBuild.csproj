@@ -1,0 +1,105 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
+    <DefineConstants>PLATFORM_MSBUILD</DefineConstants>
+    <NoWarn>$(NoWarn);NU5100</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.MSBuild.UnitTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+  </ItemGroup>
+
+  <!-- NuGet properties -->
+  <PropertyGroup>
+    <PackageDescription>
+      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+This package provides MSBuild integration of the platform, its extensions and configuration files.]]>
+    </PackageDescription>
+  </PropertyGroup>
+
+  <!-- NuGet package layout -->
+  <!-- NuGet folders https://learn.microsoft.com/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->
+  <ItemGroup>
+    <Content Include="buildMultiTargeting/**">
+      <Pack>true</Pack>
+      <PackagePath>buildMultiTargeting</PackagePath>
+    </Content>
+    <TfmSpecificPackageFile Include="buildTransitive/**">
+      <PackagePath>buildTransitive/$(TargetFramework)</PackagePath>
+    </TfmSpecificPackageFile>
+    <TfmSpecificPackageFile Include="build/**">
+      <PackagePath>build/$(TargetFramework)</PackagePath>
+    </TfmSpecificPackageFile>
+  </ItemGroup>
+
+  <!--
+        Test task depends on Microsoft.Testing.Platform.dll and we need to pack with it and move to custom
+        folder to not confuse nuget with same assembly references.
+  -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CustomContentTarget</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+
+  <Target Name="CustomContentTarget" Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(OutputPath)Microsoft.Testing.Platform.dll">
+        <PackagePath>_MSBuildTasks/$(TargetFramework)</PackagePath>
+      </TfmSpecificPackageFile>
+      <TfmSpecificPackageFile Include="$(OutputPath)Microsoft.Testing.Platform.MSBuild.dll">
+        <PackagePath>_MSBuildTasks/$(TargetFramework)</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <Compile Update="Resources\MSBuildResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>MSBuildResources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\MSBuildResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>MSBuildResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <!-- Generates NuGet package layout inside artifacts to make it testable with simple imports -->
+  <Target Name="ReproNugetPackageLayout" AfterTargets="Build" Condition=" '$(TargetFramework)' != '' ">
+    <ItemGroup>
+      <MSBuildAssetsBuildTargeting Include="buildMultiTargeting/**" />
+      <MSBuildAssetsBuildTransitive Include="buildTransitive/**" />
+      <MSBuildAssetsBuild Include="build/**" />
+      <MSBuildLib Include="$(TargetDir)$(TargetName).dll" />
+      <MSBuildLib Include="$(MSBuildLib);$(TargetDir)Microsoft.Testing.Platform.dll" />
+      <!-- We ship with embedded symbols -->
+      <!--<MSBuildLib Include="$(TargetDir)$(TargetName).pdb" />-->
+    </ItemGroup>
+
+    <Message Text="MSBuildAssetsBuildTargeting tests: @(MSBuildAssetsBuildTargeting->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildMultiTargeting/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
+    <Copy SourceFiles="@(MSBuildAssetsBuildTargeting)" DestinationFiles="@(MSBuildAssetsBuildTargeting->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildMultiTargeting/%(RecursiveDir)%(Filename)%(Extension)')" />
+
+    <Message Text="MSBuildAssetsBuildTransitive tests: @(MSBuildAssetsBuildTransitive->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildTransitive/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
+    <Copy SourceFiles="@(MSBuildAssetsBuildTransitive)" DestinationFiles="@(MSBuildAssetsBuildTransitive->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildTransitive/%(RecursiveDir)%(Filename)%(Extension)')" />
+
+    <Message Text="MSBuildAssetsBuild tests: @(MSBuildAssetsBuild->'$(ArtifactsDir)tests/nugetPackageFolder/build/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
+    <Copy SourceFiles="@(MSBuildAssetsBuild)" DestinationFiles="@(MSBuildAssetsBuild->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/build/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" />
+
+    <Message Text="MSBuildLib tests: @(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/lib/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
+    <Copy SourceFiles="@(MSBuildLib)" DestinationFiles="@(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/lib/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" />
+
+    <Message Text="MSBuildLib to _MSBuildTasks: @(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/_MSBuildTasks/netstandard2.0/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
+    <Copy SourceFiles="@(MSBuildLib)" DestinationFiles="@(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/_MSBuildTasks/netstandard2.0/%(RecursiveDir)%(Filename)%(Extension)')" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+  </Target>
+</Project>

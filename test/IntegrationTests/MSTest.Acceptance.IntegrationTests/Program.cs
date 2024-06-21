@@ -19,9 +19,12 @@ ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args)
 builder.AddTestFramework(
    new TestFrameworkConfiguration(Debugger.IsAttached ? 1 : Environment.ProcessorCount),
    new SourceGeneratedTestNodesBuilder());
-builder.AddCrashDumpProvider();
-builder.AddTrxReportProvider();
+#if ENABLE_CODECOVERAGE
 builder.AddCodeCoverageProvider();
+#endif
+builder.AddHangDumpProvider();
+builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
+builder.AddTrxReportProvider();
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
