@@ -334,6 +334,12 @@ public class CollectionAssertTests : TestContainer
         Verify(ex.Message.Contains("message"));
     }
 
+    public void CollectionAssertAreNotEquivalent_FailsWithTwoNullsAndComparer_WithMessageAndParams()
+    {
+        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(null, null, new CaseInsensitiveNotEqualityComparer(), "message format {0} {1}", 1, 2));
+        Verify(ex.Message.Contains("message"));
+    }
+
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
     private ICollection? GetCollection() => new[] { "item" };
 
