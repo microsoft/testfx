@@ -22,8 +22,7 @@ public class ReflectionOperations : IReflectionOperations
     /// <param name="memberInfo"> The member. </param>
     /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-    [return: NotNullIfNotNull(nameof(memberInfo))]
-    public object[]? GetCustomAttributes(MemberInfo memberInfo, bool inherit) =>
+    public object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit) =>
 #if NETFRAMEWORK
         ReflectionUtility.GetCustomAttributes(memberInfo, inherit).ToArray();
 #else
@@ -37,8 +36,7 @@ public class ReflectionOperations : IReflectionOperations
     /// <param name="type"> The attribute type. </param>
     /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-    [return: NotNullIfNotNull(nameof(memberInfo))]
-    public object[]? GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit) =>
+    public object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit) =>
 #if NETFRAMEWORK
         ReflectionUtility.GetCustomAttributes(memberInfo, type, inherit).ToArray();
 #else
@@ -53,7 +51,7 @@ public class ReflectionOperations : IReflectionOperations
     /// <returns> The list of attributes of the given type on the member. Empty list if none found. </returns>
     public object[] GetCustomAttributes(Assembly assembly, Type type) =>
 #if NETFRAMEWORK
-        ReflectionUtility.GetCustomAttributes(assembly, type).ToArray();
+        ReflectionUtility.GetCustomAttributes(assembly, type).ToArray<object>();
 #else
         assembly.GetCustomAttributes(type).ToArray<object>();
 #endif

@@ -28,7 +28,6 @@ public class DesktopReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
         string[] expectedAttributes = ["DummyA : base", "DummySingleA : base"];
@@ -41,7 +40,6 @@ public class DesktopReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(typeInfo, false);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
         string[] expectedAttributes = ["DummyA : ba"];
