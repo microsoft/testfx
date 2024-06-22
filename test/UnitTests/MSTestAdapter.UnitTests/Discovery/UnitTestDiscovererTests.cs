@@ -243,11 +243,6 @@ public class UnitTestDiscovererTests : TestContainer
             .Returns((object)null);
 
         _test.TestMethod.DeclaringAssemblyName = "DummyAssembly2.dll";
-        ////var test = new UnitTestElement(
-        ////    new TestMethod("M", "C", "A", false)
-        ////    {
-        ////        DeclaringAssemblyName = "DummyAssembly2.dll"
-        ////    });
 
         SetupNavigation(Source, _test, _test.TestMethod.DeclaringClassFullName, _test.TestMethod.Name);
 
