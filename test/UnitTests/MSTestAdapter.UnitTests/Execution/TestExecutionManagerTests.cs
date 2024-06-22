@@ -736,7 +736,6 @@ public class TestExecutionManagerTests : TestContainer
         TestCase testCase3 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod3");
         TestCase testCase4 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod4");
 
-        ////testCase3.SetPropertyValue(MSTest.TestAdapter.Constants.DoNotParallelizeProperty, true);
         testCase4.SetPropertyValue(TestAdapterConstants.DoNotParallelizeProperty, true);
 
         TestCase[] tests = [testCase1, testCase2, testCase3, testCase4];

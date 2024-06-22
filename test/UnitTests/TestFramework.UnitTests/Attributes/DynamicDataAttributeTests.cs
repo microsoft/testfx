@@ -263,30 +263,30 @@ public class DynamicDataAttributeTests : TestContainer
     {
         MethodInfo testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithTuple), typeof(TestClassTupleData), DynamicDataSourceType.Property);
-        IEnumerable<object[]> data = dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo);
 
         dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
-        data = dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo);
     }
 
     public void DynamicDataSource_WithValueTuple_Works()
     {
         MethodInfo testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTuple), typeof(TestClassTupleData), DynamicDataSourceType.Property);
-        IEnumerable<object[]> data = dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo);
 
         dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
-        data = dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo);
     }
 
     public void DynamicDataSource_WithValueTupleWithTupleSyntax_Works()
     {
         MethodInfo testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData), DynamicDataSourceType.Property);
-        IEnumerable<object[]> data = dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo);
 
         dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData), DynamicDataSourceType.Method);
-        data = dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo);
     }
 #else
     public void DynamicDataSource_WithTuple_Throws()
