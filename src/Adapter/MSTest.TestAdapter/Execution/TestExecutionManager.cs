@@ -291,10 +291,8 @@ public class TestExecutionManager
                 string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
 
             // Create test sets for execution, we can execute them in parallel based on parallel settings
-            IEnumerable<IGrouping<bool, TestCase>> testSets = [];
-
             // Parallel and not parallel sets.
-            testSets = testsToRun.GroupBy(t => t.GetPropertyValue(Constants.DoNotParallelizeProperty, false));
+            IEnumerable<IGrouping<bool, TestCase>> testSets = testsToRun.GroupBy(t => t.GetPropertyValue(Constants.DoNotParallelizeProperty, false));
 
             IGrouping<bool, TestCase>? parallelizableTestSet = testSets.FirstOrDefault(g => !g.Key);
             IGrouping<bool, TestCase>? nonParallelizableTestSet = testSets.FirstOrDefault(g => g.Key);
