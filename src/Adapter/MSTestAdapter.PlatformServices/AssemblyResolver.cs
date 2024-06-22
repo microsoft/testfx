@@ -320,7 +320,7 @@ class AssemblyResolver :
         }
 
         // args.Name is like: "Microsoft.VisualStudio.TestTools.Common, Version=[VersionMajor].0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
-        AssemblyName? requestedName = null;
+        AssemblyName? requestedName;
 
         try
         {

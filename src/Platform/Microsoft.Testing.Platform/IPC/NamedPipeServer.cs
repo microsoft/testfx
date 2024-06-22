@@ -113,7 +113,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         int missingBytesToReadOfWholeMessage = 0;
         while (true)
         {
-            int missingBytesToReadOfCurrentChunk = 0;
             int currentReadIndex = 0;
 #if NET
             int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken);
@@ -127,7 +126,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             }
 
             // Reset the current chunk size
-            missingBytesToReadOfCurrentChunk = currentReadBytes;
+            int missingBytesToReadOfCurrentChunk = currentReadBytes;
 
             // If currentRequestSize is 0, we need to read the message size
             if (currentMessageSize == 0)
