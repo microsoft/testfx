@@ -46,7 +46,7 @@ internal class TypeCache : MarshalByRefObject
     /// <summary>
     /// ClassInfo cache.
     /// </summary>
-    private readonly ConcurrentDictionary<string, TestClassInfo> _classInfoCache = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, TestClassInfo> _classInfoCache = new();
 
     private readonly ConcurrentDictionary<string, bool> _discoverInternalsCache = new();
 
