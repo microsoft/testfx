@@ -106,7 +106,7 @@ class AssemblyResolver :
             throw new ArgumentNullException(nameof(directories));
         }
 
-        _searchDirectories = [..directories];
+        _searchDirectories = [.. directories];
         _directoryList = new Queue<RecursiveDirectoryPath>();
 
         AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
