@@ -60,12 +60,12 @@ namespace Analyzer.Utilities
         /// </summary>
         private readonly ConcurrentDictionary<string, INamedTypeSymbol?> _fullNameToTypeMap;
 
-#if !NETSTANDARD1_3 // Assuming we're on .NET Standard 2.0 or later, cache the type names that are probably compile time constants.
         /// <summary>
         /// Static cache of full type names (with namespaces) to namespace name parts,
         /// so we can query <see cref="IAssemblySymbol.NamespaceNames"/>.
         /// </summary>
         /// <remarks>
+        ///
         /// Example: "System.Collections.Generic.List`1" => [ "System", "Collections", "Generic" ]
         ///
         /// https://github.com/dotnet/roslyn/blob/9e786147b8cb884af454db081bb747a5bd36a086/src/Compilers/CSharp/Portable/Symbols/AssemblySymbol.cs#L455
@@ -73,7 +73,6 @@ namespace Analyzer.Utilities
         /// as memory intensive as unnecessary calls GetTypeByMetadataName() in some cases. So we'll go with namespace names.
         /// </remarks>
         private static readonly ConcurrentDictionary<string, ImmutableArray<string>> _fullTypeNameToNamespaceNames = new();
-#endif
 
         /// <summary>
         /// Attempts to get the type by the full type name.
@@ -111,9 +110,7 @@ namespace Analyzer.Utilities
                     INamedTypeSymbol? type = null;
 
                     ImmutableArray<string> namespaceNames;
-#if NETSTANDARD1_3 // Probably in 2.9.x branch; just don't cache.
-                    namespaceNames = GetNamespaceNamesFromFullTypeName(fullTypeName);
-#else // Assuming we're on .NET Standard 2.0 or later, cache the type names that are probably compile time constants.
+                    // Assuming we're on .NET Standard 2.0 or later, cache the type names that are probably compile time constants.
                     if (string.IsInterned(fullTypeName) != null)
                     {
                         namespaceNames = _fullTypeNameToNamespaceNames.GetOrAdd(
@@ -124,7 +121,6 @@ namespace Analyzer.Utilities
                     {
                         namespaceNames = GetNamespaceNamesFromFullTypeName(fullTypeName);
                     }
-#endif
 
                     if (IsSubsetOfCollection(namespaceNames, Compilation.Assembly.NamespaceNames))
                     {
@@ -259,12 +255,6 @@ namespace Analyzer.Utilities
             }
 
             UnicodeCategory cat = CharUnicodeInfo.GetUnicodeCategory(ch);
-
-            ////return IsLetterChar(cat)
-            ////    || IsDecimalDigitChar(cat)
-            ////    || IsConnectingChar(cat)
-            ////    || IsCombiningChar(cat)
-            ////    || IsFormattingChar(cat);
 
             return cat switch
             {
