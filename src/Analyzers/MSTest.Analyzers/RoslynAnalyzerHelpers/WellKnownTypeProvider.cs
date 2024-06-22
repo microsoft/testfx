@@ -60,12 +60,12 @@ namespace Analyzer.Utilities
         /// </summary>
         private readonly ConcurrentDictionary<string, INamedTypeSymbol?> _fullNameToTypeMap;
 
-        // Assuming we're on .NET Standard 2.0 or later, cache the type names that are probably compile time constants.
         /// <summary>
         /// Static cache of full type names (with namespaces) to namespace name parts,
         /// so we can query <see cref="IAssemblySymbol.NamespaceNames"/>.
         /// </summary>
         /// <remarks>
+        ///
         /// Example: "System.Collections.Generic.List`1" => [ "System", "Collections", "Generic" ]
         ///
         /// https://github.com/dotnet/roslyn/blob/9e786147b8cb884af454db081bb747a5bd36a086/src/Compilers/CSharp/Portable/Symbols/AssemblySymbol.cs#L455
