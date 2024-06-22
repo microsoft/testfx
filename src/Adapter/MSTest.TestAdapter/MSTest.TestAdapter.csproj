@@ -16,7 +16,6 @@
     <NuspecFile Condition=" '$(OS)' == 'Windows_NT' ">MSTest.TestAdapter.nuspec</NuspecFile>
     <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.TestAdapter.Linux.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
-    <PackageId>MSTest.TestAdapter</PackageId>
     <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
     <PackageDescription>
       MSTest is Microsoft supported Test Framework.

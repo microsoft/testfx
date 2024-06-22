@@ -6,7 +6,6 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageId>MSTest.Sdk</PackageId>
     <NuspecFile>MSTest.Sdk.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
     <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>

@@ -9,7 +9,6 @@
     <IsShippingPackage>false</IsShippingPackage>
     <NuspecFile>MSTest.Internal.TestFx.Documentation.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
-    <PackageId>MSTest.Internal.TestFx.Documentation</PackageId>
     <PackageTags>MSTest TestFramework MSTestV2</PackageTags>
     <PackageDescription>This is a private nuget package that contains the xml documentation files for MSTest V2 Framework.</PackageDescription>
   </PropertyGroup>
