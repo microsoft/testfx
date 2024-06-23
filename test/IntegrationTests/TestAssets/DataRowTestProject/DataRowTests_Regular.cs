@@ -80,7 +80,7 @@ public class DataRowTests_Regular
     }
 
     [TestMethod]
-    [DataRow([string.Empty, 1])]
+    [DataRow(new object[] { "", 1 })]
     public void OneObjectArray(object[] objects) => Assert.AreEqual(2, objects.Length);
 
     [TestMethod]
