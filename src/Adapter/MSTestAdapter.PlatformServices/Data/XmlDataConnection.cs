@@ -52,7 +52,7 @@ internal sealed class XmlDataConnection : TestDataConnection
     {
         DataSet? dataSet = LoadDataSet(true);
 
-        DataTable table = dataSet?.Tables[tableName];
+        DataTable? table = dataSet?.Tables[tableName];
         if (table == null)
         {
             return null;
