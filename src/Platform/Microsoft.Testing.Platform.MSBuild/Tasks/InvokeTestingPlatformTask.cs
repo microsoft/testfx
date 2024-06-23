@@ -203,7 +203,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
         if (!string.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
         {
-            builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments.ItemSpec} ");
+            builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments!.ItemSpec} ");
         }
 
         return builder.ToString();

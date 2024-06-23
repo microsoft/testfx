@@ -380,7 +380,7 @@ internal class TypeCache : MarshalByRefObject
 
         assemblyInfo = new TestAssemblyInfo(assembly);
 
-        IReadOnlyList<Type> types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName, null);
+        IReadOnlyList<Type> types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName!, null);
 
         foreach (Type t in types)
         {
