@@ -9,5 +9,5 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// internal in addition to test classes and test methods which are declared public. When this attribute is not
 /// present in a test assembly the tests in such classes will not be discovered.
 /// </summary>
-[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Assembly)]
 public class DiscoverInternalsAttribute : Attribute;

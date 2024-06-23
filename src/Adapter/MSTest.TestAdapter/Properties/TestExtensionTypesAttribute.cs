@@ -6,7 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform;
 /// <summary>
 /// Custom Attribute to specify the exact types which should be loaded from assembly.
 /// </summary>
-[AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Assembly)]
 internal sealed class TestExtensionTypesAttribute : Attribute
 {
     public TestExtensionTypesAttribute(params Type[] types)
