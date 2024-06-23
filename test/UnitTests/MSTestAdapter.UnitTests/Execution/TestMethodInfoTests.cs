@@ -299,9 +299,10 @@ public class TestMethodInfoTests : TestContainer
         var exception = _testMethodInfo.Invoke(null).TestFailureException as TestFailedException;
 
         Verify(exception is not null);
+        Verify(exception.StackTraceInformation is not null);
         Verify(
-            (bool)exception?.StackTraceInformation.ErrorStackTrace.StartsWith(
-            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows>b__", StringComparison.Ordinal));
+            exception.StackTraceInformation.ErrorStackTrace.StartsWith(
+                "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows>b__", StringComparison.Ordinal));
     }
 
     public void TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrowsWithoutInnerException()
@@ -313,8 +314,9 @@ public class TestMethodInfoTests : TestContainer
         var exception = method.Invoke(null).TestFailureException as TestFailedException;
 
         Verify(exception is not null);
+        Verify(exception.StackTraceInformation is not null);
         Verify(
-            (bool)exception?.StackTraceInformation.ErrorStackTrace.StartsWith(
+            exception.StackTraceInformation.ErrorStackTrace.StartsWith(
             "    at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)", StringComparison.Ordinal));
     }
 
@@ -403,9 +405,10 @@ public class TestMethodInfoTests : TestContainer
         var exception = _testMethodInfo.Invoke(null).TestFailureException as TestFailedException;
 
         Verify(exception is not null);
+        Verify(exception.StackTraceInformation is not null);
         Verify(
-            (bool)exception?.StackTraceInformation.ErrorStackTrace.StartsWith(
-            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows>b__", StringComparison.Ordinal));
+            exception.StackTraceInformation.ErrorStackTrace.StartsWith(
+                "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows>b__", StringComparison.Ordinal));
     }
 
     #endregion
