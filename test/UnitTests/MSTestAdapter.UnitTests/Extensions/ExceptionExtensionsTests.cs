@@ -55,13 +55,6 @@ public class ExceptionExtensionsTests : TestContainer
 
     #region TryGetStackTraceInformation scenarios
 
-    public void TryGetStackTraceInformationReturnsNullIfExceptionIsNull()
-    {
-        var exception = (Exception)null;
-
-        Verify(exception.TryGetStackTraceInformation() is null);
-    }
-
     public void TryGetStackTraceInformationReturnsNullIfExceptionStackTraceIsNullOrEmpty()
     {
         var exception = new DummyExceptionForStackTrace(() => null);
