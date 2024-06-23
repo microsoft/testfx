@@ -193,15 +193,13 @@ public class ReflectionOperationsTests : TestContainer
         var attribValuePairs = new List<string>();
         foreach (object attrib in attributes)
         {
-            if (attrib is DummySingleAAttribute)
+            if (attrib is DummySingleAAttribute dummySingleAAttribute)
             {
-                var a = attrib as DummySingleAAttribute;
-                attribValuePairs.Add("DummySingleA : " + a.Value);
+                attribValuePairs.Add("DummySingleA : " + dummySingleAAttribute.Value);
             }
-            else if (attrib is DummyAAttribute)
+            else if (attrib is DummyAAttribute dummyAAttribute)
             {
-                var a = attrib as DummyAAttribute;
-                attribValuePairs.Add("DummyA : " + a.Value);
+                attribValuePairs.Add("DummyA : " + dummyAAttribute.Value);
             }
         }
 
@@ -219,7 +217,7 @@ public class ReflectionOperationsTests : TestContainer
         public string Value { get; set; }
     }
 
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
     public class DummySingleAAttribute : Attribute
     {
         public DummySingleAAttribute(string foo)

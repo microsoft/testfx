@@ -16,7 +16,7 @@ public sealed class DurationAttribute : TestPropertyAttribute
     public string Duration { get; private set; }
 }
 
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Method)]
 public sealed class CategoryArrayAttribute : Attribute
 {
     public CategoryArrayAttribute(params string[] value)
