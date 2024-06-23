@@ -279,25 +279,21 @@ public class ReflectionUtilityTests : TestContainer
         var attributeValuePairs = new List<string>();
         foreach (object attribute in attributes)
         {
-            if (attribute is OwnerAttribute)
+            if (attribute is OwnerAttribute ownerAttribute)
             {
-                var a = attribute as OwnerAttribute;
-                attributeValuePairs.Add("Owner : " + a.Owner);
+                attributeValuePairs.Add("Owner : " + ownerAttribute.Owner);
             }
-            else if (attribute is TestCategoryAttribute)
+            else if (attribute is TestCategoryAttribute categoryAttribute)
             {
-                var a = attribute as TestCategoryAttribute;
-                attributeValuePairs.Add("TestCategory : " + a.TestCategories.Aggregate((i, j) => i + "," + j));
+                attributeValuePairs.Add("TestCategory : " + categoryAttribute.TestCategories.Aggregate((i, j) => i + "," + j));
             }
-            else if (attribute is DurationAttribute)
+            else if (attribute is DurationAttribute durationAttribute)
             {
-                var a = attribute as DurationAttribute;
-                attributeValuePairs.Add("Duration : " + a.Duration);
+                attributeValuePairs.Add("Duration : " + durationAttribute.Duration);
             }
-            else if (attribute is CategoryArrayAttribute)
+            else if (attribute is CategoryArrayAttribute arrayAttribute)
             {
-                var a = attribute as CategoryArrayAttribute;
-                attributeValuePairs.Add("CategoryAttribute : " + a.Value.Aggregate((i, j) => i + "," + j));
+                attributeValuePairs.Add("CategoryAttribute : " + arrayAttribute.Value.Aggregate((i, j) => i + "," + j));
             }
         }
 
