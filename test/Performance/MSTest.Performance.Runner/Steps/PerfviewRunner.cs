@@ -59,12 +59,12 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
         process.OutputDataReceived += (sender, args) =>
         {
             Console.WriteLine(args.Data);
-            if (args?.Data?.Contains("SUCCESS: PerfView") == true)
+            if (args.Data?.Contains("SUCCESS: PerfView") == true)
             {
                 succeded = true;
             }
 
-            if (args?.Data == "Press enter to close window.")
+            if (args.Data == "Press enter to close window.")
             {
                 killTheProcess.Set();
             }

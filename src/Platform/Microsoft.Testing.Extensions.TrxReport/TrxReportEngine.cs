@@ -512,12 +512,12 @@ internal sealed partial class TrxReportEngine
             {
                 XElement errorInfoElement = new("ErrorInfo");
 
-                if (trxException?.Message is not null)
+                if (trxException.Message is not null)
                 {
                     errorInfoElement.Add(new XElement("Message", RemoveInvalidXmlChar(trxException.Message)));
                 }
 
-                if (trxException?.StackTrace is not null)
+                if (trxException.StackTrace is not null)
                 {
                     errorInfoElement.Add(new XElement("StackTrace", RemoveInvalidXmlChar(trxException.StackTrace)));
                 }
