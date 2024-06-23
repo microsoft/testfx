@@ -26,7 +26,7 @@ internal sealed partial class TrxReportEngine
 
     private static readonly Regex ReservedFileNamesRegex = BuildReservedFileNameRegex();
     private static readonly Regex InvalidXmlCharReplace = BuildInvalidXmlCharReplace();
-    private static readonly MatchEvaluator InvalidXmlEvaluator = new(ReplaceInvalidCharacterWithUniCodeEscapeSequence);
+    private static readonly MatchEvaluator InvalidXmlEvaluator = ReplaceInvalidCharacterWithUniCodeEscapeSequence;
 
     private static readonly Type[] FailedStates = new[]
     {

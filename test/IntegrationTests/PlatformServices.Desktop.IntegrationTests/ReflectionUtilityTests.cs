@@ -42,7 +42,7 @@ public class ReflectionUtilityTests : TestContainer
         _testAsset = Assembly.ReflectionOnlyLoadFrom(testAssetPath);
 
         // This is needed for System assemblies.
-        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
+        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += ReflectionOnlyOnResolve;
     }
 
     public void GetCustomAttributesShouldReturnAllAttributes()
