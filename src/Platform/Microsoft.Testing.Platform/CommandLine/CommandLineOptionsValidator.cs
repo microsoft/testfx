@@ -196,7 +196,7 @@ internal static class CommandLineOptionsValidator
             }
         }
 
-        return stringBuilder?.Length > 0
+        return stringBuilder.Length > 0
             ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
     }

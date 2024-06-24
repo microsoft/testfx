@@ -188,7 +188,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
                     !miniDumpType.Value.Equals("3", StringComparison.OrdinalIgnoreCase) &&
                     !miniDumpType.Value.Equals("4", StringComparison.OrdinalIgnoreCase))
                 {
-                    AddError(errors, $"{prefix}{MiniDumpTypeVariable}", "Valid values are 1, 2, 3, 4", miniDumpType?.Value);
+                    AddError(errors, $"{prefix}{MiniDumpTypeVariable}", "Valid values are 1, 2, 3, 4", miniDumpType.Value);
                 }
             }
         }
