@@ -7,9 +7,9 @@ namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 internal readonly struct TestRequestExecutionTimeInfo(TimingInfo timingInfo) : IData
 {
-    public readonly string DisplayName => nameof(TestRequestExecutionTimeInfo);
+    public string DisplayName => nameof(TestRequestExecutionTimeInfo);
 
-    public readonly string? Description => "Information about the test execution times.";
+    public string? Description => "Information about the test execution times.";
 
     public TimingInfo TimingInfo { get; } = timingInfo;
 
