@@ -12,7 +12,7 @@ public static class TargetFrameworks
     public static TestArgumentsEntry<string>[] Net { get; } =
     [
         new("net8.0", "net8.0"),
-#if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
+#if !FAST_ACCEPTANCE_TEST
         new("net7.0", "net7.0"),
         new("net6.0", "net6.0"),
 #endif
