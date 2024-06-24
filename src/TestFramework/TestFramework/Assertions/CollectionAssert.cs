@@ -726,7 +726,7 @@ public sealed class CollectionAssert
         }
 
         // Search for a mismatched element.
-        if (FindMismatchedElement<T>(expected, actual, comparer, out int expectedCount, out int actualCount, out object? mismatchedElement))
+        if (FindMismatchedElement(expected, actual, comparer, out int expectedCount, out int actualCount, out object? mismatchedElement))
         {
             string userMessage = Assert.BuildUserMessage(message, parameters);
             string finalMessage = string.Format(
