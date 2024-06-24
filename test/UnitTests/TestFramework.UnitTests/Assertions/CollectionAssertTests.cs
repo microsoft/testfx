@@ -249,6 +249,15 @@ public class CollectionAssertTests : TestContainer
         CollectionAssert.AreEquivalent(collection1, collection2);
     }
 
+    public void CollectionAssertAreEquivalent_WithMatchingNullableSets_DoesNotThrow()
+    {
+        ICollection? retSetWithNulls = new[] { "item", null };
+
+        ICollection? getMatchingSetWithNulls = new[] { "item", null };
+
+        CollectionAssert.AreEquivalent(retSetWithNulls, getMatchingSetWithNulls);
+    }
+
     public void CollectionAssertAreEquivalent_FailWhenNotEquivalent_WithMessage()
     {
         ICollection? collection1 = GetCollection();
