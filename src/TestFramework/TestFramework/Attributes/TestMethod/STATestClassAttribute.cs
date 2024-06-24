@@ -14,6 +14,5 @@ public class STATestClassAttribute : TestClassAttribute
     /// </summary>
     /// <param name="testMethodAttribute">The test method attribute instance defined on this method.</param>
     /// <returns>The <see cref="TestMethodAttribute"/> to be used to run this test.</returns>
-    /// <remarks>Extensions can override this method to customize how all methods in a class are run.</remarks>
     public override TestMethodAttribute? GetTestMethodAttribute(TestMethodAttribute? testMethodAttribute) => testMethodAttribute;
 }
