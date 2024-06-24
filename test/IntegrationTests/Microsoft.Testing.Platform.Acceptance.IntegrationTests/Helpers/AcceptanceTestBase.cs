@@ -14,11 +14,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// </summary>
 public abstract class AcceptanceTestBase : TestBase
 {
-    private const string MicrosoftTestingPlatformNamePrefix = "Microsoft.Testing.Platform.";
     private const string NuGetPackageExtensionName = ".nupkg";
-#if !MSTEST_DOWNLOADED
-    private const string MSTestTestFrameworkPackageNamePrefix = "MSTest.TestFramework.";
-#endif
 
     protected const string CurrentMSTestSourceCode = """
 #file MSTestProject.csproj
@@ -63,11 +59,11 @@ public class UnitTest1
         var versionsPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
 #if MSTEST_DOWNLOADED
         MSTestVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestVersion");
-        MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MicrosoftTestingPlatformNamePrefix);
-        MicrosoftTestingPlatformExtensionsVersion = MicrosoftTestingPlatformVersion;
+        MicrosoftTestingPlatformVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestVersion");
+        MicrosoftTestingEnterpriseExtensionsVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.");
 #else
-        MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MSTestTestFrameworkPackageNamePrefix);
-        MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MicrosoftTestingPlatformNamePrefix);
+        MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
+        MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
         MicrosoftTestingEnterpriseExtensionsVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MicrosoftTestingInternalFrameworkVersion");
 #endif
     }
