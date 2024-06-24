@@ -63,7 +63,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase
             SourceCode
             .PatchCodeWithReplace("$TargetFrameworks$", isMultiTfm ? $"<TargetFrameworks>{singleTfmOrMultiTfm}</TargetFrameworks>" : $"<TargetFramework>{singleTfmOrMultiTfm}</TargetFramework>")
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$MicrosoftTestingExtensionsVersion$", MicrosoftTestingExtensionsVersion));
+            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
 
         string projectContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "MSBuildTests.csproj", SearchOption.AllDirectories).Single());
         string programSourceContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "Program.cs", SearchOption.AllDirectories).Single());
@@ -128,8 +128,8 @@ public class MSBuildTests_Solution : AcceptanceTestBase
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <!-- TrxReport.Abstractions is only needed because Internal.Framework relies on a preview version that we want to override with currently built one -->
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingExtensionsVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
     </ItemGroup>
 </Project>
 

@@ -68,7 +68,7 @@ public class UnitTest1
 #else
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MSTestTestFrameworkPackageNamePrefix);
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MicrosoftTestingPlatformNamePrefix);
-        MicrosoftTestingExtensionsVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MicrosoftTestingPlatformVersion");
+        MicrosoftTestingEnterpriseExtensionsVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MicrosoftTestingInternalFrameworkVersion");
 #endif
     }
 
@@ -77,7 +77,7 @@ public class UnitTest1
     {
     }
 
-    internal static string RID { get; private set; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
+    internal static string RID { get; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
 
     public static string MSTestVersion { get; private set; }
 
@@ -85,7 +85,7 @@ public class UnitTest1
 
     public static string MicrosoftTestingPlatformVersion { get; private set; }
 
-    public static string MicrosoftTestingExtensionsVersion { get; private set; }
+    public static string MicrosoftTestingEnterpriseExtensionsVersion { get; private set; }
 
     internal static IEnumerable<TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration, Verb Verb)>> GetBuildMatrixTfmBuildVerbConfiguration()
     {
