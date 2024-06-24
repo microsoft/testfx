@@ -117,7 +117,7 @@ public class ThreadSafeStringWriter : StringWriter
     {
         lock (StaticLockObject)
         {
-            State?.Value?.Remove(_outputType);
+            State.Value?.Remove(_outputType);
             try
             {
                 base.Dispose(disposing);

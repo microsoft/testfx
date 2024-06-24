@@ -62,7 +62,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     public string? DisplayName { get; set; }
 
     /// <inheritdoc />
-    public IEnumerable<object?[]> GetData(MethodInfo methodInfo) => new[] { Data };
+    public IEnumerable<object?[]> GetData(MethodInfo methodInfo) => [Data];
 
     /// <inheritdoc />
     public virtual string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
@@ -83,7 +83,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
         // so that null do appear as "null". If you remove the call, and do string.Join(",", new object[] { null, "a" }),
         // you will get empty string while with the call you will get "null,a".
         IEnumerable<object?> displayData = parameters.Length == 1 && parameters[0].ParameterType == typeof(object[])
-            ? new object[] { data.AsEnumerable() }
+            ? [data.AsEnumerable()]
             : data.AsEnumerable();
 
         return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name,

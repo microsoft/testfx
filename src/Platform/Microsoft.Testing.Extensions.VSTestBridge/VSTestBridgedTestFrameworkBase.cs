@@ -39,12 +39,12 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     public abstract string Description { get; }
 
     /// <inheritdoc />
-    public Type[] DataTypesProduced { get; } = new[]
-    {
+    public Type[] DataTypesProduced { get; } =
+    [
         typeof(TestNodeUpdateMessage),
         typeof(SessionFileArtifact),
-        typeof(TestNodeFileArtifact),
-    };
+        typeof(TestNodeFileArtifact)
+    ];
 
     protected internal IServiceProvider ServiceProvider { get; }
 

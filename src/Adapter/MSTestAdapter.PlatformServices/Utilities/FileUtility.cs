@@ -208,7 +208,7 @@ internal class FileUtility
             }
 
             List<string> subDirectoryContents = AddFilesFromDirectory(subDirectoryPath, ignoreDirectory, true);
-            if (subDirectoryContents?.Count > 0)
+            if (subDirectoryContents.Count > 0)
             {
                 fileContents.AddRange(subDirectoryContents);
             }

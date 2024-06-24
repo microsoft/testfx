@@ -126,7 +126,7 @@ internal sealed class Condition
                     foreach (string propertyValue in multiValue)
                     {
                         RoslynDebug.Assert(propertyValue != null, "PropertyValue can not be null.");
-                        result = result || propertyValue!.Contains(Value, StringComparison.OrdinalIgnoreCase);
+                        result = result || propertyValue.Contains(Value, StringComparison.OrdinalIgnoreCase);
                         if (result)
                         {
                             break;
@@ -145,7 +145,7 @@ internal sealed class Condition
                     foreach (string propertyValue in multiValue)
                     {
                         RoslynDebug.Assert(propertyValue != null, "PropertyValue can not be null.");
-                        result = result && !propertyValue!.Contains(Value, StringComparison.OrdinalIgnoreCase);
+                        result = result && !propertyValue.Contains(Value, StringComparison.OrdinalIgnoreCase);
                         if (!result)
                         {
                             break;
@@ -169,7 +169,7 @@ internal sealed class Condition
             ThrownFormatExceptionForInvalidCondition(conditionString);
         }
 
-        string[] parts = TokenizeFilterConditionString(conditionString!).ToArray();
+        string[] parts = TokenizeFilterConditionString(conditionString).ToArray();
         if (parts.Length == 1)
         {
             // If only parameter values is passed, create condition with default property name,
@@ -231,15 +231,12 @@ internal sealed class Condition
 
         // Check validity of operator only if related TestProperty is non-null.
         // if null, it might be custom validation ignore it.
-        if (propertyProvider != null)
+        TestProperty? testProperty = propertyProvider?.Invoke(Name);
+        if (testProperty != null)
         {
-            TestProperty? testProperty = propertyProvider(Name);
-            if (testProperty != null)
-            {
-                Type propertyType = testProperty.GetValueType();
-                valid = typeof(string) == propertyType ||
-                        typeof(string[]) == propertyType;
-            }
+            Type propertyType = testProperty.GetValueType();
+            valid = typeof(string) == propertyType ||
+                    typeof(string[]) == propertyType;
         }
 
         return valid;

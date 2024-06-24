@@ -263,30 +263,30 @@ public class DynamicDataAttributeTests : TestContainer
     {
         MethodInfo testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithTuple), typeof(TestClassTupleData), DynamicDataSourceType.Property);
-        IEnumerable<object[]> data = dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo);
 
         dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
-        data = dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo);
     }
 
     public void DynamicDataSource_WithValueTuple_Works()
     {
         MethodInfo testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTuple), typeof(TestClassTupleData), DynamicDataSourceType.Property);
-        IEnumerable<object[]> data = dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo);
 
         dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
-        data = dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo);
     }
 
     public void DynamicDataSource_WithValueTupleWithTupleSyntax_Works()
     {
         MethodInfo testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData), DynamicDataSourceType.Property);
-        IEnumerable<object[]> data = dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo);
 
         dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData), DynamicDataSourceType.Method);
-        data = dynamicDataAttribute.GetData(testMethodInfo);
+        dynamicDataAttribute.GetData(testMethodInfo);
     }
 #else
     public void DynamicDataSource_WithTuple_Throws()
@@ -337,7 +337,7 @@ public class DummyTestClass
     /// <summary>
     /// Gets the reusable test data property.
     /// </summary>
-    public static IEnumerable<object[]> ReusableTestDataProperty => new[] { new object[] { 1, 2, 3 }, [4, 5, 6] };
+    public static IEnumerable<object[]> ReusableTestDataProperty => [[1, 2, 3], [4, 5, 6]];
 
     /// <summary>
     /// Gets the null test data property.
@@ -361,7 +361,7 @@ public class DummyTestClass
     /// <returns>
     /// The <see cref="IEnumerable{T}"/>.
     /// </returns>
-    public static IEnumerable<object[]> ReusableTestDataMethod() => new[] { new object[] { 1, 2, 3 }, [4, 5, 6] };
+    public static IEnumerable<object[]> ReusableTestDataMethod() => [[1, 2, 3], [4, 5, 6]];
 
     /// <summary>
     /// The custom display name method.
@@ -510,7 +510,7 @@ public class DummyTestClass2
     /// <summary>
     /// Gets the reusable test data property.
     /// </summary>
-    public static IEnumerable<object[]> ReusableTestDataProperty2 => new[] { new object[] { 1, 2, 3 }, [4, 5, 6] };
+    public static IEnumerable<object[]> ReusableTestDataProperty2 => [[1, 2, 3], [4, 5, 6]];
 
     /// <summary>
     /// The reusable test data method.
@@ -518,7 +518,7 @@ public class DummyTestClass2
     /// <returns>
     /// The <see cref="IEnumerable"/>.
     /// </returns>
-    public static IEnumerable<object[]> ReusableTestDataMethod2() => new[] { new object[] { 1, 2, 3 }, [4, 5, 6] };
+    public static IEnumerable<object[]> ReusableTestDataMethod2() => [[1, 2, 3], [4, 5, 6]];
 
     /// <summary>
     /// The custom display name method.

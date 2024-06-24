@@ -135,14 +135,14 @@ public class ArgumentArityTests : TestBase
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
         public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-            => new CommandLineOption[]
-            {
+            =>
+            [
                 new("zeroArgumentsOption", "Show command line zeroArgumentsOption.", ArgumentArity.Zero, false),
                 new("zeroOrOneArgumentsOption", "Show command line zeroOrOneArgumentsOption.", ArgumentArity.ZeroOrOne, false),
                 new("zeroOrMoreArgumentsOption", "Show command line zeroOrMoreArgumentsOption.", ArgumentArity.ZeroOrMore, false),
                 new("exactlyOneArgumentsOption", "Show command line exactlyOneArgumentsOption.", ArgumentArity.ExactlyOne, false),
-                new("oneOrMoreArgumentsOption", "Show command line oneOrMoreArgumentsOption.", ArgumentArity.OneOrMore, false),
-            };
+                new("oneOrMoreArgumentsOption", "Show command line oneOrMoreArgumentsOption.", ArgumentArity.OneOrMore, false)
+            ];
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.ValidTask;
 

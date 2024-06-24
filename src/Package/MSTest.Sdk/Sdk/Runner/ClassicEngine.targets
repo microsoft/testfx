@@ -11,11 +11,11 @@
   <PropertyGroup>
     <!-- Hot Reload -->
     <EnableMicrosoftTestingExtensionsHotReload Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHotReload>
-    <MicrosoftTestingExtensionsHotReloadVersion Condition=" '$(MicrosoftTestingExtensionsHotReloadVersion)' == '' " >$(MicrosoftTestingExtensionsVersion)</MicrosoftTestingExtensionsHotReloadVersion>
+    <MicrosoftTestingExtensionsHotReloadVersion Condition=" '$(MicrosoftTestingExtensionsHotReloadVersion)' == '' " >$(MicrosoftTestingEntrepriseExtensionsVersion)</MicrosoftTestingExtensionsHotReloadVersion>
 
     <!-- Retry -->
     <EnableMicrosoftTestingExtensionsRetry Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsRetry>
-    <MicrosoftTestingExtensionsRetryVersion Condition=" '$(MicrosoftTestingExtensionsRetryVersion)' == '' " >$(MicrosoftTestingExtensionsVersion)</MicrosoftTestingExtensionsRetryVersion>
+    <MicrosoftTestingExtensionsRetryVersion Condition=" '$(MicrosoftTestingExtensionsRetryVersion)' == '' " >$(MicrosoftTestingEntrepriseExtensionsVersion)</MicrosoftTestingExtensionsRetryVersion>
 
     <!-- Crash dump -->
     <EnableMicrosoftTestingExtensionsCrashDump Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsCrashDump>

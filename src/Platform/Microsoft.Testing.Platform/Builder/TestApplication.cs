@@ -157,7 +157,7 @@ public sealed class TestApplication : ITestApplication
         if (RuntimeFeature.IsDynamicCodeSupported)
         {
 #pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
-            string? runtimeLocation = typeof(object).Assembly?.Location;
+            string? runtimeLocation = typeof(object).Assembly.Location;
 #pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
             if (runtimeLocation is not null)
             {

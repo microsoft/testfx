@@ -59,12 +59,12 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
         process.OutputDataReceived += (sender, args) =>
         {
             Console.WriteLine(args.Data);
-            if (args?.Data?.Contains("SUCCESS: PerfView") == true)
+            if (args.Data?.Contains("SUCCESS: PerfView") == true)
             {
                 succeded = true;
             }
 
-            if (args?.Data == "Press enter to close window.")
+            if (args.Data == "Press enter to close window.")
             {
                 killTheProcess.Set();
             }
@@ -98,7 +98,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
             Directory.CreateDirectory(dataFileDirectory);
             foreach (string item in Directory.GetFiles(reportDirectory, "DataFile.*"))
             {
-                File.Move(item, Path.Combine(dataFileDirectory, Path.GetFileName(item)!));
+                File.Move(item, Path.Combine(dataFileDirectory, Path.GetFileName(item)));
             }
 
             ZipFile.CreateFromDirectory(dataFileDirectory, sample, _compressionLevel, includeBaseDirectory: true);

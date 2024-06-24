@@ -63,7 +63,7 @@ public sealed class ObjectModelConvertersTests : TestBase
             CodeFilePath = "FilePath",
         });
         var testNode = testResult.ToTestNode(false, TestClient);
-        Assert.AreEqual("FilePath", testNode.Properties.Single<TestFileLocationProperty>()?.FilePath?.ToString());
+        Assert.AreEqual("FilePath", testNode.Properties.Single<TestFileLocationProperty>().FilePath);
     }
 
     public void ToTestNode_WhenTestResultHasTestNodeUidProperty_TestNodeUidUsesIt()
@@ -96,7 +96,7 @@ public sealed class ObjectModelConvertersTests : TestBase
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"));
         var testCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", "Label", typeof(string[]), TestPropertyAttributes.None, typeof(TestCase));
-        testResult.SetPropertyValue<string[]>(testCategoryProperty, new string[] { "category1" });
+        testResult.SetPropertyValue<string[]>(testCategoryProperty, ["category1"]);
 
         var testNode = testResult.ToTestNode(false, VSTestClient);
 
@@ -111,13 +111,13 @@ public sealed class ObjectModelConvertersTests : TestBase
     {
         TestResult testResult = new(new TestCase("assembly.class.SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"));
         var testCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", "Label", typeof(string[]), TestPropertyAttributes.None, typeof(TestCase));
-        testResult.SetPropertyValue<string[]>(testCategoryProperty, new string[] { "category1" });
+        testResult.SetPropertyValue<string[]>(testCategoryProperty, ["category1"]);
 
         var testNode = testResult.ToTestNode(true, VSTestClient);
 
         TrxCategoriesProperty[] trxCategoriesProperty = testNode.Properties.OfType<TrxCategoriesProperty>().ToArray();
         Assert.IsTrue(trxCategoriesProperty.Length == 1);
-        Assert.IsTrue(trxCategoriesProperty[0].Categories?.Length == 1);
+        Assert.IsTrue(trxCategoriesProperty[0].Categories.Length == 1);
         Assert.AreEqual(trxCategoriesProperty[0].Categories[0], "category1");
     }
 
@@ -125,7 +125,7 @@ public sealed class ObjectModelConvertersTests : TestBase
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"));
         var testCaseHierarchy = TestProperty.Register("TestCase.Hierarchy", "Label", typeof(string[]), TestPropertyAttributes.None, typeof(TestCase));
-        testResult.SetPropertyValue<string[]>(testCaseHierarchy, new string[] { "assembly", "class", "category", "test" });
+        testResult.SetPropertyValue<string[]>(testCaseHierarchy, ["assembly", "class", "category", "test"]);
 
         var testNode = testResult.ToTestNode(false, VSTestClient);
 
@@ -185,9 +185,9 @@ public sealed class ObjectModelConvertersTests : TestBase
             Duration = duration,
         };
         var testNode = testResult.ToTestNode(false, TestClient);
-        var testResultTimingProperty = new TimingProperty(new(startTime, endTime, duration), Array.Empty<StepTimingInfo>());
+        var testResultTimingProperty = new TimingProperty(new(startTime, endTime, duration), []);
 
-        Assert.AreEqual<TimingProperty>(testNode.Properties.OfType<TimingProperty>()?[0], testResultTimingProperty);
+        Assert.AreEqual<TimingProperty>(testNode.Properties.OfType<TimingProperty>()[0], testResultTimingProperty);
     }
 
     public void ToTestNode_WhenTestResultOutcomeIsNotFoundWithoutSetErrorMessage_TestNodePropertiesContainErrorTestNodeStatePropertyWithDefaultErrorMessage()

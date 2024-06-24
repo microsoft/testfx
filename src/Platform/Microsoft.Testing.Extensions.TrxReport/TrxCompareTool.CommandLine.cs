@@ -46,11 +46,11 @@ internal class TrxCompareToolCommandLine : IToolCommandLineOptionsProvider
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => new CommandLineOption[]
-        {
+        =>
+        [
             new(BaselineTrxOptionName, ExtensionResources.TrxComparerToolBaselineFileOptionDescription, ArgumentArity.ExactlyOne, false),
-            new(TrxToCompareOptionName, ExtensionResources.TrxComparerToolOtherFileOptionDescription, ArgumentArity.ExactlyOne, false),
-        };
+            new(TrxToCompareOptionName, ExtensionResources.TrxComparerToolOtherFileOptionDescription, ArgumentArity.ExactlyOne, false)
+        ];
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {

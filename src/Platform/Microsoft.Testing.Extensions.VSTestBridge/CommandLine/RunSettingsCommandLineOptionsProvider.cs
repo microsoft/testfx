@@ -51,7 +51,7 @@ internal sealed class RunSettingsCommandLineOptionsProvider : ICommandLineOption
 
     /// <inheritdoc />
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => new[] { new CommandLineOption(RunSettingsOptionName, ExtensionResources.RunSettingsOptionDescription, ArgumentArity.ExactlyOne, false) };
+        => [new CommandLineOption(RunSettingsOptionName, ExtensionResources.RunSettingsOptionDescription, ArgumentArity.ExactlyOne, false)];
 
     /// <inheritdoc />
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)

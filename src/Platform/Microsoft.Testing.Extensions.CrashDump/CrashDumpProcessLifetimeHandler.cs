@@ -45,7 +45,7 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
     /// <inheritdoc />
     public string Description => CrashDumpResources.CrashDumpDescription;
 
-    public Type[] DataTypesProduced => new[] { typeof(FileArtifact) };
+    public Type[] DataTypesProduced => [typeof(FileArtifact)];
 
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)

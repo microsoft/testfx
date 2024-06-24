@@ -182,7 +182,7 @@ internal static class CommandLineOptionsValidator
             string optionName = groupedOptions.Key;
             (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionName];
 
-            if (arity > option!.Arity.Max && option.Arity.Max == 0)
+            if (arity > option.Arity.Max && option.Arity.Max == 0)
             {
                 stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsNoArguments, optionName, provider.DisplayName, provider.Uid));
             }
@@ -196,7 +196,7 @@ internal static class CommandLineOptionsValidator
             }
         }
 
-        return stringBuilder?.Length > 0
+        return stringBuilder.Length > 0
             ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
     }
