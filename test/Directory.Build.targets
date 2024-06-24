@@ -26,9 +26,9 @@
 
   <ItemGroup Condition=" '$(UseVSTestRunner)' == 'false' ">
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" GeneratePathProperty="True" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CrashDump\Microsoft.Testing.Extensions.CrashDump.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.HangDump\Microsoft.Testing.Extensions.HangDump.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
     <PackageReference Include="Microsoft.Testing.Internal.Framework" GeneratePathProperty="True" />
     <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" GeneratePathProperty="True" />
   </ItemGroup>
