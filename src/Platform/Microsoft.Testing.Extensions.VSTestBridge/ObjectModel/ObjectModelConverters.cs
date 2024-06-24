@@ -162,7 +162,7 @@ internal static class ObjectModelConverters
                 .ToArray()));
         }
 
-        testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), Array.Empty<StepTimingInfo>()));
+        testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
 
         return testNode;
     }

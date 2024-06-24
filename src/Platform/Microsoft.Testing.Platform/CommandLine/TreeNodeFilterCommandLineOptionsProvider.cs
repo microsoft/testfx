@@ -28,10 +28,10 @@ internal sealed class TreeNodeFilterCommandLineOptionsProvider(IExtension extens
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => new CommandLineOption[]
-        {
-            new(TreenodeFilter, PlatformResources.TreeNodeFilterDescription, ArgumentArity.ExactlyOne, false),
-        };
+        =>
+        [
+            new(TreenodeFilter, PlatformResources.TreeNodeFilterDescription, ArgumentArity.ExactlyOne, false)
+        ];
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
         => ValidationResult.ValidTask;

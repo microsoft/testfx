@@ -85,7 +85,7 @@ $"""
         _commandLineOptions.Setup(x => x.TryGetOptionArgumentList(TestRunParametersCommandLineOptionsProvider.TestRunParameterOptionName, out arguments))
             .Returns((string optionName, out string[]? arguments) =>
             {
-                arguments = new[] { "key2=updated-value", "key3=value3" };
+                arguments = ["key2=updated-value", "key3=value3"];
                 return true;
             });
 
@@ -108,7 +108,7 @@ $"""
         _commandLineOptions.Setup(x => x.TryGetOptionArgumentList(TestRunParametersCommandLineOptionsProvider.TestRunParameterOptionName, out arguments))
             .Returns((string optionName, out string[]? arguments) =>
             {
-                arguments = new[] { "key1=value1", "key2=value2" };
+                arguments = ["key1=value1", "key2=value2"];
                 return true;
             });
 

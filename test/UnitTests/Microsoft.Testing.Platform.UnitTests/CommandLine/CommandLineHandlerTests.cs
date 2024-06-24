@@ -306,10 +306,10 @@ public class CommandLineHandlerTests : TestBase
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() => new CommandLineOption[]
-        {
-            new(HelpOption, "Show command line help.", ArgumentArity.ZeroOrOne, false),
-        };
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
+        [
+            new(HelpOption, "Show command line help.", ArgumentArity.ZeroOrOne, false)
+        ];
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => throw new NotImplementedException();
 
@@ -334,10 +334,10 @@ public class CommandLineHandlerTests : TestBase
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() => new CommandLineOption[]
-        {
-            new(Option, "Show command line option.", ArgumentArity.ZeroOrOne, false),
-        };
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
+        [
+            new(Option, "Show command line option.", ArgumentArity.ZeroOrOne, false)
+        ];
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => throw new NotImplementedException();
 
@@ -367,10 +367,10 @@ public class CommandLineHandlerTests : TestBase
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() => new CommandLineOption[]
-                {
-            new(_option, "Show command line option.", ArgumentArity.ZeroOrOne, false),
-                };
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
+        [
+            new(_option, "Show command line option.", ArgumentArity.ZeroOrOne, false)
+        ];
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.InvalidTask("Invalid configuration errorMessage");
 

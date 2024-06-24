@@ -39,10 +39,10 @@ internal sealed class TestCaseFilterCommandLineOptionsProvider : ICommandLineOpt
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     /// <inheritdoc />
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() => new CommandLineOption[]
-    {
-        new(TestCaseFilterOptionName, ExtensionResources.TestCaseFilterOptionDescription, ArgumentArity.ExactlyOne, false),
-    };
+    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
+    [
+        new(TestCaseFilterOptionName, ExtensionResources.TestCaseFilterOptionDescription, ArgumentArity.ExactlyOne, false)
+    ];
 
     /// <inheritdoc />
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)

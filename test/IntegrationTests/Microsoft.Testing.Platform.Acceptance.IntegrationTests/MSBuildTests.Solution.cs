@@ -78,13 +78,13 @@ public class MSBuildTests_Solution : AcceptanceTestBase
         string nugetFile = solution.AddOrUpdateFileContent("Nuget.config", nugetConfigContent);
         for (int i = 0; i < 3; i++)
         {
-            CSharpProject project = solution.CreateCSharpProject($"TestProject{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : new[] { singleTfmOrMultiTfm });
+            CSharpProject project = solution.CreateCSharpProject($"TestProject{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : [singleTfmOrMultiTfm]);
             File.WriteAllText(project.ProjectFile, projectContent);
             project.AddOrUpdateFileContent("Program.cs", programSourceContent.PatchCodeWithReplace("$ProjectName$", $"TestProject{i}"));
             project.AddOrUpdateFileContent("UnitTest1.cs", unitTestSourceContent);
             project.AddOrUpdateFileContent("Usings.cs", usingsSourceContent);
 
-            CSharpProject project2 = solution.CreateCSharpProject($"Project{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : new[] { singleTfmOrMultiTfm });
+            CSharpProject project2 = solution.CreateCSharpProject($"Project{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : [singleTfmOrMultiTfm]);
             project.AddProjectReference(project2.ProjectFile);
         }
 

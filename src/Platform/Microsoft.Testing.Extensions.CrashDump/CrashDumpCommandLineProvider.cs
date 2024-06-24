@@ -26,12 +26,12 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => new[]
-        {
+        =>
+        [
             new CommandLineOption(CrashDumpCommandLineOptions.CrashDumpOptionName, CrashDumpResources.CrashDumpOptionDescription, ArgumentArity.Zero, false),
             new CommandLineOption(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, CrashDumpResources.CrashDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(CrashDumpCommandLineOptions.CrashDumpTypeOptionName, CrashDumpResources.CrashDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false),
-        };
+            new CommandLineOption(CrashDumpCommandLineOptions.CrashDumpTypeOptionName, CrashDumpResources.CrashDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
+        ];
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {

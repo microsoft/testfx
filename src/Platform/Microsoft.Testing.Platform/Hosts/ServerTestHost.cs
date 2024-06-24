@@ -9,7 +9,6 @@ using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
@@ -448,7 +447,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             invoker,
             filterFactory,
             new ServerModePerCallOutputDevice(),
-            new IDataConsumer[] { testNodeUpdateProcessor },
+            [testNodeUpdateProcessor],
             _testFrameworkManager,
             _testSessionManager,
             new MessageBusProxy(),

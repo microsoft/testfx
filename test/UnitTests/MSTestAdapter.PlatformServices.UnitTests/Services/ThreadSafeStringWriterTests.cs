@@ -109,10 +109,10 @@ public class ThreadSafeStringWriterTests : TestContainer
             Verify(!string.IsNullOrWhiteSpace(result.Debug));
 
             string[] output = result.Out.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            Verify(output.SequenceEqual(new[] { "out", "out" }));
+            Verify(output.SequenceEqual(["out", "out"]));
 
             string[] debug = result.Debug.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            Verify(debug.SequenceEqual(new[] { "debug", "debug" }));
+            Verify(debug.SequenceEqual(["debug", "debug"]));
         }
     }
 }
