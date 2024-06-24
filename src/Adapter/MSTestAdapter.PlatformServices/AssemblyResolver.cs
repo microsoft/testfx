@@ -109,12 +109,12 @@ class AssemblyResolver :
         _searchDirectories = new List<string>(directories);
         _directoryList = new Queue<RecursiveDirectoryPath>();
 
-        AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
+        AppDomain.CurrentDomain.AssemblyResolve += OnResolve;
 #if NETFRAMEWORK
-        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
+        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += ReflectionOnlyOnResolve;
 
         // This is required for winmd resolution for arm built sources discovery on desktop.
-        WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve += new EventHandler<NamespaceResolveEventArgs>(WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
+        WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve += WindowsRuntimeMetadataReflectionOnlyNamespaceResolve;
 #endif
     }
 
@@ -243,11 +243,11 @@ class AssemblyResolver :
             if (disposing)
             {
                 // cleanup Managed resources like calling dispose on other managed object created.
-                AppDomain.CurrentDomain.AssemblyResolve -= new ResolveEventHandler(OnResolve);
+                AppDomain.CurrentDomain.AssemblyResolve -= OnResolve;
 
 #if NETFRAMEWORK
-                AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= new ResolveEventHandler(ReflectionOnlyOnResolve);
-                WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve -= new EventHandler<NamespaceResolveEventArgs>(WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
+                AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= ReflectionOnlyOnResolve;
+                WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve -= WindowsRuntimeMetadataReflectionOnlyNamespaceResolve;
 #endif
             }
 
