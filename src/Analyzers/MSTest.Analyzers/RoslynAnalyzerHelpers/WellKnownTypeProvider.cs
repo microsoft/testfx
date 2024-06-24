@@ -26,7 +26,7 @@ namespace Analyzer.Utilities
         private WellKnownTypeProvider(Compilation compilation)
         {
             Compilation = compilation;
-            _fullNameToTypeMap = new ConcurrentDictionary<string, INamedTypeSymbol?>(StringComparer.Ordinal);
+            _fullNameToTypeMap = new ConcurrentDictionary<string, INamedTypeSymbol?>();
             _referencedAssemblies = new Lazy<ImmutableArray<IAssemblySymbol>>(
                 () => Compilation.Assembly.Modules
                         .SelectMany(m => m.ReferencedAssemblySymbols)
@@ -72,8 +72,7 @@ namespace Analyzer.Utilities
         /// suggests the TypeNames collection can be checked to avoid expensive operations. But realizing TypeNames seems to be
         /// as memory intensive as unnecessary calls GetTypeByMetadataName() in some cases. So we'll go with namespace names.
         /// </remarks>
-        private static readonly ConcurrentDictionary<string, ImmutableArray<string>> _fullTypeNameToNamespaceNames =
-            new(StringComparer.Ordinal);
+        private static readonly ConcurrentDictionary<string, ImmutableArray<string>> _fullTypeNameToNamespaceNames = new();
 
         /// <summary>
         /// Attempts to get the type by the full type name.
