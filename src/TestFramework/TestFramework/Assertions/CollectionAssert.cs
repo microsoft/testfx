@@ -616,7 +616,7 @@ public sealed class CollectionAssert
     /// or if any element was found in one of the collections but not the other.
     /// </exception>
     public static void AreEquivalent<T>(
-        [NotNullIfNotNull(nameof(actual))] IEnumerable<T>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T>? actual, [NotNull] IEqualityComparer<T>? comparer)
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer)
         => AreEquivalent(expected, actual, comparer, string.Empty, null);
 
     /// <summary>
@@ -648,7 +648,7 @@ public sealed class CollectionAssert
     /// or if any element was found in one of the collections but not the other.
     /// </exception>
     public static void AreEquivalent<T>(
-        [NotNullIfNotNull(nameof(actual))] IEnumerable<T>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T>? actual, [NotNull] IEqualityComparer<T>? comparer,
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         string? message)
         => AreEquivalent(expected, actual, comparer, message, null);
 
@@ -684,7 +684,7 @@ public sealed class CollectionAssert
     /// or if any element was found in one of the collections but not the other.
     /// </exception>
     public static void AreEquivalent<T>(
-        [NotNullIfNotNull(nameof(actual))] IEnumerable<T>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T>? actual, [NotNull] IEqualityComparer<T>? comparer,
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
@@ -848,7 +848,7 @@ public sealed class CollectionAssert
     /// occurrences of each element.
     /// </exception>
     public static void AreNotEquivalent<T>(
-        [NotNullIfNotNull(nameof(actual))] IEnumerable<T>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T>? actual, [NotNull] IEqualityComparer<T>? comparer)
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer)
         => AreNotEquivalent(expected, actual, comparer, string.Empty, null);
 
     /// <summary>
@@ -881,7 +881,7 @@ public sealed class CollectionAssert
     /// occurrences of each element.
     /// </exception>
     public static void AreNotEquivalent<T>(
-        [NotNullIfNotNull(nameof(actual))] IEnumerable<T>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T>? actual, [NotNull] IEqualityComparer<T>? comparer,
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         string? message)
         => AreNotEquivalent(expected, actual, comparer, message, null);
 
@@ -918,7 +918,7 @@ public sealed class CollectionAssert
     /// occurrences of each element.
     /// </exception>
     public static void AreNotEquivalent<T>(
-        [NotNullIfNotNull(nameof(actual))] IEnumerable<T>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T>? actual, [NotNull] IEqualityComparer<T>? comparer,
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
@@ -1502,7 +1502,7 @@ public sealed class CollectionAssert
     /// A dictionary containing the number of occurrences of each element
     /// in the specified collection.
     /// </returns>
-    private static Dictionary<T, int> GetElementCounts<T>(IEnumerable<T> collection, IEqualityComparer<T> comparer, out int nullCount)
+    private static Dictionary<T, int> GetElementCounts<T>(IEnumerable<T?> collection, IEqualityComparer<T> comparer, out int nullCount)
     {
         DebugEx.Assert(collection != null, "Collection is Null.");
 
@@ -1557,7 +1557,7 @@ public sealed class CollectionAssert
     /// <returns>
     /// true if a mismatched element was found; false otherwise.
     /// </returns>
-    private static bool FindMismatchedElement<T>(IEnumerable<T> expected, IEnumerable<T> actual, IEqualityComparer<T> comparer, out int expectedCount,
+    private static bool FindMismatchedElement<T>(IEnumerable<T?> expected, IEnumerable<T?> actual, IEqualityComparer<T> comparer, out int expectedCount,
         out int actualCount, out object? mismatchedElement)
     {
         // $ CONSIDER: The current algorithm counts the number of occurrences of each
