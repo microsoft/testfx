@@ -111,7 +111,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 EnvironmentVariables =
                 {
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID}", processCorrelationId },
-                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPID}", process.GetCurrentProcess()?.Id.ToString(CultureInfo.InvariantCulture) ?? "null pid" },
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPID}", process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) ?? "null pid" },
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPID}", "1" },
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}", testHostControllerIpc.PipeName.Name },
                 },
@@ -295,7 +295,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 await platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode)));
             }
 
-            await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess?.ExitCode}')' in '{consoleRunStarted.Elapsed}'");
+            await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}')' in '{consoleRunStarted.Elapsed}'");
             await DisposeHelper.DisposeAsync(testHostControllerIpc);
         }
         finally

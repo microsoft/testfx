@@ -13,7 +13,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
 internal static class RunSettingsPatcher
 {
-    private static readonly char[] TestRunParameterSeparator = new[] { '=' };
+    private static readonly char[] TestRunParameterSeparator = ['='];
 
     public static XDocument Patch(string? runSettingsXml, IConfiguration configuration, ClientInfo client, ICommandLineOptions commandLineOptions)
     {

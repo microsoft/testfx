@@ -66,8 +66,8 @@ public class DataRowAttributeTests : TestContainer
         var dataRow = new DataRowAttribute(new[] { "a" }, new[] { "b" });
 
         Verify(dataRow.Data.Length == 2);
-        Verify(dataRow.Data[0] is string[] array1 && array1.SequenceEqual(new[] { "a" }));
-        Verify(dataRow.Data[1] is string[] array2 && array2.SequenceEqual(new[] { "b" }));
+        Verify(dataRow.Data[0] is string[] array1 && array1.SequenceEqual(["a"]));
+        Verify(dataRow.Data[1] is string[] array2 && array2.SequenceEqual(["b"]));
     }
 
     public void GetDataShouldReturnDataPassed()
@@ -200,7 +200,7 @@ public class DataRowAttributeTests : TestContainer
     public void GetDisplayNameForMultipleArraysOfArraysOfMultipleItems()
     {
         // Arrange
-        var dataRow = new DataRowAttribute(new[] { new[] { "a", "b", "c" }, new[] { "d", "e", "f" }, new[] { "gh", "ij", "kl" } }, new[] { 'm', 'n', 'o' }, new[] { new[] { "1", "2", "3" }, new[] { "4", "5", "6" }, new[] { "7", "8", "9" } });
+        var dataRow = new DataRowAttribute(new[] { ["a", "b", "c"], ["d", "e", "f"], new[] { "gh", "ij", "kl" } }, new[] { 'm', 'n', 'o' }, new[] { ["1", "2", "3"], ["4", "5", "6"], new[] { "7", "8", "9" } });
         var methodInfoMock = new Mock<MethodInfo>();
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 

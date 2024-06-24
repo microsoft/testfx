@@ -29,7 +29,7 @@ internal readonly struct InstanceExecutionContextScope : IExecutionContextScope
 
     public int RemainingCleanupCount { get; }
 
-    public override readonly int GetHashCode() => Instance.GetHashCode();
+    public override int GetHashCode() => Instance.GetHashCode();
 
-    public override readonly bool Equals(object? obj) => Instance.Equals(obj);
+    public override bool Equals(object? obj) => Instance.Equals(obj);
 }

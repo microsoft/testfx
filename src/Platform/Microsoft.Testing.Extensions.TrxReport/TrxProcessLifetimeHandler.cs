@@ -82,9 +82,9 @@ internal sealed class TrxProcessLifetimeHandler :
 
     public string Description => string.Empty;
 
-    public Type[] DataTypesConsumed => new[] { typeof(FileArtifact) };
+    public Type[] DataTypesConsumed => [typeof(FileArtifact)];
 
-    public Type[] DataTypesProduced => new[] { typeof(FileArtifact) };
+    public Type[] DataTypesProduced => [typeof(FileArtifact)];
 
     public Task<bool> IsEnabledAsync()
 #pragma warning disable SA1114 // Parameter list should follow declaration
@@ -126,7 +126,7 @@ internal sealed class TrxProcessLifetimeHandler :
     {
         if (!_fileArtifacts.TryGetValue(dataProducer, out List<FileArtifact>? fileArtifacts))
         {
-            fileArtifacts = new List<FileArtifact>();
+            fileArtifacts = [];
             _fileArtifacts.Add(dataProducer, fileArtifacts);
         }
 
@@ -159,7 +159,7 @@ internal sealed class TrxProcessLifetimeHandler :
         if (!testHostProcessInformation.HasExitedGracefully)
         {
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
-                _clock, Array.Empty<TestNodeUpdateMessage>(), 0, 0,
+                _clock, [], 0, 0,
                 artifacts,
                 new Dictionary<TestNodeUid, List<SessionFileArtifact>>(),
                 adapterSupportTrxCapability: null,
@@ -189,7 +189,7 @@ internal sealed class TrxProcessLifetimeHandler :
         if (_fileArtifacts.Count > 0)
         {
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
-               _clock, Array.Empty<TestNodeUpdateMessage>(), 0, 0,
+               _clock, [], 0, 0,
                artifacts,
                new Dictionary<TestNodeUid, List<SessionFileArtifact>>(),
                false,

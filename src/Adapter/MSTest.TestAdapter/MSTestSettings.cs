@@ -660,7 +660,7 @@ public class MSTestSettings
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
         MSTestSettings settings)
     {
-        XElement? runConfigElement = XDocument.Parse(runsettingsXml)?.Element("RunSettings")?.Element("RunConfiguration");
+        XElement? runConfigElement = XDocument.Parse(runsettingsXml).Element("RunSettings")?.Element("RunConfiguration");
 
         if (runConfigElement == null)
         {

@@ -457,7 +457,7 @@ internal class ReflectHelper : MarshalByRefObject
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.FailedToGetCustomAttribute, attributeProvider.GetType().FullName!, description);
 
-                return Array.Empty<Attribute>();
+                return [];
             }
         }
     }

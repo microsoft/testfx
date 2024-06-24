@@ -160,7 +160,7 @@ internal static class SerializerUtilities
             Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.RunId] = ev.RunId,
-                [JsonRpcStrings.Changes] = ev.Changes?.Select(ch => Serialize(ch))?.ToList<object>(),
+                [JsonRpcStrings.Changes] = ev.Changes?.Select(ch => Serialize(ch)).ToList<object>(),
             };
 
             return values;
@@ -280,8 +280,8 @@ internal static class SerializerUtilities
                             case FailedTestNodeStateProperty failedTestNodeStateProperty:
                                 {
                                     properties["execution-state"] = "failed";
-                                    properties["error.message"] = failedTestNodeStateProperty?.Explanation ?? failedTestNodeStateProperty?.Exception?.Message;
-                                    if (failedTestNodeStateProperty?.Exception != null)
+                                    properties["error.message"] = failedTestNodeStateProperty.Explanation ?? failedTestNodeStateProperty.Exception?.Message;
+                                    if (failedTestNodeStateProperty.Exception != null)
                                     {
                                         Exception exception = failedTestNodeStateProperty.Exception;
                                         properties["error.stacktrace"] = exception.StackTrace ?? string.Empty;
@@ -295,10 +295,10 @@ internal static class SerializerUtilities
                             case TimeoutTestNodeStateProperty timeoutTestNodeStateProperty:
                                 {
                                     properties["execution-state"] = "timed-out";
-                                    properties["error.message"] = timeoutTestNodeStateProperty?.Explanation ?? timeoutTestNodeStateProperty?.Exception?.Message;
-                                    if (timeoutTestNodeStateProperty?.Exception != null)
+                                    properties["error.message"] = timeoutTestNodeStateProperty.Explanation ?? timeoutTestNodeStateProperty.Exception?.Message;
+                                    if (timeoutTestNodeStateProperty.Exception != null)
                                     {
-                                        properties["error.stacktrace"] = timeoutTestNodeStateProperty?.Exception?.StackTrace ?? string.Empty;
+                                        properties["error.stacktrace"] = timeoutTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
                                     }
 
                                     break;
@@ -307,10 +307,10 @@ internal static class SerializerUtilities
                             case ErrorTestNodeStateProperty errorTestNodeStateProperty:
                                 {
                                     properties["execution-state"] = "error";
-                                    properties["error.message"] = errorTestNodeStateProperty?.Explanation ?? errorTestNodeStateProperty?.Exception?.Message;
-                                    if (errorTestNodeStateProperty?.Exception != null)
+                                    properties["error.message"] = errorTestNodeStateProperty.Explanation ?? errorTestNodeStateProperty.Exception?.Message;
+                                    if (errorTestNodeStateProperty.Exception != null)
                                     {
-                                        properties["error.stacktrace"] = errorTestNodeStateProperty?.Exception?.StackTrace ?? string.Empty;
+                                        properties["error.stacktrace"] = errorTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
                                     }
 
                                     break;
@@ -319,10 +319,10 @@ internal static class SerializerUtilities
                             case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
                                 {
                                     properties["execution-state"] = "cancelled";
-                                    properties["error.message"] = cancelledTestNodeStateProperty?.Explanation ?? cancelledTestNodeStateProperty?.Exception?.Message;
-                                    if (cancelledTestNodeStateProperty?.Exception != null)
+                                    properties["error.message"] = cancelledTestNodeStateProperty.Explanation ?? cancelledTestNodeStateProperty.Exception?.Message;
+                                    if (cancelledTestNodeStateProperty.Exception != null)
                                     {
-                                        properties["error.stacktrace"] = cancelledTestNodeStateProperty?.Exception?.StackTrace ?? string.Empty;
+                                        properties["error.stacktrace"] = cancelledTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
                                     }
 
                                     break;
@@ -561,7 +561,7 @@ internal static class SerializerUtilities
 
             var testsJson = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Tests) as ICollection<object>;
 
-            ICollection<TestNode>? tests = testsJson?.OfType<IDictionary<string, object?>>()?.Select(obj => Deserialize<TestNode>(obj)).ToList();
+            ICollection<TestNode>? tests = testsJson?.OfType<IDictionary<string, object?>>().Select(obj => Deserialize<TestNode>(obj)).ToList();
             string? filter = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Filter) as string;
 
             return new RunRequestArgs(runId, tests, filter);

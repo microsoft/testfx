@@ -48,10 +48,7 @@ internal class PipelinesRunner
                 pipelinePropertyBag.Add(item.Key, item.Value);
             }
 
-            if (pipeline.UpdatePropertyBag is not null)
-            {
-                pipeline.UpdatePropertyBag(pipelinePropertyBag);
-            }
+            pipeline.UpdatePropertyBag?.Invoke(pipelinePropertyBag);
 
             pipeline.Func(pipelinePropertyBag);
         }

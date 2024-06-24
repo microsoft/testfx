@@ -387,15 +387,14 @@ public class FormatterUtilitiesTests : TestBase
         {
             return new DiscoverRequestArgs(
                 Guid.Empty,
-                new TestNode[]
-                {
+                [
                     new()
                     {
                         Uid = new TestNodeUid("UnitTest1.TestMethod1"),
                         DisplayName = "test1",
                         Properties = new PropertyBag(new TestFileLocationProperty("filePath", new LinePositionSpan(new(1, 0), new(2, 0)))),
-                    },
-                },
+                    }
+                ],
                 null);
         }
 
@@ -403,15 +402,14 @@ public class FormatterUtilitiesTests : TestBase
         {
             return new RunRequestArgs(
                 Guid.Empty,
-                new TestNode[]
-                {
+                [
                     new()
                     {
                         Uid = new TestNodeUid("UnitTest1.TestMethod1"),
                         DisplayName = "test1",
                         Properties = new PropertyBag(new TestFileLocationProperty("filePath", new LinePositionSpan(new(1, 0), new(2, 0)))),
-                    },
-                },
+                    }
+                ],
                 null);
         }
 

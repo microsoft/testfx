@@ -6,7 +6,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Specifies how to discover <see cref="ITestDataSource"/> tests.
 /// </summary>
-[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Assembly)]
 public class TestDataSourceDiscoveryAttribute : Attribute
 {
     /// <summary>

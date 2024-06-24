@@ -46,7 +46,7 @@ internal class TypeCache : MarshalByRefObject
     /// <summary>
     /// ClassInfo cache.
     /// </summary>
-    private readonly ConcurrentDictionary<string, TestClassInfo> _classInfoCache = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, TestClassInfo> _classInfoCache = new();
 
     private readonly ConcurrentDictionary<string, bool> _discoverInternalsCache = new();
 
@@ -269,8 +269,7 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
     private TestClassInfo CreateClassInfo(Type classType, TestMethod testMethod)
     {
-        IEnumerable<ConstructorInfo> constructors = classType.GetTypeInfo().DeclaredConstructors;
-        ConstructorInfo? constructor = constructors.FirstOrDefault(ctor => ctor.GetParameters().Length == 0 && ctor.IsPublic);
+        ConstructorInfo? constructor = classType.GetConstructor([]);
 
         if (constructor == null)
         {

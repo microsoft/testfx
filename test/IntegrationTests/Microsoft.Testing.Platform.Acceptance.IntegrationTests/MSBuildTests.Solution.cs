@@ -63,7 +63,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase
             SourceCode
             .PatchCodeWithReplace("$TargetFrameworks$", isMultiTfm ? $"<TargetFrameworks>{singleTfmOrMultiTfm}</TargetFrameworks>" : $"<TargetFramework>{singleTfmOrMultiTfm}</TargetFramework>")
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$MicrosoftTestingExtensionsVersion$", MicrosoftTestingExtensionsVersion));
+            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
 
         string projectContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "MSBuildTests.csproj", SearchOption.AllDirectories).Single());
         string programSourceContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "Program.cs", SearchOption.AllDirectories).Single());
@@ -78,13 +78,13 @@ public class MSBuildTests_Solution : AcceptanceTestBase
         string nugetFile = solution.AddOrUpdateFileContent("Nuget.config", nugetConfigContent);
         for (int i = 0; i < 3; i++)
         {
-            CSharpProject project = solution.CreateCSharpProject($"TestProject{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : new[] { singleTfmOrMultiTfm });
+            CSharpProject project = solution.CreateCSharpProject($"TestProject{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : [singleTfmOrMultiTfm]);
             File.WriteAllText(project.ProjectFile, projectContent);
             project.AddOrUpdateFileContent("Program.cs", programSourceContent.PatchCodeWithReplace("$ProjectName$", $"TestProject{i}"));
             project.AddOrUpdateFileContent("UnitTest1.cs", unitTestSourceContent);
             project.AddOrUpdateFileContent("Usings.cs", usingsSourceContent);
 
-            CSharpProject project2 = solution.CreateCSharpProject($"Project{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : new[] { singleTfmOrMultiTfm });
+            CSharpProject project2 = solution.CreateCSharpProject($"Project{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : [singleTfmOrMultiTfm]);
             project.AddProjectReference(project2.ProjectFile);
         }
 
@@ -128,8 +128,8 @@ public class MSBuildTests_Solution : AcceptanceTestBase
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <!-- TrxReport.Abstractions is only needed because Internal.Framework relies on a preview version that we want to override with currently built one -->
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingExtensionsVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
     </ItemGroup>
 </Project>
 
