@@ -42,7 +42,7 @@ public class TestMethodRunnerTests : TestContainer
 
     public TestMethodRunnerTests()
     {
-        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
+        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructor([])!;
         _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod", StringComparison.Ordinal));
         var classAttribute = new UTF.TestClassAttribute();
         _testMethodAttribute = new UTF.TestMethodAttribute();
@@ -113,7 +113,7 @@ public class TestMethodRunnerTests : TestContainer
             BindingFlags.Static | BindingFlags.NonPublic),
         };
 
-        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
+        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructor([])!;
         var classAttribute = new UTF.TestClassAttribute();
         PropertyInfo testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 
@@ -139,7 +139,7 @@ public class TestMethodRunnerTests : TestContainer
         // Arrange.
         var tai = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
 
-        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
+        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructor([])!;
         var classAttribute = new UTF.TestClassAttribute();
         PropertyInfo testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 

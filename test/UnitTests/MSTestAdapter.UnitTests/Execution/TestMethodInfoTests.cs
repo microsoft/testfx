@@ -50,7 +50,7 @@ public class TestMethodInfoTests : TestContainer
 
     public TestMethodInfoTests()
     {
-        _constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
+        _constructorInfo = typeof(DummyTestClass).GetConstructor([])!;
         _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod", StringComparison.Ordinal));
         _classAttribute = new UTF.TestClassAttribute();
         _testMethodAttribute = new UTF.TestMethodAttribute();
@@ -875,7 +875,7 @@ public class TestMethodInfoTests : TestContainer
     {
         bool disposeCalled = false;
         DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
-        ConstructorInfo ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructors().Single();
+        ConstructorInfo ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructor([])!;
         var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, null, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
 
@@ -890,7 +890,7 @@ public class TestMethodInfoTests : TestContainer
         // Arrange
         bool asyncDisposeCalled = false;
         DummyTestClassWithAsyncDisposable.DisposeAsyncMethodBody = () => asyncDisposeCalled = true;
-        ConstructorInfo ctorInfo = typeof(DummyTestClassWithAsyncDisposable).GetConstructors().Single();
+        ConstructorInfo ctorInfo = typeof(DummyTestClassWithAsyncDisposable).GetConstructor([])!;
         var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposable), ctorInfo, null, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
 
@@ -911,7 +911,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClassWithAsyncDisposableAndDisposable.DisposeMethodBody = () => disposeCalledOrder = ++order;
         DummyTestClassWithAsyncDisposableAndDisposable.DisposeAsyncMethodBody = () => disposeAsyncCalledOrder = ++order;
 
-        ConstructorInfo ctorInfo = typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetConstructors().Single();
+        ConstructorInfo ctorInfo = typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetConstructor([])!;
         var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable), ctorInfo, null, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
 
@@ -929,7 +929,7 @@ public class TestMethodInfoTests : TestContainer
         bool disposeCalled = false;
         DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
         DummyTestClassWithDisposable.DummyTestCleanupMethodBody = classInstance => throw new NotImplementedException();
-        ConstructorInfo ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructors().Single();
+        ConstructorInfo ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructor([])!;
         var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, null, _classAttribute, _testAssemblyInfo)
         {
             TestCleanupMethod = typeof(DummyTestClassWithDisposable).GetMethod("DummyTestCleanupMethod"),
