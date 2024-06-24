@@ -19,12 +19,6 @@ public class ReflectionUtilityTests : TestContainer
 {
     private readonly Assembly _testAsset;
 
-    /// <summary>
-    /// Dictionary of Assemblies discovered to date. Must be locked as it may
-    /// be accessed in a multi-threaded context.
-    /// </summary>
-    private readonly Dictionary<string, Assembly> _resolvedAssemblies = [];
-
     public ReflectionUtilityTests()
     {
         DirectoryInfo currentAssemblyDirectory = new FileInfo(typeof(ReflectionUtilityTests).Assembly.Location).Directory;
@@ -259,19 +253,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         string assemblyNameToLoad = AppDomain.CurrentDomain.ApplyPolicy(args.Name);
 
-        // Put it in the resolved assembly cache so that if the Load call below
-        // triggers another assembly resolution, then we don't end up in stack overflow.
-        _resolvedAssemblies[assemblyNameToLoad] = null;
-
-        var assembly = Assembly.ReflectionOnlyLoad(assemblyNameToLoad);
-
-        if (assembly != null)
-        {
-            _resolvedAssemblies[assemblyNameToLoad] = assembly;
-            return assembly;
-        }
-
-        return null;
+        return Assembly.ReflectionOnlyLoad(assemblyNameToLoad);
     }
 
     private static string[] GetAttributeValuePairs(IEnumerable attributes)
