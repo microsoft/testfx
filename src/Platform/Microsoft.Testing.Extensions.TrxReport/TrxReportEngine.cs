@@ -26,18 +26,18 @@ internal sealed partial class TrxReportEngine
 
     private static readonly Regex ReservedFileNamesRegex = BuildReservedFileNameRegex();
     private static readonly Regex InvalidXmlCharReplace = BuildInvalidXmlCharReplace();
-    private static readonly MatchEvaluator InvalidXmlEvaluator = new(ReplaceInvalidCharacterWithUniCodeEscapeSequence);
+    private static readonly MatchEvaluator InvalidXmlEvaluator = ReplaceInvalidCharacterWithUniCodeEscapeSequence;
 
-    private static readonly Type[] FailedStates = new[]
-    {
+    private static readonly Type[] FailedStates =
+    [
         typeof(FailedTestNodeStateProperty),
         typeof(CancelledTestNodeStateProperty),
         typeof(ErrorTestNodeStateProperty),
-        typeof(TimeoutTestNodeStateProperty),
-    };
+        typeof(TimeoutTestNodeStateProperty)
+    ];
 
-    private static readonly HashSet<char> InvalidFileNameChars = new()
-    {
+    private static readonly HashSet<char> InvalidFileNameChars =
+    [
         '\"',
         '<',
         '>',
@@ -83,8 +83,8 @@ internal sealed partial class TrxReportEngine
         '(',
         ')',
         '^',
-        ' ',
-    };
+        ' '
+    ];
 
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly IEnvironment _environment;
@@ -512,12 +512,12 @@ internal sealed partial class TrxReportEngine
             {
                 XElement errorInfoElement = new("ErrorInfo");
 
-                if (trxException?.Message is not null)
+                if (trxException.Message is not null)
                 {
                     errorInfoElement.Add(new XElement("Message", RemoveInvalidXmlChar(trxException.Message)));
                 }
 
-                if (trxException?.StackTrace is not null)
+                if (trxException.StackTrace is not null)
                 {
                     errorInfoElement.Add(new XElement("StackTrace", RemoveInvalidXmlChar(trxException.StackTrace)));
                 }

@@ -162,7 +162,7 @@ internal static class ObjectModelConverters
                 .ToArray()));
         }
 
-        testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), Array.Empty<StepTimingInfo>()));
+        testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
 
         return testNode;
     }
@@ -200,7 +200,7 @@ internal static class ObjectModelConverters
         // test assembly path.
         if (RoslynString.IsNullOrEmpty(testCase.Source) && !RoslynString.IsNullOrEmpty(testAssemblyPath))
         {
-            testCase.Source = testAssemblyPath!;
+            testCase.Source = testAssemblyPath;
         }
 
         // Because this project is the actually registered test adapter, we need to replace test framework executor

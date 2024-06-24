@@ -40,8 +40,8 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
 
     private static readonly CommandLineOption MinimumExpectedTests = new(MinimumExpectedTestsOptionKey, "Specifies the minimum number of tests that are expected to run.", ArgumentArity.ZeroOrOne, false, isBuiltIn: true);
 
-    private static readonly IReadOnlyCollection<CommandLineOption> PlatformCommandLineProviderCache = new[]
-    {
+    private static readonly IReadOnlyCollection<CommandLineOption> PlatformCommandLineProviderCache =
+    [
         // Visible options
         new(HelpOptionKey, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         new(InfoOptionKey, PlatformResources.PlatformCommandLineInfoOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
@@ -65,8 +65,8 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         new(VSTestAdapterModeOptionKey, PlatformResources.PlatformCommandLineVSTestAdapterModeOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
         new(NoBannerOptionKey, PlatformResources.PlatformCommandLineNoBannerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
         new(TestHostControllerPIDOptionKey, PlatformResources.PlatformCommandLineTestHostControllerPIDOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
-        new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
-    };
+        new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true)
+    ];
 
     /// <inheritdoc />
     public string Uid { get; } = nameof(PlatformCommandLineProvider);

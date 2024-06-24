@@ -21,10 +21,10 @@ internal sealed class MSBuildCommandLineProvider : ICommandLineOptionsProvider
     public string Description => Resources.MSBuildResources.MSBuildExtensionsDescription;
 
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => new CommandLineOption[]
-        {
-            new(MSBuildNodeOptionKey, "Used to pass the msbuild node handle", ArgumentArity.ExactlyOne, isHidden: true, isBuiltIn: true),
-        };
+        =>
+        [
+            new(MSBuildNodeOptionKey, "Used to pass the msbuild node handle", ArgumentArity.ExactlyOne, isHidden: true, isBuiltIn: true)
+        ];
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

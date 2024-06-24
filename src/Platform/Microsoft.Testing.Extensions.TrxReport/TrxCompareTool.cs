@@ -244,7 +244,7 @@ internal class TrxCompareTool : ITool, IOutputDeviceDataProducer
                 continue;
             }
 
-            results.Add((testDefinitionClassName + "." + testResultTestName, testResultOutcome!, testDefinitionStorage));
+            results.Add((testDefinitionClassName + "." + testResultTestName, testResultOutcome, testDefinitionStorage));
         }
     }
 }

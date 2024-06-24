@@ -55,7 +55,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
     {
         // Arrange
         using MemoryFileStream memoryStream = new();
-        string[]? argumentTrxReportFileName = { "argumentTrxReportFileName" };
+        string[]? argumentTrxReportFileName = ["argumentTrxReportFileName"];
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
@@ -73,7 +73,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
     {
         // Arrange
         using MemoryFileStream memoryStream = new();
-        string[]? argumentTrxReportFileName = { "NUL" };
+        string[]? argumentTrxReportFileName = ["NUL"];
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
@@ -125,7 +125,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         using MemoryFileStream memoryStream = new();
         PropertyBag propertyBag = new(
             new FailedTestNodeStateProperty("test failed"),
-            new TrxMessagesProperty(new TrxMessage[] { new StandardErrorTrxMessage("error message") }));
+            new TrxMessagesProperty([new StandardErrorTrxMessage("error message")]));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
@@ -138,7 +138,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
 
         XElement? testRun = xml.Root;
         Assert.IsNotNull(testRun);
-        var nodes = testRun?.Nodes().ToList();
+        var nodes = testRun.Nodes().ToList();
 
         string trxContent = xml.ToString();
         string trxContentsPattern = @"
@@ -157,7 +157,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         using MemoryFileStream memoryStream = new();
         PropertyBag propertyBag = new(
             new FailedTestNodeStateProperty("test failed"),
-            new TrxMessagesProperty(new TrxMessage[] { new("error message") }));
+            new TrxMessagesProperty([new("error message")]));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
@@ -214,7 +214,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         using MemoryFileStream memoryStream = new();
         PropertyBag propertyBag = new(
             new PassedTestNodeStateProperty(),
-            new TrxCategoriesProperty(new string[] { "category1" }));
+            new TrxCategoriesProperty(["category1"]));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
@@ -240,7 +240,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         using MemoryFileStream memoryStream = new();
         PropertyBag propertyBag = new(
             new FailedTestNodeStateProperty(),
-            new TrxCategoriesProperty(new string[] { "category1" }));
+            new TrxCategoriesProperty(["category1"]));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
@@ -285,7 +285,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
     {
         // Arrange
         using MemoryFileStream memoryStream = new();
-        _artifactsByTestNode.Add("test()", new() { new(new SessionUid("1"), new FileInfo("fileName"), "TestMethod", "description") });
+        _artifactsByTestNode.Add("test()", [new(new SessionUid("1"), new FileInfo("fileName"), "TestMethod", "description")]);
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0,
             new(new PassedTestNodeStateProperty()), memoryStream);
 
@@ -315,7 +315,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         using MemoryFileStream memoryStream = new();
         _artifactsByExtension.Add(
             new ToolTrxCompareFactory(),
-            new() { new(new SessionUid("1"), new FileInfo("fileName"), "TestMethod", "description") });
+            [new(new SessionUid("1"), new FileInfo("fileName"), "TestMethod", "description")]);
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0,
             new(new PassedTestNodeStateProperty()), memoryStream);
 
@@ -361,7 +361,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("MachineName");
         _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("TestAppPath");
         TrxReportEngine trxReportEngine = new(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
-            _configurationMock.Object, _clockMock.Object, Array.Empty<TestNodeUpdateMessage>(), 0, 0,
+            _configurationMock.Object, _clockMock.Object, [], 0, 0,
             _artifactsByExtension, _artifactsByTestNode, true, _testFrameworkMock.Object, DateTime.UtcNow, CancellationToken.None,
             isCopyingFileAllowed: false);
 
@@ -402,7 +402,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
             new SessionUid("1"),
             new TestNode { Uid = new TestNodeUid("test()"), DisplayName = "TestMethod", Properties = propertyBag });
 
-        TestNodeUpdateMessage[] testNodeUpdatedMessages = { testNode };
+        TestNodeUpdateMessage[] testNodeUpdatedMessages = [testNode];
 
         DateTime testStartTime = DateTime.Now;
         CancellationToken cancellationToken = CancellationToken.None;

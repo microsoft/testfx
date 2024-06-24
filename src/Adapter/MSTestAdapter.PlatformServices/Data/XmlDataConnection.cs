@@ -51,12 +51,8 @@ internal sealed class XmlDataConnection : TestDataConnection
     public override List<string>? GetColumns(string tableName)
     {
         DataSet? dataSet = LoadDataSet(true);
-        if (dataSet == null)
-        {
-            return null;
-        }
 
-        DataTable table = dataSet.Tables[tableName];
+        DataTable? table = dataSet?.Tables[tableName];
         if (table == null)
         {
             return null;

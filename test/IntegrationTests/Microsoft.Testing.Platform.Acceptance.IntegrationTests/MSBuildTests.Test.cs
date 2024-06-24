@@ -26,7 +26,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
 
     internal static IEnumerable<BuildConfiguration> GetBuildConfiguration()
     {
-        string[] compilationModes = new[] { "Debug", "Release" };
+        string[] compilationModes = ["Debug", "Release"];
         foreach (string compilationMode in compilationModes)
         {
             yield return compilationMode == "Debug" ? BuildConfiguration.Debug : BuildConfiguration.Release;
@@ -74,7 +74,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
 
     [ArgumentsProvider(nameof(GetBuildMatrix), TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
     public async Task InvokeTestingPlatform_Target_Should_Execute_Tests_Without_Showing_Error_Detail_SingleTfm(string testCommand, string tfm, BuildConfiguration compilationMode, bool testSucceeded)
-        => await InvokeTestingPlatform_Target_Should_Execute_Tests_Without_Showing_Error_Detail(testCommand, tfm, false, new[] { tfm }, compilationMode, testSucceeded);
+        => await InvokeTestingPlatform_Target_Should_Execute_Tests_Without_Showing_Error_Detail(testCommand, tfm, false, [tfm], compilationMode, testSucceeded);
 
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfm), TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
     public async Task InvokeTestingPlatform_Target_Should_Execute_Tests_Without_Showing_Error_Detail_MultiTfm(string testCommand, string multiTfm, BuildConfiguration compilationMode, bool testSucceeded)
@@ -104,7 +104,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
 
     [ArgumentsProvider(nameof(GetBuildMatrix), TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
     public async Task InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_SingleTfm(string testCommand, string tfm, BuildConfiguration compilationMode, bool testSucceeded)
-        => await InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_Detail(testCommand, tfm, false, new[] { tfm }, compilationMode, testSucceeded);
+        => await InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_Detail(testCommand, tfm, false, [tfm], compilationMode, testSucceeded);
 
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfm), TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
     public async Task InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_MultiTfm(string testCommand, string multiTfm, BuildConfiguration compilationMode, bool testSucceeded)

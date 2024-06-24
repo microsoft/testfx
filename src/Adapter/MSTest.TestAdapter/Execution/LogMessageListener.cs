@@ -119,13 +119,7 @@ public class LogMessageListener : IDisposable
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
     public string? GetAndClearDebugTrace()
     {
-        if (s_redirectedDebugTrace == null)
-        {
-            return null;
-        }
-
-        string? output = s_redirectedDebugTrace.ToStringAndClear();
-        return output;
+        return s_redirectedDebugTrace?.ToStringAndClear();
     }
 
     public void Dispose()

@@ -61,8 +61,8 @@ internal class DynamicDataTest
     {
     }
 
-    public static IEnumerable<object[]> DynamicData => new[]
-    {
-        new object[] { new SerializableInternalType() },
-    };
+    public static IEnumerable<object[]> DynamicData =>
+    [
+        [new SerializableInternalType()]
+    ];
 }

@@ -73,7 +73,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         }
     }
 
-    public Type[] DataTypesConsumed => new[] { typeof(TestNodeUpdateMessage) };
+    public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
 
     public string Uid => nameof(HangDumpActivityIndicator);
 

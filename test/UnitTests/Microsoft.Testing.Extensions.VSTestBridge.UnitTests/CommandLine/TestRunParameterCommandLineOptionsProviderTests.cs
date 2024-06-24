@@ -21,7 +21,7 @@ public sealed class TestRunParameterCommandLineOptionsProviderTests(ITestExecuti
         CommandLineOption option = provider.GetCommandLineOptions().Single();
 
         // Act
-        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, new[] { "something" });
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["something"]);
 
         // Assert
         Assert.IsFalse(result.IsValid);
@@ -35,7 +35,7 @@ public sealed class TestRunParameterCommandLineOptionsProviderTests(ITestExecuti
         CommandLineOption option = provider.GetCommandLineOptions().Single();
 
         // Act
-        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, new[] { "a=b" });
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["a=b"]);
 
         // Assert
         Assert.IsTrue(result.IsValid);

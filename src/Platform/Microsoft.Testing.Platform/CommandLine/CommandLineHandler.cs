@@ -235,7 +235,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
     }
 
     public bool IsOptionSet(string optionName)
-        => ParseResult?.IsOptionSet(optionName) == true;
+        => ParseResult.IsOptionSet(optionName);
 
     public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
     {

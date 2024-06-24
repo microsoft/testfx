@@ -24,7 +24,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     private const string CreateDumpVerboseDiagnosticsVariable = "CreateDumpVerboseDiagnostics";
     private const string EnableMiniDumpValue = "1";
 
-    private readonly string[] _prefixes = new[] { "DOTNET_", "COMPlus_" };
+    private readonly string[] _prefixes = ["DOTNET_", "COMPlus_"];
     private readonly IConfiguration _configuration;
     private readonly IMessageBus _messageBus;
     private readonly ICommandLineOptions _commandLineOptions;
@@ -188,7 +188,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
                     !miniDumpType.Value.Equals("3", StringComparison.OrdinalIgnoreCase) &&
                     !miniDumpType.Value.Equals("4", StringComparison.OrdinalIgnoreCase))
                 {
-                    AddError(errors, $"{prefix}{MiniDumpTypeVariable}", "Valid values are 1, 2, 3, 4", miniDumpType?.Value);
+                    AddError(errors, $"{prefix}{MiniDumpTypeVariable}", "Valid values are 1, 2, 3, 4", miniDumpType.Value);
                 }
             }
         }

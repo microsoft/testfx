@@ -16,15 +16,15 @@ public class FixturesTests : CLITestBase
     private static readonly string TestMethod = "FixturesTestProject1.UnitTest1.Test";
     private static readonly string PassingTest = "FixturesTestProject1.UnitTest1.PassingTest";
 
-    private readonly string[] _tests = new[]
-    {
+    private readonly string[] _tests =
+    [
         AssemblyInitialize,
         AssemblyCleanup,
         ClassInitialize,
         ClassCleanup,
         TestMethod,
-        PassingTest,
-    };
+        PassingTest
+    ];
 
     public void FixturesDisabled_DoesNotReport_FixtureTests()
     {

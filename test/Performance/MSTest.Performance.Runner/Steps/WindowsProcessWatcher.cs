@@ -17,7 +17,7 @@ SELECT *
 FROM __InstanceOperationEvent WITHIN 1
 WHERE TargetInstance ISA 'Win32_Process' and TargetInstance.Name = '{processName}'
 """;
-        EventArrived += new EventArrivedEventHandler(Watcher_EventArrived);
+        EventArrived += Watcher_EventArrived;
     }
 
     public event EventHandler<ManagementBaseObject>? ProcessCreated;

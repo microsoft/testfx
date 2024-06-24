@@ -476,6 +476,7 @@ public class TestClassInfo
         lock (_testClassExecuteSyncObject)
         {
             if (IsClassCleanupExecuted
+                // If there is a ClassInitialize method and it has not been executed, then we should not execute ClassCleanup
                 || (!IsClassInitializeExecuted && ClassInitializeMethod is not null))
             {
                 return;
@@ -483,15 +484,16 @@ public class TestClassInfo
 
             try
             {
-                classCleanupMethod = ClassCleanupMethod;
-                ClassCleanupException = classCleanupMethod is not null
-                    ? InvokeCleanupMethod(classCleanupMethod, BaseClassCleanupMethodsStack.Count)
-                    : null;
-                var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
-                while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
+                IEnumerable<MethodInfo> cleanupMethods = (ClassCleanupMethod is null ? Array.Empty<MethodInfo>() : [ClassCleanupMethod]).Union(BaseClassCleanupMethodsStack);
+                var classCleanupQueue = new Queue<MethodInfo>(cleanupMethods);
+
+                while (classCleanupQueue.Count > 0 && ClassCleanupException is null)
                 {
-                    classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                    ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, baseClassCleanupQueue.Count);
+                    classCleanupMethod = classCleanupQueue.Dequeue();
+                    if (!ReflectHelper.Instance.IsNonDerivedAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
+                    {
+                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, classCleanupQueue.Count);
+                    }
                 }
 
                 IsClassCleanupExecuted = ClassCleanupException is null;

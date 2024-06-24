@@ -41,7 +41,7 @@ internal sealed class TrxReportGenerator :
     private readonly TrxReportGeneratorCommandLine _trxReportGeneratorCommandLine;
     private readonly TrxTestApplicationLifecycleCallbacks? _trxTestApplicationLifecycleCallbacks;
     private readonly ILogger<TrxReportGenerator> _logger;
-    private readonly List<TestNodeUpdateMessage> _tests = new();
+    private readonly List<TestNodeUpdateMessage> _tests = [];
     private readonly Dictionary<TestNodeUid, List<SessionFileArtifact>> _artifactsByTestNode = new();
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = new();
     private readonly bool _isEnabled;
@@ -81,14 +81,14 @@ internal sealed class TrxReportGenerator :
         _isEnabled = commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName);
     }
 
-    public Type[] DataTypesConsumed { get; } = new[]
-    {
+    public Type[] DataTypesConsumed { get; } =
+    [
         typeof(TestNodeUpdateMessage),
         typeof(TestNodeFileArtifact),
-        typeof(SessionFileArtifact),
-    };
+        typeof(SessionFileArtifact)
+    ];
 
-    public Type[] DataTypesProduced { get; } = new[] { typeof(SessionFileArtifact) };
+    public Type[] DataTypesProduced { get; } = [typeof(SessionFileArtifact)];
 
     /// <inheritdoc />
     public string Uid { get; } = nameof(TrxReportGenerator);
@@ -137,7 +137,7 @@ internal sealed class TrxReportGenerator :
                 case TestNodeFileArtifact testNodeFileArtifact:
                     if (!_artifactsByTestNode.TryGetValue(testNodeFileArtifact.TestNode.Uid, out List<SessionFileArtifact>? nodeFileArtifacts))
                     {
-                        nodeFileArtifacts = new List<SessionFileArtifact> { testNodeFileArtifact };
+                        nodeFileArtifacts = [testNodeFileArtifact];
                         _artifactsByTestNode[testNodeFileArtifact.TestNode.Uid] = nodeFileArtifacts;
                     }
                     else
@@ -149,7 +149,7 @@ internal sealed class TrxReportGenerator :
                 case SessionFileArtifact fileArtifact:
                     if (!_artifactsByExtension.TryGetValue(dataProducer, out List<SessionFileArtifact>? sessionFileArtifacts))
                     {
-                        sessionFileArtifacts = new List<SessionFileArtifact> { fileArtifact };
+                        sessionFileArtifacts = [fileArtifact];
                         _artifactsByExtension[dataProducer] = sessionFileArtifacts;
                     }
                     else

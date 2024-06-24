@@ -58,7 +58,7 @@ public static class ProcessFactory
         ProcessHandleInfo processHandleInfo = new();
         ProcessHandle processHandle = new(process, processHandleInfo);
 
-        process.Exited += (s, e) => config?.OnExit?.Invoke(processHandle, process.ExitCode);
+        process.Exited += (s, e) => config.OnExit?.Invoke(processHandle, process.ExitCode);
 
         if (config.OnStandardOutput != null)
         {

@@ -10,8 +10,8 @@ namespace Microsoft.Testing.Extensions.Telemetry;
 internal class CIEnvironmentDetectorForTelemetry
 {
     // Systems that provide boolean values only, so we can simply parse and check for true
-    private static readonly string[] BooleanVariables = new string[]
-    {
+    private static readonly string[] BooleanVariables =
+    [
         // Azure Pipelines - https://docs.microsoft.com/azure/devops/pipelines/build/variables#system-variables-devops-services
         "TF_BUILD",
 
@@ -29,31 +29,31 @@ internal class CIEnvironmentDetectorForTelemetry
         "TRAVIS",
 
         // CircleCI - https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
-        "CIRCLECI",
-    };
+        "CIRCLECI"
+    ];
 
     // Systems where every variable must be present and not-null before returning true
     private static readonly string[][] AllNotNullVariables = new string[][]
     {
         // AWS CodeBuild - https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html
-        new string[] { "CODEBUILD_BUILD_ID", "AWS_REGION" },
+        ["CODEBUILD_BUILD_ID", "AWS_REGION"],
 
         // Jenkins - https://github.com/jenkinsci/jenkins/blob/master/core/src/main/resources/jenkins/model/CoreEnvironmentContributor/buildEnv.groovy
-        new string[] { "BUILD_ID", "BUILD_URL" },
+        ["BUILD_ID", "BUILD_URL"],
 
         // Google Cloud Build - https://cloud.google.com/build/docs/configuring-builds/substitute-variable-values#using_default_substitutions
-        new string[] { "BUILD_ID", "PROJECT_ID" },
+        ["BUILD_ID", "PROJECT_ID"],
     };
 
     // Systems where the variable must be present and not-null
-    private static readonly string[] IfNonNullVariables = new string[]
-    {
+    private static readonly string[] IfNonNullVariables =
+    [
         // TeamCity - https://www.jetbrains.com/help/teamcity/predefined-build-parameters.html#Predefined+Server+Build+Parameters
         "TEAMCITY_VERSION",
 
         // JetBrains Space - https://www.jetbrains.com/help/space/automation-environment-variables.html#general
-        "JB_SPACE_API_URL",
-    };
+        "JB_SPACE_API_URL"
+    ];
 
     public static bool IsCIEnvironment()
     {
