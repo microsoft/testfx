@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
@@ -81,60 +82,159 @@ internal class TestMethodRunner
 
         UnitTestResult[]? result = null;
 
-        try
+        using (LogMessageListener logListener = new(_captureDebugTraces))
         {
-            using (LogMessageListener logListener = new(_captureDebugTraces))
+            try
+            {
+                // Run the assembly and class Initialize methods if required.
+                // Assembly or class initialize can throw exceptions in which case we need to ensure that we fail the test.
+                _testMethodInfo.Parent.Parent.RunAssemblyInitialize(_testContext.Context);
+            }
+            finally
+            {
+                initializationLogs = logListener.GetAndClearStandardOutput();
+                initializationTrace = logListener.GetAndClearDebugTrace();
+                initializationErrorLogs = logListener.GetAndClearStandardError();
+                initializationTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
+            }
+        }
+
+        // is staTestClass && widows && !STA => do it
+        if (_testMethodInfo.Parent.ClassAttribute is STATestClassAttribute
+            && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+        {
+            Thread entryPointThread = new(new ThreadStart(DoRunTests))
+            {
+                Name = "MSTest Entry Point",
+            };
+
+            entryPointThread.SetApartmentState(ApartmentState.STA);
+            entryPointThread.Start();
+
+            try
+            {
+                var threadTask = Task.Run(entryPointThread.Join, _testContext.Context.CancellationTokenSource.Token);
+                threadTask.Wait(_testContext.Context.CancellationTokenSource.Token);
+            }
+            catch
+            {
+                //throw the error somehow
+            }
+
+            void DoRunTests()
             {
                 try
                 {
-                    // Run the assembly and class Initialize methods if required.
-                    // Assembly or class initialize can throw exceptions in which case we need to ensure that we fail the test.
-                    _testMethodInfo.Parent.Parent.RunAssemblyInitialize(_testContext.Context);
-                    _testMethodInfo.Parent.RunClassInitialize(_testContext.Context);
+                    // code for init/clean/test/con.dis allll
+                    using (LogMessageListener logListener = new(_captureDebugTraces))
+                    {
+                        try
+                        {
+                            _testMethodInfo.Parent.RunClassInitialize(_testContext.Context);
+                        }
+                        finally
+                        {
+                            initializationLogs += logListener.GetAndClearStandardOutput();
+                            initializationTrace += logListener.GetAndClearDebugTrace();
+                            initializationErrorLogs += logListener.GetAndClearStandardError();
+                            initializationTestContextMessages += _testContext.GetAndClearDiagnosticMessages();
+                        }
+                    }
+
+                    // Listening to log messages when running the test method with its Test Initialize and cleanup later on in the stack.
+                    // This allows us to differentiate logging when data driven methods are used.
+                    result = RunTestMethod();
+                }
+                catch (TestFailedException ex)
+                {
+                    result = [new UnitTestResult(ex)];
+                }
+                catch (Exception ex)
+                {
+                    if (result == null || result.Length == 0)
+                    {
+                        result = [new UnitTestResult()];
+                    }
+
+#pragma warning disable IDE0056 // Use index operator
+                    var newResult = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
+                    {
+                        StandardOut = result[result.Length - 1].StandardOut,
+                        StandardError = result[result.Length - 1].StandardError,
+                        DebugTrace = result[result.Length - 1].DebugTrace,
+                        TestContextMessages = result[result.Length - 1].TestContextMessages,
+                        Duration = result[result.Length - 1].Duration,
+                    };
+                    result[result.Length - 1] = newResult;
+#pragma warning restore IDE0056 // Use index operator
                 }
                 finally
                 {
-                    initializationLogs = logListener.GetAndClearStandardOutput();
-                    initializationTrace = logListener.GetAndClearDebugTrace();
-                    initializationErrorLogs = logListener.GetAndClearStandardError();
-                    initializationTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
+                    UnitTestResult firstResult = result![0];
+                    firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
+                    firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
+                    firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
+                    firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
                 }
             }
-
-            // Listening to log messages when running the test method with its Test Initialize and cleanup later on in the stack.
-            // This allows us to differentiate logging when data driven methods are used.
-            result = RunTestMethod();
         }
-        catch (TestFailedException ex)
+        else
         {
-            result = [new UnitTestResult(ex)];
-        }
-        catch (Exception ex)
-        {
-            if (result == null || result.Length == 0)
+            try
             {
-                result = [new UnitTestResult()];
+                using (LogMessageListener logListener = new(_captureDebugTraces))
+                {
+                    try
+                    {
+                        // Run the assembly and class Initialize methods if required.
+                        // Assembly or class initialize can throw exceptions in which case we need to ensure that we fail the test.
+                        _testMethodInfo.Parent.RunClassInitialize(_testContext.Context);
+                    }
+                    finally
+                    {
+                        initializationLogs += logListener.GetAndClearStandardOutput();
+                        initializationTrace += logListener.GetAndClearDebugTrace();
+                        initializationErrorLogs += logListener.GetAndClearStandardError();
+                        initializationTestContextMessages += _testContext.GetAndClearDiagnosticMessages();
+                    }
+                }
+
+                // Listening to log messages when running the test method with its Test Initialize and cleanup later on in the stack.
+                // This allows us to differentiate logging when data driven methods are used.
+                result = RunTestMethod();
             }
+            catch (TestFailedException ex)
+            {
+                result = [new UnitTestResult(ex)];
+            }
+            catch (Exception ex)
+            {
+                if (result == null || result.Length == 0)
+                {
+                    result = [new UnitTestResult()];
+                }
 
 #pragma warning disable IDE0056 // Use index operator
-            var newResult = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
-            {
-                StandardOut = result[result.Length - 1].StandardOut,
-                StandardError = result[result.Length - 1].StandardError,
-                DebugTrace = result[result.Length - 1].DebugTrace,
-                TestContextMessages = result[result.Length - 1].TestContextMessages,
-                Duration = result[result.Length - 1].Duration,
-            };
-            result[result.Length - 1] = newResult;
+                var newResult = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
+                {
+                    StandardOut = result[result.Length - 1].StandardOut,
+                    StandardError = result[result.Length - 1].StandardError,
+                    DebugTrace = result[result.Length - 1].DebugTrace,
+                    TestContextMessages = result[result.Length - 1].TestContextMessages,
+                    Duration = result[result.Length - 1].Duration,
+                };
+                result[result.Length - 1] = newResult;
 #pragma warning restore IDE0056 // Use index operator
-        }
-        finally
-        {
-            UnitTestResult firstResult = result![0];
-            firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
-            firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
-            firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
-            firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
+            }
+            finally
+            {
+                UnitTestResult firstResult = result![0];
+                firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
+                firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
+                firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
+                firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
+            }
         }
 
         return result;
