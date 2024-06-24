@@ -138,7 +138,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
 
         XElement? testRun = xml.Root;
         Assert.IsNotNull(testRun);
-        var nodes = testRun?.Nodes().ToList();
+        var nodes = testRun.Nodes().ToList();
 
         string trxContent = xml.ToString();
         string trxContentsPattern = @"

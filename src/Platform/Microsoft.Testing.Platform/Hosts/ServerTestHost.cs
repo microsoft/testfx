@@ -542,7 +542,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             { TelemetryProperties.RequestProperties.AdapterLoadStop, adapterLoadStop },
             { TelemetryProperties.RequestProperties.RequestExecuteStart, requestExecuteStart },
             { TelemetryProperties.RequestProperties.RequestExecuteStop, requestExecuteStop },
-            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args?.TestNodes is not null || args?.GraphFilter is not null).AsTelemetryBool() },
+            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args.TestNodes is not null || args?.GraphFilter is not null).AsTelemetryBool() },
         };
 
     internal static Dictionary<string, object> GetRunMetrics(
@@ -562,7 +562,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             { TelemetryProperties.RequestProperties.AdapterLoadStop, adapterLoadStop },
             { TelemetryProperties.RequestProperties.RequestExecuteStart, requestExecuteStart },
             { TelemetryProperties.RequestProperties.RequestExecuteStop, requestExecuteStop },
-            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args?.TestNodes is not null || args?.GraphFilter is not null).AsTelemetryBool() },
+            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args.TestNodes is not null || args?.GraphFilter is not null).AsTelemetryBool() },
         };
 
     private async Task SendErrorAsync(int reqId, int errorCode, string message, object? data, CancellationToken cancellationToken)

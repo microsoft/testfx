@@ -160,7 +160,7 @@ internal static class SerializerUtilities
             Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.RunId] = ev.RunId,
-                [JsonRpcStrings.Changes] = ev.Changes?.Select(ch => Serialize(ch))?.ToList<object>(),
+                [JsonRpcStrings.Changes] = ev.Changes?.Select(ch => Serialize(ch)).ToList<object>(),
             };
 
             return values;
@@ -561,7 +561,7 @@ internal static class SerializerUtilities
 
             var testsJson = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Tests) as ICollection<object>;
 
-            ICollection<TestNode>? tests = testsJson?.OfType<IDictionary<string, object?>>()?.Select(obj => Deserialize<TestNode>(obj)).ToList();
+            ICollection<TestNode>? tests = testsJson?.OfType<IDictionary<string, object?>>().Select(obj => Deserialize<TestNode>(obj)).ToList();
             string? filter = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Filter) as string;
 
             return new RunRequestArgs(runId, tests, filter);

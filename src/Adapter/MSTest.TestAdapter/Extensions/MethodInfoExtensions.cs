@@ -153,7 +153,7 @@ internal static class MethodInfoExtensions
         object? invokeResult;
 
         if (arguments is not null
-            && methodParameters?.Length == 1
+            && methodParameters.Length == 1
             && methodParameters[0].ParameterType == typeof(object[]))
         {
             invokeResult = methodInfo.Invoke(classInstance, [arguments]);

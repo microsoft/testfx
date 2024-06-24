@@ -272,7 +272,7 @@ public class TempDirectory : IDisposable
             List<string> lines = new();
             foreach (string line in fileContents.Split('\n'))
             {
-                if (line.Trim()?.StartsWith("### ", StringComparison.InvariantCulture) ?? false)
+                if (line.Trim().StartsWith("### ", StringComparison.InvariantCulture))
                 {
                     if (inFile)
                     {
