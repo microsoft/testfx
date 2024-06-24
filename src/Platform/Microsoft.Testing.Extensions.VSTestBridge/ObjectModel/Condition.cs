@@ -231,15 +231,12 @@ internal sealed class Condition
 
         // Check validity of operator only if related TestProperty is non-null.
         // if null, it might be custom validation ignore it.
-        if (propertyProvider != null)
+        TestProperty? testProperty = propertyProvider?.Invoke(Name);
+        if (testProperty != null)
         {
-            TestProperty? testProperty = propertyProvider(Name);
-            if (testProperty != null)
-            {
-                Type propertyType = testProperty.GetValueType();
-                valid = typeof(string) == propertyType ||
-                        typeof(string[]) == propertyType;
-            }
+            Type propertyType = testProperty.GetValueType();
+            valid = typeof(string) == propertyType ||
+                    typeof(string[]) == propertyType;
         }
 
         return valid;
