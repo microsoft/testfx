@@ -98,7 +98,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
             Directory.CreateDirectory(dataFileDirectory);
             foreach (string item in Directory.GetFiles(reportDirectory, "DataFile.*"))
             {
-                File.Move(item, Path.Combine(dataFileDirectory, Path.GetFileName(item)!));
+                File.Move(item, Path.Combine(dataFileDirectory, Path.GetFileName(item)));
             }
 
             ZipFile.CreateFromDirectory(dataFileDirectory, sample, _compressionLevel, includeBaseDirectory: true);
