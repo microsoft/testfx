@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
@@ -87,7 +88,7 @@ public class UnitTest1
     {
         foreach (TestArgumentsEntry<string> tfm in TargetFrameworks.All)
         {
-            foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
+            foreach (BuildConfiguration compilationMode in GetBuildConfigurations())
             {
                 foreach (Verb verb in Enum.GetValues<Verb>())
                 {
@@ -101,7 +102,7 @@ public class UnitTest1
     {
         foreach (TestArgumentsEntry<string> tfm in TargetFrameworks.All)
         {
-            foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
+            foreach (BuildConfiguration compilationMode in GetBuildConfigurations())
             {
                 yield return new TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)>((tfm.Arguments, compilationMode), $"{tfm.Arguments},{compilationMode}");
             }
@@ -110,7 +111,7 @@ public class UnitTest1
 
     internal static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>> GetBuildMatrixMultiTfmFoldedBuildConfiguration()
     {
-        foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
+        foreach (BuildConfiguration compilationMode in GetBuildConfigurations())
         {
             yield return new TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>((TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode), $"multitfm,{compilationMode}");
         }
@@ -118,7 +119,7 @@ public class UnitTest1
 
     internal static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>> GetBuildMatrixMultiTfmBuildConfiguration()
     {
-        foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
+        foreach (BuildConfiguration compilationMode in GetBuildConfigurations())
         {
             yield return new TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>((TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode), $"{TargetFrameworks.All.ToMSBuildTargetFrameworks()},{compilationMode}");
         }
@@ -175,5 +176,15 @@ public class UnitTest1
         return matches.Length != 1
             ? throw new InvalidOperationException($"Was expecting to find a single entry for '{entryName}' but found {matches.Length}.")
             : matches[0].Value;
+    }
+
+    private static IEnumerable<BuildConfiguration> GetBuildConfigurations()
+    {
+#if !FAST_ACCEPTANCE_TEST || DEBUG
+        yield return BuildConfiguration.Debug;
+#endif
+#if !FAST_ACCEPTANCE_TEST || RELEASE
+        yield return BuildConfiguration.Debug;
+#endif
     }
 }

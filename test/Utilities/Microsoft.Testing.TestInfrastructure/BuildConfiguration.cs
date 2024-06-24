@@ -5,14 +5,6 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public enum BuildConfiguration
 {
-#if FAST_ACCEPTANCE_TEST
-#if DEBUG
-    Debug,
-#else
-    Release,
-#endif
-#else
     Debug,
     Release,
-#endif
 }
