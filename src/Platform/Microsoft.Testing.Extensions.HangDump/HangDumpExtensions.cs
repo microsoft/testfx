@@ -16,7 +16,7 @@ public static class HangDumpExtensions
     {
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         string mutexSuffix = Guid.NewGuid().ToString("N");
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName($"hangdumpgeneratorpipename.{FNV_1aHashHelper.ComputeStringHash(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_{mutexSuffix}");
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
         HangDumpConfiguration hangDumpConfiguration = new(testApplicationModuleInfo, pipeNameDescription, mutexSuffix);
 
         builder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider
