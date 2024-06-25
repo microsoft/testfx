@@ -84,6 +84,7 @@ public class TestClass : IDisposable
     {
         AssertCorrectThreadApartmentState();
     }
+
     [ClassInitialize]
     public static void ClassInitialize(TestContext context)
     {
