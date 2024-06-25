@@ -4,107 +4,107 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="new">TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <target state="translated">O gerador de relatórios TRX só funciona com construtores do tipo ''Microsoft.Testing.Platform.Builder.TestApplicationBuilder''</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
         <source>The baseline TRX file</source>
-        <target state="new">The baseline TRX file</target>
+        <target state="translated">O arquivo TRX da linha de base</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolBothFilesMustBeSpecified">
         <source>'--{0}' and '--{1}' must both be specified</source>
-        <target state="new">'--{0}' and '--{1}' must both be specified</target>
+        <target state="translated">''--{0}'' e ''--{1}'' devem ser especificados</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolDescription">
         <source>This tool allows to compare and highights differences between 2 TRX reports</source>
-        <target state="new">This tool allows to compare and highights differences between 2 TRX reports</target>
+        <target state="translated">Esta ferramenta permite comparar e definir diferenças entre dois relatórios TRX</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolDisplayName">
         <source>TRX comparer tool</source>
-        <target state="new">TRX comparer tool</target>
+        <target state="translated">Ferramenta de comparador TRX</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolOptionExpectsSingleArgument">
         <source>'--{0}' expects a single trx file path as argument</source>
-        <target state="new">'--{0}' expects a single trx file path as argument</target>
+        <target state="translated">''--{0}'' espera um único caminho de arquivo trx como argumento</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolOtherFileOptionDescription">
         <source>The TRX file to compare with the baseline</source>
-        <target state="new">The TRX file to compare with the baseline</target>
+        <target state="translated">O arquivo TRX a ser comparado com a linha de base</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
         <source>Test session</source>
-        <target state="new">Test session</target>
+        <target state="translated">Sessão de teste</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportArtifactDisplayName">
         <source>TRX Report</source>
-        <target state="new">TRX Report</target>
+        <target state="translated">Relatório TRX</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameExtensionIsNotTrx">
         <source>'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</source>
-        <target state="new">'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</target>
+        <target state="translated">O argumento de nome de arquivo ''--report-trx-filename'' deve terminar com ''.trx'' (por exemplo, --report-trx-filename myreport.trx)</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameOptionDescription">
         <source>The name of the generated TRX report</source>
-        <target state="new">The name of the generated TRX report</target>
+        <target state="translated">O nome do relatório TRX gerado</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameRequiresTrxReport">
         <source>'--report-trx-filename' requires '--report-trx' to be enabled</source>
-        <target state="new">'--report-trx-filename' requires '--report-trx' to be enabled</target>
+        <target state="translated">''--report-trx-filename'' requer que ''--report-trx'' esteja habilitado</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameShouldNotContainPath">
         <source>file name argument must not contain path (e.g. --report-trx-filename myreport.trx)</source>
-        <target state="new">file name argument must not contain path (e.g. --report-trx-filename myreport.trx)</target>
+        <target state="translated">argumento de nome de arquivo não deve conter caminho (por exemplo, --report-trx-filename myreport.trx)</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFrameworkDoesNotSupportTrxReportCapability">
         <source>The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</source>
-        <target state="new">The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</target>
+        <target state="translated">A estrutura de teste ''{0}'' com UID ''{1}'' não dá suporte a ''ITrxReportCapability'' levando a relatórios TRX ausentes ou incompletos</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportGeneratorBeforeTestHostProcessStartAsyncNotCalled">
         <source>Method 'BeforeTestHostProcessStartAsync' must be called before 'OnTestHostProcessStartedAsync'</source>
-        <target state="new">Method 'BeforeTestHostProcessStartAsync' must be called before 'OnTestHostProcessStartedAsync'</target>
+        <target state="translated">O método ''BeforeTestHostProcessStartAsync'' deve ser chamado antes de ''OnTestHostProcessStartedAsync''</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDescription">
         <source>Produce a TRX report for the current test session</source>
-        <target state="new">Produce a TRX report for the current test session</target>
+        <target state="translated">Produzir um relatório TRX para a sessão de teste atual</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDisplayName">
         <source>TRX report generator</source>
-        <target state="new">TRX report generator</target>
+        <target state="translated">Gerador de relatório TRX</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable">
         <source>Required environment variable '{0}' is missing for TRX report generator</source>
-        <target state="new">Required environment variable '{0}' is missing for TRX report generator</target>
+        <target state="translated">A variável de ambiente necessária ''{0}'' está ausente para o gerador de relatório TRX</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportIsNotValidForDiscovery">
         <source>'--report-trx' cannot be enabled when using '--list-tests'</source>
-        <target state="new">'--report-trx' cannot be enabled when using '--list-tests'</target>
+        <target state="translated">Não é possível habilitar ''--report-trx'' ao usar ''--list-tests''</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportOptionDescription">
         <source>Enable generating TRX report</source>
-        <target state="new">Enable generating TRX report</target>
+        <target state="translated">Habilitar geração de relatório TRX</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
-        <target state="new">Requests of type '{0}' is not supported</target>
+        <target state="translated">Não há suporte para solicitações de tipo ''{0}''</target>
         <note />
       </trans-unit>
     </body>
