@@ -4,74 +4,74 @@
     <body>
       <trans-unit id="CannotFindExpectedCrashDumpFile">
         <source>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</source>
-        <target state="new">Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</target>
+        <target state="translated">找不到预期的故障转储文件“{0}”，与“*.dmp”模式匹配的所有文件都将复制到结果文件夹</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDescription">
         <source>The testhost process crash dump file</source>
-        <target state="new">The testhost process crash dump file</target>
+        <target state="translated">testhost 进程故障转储文件</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDisplayName">
         <source>Crash dump file</source>
-        <target state="new">Crash dump file</target>
+        <target state="translated">故障转储文件</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
         <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="new">[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</target>
+        <target state="translated">[仅限 net6.0+]在测试执行进程意外崩溃时生成故障转储文件</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
         <source>Crash dump</source>
-        <target state="new">Crash dump</target>
+        <target state="translated">故障转储</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file</source>
-        <target state="new">Specify the name of the dump file</target>
+        <target state="translated">指定转储文件的名称</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
         <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
-        <target state="new">Environment variable '{0}' should have been set to '{1}' but value is '{2}'</target>
+        <target state="translated">环境变量“{0}”应设置为“{1}”，但值为“{2}”</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
         <source>Crash dump feature is only available in .NET (Core)</source>
-        <target state="new">Crash dump feature is only available in .NET (Core)</target>
+        <target state="translated">故障转储功能仅在 .NET (Core) 中可用</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
-        <target state="new">[net6.0+ only] Generate a dump file if the test process crashes</target>
+        <target state="translated">[仅限 net6.0+]如果测试进程崩溃，则生成转储文件</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
-        <target state="new">Test host process with PID '{0}' crashed, a dump file was generated</target>
+        <target state="translated">PID 为“{0}”的测试主机进程崩溃，生成了转储文件</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
         <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. 
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
-        <target state="new">Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. 
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
+        <target state="translated">指定转储的类型。有效值为 "Mini"、"Heap"、"Triage" 或 "Full"。默认类型为 "Full"。
+有关详细信息，请访问 https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
-        <target state="new">'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</target>
+        <target state="translated">“{0}”不是有效的转储类型。有效选项为“Mini”、“Heap”、“Triage”和“Full”</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">
         <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
-        <target state="new">'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</target>
+        <target state="translated">“--crashdump-type”需要将单一转储类型作为参数(例如“--crashdump-type Heap”)</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
-        <target state="new">Requests of type '{0}' is not supported</target>
+        <target state="translated">不支持类型为“{0}”的请求</target>
         <note />
       </trans-unit>
     </body>

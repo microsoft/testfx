@@ -369,7 +369,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         diagnosticsClient.WriteDump(dumpType, finalDumpFileName, true);
         NotifyCrashDumpServiceIfEnabled();
-        IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
+        using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
         process.Kill();
         await process.WaitForExitAsync();
 
@@ -384,7 +384,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         MiniDumpWriteDump.CollectDumpUsingMiniDumpWriteDump(_testHostProcessInformation.PID, finalDumpFileName, miniDumpTypeOption);
         NotifyCrashDumpServiceIfEnabled();
-        IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
+        using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
         process.Kill();
         process.WaitForExit();
 #endif

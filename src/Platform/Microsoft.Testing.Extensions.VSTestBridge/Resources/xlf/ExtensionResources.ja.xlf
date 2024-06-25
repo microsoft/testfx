@@ -4,37 +4,37 @@
     <body>
       <trans-unit id="RunSettingsOptionDescription">
         <source>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</source>
-        <target state="new">The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</target>
+        <target state="translated">.runsettings ファイルへの相対パスまたは絶対パス。テストの実行を構成する方法の詳細と例については、https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file を参照してください</target>
         <note />
       </trans-unit>
       <trans-unit id="RunsettingsFileCannotBeRead">
         <source>runsettings file '{0}' cannot be read</source>
-        <target state="new">runsettings file '{0}' cannot be read</target>
+        <target state="translated">runsettings ファイル '{0}' を読み取れません</target>
         <note />
       </trans-unit>
       <trans-unit id="RunsettingsFileDoesNotExist">
         <source>runsettings file '{0}' does not exist</source>
-        <target state="new">runsettings file '{0}' does not exist</target>
+        <target state="translated">runsettings ファイル '{0}' が存在しません</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCaseFilterOptionDescription">
         <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
-        <target state="new">Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
+        <target state="translated">指定された式を使用してテストをフィルター処理します。詳細については、「フィルター オプションの詳細」セクションを参照してください。選択的単体テスト フィルターの使用方法の詳細と例については、https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests を参照してください。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestRunParameterOptionArgumentIsNotParameter">
         <source>argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</source>
-        <target state="new">argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</target>
+        <target state="translated">引数 '{0}' はパラメーターではありません。パラメーター引数は、次のパターン 'key=value' と一致しています。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestRunParameterOptionDescription">
         <source>Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</source>
-        <target state="new">Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</target>
+        <target state="translated">キーと値のペア パラメーターを指定またはオーバーライドします。詳細情報と例については、「https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters」を参照してください。</target>
         <note />
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
         <source>The bridged framework supports only one session at a time. A session with UID {0} is already open.</source>
-        <target state="new">The bridged framework supports only one session at a time. A session with UID {0} is already open.</target>
+        <target state="translated">ブリッジ されたフレームワークは、一度に 1 つのセッションのみをサポートします。UID{0} のセッションは既に開かれています。</target>
         <note />
       </trans-unit>
     </body>

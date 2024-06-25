@@ -87,7 +87,10 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         return processPath;
     }
 #else
-        => process.GetCurrentProcess().MainModule.FileName;
+    {
+        using IProcess currentProcess = process.GetCurrentProcess();
+        return currentProcess.MainModule.FileName;
+    }
 #endif
 
     public ExecutableInfo GetCurrentExecutableInfo()

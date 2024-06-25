@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -275,6 +275,11 @@ public sealed partial class Assert
     /// </exception>
     public static void AreEqual<T>(IEquatable<T>? expected, IEquatable<T>? actual, string? message, params object?[]? parameters)
     {
+        if (actual is null && expected is null)
+        {
+            return;
+        }
+
         if (actual?.Equals(expected) == true)
         {
             return;

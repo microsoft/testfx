@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="FixAssertionArgsOrder">
         <source>Fix actual/expected arguments order</source>
-        <target state="new">Fix actual/expected arguments order</target>
+        <target state="translated">Fiili/beklenen bağımsız değişken sırasını düzelt</target>
         <note />
       </trans-unit>
       <trans-unit id="FixSignatureCodeFix">
