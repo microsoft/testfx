@@ -77,7 +77,6 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [STATestClass]
-public class TestClass
 public class TestClass : IDisposable
 {
     public TestClass()
