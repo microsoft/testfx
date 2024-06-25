@@ -187,8 +187,7 @@ internal class UnitTestRunner : MarshalByRefObject
             _fixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo);
 
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
-            UnitTestResult[] result = testMethodRunner.Execute();
-            RunRequiredCleanups(testContext, testMethodInfo, testMethod, result);
+            UnitTestResult[] result = testMethodRunner.Execute(_classCleanupManager, _typeCache);
             return result;
         }
         catch (TypeInspectionException ex)
@@ -325,7 +324,7 @@ internal class UnitTestRunner : MarshalByRefObject
         return true;
     }
 
-    private class ClassCleanupManager
+    internal class ClassCleanupManager
     {
         private readonly ClassCleanupBehavior? _lifecycleFromMsTest;
         private readonly ClassCleanupBehavior _lifecycleFromAssembly;

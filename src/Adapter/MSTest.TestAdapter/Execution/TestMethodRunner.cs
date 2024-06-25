@@ -12,6 +12,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTestRunner;
+
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -73,7 +75,7 @@ internal class TestMethodRunner
     /// Executes a test.
     /// </summary>
     /// <returns>The test results.</returns>
-    internal UnitTestResult[] Execute()
+    internal UnitTestResult[] Execute(ClassCleanupManager? _classCleanupManager, TypeCache _typeCache)
     {
         string? initializationLogs = string.Empty;
         string? initializationTrace = string.Empty;
@@ -81,6 +83,11 @@ internal class TestMethodRunner
         string? initializationTestContextMessages = string.Empty;
 
         UnitTestResult[]? result = null;
+
+        bool shouldRunClassCleanup = false;
+        bool shouldRunClassAndAssemblyCleanup = false;
+
+        var threadState = Thread.CurrentThread.GetApartmentState();
 
         using (LogMessageListener logListener = new(_captureDebugTraces))
         {
@@ -98,7 +105,7 @@ internal class TestMethodRunner
                 initializationTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
             }
         }
-
+        var current = Thread.CurrentThread.GetApartmentState();
         // is staTestClass && widows && !STA => do it
         if (_testMethodInfo.Parent.ClassAttribute is STATestClassAttribute
             && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
@@ -177,6 +184,49 @@ internal class TestMethodRunner
                     firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
                     firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
                 }
+
+                if (_testMethodInfo is not null)
+                {
+                    _classCleanupManager?.MarkTestComplete(_testMethodInfo, _test, out shouldRunClassCleanup, out shouldRunClassAndAssemblyCleanup);
+                }
+
+                try
+                {
+                    // will be only included in STA if the behavior was endOfClass
+                    if (shouldRunClassCleanup)
+                    {
+                        _testMethodInfo?.Parent.ExecuteClassCleanup();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // We mainly expect TestFailedException here as each cleanup method is executed in a try-catch block but
+                    // for the sake of the catch-all mechanism, let's keep it as Exception.
+                    if (result.Length != 0)
+                    {
+                        UnitTestResult lastResult = result[result.Length - 1];
+                        lastResult.Outcome = ObjectModel.UnitTestOutcome.Failed;
+                        lastResult.ErrorMessage = ex.Message;
+                        lastResult.ErrorStackTrace = ex.StackTrace;
+                    }
+                }
+                finally
+                {
+                    using LogMessageListener logListener = new(_captureDebugTraces);
+                    if (result.Length != 0)
+                    {
+                        string? cleanupTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
+
+                        if (result.Length > 0)
+                        {
+                            UnitTestResult lastResult = result[result.Length - 1];
+                            lastResult.StandardOut += logListener.StandardOutput;
+                            lastResult.StandardError += logListener.StandardError;
+                            lastResult.DebugTrace += logListener.DebugTrace;
+                            lastResult.TestContextMessages += cleanupTestContextMessages;
+                        }
+                    }
+                }
             }
         }
         else
@@ -235,9 +285,105 @@ internal class TestMethodRunner
                 firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
                 firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
             }
+
+            if (_testMethodInfo is not null)
+            {
+                _classCleanupManager?.MarkTestComplete(_testMethodInfo, _test, out shouldRunClassCleanup, out shouldRunClassAndAssemblyCleanup);
+            }
+
+            try
+            {
+                // will be only included in STA if the behavior was endOfClass
+                if (shouldRunClassCleanup)
+                {
+                    _testMethodInfo?.Parent.ExecuteClassCleanup();
+                }
+            }
+            catch (Exception ex)
+            {
+                // We mainly expect TestFailedException here as each cleanup method is executed in a try-catch block but
+                // for the sake of the catch-all mechanism, let's keep it as Exception.
+                if (result.Length != 0)
+                {
+                    UnitTestResult lastResult = result[result.Length - 1];
+                    lastResult.Outcome = ObjectModel.UnitTestOutcome.Failed;
+                    lastResult.ErrorMessage = ex.Message;
+                    lastResult.ErrorStackTrace = ex.StackTrace;
+                }
+            }
+            finally
+            {
+                using LogMessageListener logListener = new(_captureDebugTraces);
+                if (result.Length != 0)
+                {
+                    string? cleanupTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
+
+                    if (result.Length > 0)
+                    {
+                        UnitTestResult lastResult = result[result.Length - 1];
+                        lastResult.StandardOut += logListener.StandardOutput;
+                        lastResult.StandardError += logListener.StandardError;
+                        lastResult.DebugTrace += logListener.DebugTrace;
+                        lastResult.TestContextMessages += cleanupTestContextMessages;
+                    }
+                }
+            }
         }
 
-        return result!;
+        if (_testMethodInfo is not null)
+        {
+            _classCleanupManager?.MarkTestComplete(_testMethodInfo, _test, out shouldRunClassCleanup, out shouldRunClassAndAssemblyCleanup);
+        }
+        var current2 = Thread.CurrentThread.GetApartmentState();
+        try
+        {
+            // if endofassembly will work both thread types the same
+            if (shouldRunClassAndAssemblyCleanup)
+            {
+                IEnumerable<TestClassInfo> classInfoCache = _typeCache.ClassInfoListWithExecutableCleanupMethods;
+                foreach (TestClassInfo classInfo in classInfoCache)
+                {
+                    classInfo.ExecuteClassCleanup();
+                }
+
+                IEnumerable<TestAssemblyInfo> assemblyInfoCache = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
+                foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
+                {
+                    assemblyInfo.ExecuteAssemblyCleanup();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // We mainly expect TestFailedException here as each cleanup method is executed in a try-catch block but
+            // for the sake of the catch-all mechanism, let's keep it as Exception.
+            if (result.Length != 0)
+            {
+                UnitTestResult lastResult = result[result.Length - 1];
+                lastResult.Outcome = ObjectModel.UnitTestOutcome.Failed;
+                lastResult.ErrorMessage = ex.Message;
+                lastResult.ErrorStackTrace = ex.StackTrace;
+            }
+        }
+        finally
+        {
+            using LogMessageListener logListener = new(_captureDebugTraces);
+            if (result.Length != 0)
+            {
+                string? cleanupTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
+
+                if (result.Length > 0)
+                {
+                    UnitTestResult lastResult = result[result.Length - 1];
+                    lastResult.StandardOut += logListener.StandardOutput;
+                    lastResult.StandardError += logListener.StandardError;
+                    lastResult.DebugTrace += logListener.DebugTrace;
+                    lastResult.TestContextMessages += cleanupTestContextMessages;
+                }
+            }
+        }
+
+        return result;
     }
 
     /// <summary>

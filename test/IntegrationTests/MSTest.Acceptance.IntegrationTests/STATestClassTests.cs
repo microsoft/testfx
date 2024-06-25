@@ -90,6 +90,12 @@ public class TestClass : IDisposable
         AssertCorrectThreadApartmentState();
     }
 
+    [ClassCleanup]
+    public static void ClassCleanup()
+    {
+        AssertCorrectThreadApartmentState();
+    }
+
     [TestInitialize]
     public void TestInitialize()
     {
