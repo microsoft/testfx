@@ -528,8 +528,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         await logger.LogDebugAsync($"Connected to named pipe '{pipeName}'");
 
         // Send the PID
+        using IProcess currentProcess = processHandler.GetCurrentProcess();
         await client.RequestReplyAsync<TestHostProcessPIDRequest, VoidResponse>(
-            new TestHostProcessPIDRequest(processHandler.GetCurrentProcess().Id),
+            new TestHostProcessPIDRequest(currentProcess.Id),
             testApplicationCancellationTokenSource.CancellationToken);
         return client;
     }
