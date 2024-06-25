@@ -243,17 +243,20 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
             if (!_firstCallTo_OnSessionStartingAsync)
             {
-                bool runFailed = _totalFailedTests > 0;
-                string passedOrFailedOrAborted = string.Format(CultureInfo.CurrentCulture, "{0}!", runFailed ? PlatformResources.Failed : PlatformResources.Passed);
-                passedOrFailedOrAborted = _totalTests == 0 ? PlatformResources.ZeroTestsRan : passedOrFailedOrAborted;
-                passedOrFailedOrAborted = _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested ? PlatformResources.Aborted : passedOrFailedOrAborted;
-                passedOrFailedOrAborted = _totalTests < _minimumExpectedTest ? string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, _totalTests, _minimumExpectedTest) : passedOrFailedOrAborted;
+                (bool isSuccess, string testRunResultMessage) = (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested, _totalTests, _totalFailedTests) switch
+                {
+                    (true, _, _) => (false, PlatformResources.Aborted),
+                    (false, _, _) when _totalTests < _minimumExpectedTest => (false, string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, _totalTests, _minimumExpectedTest)),
+                    (false, 0, _) => (false, PlatformResources.ZeroTestsRan),
+                    (false, _, > 0) => (false, string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Failed)),
+                    _ => (true, string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Passed)),
+                };
                 ConsoleColor currentForeground = _console.GetForegroundColor();
-                ConsoleColor consoleColor = runFailed ? ConsoleColor.Red : ConsoleColor.Green;
+                ConsoleColor consoleColor = isSuccess ? ConsoleColor.Green : ConsoleColor.Red;
                 try
                 {
                     _console.SetForegroundColor(consoleColor);
-                    _console.WriteLine($"{passedOrFailedOrAborted} - {PlatformResources.Failed}: {_totalFailedTests}, {PlatformResources.Passed}: {_totalPassedTests}, {PlatformResources.Skipped}: {_totalSkippedTests}, {PlatformResources.Total}: {_totalTests}{(_testRequestExecutionTimeInfo is not null ? $", Duration: {ToHumanReadableDuration(_testRequestExecutionTimeInfo.Value.TimingInfo.Duration.TotalMilliseconds)}" : string.Empty)} - {Path.GetFileName(moduleOutput)} {(runtimeInformation is null ? string.Empty : $"({runtimeInformation})")}");
+                    _console.WriteLine($"{testRunResultMessage} - {PlatformResources.Failed}: {_totalFailedTests}, {PlatformResources.Passed}: {_totalPassedTests}, {PlatformResources.Skipped}: {_totalSkippedTests}, {PlatformResources.Total}: {_totalTests}{(_testRequestExecutionTimeInfo is not null ? $", Duration: {ToHumanReadableDuration(_testRequestExecutionTimeInfo.Value.TimingInfo.Duration.TotalMilliseconds)}" : string.Empty)} - {Path.GetFileName(moduleOutput)} {(runtimeInformation is null ? string.Empty : $"({runtimeInformation})")}");
                 }
                 finally
                 {
