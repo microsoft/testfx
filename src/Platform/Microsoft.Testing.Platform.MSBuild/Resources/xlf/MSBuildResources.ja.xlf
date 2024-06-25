@@ -4,72 +4,72 @@
     <body>
       <trans-unit id="ActualValue">
         <source>Actual value: {0}</source>
-        <target state="new">Actual value: {0}</target>
+        <target state="translated">実際の値: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ExpectedValue">
         <source>Expected value: {0}</source>
-        <target state="new">Expected value: {0}</target>
+        <target state="translated">想定された値: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
-        <target state="new">Failed</target>
+        <target state="translated">失敗</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedTestDetail">
         <source>Failed test '{0}', reason '{1}'</source>
-        <target state="new">Failed test '{0}', reason '{1}'</target>
+        <target state="translated">失敗したテスト '{0}'、理由 '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="FullPathToolCalculationFailed">
         <source>Full path tool calculation failed. Runner '{0}'</source>
-        <target state="new">Full path tool calculation failed. Runner '{0}'</target>
+        <target state="translated">完全なパス ツールの計算に失敗しました。ランナー '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTargetPath">
         <source>Invalid TargetPath, {0}</source>
-        <target state="new">Invalid TargetPath, {0}</target>
+        <target state="translated">無効な TargetPath、{0}</target>
         <note />
       </trans-unit>
       <trans-unit id="MSBuildExtensionsDescription">
         <source>Extension used to pass parameters from MSBuild node and the hosts</source>
-        <target state="new">Extension used to pass parameters from MSBuild node and the hosts</target>
+        <target state="translated">MSBuild ノードおよびホストからパラメーターを渡すために使用される拡張機能</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
-        <target state="new">Passed</target>
+        <target state="translated">成功</target>
         <note />
       </trans-unit>
       <trans-unit id="RunTests">
         <source>Run tests: '{0}' [{1}|{2}]</source>
-        <target state="new">Run tests: '{0}' [{1}|{2}]</target>
+        <target state="translated">テストの実行: '{0}' [{1}|{2}]</target>
         <note />
       </trans-unit>
       <trans-unit id="StackTrace">
         <source>Stack Trace:</source>
-        <target state="new">Stack Trace:</target>
+        <target state="translated">スタック トレース:</target>
         <note />
       </trans-unit>
       <trans-unit id="Summary">
         <source>{0}! - Failed: {1}, Passed: {2}, Skipped: {3}, Total: {4}, Duration: {5}</source>
-        <target state="new">{0}! - Failed: {1}, Passed: {2}, Skipped: {3}, Total: {4}, Duration: {5}</target>
+        <target state="translated">{0}! - 不合格: {1}、合格: {2}、スキップ: {3}、合計: {4}、期間: {5}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestFailed">
         <source>Tests failed: '{0}' [{1}|{2}]</source>
-        <target state="new">Tests failed: '{0}' [{1}|{2}]</target>
+        <target state="translated">テスト失敗: '{0}' [{1}|{2}]</target>
         <note />
       </trans-unit>
       <trans-unit id="TestFailedNoDetail">
         <source>Tests failed: {0}</source>
-        <target state="new">Tests failed: {0}</target>
+        <target state="translated">テスト失敗: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestsSucceeded">
         <source>Tests succeeded: '{0}' [{1}|{2}]</source>
-        <target state="new">Tests succeeded: '{0}' [{1}|{2}]</target>
+        <target state="translated">テスト成功: '{0}' [{1}|{2}]</target>
         <note />
       </trans-unit>
     </body>

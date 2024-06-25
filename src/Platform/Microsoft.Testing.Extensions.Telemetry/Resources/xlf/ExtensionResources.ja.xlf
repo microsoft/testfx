@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AddAppInsightsTelemetryProviderInvalidBuilder">
         <source>AppInsights telemetry provider can only be registered onto Microsoft.Testing.Platform.Builder.TestApplicationBuilder builders</source>
-        <target state="new">AppInsights telemetry provider can only be registered onto Microsoft.Testing.Platform.Builder.TestApplicationBuilder builders</target>
+        <target state="translated">AppInsights テレメトリ プロバイダーは、Microsoft.Testing.Platform.Builder.TestApplicationBuilder ビルダーにのみ登録できます</target>
         <note />
       </trans-unit>
     </body>

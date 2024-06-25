@@ -4,107 +4,107 @@
     <body>
       <trans-unit id="CreatingDumpFile">
         <source>Creating dump file '{0}'</source>
-        <target state="new">Creating dump file '{0}'</target>
+        <target state="translated">Создание файла дампа "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpArtifactDescription">
         <source>The hang dump file</source>
-        <target state="new">The hang dump file</target>
+        <target state="translated">Файл дампа зависания</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpArtifactDisplayName">
         <source>Hang dump file</source>
-        <target state="new">Hang dump file</target>
+        <target state="translated">Файл дампа зависания</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
-        <target state="new">Environment variable '{0}' is set to '{1}' instead of '{2}'</target>
+        <target state="translated">Переменной среды "{0}" присвоено значение "{1}" вместо "{2}"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableIsMissingErrorMessage">
         <source>Environment variable '{0}' is not set</source>
-        <target state="new">Environment variable '{0}' is not set</target>
+        <target state="translated">Переменная среды "{0}" не задана</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpExtensionDescription">
         <source>Produce hang dump files when a test execution exceed a given time.</source>
-        <target state="new">Produce hang dump files when a test execution exceed a given time.</target>
+        <target state="translated">Создавать файлы дампа зависания при превышении заданного времени выполнения теста.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpExtensionDisplayName">
         <source>Hang dump</source>
-        <target state="new">Hang dump</target>
+        <target state="translated">Дамп зависания</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file</source>
-        <target state="new">Specify the name of the dump file</target>
+        <target state="translated">Укажите имя файла дампа зависания</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs</source>
-        <target state="new">Generate a dump file if the test process hangs</target>
+        <target state="translated">Создавать файл дампа, если тестовый процесс завис</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
         <source>Hang dump timeout of '{0}' expired</source>
-        <target state="new">Hang dump timeout of '{0}' expired</target>
+        <target state="translated">Истекло время ожидания дампа зависания "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.</source>
-        <target state="new">Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.</target>
+        <target state="translated">Укажите время ожидания, по истечении которого будет создан дамп. Значение времени ожидания указано в одном из следующих форматов: 1,5 ч, 1,5 часа, 90 м, 90 мин, 90 минут, 5400 с, 5400 сек, 5400 секунд. Значение по умолчанию — 30 м.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
         <source>'--hangdump-timeout' expects a single timeout argument</source>
-        <target state="new">'--hangdump-timeout' expects a single timeout argument</target>
+        <target state="translated">"--hangdump-timeout" ожидает один аргумент времени ожидания</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'</target>
+        <target state="translated">Укажите тип дампа. Допустимые значения: "Mini", "Heap", "Triage" (доступно только в .NET 6+) или "Full". Тип по умолчанию — "Full"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
-        <target state="new">'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</target>
+        <target state="translated">"{0}" не является допустимым типом дампа. Допустимые параметры: "Mini", "Heap", "Triage" (доступно только в .NET 6+) и "Full"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
         <source>Request of type '{0}' is not supported</source>
-        <target state="new">Request of type '{0}' is not supported</target>
+        <target state="translated">Запрос типа "{0}" не поддерживается</target>
         <note />
       </trans-unit>
       <trans-unit id="HangTestListArtifactDescription">
         <source>The list of tests that were running at the time of the hang</source>
-        <target state="new">The list of tests that were running at the time of the hang</target>
+        <target state="translated">Список тестов, которые были запущены во время зависания</target>
         <note />
       </trans-unit>
       <trans-unit id="HangTestListArtifactDisplayName">
         <source>Hang test list</source>
-        <target state="new">Hang test list</target>
+        <target state="translated">Список тестов зависаний</target>
         <note />
       </trans-unit>
       <trans-unit id="MissingHangDumpMainOption">
         <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
-        <target state="new">You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</target>
+        <target state="translated">Вы указали один или несколько параметров дампа зависания, но не включили его. Добавьте --hangdump в командную строку</target>
         <note />
       </trans-unit>
       <trans-unit id="MutexDoesNotExistErrorMessage">
         <source>Cannot find mutex '{0}'</source>
-        <target state="new">Cannot find mutex '{0}'</target>
+        <target state="translated">Не удается найти мьютекс "{0}".</target>
         <note />
       </trans-unit>
       <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
         <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="new">Mutex name wasn't received after '{0}' seconds</target>
+        <target state="translated">Имя мьютекса не было получено через "{0}" секунд</target>
         <note />
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="new">The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <target state="translated">При создании дампа все еще выполнялись следующие тесты (формат: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
         <note />
       </trans-unit>
     </body>
