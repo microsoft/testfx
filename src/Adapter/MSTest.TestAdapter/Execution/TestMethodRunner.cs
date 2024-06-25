@@ -119,7 +119,7 @@ internal class TestMethodRunner
             }
             catch
             {
-                //throw the error somehow
+                // throw the error somehow
             }
 
             void DoRunTests()
@@ -237,7 +237,7 @@ internal class TestMethodRunner
             }
         }
 
-        return result;
+        return result!;
     }
 
     /// <summary>
