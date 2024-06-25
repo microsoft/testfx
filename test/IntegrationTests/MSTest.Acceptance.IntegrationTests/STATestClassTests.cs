@@ -78,7 +78,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [STATestClass]
 public class TestClass
+public class TestClass : IDisposable
 {
+    public TestClass()
+    {
+        AssertCorrectThreadApartmentState();
+    }
     [ClassInitialize]
     public static void ClassInitialize(TestContext context)
     {
@@ -107,6 +112,11 @@ public class TestClass
     {
         var apartmentState = Thread.CurrentThread.GetApartmentState();
         Assert.AreEqual(ApartmentState.STA, apartmentState);
+    }
+
+    public void Dispose()
+    {
+        AssertCorrectThreadApartmentState();
     }
 }
 """;
