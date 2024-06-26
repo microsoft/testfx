@@ -120,14 +120,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Runtime location: {runtimeLocation}"));
 #endif
 
-            string? moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
-            moduleName = RoslynString.IsNullOrEmpty(moduleName)
-#if NETCOREAPP
-                ? _environment.ProcessPath
-#else
-                ? _process.GetCurrentProcess().MainModule.FileName
-#endif
-                : moduleName;
+            string moduleName = GetModuleName();
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Test module: {moduleName}"));
         }
 
@@ -232,6 +225,21 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                 }
             }
         }
+    }
+
+    private string GetModuleName()
+    {
+        string? testApplicationPath = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+        if (!RoslynString.IsNullOrEmpty(testApplicationPath))
+        {
+            return testApplicationPath;
+        }
+#if NETCOREAPP
+        return _environment.ProcessPath;
+#else
+        using IProcess process = _process.GetCurrentProcess();
+        return process.MainModule.FileName;
+#endif
     }
 
     public bool IsOptionSet(string optionName)
