@@ -53,8 +53,7 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
-        <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
+        <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
         <target state="needs-review-translation">Dökümün türünü belirtin. Geçerli değerler: 'Mini', 'Heap', 'Triage' veya 'Full'. Varsayılan tür: 'Full'. 
 Daha fazla bilgi için https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps adresini ziyaret edin</target>
         <note />
