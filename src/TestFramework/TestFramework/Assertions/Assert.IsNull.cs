@@ -59,7 +59,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not null.
     /// </exception>
-    public static void IsNull(object? value, string? message, params object?[]? parameters)
+    public static void IsNull(object? value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         if (value != null)
         {
@@ -114,7 +114,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
-    public static void IsNotNull([NotNull] object? value, string? message, params object?[]? parameters)
+    public static void IsNotNull([NotNull] object? value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         if (value == null)
         {
