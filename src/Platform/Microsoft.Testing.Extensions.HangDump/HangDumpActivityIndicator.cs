@@ -62,9 +62,12 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         if (_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName) &&
             !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey))
         {
-            string namedPipeSuffix = _environment.GetEnvironmentVariable(HangDumpConfiguration.MutexNameSuffix) ?? throw new InvalidOperationException($"Expected {HangDumpConfiguration.MutexNameSuffix} environment variable set.");
+            string namedPipeSuffix = _environment.GetEnvironmentVariable(HangDumpConfiguration.MutexNameSuffix)
+                ?? throw new InvalidOperationException($"Expected {HangDumpConfiguration.MutexNameSuffix} environment variable set.");
+            // @Marco: Why do we need to duplicate logic here instead of using HangDumpConfiguration.PipeNameKey?
             string pipeNameEnvironmentVariable = $"{HangDumpConfiguration.PipeName}_{FNV_1aHashHelper.ComputeStringHash(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_{namedPipeSuffix}";
-            string namedPipeName = _environment.GetEnvironmentVariable(pipeNameEnvironmentVariable) ?? throw new InvalidOperationException($"Expected {pipeNameEnvironmentVariable} environment variable set.");
+            string namedPipeName = _environment.GetEnvironmentVariable(pipeNameEnvironmentVariable)
+                ?? throw new InvalidOperationException($"Expected {pipeNameEnvironmentVariable} environment variable set.");
             _namedPipeClient = new NamedPipeClient(namedPipeName);
             _namedPipeClient.RegisterSerializer(new ActivityIndicatorMutexNameRequestSerializer(), typeof(ActivityIndicatorMutexNameRequest));
             _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
@@ -114,7 +117,8 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             await _logger.LogTraceAsync($"Mutex '{_mutexName}' sent to the process lifetime handler");
 
             // Setup the server channel with the testhost controller
-            _pipeNameDescription = NamedPipeServer.GetPipeName($"HangDumpActivityIndicator_{Guid.NewGuid():N}");
+            _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+            _logger.LogTrace($"Hang dump pipe name: '{_pipeNameDescription.Name}'");
             _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
             _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
             _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));

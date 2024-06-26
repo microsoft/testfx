@@ -20,9 +20,9 @@ internal sealed class HangDumpConfiguration
         MutexSuffix = mutexSuffix;
     }
 
-    public string PipeNameKey { get; private set; }
+    public string PipeNameKey { get; }
 
-    public string PipeNameValue { get; private set; }
+    public string PipeNameValue { get; }
 
-    public string MutexSuffix { get; private set; }
+    public string MutexSuffix { get; }
 }
