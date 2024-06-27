@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -85,6 +86,7 @@ public class StringAssertTests : TestContainer
     }
 
     // See https://github.com/dotnet/sdk/issues/25373
+    [SuppressMessage("Usage", "CA2241:Provide correct arguments to formatting methods", Justification = "We want to test invalid format")]
     public void StringAssertContainsFailsIfMessageIsInvalidStringFormatComposite()
     {
         Exception ex = VerifyThrows(() => StringAssert.Contains("a", "b", "message {{0}", "arg"));

@@ -139,7 +139,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual, string? message, params object?[]? parameters)
+    public static void AreEqual<T>(T? expected, T? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => AreEqual(expected, actual, null, message, parameters);
 
     /// <summary>
@@ -173,7 +173,7 @@ public sealed partial class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer,
-        string? message, params object?[]? parameters)
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         IEqualityComparer<T> localComparer = comparer ?? EqualityComparer<T>.Default;
         if (localComparer.Equals(expected!, actual!))
@@ -273,7 +273,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(IEquatable<T>? expected, IEquatable<T>? actual, string? message, params object?[]? parameters)
+    public static void AreEqual<T>(IEquatable<T>? expected, IEquatable<T>? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         if (actual is null && expected is null)
         {
@@ -433,7 +433,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual<T>(T? notExpected, T? actual, string? message, params object?[]? parameters)
+    public static void AreNotEqual<T>(T? notExpected, T? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => AreNotEqual(notExpected, actual, null, message, parameters);
 
     /// <summary>
@@ -467,7 +467,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T>? comparer,
-        string? message, params object?[]? parameters)
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         IEqualityComparer<T> localComparer = comparer ?? EqualityComparer<T>.Default;
         if (!localComparer.Equals(notExpected!, actual!))
@@ -561,7 +561,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(float expected, float actual, float delta, string? message,
+    public static void AreEqual(float expected, float actual, float delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         if (float.IsNaN(expected) || float.IsNaN(actual) || float.IsNaN(delta))
@@ -667,7 +667,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(float notExpected, float actual, float delta, string? message,
+    public static void AreNotEqual(float notExpected, float actual, float delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         if (Math.Abs(notExpected - actual) <= delta)
@@ -760,7 +760,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(decimal expected, decimal actual, decimal delta, string? message,
+    public static void AreEqual(decimal expected, decimal actual, decimal delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         if (Math.Abs(expected - actual) > delta)
@@ -853,7 +853,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, string? message,
+    public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         if (Math.Abs(notExpected - actual) <= delta)
@@ -946,7 +946,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(long expected, long actual, long delta, string? message,
+    public static void AreEqual(long expected, long actual, long delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         if (Math.Abs(expected - actual) > delta)
@@ -1039,7 +1039,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(long notExpected, long actual, long delta, string? message,
+    public static void AreNotEqual(long notExpected, long actual, long delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         if (Math.Abs(notExpected - actual) <= delta)
@@ -1130,7 +1130,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(double expected, double actual, double delta, string? message,
+    public static void AreEqual(double expected, double actual, double delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         if (double.IsNaN(expected) || double.IsNaN(actual) || double.IsNaN(delta))
@@ -1236,7 +1236,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(double notExpected, double actual, double delta, string? message,
+    public static void AreNotEqual(double notExpected, double actual, double delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         if (Math.Abs(notExpected - actual) <= delta)
@@ -1323,7 +1323,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase, string? message,
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
         => AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
 
@@ -1409,7 +1409,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(string? expected, string? actual, bool ignoreCase,
-        [NotNull] CultureInfo? culture, string? message, params object?[]? parameters)
+        [NotNull] CultureInfo? culture, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         CheckParameterNotNull(culture, "Assert.AreEqual", "culture", string.Empty);
         if (CompareInternal(expected, actual, ignoreCase, culture) == 0)
@@ -1510,7 +1510,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase,
-        string? message, params object?[]? parameters)
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
 
     /// <summary>
@@ -1597,7 +1597,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase,
-        CultureInfo? culture, string? message, params object?[]? parameters)
+        CultureInfo? culture, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         CheckParameterNotNull(culture, "Assert.AreNotEqual", "culture", string.Empty);
         if (CompareInternal(notExpected, actual, ignoreCase, culture) != 0)

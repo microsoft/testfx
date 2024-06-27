@@ -50,6 +50,6 @@ public sealed partial class Assert
     /// Always thrown.
     /// </exception>
     [DoesNotReturn]
-    public static void Fail(string? message, params object?[]? parameters)
+    public static void Fail([StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => ThrowAssertFailed("Assert.Fail", BuildUserMessage(message, parameters));
 }

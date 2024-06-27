@@ -51,7 +51,7 @@ public sealed partial class Assert
     /// Always thrown.
     /// </exception>
     [DoesNotReturn]
-    public static void Inconclusive(string? message, params object?[]? parameters)
+    public static void Inconclusive([StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         string userMessage = BuildUserMessage(message, parameters);
         throw new AssertInconclusiveException(
