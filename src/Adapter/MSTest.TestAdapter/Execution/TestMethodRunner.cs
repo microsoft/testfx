@@ -87,8 +87,6 @@ internal class TestMethodRunner
         bool shouldRunClassCleanup = false;
         bool shouldRunClassAndAssemblyCleanup = false;
 
-        var threadState = Thread.CurrentThread.GetApartmentState();
-
         using (LogMessageListener logListener = new(_captureDebugTraces))
         {
             try
@@ -105,8 +103,7 @@ internal class TestMethodRunner
                 initializationTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
             }
         }
-        var current = Thread.CurrentThread.GetApartmentState();
-        // is staTestClass && widows && !STA => do it
+
         if (_testMethodInfo.Parent.ClassAttribute is STATestClassAttribute
             && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
@@ -330,11 +327,6 @@ internal class TestMethodRunner
             }
         }
 
-        if (_testMethodInfo is not null)
-        {
-            _classCleanupManager?.MarkTestComplete(_testMethodInfo, _test, out shouldRunClassCleanup, out shouldRunClassAndAssemblyCleanup);
-        }
-        var current2 = Thread.CurrentThread.GetApartmentState();
         try
         {
             // if endofassembly will work both thread types the same
