@@ -28,7 +28,9 @@ internal class UnitTestRunner : MarshalByRefObject
     /// <summary>
     /// Type cache.
     /// </summary>
-    private readonly TypeCache _typeCache;
+#pragma warning disable SA1401 // Fields should be private
+    internal readonly TypeCache _typeCache;
+#pragma warning restore SA1401 // Fields should be private
 
     /// <summary>
     /// Reflect helper.
@@ -38,7 +40,9 @@ internal class UnitTestRunner : MarshalByRefObject
     /// <summary>
     /// Class cleanup manager.
     /// </summary>
-    private ClassCleanupManager? _classCleanupManager;
+#pragma warning disable SA1401 // Fields should be private
+    internal ClassCleanupManager? _classCleanupManager;
+#pragma warning restore SA1401 // Fields should be private
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.

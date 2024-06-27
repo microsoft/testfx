@@ -4,6 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text;
+using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -39,6 +40,8 @@ public class TestMethodRunnerTests : TestContainer
     private readonly TestMethodOptions _testMethodOptions;
 
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
+
+    private readonly UnitTestRunner _unitTestRunner;
 
     public TestMethodRunnerTests()
     {
@@ -91,6 +94,8 @@ public class TestMethodRunnerTests : TestContainer
         _testablePlatformServiceProvider.SetupMockReflectionOperations();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
+        _unitTestRunner = new UnitTestRunner(GetSettingsWithDebugTrace(false));
+
         ReflectHelper.Instance.ClearCache();
     }
 
@@ -127,7 +132,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         // Act.
-        UnitTestResult[] results = testMethodRunner.Execute();
+        UnitTestResult[] results = testMethodRunner.Execute(_unitTestRunner._classCleanupManager, _unitTestRunner._typeCache);
 
         // Assert.
         Verify(results[0].Outcome == AdapterTestOutcome.Failed);
@@ -159,7 +164,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         // Act.
-        UnitTestResult[] results = testMethodRunner.Execute();
+        UnitTestResult[] results = testMethodRunner.Execute(_unitTestRunner._classCleanupManager, _unitTestRunner._typeCache);
 
         // Assert.
         Verify(results[0].Outcome == AdapterTestOutcome.Failed);
@@ -171,7 +176,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => throw new Exception("DummyException"));
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
-        UnitTestResult[] results = testMethodRunner.Execute();
+        UnitTestResult[] results = testMethodRunner.Execute(_unitTestRunner._classCleanupManager, _unitTestRunner._typeCache);
         Verify(results[0].Outcome == AdapterTestOutcome.Failed);
         Verify(results[0].ErrorMessage.Contains("Exception thrown while executing test"));
     }
@@ -181,7 +186,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
-        UnitTestResult[] results = testMethodRunner.Execute();
+        UnitTestResult[] results = testMethodRunner.Execute(_unitTestRunner._classCleanupManager, _unitTestRunner._typeCache);
         Verify(results[0].Outcome == AdapterTestOutcome.Passed);
     }
 
@@ -193,7 +198,7 @@ public class TestMethodRunnerTests : TestContainer
         StringWriter writer = new(new StringBuilder("DummyTrace"));
         _testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
 
-        UnitTestResult[] results = testMethodRunner.Execute();
+        UnitTestResult[] results = testMethodRunner.Execute(_unitTestRunner._classCleanupManager, _unitTestRunner._typeCache);
         Verify(results[0].DebugTrace == string.Empty);
     }
 
@@ -215,7 +220,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, true);
         _testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
 
-        UnitTestResult[] results = testMethodRunner.Execute();
+        UnitTestResult[] results = testMethodRunner.Execute(_unitTestRunner._classCleanupManager, _unitTestRunner._typeCache);
 
         Verify(results[0].DebugTrace == string.Empty);
     }
@@ -250,7 +255,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, localTestMethodOptions, null);
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
-        UnitTestResult[] results = testMethodRunner.Execute();
+        UnitTestResult[] results = testMethodRunner.Execute(_unitTestRunner._classCleanupManager, _unitTestRunner._typeCache);
         Verify(results.Length == 2);
 
         Verify(results[0].Outcome == AdapterTestOutcome.Passed);
@@ -262,7 +267,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
-        UnitTestResult[] results = testMethodRunner.Execute();
+        UnitTestResult[] results = testMethodRunner.Execute(_unitTestRunner._classCleanupManager, _unitTestRunner._typeCache);
         Verify(results[0].Outcome == AdapterTestOutcome.Passed);
     }
 
@@ -271,7 +276,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Failed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
-        UnitTestResult[] results = testMethodRunner.Execute();
+        UnitTestResult[] results = testMethodRunner.Execute(_unitTestRunner._classCleanupManager, _unitTestRunner._typeCache);
         Verify(results[0].Outcome == AdapterTestOutcome.Failed);
     }
 
@@ -472,6 +477,30 @@ public class TestMethodRunnerTests : TestContainer
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
         => throw new ArgumentException();
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
+
+    private MSTestSettings GetSettingsWithDebugTrace(bool captureDebugTraceValue)
+    {
+        string runSettingsXml =
+            $"""
+             <RunSettings>
+               <MSTest>
+                 <CaptureTraceOutput>{captureDebugTraceValue}</CaptureTraceOutput>
+               </MSTest>
+             </RunSettings>
+             """;
+
+        _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
+            .Callback((XmlReader actualReader) =>
+            {
+                if (actualReader != null)
+                {
+                    actualReader.Read();
+                    actualReader.ReadInnerXml();
+                }
+            });
+
+        return MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName);
+    }
 
     public class TestableTestmethodInfo : TestMethodInfo
     {
