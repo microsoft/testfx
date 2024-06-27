@@ -31,8 +31,8 @@ public sealed class STATestClassTests : AcceptanceTestBase
         }
 
         var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
-
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -53,6 +53,14 @@ public sealed class STATestClassTests : AcceptanceTestBase
         }
 
         private const string SourceCode = """
+#file mta.runsettings
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+        <ExecutionThreadApartmentState>MTA</ExecutionThreadApartmentState>
+    </RunConfiguration>
+</RunSettings>
+
 #file STATestClass.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -79,42 +87,59 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [STATestClass]
 public class TestClass : IDisposable
 {
+    [AssemblyInitialize]
+    public static void AssemblyInitialize(TestContext context)
+    {
+        AssertCorrectThreadApartmentMTAState();
+    }
+
+    [AssemblyCleanup]
+    public static void AssemblyCleanup()
+    {
+        AssertCorrectThreadApartmentMTAState();
+    }
     public TestClass()
     {
-        AssertCorrectThreadApartmentState();
+        AssertCorrectThreadApartmentSTAState();
     }
 
     [ClassInitialize]
     public static void ClassInitialize(TestContext context)
     {
-        AssertCorrectThreadApartmentState();
+        AssertCorrectThreadApartmentSTAState();
     }
 
     [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
     public static void ClassCleanup()
     {
-        AssertCorrectThreadApartmentState();
+        AssertCorrectThreadApartmentSTAState();
     }
 
     [TestInitialize]
     public void TestInitialize()
     {
-        AssertCorrectThreadApartmentState();
+        AssertCorrectThreadApartmentSTAState();
     }
 
     [TestCleanup]
     public void TestCleanup()
     {
-        AssertCorrectThreadApartmentState();
+        AssertCorrectThreadApartmentSTAState();
     }
 
     [TestMethod]
     public void TestMethod1()
     {
-        AssertCorrectThreadApartmentState();
+        AssertCorrectThreadApartmentSTAState();
     }
 
-    private static void AssertCorrectThreadApartmentState()
+    private static void AssertCorrectThreadApartmentMTAState()
+    {
+        var apartmentState = Thread.CurrentThread.GetApartmentState();
+        Assert.AreEqual(ApartmentState.MTA, apartmentState);
+    }
+
+    private static void AssertCorrectThreadApartmentSTAState()
     {
         var apartmentState = Thread.CurrentThread.GetApartmentState();
         Assert.AreEqual(ApartmentState.STA, apartmentState);
@@ -122,7 +147,7 @@ public class TestClass : IDisposable
 
     public void Dispose()
     {
-        AssertCorrectThreadApartmentState();
+        AssertCorrectThreadApartmentSTAState();
     }
 }
 """;
