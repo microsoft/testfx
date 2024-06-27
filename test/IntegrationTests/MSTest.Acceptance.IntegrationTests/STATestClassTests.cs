@@ -90,7 +90,7 @@ public class TestClass : IDisposable
         AssertCorrectThreadApartmentState();
     }
 
-    [ClassCleanup]
+    [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
     public static void ClassCleanup()
     {
         AssertCorrectThreadApartmentState();
