@@ -4,107 +4,107 @@
     <body>
       <trans-unit id="CreatingDumpFile">
         <source>Creating dump file '{0}'</source>
-        <target state="new">Creating dump file '{0}'</target>
+        <target state="translated">Criando arquivo de despejo ''{0}''</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpArtifactDescription">
         <source>The hang dump file</source>
-        <target state="new">The hang dump file</target>
+        <target state="translated">O arquivo de despejo de travamento</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpArtifactDisplayName">
         <source>Hang dump file</source>
-        <target state="new">Hang dump file</target>
+        <target state="translated">Arquivo de despejo de travamento</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
-        <target state="new">Environment variable '{0}' is set to '{1}' instead of '{2}'</target>
+        <target state="translated">A variável de ambiente ''{0}'' ambiente está definida como ''{1}'' em vez de ''{2}''</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableIsMissingErrorMessage">
         <source>Environment variable '{0}' is not set</source>
-        <target state="new">Environment variable '{0}' is not set</target>
+        <target state="translated">A variável de ambiente ''{0}'' não está definida</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpExtensionDescription">
         <source>Produce hang dump files when a test execution exceed a given time.</source>
-        <target state="new">Produce hang dump files when a test execution exceed a given time.</target>
+        <target state="translated">Produzir arquivos de despejo de travamento quando uma execução de teste exceder um determinado tempo.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpExtensionDisplayName">
         <source>Hang dump</source>
-        <target state="new">Hang dump</target>
+        <target state="translated">Despejo de travamento</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file</source>
-        <target state="new">Specify the name of the dump file</target>
+        <target state="translated">Especifique o nome do arquivo de despejo</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs</source>
-        <target state="new">Generate a dump file if the test process hangs</target>
+        <target state="translated">Gerar um arquivo de despejo se o processo de teste travar</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
         <source>Hang dump timeout of '{0}' expired</source>
-        <target state="new">Hang dump timeout of '{0}' expired</target>
+        <target state="translated">Tempo limite de despejo de travamento de ''{0}'' expirado</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.</source>
-        <target state="new">Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.</target>
+        <target state="translated">Especifique o tempo limite após o qual o despejo será gerado. O valor de tempo limite é especificado em um dos seguintes formatos: 1.5h, 1,5hora, 1,5horas, 90m, 90min, 90minuto, 90minutos 5400s, 5400seg, 5400segundo, 5400segundos. O padrão é 30m.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
         <source>'--hangdump-timeout' expects a single timeout argument</source>
-        <target state="new">'--hangdump-timeout' expects a single timeout argument</target>
+        <target state="translated">''--hangdump-timeout'' espera um único argumento de tempo limite</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'</target>
+        <target state="translated">Especifique o tipo de despejo. Os valores válidos são ''Mini'', ''Heap'', ''Triage'' (disponível somente no .NET 6+) e ''Full'' O tipo padrão é ''Full''</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
-        <target state="new">'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</target>
+        <target state="translated">''{0}'' não é um tipo de despejo válido. As opções válidas são ''Mini'', ''Heap'', ''Triage'' (disponível somente no .NET 6+) e ''Full''</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
         <source>Request of type '{0}' is not supported</source>
-        <target state="new">Request of type '{0}' is not supported</target>
+        <target state="translated">Não há suporte para a solicitação do tipo ''{0}''</target>
         <note />
       </trans-unit>
       <trans-unit id="HangTestListArtifactDescription">
         <source>The list of tests that were running at the time of the hang</source>
-        <target state="new">The list of tests that were running at the time of the hang</target>
+        <target state="translated">A lista de testes que estavam sendo executados no momento do travamento</target>
         <note />
       </trans-unit>
       <trans-unit id="HangTestListArtifactDisplayName">
         <source>Hang test list</source>
-        <target state="new">Hang test list</target>
+        <target state="translated">Lista de testes de travamento</target>
         <note />
       </trans-unit>
       <trans-unit id="MissingHangDumpMainOption">
         <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
-        <target state="new">You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</target>
+        <target state="translated">Você especificou um ou mais parâmetros de hang dump, mas não os ativou, adicione --hangdump à linha de comando</target>
         <note />
       </trans-unit>
       <trans-unit id="MutexDoesNotExistErrorMessage">
         <source>Cannot find mutex '{0}'</source>
-        <target state="new">Cannot find mutex '{0}'</target>
+        <target state="translated">Não é possível localizar o mutex ''{0}''</target>
         <note />
       </trans-unit>
       <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
         <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="new">Mutex name wasn't received after '{0}' seconds</target>
+        <target state="translated">O nome do mutex não foi recebido após ''{0}'' segundos</target>
         <note />
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="new">The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <target state="translated">Os testes a seguir ainda estavam em execução quando o despejo foi realizado (formato: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
         <note />
       </trans-unit>
     </body>

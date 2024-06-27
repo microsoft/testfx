@@ -35,8 +35,8 @@ public class NativeAotTests : AcceptanceTestBase
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="MSTest.Engine" Version="$MicrosoftTestingExtensionsVersion$" />
-        <PackageReference Include="MSTest.SourceGeneration" Version="$MicrosoftTestingExtensionsVersion$" />
+        <PackageReference Include="MSTest.Engine" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
+        <PackageReference Include="MSTest.SourceGeneration" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
         <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
     </ItemGroup>
 </Project>
@@ -97,7 +97,7 @@ public class UnitTest1
            "NativeAotTests",
            testCode
            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-           .PatchCodeWithReplace("$MicrosoftTestingExtensionsVersion$", MicrosoftTestingExtensionsVersion)
+           .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent.Arguments)
            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
            addPublicFeeds: true);

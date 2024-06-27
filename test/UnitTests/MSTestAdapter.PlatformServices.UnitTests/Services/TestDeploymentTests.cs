@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -252,8 +252,7 @@ public class TestDeploymentTests : TestContainer
     }
 
     // TODO: This test has to have mocks. It actually deploys stuff and we cannot assume that all the dependencies get copied over to bin\debug.
-    [Ignore]
-    public void DeployShouldReturnTrueWhenDeploymentEnabledSetToTrueAndHasDeploymentItems()
+    internal void DeployShouldReturnTrueWhenDeploymentEnabledSetToTrueAndHasDeploymentItems()
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), typeof(TestDeploymentTests).Assembly.Location);
         KeyValuePair<string, string>[] kvpArray =

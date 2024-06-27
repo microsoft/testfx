@@ -97,7 +97,7 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> does not contain
     /// element <paramref name="element"/>.
     /// </exception>
-    public static void Contains([NotNull] ICollection? collection, object? element, string? message,
+    public static void Contains([NotNull] ICollection? collection, object? element, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.Contains", "collection", string.Empty);
@@ -174,7 +174,7 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains
     /// element <paramref name="element"/>.
     /// </exception>
-    public static void DoesNotContain([NotNull] ICollection? collection, object? element, string? message,
+    public static void DoesNotContain([NotNull] ICollection? collection, object? element, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.DoesNotContain", "collection", string.Empty);
@@ -235,7 +235,7 @@ public sealed class CollectionAssert
     /// <exception cref="AssertFailedException">
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains a null element.
     /// </exception>
-    public static void AllItemsAreNotNull([NotNull] ICollection? collection, string? message,
+    public static void AllItemsAreNotNull([NotNull] ICollection? collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreNotNull", "collection", string.Empty);
@@ -300,7 +300,7 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains at least one duplicate
     /// element.
     /// </exception>
-    public static void AllItemsAreUnique([NotNull] ICollection? collection, string? message,
+    public static void AllItemsAreUnique([NotNull] ICollection? collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreUnique", "collection", string.Empty);
@@ -424,7 +424,7 @@ public sealed class CollectionAssert
     /// or <paramref name="subset"/> contains at least one element not contained in
     /// <paramref name="superset"/>.
     /// </exception>
-    public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message,
+    public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsSubsetOf", "subset", string.Empty);
@@ -499,7 +499,7 @@ public sealed class CollectionAssert
     /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
     /// or all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
     /// </exception>
-    public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message,
+    public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsNotSubsetOf", "subset", string.Empty);
@@ -589,7 +589,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
-        string? message, params object?[]? parameters)
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => AreEquivalent(expected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, message, parameters);
 
     /// <summary>
@@ -685,7 +685,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreEquivalent<T>(
         [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
-        string? message, params object?[]? parameters)
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
 
@@ -820,7 +820,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreNotEquivalent(
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
-        string? message, params object?[]? parameters)
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => AreNotEquivalent(expected?.Cast<object>(), actual?.Cast<object>(), comparer: EqualityComparer<object>.Default, message, parameters);
 
     /// <summary>
@@ -919,7 +919,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreNotEquivalent<T>(
         [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
-        string? message, params object?[]? parameters)
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
 
@@ -1049,7 +1049,7 @@ public sealed class CollectionAssert
     /// <paramref name="expectedType"/>.
     /// </exception>
     public static void AllItemsAreInstancesOfType(
-        [NotNull] ICollection? collection, [NotNull] Type? expectedType, string? message, params object?[]? parameters)
+        [NotNull] ICollection? collection, [NotNull] Type? expectedType, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreInstancesOfType", "collection", string.Empty);
         Assert.CheckParameterNotNull(expectedType, "CollectionAssert.AllItemsAreInstancesOfType", "expectedType", string.Empty);
@@ -1152,7 +1152,7 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(ICollection? expected, ICollection? actual, string? message,
+    public static void AreEqual(ICollection? expected, ICollection? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         string reason = string.Empty;
@@ -1237,7 +1237,7 @@ public sealed class CollectionAssert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, string? message,
+    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         string reason = string.Empty;
@@ -1330,7 +1330,7 @@ public sealed class CollectionAssert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer,
-        string? message, params object?[]? parameters)
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         string reason = string.Empty;
         if (!AreCollectionsEqual(expected, actual, comparer, ref reason))
@@ -1422,7 +1422,7 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer,
-        string? message, params object?[]? parameters)
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         string reason = string.Empty;
         if (AreCollectionsEqual(notExpected, actual, comparer, ref reason))

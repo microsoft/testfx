@@ -4,74 +4,72 @@
     <body>
       <trans-unit id="CannotFindExpectedCrashDumpFile">
         <source>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</source>
-        <target state="new">Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</target>
+        <target state="translated">Не удалось найти ожидаемый файл аварийного дампа "{0}". Все файлы, соответствующие шаблону "*.dmp", будут скопированы в папку результатов.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDescription">
         <source>The testhost process crash dump file</source>
-        <target state="new">The testhost process crash dump file</target>
+        <target state="translated">Файл аварийного дампа тестового хост-процесса</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDisplayName">
         <source>Crash dump file</source>
-        <target state="new">Crash dump file</target>
+        <target state="translated">Файл аварийного дампа</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
         <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="new">[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</target>
+        <target state="translated">[только net6.0 и выше] Создавать файлы аварийного дампа при неожиданном сбое процесса выполнения теста</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
         <source>Crash dump</source>
-        <target state="new">Crash dump</target>
+        <target state="translated">Аварийный дамп</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file</source>
-        <target state="new">Specify the name of the dump file</target>
+        <target state="translated">Укажите имя файла дампа зависания</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
         <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
-        <target state="new">Environment variable '{0}' should have been set to '{1}' but value is '{2}'</target>
+        <target state="translated">Для переменной среды "{0}" должно быть задано значение "{1}", но задано значение "{2}"</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
         <source>Crash dump feature is only available in .NET (Core)</source>
-        <target state="new">Crash dump feature is only available in .NET (Core)</target>
+        <target state="translated">Функция аварийного дампа доступна только в .NET (Core)</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
-        <target state="new">[net6.0+ only] Generate a dump file if the test process crashes</target>
+        <target state="translated">[только net6.0 и выше] Создавать файл дампа в случае сбоя тестового процесса</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
-        <target state="new">Test host process with PID '{0}' crashed, a dump file was generated</target>
+        <target state="translated">Произошло аварийное завершение тестового хост-процесса с идентификатором процесса "{0}". Создан файл дампа</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
-        <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. 
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
-        <target state="new">Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. 
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
+        <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
+        <target state="new">Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
-        <target state="new">'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</target>
+        <target state="translated">"{0}" не является допустимым типом дампа. Допустимые параметры: "Mini", "Heap", "Triage" и "Full"</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">
         <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
-        <target state="new">'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</target>
+        <target state="translated">"--hangdump-type" ожидает в качестве аргумента один тип дампа (например, "--crashdump-type Heap")</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
-        <target state="new">Requests of type '{0}' is not supported</target>
+        <target state="translated">Запросы типа "{0}" не поддерживаются</target>
         <note />
       </trans-unit>
     </body>

@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="FixAssertionArgsOrder">
         <source>Fix actual/expected arguments order</source>
-        <target state="new">Fix actual/expected arguments order</target>
+        <target state="translated">修复实际/预期参数顺序</target>
         <note />
       </trans-unit>
       <trans-unit id="FixSignatureCodeFix">

@@ -84,6 +84,7 @@ UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter TestCategory=category|Priority=1");
 
         testHostResult.AssertOutputContains("Zero tests ran");
+        testHostResult.AssertExitCodeIs(8);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]

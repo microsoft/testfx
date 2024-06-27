@@ -4,74 +4,72 @@
     <body>
       <trans-unit id="CannotFindExpectedCrashDumpFile">
         <source>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</source>
-        <target state="new">Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</target>
+        <target state="translated">Il file di dump di arresto anomalo '{0}' previsto non è stato trovato. Tutti i file corrispondenti al criterio '*.dmp' verranno copiati nella cartella dei risultati.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDescription">
         <source>The testhost process crash dump file</source>
-        <target state="new">The testhost process crash dump file</target>
+        <target state="translated">File di dump di arresto anomalo del processo testhost</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDisplayName">
         <source>Crash dump file</source>
-        <target state="new">Crash dump file</target>
+        <target state="translated">File di dump di arresto anomalo del sistema</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
         <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="new">[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</target>
+        <target state="translated">[solo net6.0+] Generazione di file di dump di arresto anomalo quando il processo di esecuzione del test si arresta in modo imprevisto</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
         <source>Crash dump</source>
-        <target state="new">Crash dump</target>
+        <target state="translated">Dump di arresto anomalo del sistema</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file</source>
-        <target state="new">Specify the name of the dump file</target>
+        <target state="translated">Specificare il nome del file di dump</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
         <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
-        <target state="new">Environment variable '{0}' should have been set to '{1}' but value is '{2}'</target>
+        <target state="translated">La variabile di ambiente '{0}' avrebbe dovuto essere impostata su '{1}' ma il valore è '{2}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
         <source>Crash dump feature is only available in .NET (Core)</source>
-        <target state="new">Crash dump feature is only available in .NET (Core)</target>
+        <target state="translated">La funzionalità dump di arresto anomalo del sistema è disponibile solo in .NET (Core)</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
-        <target state="new">[net6.0+ only] Generate a dump file if the test process crashes</target>
+        <target state="translated">[solo net6.0+ ] Generazione di un file di dump in caso di arresto anomalo del processo di test</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
-        <target state="new">Test host process with PID '{0}' crashed, a dump file was generated</target>
+        <target state="translated">Il processo host di test con PID '{0}' si è arrestato in modo anomalo. È stato generato un file di dump</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
-        <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. 
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
-        <target state="new">Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. 
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
+        <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
+        <target state="new">Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
-        <target state="new">'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</target>
+        <target state="translated">'{0}' non è un tipo di dump valido. Le opzioni valide sono 'Mini', 'Heap', 'Triage' e 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">
         <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
-        <target state="new">'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</target>
+        <target state="translated">'--crashdump-type' prevede un singolo tipo di dump come argomento (ad esempio '--crashdump-type Heap')</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
-        <target state="new">Requests of type '{0}' is not supported</target>
+        <target state="translated">Le richieste di tipo '{0}' non sono supportate</target>
         <note />
       </trans-unit>
     </body>

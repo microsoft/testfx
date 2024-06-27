@@ -132,7 +132,7 @@ let main args =
                         sourceCode
                         .PatchCodeWithReplace("$TargetFrameworks$", tfm)
                         .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                        .PatchCodeWithReplace("$MicrosoftTestingExtensionsVersion$", MicrosoftTestingExtensionsVersion));
+                        .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
                     DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.{languageFileExtension}proj", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
                     string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
                     compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);

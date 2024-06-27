@@ -22,7 +22,6 @@ public static class TrxReportExtensions
             throw new InvalidOperationException(ExtensionResources.InvalidTestApplicationBuilderType);
         }
 
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName($"trxpipename.{Guid.NewGuid():N}");
         var commandLine = new TrxReportGeneratorCommandLine();
 
         var compositeTestSessionTrxService =
@@ -42,29 +41,37 @@ public static class TrxReportExtensions
                 serviceProvider.GetLoggerFactory().CreateLogger<TrxReportGenerator>()));
 
         builder.TestHost.AddTestApplicationLifecycleCallbacks(serviceProvider =>
-        new TrxTestApplicationLifecycleCallbacks(
-            serviceProvider.GetCommandLineOptions(),
-            serviceProvider.GetEnvironment()));
+            new TrxTestApplicationLifecycleCallbacks(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetEnvironment()));
         builder.TestHost.AddDataConsumer(compositeTestSessionTrxService);
         builder.TestHost.AddTestSessionLifetimeHandle(compositeTestSessionTrxService);
 
         builder.CommandLine.AddProvider(() => commandLine);
 
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
         var compositeLifeTimeHandler =
             new CompositeExtensionFactory<TrxProcessLifetimeHandler>(serviceProvider =>
-                new TrxProcessLifetimeHandler(
-                serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetEnvironment(),
-                serviceProvider.GetLoggerFactory(),
-                serviceProvider.GetMessageBus(),
-                serviceProvider.GetTestApplicationModuleInfo(),
-                serviceProvider.GetConfiguration(),
-                serviceProvider.GetSystemClock(),
-                serviceProvider.GetTask(),
-                pipeNameDescription));
+            {
+                serviceProvider.GetLoggerFactory().CreateLogger<TrxProcessLifetimeHandler>().LogTrace($"TRX pipe name: '{pipeNameDescription.Name}");
+                return new TrxProcessLifetimeHandler(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetLoggerFactory(),
+                    serviceProvider.GetMessageBus(),
+                    serviceProvider.GetTestApplicationModuleInfo(),
+                    serviceProvider.GetConfiguration(),
+                    serviceProvider.GetSystemClock(),
+                    serviceProvider.GetTask(),
+                    pipeNameDescription);
+            });
         ((TestHostControllersManager)builder.TestHostControllers).AddDataConsumer(compositeLifeTimeHandler);
         builder.TestHostControllers.AddProcessLifetimeHandler(compositeLifeTimeHandler);
-        builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider => new TrxEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), pipeNameDescription.Name));
+        builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider =>
+        {
+            serviceProvider.GetLoggerFactory().CreateLogger<TrxEnvironmentVariableProvider>().LogTrace($"TRX pipe name: '{pipeNameDescription.Name}");
+            return new TrxEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), pipeNameDescription.Name);
+        });
 
         ToolTrxCompareFactory toolTrxCompareFactory = new();
         TrxCompareToolCommandLine createTrxCompareToolCommandLine = toolTrxCompareFactory.CreateTrxCompareToolCommandLine();

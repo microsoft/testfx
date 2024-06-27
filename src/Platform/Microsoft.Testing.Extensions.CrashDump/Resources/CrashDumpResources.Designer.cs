@@ -151,8 +151,7 @@ namespace Microsoft.Testing.Extensions.Diagnostics.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specify the type of the dump. Valid values are &apos;Mini&apos;, &apos;Heap&apos;, &apos;Triage&apos; or &apos;Full&apos;. Default type is &apos;Full&apos;. 
-        ///For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.
+        ///   Looks up a localized string similar to Specify the type of the dump. Valid values are &apos;Mini&apos;, &apos;Heap&apos;, &apos;Triage&apos; or &apos;Full&apos;. Default type is &apos;Full&apos;. For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.
         /// </summary>
         internal static string CrashDumpTypeOptionDescription {
             get {

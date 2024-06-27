@@ -4,37 +4,37 @@
     <body>
       <trans-unit id="RunSettingsOptionDescription">
         <source>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</source>
-        <target state="new">The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</target>
+        <target state="translated">Der relative oder absolute Pfad zur Datei „.runsettings“. Weitere Informationen und Beispiele zum Konfigurieren des Testlaufs finden Sie unter https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</target>
         <note />
       </trans-unit>
       <trans-unit id="RunsettingsFileCannotBeRead">
         <source>runsettings file '{0}' cannot be read</source>
-        <target state="new">runsettings file '{0}' cannot be read</target>
+        <target state="translated">Runsettings-Datei „{0}“ kann nicht gelesen werden.</target>
         <note />
       </trans-unit>
       <trans-unit id="RunsettingsFileDoesNotExist">
         <source>runsettings file '{0}' does not exist</source>
-        <target state="new">runsettings file '{0}' does not exist</target>
+        <target state="translated">Runsettings-Datei „{0}“ ist nicht vorhanden.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCaseFilterOptionDescription">
         <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
-        <target state="new">Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
+        <target state="translated">Filtert Tests mithilfe des angegebenen Ausdrucks. Weitere Informationen finden Sie im Abschnitt „Filteroptionsdetails“. Weitere Informationen und Beispiele zur Verwendung der selektiven Komponententestfilterung finden Sie unter https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestRunParameterOptionArgumentIsNotParameter">
         <source>argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</source>
-        <target state="new">argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</target>
+        <target state="translated">Das Argument „{0}“ ist kein Parameter. Parameterargumente stimmen mit dem folgenden Muster „key=value“ überein.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestRunParameterOptionDescription">
         <source>Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</source>
-        <target state="new">Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</target>
+        <target state="translated">Geben Sie einen Schlüssel-Wert-Paarparameter an, oder überschreiben Sie diesen. Weitere Informationen und Beispiele finden Sie unter https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</target>
         <note />
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
         <source>The bridged framework supports only one session at a time. A session with UID {0} is already open.</source>
-        <target state="new">The bridged framework supports only one session at a time. A session with UID {0} is already open.</target>
+        <target state="translated">Das Brückenframework unterstützt jeweils nur eine Sitzung. Eine Sitzung mit UID {0} ist bereits geöffnet.</target>
         <note />
       </trans-unit>
     </body>
