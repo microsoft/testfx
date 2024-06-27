@@ -86,9 +86,10 @@ internal class TestMethodRunner
 
         bool shouldRunClassCleanup = false;
         bool shouldRunClassAndAssemblyCleanup = false;
-
-        using (LogMessageListener logListener = new(_captureDebugTraces))
+        bool runFailed = false;
+        try
         {
+            using LogMessageListener logListener = new(_captureDebugTraces);
             try
             {
                 // Run the assembly Initialize methods if required.
@@ -103,10 +104,36 @@ internal class TestMethodRunner
                 initializationTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
             }
         }
+        catch (TestFailedException ex)
+        {
+            runFailed = true;
+            result = [new UnitTestResult(ex)];
+        }
+        catch (Exception ex)
+        {
+            runFailed = true;
+            if (result == null || result.Length == 0)
+            {
+                result = [new UnitTestResult()];
+            }
+
+#pragma warning disable IDE0056 // Use index operator
+            var newResult = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
+            {
+                StandardOut = result[result.Length - 1].StandardOut,
+                StandardError = result[result.Length - 1].StandardError,
+                DebugTrace = result[result.Length - 1].DebugTrace,
+                TestContextMessages = result[result.Length - 1].TestContextMessages,
+                Duration = result[result.Length - 1].Duration,
+            };
+            result[result.Length - 1] = newResult;
+#pragma warning restore IDE0056 // Use index operator
+        }
 
         if (_testMethodInfo.Parent.ClassAttribute is STATestClassAttribute
             && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+            && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA
+            && !runFailed)
         {
             Thread entryPointThread = new(new ThreadStart(DoRunTests))
             {
@@ -126,9 +153,14 @@ internal class TestMethodRunner
                 // throw the error somehow
             }
         }
-        else
+        else if (!runFailed)
         {
             DoRunTests();
+        }
+
+        if (!runFailed)
+        {
+            RunClassCleanup();
         }
 
         // run assemblyCleanup and classCleanup(with endOfAssembly behavior)
@@ -236,6 +268,11 @@ internal class TestMethodRunner
                 firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
             }
 
+            RunClassCleanup();
+        }
+
+        void RunClassCleanup()
+        {
             if (_testMethodInfo is not null)
             {
                 _classCleanupManager?.MarkTestComplete(_testMethodInfo, _test, out shouldRunClassCleanup, out shouldRunClassAndAssemblyCleanup);
@@ -253,7 +290,7 @@ internal class TestMethodRunner
             {
                 // We mainly expect TestFailedException here as each cleanup method is executed in a try-catch block but
                 // for the sake of the catch-all mechanism, let's keep it as Exception.
-                if (result.Length != 0)
+                if (result!.Length != 0)
                 {
                     UnitTestResult lastResult = result[result.Length - 1];
                     lastResult.Outcome = ObjectModel.UnitTestOutcome.Failed;
@@ -266,7 +303,7 @@ internal class TestMethodRunner
                 using LogMessageListener logListener = new(_captureDebugTraces);
                 string? cleanupTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
 
-                if (result.Length > 0)
+                if (result!.Length > 0)
                 {
                     UnitTestResult lastResult = result[result.Length - 1];
                     lastResult.StandardOut += logListener.StandardOutput;
