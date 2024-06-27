@@ -23,7 +23,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task STATestClass_OnWindows_ThreadIsSTA(string currentTfm)
+    public async Task STATestClass_OnWindows_LifeCycle(string currentTfm)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -32,7 +32,23 @@ public sealed class STATestClassTests : AcceptanceTestBase
 
         var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filtr className=LifeCycleTestClass");
+
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContains("Passed!");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task STATestClass_OnWindows_ClassCleanupWithEndOfAssemblyBehavior_IsNotInsideTheSTAThread(string currentTfm)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filtr className=TestClassWithClassCleanupEndOfAssembly");
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -85,69 +101,117 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [STATestClass]
-public class TestClass : IDisposable
+public class LifeCycleTestClass : IDisposable
 {
     [AssemblyInitialize]
     public static void AssemblyInitialize(TestContext context)
     {
-        AssertCorrectThreadApartmentMTAState();
+        Helper.AssertCorrectThreadApartmentMTAState();
     }
 
     [AssemblyCleanup]
     public static void AssemblyCleanup()
     {
-        AssertCorrectThreadApartmentMTAState();
+        Helper.AssertCorrectThreadApartmentMTAState();
     }
-    public TestClass()
+
+    public LifeCycleTestClass()
     {
-        AssertCorrectThreadApartmentSTAState();
+        Helper.AssertCorrectThreadApartmentSTAState();
     }
 
     [ClassInitialize]
     public static void ClassInitialize(TestContext context)
     {
-        AssertCorrectThreadApartmentSTAState();
+        Helper.AssertCorrectThreadApartmentSTAState();
     }
 
     [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
     public static void ClassCleanup()
     {
-        AssertCorrectThreadApartmentSTAState();
+        Helper.AssertCorrectThreadApartmentSTAState();
     }
 
     [TestInitialize]
     public void TestInitialize()
     {
-        AssertCorrectThreadApartmentSTAState();
+        Helper.AssertCorrectThreadApartmentSTAState();
     }
 
     [TestCleanup]
     public void TestCleanup()
     {
-        AssertCorrectThreadApartmentSTAState();
+        Helper.AssertCorrectThreadApartmentSTAState();
     }
 
     [TestMethod]
     public void TestMethod1()
     {
-        AssertCorrectThreadApartmentSTAState();
+        Helper.AssertCorrectThreadApartmentSTAState();
     }
 
-    private static void AssertCorrectThreadApartmentMTAState()
+    public void Dispose()
+    {
+        Helper.AssertCorrectThreadApartmentSTAState();
+    }
+}
+
+[STATestClass]
+public class TestClassWithClassCleanupEndOfAssembly : IDisposable
+{
+    public TestClassWithClassCleanupEndOfAssembly()
+    {
+        Helper.AssertCorrectThreadApartmentSTAState();
+    }
+
+    [ClassInitialize]
+    public static void ClassInitialize(TestContext context)
+    {
+        Helper.AssertCorrectThreadApartmentSTAState();
+    }
+
+    [ClassCleanup(ClassCleanupBehavior.EndOfAssembly)]
+    public static void ClassCleanup()
+    {
+        Helper.AssertCorrectThreadApartmentMTAState();
+    }
+
+    [TestInitialize]
+    public void TestInitialize()
+    {
+        Helper.AssertCorrectThreadApartmentSTAState();
+    }
+
+    [TestCleanup]
+    public void TestCleanup()
+    {
+        Helper.AssertCorrectThreadApartmentSTAState();
+    }
+
+    [TestMethod]
+    public void TestMethod1()
+    {
+        Helper.AssertCorrectThreadApartmentSTAState();
+    }
+
+    public void Dispose()
+    {
+        Helper.AssertCorrectThreadApartmentSTAState();
+    }
+}
+
+public static class Helper
+{
+    public static void AssertCorrectThreadApartmentMTAState()
     {
         var apartmentState = Thread.CurrentThread.GetApartmentState();
         Assert.AreEqual(ApartmentState.MTA, apartmentState);
     }
 
-    private static void AssertCorrectThreadApartmentSTAState()
+    public static void AssertCorrectThreadApartmentSTAState()
     {
         var apartmentState = Thread.CurrentThread.GetApartmentState();
         Assert.AreEqual(ApartmentState.STA, apartmentState);
-    }
-
-    public void Dispose()
-    {
-        AssertCorrectThreadApartmentSTAState();
     }
 }
 """;
