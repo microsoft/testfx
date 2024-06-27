@@ -264,18 +264,15 @@ internal class TestMethodRunner
             finally
             {
                 using LogMessageListener logListener = new(_captureDebugTraces);
-                if (result.Length != 0)
-                {
-                    string? cleanupTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
+                string? cleanupTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
 
-                    if (result.Length > 0)
-                    {
-                        UnitTestResult lastResult = result[result.Length - 1];
-                        lastResult.StandardOut += logListener.StandardOutput;
-                        lastResult.StandardError += logListener.StandardError;
-                        lastResult.DebugTrace += logListener.DebugTrace;
-                        lastResult.TestContextMessages += cleanupTestContextMessages;
-                    }
+                if (result.Length > 0)
+                {
+                    UnitTestResult lastResult = result[result.Length - 1];
+                    lastResult.StandardOut += logListener.StandardOutput;
+                    lastResult.StandardError += logListener.StandardError;
+                    lastResult.DebugTrace += logListener.DebugTrace;
+                    lastResult.TestContextMessages += cleanupTestContextMessages;
                 }
             }
         }
