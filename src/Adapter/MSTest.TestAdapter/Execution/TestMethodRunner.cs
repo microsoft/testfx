@@ -158,7 +158,7 @@ internal class TestMethodRunner
             DoRunTests();
         }
 
-        if (!runFailed)
+        if (runFailed)
         {
             RunClassCleanup();
         }
