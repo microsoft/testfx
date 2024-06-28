@@ -172,9 +172,6 @@ internal class TestMethodRunner
         {
             runFailed = true;
             RunCatch(ex, ref result);
-        }
-        finally
-        {
             RunFinally(ref result, ref initializationLogs, ref initializationTrace, ref initializationErrorLogs, ref initializationTestContextMessages);
         }
 
@@ -201,9 +198,6 @@ internal class TestMethodRunner
             {
                 runFailed = true;
                 RunCatch(ex, ref result);
-            }
-            finally
-            {
                 RunFinally(ref result, ref initializationLogs, ref initializationTrace, ref initializationErrorLogs, ref initializationTestContextMessages);
             }
         }
