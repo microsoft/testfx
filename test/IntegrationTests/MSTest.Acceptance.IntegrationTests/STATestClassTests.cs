@@ -39,7 +39,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task STATestClass_OnWindows_ClassCleanupWithEndOfAssemblyBehavior_IsNotInsideTheSTAThread(string currentTfm)
+    public async Task DerivedSTATestClass_OnWindows_ClassCleanupWithEndOfAssemblyBehavior_IsNotInsideTheSTAThread(string currentTfm)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -162,7 +162,11 @@ public class LifeCycleTestClass : IDisposable
     }
 }
 
-[STATestClass]
+public class DerivedSTATestClass : STATestClassAttribute
+{
+}
+
+[DerivedSTATestClass]
 public class TestClassWithClassCleanupEndOfAssembly : IDisposable
 {
     public TestClassWithClassCleanupEndOfAssembly()
