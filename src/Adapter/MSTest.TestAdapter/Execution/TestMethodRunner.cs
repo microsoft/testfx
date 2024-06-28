@@ -176,7 +176,7 @@ internal class TestMethodRunner
         }
 
         Type attributeType = _testMethodInfo.Parent.ClassAttribute.GetType();
-        if (attributeType.IsSubclassOf(typeof(STATestClassAttribute))
+        if ((_testMethodInfo.Parent.ClassAttribute is STATestClassAttribute || attributeType.IsSubclassOf(typeof(STATestClassAttribute)))
             && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA
             && !runFailed)
