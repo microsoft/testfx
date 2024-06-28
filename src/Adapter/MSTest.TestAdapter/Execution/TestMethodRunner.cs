@@ -130,7 +130,8 @@ internal class TestMethodRunner
 #pragma warning restore IDE0056 // Use index operator
         }
 
-        if (_testMethodInfo.Parent.ClassAttribute is STATestClassAttribute
+        Type attributeType = _testMethodInfo.Parent.ClassAttribute.GetType();
+        if (attributeType.IsSubclassOf(typeof(STATestClassAttribute))
             && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA
             && !runFailed)
