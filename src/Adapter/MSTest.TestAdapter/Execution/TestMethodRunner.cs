@@ -71,6 +71,70 @@ internal class TestMethodRunner
         _captureDebugTraces = captureDebugTraces;
     }
 
+    private static void RunCatch(Exception exception, ref UnitTestResult[]? result)
+    {
+        if (exception is TestFailedException testFailedException)
+        {
+            result = [new UnitTestResult(testFailedException)];
+        }
+        else
+        {
+            if (result == null || result.Length == 0)
+            {
+                result = [new UnitTestResult()];
+            }
+
+#pragma warning disable IDE0056 // Use index operator
+            var newResult = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, exception.TryGetMessage(), exception.TryGetStackTraceInformation()))
+            {
+                StandardOut = result[result.Length - 1].StandardOut,
+                StandardError = result[result.Length - 1].StandardError,
+                DebugTrace = result[result.Length - 1].DebugTrace,
+                TestContextMessages = result[result.Length - 1].TestContextMessages,
+                Duration = result[result.Length - 1].Duration,
+            };
+            result[result.Length - 1] = newResult;
+#pragma warning restore IDE0056 // Use index operator
+        }
+    }
+
+    private static void RunFinally(
+        ref UnitTestResult[]? result,
+        ref string? initializationLogs, ref string? initializationTrace,
+        ref string? initializationErrorLogs, ref string? initializationTestContextMessages)
+    {
+        UnitTestResult firstResult = result![0];
+        firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
+        firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
+        firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
+        firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
+    }
+
+    private static void RunCleanupCatch(Exception exception, ref UnitTestResult[]? result)
+    {
+        // We mainly expect TestFailedException here as each cleanup method is executed in a try-catch block but
+        // for the sake of the catch-all mechanism, let's keep it as Exception.
+        if (result is not null && result.Length != 0)
+        {
+            UnitTestResult lastResult = result[result.Length - 1];
+            lastResult.Outcome = ObjectModel.UnitTestOutcome.Failed;
+            lastResult.ErrorMessage = exception.Message;
+            lastResult.ErrorStackTrace = exception.StackTrace;
+        }
+    }
+
+    private static void RunCleanupFinally(ref UnitTestResult[]? result, ref LogMessageListener logListener, string? cleanupTestContextMessages)
+    {
+        if (result is not null && result.Length > 0)
+        {
+            UnitTestResult lastResult = result[result.Length - 1];
+            lastResult.StandardOut += logListener.GetAndClearStandardOutput();
+            lastResult.StandardError += logListener.GetAndClearStandardError();
+            lastResult.DebugTrace += logListener.GetAndClearDebugTrace();
+            lastResult.TestContextMessages += cleanupTestContextMessages;
+        }
+    }
+
     /// <summary>
     /// Executes a test.
     /// </summary>
@@ -87,7 +151,7 @@ internal class TestMethodRunner
         bool shouldRunClassCleanup = false;
         bool shouldRunClassAndAssemblyCleanup = false;
         bool runFailed = false;
-        using LogMessageListener logListener = new(_captureDebugTraces);
+        LogMessageListener logListener = new(_captureDebugTraces);
         try
         {
             try
@@ -104,30 +168,14 @@ internal class TestMethodRunner
                 initializationTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
             }
         }
-        catch (TestFailedException ex)
-        {
-            runFailed = true;
-            result = [new UnitTestResult(ex)];
-        }
         catch (Exception ex)
         {
             runFailed = true;
-            if (result == null || result.Length == 0)
-            {
-                result = [new UnitTestResult()];
-            }
-
-#pragma warning disable IDE0056 // Use index operator
-            var newResult = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
-            {
-                StandardOut = result[result.Length - 1].StandardOut,
-                StandardError = result[result.Length - 1].StandardError,
-                DebugTrace = result[result.Length - 1].DebugTrace,
-                TestContextMessages = result[result.Length - 1].TestContextMessages,
-                Duration = result[result.Length - 1].Duration,
-            };
-            result[result.Length - 1] = newResult;
-#pragma warning restore IDE0056 // Use index operator
+            RunCatch(ex, ref result);
+        }
+        finally
+        {
+            RunFinally(ref result, ref initializationLogs, ref initializationTrace, ref initializationErrorLogs, ref initializationTestContextMessages);
         }
 
         Type attributeType = _testMethodInfo.Parent.ClassAttribute.GetType();
@@ -149,9 +197,14 @@ internal class TestMethodRunner
                 var threadTask = Task.Run(entryPointThread.Join, _testContext.Context.CancellationTokenSource.Token);
                 threadTask.Wait(_testContext.Context.CancellationTokenSource.Token);
             }
-            catch
+            catch (Exception ex)
             {
-                // throw the error somehow
+                runFailed = true;
+                RunCatch(ex, ref result);
+            }
+            finally
+            {
+                RunFinally(ref result, ref initializationLogs, ref initializationTrace, ref initializationErrorLogs, ref initializationTestContextMessages);
             }
         }
         else if (!runFailed)
@@ -184,31 +237,11 @@ internal class TestMethodRunner
         }
         catch (Exception ex)
         {
-            // We mainly expect TestFailedException here as each cleanup method is executed in a try-catch block but
-            // for the sake of the catch-all mechanism, let's keep it as Exception.
-            if (result is not null && result.Length != 0)
-            {
-                UnitTestResult lastResult = result[result.Length - 1];
-                lastResult.Outcome = ObjectModel.UnitTestOutcome.Failed;
-                lastResult.ErrorMessage = ex.Message;
-                lastResult.ErrorStackTrace = ex.StackTrace;
-            }
+            RunCleanupCatch(ex, ref result);
         }
         finally
         {
-            if (result is not null && result.Length != 0)
-            {
-                string? cleanupTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
-
-                if (result.Length > 0)
-                {
-                    UnitTestResult lastResult = result[result.Length - 1];
-                    lastResult.StandardOut += logListener.GetAndClearStandardOutput();
-                    lastResult.StandardError += logListener.GetAndClearStandardError();
-                    lastResult.DebugTrace += logListener.GetAndClearDebugTrace();
-                    lastResult.TestContextMessages += cleanupTestContextMessages;
-                }
-            }
+            RunCleanupFinally(ref result, ref logListener, _testContext.GetAndClearDiagnosticMessages());
         }
 
         void DoRunTests()
@@ -233,36 +266,14 @@ internal class TestMethodRunner
                 // This allows us to differentiate logging when data driven methods are used.
                 result = RunTestMethod();
             }
-            catch (TestFailedException ex)
-            {
-                result = [new UnitTestResult(ex)];
-            }
             catch (Exception ex)
             {
-                if (result == null || result.Length == 0)
-                {
-                    result = [new UnitTestResult()];
-                }
-
-#pragma warning disable IDE0056 // Use index operator
-                var newResult = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
-                {
-                    StandardOut = result[result.Length - 1].StandardOut,
-                    StandardError = result[result.Length - 1].StandardError,
-                    DebugTrace = result[result.Length - 1].DebugTrace,
-                    TestContextMessages = result[result.Length - 1].TestContextMessages,
-                    Duration = result[result.Length - 1].Duration,
-                };
-                result[result.Length - 1] = newResult;
-#pragma warning restore IDE0056 // Use index operator
+                runFailed = true;
+                RunCatch(ex, ref result);
             }
             finally
             {
-                UnitTestResult firstResult = result![0];
-                firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
-                firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
-                firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
-                firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
+                RunFinally(ref result, ref initializationLogs, ref initializationTrace, ref initializationErrorLogs, ref initializationTestContextMessages);
             }
 
             RunClassCleanup();
@@ -285,28 +296,11 @@ internal class TestMethodRunner
             }
             catch (Exception ex)
             {
-                // We mainly expect TestFailedException here as each cleanup method is executed in a try-catch block but
-                // for the sake of the catch-all mechanism, let's keep it as Exception.
-                if (result!.Length != 0)
-                {
-                    UnitTestResult lastResult = result[result.Length - 1];
-                    lastResult.Outcome = ObjectModel.UnitTestOutcome.Failed;
-                    lastResult.ErrorMessage = ex.Message;
-                    lastResult.ErrorStackTrace = ex.StackTrace;
-                }
+                RunCleanupCatch(ex, ref result);
             }
             finally
             {
-                string? cleanupTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
-
-                if (result!.Length > 0)
-                {
-                    UnitTestResult lastResult = result[result.Length - 1];
-                    lastResult.StandardOut += logListener.GetAndClearStandardOutput();
-                    lastResult.StandardError += logListener.GetAndClearStandardError();
-                    lastResult.DebugTrace += logListener.GetAndClearDebugTrace();
-                    lastResult.TestContextMessages += cleanupTestContextMessages;
-                }
+                RunCleanupFinally(ref result, ref logListener, _testContext.GetAndClearDiagnosticMessages());
             }
         }
 
