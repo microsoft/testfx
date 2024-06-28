@@ -298,6 +298,8 @@ internal class TestMethodRunner
             }
         }
 
+        logListener.Dispose();
+
         return result!;
     }
 
