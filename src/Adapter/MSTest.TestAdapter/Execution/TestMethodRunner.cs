@@ -87,9 +87,9 @@ internal class TestMethodRunner
         bool shouldRunClassCleanup = false;
         bool shouldRunClassAndAssemblyCleanup = false;
         bool runFailed = false;
+        using LogMessageListener logListener = new(_captureDebugTraces);
         try
         {
-            using LogMessageListener logListener = new(_captureDebugTraces);
             try
             {
                 // Run the assembly Initialize methods if required.
@@ -195,7 +195,6 @@ internal class TestMethodRunner
         }
         finally
         {
-            using LogMessageListener logListener = new(_captureDebugTraces);
             if (result is not null && result.Length != 0)
             {
                 string? cleanupTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
@@ -203,9 +202,9 @@ internal class TestMethodRunner
                 if (result.Length > 0)
                 {
                     UnitTestResult lastResult = result[result.Length - 1];
-                    lastResult.StandardOut += logListener.StandardOutput;
-                    lastResult.StandardError += logListener.StandardError;
-                    lastResult.DebugTrace += logListener.DebugTrace;
+                    lastResult.StandardOut += logListener.GetAndClearStandardOutput();
+                    lastResult.StandardError += logListener.GetAndClearStandardError();
+                    lastResult.DebugTrace += logListener.GetAndClearDebugTrace();
                     lastResult.TestContextMessages += cleanupTestContextMessages;
                 }
             }
@@ -215,21 +214,18 @@ internal class TestMethodRunner
         {
             try
             {
-                using (LogMessageListener logListener = new(_captureDebugTraces))
+                try
                 {
-                    try
-                    {
-                        // Run the class Initialize methods if required.
-                        // class initialize can throw exceptions in which case we need to ensure that we fail the test.
-                        _testMethodInfo.Parent.RunClassInitialize(_testContext.Context);
-                    }
-                    finally
-                    {
-                        initializationLogs += logListener.GetAndClearStandardOutput();
-                        initializationTrace += logListener.GetAndClearDebugTrace();
-                        initializationErrorLogs += logListener.GetAndClearStandardError();
-                        initializationTestContextMessages += _testContext.GetAndClearDiagnosticMessages();
-                    }
+                    // Run the class Initialize methods if required.
+                    // class initialize can throw exceptions in which case we need to ensure that we fail the test.
+                    _testMethodInfo.Parent.RunClassInitialize(_testContext.Context);
+                }
+                finally
+                {
+                    initializationLogs += logListener.GetAndClearStandardOutput();
+                    initializationTrace += logListener.GetAndClearDebugTrace();
+                    initializationErrorLogs += logListener.GetAndClearStandardError();
+                    initializationTestContextMessages += _testContext.GetAndClearDiagnosticMessages();
                 }
 
                 // Listening to log messages when running the test method with its Test Initialize and cleanup later on in the stack.
@@ -300,15 +296,14 @@ internal class TestMethodRunner
             }
             finally
             {
-                using LogMessageListener logListener = new(_captureDebugTraces);
                 string? cleanupTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
 
                 if (result!.Length > 0)
                 {
                     UnitTestResult lastResult = result[result.Length - 1];
-                    lastResult.StandardOut += logListener.StandardOutput;
-                    lastResult.StandardError += logListener.StandardError;
-                    lastResult.DebugTrace += logListener.DebugTrace;
+                    lastResult.StandardOut += logListener.GetAndClearStandardOutput();
+                    lastResult.StandardError += logListener.GetAndClearStandardError();
+                    lastResult.DebugTrace += logListener.GetAndClearDebugTrace();
                     lastResult.TestContextMessages += cleanupTestContextMessages;
                 }
             }
