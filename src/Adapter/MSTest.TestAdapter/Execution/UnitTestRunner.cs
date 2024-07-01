@@ -170,12 +170,10 @@ internal class UnitTestRunner : MarshalByRefObject
 
             if (!IsTestMethodRunnable(testMethod, testMethodInfo, out UnitTestResult[]? notRunnableResult))
             {
-                if (_classCleanupManager is null)
+                if (_classCleanupManager is not null)
                 {
-                    return notRunnableResult;
+                    RunRequiredCleanups(testContext, testMethodInfo, testMethod, notRunnableResult);
                 }
-
-                RunRequiredCleanups(testContext, testMethodInfo, testMethod, notRunnableResult);
 
                 return notRunnableResult;
             }
