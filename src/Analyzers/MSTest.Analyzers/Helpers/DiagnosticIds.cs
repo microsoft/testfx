@@ -33,4 +33,5 @@ internal static class DiagnosticIds
     public const string UseAsyncSuffixTestMethodSuppressorRuleId = "MSTEST0027";
     public const string UseAsyncSuffixTestFixtureMethodSuppressorRuleId = "MSTEST0028";
     public const string PublicMethodShouldBeTestMethodRuleId = "MSTEST0029";
+    public const string TypeContainingTestMethodShouldBeATestClassRuleId = "MSTEST0030";
 }

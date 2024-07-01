@@ -833,6 +833,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Type contaning &apos;[TestMethod]&apos; must be a &apos;[TestClass]&apos;..
+        /// </summary>
+        internal static string TypeContaningTestMethodShouldBeATestClassDescription {
+            get {
+                return ResourceManager.GetString("TypeContaningTestMethodShouldBeATestClassDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; contaning &apos;[TestMethod]&apos; must be a &apos;[TestClass]&apos;.
+        /// </summary>
+        internal static string TypeContaningTestMethodShouldBeATestClassMessageFormat {
+            get {
+                return ResourceManager.GetString("TypeContaningTestMethodShouldBeATestClassMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type containing &apos;[TestMethod]&apos; must be a &apos;[TestClass]&apos;.
+        /// </summary>
+        internal static string TypeContaningTestMethodShouldBeATestClassTitle {
+            get {
+                return ResourceManager.GetString("TypeContaningTestMethodShouldBeATestClassTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Asynchronous test fixture methods do not require the &apos;Async&apos; suffix.
         /// </summary>
         internal static string UseAsyncSuffixTestFixtureMethodSuppressorJustification {
