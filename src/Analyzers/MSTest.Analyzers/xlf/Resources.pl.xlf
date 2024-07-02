@@ -209,6 +209,21 @@
         <target state="translated">Nie przechowuj elementu TestContext w statycznym elemencie członkowskim</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
+        <source>Ensure to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' and not 'System.ComponentModel.DescriptionAttribute'.</source>
+        <target state="new">Ensure to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' and not 'System.ComponentModel.DescriptionAttribute'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseSystemDescriptionAttributeMessageFormat">
+        <source>Test method '{0}' should not use 'System.ComponentModel.DescriptionAttribute'</source>
+        <target state="new">Test method '{0}' should not use 'System.ComponentModel.DescriptionAttribute'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseSystemDescriptionAttributeTitle">
+        <source>Do Not use 'System.ComponentModel.DescriptionAttribute'</source>
+        <target state="new">Do Not use 'System.ComponentModel.DescriptionAttribute'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
         <target state="translated">Użyj trybu „Assert.Fail” zamiast kończącej się zawsze niepowodzeniem instrukcji „Assert.{0}”</target>

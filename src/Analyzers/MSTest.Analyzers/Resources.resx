@@ -445,4 +445,13 @@
   <data name="TypeContainingTestMethodShouldBeATestClassMessageFormat" xml:space="preserve">
     <value>Class '{0}' contains test methods and should be marked with '[TestClass]'</value>
   </data>
+  <data name="DoNotUseSystemDescriptionAttributeTitle" xml:space="preserve">
+    <value>Do Not use 'System.ComponentModel.DescriptionAttribute'</value>
+  </data>
+  <data name="DoNotUseSystemDescriptionAttributeMessageFormat" xml:space="preserve">
+    <value>Test method '{0}' should not use 'System.ComponentModel.DescriptionAttribute'</value>
+  </data>
+  <data name="DoNotUseSystemDescriptionAttributeDescription" xml:space="preserve">
+    <value>Ensure to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' and not 'System.ComponentModel.DescriptionAttribute'.</value>
+  </data>
 </root>
