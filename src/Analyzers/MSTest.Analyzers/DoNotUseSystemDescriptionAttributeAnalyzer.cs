@@ -61,7 +61,7 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzer : DiagnosticAnaly
                 hasTestMethodAttribute = true;
             }
 
-            if (SymbolEqualityComparer.Default.Equals((attribute, systemDescriptionAttributeSymbol))
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, systemDescriptionAttributeSymbol))
             {
                 hasSystemDescriptionAttribute = true;
             }
