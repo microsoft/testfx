@@ -145,4 +145,17 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    public async Task WhenAbstractClass_DoesNotHaveTestMethod_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class AbstractClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
