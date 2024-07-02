@@ -437,12 +437,12 @@
     <value>Explicitly enable or disable tests parallelization</value>
   </data>
   <data name="TypeContainingTestMethodShouldBeATestClassTitle" xml:space="preserve">
-    <value>Type containing '[TestMethod]' must be a '[TestClass]'</value>
+    <value>Type containing '[TestMethod]' must be marked with '[TestClass]'</value>
   </data>
   <data name="TypeContainingTestMethodShouldBeATestClassDescription" xml:space="preserve">
-    <value>Type contaning '[TestMethod]' must be a '[TestClass]'.</value>
+    <value>Type contaning '[TestMethod]' must be marked with '[TestClass]', otherwise the test method will be silently ignored.</value>
   </data>
   <data name="TypeContainingTestMethodShouldBeATestClassMessageFormat" xml:space="preserve">
-    <value>Type '{0}' contaning '[TestMethod]' must be a '[TestClass]'</value>
+    <value>Class '{0}' contains test methods and should be marked with '[TestClass]'</value>
   </data>
 </root>

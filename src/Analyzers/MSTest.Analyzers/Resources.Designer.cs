@@ -833,7 +833,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Type contaning &apos;[TestMethod]&apos; must be a &apos;[TestClass]&apos;..
+        ///   Looks up a localized string similar to Type contaning &apos;[TestMethod]&apos; must be marked with &apos;[TestClass]&apos;, otherwise the test method will be silently ignored..
         /// </summary>
         internal static string TypeContainingTestMethodShouldBeATestClassDescription {
             get {
@@ -842,7 +842,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Type &apos;{0}&apos; contaning &apos;[TestMethod]&apos; must be a &apos;[TestClass]&apos;.
+        ///   Looks up a localized string similar to Class &apos;{0}&apos; contains test methods and should be marked with &apos;[TestClass]&apos;.
         /// </summary>
         internal static string TypeContainingTestMethodShouldBeATestClassMessageFormat {
             get {
@@ -851,7 +851,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Type containing &apos;[TestMethod]&apos; must be a &apos;[TestClass]&apos;.
+        ///   Looks up a localized string similar to Type containing &apos;[TestMethod]&apos; must be marked with &apos;[TestClass]&apos;.
         /// </summary>
         internal static string TypeContainingTestMethodShouldBeATestClassTitle {
             get {
