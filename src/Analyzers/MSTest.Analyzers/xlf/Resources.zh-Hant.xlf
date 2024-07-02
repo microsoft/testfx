@@ -520,8 +520,8 @@
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' must be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="new">Type contaning '[TestMethod]' must be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
+        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <target state="new">Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
@@ -530,8 +530,8 @@
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
-        <source>Type containing '[TestMethod]' must be marked with '[TestClass]'</source>
-        <target state="new">Type containing '[TestMethod]' must be marked with '[TestClass]'</target>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]'</source>
+        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
