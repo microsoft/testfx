@@ -519,17 +519,17 @@
         <target state="translated">Die Testmethode darf nicht ignoriert werden.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TypeContaningTestMethodShouldBeATestClassDescription">
+      <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type contaning '[TestMethod]' must be a '[TestClass]'.</source>
         <target state="new">Type contaning '[TestMethod]' must be a '[TestClass]'.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TypeContaningTestMethodShouldBeATestClassMessageFormat">
+      <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Type '{0}' contaning '[TestMethod]' must be a '[TestClass]'</source>
         <target state="new">Type '{0}' contaning '[TestMethod]' must be a '[TestClass]'</target>
         <note />
       </trans-unit>
-      <trans-unit id="TypeContaningTestMethodShouldBeATestClassTitle">
+      <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
         <source>Type containing '[TestMethod]' must be a '[TestClass]'</source>
         <target state="new">Type containing '[TestMethod]' must be a '[TestClass]'</target>
         <note />

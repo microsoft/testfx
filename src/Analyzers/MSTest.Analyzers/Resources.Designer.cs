@@ -835,27 +835,27 @@ namespace MSTest.Analyzers {
         /// <summary>
         ///   Looks up a localized string similar to Type contaning &apos;[TestMethod]&apos; must be a &apos;[TestClass]&apos;..
         /// </summary>
-        internal static string TypeContaningTestMethodShouldBeATestClassDescription {
+        internal static string TypeContainingTestMethodShouldBeATestClassDescription {
             get {
-                return ResourceManager.GetString("TypeContaningTestMethodShouldBeATestClassDescription", resourceCulture);
+                return ResourceManager.GetString("TypeContainingTestMethodShouldBeATestClassDescription", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Type &apos;{0}&apos; contaning &apos;[TestMethod]&apos; must be a &apos;[TestClass]&apos;.
         /// </summary>
-        internal static string TypeContaningTestMethodShouldBeATestClassMessageFormat {
+        internal static string TypeContainingTestMethodShouldBeATestClassMessageFormat {
             get {
-                return ResourceManager.GetString("TypeContaningTestMethodShouldBeATestClassMessageFormat", resourceCulture);
+                return ResourceManager.GetString("TypeContainingTestMethodShouldBeATestClassMessageFormat", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Type containing &apos;[TestMethod]&apos; must be a &apos;[TestClass]&apos;.
         /// </summary>
-        internal static string TypeContaningTestMethodShouldBeATestClassTitle {
+        internal static string TypeContainingTestMethodShouldBeATestClassTitle {
             get {
-                return ResourceManager.GetString("TypeContaningTestMethodShouldBeATestClassTitle", resourceCulture);
+                return ResourceManager.GetString("TypeContainingTestMethodShouldBeATestClassTitle", resourceCulture);
             }
         }
         

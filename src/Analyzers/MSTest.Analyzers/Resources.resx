@@ -436,13 +436,13 @@
   <data name="UseParallelizeAttributeAnalyzerTitle" xml:space="preserve">
     <value>Explicitly enable or disable tests parallelization</value>
   </data>
-  <data name="TypeContaningTestMethodShouldBeATestClassTitle" xml:space="preserve">
+  <data name="TypeContainingTestMethodShouldBeATestClassTitle" xml:space="preserve">
     <value>Type containing '[TestMethod]' must be a '[TestClass]'</value>
   </data>
-  <data name="TypeContaningTestMethodShouldBeATestClassDescription" xml:space="preserve">
+  <data name="TypeContainingTestMethodShouldBeATestClassDescription" xml:space="preserve">
     <value>Type contaning '[TestMethod]' must be a '[TestClass]'.</value>
   </data>
-  <data name="TypeContaningTestMethodShouldBeATestClassMessageFormat" xml:space="preserve">
+  <data name="TypeContainingTestMethodShouldBeATestClassMessageFormat" xml:space="preserve">
     <value>Type '{0}' contaning '[TestMethod]' must be a '[TestClass]'</value>
   </data>
 </root>

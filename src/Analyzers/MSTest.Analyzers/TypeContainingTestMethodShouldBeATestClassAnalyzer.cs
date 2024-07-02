@@ -15,9 +15,9 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly LocalizableResourceString Title = new(nameof(Resources.TypeContaningTestMethodShouldBeATestClassTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString Description = new(nameof(Resources.TypeContaningTestMethodShouldBeATestClassDescription), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TypeContaningTestMethodShouldBeATestClassMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Title = new(nameof(Resources.TypeContainingTestMethodShouldBeATestClassTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.TypeContainingTestMethodShouldBeATestClassDescription), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TypeContainingTestMethodShouldBeATestClassMessageFormat), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor TypeContainingTestMethodShouldBeATestClassRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TypeContainingTestMethodShouldBeATestClassRuleId,
