@@ -33,7 +33,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            public class {|#0:MyTestClass|}
+            public class [|MyTestClass|]
             {
                 [TestMethod]
                 public void TestMethod1() {}
@@ -48,7 +48,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            public class {|#0:MyTestClass|} : WithTestMethods_WithoutTestClass
+            public class [|MyTestClass|] : WithTestMethods_WithoutTestClass
             {
 
             }
@@ -82,7 +82,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
 
             }
 
-            public class {|#0:MyTestClass|} : Base
+            public class [|MyTestClass|] : Base
             {
                 [TestMethod]
                 public void TestMethod1()
@@ -134,7 +134,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
             {
             }
 
-            public class {|#0:MyTestClass|}
+            public class [|MyTestClass|]
             {
                 [DerivedTestMethod]
                 public void MyTestMethod()
