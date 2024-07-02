@@ -83,7 +83,13 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzer : Diagnos
                     if (attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
                     {
                         hasTestMethod = true;
+                        break;
                     }
+                }
+
+                if (!hasTestMethod)
+                {
+                    break;
                 }
             }
 
