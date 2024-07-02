@@ -353,6 +353,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ensure to use &apos;Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute&apos; and not &apos;System.ComponentModel.DescriptionAttribute&apos;..
+        /// </summary>
+        internal static string DoNotUseSystemDescriptionAttributeDescription {
+            get {
+                return ResourceManager.GetString("DoNotUseSystemDescriptionAttributeDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not use &apos;System.ComponentModel.DescriptionAttribute&apos;.
+        /// </summary>
+        internal static string DoNotUseSystemDescriptionAttributeMessageFormat {
+            get {
+                return ResourceManager.GetString("DoNotUseSystemDescriptionAttributeMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do Not use &apos;System.ComponentModel.DescriptionAttribute&apos;.
+        /// </summary>
+        internal static string DoNotUseSystemDescriptionAttributeTitle {
+            get {
+                return ResourceManager.GetString("DoNotUseSystemDescriptionAttributeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use &apos;Assert.Fail&apos; instead of an always-failing &apos;Assert.{0}&apos; assert.
         /// </summary>
         internal static string PreferAssertFailOverAlwaysFalseConditionsMessageFormat {
