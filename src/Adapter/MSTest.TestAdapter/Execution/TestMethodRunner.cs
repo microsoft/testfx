@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
@@ -10,6 +11,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTestRunner;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -68,48 +71,13 @@ internal class TestMethodRunner
         _captureDebugTraces = captureDebugTraces;
     }
 
-    /// <summary>
-    /// Executes a test.
-    /// </summary>
-    /// <returns>The test results.</returns>
-    internal UnitTestResult[] Execute()
+    private static void RunCatch(Exception exception, ref UnitTestResult[]? result)
     {
-        string? initializationLogs = string.Empty;
-        string? initializationTrace = string.Empty;
-        string? initializationErrorLogs = string.Empty;
-        string? initializationTestContextMessages = string.Empty;
-
-        UnitTestResult[]? result = null;
-
-        try
+        if (exception is TestFailedException testFailedException)
         {
-            using (LogMessageListener logListener = new(_captureDebugTraces))
-            {
-                try
-                {
-                    // Run the assembly and class Initialize methods if required.
-                    // Assembly or class initialize can throw exceptions in which case we need to ensure that we fail the test.
-                    _testMethodInfo.Parent.Parent.RunAssemblyInitialize(_testContext.Context);
-                    _testMethodInfo.Parent.RunClassInitialize(_testContext.Context);
-                }
-                finally
-                {
-                    initializationLogs = logListener.GetAndClearStandardOutput();
-                    initializationTrace = logListener.GetAndClearDebugTrace();
-                    initializationErrorLogs = logListener.GetAndClearStandardError();
-                    initializationTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
-                }
-            }
-
-            // Listening to log messages when running the test method with its Test Initialize and cleanup later on in the stack.
-            // This allows us to differentiate logging when data driven methods are used.
-            result = RunTestMethod();
+            result = [new UnitTestResult(testFailedException)];
         }
-        catch (TestFailedException ex)
-        {
-            result = [new UnitTestResult(ex)];
-        }
-        catch (Exception ex)
+        else
         {
             if (result == null || result.Length == 0)
             {
@@ -117,7 +85,7 @@ internal class TestMethodRunner
             }
 
 #pragma warning disable IDE0056 // Use index operator
-            var newResult = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
+            var newResult = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, exception.TryGetMessage(), exception.TryGetStackTraceInformation()))
             {
                 StandardOut = result[result.Length - 1].StandardOut,
                 StandardError = result[result.Length - 1].StandardError,
@@ -128,16 +96,211 @@ internal class TestMethodRunner
             result[result.Length - 1] = newResult;
 #pragma warning restore IDE0056 // Use index operator
         }
-        finally
+    }
+
+    private static void RunFinally(
+        ref UnitTestResult[]? result,
+        ref string? initializationLogs, ref string? initializationTrace,
+        ref string? initializationErrorLogs, ref string? initializationTestContextMessages)
+    {
+        UnitTestResult firstResult = result![0];
+        firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
+        firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
+        firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
+        firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
+    }
+
+    private static void RunCleanupCatch(Exception exception, ref UnitTestResult[]? result)
+    {
+        // We mainly expect TestFailedException here as each cleanup method is executed in a try-catch block but
+        // for the sake of the catch-all mechanism, let's keep it as Exception.
+        if (result is not null && result.Length != 0)
         {
-            UnitTestResult firstResult = result![0];
-            firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
-            firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
-            firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
-            firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
+            UnitTestResult lastResult = result[result.Length - 1];
+            lastResult.Outcome = ObjectModel.UnitTestOutcome.Failed;
+            lastResult.ErrorMessage = exception.Message;
+            lastResult.ErrorStackTrace = exception.StackTrace;
+        }
+    }
+
+    private static void RunCleanupFinally(ref UnitTestResult[]? result, ref LogMessageListener logListener, string? cleanupTestContextMessages)
+    {
+        if (result is not null && result.Length > 0)
+        {
+            UnitTestResult lastResult = result[result.Length - 1];
+            lastResult.StandardOut += logListener.GetAndClearStandardOutput();
+            lastResult.StandardError += logListener.GetAndClearStandardError();
+            lastResult.DebugTrace += logListener.GetAndClearDebugTrace();
+            lastResult.TestContextMessages += cleanupTestContextMessages;
+        }
+    }
+
+    /// <summary>
+    /// Executes a test.
+    /// </summary>
+    /// <returns>The test results.</returns>
+    internal UnitTestResult[] Execute(ClassCleanupManager? _classCleanupManager, TypeCache _typeCache)
+    {
+        string? initializationLogs = string.Empty;
+        string? initializationTrace = string.Empty;
+        string? initializationErrorLogs = string.Empty;
+        string? initializationTestContextMessages = string.Empty;
+
+        UnitTestResult[]? result = null;
+
+        bool shouldRunClassCleanup = false;
+        bool shouldRunClassAndAssemblyCleanup = false;
+        bool runFailed = false;
+        LogMessageListener logListener = new(_captureDebugTraces);
+        try
+        {
+            try
+            {
+                // Run the assembly Initialize methods if required.
+                // Assembly initialize can throw exceptions in which case we need to ensure that we fail the test.
+                _testMethodInfo.Parent.Parent.RunAssemblyInitialize(_testContext.Context);
+            }
+            finally
+            {
+                initializationLogs = logListener.GetAndClearStandardOutput();
+                initializationTrace = logListener.GetAndClearDebugTrace();
+                initializationErrorLogs = logListener.GetAndClearStandardError();
+                initializationTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
+            }
+        }
+        catch (Exception ex)
+        {
+            runFailed = true;
+            RunCatch(ex, ref result);
+            RunFinally(ref result, ref initializationLogs, ref initializationTrace, ref initializationErrorLogs, ref initializationTestContextMessages);
         }
 
-        return result;
+        Type attributeType = _testMethodInfo.Parent.ClassAttribute.GetType();
+        if ((_testMethodInfo.Parent.ClassAttribute is STATestClassAttribute || attributeType.IsSubclassOf(typeof(STATestClassAttribute)))
+            && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA
+            && !runFailed)
+        {
+            Thread entryPointThread = new(new ThreadStart(DoRunTests))
+            {
+                Name = "MSTest Entry Point",
+            };
+
+            entryPointThread.SetApartmentState(ApartmentState.STA);
+            entryPointThread.Start();
+
+            try
+            {
+                var threadTask = Task.Run(entryPointThread.Join, _testContext.Context.CancellationTokenSource.Token);
+                threadTask.Wait(_testContext.Context.CancellationTokenSource.Token);
+            }
+            catch (Exception ex)
+            {
+                runFailed = true;
+                RunCatch(ex, ref result);
+                RunFinally(ref result, ref initializationLogs, ref initializationTrace, ref initializationErrorLogs, ref initializationTestContextMessages);
+            }
+        }
+        else if (!runFailed)
+        {
+            DoRunTests();
+        }
+
+        if (runFailed)
+        {
+            RunClassCleanup();
+        }
+
+        // run assemblyCleanup and classCleanup(with endOfAssembly behavior)
+        try
+        {
+            if (shouldRunClassAndAssemblyCleanup)
+            {
+                IEnumerable<TestClassInfo> classInfoCache = _typeCache.ClassInfoListWithExecutableCleanupMethods;
+                foreach (TestClassInfo classInfo in classInfoCache)
+                {
+                    classInfo.ExecuteClassCleanup();
+                }
+
+                IEnumerable<TestAssemblyInfo> assemblyInfoCache = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
+                foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
+                {
+                    assemblyInfo.ExecuteAssemblyCleanup();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            RunCleanupCatch(ex, ref result);
+        }
+        finally
+        {
+            RunCleanupFinally(ref result, ref logListener, _testContext.GetAndClearDiagnosticMessages());
+        }
+
+        void DoRunTests()
+        {
+            try
+            {
+                try
+                {
+                    // Run the class Initialize methods if required.
+                    // class initialize can throw exceptions in which case we need to ensure that we fail the test.
+                    _testMethodInfo.Parent.RunClassInitialize(_testContext.Context);
+                }
+                finally
+                {
+                    initializationLogs += logListener.GetAndClearStandardOutput();
+                    initializationTrace += logListener.GetAndClearDebugTrace();
+                    initializationErrorLogs += logListener.GetAndClearStandardError();
+                    initializationTestContextMessages += _testContext.GetAndClearDiagnosticMessages();
+                }
+
+                // Listening to log messages when running the test method with its Test Initialize and cleanup later on in the stack.
+                // This allows us to differentiate logging when data driven methods are used.
+                result = RunTestMethod();
+            }
+            catch (Exception ex)
+            {
+                runFailed = true;
+                RunCatch(ex, ref result);
+            }
+            finally
+            {
+                RunFinally(ref result, ref initializationLogs, ref initializationTrace, ref initializationErrorLogs, ref initializationTestContextMessages);
+            }
+
+            RunClassCleanup();
+        }
+
+        void RunClassCleanup()
+        {
+            if (_testMethodInfo is not null)
+            {
+                _classCleanupManager?.MarkTestComplete(_testMethodInfo, _test, out shouldRunClassCleanup, out shouldRunClassAndAssemblyCleanup);
+            }
+
+            try
+            {
+                // will be only included in STA if the behavior was endOfClass
+                if (shouldRunClassCleanup)
+                {
+                    _testMethodInfo?.Parent.ExecuteClassCleanup();
+                }
+            }
+            catch (Exception ex)
+            {
+                RunCleanupCatch(ex, ref result);
+            }
+            finally
+            {
+                RunCleanupFinally(ref result, ref logListener, _testContext.GetAndClearDiagnosticMessages());
+            }
+        }
+
+        logListener.Dispose();
+
+        return result!;
     }
 
     /// <summary>

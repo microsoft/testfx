@@ -28,7 +28,9 @@ internal class UnitTestRunner : MarshalByRefObject
     /// <summary>
     /// Type cache.
     /// </summary>
-    private readonly TypeCache _typeCache;
+#pragma warning disable SA1401 // Fields should be private
+    internal readonly TypeCache _typeCache;
+#pragma warning restore SA1401 // Fields should be private
 
     /// <summary>
     /// Reflect helper.
@@ -38,7 +40,9 @@ internal class UnitTestRunner : MarshalByRefObject
     /// <summary>
     /// Class cleanup manager.
     /// </summary>
-    private ClassCleanupManager? _classCleanupManager;
+#pragma warning disable SA1401 // Fields should be private
+    internal ClassCleanupManager? _classCleanupManager;
+#pragma warning restore SA1401 // Fields should be private
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
@@ -185,8 +189,7 @@ internal class UnitTestRunner : MarshalByRefObject
             _fixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo);
 
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
-            UnitTestResult[] result = testMethodRunner.Execute();
-            RunRequiredCleanups(testContext, testMethodInfo, testMethod, result);
+            UnitTestResult[] result = testMethodRunner.Execute(_classCleanupManager, _typeCache);
             return result;
         }
         catch (TypeInspectionException ex)
@@ -323,7 +326,7 @@ internal class UnitTestRunner : MarshalByRefObject
         return true;
     }
 
-    private class ClassCleanupManager
+    internal class ClassCleanupManager
     {
         private readonly ClassCleanupBehavior? _lifecycleFromMsTest;
         private readonly ClassCleanupBehavior _lifecycleFromAssembly;
