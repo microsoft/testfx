@@ -153,6 +153,10 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
 
             public abstract class AbstractClass
             {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
             }
             """;
 
