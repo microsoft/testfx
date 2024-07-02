@@ -520,6 +520,21 @@
         <target state="translated">テスト メソッドを無視することはできません</target>
         <note />
       </trans-unit>
+      <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
+        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <target state="new">Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
+        <source>Class '{0}' contains test methods and should be marked with '[TestClass]'</source>
+        <target state="new">Class '{0}' contains test methods and should be marked with '[TestClass]'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]'</source>
+        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
         <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
         <target state="translated">非同期テスト フィクスチャには 'Async' サフィックスは不要です</target>

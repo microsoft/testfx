@@ -51,6 +51,8 @@ MSTest.Analyzers.TestMethodShouldBeValidAnalyzer
 MSTest.Analyzers.TestMethodShouldBeValidAnalyzer.TestMethodShouldBeValidAnalyzer() -> void
 MSTest.Analyzers.TestMethodShouldNotBeIgnoredAnalyzer
 MSTest.Analyzers.TestMethodShouldNotBeIgnoredAnalyzer.TestMethodShouldNotBeIgnoredAnalyzer() -> void
+MSTest.Analyzers.TypeContainingTestMethodShouldBeATestClassAnalyzer
+MSTest.Analyzers.TypeContainingTestMethodShouldBeATestClassAnalyzer.TypeContainingTestMethodShouldBeATestClassAnalyzer() -> void
 MSTest.Analyzers.UseAsyncSuffixTestFixtureMethodSuppressor
 MSTest.Analyzers.UseAsyncSuffixTestFixtureMethodSuppressor.UseAsyncSuffixTestFixtureMethodSuppressor() -> void
 MSTest.Analyzers.UseAsyncSuffixTestMethodSuppressor
@@ -107,6 +109,8 @@ override MSTest.Analyzers.TestMethodShouldBeValidAnalyzer.Initialize(Microsoft.C
 override MSTest.Analyzers.TestMethodShouldBeValidAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.TestMethodShouldNotBeIgnoredAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.TestMethodShouldNotBeIgnoredAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.TypeContainingTestMethodShouldBeATestClassAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.TypeContainingTestMethodShouldBeATestClassAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.UseAsyncSuffixTestFixtureMethodSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void
 override MSTest.Analyzers.UseAsyncSuffixTestFixtureMethodSuppressor.SupportedSuppressions.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.SuppressionDescriptor!>
 override MSTest.Analyzers.UseAsyncSuffixTestMethodSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void
