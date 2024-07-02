@@ -78,6 +78,11 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzer : Diagnos
         {
             foreach (ISymbol classMember in currentType.GetMembers())
             {
+                if (classMember.Kind != SymbolKind.Method)
+                {
+                    continue;
+                }
+
                 foreach (AttributeData attribute in classMember.GetAttributes())
                 {
                     if (attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
