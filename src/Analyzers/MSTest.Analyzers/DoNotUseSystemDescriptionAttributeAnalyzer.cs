@@ -66,13 +66,13 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzer : DiagnosticAnaly
                 hasSystemDescriptionAttribute = true;
             }
 
-            if (!hasTestMethodAttribute && !hasSystemDescriptionAttribute)
+            if (hasTestMethodAttribute && hasSystemDescriptionAttribute)
             {
                 break;
             }
         }
 
-        if (!hasTestMethodAttribute && !hasSystemDescriptionAttribute)
+        if (hasTestMethodAttribute && hasSystemDescriptionAttribute)
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(DoNotUseSystemDescriptionAttributeRule, methodSymbol.Name));
         }
