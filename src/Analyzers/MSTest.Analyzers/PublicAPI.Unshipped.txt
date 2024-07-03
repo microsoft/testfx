@@ -59,6 +59,8 @@ MSTest.Analyzers.UseAsyncSuffixTestMethodSuppressor
 MSTest.Analyzers.UseAsyncSuffixTestMethodSuppressor.UseAsyncSuffixTestMethodSuppressor() -> void
 MSTest.Analyzers.UseAttributeOnTestMethodAnalyzer
 MSTest.Analyzers.UseAttributeOnTestMethodAnalyzer.UseAttributeOnTestMethodAnalyzer() -> void
+MSTest.Analyzers.UseNullableForIsNullAndIsNotNullAssertionsAnalyzer
+MSTest.Analyzers.UseNullableForIsNullAndIsNotNullAssertionsAnalyzer.UseNullableForIsNullAndIsNotNullAssertionsAnalyzer() -> void
 MSTest.Analyzers.UseParallelizeAttributeAnalyzer
 MSTest.Analyzers.UseParallelizeAttributeAnalyzer.UseParallelizeAttributeAnalyzer() -> void
 override MSTest.Analyzers.AssemblyCleanupShouldBeValidAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
@@ -117,6 +119,8 @@ override MSTest.Analyzers.UseAsyncSuffixTestMethodSuppressor.ReportSuppressions(
 override MSTest.Analyzers.UseAsyncSuffixTestMethodSuppressor.SupportedSuppressions.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.SuppressionDescriptor!>
 override MSTest.Analyzers.UseAttributeOnTestMethodAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.UseAttributeOnTestMethodAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.UseNullableForIsNullAndIsNotNullAssertionsAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.UseNullableForIsNullAndIsNotNullAssertionsAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.UseParallelizeAttributeAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.UseParallelizeAttributeAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 static Analyzer.Utilities.WellKnownTypeProvider.GetOrCreate(Microsoft.CodeAnalysis.Compilation! compilation) -> Analyzer.Utilities.WellKnownTypeProvider!
