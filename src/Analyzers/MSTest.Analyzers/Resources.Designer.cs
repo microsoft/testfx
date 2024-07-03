@@ -353,7 +353,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;System.ComponentModel.DescriptionAttribute&apos; has no effect in the context of tests and you likely wanted to use &apos; Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute&apos; instead..
+        ///   Looks up a localized string similar to &apos;System.ComponentModel.DescriptionAttribute&apos; has no effect in the context of tests and you likely wanted to use &apos;Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute&apos; instead..
         /// </summary>
         internal static string DoNotUseSystemDescriptionAttributeDescription {
             get {
@@ -371,7 +371,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;System.ComponentModel.DescriptionAttribute&apos; has not effect on test methods..
+        ///   Looks up a localized string similar to &apos;System.ComponentModel.DescriptionAttribute&apos; has no effect on test methods.
         /// </summary>
         internal static string DoNotUseSystemDescriptionAttributeTitle {
             get {

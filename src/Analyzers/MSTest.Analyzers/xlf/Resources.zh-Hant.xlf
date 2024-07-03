@@ -210,8 +210,8 @@
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
-        <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use ' Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
-        <target state="new">'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use ' Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</target>
+        <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
+        <target state="new">'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeMessageFormat">
@@ -220,8 +220,8 @@
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeTitle">
-        <source>'System.ComponentModel.DescriptionAttribute' has not effect on test methods.</source>
-        <target state="new">'System.ComponentModel.DescriptionAttribute' has not effect on test methods.</target>
+        <source>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</source>
+        <target state="new">'System.ComponentModel.DescriptionAttribute' has no effect on test methods</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
