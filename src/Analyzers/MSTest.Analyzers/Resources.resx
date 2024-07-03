@@ -445,4 +445,22 @@
   <data name="TypeContainingTestMethodShouldBeATestClassMessageFormat" xml:space="preserve">
     <value>Class '{0}' contains test methods and should be marked with '[TestClass]'</value>
   </data>
+  <data name="DoNotUseSystemDescriptionAttributeTitle" xml:space="preserve">
+    <value>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</value>
+  </data>
+  <data name="DoNotUseSystemDescriptionAttributeMessageFormat" xml:space="preserve">
+    <value>Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</value>
+  </data>
+  <data name="DoNotUseSystemDescriptionAttributeDescription" xml:space="preserve">
+    <value>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</value>
+  </data>
+  <data name="UseNullableForIsNullAndIsNotNullAssertionsAnalyzerTitle" xml:space="preserve">
+    <value>Use Nullabe value, or this assert will either always pass or always fail</value>
+  </data>
+  <data name="UseNullableForIsNullAndIsNotNullAssertionsAnalyzerDescription" xml:space="preserve">
+    <value>Assert.IsNotNull or Assert.IsNull is called with a value type other than Nullable, and this assert will either always pass or always fail.</value>
+  </data>
+  <data name="UseNullableForIsNullAndIsNotNullAssertionsAnalyzerMessageFormat" xml:space="preserve">
+    <value>Use Nullabe value!</value>
+  </data>
 </root>
