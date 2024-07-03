@@ -68,13 +68,9 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzer : DiagnosticAnaly
 
             if (hasTestMethodAttribute && hasSystemDescriptionAttribute)
             {
+                context.ReportDiagnostic(methodSymbol.CreateDiagnostic(DoNotUseSystemDescriptionAttributeRule, methodSymbol.Name));
                 break;
             }
-        }
-
-        if (hasTestMethodAttribute && hasSystemDescriptionAttribute)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(DoNotUseSystemDescriptionAttributeRule, methodSymbol.Name));
         }
     }
 }
