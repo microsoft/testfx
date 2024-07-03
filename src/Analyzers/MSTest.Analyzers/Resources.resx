@@ -446,12 +446,12 @@
     <value>Class '{0}' contains test methods and should be marked with '[TestClass]'</value>
   </data>
   <data name="DoNotUseSystemDescriptionAttributeTitle" xml:space="preserve">
-    <value>Do Not use 'System.ComponentModel.DescriptionAttribute'</value>
+    <value>'System.ComponentModel.DescriptionAttribute' has not effect on test methods.</value>
   </data>
   <data name="DoNotUseSystemDescriptionAttributeMessageFormat" xml:space="preserve">
-    <value>Test method '{0}' should not use 'System.ComponentModel.DescriptionAttribute'</value>
+    <value>Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</value>
   </data>
   <data name="DoNotUseSystemDescriptionAttributeDescription" xml:space="preserve">
-    <value>Ensure to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' and not 'System.ComponentModel.DescriptionAttribute'.</value>
+    <value>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use ' Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</value>
   </data>
 </root>
