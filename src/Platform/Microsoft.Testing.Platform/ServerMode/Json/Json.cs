@@ -80,8 +80,9 @@ internal sealed class Json
 
         _serializers[typeof(InitializeResponseArgs)] = new JsonObjectSerializer<InitializeResponseArgs>(response =>
         {
-            var list = new (string, object?)[2]
+            var list = new (string, object?)[3]
             {
+                (JsonRpcStrings.ProcessId, response.ProcessId),
                 (JsonRpcStrings.ServerInfo, response.ServerInfo),
                 (JsonRpcStrings.Capabilities, response.Capabilities),
             };
@@ -509,6 +510,7 @@ internal sealed class Json
 
         _deserializers[typeof(InitializeResponseArgs)] = new JsonElementDeserializer<InitializeResponseArgs>(
           (json, jsonElement) => new InitializeResponseArgs(
+                  ProcessId: json.Bind<int>(jsonElement, JsonRpcStrings.ProcessId),
                   ServerInfo: json.Bind<ServerInfo>(jsonElement, JsonRpcStrings.ServerInfo),
                   Capabilities: json.Bind<ServerCapabilities>(jsonElement, JsonRpcStrings.Capabilities)));
 

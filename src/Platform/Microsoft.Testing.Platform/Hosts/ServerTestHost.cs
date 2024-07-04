@@ -379,9 +379,9 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                 {
                     _client = new(args.ClientInfo.Name, args.ClientInfo.Version);
                     await _logger.LogInformationAsync($"Connection established with '{_client.Id}', protocol version {_client.Version}");
-
                     INamedFeatureCapability? namedFeatureCapability = ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();
                     return new InitializeResponseArgs(
+                        ProcessId: ServiceProvider.GetProcessHandler().GetCurrentProcess().Id,
                         ServerInfo: new ServerInfo("test-anywhere", Version: ProtocolVersion),
                         Capabilities: new ServerCapabilities(
                             new ServerTestingCapabilities(
