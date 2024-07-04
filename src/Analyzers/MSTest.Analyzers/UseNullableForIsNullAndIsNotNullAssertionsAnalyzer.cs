@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Data;
 
 using Analyzer.Utilities.Extensions;
 
@@ -40,14 +39,15 @@ public sealed class UseNullableForIsNullAndIsNotNullAssertionsAnalyzer : Diagnos
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertSymbol)
+                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemNullable, out INamedTypeSymbol? nullableSymbol))
             {
-                context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol), OperationKind.Invocation);
+                context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol, nullableSymbol), OperationKind.Invocation);
             }
         });
     }
 
-    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol)
+    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol? nullableSymbol)
     {
         var invocationOperation = (IInvocationOperation)context.Operation;
 
@@ -59,7 +59,7 @@ public sealed class UseNullableForIsNullAndIsNotNullAssertionsAnalyzer : Diagnos
 
         foreach (IArgumentOperation argument in invocationOperation.Arguments)
         {
-            if (argument.Type is Nullable && argument.Parameter?.Name == "value")
+            if (SymbolEqualityComparer.Default.Equals(argument.Type, nullableSymbol) && argument.Parameter?.Name == "value") // not working.
             {
                 context.ReportDiagnostic(invocationOperation.CreateDiagnostic(UseNullableForIsNullAndIsNotNullAssertionsAnalyzerRule));
                 break;
