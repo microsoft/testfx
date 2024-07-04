@@ -316,10 +316,11 @@ public class TestExecutionManager
 
                 var tasks = new List<Task>();
                 bool isSTA = false;
+
                 for (int i = 0; i < parallelWorkers; i++)
                 {
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                        && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+                        && MSTestSettings.RunConfigurationSettings.ExecutionApartmentState == ApartmentState.STA)
                     {
                         isSTA = true;
                         Thread entryPointThread = new(new ThreadStart(RunTest));
