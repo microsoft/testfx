@@ -2,68 +2,40 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
-    <UseVSTestRunner>false</UseVSTestRunner>
-    <ImplicitUsings>true</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <GenerateProgramFile>false</GenerateProgramFile>
     <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --retry-failed-tests 3</TestRunnerAdditionalArguments>
-    <OutputType>Exe</OutputType>
+    <UseVSTestRunner>false</UseVSTestRunner>
+    <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="Microsoft.Testing.Extensions.Retry" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Internal.Framework" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" GeneratePathProperty="True" />
   </ItemGroup>
 
   <!-- Packages needed for the test assets but that we don't want to reference -->
   <ItemGroup>
-    <PackageDownload Include="Microsoft.Testing.Extensions.HangDump" Version="[$(MicrosoftTestingPlatformVersion)]" />
-    <PackageDownload Include="Microsoft.Testing.Extensions.Telemetry" Version="[$(MicrosoftTestingPlatformVersion)]" />
-    <PackageDownload Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="[$(MicrosoftTestingPlatformVersion)]" />
-    <PackageDownload Include="Microsoft.Testing.Extensions.VSTestBridge" Version="[$(MicrosoftTestingPlatformVersion)]" />
-    <PackageDownload Include="Microsoft.Testing.Platform.MSBuild" Version="[$(MicrosoftTestingPlatformVersion)]" />
+    <PackageDownload Include="Microsoft.Testing.Extensions.HotReload" Version="[$(MicrosoftTestingInternalFrameworkVersion)]" />
+    <PackageDownload Include="Microsoft.Testing.Extensions.Retry" Version="[$(MicrosoftTestingInternalFrameworkVersion)]" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
-    <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Microsoft.Testing.Platform.Acceptance.IntegrationTests.launcher.config.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Microsoft.Testing.Platform.Acceptance.IntegrationTests.testingplatformconfig.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="testsbaseline.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <Using Include="Microsoft.Testing.Internal.Framework" />
+    <Using Include="Microsoft.Testing.Platform.Builder" />
+    <Using Include="Microsoft.Testing.Platform.Extensions" />
+    <Using Include="Microsoft.Testing.TestInfrastructure" />
   </ItemGroup>
 
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">
     <ItemGroup>
-      <MicrosoftTestingExtensionsCrashDumpPackage Include="$(PkgMicrosoft_Testing_Extensions_CrashDump)\microsoft.testing.extensions.crashdump.*.nupkg" />
-      <MicrosoftTestingExtensionsTrxReportPackage Include="$(PkgMicrosoft_Testing_Extensions_TrxReport)\microsoft.testing.extensions.trxreport.*.nupkg" />
       <MicrosoftTestingInternalFrameworkPackage Include="$(PkgMicrosoft_Testing_Internal_Framework)\microsoft.testing.internal.framework.*.nupkg" />
       <MicrosoftTestingInternalFrameworkSourceGenerationPackage Include="$(PkgMicrosoft_Testing_Internal_Framework_SourceGeneration)\microsoft.testing.internal.framework.sourcegeneration.*.nupkg" />
     </ItemGroup>
 
-    <Copy SkipUnchangedFiles="true" SourceFiles="@(MicrosoftTestingExtensionsCrashDumpPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
-    <Copy SkipUnchangedFiles="true" SourceFiles="@(MicrosoftTestingExtensionsTrxReportPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
     <Copy SkipUnchangedFiles="true" SourceFiles="@(MicrosoftTestingInternalFrameworkPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
     <Copy SkipUnchangedFiles="true" SourceFiles="@(MicrosoftTestingInternalFrameworkSourceGenerationPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
 
-    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.hangdump\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.hangdump.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.hangdump.$(MicrosoftTestingPlatformVersion).nupkg" />
-    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.telemetry\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.telemetry.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.telemetry.$(MicrosoftTestingPlatformVersion).nupkg" />
-    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.trxreport.abstractions\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.trxreport.abstractions.$(microsofttestingplatformversion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.trxreport.abstractions.$(MicrosoftTestingPlatformVersion).nupkg" />
-    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.vstestbridge\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.vstestbridge.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.vstestbridge.$(MicrosoftTestingPlatformVersion).nupkg" />
-    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.platform.msbuild\$(MicrosoftTestingPlatformVersion)\microsoft.testing.platform.msbuild.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.platform.msbuild.$(MicrosoftTestingPlatformVersion).nupkg" />
+    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.hotreload\$(MicrosoftTestingInternalFrameworkVersion)\microsoft.testing.extensions.hotreload.$(MicrosoftTestingInternalFrameworkVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.hotreload.$(MicrosoftTestingInternalFrameworkVersion).nupkg" />
+    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.retry\$(MicrosoftTestingInternalFrameworkVersion)\microsoft.testing.extensions.retry.$(MicrosoftTestingInternalFrameworkVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.retry.$(MicrosoftTestingInternalFrameworkVersion).nupkg" />
   </Target>
 
 </Project>

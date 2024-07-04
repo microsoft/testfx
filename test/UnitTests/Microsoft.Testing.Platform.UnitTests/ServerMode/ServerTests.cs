@@ -5,8 +5,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-using Microsoft.Testing.Internal.Framework;
-using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -14,7 +12,6 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.TestInfrastructure;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -65,7 +62,7 @@ public class ServerTests : TestBase
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter());
         var testApplication = (TestApplication)await builder.BuildAsync();
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
-        var serverTask = Task.Run(() => testApplication.RunAsync());
+        var serverTask = Task.Run(testApplication.RunAsync);
 
         using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
         using TcpClient client = await server.WaitForConnectionAsync(timeout.Token);
@@ -149,7 +146,7 @@ public class ServerTests : TestBase
         });
         var testApplication = (TestApplication)await builder.BuildAsync();
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
-        var serverTask = Task.Run(() => testApplication.RunAsync());
+        var serverTask = Task.Run(testApplication.RunAsync);
 
         using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
         using TcpClient client = await server.WaitForConnectionAsync(timeout.Token);

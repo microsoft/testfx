@@ -51,7 +51,7 @@ public abstract class TestContainer : IDisposable
     }
 
     public static void Verify(
-        bool condition,
+        [DoesNotReturnIf(false)] bool condition,
         [CallerArgumentExpression(nameof(condition))] string? expression = default,
         [CallerMemberName] string? caller = default,
         [CallerFilePath] string? filePath = default,

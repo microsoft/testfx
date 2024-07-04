@@ -3,9 +3,7 @@
 
 using System.Diagnostics;
 
-using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.TestInfrastructure;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -25,7 +23,7 @@ public class SystemAsyncMonitorTests : TestBase
         var stopwatch = Stopwatch.StartNew();
         for (int i = 0; i < 3; i++)
         {
-            tasks.Add(Task.Run(() => TestLock()));
+            tasks.Add(Task.Run(TestLock));
         }
 
         await Task.WhenAll(tasks.ToArray());

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -10,6 +10,36 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// </summary>
 internal static class Constants
 {
+    /// <summary>
+    /// The 3rd level entry (class) name in the hierarchy array.
+    /// </summary>
+    internal const string AssemblyFixturesHierarchyClassName = "[Assembly]";
+
+    /// <summary>
+    /// Discover fixtures or not.
+    /// </summary>
+    internal const string FixturesTestTrait = "FixturesTrait";
+
+    /// <summary>
+    /// Assembly initialize.
+    /// </summary>
+    internal const string AssemblyInitializeFixtureTrait = "AssemblyInitialize";
+
+    /// <summary>
+    /// Assembly cleanup.
+    /// </summary>
+    internal const string AssemblyCleanupFixtureTrait = "AssemblyCleanup";
+
+    /// <summary>
+    /// Class initialize.
+    /// </summary>
+    internal const string ClassInitializeFixtureTrait = "ClassInitialize";
+
+    /// <summary>
+    /// Class cleanup.
+    /// </summary>
+    internal const string ClassCleanupFixtureTrait = "ClassCleanup";
+
     /// <summary>
     /// Uri of the MSTest executor.
     /// </summary>

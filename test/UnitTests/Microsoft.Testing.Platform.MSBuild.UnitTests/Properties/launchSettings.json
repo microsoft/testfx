@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Microsoft.Testing.Platform.MSBuild.UnitTests": {
+      "commandName": "Project",
+      "commandLineArgs": ""
+    }
+  }
+}

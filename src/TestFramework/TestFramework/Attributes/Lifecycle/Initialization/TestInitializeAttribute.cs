@@ -6,5 +6,5 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// The test initialize attribute.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Method)]
 public sealed class TestInitializeAttribute : Attribute;

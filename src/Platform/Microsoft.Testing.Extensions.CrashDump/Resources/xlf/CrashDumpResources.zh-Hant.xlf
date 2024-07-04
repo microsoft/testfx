@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="zh-Hant" original="../CrashDumpResources.resx">
+    <body>
+      <trans-unit id="CannotFindExpectedCrashDumpFile">
+        <source>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</source>
+        <target state="translated">找不到預期的損毀傾印檔案 '{0}'，符合 '*.dmp' 模式的所有檔案都將複製到結果資料夾</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpArtifactDescription">
+        <source>The testhost process crash dump file</source>
+        <target state="translated">testhost 處理常式損毀傾印檔案</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpArtifactDisplayName">
+        <source>Crash dump file</source>
+        <target state="translated">損毀傾印檔案</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpDescription">
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
+        <target state="translated">[net6.0+ only] 測試執行流程意外損毀時會產生損毀傾印檔案</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpDisplayName">
+        <source>Crash dump</source>
+        <target state="translated">損毀傾印</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpFileNameOptionDescription">
+        <source>Specify the name of the dump file</source>
+        <target state="translated">指定傾印檔案的名稱</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
+        <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
+        <target state="translated">環境變數 '{0}' 應該設定為 '{1}' 但值為 '{2}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
+        <source>Crash dump feature is only available in .NET (Core)</source>
+        <target state="translated">只有 .NET (Core) 才可使用損毀傾印功能</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpOptionDescription">
+        <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
+        <target state="translated">[net6.0+ only] 如果測試流程損毀，則產生傾印檔案</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
+        <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
+        <target state="translated">PID '{0}' 損毀的測試主機處理常式，已產生傾印檔案</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpTypeOptionDescription">
+        <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
+        <target state="translated">指定傾印的類型。有效值為 'Mini'、'Heap'、'Triage' 或 'Full'。預設類型為 'Full'。如需詳細資訊，請瀏覽 https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpTypeOptionInvalidType">
+        <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
+        <target state="translated">'{0}' 不是有效的傾印類型。有效的選項為 'Mini'、'Heap'、'Triage' 和 'Full'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpTypeOptionTooManyArguments">
+        <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
+        <target state="translated">'--crashdump-type' 需要單一傾印類型做為引數 (例如 '--crashdump-type Heap')</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnsupportedRequestTypeErrorMessage">
+        <source>Requests of type '{0}' is not supported</source>
+        <target state="translated">不支援類型 '{0}' 的要求</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -82,7 +83,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame<T>(T? expected, T? actual, string? message, params object?[]? parameters)
+    public static void AreSame<T>(T? expected, T? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         if (ReferenceEquals(expected, actual))
         {
@@ -179,7 +180,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> refers to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotSame<T>(T? notExpected, T? actual, string? message, params object?[]? parameters)
+    public static void AreNotSame<T>(T? notExpected, T? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         if (ReferenceEquals(notExpected, actual))
         {

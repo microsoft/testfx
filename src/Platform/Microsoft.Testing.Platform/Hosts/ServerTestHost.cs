@@ -9,7 +9,6 @@ using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
@@ -448,7 +447,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             invoker,
             filterFactory,
             new ServerModePerCallOutputDevice(),
-            new IDataConsumer[] { testNodeUpdateProcessor },
+            [testNodeUpdateProcessor],
             _testFrameworkManager,
             _testSessionManager,
             new MessageBusProxy(),
@@ -542,7 +541,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             { TelemetryProperties.RequestProperties.AdapterLoadStop, adapterLoadStop },
             { TelemetryProperties.RequestProperties.RequestExecuteStart, requestExecuteStart },
             { TelemetryProperties.RequestProperties.RequestExecuteStop, requestExecuteStop },
-            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args?.TestNodes is not null || args?.GraphFilter is not null).AsTelemetryBool() },
+            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args.TestNodes is not null || args?.GraphFilter is not null).AsTelemetryBool() },
         };
 
     internal static Dictionary<string, object> GetRunMetrics(
@@ -562,7 +561,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             { TelemetryProperties.RequestProperties.AdapterLoadStop, adapterLoadStop },
             { TelemetryProperties.RequestProperties.RequestExecuteStart, requestExecuteStart },
             { TelemetryProperties.RequestProperties.RequestExecuteStop, requestExecuteStop },
-            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args?.TestNodes is not null || args?.GraphFilter is not null).AsTelemetryBool() },
+            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args.TestNodes is not null || args?.GraphFilter is not null).AsTelemetryBool() },
         };
 
     private async Task SendErrorAsync(int reqId, int errorCode, string message, object? data, CancellationToken cancellationToken)

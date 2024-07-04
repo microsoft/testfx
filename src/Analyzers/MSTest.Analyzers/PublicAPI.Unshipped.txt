@@ -23,6 +23,8 @@ MSTest.Analyzers.DoNotNegateBooleanAssertionAnalyzer
 MSTest.Analyzers.DoNotNegateBooleanAssertionAnalyzer.DoNotNegateBooleanAssertionAnalyzer() -> void
 MSTest.Analyzers.DoNotStoreStaticTestContextAnalyzer
 MSTest.Analyzers.DoNotStoreStaticTestContextAnalyzer.DoNotStoreStaticTestContextAnalyzer() -> void
+MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer
+MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer.DoNotUseSystemDescriptionAttributeAnalyzer() -> void
 MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer
 MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer.PreferAssertFailOverAlwaysFalseConditionsAnalyzer() -> void
 MSTest.Analyzers.PreferConstructorOverTestInitializeAnalyzer
@@ -51,6 +53,8 @@ MSTest.Analyzers.TestMethodShouldBeValidAnalyzer
 MSTest.Analyzers.TestMethodShouldBeValidAnalyzer.TestMethodShouldBeValidAnalyzer() -> void
 MSTest.Analyzers.TestMethodShouldNotBeIgnoredAnalyzer
 MSTest.Analyzers.TestMethodShouldNotBeIgnoredAnalyzer.TestMethodShouldNotBeIgnoredAnalyzer() -> void
+MSTest.Analyzers.TypeContainingTestMethodShouldBeATestClassAnalyzer
+MSTest.Analyzers.TypeContainingTestMethodShouldBeATestClassAnalyzer.TypeContainingTestMethodShouldBeATestClassAnalyzer() -> void
 MSTest.Analyzers.UseAsyncSuffixTestFixtureMethodSuppressor
 MSTest.Analyzers.UseAsyncSuffixTestFixtureMethodSuppressor.UseAsyncSuffixTestFixtureMethodSuppressor() -> void
 MSTest.Analyzers.UseAsyncSuffixTestMethodSuppressor
@@ -79,6 +83,8 @@ override MSTest.Analyzers.DoNotNegateBooleanAssertionAnalyzer.Initialize(Microso
 override MSTest.Analyzers.DoNotNegateBooleanAssertionAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.DoNotStoreStaticTestContextAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.DoNotStoreStaticTestContextAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.PreferConstructorOverTestInitializeAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
@@ -107,6 +113,8 @@ override MSTest.Analyzers.TestMethodShouldBeValidAnalyzer.Initialize(Microsoft.C
 override MSTest.Analyzers.TestMethodShouldBeValidAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.TestMethodShouldNotBeIgnoredAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.TestMethodShouldNotBeIgnoredAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.TypeContainingTestMethodShouldBeATestClassAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.TypeContainingTestMethodShouldBeATestClassAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.UseAsyncSuffixTestFixtureMethodSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void
 override MSTest.Analyzers.UseAsyncSuffixTestFixtureMethodSuppressor.SupportedSuppressions.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.SuppressionDescriptor!>
 override MSTest.Analyzers.UseAsyncSuffixTestMethodSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void

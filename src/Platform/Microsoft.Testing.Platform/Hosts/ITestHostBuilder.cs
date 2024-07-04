@@ -41,5 +41,5 @@ internal interface ITestHostBuilder
 
     IToolsManager Tools { get; }
 
-    Task<ITestHost> BuildAsync(string[] args, ApplicationLoggingState loggingState, TestApplicationOptions testApplicationOptions, IUnhandledExceptionsHandler unhandledExceptionsHandler, DateTimeOffset createBuilderStart);
+    Task<ITestHost> BuildAsync(ApplicationLoggingState loggingState, TestApplicationOptions testApplicationOptions, IUnhandledExceptionsHandler unhandledExceptionsHandler, DateTimeOffset createBuilderStart);
 }

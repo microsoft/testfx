@@ -178,7 +178,8 @@ public class TestExecutionManager
 
             try
             {
-                if (testResult.Outcome != TestOutcome.NotFound || !IsInHotReloadMode())
+                if (testResult.Outcome != TestOutcome.NotFound
+                    || !RuntimeContext.IsHotReloadEnabled)
                 {
                     testExecutionRecorder.RecordResult(testResult);
                 }
@@ -190,16 +191,17 @@ public class TestExecutionManager
         }
     }
 
-    // TODO: We should be using a capability from the runner instead of looking at environment variables.
-    private static bool IsInHotReloadMode()
-        => Environment.GetEnvironmentVariable("DOTNET_WATCH") == "1"
-        || Environment.GetEnvironmentVariable("TESTINGPLATFORM_HOTRELOAD_ENABLED") == "1";
-
     private static bool MatchTestFilter(ITestCaseFilterExpression? filterExpression, TestCase test, TestMethodFilter testMethodFilter)
     {
         if (filterExpression != null
             && !filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)))
         {
+            // If this is a fixture test, return true. Fixture tests are not filtered out and are always available for the status.
+            if (test.Traits.Any(t => t.Name == Constants.FixturesTestTrait))
+            {
+                return true;
+            }
+
             // Skip test if not fitting filter criteria.
             return false;
         }
@@ -284,16 +286,13 @@ public class TestExecutionManager
         if (!MSTestSettings.CurrentSettings.DisableParallelization && sourceSettings.CanParallelizeAssembly && parallelWorkers > 0)
         {
             // Parallelization is enabled. Let's do further classification for sets.
-            var logger = (IMessageLogger)frameworkHandle;
-            logger.SendMessage(
+            frameworkHandle.SendMessage(
                 TestMessageLevel.Informational,
                 string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
 
             // Create test sets for execution, we can execute them in parallel based on parallel settings
-            IEnumerable<IGrouping<bool, TestCase>> testSets = [];
-
             // Parallel and not parallel sets.
-            testSets = testsToRun.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, false));
+            IEnumerable<IGrouping<bool, TestCase>> testSets = testsToRun.GroupBy(t => t.GetPropertyValue(Constants.DoNotParallelizeProperty, false));
 
             IGrouping<bool, TestCase>? parallelizableTestSet = testSets.FirstOrDefault(g => !g.Key);
             IGrouping<bool, TestCase>? nonParallelizableTestSet = testSets.FirstOrDefault(g => g.Key);
@@ -310,7 +309,7 @@ public class TestExecutionManager
                         break;
 
                     case ExecutionScope.ClassLevel:
-                        queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.TestClassNameProperty) as string));
+                        queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(Constants.TestClassNameProperty) as string));
                         break;
                 }
 
@@ -336,7 +335,17 @@ public class TestExecutionManager
                     }));
                 }
 
-                Task.WaitAll(tasks.ToArray());
+                try
+                {
+                    Task.WaitAll(tasks.ToArray());
+                }
+                catch (Exception ex)
+                {
+                    string exceptionToString = ex.ToString();
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("Error occurred while executing tests in parallel{0}{1}", Environment.NewLine, exceptionToString);
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, exceptionToString);
+                    throw;
+                }
             }
 
             // Queue the non parallel set
@@ -379,6 +388,9 @@ public class TestExecutionManager
         IDictionary<string, object> sourceLevelParameters,
         UnitTestRunner testRunner)
     {
+        bool hasAnyRunnableTests = false;
+        var fixtureTests = new List<TestCase>();
+
         foreach (TestCase currentTest in tests)
         {
             if (_cancellationToken is { Canceled: true })
@@ -386,6 +398,15 @@ public class TestExecutionManager
                 break;
             }
 
+            // If it is a fixture test, add it to the list of fixture tests and do not execute it.
+            // It is executed by test itself.
+            if (currentTest.Traits.Any(t => t.Name == Constants.FixturesTestTrait))
+            {
+                fixtureTests.Add(currentTest);
+                continue;
+            }
+
+            hasAnyRunnableTests = true;
             var unitTestElement = currentTest.ToUnitTestElement(source);
 
             testExecutionRecorder.RecordStart(currentTest);
@@ -404,6 +425,30 @@ public class TestExecutionManager
             DateTimeOffset endTime = DateTimeOffset.Now;
 
             SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
+        }
+
+        // Once all tests have been executed, update the status of fixture tests.
+        foreach (TestCase currentTest in fixtureTests)
+        {
+            testExecutionRecorder.RecordStart(currentTest);
+
+            // If there were only fixture tests, send an inconclusive result.
+            if (!hasAnyRunnableTests)
+            {
+                var result = new UnitTestResult(ObjectModel.UnitTestOutcome.Inconclusive, null);
+                SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
+                continue;
+            }
+
+            Trait trait = currentTest.Traits.First(t => t.Name == Constants.FixturesTestTrait);
+            var unitTestElement = currentTest.ToUnitTestElement(source);
+            FixtureTestResult fixtureTestResult = testRunner.GetFixtureTestResult(unitTestElement.TestMethod, trait.Value);
+
+            if (fixtureTestResult.IsExecuted)
+            {
+                var result = new UnitTestResult(fixtureTestResult.Outcome, null);
+                SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
+            }
         }
     }
 

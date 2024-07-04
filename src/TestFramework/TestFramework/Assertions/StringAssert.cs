@@ -147,7 +147,7 @@ public sealed class StringAssert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
     /// </exception>
-    public static void Contains([NotNull] string? value, [NotNull] string? substring, string? message,
+    public static void Contains([NotNull] string? value, [NotNull] string? substring, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
         => Contains(value, substring, message, StringComparison.Ordinal, parameters);
 
@@ -177,7 +177,7 @@ public sealed class StringAssert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
     /// </exception>
-    public static void Contains([NotNull] string? value, [NotNull] string? substring, string? message,
+    public static void Contains([NotNull] string? value, [NotNull] string? substring, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         StringComparison comparisonType, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(value, "StringAssert.Contains", "value", string.Empty);
@@ -276,7 +276,7 @@ public sealed class StringAssert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
-    public static void StartsWith([NotNull] string? value, [NotNull] string? substring, string? message,
+    public static void StartsWith([NotNull] string? value, [NotNull] string? substring, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
         => StartsWith(value, substring, message, StringComparison.Ordinal, parameters);
 
@@ -333,7 +333,7 @@ public sealed class StringAssert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
-    public static void StartsWith([NotNull] string? value, [NotNull] string? substring, string? message,
+    public static void StartsWith([NotNull] string? value, [NotNull] string? substring, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         StringComparison comparisonType, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(value, "StringAssert.StartsWith", "value", string.Empty);
@@ -432,7 +432,7 @@ public sealed class StringAssert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not end with <paramref name="substring"/>.
     /// </exception>
-    public static void EndsWith([NotNull] string? value, [NotNull] string? substring, string? message,
+    public static void EndsWith([NotNull] string? value, [NotNull] string? substring, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
         => EndsWith(value, substring, message, StringComparison.Ordinal, parameters);
 
@@ -489,7 +489,7 @@ public sealed class StringAssert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not end with <paramref name="substring"/>.
     /// </exception>
-    public static void EndsWith([NotNull] string? value, [NotNull] string? substring, string? message,
+    public static void EndsWith([NotNull] string? value, [NotNull] string? substring, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         StringComparison comparisonType, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(value, "StringAssert.EndsWith", "value", string.Empty);
@@ -570,7 +570,7 @@ public sealed class StringAssert
     /// <paramref name="value"/> is null, or <paramref name="pattern"/> is null,
     /// or <paramref name="value"/> does not match <paramref name="pattern"/>.
     /// </exception>
-    public static void Matches([NotNull] string? value, [NotNull] Regex? pattern, string? message, params object?[]? parameters)
+    public static void Matches([NotNull] string? value, [NotNull] Regex? pattern, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(value, "StringAssert.Matches", "value", string.Empty);
         Assert.CheckParameterNotNull(pattern, "StringAssert.Matches", "pattern", string.Empty);
@@ -647,7 +647,7 @@ public sealed class StringAssert
     /// <paramref name="value"/> is null, or <paramref name="pattern"/> is null,
     /// or <paramref name="value"/> matches <paramref name="pattern"/>.
     /// </exception>
-    public static void DoesNotMatch([NotNull] string? value, [NotNull] Regex? pattern, string? message, params object?[]? parameters)
+    public static void DoesNotMatch([NotNull] string? value, [NotNull] Regex? pattern, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(value, "StringAssert.DoesNotMatch", "value", string.Empty);
         Assert.CheckParameterNotNull(pattern, "StringAssert.DoesNotMatch", "pattern", string.Empty);

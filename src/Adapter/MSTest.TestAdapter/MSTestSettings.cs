@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -192,6 +192,13 @@ public class MSTestSettings
     public bool TreatClassAndAssemblyCleanupWarningsAsErrors { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether AssemblyInitialize, AssemblyCleanup, ClassInitialize and ClassCleanup methods are
+    /// reported as special tests (cannot be executed). When this feature is enabled, these methods will be reported as
+    /// separate entries in the TRX reports, in Test Explorer or in CLI.
+    /// </summary>
+    internal bool ConsiderFixturesAsSpecialTests { get; private set; }
+
+    /// <summary>
     /// Populate settings based on existing settings object.
     /// </summary>
     /// <param name="settings">The existing settings object.</param>
@@ -222,6 +229,7 @@ public class MSTestSettings
         CurrentSettings.ClassCleanupTimeout = settings.ClassCleanupTimeout;
         CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
         CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
+        CurrentSettings.ConsiderFixturesAsSpecialTests = settings.ConsiderFixturesAsSpecialTests;
     }
 
     /// <summary>
@@ -553,6 +561,16 @@ public class MSTestSettings
                             break;
                         }
 
+                    case "CONSIDERFIXTURESASSPECIALTESTS":
+                        {
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.ConsiderFixturesAsSpecialTests = result;
+                            }
+
+                            break;
+                        }
+
                     default:
                         {
                             PlatformServiceProvider.Instance.SettingsProvider.Load(reader.ReadSubtree());
@@ -642,7 +660,7 @@ public class MSTestSettings
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
         MSTestSettings settings)
     {
-        XElement? runConfigElement = XDocument.Parse(runsettingsXml)?.Element("RunSettings")?.Element("RunConfiguration");
+        XElement? runConfigElement = XDocument.Parse(runsettingsXml).Element("RunSettings")?.Element("RunConfiguration");
 
         if (runConfigElement == null)
         {

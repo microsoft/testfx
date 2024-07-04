@@ -117,7 +117,7 @@ public sealed partial class Assert
     /// <paramref name="expectedType"/> is not in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message,
+    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         if (expectedType == null || value == null)
@@ -146,7 +146,7 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static void IsInstanceOfType<T>([NotNull] object? value, string? message, params object?[]? parameters)
+    public static void IsInstanceOfType<T>([NotNull] object? value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => IsInstanceOfType(value, typeof(T), message, parameters);
 
     /// <summary>
@@ -155,7 +155,7 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, string? message, params object?[]? parameters)
+    public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         IsInstanceOfType(value, typeof(T), message, parameters);
         instance = (T)value;
@@ -246,7 +246,7 @@ public sealed partial class Assert
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message,
+    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         if (wrongType == null)
@@ -281,6 +281,6 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The type that <paramref name="value"/> should not be.</typeparam>
-    public static void IsNotInstanceOfType<T>(object? value, string? message, params object?[]? parameters)
+    public static void IsNotInstanceOfType<T>(object? value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => IsNotInstanceOfType(value, typeof(T), message, parameters);
 }

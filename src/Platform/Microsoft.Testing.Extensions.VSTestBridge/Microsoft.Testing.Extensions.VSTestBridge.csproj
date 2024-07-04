@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Internal.Framework" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Internal.Framework.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.TestAnywhereAdapter" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport.Abstractions\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" />
+  </ItemGroup>
+
+  <!-- NuGet properties -->
+  <PropertyGroup>
+    <PackageDescription>
+      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+This package provides a bridge integration for test adapters wanting to target both VSTest and Microsoft.Testing.Platform test platforms.]]>
+    </PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources\ExtensionResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ExtensionResources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\ExtensionResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ExtensionResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

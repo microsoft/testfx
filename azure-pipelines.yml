@@ -106,6 +106,7 @@ stages:
             -prepareMachine
             $(_InternalBuildArgs)
             /p:Test=false
+            /p:FastAcceptanceTest=true
           name: Build
           displayName: Build
 
@@ -116,7 +117,6 @@ stages:
               -configuration $(_BuildConfig)
               -ci
               -nobl
-              /p:FastAcceptanceTest=true
             name: Test
             displayName: Test
 
@@ -146,13 +146,14 @@ stages:
             -prepareMachine
             /p:Test=false
             /p:NonWindowsBuild=true
+            /p:FastAcceptanceTest=true
           displayName: Build
 
         - ${{ if eq(parameters.SkipTests, False) }}:
-          # -ci is allowing to import some environment variables and some required configurations
-          # --excludeCIBinarylog avoids overwriting build binlog with binlog from tests
+          # --ci is allowing to import some environment variables and some required configurations
+          # --nobl avoids overwriting build binlog with binlog from tests
           - script: |
               chmod +x ./test.sh
-              ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --excludeCIBinarylog /p:FastAcceptanceTest=true
+              ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
             name: Test
             displayName: Tests

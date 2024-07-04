@@ -436,4 +436,22 @@
   <data name="UseParallelizeAttributeAnalyzerTitle" xml:space="preserve">
     <value>Explicitly enable or disable tests parallelization</value>
   </data>
+  <data name="TypeContainingTestMethodShouldBeATestClassTitle" xml:space="preserve">
+    <value>Type containing '[TestMethod]' should be marked with '[TestClass]'</value>
+  </data>
+  <data name="TypeContainingTestMethodShouldBeATestClassDescription" xml:space="preserve">
+    <value>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</value>
+  </data>
+  <data name="TypeContainingTestMethodShouldBeATestClassMessageFormat" xml:space="preserve">
+    <value>Class '{0}' contains test methods and should be marked with '[TestClass]'</value>
+  </data>
+  <data name="DoNotUseSystemDescriptionAttributeTitle" xml:space="preserve">
+    <value>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</value>
+  </data>
+  <data name="DoNotUseSystemDescriptionAttributeMessageFormat" xml:space="preserve">
+    <value>Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</value>
+  </data>
+  <data name="DoNotUseSystemDescriptionAttributeDescription" xml:space="preserve">
+    <value>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</value>
+  </data>
 </root>

@@ -84,6 +84,7 @@ UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter TestCategory=category|Priority=1");
 
         testHostResult.AssertOutputContains("Zero tests ran");
+        testHostResult.AssertExitCodeIs(8);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -97,14 +98,13 @@ UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
         private const string SourceCode = """
 #file TestFilter.csproj
 <Project Sdk="Microsoft.NET.Sdk">
-    
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
@@ -114,7 +114,6 @@ UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
   <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 
 </Project>

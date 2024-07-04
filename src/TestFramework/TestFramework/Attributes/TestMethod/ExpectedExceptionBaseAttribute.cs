@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Base class for attributes that specify to expect an exception from a unit test.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+[AttributeUsage(AttributeTargets.Method)]
 public abstract class ExpectedExceptionBaseAttribute : Attribute
 {
     /// <summary>

@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -18,6 +20,7 @@ public partial class AssertTests
     }
 
     // See https://github.com/dotnet/sdk/issues/25373
+    [SuppressMessage("Usage", "CA2241:Provide correct arguments to formatting methods", Justification = "We want to test invalid format")]
     public void InconclusiveThrowsWhenMessageContainsInvalidStringFormatComposite()
     {
         Exception ex = VerifyThrows(() => Assert.Inconclusive("{", "arg"));

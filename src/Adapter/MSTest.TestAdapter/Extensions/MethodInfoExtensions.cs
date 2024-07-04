@@ -150,13 +150,13 @@ internal static class MethodInfoExtensions
                     methodInfo.Name));
         }
 
-        Task? task;
+        object? invokeResult;
 
         if (arguments is not null
-            && methodParameters?.Length == 1
+            && methodParameters.Length == 1
             && methodParameters[0].ParameterType == typeof(object[]))
         {
-            task = methodInfo.Invoke(classInstance, [arguments]) as Task;
+            invokeResult = methodInfo.Invoke(classInstance, [arguments]);
         }
         else
         {
@@ -169,7 +169,7 @@ internal static class MethodInfoExtensions
 
             try
             {
-                task = methodInfo.Invoke(classInstance, arguments) as Task;
+                invokeResult = methodInfo.Invoke(classInstance, arguments);
             }
             catch (Exception ex) when (ex is TargetParameterCountException or ArgumentException)
             {
@@ -178,7 +178,16 @@ internal static class MethodInfoExtensions
         }
 
         // If methodInfo is an async method, wait for returned task
-        task?.GetAwaiter().GetResult();
+        if (invokeResult is Task task)
+        {
+            task.GetAwaiter().GetResult();
+        }
+#if NET6_0_OR_GREATER
+        else if (invokeResult is ValueTask valueTask)
+        {
+            valueTask.GetAwaiter().GetResult();
+        }
+#endif
     }
 
     private static TestFailedException GetParameterCountMismatchException(MethodInfo methodInfo, object?[]? arguments, ParameterInfo[]? methodParameters, int methodParametersLengthOrZero, int argumentsLengthOrZero, Exception? innerException) =>

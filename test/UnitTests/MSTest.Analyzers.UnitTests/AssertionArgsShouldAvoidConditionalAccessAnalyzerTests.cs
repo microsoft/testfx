@@ -1,9 +1,5 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-#nullable enable
-
-using Microsoft.Testing.Internal.Framework;
-using Microsoft.Testing.TestInfrastructure;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AssertionArgsShouldAvoidConditionalAccessAnalyzer,
@@ -36,7 +32,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                     A? a = new A();
                     A b = new A();
                     string? s = "";
-            
+
                     [|Assert.AreEqual(s?.Length, 32)|];
                     [|Assert.AreEqual(((s?.Length)), 32)|];
                     [|Assert.AreEqual(s?.Length, s?.Length)|];
@@ -60,7 +56,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                     [|Assert.AreSame(b.S?.Length, 32)|];
                     [|Assert.AreSame(a?.T?[3]?.Length, 32)|];
                     [|Assert.AreSame(b.T?[3]?.Length, 32)|];
-            
+
                     [|Assert.AreNotSame(s?.Length, 32)|];
                     [|Assert.AreNotSame(((s?.Length)), 32)|];
                     [|Assert.AreNotSame(s?.Length, s?.Length)|];
@@ -124,7 +120,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                     A? a = new A();
                     A b = new A();
                     string? s = "";
-            
+
                     [|Assert.IsTrue(s?.Length > 32)|];
                     [|Assert.IsTrue((s?.Length> 32))|];
                     [|Assert.IsTrue(a?.S?.Length > 32)|];
@@ -213,7 +209,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                 {
                     A? a = new A();
                     A b = new A();
-            
+
                     [|CollectionAssert.AreEqual(a?.S, b.S)|];
                     [|CollectionAssert.AreEqual(a?.S, a?.S)|];
                     [|CollectionAssert.AreEqual(b.S, a?.S)|];
@@ -286,7 +282,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                     Regex r = new Regex("");
                     A? a = new A();
                     A b = new A();
-            
+
                     [|StringAssert.Contains(a?.S, s)|];
                     [|StringAssert.Contains(a?.S, a?.S)|];
                     [|StringAssert.Contains(b.S, a?.S)|];

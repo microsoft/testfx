@@ -14,6 +14,40 @@ internal static class AcceptanceAssert
     public static void AssertExitCodeIsNot(this TestHostResult testHostResult, int exitCode, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.That(exitCode != testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult), callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber);
 
+    public static void AssertOutputMatches(this TestHostResult testHostResult, string wildcardPattern, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    {
+        string[] wildcardLines = wildcardPattern.Split(Environment.NewLine);
+        for (int i = 0; i < testHostResult.StandardOutputLines.Count; i++)
+        {
+            string outputLine = testHostResult.StandardOutputLines[i];
+
+            if (wildcardLines[i].Contains('*'))
+            {
+                string matchingPatternLine =
+                    "^"
+                    + Regex.Escape(wildcardLines[i]).Replace("\\*", ".*")
+                    + "$";
+
+                Assert.That(
+                    Regex.IsMatch(outputLine, matchingPatternLine, RegexOptions.Singleline),
+                    $"Output on line {i + 1}{Environment.NewLine}{outputLine}{Environment.NewLine}doesn't match pattern{Environment.NewLine}{matchingPatternLine}",
+                    callerMemberName: callerMemberName,
+                    callerFilePath: callerFilePath,
+                    callerLineNumber: callerLineNumber);
+            }
+            else
+            {
+                string expectedLine = wildcardLines[i];
+                Assert.That(
+                    string.Equals(outputLine, expectedLine, StringComparison.Ordinal),
+                    $"Output on line {i + 1} (length: {outputLine.Length}){Environment.NewLine}{outputLine}{Environment.NewLine}doesn't match line (length: {expectedLine.Length}){Environment.NewLine}{expectedLine}",
+                    callerMemberName: callerMemberName,
+                    callerFilePath: callerFilePath,
+                    callerLineNumber: callerLineNumber);
+            }
+        }
+    }
+
     public static void AssertOutputMatchesRegex(this TestHostResult testHostResult, string pattern, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.That(Regex.IsMatch(testHostResult.StandardOutput, pattern), GenerateFailedAssertionMessage(testHostResult), callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber);
 

@@ -106,7 +106,7 @@ class AssemblyResolver :
             throw new ArgumentNullException(nameof(directories));
         }
 
-        _searchDirectories = new List<string>(directories);
+        _searchDirectories = [.. directories];
         _directoryList = new Queue<RecursiveDirectoryPath>();
 
         // In source gen mode don't register any custom resolver. We can still resolve in the same folder,
@@ -119,7 +119,7 @@ class AssemblyResolver :
         {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
 #if NETFRAMEWORK
-            AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
+        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
 
             // This is required for winmd resolution for arm built sources discovery on desktop.
             WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve += new EventHandler<NamespaceResolveEventArgs>(WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
@@ -252,11 +252,11 @@ class AssemblyResolver :
             if (disposing)
             {
                 // cleanup Managed resources like calling dispose on other managed object created.
-                AppDomain.CurrentDomain.AssemblyResolve -= new ResolveEventHandler(OnResolve);
+                AppDomain.CurrentDomain.AssemblyResolve -= OnResolve;
 
 #if NETFRAMEWORK
-                AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= new ResolveEventHandler(ReflectionOnlyOnResolve);
-                WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve -= new EventHandler<NamespaceResolveEventArgs>(WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
+                AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= ReflectionOnlyOnResolve;
+                WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve -= WindowsRuntimeMetadataReflectionOnlyNamespaceResolve;
 #endif
             }
 
@@ -333,7 +333,7 @@ class AssemblyResolver :
         }
 
         // args.Name is like: "Microsoft.VisualStudio.TestTools.Common, Version=[VersionMajor].0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
-        AssemblyName? requestedName = null;
+        AssemblyName? requestedName;
 
         try
         {

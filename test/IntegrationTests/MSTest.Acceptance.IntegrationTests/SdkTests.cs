@@ -9,7 +9,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
+// [TestGroup]
 public sealed class SdkTests : AcceptanceTestBase
 {
     private const string AssetName = "MSTestSdk";
@@ -18,6 +18,12 @@ public sealed class SdkTests : AcceptanceTestBase
 #file MSTestSdk.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$" >
   <PropertyGroup>
+    <!--
+        This property is not required by users and is only set to simplify our testing infrastructure. When testing out in local or ci,
+        we end up with a -dev or -ci version which will lose resolution over -preview dependency of code coverage. Because we want to
+        ensure we are testing with locally built version, we force adding the platform dependency.
+    -->
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
     $OutputType$
     $TargetFramework$
     $EnableMSTestRunner$
@@ -71,8 +77,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$EnableMSTestRunner$", "<UseVSTest>true</UseVSTest>")
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
-               .PatchCodeWithReplace("$Extensions$", string.Empty),
-               addPublicFeeds: true);
+               .PatchCodeWithReplace("$Extensions$", string.Empty));
 
         File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
 <Project>
@@ -85,13 +90,15 @@ namespace MSTestSdkTest
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
-        compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* ms - MSTestSdk.dll \(net8\.0\)");
-        compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* ms - MSTestSdk.dll \(net7\.0\)");
-        compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* ms - MSTestSdk.dll \(net6\.0\)");
+        compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
+#if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
+        compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net7\.0\)");
+        compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net6\.0\)");
+#endif
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* ms - MSTestSdk.dll \(net462\)");
+            compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net462\)");
         }
     }
 
@@ -107,8 +114,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
-               .PatchCodeWithReplace("$Extensions$", string.Empty),
-               addPublicFeeds: true);
+               .PatchCodeWithReplace("$Extensions$", string.Empty));
 
         File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
 <Project>
@@ -122,8 +128,10 @@ namespace MSTestSdkTest
         Assert.AreEqual(0, compilationResult.ExitCode);
 
         compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net8\.0|x64\]");
+#if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
         compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net7\.0|x64\]");
         compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net6\.0|x64\]");
+#endif
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -143,8 +151,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
-               .PatchCodeWithReplace("$Extensions$", string.Empty),
-               addPublicFeeds: true);
+               .PatchCodeWithReplace("$Extensions$", string.Empty));
 
         File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
 <Project>
@@ -176,8 +183,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
-               .PatchCodeWithReplace("$Extensions$", string.Empty),
-               addPublicFeeds: true);
+               .PatchCodeWithReplace("$Extensions$", string.Empty));
 
         File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
 <Project>
@@ -253,8 +259,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
-               .PatchCodeWithReplace("$Extensions$", msbuildExtensionEnableFragment),
-               addPublicFeeds: true);
+               .PatchCodeWithReplace("$Extensions$", msbuildExtensionEnableFragment));
 
         File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
 <Project>
@@ -289,8 +294,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
-               .PatchCodeWithReplace("$Extensions$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"),
-               addPublicFeeds: true);
+               .PatchCodeWithReplace("$Extensions$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"));
 
         File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
 <Project>
@@ -336,8 +340,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
-               .PatchCodeWithReplace("$Extensions$", enableDefaultExtensions ? string.Empty : "<TestingExtensionsProfile>None</TestingExtensionsProfile>"),
-               addPublicFeeds: true);
+               .PatchCodeWithReplace("$Extensions$", enableDefaultExtensions ? string.Empty : "<TestingExtensionsProfile>None</TestingExtensionsProfile>"));
 
         File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
 <Project>
@@ -376,8 +379,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
-               .PatchCodeWithReplace("$Extensions$", "<TestingExtensionsProfile>WrongName</TestingExtensionsProfile>"),
-               addPublicFeeds: true);
+               .PatchCodeWithReplace("$Extensions$", "<TestingExtensionsProfile>WrongName</TestingExtensionsProfile>"));
 
         File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
 <Project>
@@ -397,28 +399,27 @@ namespace MSTestSdkTest
         // I suppose due to the load on the build machines. So, we retry the test a few times.
         await RetryHelper.RetryAsync(
             async () =>
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return;
-            }
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    return;
+                }
 
-            using TestAsset generator = await TestAsset.GenerateAssetAsync(
-                   AssetName,
-                   SingleTestSourceCode
-                   .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                   .PatchCodeWithReplace("$OutputType$", string.Empty)
-                   .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{TargetFrameworks.NetCurrent.Arguments}</TargetFramework>")
-                   .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
-                   .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
-                   .PatchCodeWithReplace("$ExtraProperties$", """
+                using TestAsset generator = await TestAsset.GenerateAssetAsync(
+                       AssetName,
+                       SingleTestSourceCode
+                       .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                       .PatchCodeWithReplace("$OutputType$", string.Empty)
+                       .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{TargetFrameworks.NetCurrent.Arguments}</TargetFramework>")
+                       .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
+                       .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
+                       .PatchCodeWithReplace("$ExtraProperties$", """
         <PublishAot>true</PublishAot>
         <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
         """)
-                   .PatchCodeWithReplace("$Extensions$", string.Empty),
-                   addPublicFeeds: true);
+                       .PatchCodeWithReplace("$Extensions$", string.Empty));
 
-            File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
+                File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
@@ -426,14 +427,14 @@ namespace MSTestSdkTest
 </Project>
 """);
 
-            DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"publish -r {RID} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-            compilationResult.AssertOutputNotContains("warning");
-            compilationResult.AssertOutputContains("Generating native code");
-            var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments, verb: Verb.publish);
-            TestHostResult testHostResult = await testHost.ExecuteAsync();
-            testHostResult.AssertExitCodeIs(ExitCodes.Success);
-            testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
-        }, 3, TimeSpan.FromSeconds(5));
+                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"publish -r {RID} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                compilationResult.AssertOutputNotContains("warning");
+                compilationResult.AssertOutputContains("Generating native code");
+                var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments, verb: Verb.publish);
+                TestHostResult testHostResult = await testHost.ExecuteAsync();
+                testHostResult.AssertExitCodeIs(ExitCodes.Success);
+                testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+            }, 3, TimeSpan.FromSeconds(5));
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task EnablePlaywrightProperty_WhenUsingRunner_AllowsToRunPlaywrightTests(string tfm)

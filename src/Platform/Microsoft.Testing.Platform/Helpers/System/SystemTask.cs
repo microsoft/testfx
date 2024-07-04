@@ -26,7 +26,7 @@ internal sealed class SystemTask : ITask
         }
 
         TaskCompletionSource<int> taskCompletionSource = new();
-        Thread thread = new(new ThreadStart(() =>
+        Thread thread = new(() =>
         {
             try
             {
@@ -41,7 +41,7 @@ internal sealed class SystemTask : ITask
                 // will end inside the AppDomain.CurrentDomain.UnhandledException handler as expected
                 throw;
             }
-        }))
+        })
         {
             IsBackground = true,
             Name = name,

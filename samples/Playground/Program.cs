@@ -16,7 +16,7 @@ public class Program
         Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 
         ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
-        testApplicationBuilder.AddMSTest(() => new[] { Assembly.GetEntryAssembly()! });
+        testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
         // Enable Trx
         // testApplicationBuilder.AddTrxReportProvider();

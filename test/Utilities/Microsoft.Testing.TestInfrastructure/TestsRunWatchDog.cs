@@ -34,8 +34,8 @@ public static class TestsRunWatchDog
             throw new InvalidOperationException("No tests were executed. Have you called 'TestsRunWatchDog.AddTestRun'?");
         }
 
-        List<string> expectedTestsDidNotRun = new();
-        List<string> unexpectedRanTests = new();
+        List<string> expectedTestsDidNotRun = [];
+        List<string> unexpectedRanTests = [];
         using (FileStream fs = File.OpenRead(BaselineFile))
         {
             using StreamReader streamReader = new(fs);
@@ -107,8 +107,8 @@ public static class TestsRunWatchDog
         {
             if (fixBaseLine)
             {
-                List<string> tests = new(File.ReadAllLines(BaselineFile));
-                tests.RemoveAll(t => expectedTestsDidNotRun.Contains(t));
+                List<string> tests = [.. File.ReadAllLines(BaselineFile)];
+                tests.RemoveAll(expectedTestsDidNotRun.Contains);
                 tests.AddRange(unexpectedRanTests);
                 tests.Sort();
                 File.WriteAllLines(BaselineFile, tests);

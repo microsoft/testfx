@@ -100,7 +100,7 @@ public sealed partial class Assert
     /// The parameters.
     /// </param>
     internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName,
-        string? message, params object?[]? parameters)
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         if (param == null)
         {

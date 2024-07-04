@@ -28,7 +28,7 @@ internal class PipelinesRunner
                 continue;
             }
 
-            if (!pipeline.OSPlatform.Any(x => RuntimeInformation.IsOSPlatform(x)))
+            if (!pipeline.OSPlatform.Any(RuntimeInformation.IsOSPlatform))
             {
                 WriteConsole($"Skip '{pipeline.PipelineName}', OS expected: '{pipeline.OSPlatform}', current OS: '{RuntimeInformation.OSDescription}'", ConsoleColor.Yellow);
                 continue;
@@ -48,10 +48,7 @@ internal class PipelinesRunner
                 pipelinePropertyBag.Add(item.Key, item.Value);
             }
 
-            if (pipeline.UpdatePropertyBag is not null)
-            {
-                pipeline.UpdatePropertyBag(pipelinePropertyBag);
-            }
+            pipeline.UpdatePropertyBag?.Invoke(pipelinePropertyBag);
 
             pipeline.Func(pipelinePropertyBag);
         }

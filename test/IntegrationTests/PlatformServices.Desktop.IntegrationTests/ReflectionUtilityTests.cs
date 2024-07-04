@@ -19,12 +19,6 @@ public class ReflectionUtilityTests : TestContainer
 {
     private readonly Assembly _testAsset;
 
-    /// <summary>
-    /// Dictionary of Assemblies discovered to date. Must be locked as it may
-    /// be accessed in a multi-threaded context.
-    /// </summary>
-    private readonly Dictionary<string, Assembly> _resolvedAssemblies = [];
-
     public ReflectionUtilityTests()
     {
         DirectoryInfo currentAssemblyDirectory = new FileInfo(typeof(ReflectionUtilityTests).Assembly.Location).Directory;
@@ -42,7 +36,7 @@ public class ReflectionUtilityTests : TestContainer
         _testAsset = Assembly.ReflectionOnlyLoadFrom(testAssetPath);
 
         // This is needed for System assemblies.
-        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
+        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += ReflectionOnlyOnResolve;
     }
 
     public void GetCustomAttributesShouldReturnAllAttributes()
@@ -259,19 +253,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         string assemblyNameToLoad = AppDomain.CurrentDomain.ApplyPolicy(args.Name);
 
-        // Put it in the resolved assembly cache so that if the Load call below
-        // triggers another assembly resolution, then we don't end up in stack overflow.
-        _resolvedAssemblies[assemblyNameToLoad] = null;
-
-        var assembly = Assembly.ReflectionOnlyLoad(assemblyNameToLoad);
-
-        if (assembly != null)
-        {
-            _resolvedAssemblies[assemblyNameToLoad] = assembly;
-            return assembly;
-        }
-
-        return null;
+        return Assembly.ReflectionOnlyLoad(assemblyNameToLoad);
     }
 
     private static string[] GetAttributeValuePairs(IEnumerable attributes)
@@ -279,25 +261,21 @@ public class ReflectionUtilityTests : TestContainer
         var attributeValuePairs = new List<string>();
         foreach (object attribute in attributes)
         {
-            if (attribute is OwnerAttribute)
+            if (attribute is OwnerAttribute ownerAttribute)
             {
-                var a = attribute as OwnerAttribute;
-                attributeValuePairs.Add("Owner : " + a.Owner);
+                attributeValuePairs.Add("Owner : " + ownerAttribute.Owner);
             }
-            else if (attribute is TestCategoryAttribute)
+            else if (attribute is TestCategoryAttribute categoryAttribute)
             {
-                var a = attribute as TestCategoryAttribute;
-                attributeValuePairs.Add("TestCategory : " + a.TestCategories.Aggregate((i, j) => i + "," + j));
+                attributeValuePairs.Add("TestCategory : " + categoryAttribute.TestCategories.Aggregate((i, j) => i + "," + j));
             }
-            else if (attribute is DurationAttribute)
+            else if (attribute is DurationAttribute durationAttribute)
             {
-                var a = attribute as DurationAttribute;
-                attributeValuePairs.Add("Duration : " + a.Duration);
+                attributeValuePairs.Add("Duration : " + durationAttribute.Duration);
             }
-            else if (attribute is CategoryArrayAttribute)
+            else if (attribute is CategoryArrayAttribute arrayAttribute)
             {
-                var a = attribute as CategoryArrayAttribute;
-                attributeValuePairs.Add("CategoryAttribute : " + a.Value.Aggregate((i, j) => i + "," + j));
+                attributeValuePairs.Add("CategoryAttribute : " + arrayAttribute.Value.Aggregate((i, j) => i + "," + j));
             }
         }
 

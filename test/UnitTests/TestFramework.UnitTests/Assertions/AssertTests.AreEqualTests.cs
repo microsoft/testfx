@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -380,6 +380,14 @@ public partial class AssertTests : TestContainer
 
         // This one doesn't work
         VerifyThrows(() => Assert.AreEqual(instanceOfB, instanceOfA));
+    }
+
+    public void AreEqualUsingDynamicsDoesNotFail()
+    {
+        Assert.AreEqual<dynamic>((dynamic?)null, (dynamic?)null);
+        Assert.AreEqual<dynamic>((dynamic)1, (dynamic)1);
+        Assert.AreEqual<dynamic>((dynamic)"a", (dynamic)"a");
+        Assert.AreEqual<dynamic>((dynamic)'a', (dynamic)'a');
     }
 
     private CultureInfo? GetCultureInfo() => CultureInfo.CurrentCulture;

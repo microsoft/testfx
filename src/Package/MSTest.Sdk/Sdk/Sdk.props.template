@@ -16,6 +16,7 @@
     <MicrosoftPlaywrightVersion Condition=" '$(MicrosoftPlaywrightVersion)' == '' ">${MicrosoftPlaywrightVersion}</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >${MicrosoftTestingExtensionsCodeCoverageVersion}</MicrosoftTestingExtensionsCodeCoverageVersion>
     <MicrosoftTestingPlatformVersion Condition=" '$(MicrosoftTestingPlatformVersion)' == '' " >${MicrosoftTestingPlatformVersion}</MicrosoftTestingPlatformVersion>
+    <MicrosoftTestingEntrepriseExtensionsVersion Condition=" '$(MicrosoftTestingEntrepriseExtensionsVersion)' == '' ">${MicrosoftTestingEntrepriseExtensionsVersion}</MicrosoftTestingEntrepriseExtensionsVersion>
   </PropertyGroup>
 
 </Project>

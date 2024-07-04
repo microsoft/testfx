@@ -69,7 +69,6 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         var consoleRunStarted = Stopwatch.StartNew();
         IEnvironment environment = ServiceProvider.GetEnvironment();
         IProcessHandler process = ServiceProvider.GetProcessHandler();
-        int currentPID = process.GetCurrentProcess().Id;
         ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
         ExecutableInfo executableInfo = testApplicationModuleInfo.GetCurrentExecutableInfo();
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
@@ -79,7 +78,9 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         IConfiguration configuration = ServiceProvider.GetConfiguration();
         try
         {
-            string processIdString = process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture);
+            using IProcess currentProcess = process.GetCurrentProcess();
+            int currentPID = currentProcess.Id;
+            string processIdString = currentPID.ToString(CultureInfo.InvariantCulture);
             List<string> partialCommandLine =
             [
                 .. executableInfo.Arguments,
@@ -111,7 +112,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 EnvironmentVariables =
                 {
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID}", processCorrelationId },
-                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPID}", process.GetCurrentProcess()?.Id.ToString(CultureInfo.InvariantCulture) ?? "null pid" },
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPID}", processIdString },
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPID}", "1" },
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}", testHostControllerIpc.PipeName.Name },
                 },
@@ -202,7 +203,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID}", testHostProcessStartupTime);
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID} '{testHostProcessStartupTime}'");
             await _logger.LogDebugAsync($"Starting test host process");
-            IProcess testHostProcess = process.Start(processStartInfo);
+            using IProcess testHostProcess = process.Start(processStartInfo);
 
             testHostProcess.Exited += (sender, e) =>
             {
@@ -295,7 +296,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 await platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode)));
             }
 
-            await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess?.ExitCode}')' in '{consoleRunStarted.Elapsed}'");
+            await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}')' in '{consoleRunStarted.Elapsed}'");
             await DisposeHelper.DisposeAsync(testHostControllerIpc);
         }
         finally

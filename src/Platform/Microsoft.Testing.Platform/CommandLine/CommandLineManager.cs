@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
@@ -23,20 +24,23 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, IEnviro
         _commandLineProviderFactory.Add(commandLineProviderFactory);
     }
 
-    internal async Task<CommandLineHandler> BuildAsync(string[] args, IPlatformOutputDevice platformOutputDisplay, CommandLineParseResult parseResult)
+    internal async Task<CommandLineHandler> BuildAsync(IPlatformOutputDevice platformOutputDisplay, CommandLineParseResult parseResult)
     {
         List<ICommandLineOptionsProvider> commandLineOptionsProviders = [];
         foreach (Func<ICommandLineOptionsProvider> commandLineProviderFactory in _commandLineProviderFactory)
         {
-            ICommandLineOptionsProvider serviceInstance = commandLineProviderFactory();
-            if (!await serviceInstance.IsEnabledAsync())
+            ICommandLineOptionsProvider commandLineOptionsProvider = commandLineProviderFactory();
+            if (!await commandLineOptionsProvider.IsEnabledAsync())
             {
                 continue;
             }
 
-            await serviceInstance.TryInitializeAsync();
+            await commandLineOptionsProvider.TryInitializeAsync();
 
-            commandLineOptionsProviders.Add(new CommandLineOptionsProviderCache(serviceInstance));
+            commandLineOptionsProviders.Add(
+                commandLineOptionsProvider is IToolCommandLineOptionsProvider toolCommandLineOptionsProvider
+                    ? new ToolCommandLineOptionsProviderCache(toolCommandLineOptionsProvider)
+                    : new CommandLineOptionsProviderCache(commandLineOptionsProvider));
         }
 
         ICommandLineOptionsProvider[] systemCommandLineOptionsProviders =
@@ -44,7 +48,7 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, IEnviro
             new PlatformCommandLineProvider()
         ];
 
-        return new CommandLineHandler(args, parseResult, commandLineOptionsProviders.ToArray(),
+        return new CommandLineHandler(parseResult, commandLineOptionsProviders.ToArray(),
             systemCommandLineOptionsProviders, _testApplicationModuleInfo, _runtimeFeature, platformOutputDisplay, _environment, _processHandler);
     }
 }

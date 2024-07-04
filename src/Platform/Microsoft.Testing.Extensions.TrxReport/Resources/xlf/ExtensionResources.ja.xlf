@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ja" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="InvalidTestApplicationBuilderType">
+        <source>TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">TRX レポート ジェネレーター、'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 型のビルダーでのみ機能します</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
+        <source>The baseline TRX file</source>
+        <target state="translated">ベースライン TRX ファイル</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxComparerToolBothFilesMustBeSpecified">
+        <source>'--{0}' and '--{1}' must both be specified</source>
+        <target state="translated">'--{0}' と '--{1}' の両方を指定する必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxComparerToolDescription">
+        <source>This tool allows to compare and highights differences between 2 TRX reports</source>
+        <target state="translated">このツールを使用すると、2 つの TRX レポートの違いを比較し、強調表示できます</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxComparerToolDisplayName">
+        <source>TRX comparer tool</source>
+        <target state="translated">TRX 比較ツール</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxComparerToolOptionExpectsSingleArgument">
+        <source>'--{0}' expects a single trx file path as argument</source>
+        <target state="translated">'--{0}' には、引数として 1 つの trx ファイル パスが必要です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxComparerToolOtherFileOptionDescription">
+        <source>The TRX file to compare with the baseline</source>
+        <target state="translated">ベースラインと比較する TRX ファイル</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportArtifactDescription">
+        <source>Test session</source>
+        <target state="translated">テスト セッション</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportArtifactDisplayName">
+        <source>TRX Report</source>
+        <target state="translated">TRX レポート</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportFileNameExtensionIsNotTrx">
+        <source>'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</source>
+        <target state="translated">'--report-trx-filename' ファイル名引数の末尾は '.trx' にする必要があります (例: --report-trx-filename myreport.trx)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportFileNameOptionDescription">
+        <source>The name of the generated TRX report</source>
+        <target state="translated">生成された TRX レポートの名前</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportFileNameRequiresTrxReport">
+        <source>'--report-trx-filename' requires '--report-trx' to be enabled</source>
+        <target state="translated">'--report-trx-filename' では、'--report-trx' を有効にする必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportFileNameShouldNotContainPath">
+        <source>file name argument must not contain path (e.g. --report-trx-filename myreport.trx)</source>
+        <target state="translated">ファイル名引数にパスを含めることはできません (例: --report-trx-filename myreport.trx)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportFrameworkDoesNotSupportTrxReportCapability">
+        <source>The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</source>
+        <target state="translated">UID '{1}' のテスト フレームワーク '{0}' は 'ITrxReportCapability' をサポートしていないため、TRX レポートが見つからないか不完全です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportGeneratorBeforeTestHostProcessStartAsyncNotCalled">
+        <source>Method 'BeforeTestHostProcessStartAsync' must be called before 'OnTestHostProcessStartedAsync'</source>
+        <target state="translated">'OnTestHostProcessStartedAsync' の前にメソッド 'BeforeTestHostProcessStartAsync' を呼び出す必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportGeneratorDescription">
+        <source>Produce a TRX report for the current test session</source>
+        <target state="translated">現在のテスト セッションの TRX レポートを生成する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportGeneratorDisplayName">
+        <source>TRX report generator</source>
+        <target state="translated">TRX レポート ジェネレーター</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable">
+        <source>Required environment variable '{0}' is missing for TRX report generator</source>
+        <target state="translated">TRX レポート ジェネレーターに必要な環境変数 '{0}' がありません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportIsNotValidForDiscovery">
+        <source>'--report-trx' cannot be enabled when using '--list-tests'</source>
+        <target state="translated">'--list-tests' を使用している場合、'--report-trx' を有効にすることはできません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportOptionDescription">
+        <source>Enable generating TRX report</source>
+        <target state="translated">TRX レポートの生成を有効にする</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnsupportedRequestTypeErrorMessage">
+        <source>Requests of type '{0}' is not supported</source>
+        <target state="translated">型 '{0}' の要求はサポートされていません</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

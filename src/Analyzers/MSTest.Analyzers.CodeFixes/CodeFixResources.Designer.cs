@@ -63,6 +63,24 @@ namespace MSTest.Analyzers {
         /// <summary>
         ///   Looks up a localized string similar to Fix signature.
         /// </summary>
+        internal static string AssemblyInitializeShouldBeValidCodeFix {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidCodeFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fix actual/expected arguments order.
+        /// </summary>
+        internal static string FixAssertionArgsOrder {
+            get {
+                return ResourceManager.GetString("FixAssertionArgsOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fix signature.
+        /// </summary>
         internal static string FixSignatureCodeFix {
             get {
                 return ResourceManager.GetString("FixSignatureCodeFix", resourceCulture);

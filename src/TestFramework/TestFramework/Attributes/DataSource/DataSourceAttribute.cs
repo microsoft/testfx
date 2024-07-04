@@ -13,7 +13,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// [DataSource("dataSourceNameFromConfigFile")].
 /// </example>
 [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments", Justification = "Compat")]
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Method)]
 public sealed class DataSourceAttribute : Attribute
 {
     // DefaultProviderName needs not to be constant so that clients do not need

@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="fr" original="../MSBuildResources.resx">
+    <body>
+      <trans-unit id="ActualValue">
+        <source>Actual value: {0}</source>
+        <target state="translated">Valeur réelle : {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExpectedValue">
+        <source>Expected value: {0}</source>
+        <target state="translated">Valeur attendue : {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Failed">
+        <source>Failed</source>
+        <target state="translated">Échec</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedTestDetail">
+        <source>Failed test '{0}', reason '{1}'</source>
+        <target state="translated">Échec du test « {0} », raison « {1} »</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FullPathToolCalculationFailed">
+        <source>Full path tool calculation failed. Runner '{0}'</source>
+        <target state="translated">Désolé... Nous n’avons pas pu effectuer le calcul d’outil de chemin complet. Exécuteur « {0} »</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTargetPath">
+        <source>Invalid TargetPath, {0}</source>
+        <target state="translated">TargetPath non valide, {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MSBuildExtensionsDescription">
+        <source>Extension used to pass parameters from MSBuild node and the hosts</source>
+        <target state="translated">Extension utilisée pour passer des paramètres entre le nœud MSBuild et les hôtes</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Passed">
+        <source>Passed</source>
+        <target state="translated">Réussite</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RunTests">
+        <source>Run tests: '{0}' [{1}|{2}]</source>
+        <target state="translated">Exécuter des tests : « {0} » [{1}|{2}]</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StackTrace">
+        <source>Stack Trace:</source>
+        <target state="translated">Arborescence des appels de procédure :</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Summary">
+        <source>{0}! - Failed: {1}, Passed: {2}, Skipped: {3}, Total: {4}, Duration: {5}</source>
+        <target state="translated">{0}! – Échec : {1}, Passé : {2}, Ignoré : {3}, Total : {4}, Durée : {5}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestFailed">
+        <source>Tests failed: '{0}' [{1}|{2}]</source>
+        <target state="translated">Échec des tests : « {0} » [{1}|{2}]</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestFailedNoDetail">
+        <source>Tests failed: {0}</source>
+        <target state="translated">Échec des tests : {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestsSucceeded">
+        <source>Tests succeeded: '{0}' [{1}|{2}]</source>
+        <target state="translated">Tests réussis : « {0} » [{1}|{2}]</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

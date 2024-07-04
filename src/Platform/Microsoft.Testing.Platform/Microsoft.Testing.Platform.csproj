@@ -2,10 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <IsPackable>true</IsPackable>
-    <IsShippingPackage Condition=" '$(DoNotShipTestingPlatformPackage)' == 'true' ">false</IsShippingPackage>
-    <SuppressLicenseValidation>true</SuppressLicenseValidation>
   </PropertyGroup>
 
   <!-- Insert the PlatformVersion.cs -->
@@ -133,13 +129,5 @@ This package provides the core platform and the .NET implementation of the proto
       <PackagePath>build/$(TargetFramework)</PackagePath>
     </TfmSpecificPackageFile>
   </ItemGroup>
-
-  <Target Name="MoveNuGetPackage" AfterTargets="Pack" Condition=" '$(DoNotShipTestingPlatformPackage)' == 'true' ">
-    <ItemGroup>
-      <MicrosoftTestingPlatformNuGetPackage Include="$(ArtifactsNonShippingPackagesDir)Microsoft.Testing.Platform.*.nupkg" />
-    </ItemGroup>
-
-    <Move SourceFiles="@(MicrosoftTestingPlatformNuGetPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
-  </Target>
 
 </Project>

@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="cs" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="CreatingDumpFile">
+        <source>Creating dump file '{0}'</source>
+        <target state="translated">Vytváří se soubor výpisu paměti {0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpArtifactDescription">
+        <source>The hang dump file</source>
+        <target state="translated">Soubor výpisu paměti při zablokování</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpArtifactDisplayName">
+        <source>Hang dump file</source>
+        <target state="translated">Soubor výpisu paměti při zablokování</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
+        <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
+        <target state="translated">Proměnná prostředí {0} je nastavená na {1} místo na {2}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpEnvironmentVariableIsMissingErrorMessage">
+        <source>Environment variable '{0}' is not set</source>
+        <target state="translated">Není nastavená proměnná prostředí {0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpExtensionDescription">
+        <source>Produce hang dump files when a test execution exceed a given time.</source>
+        <target state="translated">Vytvoří soubory výpisu paměti při zablokování, když provádění testu překročí danou dobu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpExtensionDisplayName">
+        <source>Hang dump</source>
+        <target state="translated">Výpis paměti při zablokování</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpFileNameOptionDescription">
+        <source>Specify the name of the dump file</source>
+        <target state="translated">Zadejte název souboru výpisu paměti.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpOptionDescription">
+        <source>Generate a dump file if the test process hangs</source>
+        <target state="translated">Vygeneruje soubor výpisu paměti, pokud testovací proces přestane reagovat.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTimeoutExpired">
+        <source>Hang dump timeout of '{0}' expired</source>
+        <target state="translated">Vypršel časový limit {0} pro výpis paměti při zablokování.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTimeoutOptionDescription">
+        <source>Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.</source>
+        <target state="translated">Zadejte časový limit, po kterém bude vygenerován výpis paměti. Hodnota časového limitu se zadává v jednom z následujících formátů: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Výchozí hodnota je 30m.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
+        <source>'--hangdump-timeout' expects a single timeout argument</source>
+        <target state="translated">--hangdump-timeout očekává jeden argument časového limitu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeOptionDescription">
+        <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'</source>
+        <target state="translated">Zadejte typ výpisu paměti. Platné hodnoty jsou Mini, Heap, Triage (dostupné pouze v .NET 6+) nebo Full. Výchozí typ je Full.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeOptionInvalidType">
+        <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
+        <target state="translated">{0} není platný typ výpisu paměti. Platné možnosti jsou Mini, Heap, Triage (k dispozici pouze v .NET 6+) a Full.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
+        <source>Request of type '{0}' is not supported</source>
+        <target state="translated">Žádost typu {0} není podporována.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangTestListArtifactDescription">
+        <source>The list of tests that were running at the time of the hang</source>
+        <target state="translated">Seznam testů spuštěných v době zablokování</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangTestListArtifactDisplayName">
+        <source>Hang test list</source>
+        <target state="translated">Seznam testů při zablokování</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MissingHangDumpMainOption">
+        <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
+        <target state="translated">Zadali jste jeden nebo více parametrů výpisu stavu systému, ale nepovolili jste ho. Přidejte do příkazového řádku parametr --hangdump</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MutexDoesNotExistErrorMessage">
+        <source>Cannot find mutex '{0}'</source>
+        <target state="translated">Objekt mutex {0} nebyl nalezen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
+        <source>Mutex name wasn't received after '{0}' seconds</source>
+        <target state="translated">Název objektu mutex nebyl přijat po {0} s.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RunningTestsWhileDumping">
+        <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
+        <target state="translated">Při pořízení výpisu paměti stále běžely následující testy (formát: [&lt;čas-uplynulý-od-spuštění&gt;] &lt;název&gt;):</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

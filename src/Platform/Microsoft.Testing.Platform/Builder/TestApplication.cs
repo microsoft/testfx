@@ -114,7 +114,7 @@ public sealed class TestApplication : ITestApplication
         }
 
         // All checks are fine, create the TestApplication.
-        return new TestApplicationBuilder(args, loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler);
+        return new TestApplicationBuilder(loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler);
     }
 
     private static async Task LogInformationAsync(
@@ -142,7 +142,8 @@ public sealed class TestApplication : ITestApplication
         await logger.LogInformationAsync("Logging mode: " + (syncWrite ? "synchronous" : "asynchronous"));
         await logger.LogInformationAsync($"Logging level: {loggerLevel}");
         await logger.LogInformationAsync($"CreateBuilderAsync entry time: {createBuilderEntryTime}");
-        await logger.LogInformationAsync($"PID: {processHandler.GetCurrentProcess().Id}");
+        using IProcess currentProcess = processHandler.GetCurrentProcess();
+        await logger.LogInformationAsync($"PID: {currentProcess.Id}");
 
 #if NETCOREAPP
         string runtimeInformation = $"{RuntimeInformation.RuntimeIdentifier} - {RuntimeInformation.FrameworkDescription}";
@@ -156,7 +157,7 @@ public sealed class TestApplication : ITestApplication
         if (RuntimeFeature.IsDynamicCodeSupported)
         {
 #pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
-            string? runtimeLocation = typeof(object).Assembly?.Location;
+            string? runtimeLocation = typeof(object).Assembly.Location;
 #pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
             if (runtimeLocation is not null)
             {

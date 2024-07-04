@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hant" original="../CodeFixResources.resx">
     <body>
+      <trans-unit id="FixAssertionArgsOrder">
+        <source>Fix actual/expected arguments order</source>
+        <target state="translated">修正實際/預期的引數順序</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FixSignatureCodeFix">
         <source>Fix signature</source>
         <target state="translated">修正簽章</target>

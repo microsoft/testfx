@@ -6,7 +6,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// The ignore attribute.
 /// </summary>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public sealed class IgnoreAttribute : Attribute
 {
     /// <summary>

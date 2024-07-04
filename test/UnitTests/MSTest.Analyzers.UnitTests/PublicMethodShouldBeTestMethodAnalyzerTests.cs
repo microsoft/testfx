@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Internal.Framework;
-using Microsoft.Testing.TestInfrastructure;
-
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.PublicMethodShouldBeTestMethodAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
@@ -30,6 +27,23 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenMethodIsPublicButWithInvalidTestMethodSignature_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public static void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     public async Task WhenMethodIsPublicAndMarkedAsTestMethod_NoDiagnostic()
     {
         string code = """
@@ -40,6 +54,85 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
             {
                 [TestMethod]
                 public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenMethodIsPrivateButNotInsideTestClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                private void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenMethodIsPublicAndMarkedAsDerivedTestMethodAttribute_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class DerivedTestMethod : TestMethodAttribute
+            {
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DerivedTestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenMethodIsPublicAndNotMarkedAsTestMethodWithInheritanceFromBaseTestClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class Base
+            {
+            }
+            
+            public class MyTestClass : Base
+            {
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenMethodIsPrivateAndNotMarkedAsTestMethodWithInheritedTestClassAttribute_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            
+            public class DerivedTestClass : TestClassAttribute
+            {
+            }
+            
+            [DerivedTestClass]
+            public class MyTestClass
+            {
+                private void MyTestMethod()
                 {
                 }
             }
@@ -69,23 +162,19 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
                 .WithArguments("MyTestMethod"));
     }
 
-    public async Task WhenMethodIsPublicAndNotMarkedAsTestMethodWithInheritance_Diagnostic()
+    public async Task WhenMethodIsPublicAndNotMarkedAsTestMethodWithInheritedTestClassAttribute_Diagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            public class Base
+            
+            public class DerivedTestClass : TestClassAttribute
+            {
+            }
+            
+            [DerivedTestClass]
+            public class MyTestClass
             {
                 public void {|#0:MyTestMethod|}()
-                {
-                }
-            }
-
-            [TestClass]
-            public class MyTestClass : Base
-            {
-                [TestMethod]
-                public void MyTestMethod()
                 {
                 }
             }
@@ -96,51 +185,5 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
             VerifyCS.Diagnostic(PublicMethodShouldBeTestMethodAnalyzer.PublicMethodShouldBeTestMethodRule)
                 .WithLocation(0)
                 .WithArguments("MyTestMethod"));
-    }
-
-    public async Task WhenMethodIsPrivateAndNotMarkedAsTestMethodWithInheritance_NoDiagnostic()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            public class Base
-            {
-                private void MyTestMethod()
-                {
-                }
-            }
-
-            [TestClass]
-            public class MyTestClass : Base
-            {
-                [TestMethod]
-                public void MyTestMethod()
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    public async Task WhenMethodIsPublicAndMarkedAsDerivedTestMethodAttribute_NoDiagnostic()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            public class DerivedTestMethod : TestMethodAttribute
-            {
-            }
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [DerivedTestMethod]
-                public void MyTestMethod()
-                {
-                }
-            }
-            """;
-        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 }

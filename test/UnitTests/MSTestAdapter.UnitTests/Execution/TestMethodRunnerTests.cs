@@ -42,7 +42,7 @@ public class TestMethodRunnerTests : TestContainer
 
     public TestMethodRunnerTests()
     {
-        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
+        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructor([])!;
         _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod", StringComparison.Ordinal));
         var classAttribute = new UTF.TestClassAttribute();
         _testMethodAttribute = new UTF.TestMethodAttribute();
@@ -113,7 +113,7 @@ public class TestMethodRunnerTests : TestContainer
             BindingFlags.Static | BindingFlags.NonPublic),
         };
 
-        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
+        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructor([])!;
         var classAttribute = new UTF.TestClassAttribute();
         PropertyInfo testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 
@@ -139,7 +139,7 @@ public class TestMethodRunnerTests : TestContainer
         // Arrange.
         var tai = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
 
-        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
+        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructor([])!;
         var classAttribute = new UTF.TestClassAttribute();
         PropertyInfo testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 
@@ -310,7 +310,7 @@ public class TestMethodRunnerTests : TestContainer
 
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
-        _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns(new object[] { 1, 2, 3 });
+        _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns([1, 2, 3]);
 
         UnitTestResult[] results = testMethodRunner.RunTestMethod();
 
@@ -356,7 +356,7 @@ public class TestMethodRunnerTests : TestContainer
 
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
-        _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns(new object[] { 1, 2, 3 });
+        _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns([1, 2, 3]);
 
         UnitTestResult[] results = testMethodRunner.RunTestMethod();
 
@@ -382,7 +382,7 @@ public class TestMethodRunnerTests : TestContainer
 
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
-        _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns(new object[] { 1, 2, 3 });
+        _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns([1, 2, 3]);
 
         UnitTestResult[] results = testMethodRunner.RunTestMethod();
 

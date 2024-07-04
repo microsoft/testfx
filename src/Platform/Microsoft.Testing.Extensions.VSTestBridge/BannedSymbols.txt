@@ -1,0 +1,5 @@
+﻿T:System.ArgumentNullException; Use 'ArgumentGuard' class instead
+M:System.String.IsNullOrEmpty(System.String); Use 'RoslynString.IsNullOrEmpty' instead
+M:System.String.IsNullOrWhiteSpace(System.String); Use 'RoslynString.IsNullOrWhiteSpace' instead
+﻿﻿M:System.Diagnostics.Debug.Assert(System.Boolean); Use 'RoslynDebug.Assert' instead
+M:System.Diagnostics.Debug.Assert(System.Boolean,System.String); Use 'RoslynDebug.Assert' instead

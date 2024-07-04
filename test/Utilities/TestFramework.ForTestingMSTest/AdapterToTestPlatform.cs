@@ -164,8 +164,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
             LogMessage(logger, TestMessageLevel.Informational, $"Discovering tests in assembly '{assemblyName}'");
 
             var assembly = Assembly.LoadFrom(assemblyName);
-            IEnumerable<TypeInfo> assemblyTestContainerTypes = assembly.DefinedTypes.Where(typeInfo =>
-                IsTestContainer(typeInfo));
+            IEnumerable<TypeInfo> assemblyTestContainerTypes = assembly.DefinedTypes.Where(IsTestContainer);
 
             // TODO: Fail if no container?
             foreach (TypeInfo? testContainerType in assemblyTestContainerTypes)
@@ -203,9 +202,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
                 testCase.FullyQualifiedName.StartsWith(typeInfo.FullName, StringComparison.Ordinal));
 
             // Is it better to use Activator.CreateInstance?
-            setupMethod = testContainerType.DeclaredConstructors.Single(ctorInfo =>
-                ctorInfo.IsPublic
-                && ctorInfo.GetParameters().Length == 0);
+            setupMethod = testContainerType.GetConstructor([]);
             teardownMethod = testContainerType.BaseType.GetMethod("Dispose");
             TypeInfo type = testContainerType;
             testMethod = testContainerType.DeclaredMethods.Single(methodInfo =>

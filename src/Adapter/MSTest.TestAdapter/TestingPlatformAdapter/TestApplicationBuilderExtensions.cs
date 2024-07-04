@@ -18,6 +18,7 @@ public static class TestApplicationBuilderExtensions
         MSTestExtension extension = new();
         testApplicationBuilder.AddRunSettingsService(extension);
         testApplicationBuilder.AddTestCaseFilterService(extension);
+        testApplicationBuilder.AddTestRunParametersService(extension);
         testApplicationBuilder.RegisterTestFramework(
             _ => new TestFrameworkCapabilities(new VSTestBridgeExtensionBaseCapabilities()),
             (capabilities, serviceProvider) => new MSTestBridgedTestFramework(extension, getTestAssemblies, serviceProvider, capabilities));

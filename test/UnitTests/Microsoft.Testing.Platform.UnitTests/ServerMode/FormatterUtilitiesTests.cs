@@ -1,10 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
-using Microsoft.Testing.TestInfrastructure;
 
 using TestNode = Microsoft.Testing.Platform.Extensions.Messages.TestNode;
 using TestNodeUid = Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid;
@@ -389,15 +387,14 @@ public class FormatterUtilitiesTests : TestBase
         {
             return new DiscoverRequestArgs(
                 Guid.Empty,
-                new TestNode[]
-                {
+                [
                     new()
                     {
                         Uid = new TestNodeUid("UnitTest1.TestMethod1"),
                         DisplayName = "test1",
                         Properties = new PropertyBag(new TestFileLocationProperty("filePath", new LinePositionSpan(new(1, 0), new(2, 0)))),
-                    },
-                },
+                    }
+                ],
                 null);
         }
 
@@ -405,15 +402,14 @@ public class FormatterUtilitiesTests : TestBase
         {
             return new RunRequestArgs(
                 Guid.Empty,
-                new TestNode[]
-                {
+                [
                     new()
                     {
                         Uid = new TestNodeUid("UnitTest1.TestMethod1"),
                         DisplayName = "test1",
                         Properties = new PropertyBag(new TestFileLocationProperty("filePath", new LinePositionSpan(new(1, 0), new(2, 0)))),
-                    },
-                },
+                    }
+                ],
                 null);
         }
 

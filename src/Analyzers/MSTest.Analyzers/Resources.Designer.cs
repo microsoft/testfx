@@ -353,6 +353,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;System.ComponentModel.DescriptionAttribute&apos; has no effect in the context of tests and you likely wanted to use &apos;Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute&apos; instead..
+        /// </summary>
+        internal static string DoNotUseSystemDescriptionAttributeDescription {
+            get {
+                return ResourceManager.GetString("DoNotUseSystemDescriptionAttributeDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Did you mean to be using &apos;Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute&apos;?.
+        /// </summary>
+        internal static string DoNotUseSystemDescriptionAttributeMessageFormat {
+            get {
+                return ResourceManager.GetString("DoNotUseSystemDescriptionAttributeMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;System.ComponentModel.DescriptionAttribute&apos; has no effect on test methods.
+        /// </summary>
+        internal static string DoNotUseSystemDescriptionAttributeTitle {
+            get {
+                return ResourceManager.GetString("DoNotUseSystemDescriptionAttributeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use &apos;Assert.Fail&apos; instead of an always-failing &apos;Assert.{0}&apos; assert.
         /// </summary>
         internal static string PreferAssertFailOverAlwaysFalseConditionsMessageFormat {
@@ -829,6 +856,33 @@ namespace MSTest.Analyzers {
         internal static string TestMethodShouldNotBeIgnoredAnalyzerTitle {
             get {
                 return ResourceManager.GetString("TestMethodShouldNotBeIgnoredAnalyzerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type contaning &apos;[TestMethod]&apos; should be marked with &apos;[TestClass]&apos;, otherwise the test method will be silently ignored..
+        /// </summary>
+        internal static string TypeContainingTestMethodShouldBeATestClassDescription {
+            get {
+                return ResourceManager.GetString("TypeContainingTestMethodShouldBeATestClassDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class &apos;{0}&apos; contains test methods and should be marked with &apos;[TestClass]&apos;.
+        /// </summary>
+        internal static string TypeContainingTestMethodShouldBeATestClassMessageFormat {
+            get {
+                return ResourceManager.GetString("TypeContainingTestMethodShouldBeATestClassMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type containing &apos;[TestMethod]&apos; should be marked with &apos;[TestClass]&apos;.
+        /// </summary>
+        internal static string TypeContainingTestMethodShouldBeATestClassTitle {
+            get {
+                return ResourceManager.GetString("TypeContainingTestMethodShouldBeATestClassTitle", resourceCulture);
             }
         }
         
