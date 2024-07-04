@@ -65,7 +65,7 @@ public class NativeReflectionOperations : IReflectionOperations2
 
     public PropertyInfo? GetDeclaredProperty(Type type, string propertyName) => throw new NotImplementedException();
 
-    public IReadOnlyList<Type> GetDefinedTypes(Assembly assembly)
+    public Type[] GetDefinedTypes(Assembly assembly)
         => ReflectionDataProvider.Types;
 
     public IEnumerable<MethodInfo> GetRuntimeMethods(Type type)

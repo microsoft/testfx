@@ -17,7 +17,7 @@ internal interface IReflectionOperations2 : IReflectionOperations
 
     PropertyInfo? GetDeclaredProperty(Type type, string propertyName);
 
-    IReadOnlyList<Type> GetDefinedTypes(Assembly assembly);
+    Type[] GetDefinedTypes(Assembly assembly);
 
     IEnumerable<MethodInfo> GetRuntimeMethods(Type type);
 

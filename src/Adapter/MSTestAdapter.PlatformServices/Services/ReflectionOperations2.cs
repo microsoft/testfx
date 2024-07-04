@@ -38,8 +38,8 @@ internal class ReflectionOperations2 : ReflectionOperations, IReflectionOperatio
     public PropertyInfo? GetDeclaredProperty(Type type, string propertyName)
         => type.GetProperty(propertyName);
 
-    public IReadOnlyList<Type> GetDefinedTypes(Assembly assembly)
-        => assembly.DefinedTypes.ToList();
+    public Type[] GetDefinedTypes(Assembly assembly)
+        => assembly.DefinedTypes.ToArray();
 
     public IEnumerable<MethodInfo> GetRuntimeMethods(Type type)
         => type.GetRuntimeMethods();
