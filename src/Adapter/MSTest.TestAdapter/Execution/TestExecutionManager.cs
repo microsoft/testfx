@@ -4,6 +4,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -314,37 +315,71 @@ public class TestExecutionManager
                 }
 
                 var tasks = new List<Task>();
-
+                bool isSTA = false;
                 for (int i = 0; i < parallelWorkers; i++)
                 {
-                    tasks.Add(_taskFactory(() =>
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                        && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
                     {
-                        while (!queue!.IsEmpty)
+                        isSTA = true;
+                        Thread entryPointThread = new(new ThreadStart(RunTest));
+
+                        entryPointThread.SetApartmentState(ApartmentState.STA);
+                        entryPointThread.Start();
+
+                        try
                         {
-                            if (_cancellationToken is { Canceled: true })
-                            {
-                                // if a cancellation has been requested, do not queue any more test runs.
-                                break;
-                            }
-
-                            if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
-                            {
-                                ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
-                            }
+                            // should add cancellation toke??
+                            var threadTask = Task.Run(entryPointThread.Join);
+                            threadTask.Wait();
                         }
-                    }));
+                        catch (Exception ex)
+                        {
+                            RunCatch(ex);
+                            throw;
+                        }
+                    }
+                    else
+                    {
+                        tasks.Add(_taskFactory(() => RunTest()));
+                    }
                 }
 
-                try
+                if (!isSTA)
                 {
-                    Task.WaitAll(tasks.ToArray());
+                    try
+                    {
+                        Task.WaitAll(tasks.ToArray());
+                    }
+                    catch (Exception ex)
+                    {
+                        RunCatch(ex);
+                        throw;
+                    }
                 }
-                catch (Exception ex)
+
+                void RunCatch(Exception ex)
                 {
                     string exceptionToString = ex.ToString();
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("Error occurred while executing tests in parallel{0}{1}", Environment.NewLine, exceptionToString);
                     frameworkHandle.SendMessage(TestMessageLevel.Error, exceptionToString);
-                    throw;
+                }
+
+                void RunTest()
+                {
+                    while (!queue!.IsEmpty)
+                    {
+                        if (_cancellationToken is { Canceled: true })
+                        {
+                            // if a cancellation has been requested, do not queue any more test runs.
+                            break;
+                        }
+
+                        if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
+                        {
+                            ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
+                        }
+                    }
                 }
             }
 
@@ -363,7 +398,7 @@ public class TestExecutionManager
     }
 
     private static void InitializeClassCleanupManager(string source, UnitTestRunner testRunner, IEnumerable<TestCase> testsToRun,
-        TestAssemblySettings sourceSettings)
+    TestAssemblySettings sourceSettings)
     {
         try
         {
@@ -382,11 +417,11 @@ public class TestExecutionManager
     }
 
     private void ExecuteTestsWithTestRunner(
-        IEnumerable<TestCase> tests,
-        ITestExecutionRecorder testExecutionRecorder,
-        string source,
-        IDictionary<string, object> sourceLevelParameters,
-        UnitTestRunner testRunner)
+    IEnumerable<TestCase> tests,
+    ITestExecutionRecorder testExecutionRecorder,
+    string source,
+    IDictionary<string, object> sourceLevelParameters,
+    UnitTestRunner testRunner)
     {
         bool hasAnyRunnableTests = false;
         var fixtureTests = new List<TestCase>();
@@ -459,8 +494,8 @@ public class TestExecutionManager
     /// <param name="sourceLevelParameters">Source level parameters.</param>
     /// <returns>Test context properties.</returns>
     private static Dictionary<string, object?> GetTestContextProperties(
-        IDictionary<TestProperty, object?> tcmProperties,
-        IDictionary<string, object> sourceLevelParameters)
+    IDictionary<TestProperty, object?> tcmProperties,
+    IDictionary<string, object> sourceLevelParameters)
     {
         var testContextProperties = new Dictionary<string, object?>();
 
