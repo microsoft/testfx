@@ -37,7 +37,7 @@ internal record ResponseMessage(int Id, object? Result) : RpcMessage;
 
 internal record InitializeRequestArgs(int ProcessId, ClientInfo ClientInfo, ClientCapabilities Capabilities);
 
-internal record InitializeResponseArgs(ServerInfo ServerInfo, ServerCapabilities Capabilities);
+internal record InitializeResponseArgs(int? ProcessId, ServerInfo ServerInfo, ServerCapabilities Capabilities);
 
 internal record RequestArgsBase(Guid RunId, ICollection<TestNode>? TestNodes, string? GraphFilter);
 

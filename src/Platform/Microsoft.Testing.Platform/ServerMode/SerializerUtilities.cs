@@ -96,6 +96,7 @@ internal static class SerializerUtilities
         {
             Dictionary<string, object?> values = new()
             {
+                [JsonRpcStrings.ProcessId] = res.ProcessId,
                 [JsonRpcStrings.ServerInfo] = Serialize(res.ServerInfo),
                 [JsonRpcStrings.Capabilities] = Serialize(res.Capabilities),
             };
@@ -515,10 +516,11 @@ internal static class SerializerUtilities
 
         Deserializers[typeof(InitializeResponseArgs)] = new ObjectDeserializer<InitializeResponseArgs>(properties =>
         {
+            int processId = GetRequiredPropertyFromJson<int>(properties, JsonRpcStrings.ProcessId);
             ServerInfo serverInfo = Deserialize<ServerInfo>(GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.ServerInfo));
             ServerCapabilities capabilities = Deserialize<ServerCapabilities>(GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Capabilities));
 
-            return new InitializeResponseArgs(serverInfo, capabilities);
+            return new InitializeResponseArgs(processId, serverInfo, capabilities);
         });
 
         Deserializers[typeof(ServerInfo)] = new ObjectDeserializer<ServerInfo>(properties =>

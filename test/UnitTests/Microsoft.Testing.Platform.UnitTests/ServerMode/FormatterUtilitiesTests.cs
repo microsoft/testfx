@@ -224,7 +224,7 @@ public class FormatterUtilitiesTests : TestBase
 
         if (type == typeof(InitializeResponseArgs))
         {
-            Assert.AreEqual("""{"serverInfo":{"name":"ServerInfoName","version":"Version"},"capabilities":{"testing":{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true}}}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"processId":1,"serverInfo":{"name":"ServerInfoName","version":"Version"},"capabilities":{"testing":{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true}}}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
@@ -360,7 +360,7 @@ public class FormatterUtilitiesTests : TestBase
 
         if (type == typeof(InitializeResponseArgs))
         {
-            return new InitializeResponseArgs(new ServerInfo("ServerInfoName", "Version"), new ServerCapabilities(new ServerTestingCapabilities(true, true, true)));
+            return new InitializeResponseArgs(1, new ServerInfo("ServerInfoName", "Version"), new ServerCapabilities(new ServerTestingCapabilities(true, true, true)));
         }
 
         if (type == typeof(ErrorMessage))

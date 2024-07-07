@@ -112,6 +112,7 @@ public class ServerTests : TestBase
         InitializeResponseArgs resultJson = SerializerUtilities.Deserialize<InitializeResponseArgs>((IDictionary<string, object?>)((ResponseMessage)msg).Result!);
 
         InitializeResponseArgs expectedResponse = new(
+                   1,
                    new ServerInfo("test-anywhere", "this is dynamic"),
                    new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false)));
 
