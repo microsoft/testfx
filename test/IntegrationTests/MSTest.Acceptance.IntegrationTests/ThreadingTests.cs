@@ -180,6 +180,25 @@ public sealed class ThreadingTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Passed!");
     }
 
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task LifecycleAttributesTaskThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA_With_ParallelAttribute(string tfm)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        var testHost = TestHost.LocateFrom(_testAssetFixture.LifecycleAttributesTaskProjectPath, TestAssetFixture.LifecycleWithParallelAttributesTaskProjectName, tfm);
+        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
+        {
+            ["MSTEST_THREAD_STATE_IS_STA"] = "1",
+        });
+
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContains("Passed!");
+    }
+
     [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
     public async Task LifecycleAttributesValueTaskThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA(string tfm)
     {
@@ -207,6 +226,7 @@ public sealed class ThreadingTests : AcceptanceTestBase
         public const string STAThreadProjectName = "STATestThreading";
         public const string LifecycleAttributesVoidProjectName = "LifecycleAttributesVoid";
         public const string LifecycleAttributesTaskProjectName = "LifecycleAttributesTask";
+        public const string LifecycleWithParallelAttributesTaskProjectName = "LifecycleAttributesTask";
         public const string LifecycleAttributesValueTaskProjectName = "LifecycleAttributesValueTask";
 
         public string ProjectPath => GetAssetPath(ProjectName);
@@ -216,6 +236,8 @@ public sealed class ThreadingTests : AcceptanceTestBase
         public string LifecycleAttributesVoidProjectPath => GetAssetPath(LifecycleAttributesVoidProjectName);
 
         public string LifecycleAttributesTaskProjectPath => GetAssetPath(LifecycleAttributesTaskProjectName);
+
+        public string LifecycleWithParallelAttributesTaskProjectNamePath => GetAssetPath(LifecycleWithParallelAttributesTaskProjectName);
 
         public string LifecycleAttributesValueTaskProjectPath => GetAssetPath(LifecycleAttributesValueTaskProjectName);
 
@@ -246,6 +268,14 @@ public sealed class ThreadingTests : AcceptanceTestBase
             yield return (LifecycleAttributesTaskProjectName, LifecycleAttributesTaskProjectName,
                 LifecycleAttributesTaskSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$ParallelAttribute$", string.Empty)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+            yield return (LifecycleWithParallelAttributesTaskProjectName, LifecycleWithParallelAttributesTaskProjectName,
+                LifecycleAttributesTaskSource
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$ParallelAttribute$", "[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]")
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
@@ -540,6 +570,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+$ParallelAttribute$
 [TestClass]
 public class LifecycleAttributesTask
 {
