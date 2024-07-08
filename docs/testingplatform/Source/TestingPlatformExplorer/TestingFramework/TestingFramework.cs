@@ -88,9 +88,9 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        if (_logger.IsEnabled(LogLevel.Information))
+        if (_logger.IsEnabled(LogLevel.Debug))
         {
-            await _logger.LogInformationAsync($"Executing request of type '{context.Request}'");
+            await _logger.LogDebugAsync($"Executing request of type '{context.Request}'");
         }
 
         switch (context.Request)
