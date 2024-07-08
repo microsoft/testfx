@@ -329,7 +329,6 @@ public class TestExecutionManager
 
                         try
                         {
-                            // should add cancellation toke??
                             var threadTask = Task.Run(entryPointThread.Join);
                             threadTask.Wait();
                         }
