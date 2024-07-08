@@ -18,6 +18,7 @@ Here's the current list of APIs that supported by the client.
   - [testing/discoverTests](#discovery-of-tests) - Requests a server to discover tests without executing them
   - [testing/runTests](#execution-of-tests) - Requests a server to execute tests and report their results
   - [testing/testUpdates/tests](#discovery-of-tests) - Notifies client about test updates (test cases and test results)
+  - [testing/testUpdates/attachments](#execution-of-tests) - Notifies client about additional attachments (trx/coverage)
 - Client notifications updates
   - [client/launchDebugger](#launch-debugger) - Requests a client to launch a process with debugger attached to it
   - [client/attachDebugger](#attach-debugger) - Requests a client to attach a debugger to a process by pid
@@ -217,6 +218,19 @@ interface InitializeParams {
         testing: {
             // If true, the client supports the client/attachDebugger and client/launchDebugger requests.
             debuggerProvider: true,
+
+            // If true, the client supports the testing/testUpdates/attachments request.
+            attachmentsSupport: true,
+
+            // If true, the client support a port to which child processes
+            // can connect to.
+            // Note: The test runner is expected to ensure the synchronization of messages
+            // for instance if additional processes are sending test updates
+            // or attachment updates, these must complete before the
+            // test runner sends the completion notification.
+            callbackProvider: {
+                port: integer
+            }
         },
     }
 }
@@ -242,6 +256,12 @@ interface InitializeResponse {
             // This has a potential performance benefit, where startup time and time to load test assemblies/sources
             // only needs to occur once.
             experimental_multiRequestSupport: boolean;
+
+            // If true, the server will send attachments, on top
+            // of test updates during test runs.
+            // The client will then wait on both to complete,
+            // before it marks a test run as completed.
+            attachmentsProvider?: boolean;
         },
     }
 }
@@ -262,6 +282,15 @@ lazy locations and send the full location.
 > Discovery/Run requests, as well as TestNode format specified in the intial release of the protocol
 > should be supported by all clients/servers.
 > As such, they're not expressed via capabilities.
+
+## Callback provider
+
+In some cases the test runner might want to start additional child processes. If client has the `testing.callbackProvider` capability, the client
+will provide a port for multiple connections.
+
+This allows for instance for the test runner to start multiple child processes that it distributes test run over, while each of these child processes can directly send callbacks to the client with test node updates, rather than have to relay all information via the main test runner node.
+
+Another use case is the collection of hang dumps, crash dumps, in which case the test runner node might crash, while the hang dump watcher process can still send back the hang dump/crash dump attachment, even after the crash.
 
 ## Discovery and run requests
 
@@ -530,7 +559,21 @@ Notifications:
       As soon as the client processes this notification it is guaranteed to be done
       processing all node update notifications.
   - method: `testing/testUpdates/tests`
-  - params: `TestUpdateNotificationParams` where `params.children == null`.
+  - params: `TestUpdateNotificationParams` where `params.testCases == null`.
+- Attachment updates
+  - method: `testing/testUpdates/attachments`
+  - params: `AttachmentUpdatesParams` defined as follows:
+
+    ```typescript
+    interface AttachmentUpdatesParams {
+        attachments?: Attachment[],
+        runId: GUID
+    }
+    ```
+
+- Attachment updates completes
+    method: `testing/testUpdates/attachments`
+    params: `AttachmentUpdatesParams` where `params.attachments == null`
 
 Response:
 
