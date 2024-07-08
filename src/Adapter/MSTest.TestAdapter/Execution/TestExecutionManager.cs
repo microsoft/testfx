@@ -43,12 +43,37 @@ public class TestExecutionManager
         TestMethodFilter = new TestMethodFilter();
         _sessionParameters = new Dictionary<string, object>();
         _environment = environment;
+
         _taskFactory = taskFactory
-            ?? (action => Task.Factory.StartNew(
+            ?? ThreadingHelper.StartNewAsync;
+    }
+
+    internal static class ThreadingHelper
+    {
+        public static Task StartNewAsync(Action action)
+        {
+            if (MSTestSettings.RunConfigurationSettings.ExecutionApartmentState == ApartmentState.STA
+                && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Thread entryPointThread = new(new ThreadStart(action));
+
+                entryPointThread.SetApartmentState(ApartmentState.STA);
+                entryPointThread.Start();
+                return Task.Factory.StartNew(
+                    entryPointThread.Join,
+                    CancellationToken.None,
+                    TaskCreationOptions.LongRunning,
+                    TaskScheduler.Default);
+            }
+            else
+            {
+                return Task.Factory.StartNew(
                 action,
                 CancellationToken.None,
                 TaskCreationOptions.LongRunning,
-                TaskScheduler.Default));
+                TaskScheduler.Default);
+            }
+        }
     }
 
     /// <summary>
@@ -315,23 +340,25 @@ public class TestExecutionManager
                 }
 
                 var tasks = new List<Task>();
-                bool runSTA = MSTestSettings.RunConfigurationSettings.ExecutionApartmentState == ApartmentState.STA
-                    && RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
                 for (int i = 0; i < parallelWorkers; i++)
                 {
-                    if (runSTA)
+                    tasks.Add(_taskFactory(() =>
                     {
-                        Thread entryPointThread = new(new ThreadStart(RunTest));
+                        while (!queue!.IsEmpty)
+                        {
+                            if (_cancellationToken is { Canceled: true })
+                            {
+                                // if a cancellation has been requested, do not queue any more test runs.
+                                break;
+                            }
 
-                        entryPointThread.SetApartmentState(ApartmentState.STA);
-                        entryPointThread.Start();
-                        tasks.Add(Task.Run(entryPointThread.Join));
-                    }
-                    else
-                    {
-                        tasks.Add(_taskFactory(() => RunTest()));
-                    }
+                            if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
+                            {
+                                ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
+                            }
+                        }
+                    }));
                 }
 
                 try
@@ -344,23 +371,6 @@ public class TestExecutionManager
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("Error occurred while executing tests in parallel{0}{1}", Environment.NewLine, exceptionToString);
                     frameworkHandle.SendMessage(TestMessageLevel.Error, exceptionToString);
                     throw;
-                }
-
-                void RunTest()
-                {
-                    while (!queue!.IsEmpty)
-                    {
-                        if (_cancellationToken is { Canceled: true })
-                        {
-                            // if a cancellation has been requested, do not queue any more test runs.
-                            break;
-                        }
-
-                        if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
-                        {
-                            ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
-                        }
-                    }
                 }
             }
 
