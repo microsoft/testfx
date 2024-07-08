@@ -114,7 +114,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     {
         try
         {
-            await _logger.LogInformationAsync("Starting server mode");
+            await _logger.LogDebugAsync("Starting server mode");
             _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(_testApplicationCancellationTokenSource.CancellationToken);
 
             // Initialize the ServerLoggerForwarderProvider, it can be null if diagnostic is disabled.
@@ -179,7 +179,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                     // Signal only one time
                     if (!_serverClosingTokenSource.IsCancellationRequested)
                     {
-                        await _logger.LogInformationAsync("Server requested to shutdown");
+                        await _logger.LogDebugAsync("Server requested to shutdown");
                         await _serverClosingTokenSource.CancelAsync();
                     }
 
@@ -371,17 +371,18 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         AssertInitialized();
 
-        await _logger.LogInformationAsync($"Received {message.Method} request");
+        await _logger.LogDebugAsync($"Received {message.Method} request");
 
         switch (message.Method, message.Params)
         {
             case (JsonRpcMethods.Initialize, InitializeRequestArgs args):
                 {
                     _client = new(args.ClientInfo.Name, args.ClientInfo.Version);
-                    await _logger.LogInformationAsync($"Connection established with '{_client.Id}', protocol version {_client.Version}");
+                    await _logger.LogDebugAsync($"Connection established with '{_client.Id}', protocol version {_client.Version}");
 
                     INamedFeatureCapability? namedFeatureCapability = ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();
                     return new InitializeResponseArgs(
+                        ProcessId: ServiceProvider.GetProcessHandler().GetCurrentProcess().Id,
                         ServerInfo: new ServerInfo("test-anywhere", Version: ProtocolVersion),
                         Capabilities: new ServerCapabilities(
                             new ServerTestingCapabilities(
