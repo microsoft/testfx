@@ -48,7 +48,10 @@ public sealed class PublicTypeShouldBeTestClassAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol)
     {
         var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
-        if (namedTypeSymbol.DeclaredAccessibility != Accessibility.Public
+        if (namedTypeSymbol.IsAbstract
+            || namedTypeSymbol.IsStatic
+            || namedTypeSymbol.TypeKind != TypeKind.Class
+            || namedTypeSymbol.DeclaredAccessibility != Accessibility.Public
             || namedTypeSymbol.GetResultantVisibility() != SymbolVisibility.Public)
         {
             return;
