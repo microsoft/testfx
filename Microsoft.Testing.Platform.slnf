@@ -1,0 +1,22 @@
+{
+  "solution": {
+    "path": "TestFx.sln",
+    "projects": [
+      "samples\\Playground\\Playground.csproj",
+      "src\\Platform\\Microsoft.Testing.Extensions.CrashDump\\Microsoft.Testing.Extensions.CrashDump.csproj",
+      "src\\Platform\\Microsoft.Testing.Extensions.HangDump\\Microsoft.Testing.Extensions.HangDump.csproj",
+      "src\\Platform\\Microsoft.Testing.Extensions.Telemetry\\Microsoft.Testing.Extensions.Telemetry.csproj",
+      "src\\Platform\\Microsoft.Testing.Extensions.TrxReport.Abstractions\\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj",
+      "src\\Platform\\Microsoft.Testing.Extensions.TrxReport\\Microsoft.Testing.Extensions.TrxReport.csproj",
+      "src\\Platform\\Microsoft.Testing.Extensions.VSTestBridge\\Microsoft.Testing.Extensions.VSTestBridge.csproj",
+      "src\\Platform\\Microsoft.Testing.Platform.MSBuild\\Microsoft.Testing.Platform.MSBuild.csproj",
+      "src\\Platform\\Microsoft.Testing.Platform\\Microsoft.Testing.Platform.csproj",
+      "test\\IntegrationTests\\Microsoft.Testing.Platform.Acceptance.IntegrationTests\\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Extensions.UnitTests\\Microsoft.Testing.Extensions.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Extensions.VSTestBridge.UnitTests\\Microsoft.Testing.Extensions.VSTestBridge.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Platform.MSBuild.UnitTests\\Microsoft.Testing.Platform.MSBuild.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Platform.UnitTests\\Microsoft.Testing.Platform.UnitTests.csproj",
+      "test\\Utilities\\Microsoft.Testing.TestInfrastructure\\Microsoft.Testing.TestInfrastructure.csproj"
+    ]
+  }
+}
