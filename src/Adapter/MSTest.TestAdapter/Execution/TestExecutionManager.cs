@@ -315,12 +315,11 @@ public class TestExecutionManager
                 }
 
                 var tasks = new List<Task>();
-                bool isSTA = false;
+                bool isSTA = MSTestSettings.RunConfigurationSettings.ExecutionApartmentState == ApartmentState.STA;
 
                 for (int i = 0; i < parallelWorkers; i++)
                 {
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                        && MSTestSettings.RunConfigurationSettings.ExecutionApartmentState == ApartmentState.STA)
+                    if (isSTA && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
                         isSTA = true;
                         Thread entryPointThread = new(new ThreadStart(RunTest));
@@ -399,7 +398,7 @@ public class TestExecutionManager
     }
 
     private static void InitializeClassCleanupManager(string source, UnitTestRunner testRunner, IEnumerable<TestCase> testsToRun,
-    TestAssemblySettings sourceSettings)
+        TestAssemblySettings sourceSettings)
     {
         try
         {
@@ -418,11 +417,11 @@ public class TestExecutionManager
     }
 
     private void ExecuteTestsWithTestRunner(
-    IEnumerable<TestCase> tests,
-    ITestExecutionRecorder testExecutionRecorder,
-    string source,
-    IDictionary<string, object> sourceLevelParameters,
-    UnitTestRunner testRunner)
+        IEnumerable<TestCase> tests,
+        ITestExecutionRecorder testExecutionRecorder,
+        string source,
+        IDictionary<string, object> sourceLevelParameters,
+        UnitTestRunner testRunner)
     {
         bool hasAnyRunnableTests = false;
         var fixtureTests = new List<TestCase>();
@@ -495,8 +494,8 @@ public class TestExecutionManager
     /// <param name="sourceLevelParameters">Source level parameters.</param>
     /// <returns>Test context properties.</returns>
     private static Dictionary<string, object?> GetTestContextProperties(
-    IDictionary<TestProperty, object?> tcmProperties,
-    IDictionary<string, object> sourceLevelParameters)
+        IDictionary<TestProperty, object?> tcmProperties,
+        IDictionary<string, object> sourceLevelParameters)
     {
         var testContextProperties = new Dictionary<string, object?>();
 
