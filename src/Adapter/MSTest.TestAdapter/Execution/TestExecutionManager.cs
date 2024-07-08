@@ -326,17 +326,7 @@ public class TestExecutionManager
 
                         entryPointThread.SetApartmentState(ApartmentState.STA);
                         entryPointThread.Start();
-
-                        try
-                        {
-                            var threadTask = Task.Run(entryPointThread.Join);
-                            threadTask.Wait();
-                        }
-                        catch (Exception ex)
-                        {
-                            RunCatch(ex);
-                            throw;
-                        }
+                        tasks.Add(Task.Run(entryPointThread.Join));
                     }
                     else
                     {
@@ -344,24 +334,16 @@ public class TestExecutionManager
                     }
                 }
 
-                if (!isSTA)
+                try
                 {
-                    try
-                    {
-                        Task.WaitAll(tasks.ToArray());
-                    }
-                    catch (Exception ex)
-                    {
-                        RunCatch(ex);
-                        throw;
-                    }
+                    Task.WaitAll(tasks.ToArray());
                 }
-
-                void RunCatch(Exception ex)
+                catch (Exception ex)
                 {
                     string exceptionToString = ex.ToString();
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("Error occurred while executing tests in parallel{0}{1}", Environment.NewLine, exceptionToString);
                     frameworkHandle.SendMessage(TestMessageLevel.Error, exceptionToString);
+                    throw;
                 }
 
                 void RunTest()
