@@ -43,14 +43,12 @@ public class TestExecutionManager
         TestMethodFilter = new TestMethodFilter();
         _sessionParameters = new Dictionary<string, object>();
         _environment = environment;
-
-        _taskFactory = taskFactory
-            ?? ThreadingHelper.StartNewAsync;
+        _taskFactory = taskFactory ?? ThreadingHelper.RunAsync;
     }
 
     internal static class ThreadingHelper
     {
-        public static Task StartNewAsync(Action action)
+        public static Task RunAsync(Action action)
         {
             if (MSTestSettings.RunConfigurationSettings.ExecutionApartmentState == ApartmentState.STA
                 && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -68,10 +66,10 @@ public class TestExecutionManager
             else
             {
                 return Task.Factory.StartNew(
-                action,
-                CancellationToken.None,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default);
+                    action,
+                    CancellationToken.None,
+                    TaskCreationOptions.LongRunning,
+                    TaskScheduler.Default);
             }
         }
     }
