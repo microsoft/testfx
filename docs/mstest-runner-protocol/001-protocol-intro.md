@@ -395,6 +395,14 @@ interface TestNode {
     // can leave the value null, or empty.
     // Example: "traits": [{ "trait1": "traitValue1"}, {"trait2": "traitValue2" }, { "category1": null }]
     'traits': Trait[];
+
+    // If the test framework captures output level messages for a test it can set the output of the test here.
+    // Example: "output.stdout": "This test is calling Console.WriteLine("...")"
+    'output.stdout'?: string;
+
+    // If the test framework captures error level messages for a test it can set the output of the test here.
+    // Example: "output.stderr": "This test is calling Console.Error.WriteLine("...")"
+    'output.stderr'?: string;
 }
 
 // The adapter can specify an outcome for the test.
