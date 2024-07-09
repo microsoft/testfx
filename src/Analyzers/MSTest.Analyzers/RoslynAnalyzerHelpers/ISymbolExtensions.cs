@@ -3,6 +3,7 @@
 #nullable disable warnings
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace Analyzer.Utilities.Extensions
 {
@@ -54,5 +55,20 @@ namespace Analyzer.Utilities.Extensions
 
             return visibility;
         }
+
+        public static ITypeSymbol? GetReferencedMemberOrLocalOrParameter(this ISymbol? symbol) => symbol switch
+        {
+            IEventSymbol eventSymbol => eventSymbol.Type,
+
+            IFieldSymbol fieldSymbol => fieldSymbol.Type,
+
+            IMethodSymbol methodSymbol => methodSymbol.ReturnType,
+
+            IPropertySymbol propertySymbol => propertySymbol.Type,
+
+            ILocalSymbol localSymbol => localSymbol.Type,
+
+            _ => null,
+        };
     }
 }

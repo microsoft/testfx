@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
 using MSTest.Analyzers.Helpers;
+using MSTest.Analyzers.RoslynAnalyzerHelpers;
 
 namespace MSTest.Analyzers;
 
@@ -73,7 +74,10 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         if (nullableSymbol is not null && operation.TargetMethod.Name == "IsNull")
         {
             IArgumentOperation? valueArg = GetValueArgument(operation);
-            if (!SymbolEqualityComparer.IncludeNullability.Equals(valueArg?.Type, nullableSymbol) && valueArg?.Type?.NullableAnnotation == NullableAnnotation.NotAnnotated)
+
+            ITypeSymbol? valueArgType = valueArg?.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
+
+            if (!SymbolEqualityComparer.IncludeNullability.Equals(valueArgType?.OriginalDefinition, nullableSymbol) || valueArgType?.NullableAnnotation != NullableAnnotation.Annotated)
             {
                 context.ReportDiagnostic(operation.CreateDiagnostic(Rule, operation.TargetMethod.Name));
             }
