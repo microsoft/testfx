@@ -29,10 +29,14 @@ pr:
       - src/**/*.xlf
 
 parameters:
-- name: isRTM
-  displayName: "Produce RTM version?"
-  type: boolean
-  default: False
+- name: stableVersionComponent
+  displayName: "Produce stable/RTM version for specified component (default is none)"
+  type: string
+  default: none
+  values:
+  - none
+  - mstest
+  - testanywhere
 # This option should be used with caution. This is useful for unblocking circular deps issue with testanywhere
 - name: SkipTests
   displayName: "Skip tests"
@@ -55,7 +59,7 @@ variables:
   - name: _BuildConfig
     value: Release
 
-  - ${{ if eq(parameters.isRTM, True) }}:
+  - ${{ if neq(parameters.stableVersionComponent, none) }}:
     - name: _ReleaseVersionKind
       value: release
 
@@ -74,6 +78,7 @@ variables:
       /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
       /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
       /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+      /p:StableVersionComponent=$(parameters.stableVersionComponent)
 
 resources:
   repositories:
