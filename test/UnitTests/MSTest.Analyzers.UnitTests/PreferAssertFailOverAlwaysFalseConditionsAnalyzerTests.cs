@@ -42,7 +42,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 public void MyTestMethod()
                 {
                     int var = 3;
-                    Assert.[|IsNull|](var);
+                    [|Assert.IsNull(var)|];
                 }
             }
             """;
