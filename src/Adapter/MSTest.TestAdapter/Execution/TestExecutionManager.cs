@@ -4,6 +4,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -42,12 +43,36 @@ public class TestExecutionManager
         TestMethodFilter = new TestMethodFilter();
         _sessionParameters = new Dictionary<string, object>();
         _environment = environment;
-        _taskFactory = taskFactory
-            ?? (action => Task.Factory.StartNew(
-                action,
-                CancellationToken.None,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default));
+        _taskFactory = taskFactory ?? DefaultFactoryAsync;
+    }
+
+    private static Task DefaultFactoryAsync(Action action)
+    {
+        if (MSTestSettings.RunConfigurationSettings.ExecutionApartmentState == ApartmentState.STA
+            && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            TaskCompletionSource<int> tcs = new();
+            Thread entryPointThread = new(() =>
+            {
+                try
+                {
+                    action();
+                    tcs.SetResult(0);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+
+            entryPointThread.SetApartmentState(ApartmentState.STA);
+            entryPointThread.Start();
+            return tcs.Task;
+        }
+        else
+        {
+            return Task.Run(action);
+        }
     }
 
     /// <summary>

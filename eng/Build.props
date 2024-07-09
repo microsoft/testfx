@@ -1,14 +1,40 @@
 <Project>
 
-  <ItemGroup Condition=" '$(OS)' == 'Windows_NT' ">
+  <PropertyGroup>
+    <StableVersionComponent Condition=" '$(StableVersionComponent)' == '' ">none</StableVersionComponent>
+  </PropertyGroup>
+
+  <!-- For non-stable builds on windows OS -->
+  <ItemGroup Condition=" '$(StableVersionComponent)' == 'none' AND '$(OS)' == 'Windows_NT' ">
     <ProjectToBuild  Include="$(RepoRoot)TestFx.sln" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(OS)' != 'Windows_NT' ">
+  <!-- For non-stable builds on non-windows OSes -->
+  <ItemGroup Condition=" '$(StableVersionComponent)' == 'none' AND '$(OS)' != 'Windows_NT' ">
     <ProjectToBuild Include="$(RepoRoot)src/**/*.csproj" />
     <ProjectToBuild Include="$(RepoRoot)test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
     <ProjectToBuild Include="$(RepoRoot)test/*/Microsoft.Testing.*/Microsoft.Testing.*.csproj" />
     <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
+  </ItemGroup>
+
+  <!-- For stable builds of MSTest on windows OS -->
+  <ItemGroup Condition=" '$(StableVersionComponent)' == 'mstest' AND '$(OS)' == 'Windows_NT' ">
+    <ProjectToBuild Include="$(RepoRoot)MSTest.slnf" />
+  </ItemGroup>
+
+  <!-- For stable builds of MSTest on non-windows OSes -->
+  <ItemGroup Condition=" '$(StableVersionComponent)' == 'mstest' AND '$(OS)' != 'Windows_NT' ">
+    <ProjectToBuild Include="$(RepoRoot)src/Adapter/**/*.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)src/Analyzers/**/*.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)src/Package/**/*.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)src/TestFramework/**/*.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
+  </ItemGroup>
+
+  <!-- For stable builds of Microsoft.Testing.Platform and extensions -->
+  <ItemGroup Condition=" '$(StableVersionComponent)' == 'testing-platform' ">
+    <ProjectToBuild Include="$(RepoRoot)Microsoft.Testing.Platform.slnf" />
   </ItemGroup>
 
 </Project>

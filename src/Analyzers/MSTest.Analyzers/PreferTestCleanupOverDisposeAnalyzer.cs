@@ -12,6 +12,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0022: <inheritdoc cref="Resources.PreferTestCleanupOverDisposeTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class PreferTestCleanupOverDisposeAnalyzer : DiagnosticAnalyzer
 {

@@ -14,6 +14,9 @@ using MSTest.Analyzers.RoslynAnalyzerHelpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0025: <inheritdoc cref="Resources.PreferAssertFailOverAlwaysFalseConditionsTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : DiagnosticAnalyzer
 {

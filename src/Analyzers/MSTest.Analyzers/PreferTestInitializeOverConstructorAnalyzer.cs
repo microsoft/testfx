@@ -12,6 +12,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0019: <inheritdoc cref="Resources.PreferTestInitializeOverConstructorTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class PreferTestInitializeOverConstructorAnalyzer : DiagnosticAnalyzer
 {

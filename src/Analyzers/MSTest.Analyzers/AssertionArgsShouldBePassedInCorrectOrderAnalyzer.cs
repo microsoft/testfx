@@ -14,6 +14,9 @@ using MSTest.Analyzers.RoslynAnalyzerHelpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0017: <inheritdoc cref="Resources.AssertionArgsShouldBePassedInCorrectOrderTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : DiagnosticAnalyzer
 {

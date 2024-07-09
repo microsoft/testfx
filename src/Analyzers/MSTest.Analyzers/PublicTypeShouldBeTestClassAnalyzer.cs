@@ -12,6 +12,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0004: <inheritdoc cref="Resources.PublicTypeShouldBeTestClassTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class PublicTypeShouldBeTestClassAnalyzer : DiagnosticAnalyzer
 {
@@ -48,7 +51,10 @@ public sealed class PublicTypeShouldBeTestClassAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol)
     {
         var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
-        if (namedTypeSymbol.DeclaredAccessibility != Accessibility.Public
+        if (namedTypeSymbol.IsAbstract
+            || namedTypeSymbol.IsStatic
+            || namedTypeSymbol.TypeKind != TypeKind.Class
+            || namedTypeSymbol.DeclaredAccessibility != Accessibility.Public
             || namedTypeSymbol.GetResultantVisibility() != SymbolVisibility.Public)
         {
             return;
