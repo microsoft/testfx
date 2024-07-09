@@ -12,6 +12,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0015: <inheritdoc cref="Resources.TestMethodShouldNotBeIgnoredAnalyzerTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class TestMethodShouldNotBeIgnoredAnalyzer : DiagnosticAnalyzer
 {

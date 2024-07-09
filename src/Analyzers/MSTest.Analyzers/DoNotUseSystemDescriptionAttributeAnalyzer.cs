@@ -12,6 +12,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0031: <inheritdoc cref="Resources.DoNotUseSystemDescriptionAttributeTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class DoNotUseSystemDescriptionAttributeAnalyzer : DiagnosticAnalyzer
 {

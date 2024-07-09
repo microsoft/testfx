@@ -12,6 +12,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0012: <inheritdoc cref="Resources.AssemblyInitializeShouldBeValidTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class AssemblyInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
 {

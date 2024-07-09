@@ -12,6 +12,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0004: <inheritdoc cref="Resources.PublicTypeShouldBeTestClassTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class PublicTypeShouldBeTestClassAnalyzer : DiagnosticAnalyzer
 {
