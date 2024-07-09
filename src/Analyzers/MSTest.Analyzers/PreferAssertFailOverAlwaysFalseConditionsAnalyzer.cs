@@ -53,20 +53,30 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         {
             Compilation compilation = context.Compilation;
             INamedTypeSymbol? assertSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert);
+            INamedTypeSymbol? nullableSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemNullable);
             if (assertSymbol is not null)
             {
-                context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol), OperationKind.Invocation);
+                context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol, nullableSymbol), OperationKind.Invocation);
             }
         });
     }
 
-    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol)
+    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol? nullableSymbol)
     {
         var operation = (IInvocationOperation)context.Operation;
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
             IsAlwaysFalse(operation))
         {
             context.ReportDiagnostic(operation.CreateDiagnostic(Rule, operation.TargetMethod.Name));
+        }
+
+        if (nullableSymbol is not null && operation.TargetMethod.Name == "IsNull")
+        {
+            IArgumentOperation? valueArg = GetValueArgument(operation);
+            if (!SymbolEqualityComparer.IncludeNullability.Equals(valueArg?.Type, nullableSymbol) && valueArg?.Type?.NullableAnnotation == NullableAnnotation.NotAnnotated)
+            {
+                context.ReportDiagnostic(operation.CreateDiagnostic(Rule, operation.TargetMethod.Name));
+            }
         }
     }
 

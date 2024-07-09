@@ -10,6 +10,46 @@ namespace MSTest.Analyzers.Test;
 [TestGroup]
 public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
+    public async Task WhenIsNullAssertion_ValueParameterIsNullable_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int? var = null;
+                    Assert.IsNull(var);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenIsNullAssertion_ValueParameterIsNotNullable_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int var = 3;
+                    Assert.[|IsNull|](var);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     public async Task WhenAssertIsTrueIsPassedTrue_NoDiagnostic()
     {
         string code = """
