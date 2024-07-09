@@ -27,6 +27,8 @@ MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer
 MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer.DoNotUseSystemDescriptionAttributeAnalyzer() -> void
 MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer
 MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer.PreferAssertFailOverAlwaysFalseConditionsAnalyzer() -> void
+MSTest.Analyzers.PreferAssertPassOverAlwaysTrueConditionsAnalyzerAnalyzer
+MSTest.Analyzers.PreferAssertPassOverAlwaysTrueConditionsAnalyzerAnalyzer.PreferAssertPassOverAlwaysTrueConditionsAnalyzerAnalyzer() -> void
 MSTest.Analyzers.PreferConstructorOverTestInitializeAnalyzer
 MSTest.Analyzers.PreferConstructorOverTestInitializeAnalyzer.PreferConstructorOverTestInitializeAnalyzer() -> void
 MSTest.Analyzers.PreferDisposeOverTestCleanupAnalyzer
@@ -87,6 +89,8 @@ override MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer.Initialize(
 override MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.PreferAssertPassOverAlwaysTrueConditionsAnalyzerAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.PreferAssertPassOverAlwaysTrueConditionsAnalyzerAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.PreferConstructorOverTestInitializeAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.PreferConstructorOverTestInitializeAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.PreferDisposeOverTestCleanupAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void

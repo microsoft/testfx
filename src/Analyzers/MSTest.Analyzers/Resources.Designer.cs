@@ -398,6 +398,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Always-passing &apos;Assert.{0}&apos; assert.
+        /// </summary>
+        internal static string PreferAssertPassOverAlwaysTrueConditionsAnalyzerMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferAssertPassOverAlwaysTrueConditionsAnalyzerMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Always-passing assert.
+        /// </summary>
+        internal static string PreferAssertPassOverAlwaysTrueConditionsAnalyzerTitle {
+            get {
+                return ResourceManager.GetString("PreferAssertPassOverAlwaysTrueConditionsAnalyzerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
         /// </summary>
         internal static string PreferConstructorOverTestInitializeMessageFormat {
