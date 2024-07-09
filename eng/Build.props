@@ -32,8 +32,8 @@
     <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
   </ItemGroup>
 
-  <!-- For stable builds of TestAnywhere -->
-  <ItemGroup Condition=" '$(StableVersionComponent)' == 'testanywhere' ">
+  <!-- For stable builds of Microsoft.Testing.Platform and extensions -->
+  <ItemGroup Condition=" '$(StableVersionComponent)' == 'testing-platform' ">
     <ProjectToBuild Include="$(RepoRoot)Microsoft.Testing.Platform.slnf" />
   </ItemGroup>
 
