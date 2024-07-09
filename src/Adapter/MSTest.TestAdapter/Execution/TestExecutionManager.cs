@@ -43,34 +43,35 @@ public class TestExecutionManager
         TestMethodFilter = new TestMethodFilter();
         _sessionParameters = new Dictionary<string, object>();
         _environment = environment;
-        _taskFactory = taskFactory ?? ThreadingHelper.RunAsync;
+        _taskFactory = taskFactory ?? DefaultFactoryAsync;
     }
 
-    internal static class ThreadingHelper
+    private static Task DefaultFactoryAsync(Action action)
     {
-        public static Task RunAsync(Action action)
+        if (MSTestSettings.RunConfigurationSettings.ExecutionApartmentState == ApartmentState.STA
+            && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            if (MSTestSettings.RunConfigurationSettings.ExecutionApartmentState == ApartmentState.STA
-                && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            TaskCompletionSource<int> tcs = new();
+            Thread entryPointThread = new(() =>
             {
-                Thread entryPointThread = new(new ThreadStart(action));
+                try
+                {
+                    action();
+                    tcs.SetResult(0);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
 
-                entryPointThread.SetApartmentState(ApartmentState.STA);
-                entryPointThread.Start();
-                return Task.Factory.StartNew(
-                    entryPointThread.Join,
-                    CancellationToken.None,
-                    TaskCreationOptions.LongRunning,
-                    TaskScheduler.Default);
-            }
-            else
-            {
-                return Task.Factory.StartNew(
-                    action,
-                    CancellationToken.None,
-                    TaskCreationOptions.LongRunning,
-                    TaskScheduler.Default);
-            }
+            entryPointThread.SetApartmentState(ApartmentState.STA);
+            entryPointThread.Start();
+            return tcs.Task;
+        }
+        else
+        {
+            return Task.Run(action);
         }
     }
 
