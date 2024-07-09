@@ -18,7 +18,7 @@ namespace MSTest.Analyzers;
 /// MSTEST0025: <inheritdoc cref="Resources.PreferAssertPassOverAlwaysTrueConditionsAnalyzerTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-public sealed class PreferAssertPassOverAlwaysTrueConditionsAnalyzerAnalyzer : DiagnosticAnalyzer
+public sealed class PreferAssertPassOverAlwaysTrueConditionsAnalyzer : DiagnosticAnalyzer
 {
     private enum EqualityStatus
     {
