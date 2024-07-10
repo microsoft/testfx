@@ -22,7 +22,7 @@ public sealed class TestApplicationResultTests : TestBase
     {
     }
 
-    public async Task GetProcessExitCodeAsync_If_All_Skipped_Returns_Zero()
+    public async Task GetProcessExitCodeAsync_If_All_Skipped_Returns_ZeroTestsRan()
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
@@ -33,7 +33,7 @@ public sealed class TestApplicationResultTests : TestBase
                 Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
             }), CancellationToken.None);
 
-        Assert.AreEqual(ExitCodes.Success, await _testApplicationResult.GetProcessExitCodeAsync());
+        Assert.AreEqual(ExitCodes.ZeroTests, await _testApplicationResult.GetProcessExitCodeAsync());
     }
 
     public async Task GetProcessExitCodeAsync_If_No_Tests_Ran_Returns_ZeroTestsRan()
