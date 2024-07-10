@@ -50,6 +50,47 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenIsNullAssertion_ValueParameterAsPropertySymbolIsNotNullable_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int var = 3;
+
+                [TestMethod]
+                public void Test()
+                {
+                    [|Assert.IsNull(var)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenIsNullAssertion_ValueParameterAsPropertySymbolIsNullable_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int? var = 3;
+
+                [TestMethod]
+                public void Test()
+                {
+                    Assert.IsNull(var);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
     public async Task WhenAssertIsTrueIsPassedTrue_NoDiagnostic()
     {
         string code = """
