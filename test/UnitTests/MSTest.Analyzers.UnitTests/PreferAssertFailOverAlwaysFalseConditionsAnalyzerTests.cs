@@ -14,7 +14,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-
+            #nullable enable
             [TestClass]
             public class MyTestClass
             {
@@ -34,7 +34,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-
+            #nullable enable
             [TestClass]
             public class MyTestClass
             {
@@ -54,7 +54,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-
+            #nullable enable
             [TestClass]
             public class MyTestClass
             {
@@ -75,7 +75,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-
+            #nullable enable
             [TestClass]
             public class MyTestClass
             {
@@ -96,7 +96,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-
+            #nullable enable
             [TestClass]
             public class TestClass
             {
