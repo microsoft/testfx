@@ -90,18 +90,16 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
 
     private static bool CheckIsNull(IInvocationOperation operation, INamedTypeSymbol? nullableSymbol)
     {
-        if (nullableSymbol is not null && operation.TargetMethod.Name == "IsNull")
+        if (nullableSymbol is null)
         {
-            IArgumentOperation? valueArg = GetValueArgument(operation);
-            ITypeSymbol? valueArgType = valueArg?.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
-
-            if (!SymbolEqualityComparer.IncludeNullability.Equals(valueArgType?.OriginalDefinition, nullableSymbol) || valueArgType?.NullableAnnotation != NullableAnnotation.Annotated)
-            {
-                return true;
-            }
+            return false;
         }
 
-        return false;
+        IArgumentOperation? valueArg = GetValueArgument(operation);
+        ITypeSymbol? valueArgType = valueArg?.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
+
+        return !SymbolEqualityComparer.IncludeNullability.Equals(valueArgType?.OriginalDefinition, nullableSymbol)
+            || valueArgType?.NullableAnnotation != NullableAnnotation.Annotated;
     }
 
     private static IArgumentOperation? GetArgumentWithName(IInvocationOperation operation, string name)
