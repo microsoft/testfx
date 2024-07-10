@@ -70,7 +70,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         var operation = (IInvocationOperation)context.Operation;
 
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
-        IsAlwaysFalse(operation, nullableSymbol))
+            IsAlwaysFalse(operation, nullableSymbol))
         {
             context.ReportDiagnostic(operation.CreateDiagnostic(Rule, operation.TargetMethod.Name));
         }
