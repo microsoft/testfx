@@ -462,80 +462,11 @@ Registered tools:
         testHostResult.AssertOutputMatches(wildcardPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task Help_WhenMSTestExtensionRegistered_OutputHelpContentOfRegisteredExtension(string tfm)
-    {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
-
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
-
-        const string wildcardMatchPattern = $"""
-.NET Testing Platform v*
-Usage {TestAssetFixture.MSTestAssetName}* [option providers] [extension option providers]
-Execute a .NET Test Application.
-Options:
-  --diagnostic                             Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag
-  --diagnostic-filelogger-synchronouswrite Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.
-  --diagnostic-output-directory            Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.
-  --diagnostic-output-fileprefix           Prefix for the log file name that will replace '[log]_.'
-  --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
-  --exit-on-process-exit                   Exit the test process if dependent process exits. PID must be provided.
-  --help                                   Show the command line help.
-  --ignore-exit-code                       Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)
-  --info                                   Display .NET test application information.
-  --list-tests                             List available tests.
-  --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run.
-  --results-directory                      The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.
-Extension options:
-  --filter         Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
-  --settings       The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
-  --test-parameter Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters
-""";
-
-        testHostResult.AssertOutputMatches(wildcardMatchPattern);
-    }
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task Info_WhenMSTestExtensionRegistered_OutputInfoContentOfRegisteredExtension(string tfm)
-    {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
-
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
-
-        const string RegexMatchPattern = $"""
-Registered command line providers:
-  MSTestExtension
-    Name: MSTest
-    Version: .+
-    Description: MSTest Framework for Microsoft Testing Platform
-    Options:
-      --settings
-        Arity: 1
-        Hidden: False
-        Description: The path, relative or absolute, to the \.runsettings file\. For more information and examples on how to configure test run, see https:\/\/learn\.microsoft\.com\/visualstudio\/test\/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
-      --filter
-        Arity: 1
-        Hidden: False
-        Description: Filters tests using the given expression\. For more information, see the Filter option details section\. For more information and examples on how to use selective unit test filtering, see https:\/\/learn\.microsoft\.com\/dotnet\/core\/testing\/selective-unit-tests\.
-      --test-parameter
-        Arity: 1\.\.N
-        Hidden: False
-        Description: Specify or override a key-value pair parameter\. For more information and examples, see https:\/\/learn\.microsoft\.com\/visualstudio\/test\/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters
-Registered tools:
-  There are no registered tools.
-""";
-
-        testHostResult.AssertOutputMatchesRegex(RegexMatchPattern);
-    }
-
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string AllExtensionsAssetName = "AllExtensionsInfoTest";
         public const string NoExtensionAssetName = "NoExtensionInfoTest";
-        public const string MSTestAssetName = "MSTestInfoTest";
 
         private const string AllExtensionsTestCode = """
 #file AllExtensionsInfoTest.csproj
@@ -636,53 +567,9 @@ global using Microsoft.Testing.Internal.Framework;
 global using Microsoft.Testing.Extensions;
 """;
 
-        private const string MSTestCode = """
-#file MSTestInfoTest.csproj
-<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
-        <LangVersion>preview</LangVersion>
-        <EnableMSTestRunner>true</EnableMSTestRunner>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="MSTest" Version="$MSTestVersion$" />
-    </ItemGroup>
-</Project>
-
-#file Program.cs
-using MSTestInfoTest;
-
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.AddMSTest(() => new[] { typeof(Program).Assembly });
-using ITestApplication app = await builder.BuildAsync();
-return await app.RunAsync();
-
-#file UnitTest1.cs
-namespace MSTestInfoTest;
-
-[TestClass]
-public class UnitTest1
-{
-    [TestMethod]
-    public void TestMethod1()
-    {
-    }
-}
-
-#file Usings.cs
-global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.VisualStudio.TestTools.UnitTesting;
-""";
-
         public string NoExtensionTargetAssetPath => GetAssetPath(NoExtensionAssetName);
 
         public string AllExtensionsTargetAssetPath => GetAssetPath(AllExtensionsAssetName);
-
-        public string MSTestTargetAssetPath => GetAssetPath(MSTestAssetName);
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
@@ -696,11 +583,6 @@ global using Microsoft.VisualStudio.TestTools.UnitTesting;
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
-            yield return (MSTestAssetName, MSTestAssetName,
-                MSTestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
     }
 }
