@@ -99,7 +99,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         ITypeSymbol? valueArgType = valueArg?.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
 
         return !SymbolEqualityComparer.IncludeNullability.Equals(valueArgType?.OriginalDefinition, nullableSymbol)
-            || valueArgType?.NullableAnnotation != NullableAnnotation.Annotated;
+            && valueArgType?.NullableAnnotation != NullableAnnotation.Annotated;
     }
 
     private static IArgumentOperation? GetArgumentWithName(IInvocationOperation operation, string name)
