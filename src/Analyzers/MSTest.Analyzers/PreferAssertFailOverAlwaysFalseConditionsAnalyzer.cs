@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
 using MSTest.Analyzers.Helpers;
+using MSTest.Analyzers.RoslynAnalyzerHelpers;
 
 namespace MSTest.Analyzers;
 
@@ -56,24 +57,26 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         {
             Compilation compilation = context.Compilation;
             INamedTypeSymbol? assertSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert);
+            INamedTypeSymbol? nullableSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemNullable);
             if (assertSymbol is not null)
             {
-                context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol), OperationKind.Invocation);
+                context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol, nullableSymbol), OperationKind.Invocation);
             }
         });
     }
 
-    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol)
+    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol? nullableSymbol)
     {
         var operation = (IInvocationOperation)context.Operation;
+
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
-            IsAlwaysFalse(operation))
+        IsAlwaysFalse(operation, nullableSymbol))
         {
             context.ReportDiagnostic(operation.CreateDiagnostic(Rule, operation.TargetMethod.Name));
         }
     }
 
-    private static bool IsAlwaysFalse(IInvocationOperation operation)
+    private static bool IsAlwaysFalse(IInvocationOperation operation, INamedTypeSymbol? nullableSymbol)
         => operation.TargetMethod.Name switch
         {
             "IsTrue" => GetConditionArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: false } },
@@ -81,8 +84,23 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
             "AreEqual" => GetEqualityStatus(operation, ExpectedParameterName) == EqualityStatus.NotEqual,
             "AreNotEqual" => GetEqualityStatus(operation, NotExpectedParameterName) == EqualityStatus.Equal,
             "IsNotNull" => GetValueArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: null } },
+            "IsNull" => CheckIsNull(operation, nullableSymbol),
             _ => false,
         };
+
+    private static bool CheckIsNull(IInvocationOperation operation, INamedTypeSymbol? nullableSymbol)
+    {
+        if (nullableSymbol is null)
+        {
+            return false;
+        }
+
+        IArgumentOperation? valueArg = GetValueArgument(operation);
+        ITypeSymbol? valueArgType = valueArg?.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
+
+        return !SymbolEqualityComparer.IncludeNullability.Equals(valueArgType?.OriginalDefinition, nullableSymbol)
+            && valueArgType?.NullableAnnotation != NullableAnnotation.Annotated;
+    }
 
     private static IArgumentOperation? GetArgumentWithName(IInvocationOperation operation, string name)
         => operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == name);

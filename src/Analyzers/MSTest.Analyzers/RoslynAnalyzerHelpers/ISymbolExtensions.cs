@@ -3,6 +3,7 @@
 #nullable disable warnings
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace Analyzer.Utilities.Extensions
 {

@@ -211,17 +211,17 @@
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
-        <target state="new">'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</target>
+        <target state="translated">Element „System.ComponentModel.DescriptionAttribute” nie ma żadnego efektu w kontekście testów i prawdopodobnie chcesz użyć elementu „Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute”.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeMessageFormat">
         <source>Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</source>
-        <target state="new">Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</target>
+        <target state="translated">Czy chodziło Ci o użycie elementu „Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute”?</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeTitle">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</source>
-        <target state="new">'System.ComponentModel.DescriptionAttribute' has no effect on test methods</target>
+        <target state="translated">Element „System.ComponentModel.DescriptionAttribute” nie ma wpływu na metody testowe</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -546,17 +546,17 @@ nie być „abstrakcyjne”
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="new">Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
+        <target state="translated">Typ zwierający metodę „[TestMethod]” powinien być oznaczony klasa „[TestClass]”. W przeciwnym razie metoda testowa zostanie zignorowana w trybie dyskretnym.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Class '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="new">Class '{0}' contains test methods and should be marked with '[TestClass]'</target>
+        <target state="translated">Klasa „{0}” zawiera metody testowe i powinna być oznaczona klasą „[TestClass]”</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]'</source>
-        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]'</target>
+        <target state="translated">Typ zawierający metodę „[TestMethod]” powinien być oznaczony klasą „[TestClass]”</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
