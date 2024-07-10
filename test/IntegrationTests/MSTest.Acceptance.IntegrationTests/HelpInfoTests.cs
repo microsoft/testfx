@@ -64,7 +64,6 @@ Extension options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string output = $"""
-Registered command line providers:
   MSTestExtension
     Name: MSTest
     Version: {MSTestVersion}
