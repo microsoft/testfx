@@ -69,7 +69,7 @@ public sealed class PreferAssertPassOverAlwaysTrueConditionsAnalyzer : Diagnosti
     {
         var operation = (IInvocationOperation)context.Operation;
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
-            IsAlwaysFalse(operation))
+            IsAlwaysFalse(operation, nullableSymbol))
         {
             context.ReportDiagnostic(operation.CreateDiagnostic(Rule, operation.TargetMethod.Name));
         }
@@ -87,7 +87,7 @@ public sealed class PreferAssertPassOverAlwaysTrueConditionsAnalyzer : Diagnosti
         }
     }
 
-    private static bool IsAlwaysFalse(IInvocationOperation operation)
+    private static bool IsAlwaysFalse(IInvocationOperation operation, INamedTypeSymbol? nullableSymbol)
         => operation.TargetMethod.Name switch
         {
             "IsTrue" => GetConditionArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: true } },
@@ -95,8 +95,23 @@ public sealed class PreferAssertPassOverAlwaysTrueConditionsAnalyzer : Diagnosti
             "AreEqual" => GetEqualityStatus(operation, ExpectedParameterName) == EqualityStatus.Equal,
             "AreNotEqual" => GetEqualityStatus(operation, NotExpectedParameterName) == EqualityStatus.NotEqual,
             "IsNull" => GetValueArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: null } },
+            "IsNotNull" => CheckIsNotNull(operation, nullableSymbol),
             _ => false,
         };
+
+    private static bool CheckIsNotNull(IInvocationOperation operation, INamedTypeSymbol? nullableSymbol)
+    {
+        if (nullableSymbol is null)
+        {
+            return false;
+        }
+
+        IArgumentOperation? valueArg = GetValueArgument(operation);
+        ITypeSymbol? valueArgType = valueArg?.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
+
+        return !SymbolEqualityComparer.IncludeNullability.Equals(valueArgType?.OriginalDefinition, nullableSymbol)
+            && valueArgType?.NullableAnnotation != NullableAnnotation.Annotated;
+    }
 
     private static IArgumentOperation? GetArgumentWithName(IInvocationOperation operation, string name)
         => operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == name);
