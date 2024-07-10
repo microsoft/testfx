@@ -68,26 +68,15 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
     private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol? nullableSymbol)
     {
         var operation = (IInvocationOperation)context.Operation;
+
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
-            IsAlwaysFalse(operation))
+        IsAlwaysFalse(operation, nullableSymbol))
         {
             context.ReportDiagnostic(operation.CreateDiagnostic(Rule, operation.TargetMethod.Name));
         }
-
-        if (nullableSymbol is not null && operation.TargetMethod.Name == "IsNull")
-        {
-            IArgumentOperation? valueArg = GetValueArgument(operation);
-
-            ITypeSymbol? valueArgType = valueArg?.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
-
-            if (!SymbolEqualityComparer.IncludeNullability.Equals(valueArgType?.OriginalDefinition, nullableSymbol) || valueArgType?.NullableAnnotation != NullableAnnotation.Annotated)
-            {
-                context.ReportDiagnostic(operation.CreateDiagnostic(Rule, operation.TargetMethod.Name));
-            }
-        }
     }
 
-    private static bool IsAlwaysFalse(IInvocationOperation operation)
+    private static bool IsAlwaysFalse(IInvocationOperation operation, INamedTypeSymbol? nullableSymbol)
         => operation.TargetMethod.Name switch
         {
             "IsTrue" => GetConditionArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: false } },
@@ -95,8 +84,25 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
             "AreEqual" => GetEqualityStatus(operation, ExpectedParameterName) == EqualityStatus.NotEqual,
             "AreNotEqual" => GetEqualityStatus(operation, NotExpectedParameterName) == EqualityStatus.Equal,
             "IsNotNull" => GetValueArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: null } },
+            "IsNull" => CheckIsNull(operation, nullableSymbol),
             _ => false,
         };
+
+    private static bool CheckIsNull(IInvocationOperation operation, INamedTypeSymbol? nullableSymbol)
+    {
+        if (nullableSymbol is not null && operation.TargetMethod.Name == "IsNull")
+        {
+            IArgumentOperation? valueArg = GetValueArgument(operation);
+            ITypeSymbol? valueArgType = valueArg?.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
+
+            if (!SymbolEqualityComparer.IncludeNullability.Equals(valueArgType?.OriginalDefinition, nullableSymbol) || valueArgType?.NullableAnnotation != NullableAnnotation.Annotated)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static IArgumentOperation? GetArgumentWithName(IInvocationOperation operation, string name)
         => operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == name);
