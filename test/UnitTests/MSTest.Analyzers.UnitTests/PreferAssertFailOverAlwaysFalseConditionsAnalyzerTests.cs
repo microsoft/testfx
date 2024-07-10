@@ -100,11 +100,10 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
             [TestClass]
             public class TestClass
             {
-                ObjectClass obj;
-
                 [TestMethod]
                 public void Test()
                 {
+                    ObjectClass obj = new ObjectClass();
                     [|Assert.IsNull(obj)|];
                 }
             }
