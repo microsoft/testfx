@@ -215,7 +215,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             {
                 await _logger.LogDebugAsync($"Started test host process '{testHostProcess.Id}' HasExited: {testHostProcess.HasExited}");
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException) when (testHostProcess.HasExited)
             {
                 // Access PID can throw InvalidOperationException if the process has already exited:
                 // System.InvalidOperationException: No process is associated with this object.
