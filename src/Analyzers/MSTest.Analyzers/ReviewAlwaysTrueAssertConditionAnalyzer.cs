@@ -71,7 +71,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzer : DiagnosticAnalyzer
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
             IsAlwaysTrue(operation, nullableSymbol))
         {
-            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, operation.TargetMethod.Name));
+            context.ReportDiagnostic(operation.CreateDiagnostic(Rule));
         }
     }
 

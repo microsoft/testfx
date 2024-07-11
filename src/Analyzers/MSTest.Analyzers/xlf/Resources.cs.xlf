@@ -237,13 +237,13 @@
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
-        <source>Always-passing 'Assert.{0}' assert</source>
-        <target state="new">Always-passing 'Assert.{0}' assert</target>
+        <source>Review or remove the assertion as its condition is known to be always true</source>
+        <target state="new">Review or remove the assertion as its condition is known to be always true</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerTitle">
-        <source>Always-passing assert</source>
-        <target state="new">Always-passing assert</target>
+        <source>Assertion condition is always true</source>
+        <target state="new">Assertion condition is always true</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">

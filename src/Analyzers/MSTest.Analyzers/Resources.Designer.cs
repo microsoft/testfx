@@ -398,24 +398,6 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Always-passing &apos;Assert.{0}&apos; assert.
-        /// </summary>
-        internal static string ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat {
-            get {
-                return ResourceManager.GetString("ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Always-passing assert.
-        /// </summary>
-        internal static string ReviewAlwaysTrueAssertConditionAnalyzerTitle {
-            get {
-                return ResourceManager.GetString("ReviewAlwaysTrueAssertConditionAnalyzerTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
         /// </summary>
         internal static string PreferConstructorOverTestInitializeMessageFormat {
@@ -538,6 +520,24 @@ namespace MSTest.Analyzers {
         internal static string PublicTypeShouldBeTestClassTitle {
             get {
                 return ResourceManager.GetString("PublicTypeShouldBeTestClassTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Review or remove the assertion as its condition is known to be always true.
+        /// </summary>
+        internal static string ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat {
+            get {
+                return ResourceManager.GetString("ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assertion condition is always true.
+        /// </summary>
+        internal static string ReviewAlwaysTrueAssertConditionAnalyzerTitle {
+            get {
+                return ResourceManager.GetString("ReviewAlwaysTrueAssertConditionAnalyzerTitle", resourceCulture);
             }
         }
         
