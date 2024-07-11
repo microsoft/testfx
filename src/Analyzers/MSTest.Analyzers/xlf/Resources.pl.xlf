@@ -234,12 +234,12 @@
         <target state="translated">Użyj trybu „Assert.Fail” zamiast kończącej się zawsze niepowodzeniem instrukcji asercji</target>
         <note />
       </trans-unit>
-      <trans-unit id="PreferNotUsingAlwaysTrueConditionsAnalyzerMessageFormat">
+      <trans-unit id="PreferNotUsingAlwaysTrueAssertConditionsAnalyzerMessageFormat">
         <source>Always-passing 'Assert.{0}' assert</source>
         <target state="new">Always-passing 'Assert.{0}' assert</target>
         <note />
       </trans-unit>
-      <trans-unit id="PreferNotUsingAlwaysTrueConditionsAnalyzerTitle">
+      <trans-unit id="PreferNotUsingAlwaysTrueAssertConditionsAnalyzerTitle">
         <source>Always-passing assert</source>
         <target state="new">Always-passing assert</target>
         <note />
