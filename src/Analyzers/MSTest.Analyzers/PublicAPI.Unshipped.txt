@@ -89,6 +89,8 @@ override MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer.Initialize(
 override MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.PreferAssertPassOverAlwaysTrueConditionsAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.PreferAssertPassOverAlwaysTrueConditionsAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.PreferConstructorOverTestInitializeAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.PreferConstructorOverTestInitializeAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.PreferDisposeOverTestCleanupAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void

@@ -15,7 +15,7 @@ using MSTest.Analyzers.RoslynAnalyzerHelpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0025: <inheritdoc cref="Resources.PreferAssertPassOverAlwaysTrueConditionsAnalyzerTitle"/>.
+/// MSTEST0032: <inheritdoc cref="Resources.PreferAssertPassOverAlwaysTrueConditionsAnalyzerTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class PreferAssertPassOverAlwaysTrueConditionsAnalyzer : DiagnosticAnalyzer
@@ -69,25 +69,13 @@ public sealed class PreferAssertPassOverAlwaysTrueConditionsAnalyzer : Diagnosti
     {
         var operation = (IInvocationOperation)context.Operation;
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
-            IsAlwaysFalse(operation, nullableSymbol))
+            IsAlwaysTrue(operation, nullableSymbol))
         {
             context.ReportDiagnostic(operation.CreateDiagnostic(Rule, operation.TargetMethod.Name));
         }
-
-        if (nullableSymbol is not null && operation.TargetMethod.Name == "IsNotNull")
-        {
-            IArgumentOperation? valueArg = GetValueArgument(operation);
-
-            ITypeSymbol? valueArgType = valueArg?.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
-
-            if (!SymbolEqualityComparer.IncludeNullability.Equals(valueArgType?.OriginalDefinition, nullableSymbol) || valueArgType?.NullableAnnotation != NullableAnnotation.Annotated)
-            {
-                context.ReportDiagnostic(operation.CreateDiagnostic(Rule, operation.TargetMethod.Name));
-            }
-        }
     }
 
-    private static bool IsAlwaysFalse(IInvocationOperation operation, INamedTypeSymbol? nullableSymbol)
+    private static bool IsAlwaysTrue(IInvocationOperation operation, INamedTypeSymbol? nullableSymbol)
         => operation.TargetMethod.Name switch
         {
             "IsTrue" => GetConditionArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: true } },
@@ -95,22 +83,16 @@ public sealed class PreferAssertPassOverAlwaysTrueConditionsAnalyzer : Diagnosti
             "AreEqual" => GetEqualityStatus(operation, ExpectedParameterName) == EqualityStatus.Equal,
             "AreNotEqual" => GetEqualityStatus(operation, NotExpectedParameterName) == EqualityStatus.NotEqual,
             "IsNull" => GetValueArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: null } },
-            "IsNotNull" => CheckIsNotNull(operation, nullableSymbol),
+            "IsNotNull" => GetValueArgument(operation) is { } valueArgumentOperation && IsNotNullableType(valueArgumentOperation, nullableSymbol),
             _ => false,
         };
 
-    private static bool CheckIsNotNull(IInvocationOperation operation, INamedTypeSymbol? nullableSymbol)
+    private static bool IsNotNullableType(IArgumentOperation valueArgumentOperation, INamedTypeSymbol? nullableSymbol)
     {
-        if (nullableSymbol is null)
-        {
-            return false;
-        }
-
-        IArgumentOperation? valueArg = GetValueArgument(operation);
-        ITypeSymbol? valueArgType = valueArg?.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
-
-        return !SymbolEqualityComparer.IncludeNullability.Equals(valueArgType?.OriginalDefinition, nullableSymbol)
-            && valueArgType?.NullableAnnotation != NullableAnnotation.Annotated;
+        ITypeSymbol? valueArgType = valueArgumentOperation.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
+        return valueArgType is not null
+            && valueArgType.NullableAnnotation == NullableAnnotation.NotAnnotated
+            && !SymbolEqualityComparer.IncludeNullability.Equals(valueArgType.OriginalDefinition, nullableSymbol);
     }
 
     private static IArgumentOperation? GetArgumentWithName(IInvocationOperation operation, string name)
