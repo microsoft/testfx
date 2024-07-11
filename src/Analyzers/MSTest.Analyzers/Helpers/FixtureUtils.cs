@@ -32,15 +32,30 @@ internal static class FixtureUtils
 
     public static bool HasValidFixtureMethodSignature(this IMethodSymbol methodSymbol, INamedTypeSymbol? taskSymbol,
         INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals, bool shouldBeStatic, bool allowGenericType,
-        INamedTypeSymbol? testContextSymbol, out bool isFixable)
+        INamedTypeSymbol? testContextSymbol, INamedTypeSymbol testClassAttributeSymbol, bool fixtureAllowInheritedTestClass, out bool isFixable)
     {
+        isFixable = false;
         if (methodSymbol.MethodKind != MethodKind.Ordinary
             || (methodSymbol.ContainingType.IsGenericType && !allowGenericType))
         {
-            isFixable = false;
             return false;
         }
 
+        // Fixtures are only supported on classes
+        if (methodSymbol.ContainingType.TypeKind != TypeKind.Class)
+        {
+            return false;
+        }
+
+        // For AssemblyInitialize and AssemblyCleanup methods, the containing class should be marked with TestClassAttribute.
+        // For the other fixtures, it's only required if the type is not sealed.
+        if ((!fixtureAllowInheritedTestClass || methodSymbol.ContainingType.IsSealed)
+            && !methodSymbol.ContainingType.GetAttributes().Any(x => x.AttributeClass.Inherits(testClassAttributeSymbol)))
+        {
+            return false;
+        }
+
+        // Validate the method signature
         isFixable = true;
         return !methodSymbol.IsGenericMethod
             && methodSymbol.IsStatic == shouldBeStatic

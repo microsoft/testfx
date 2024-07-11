@@ -464,4 +464,55 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestCleanup"),
             fixedCode);
     }
+
+    public async Task WhenTestCleanupIsNotOnClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public struct MyTestClass
+            {
+                [TestCleanup]
+                public void [|TestCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestCleanupIsOnSealedClassNotMarkedWithTestClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class MyTestClass
+            {
+                [TestCleanup]
+                public void [|TestCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestCleanupIsOnNonSealedClassNotMarkedWithTestClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                [TestCleanup]
+                public void TestCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
