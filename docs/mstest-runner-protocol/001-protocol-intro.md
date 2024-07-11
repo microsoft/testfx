@@ -217,6 +217,9 @@ interface InitializeParams {
         testing: {
             // If true, the client supports the client/attachDebugger and client/launchDebugger requests.
             debuggerProvider: true,
+
+            // If true, the client can receive a batch of log messages under client/log request.
+            batchLoggingSupport: true,
         },
     }
 }
@@ -395,14 +398,6 @@ interface TestNode {
     // can leave the value null, or empty.
     // Example: "traits": [{ "trait1": "traitValue1"}, {"trait2": "traitValue2" }, { "category1": null }]
     'traits': Trait[];
-
-    // If the test framework captures output level messages for a test it can set the output of the test here.
-    // Example: "output.stdout": "This test is calling Console.WriteLine("...")"
-    'output.stdout'?: string;
-
-    // If the test framework captures error level messages for a test it can set the output of the test here.
-    // Example: "output.stderr": "This test is calling Console.Error.WriteLine("...")"
-    'output.stderr'?: string;
 }
 
 // The adapter can specify an outcome for the test.
@@ -715,11 +710,37 @@ Messages are logged to the output window.
 Notification:
 
 - method: `client/log`
-- params: `LogMessageParams` defined as follows:
+- params: `LogMessageParams | BatchLogMessageParams` defined as follows:
+- capability: If `testing.batchLoggingSupport` is true, the server can send BatchLogMessageParams instead.
+  The client will check the existence of `messages` property to determine if a batch was sent instead of a single
+  message. If `testing.batchLoggingSupport` is false, the server cannot send `BatchLogMessageParams` messages to the client.
 
 ```typescript
 interface LogMessageParams {
     level: TestingPlatformLogLevel;
+    message: string;
+}
+```
+
+```typescript
+interface BatchLogMessageParams {
+    // If specified the message batch should be attributed to a specific run.
+    // Specifically, combined with the nodeUid, property the client should attribute
+    // the messages to a specific TestNode, rather than render them globally.
+    runId?: GUID;
+
+    // List of messages to log.
+    messages: LogMessage[];
+}
+
+interface LogMessage {
+    // If a log message should be attributed to a single node, rather than be global.
+    nodeUid?: GUID;
+
+    // The level of a single log message.
+    // Messages can have different log levels within a batch.
+    level: TestingPlatformLogLevel;
+
     message: string;
 }
 ```
