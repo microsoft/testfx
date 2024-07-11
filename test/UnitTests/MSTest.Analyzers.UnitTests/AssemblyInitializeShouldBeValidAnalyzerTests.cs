@@ -477,4 +477,38 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyInitialize"),
             fixedCode);
     }
+
+    public async Task WhenAssemblyInitializeIsNotOnClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public struct MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void [|AssemblyInitialize|](TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenAssemblyInitializeIsOnClassNotMarkedWithTestClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void [|AssemblyInitialize|](TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

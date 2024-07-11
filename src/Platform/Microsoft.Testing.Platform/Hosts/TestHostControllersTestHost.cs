@@ -211,7 +211,15 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 _logger.LogDebug($"Test host process exited, PID: '{processExited?.Id}'");
             };
 
-            await _logger.LogDebugAsync($"Started test host process '{testHostProcess.Id}' HasExited: {testHostProcess.HasExited}");
+            try
+            {
+                await _logger.LogDebugAsync($"Started test host process '{testHostProcess.Id}' HasExited: {testHostProcess.HasExited}");
+            }
+            catch (InvalidOperationException) when (testHostProcess.HasExited)
+            {
+                // Access PID can throw InvalidOperationException if the process has already exited:
+                // System.InvalidOperationException: No process is associated with this object.
+            }
 
             string? seconds = configuration[PlatformConfigurationConstants.PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds];
             int timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : int.Parse(seconds, CultureInfo.InvariantCulture);
