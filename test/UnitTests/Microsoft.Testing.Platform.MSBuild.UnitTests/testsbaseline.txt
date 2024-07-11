@@ -1,1 +1,0 @@
-﻿Microsoft.Testing.Platform.MSBuild.UnitTests.Microsoft.Testing.Platform.MSBuild.UnitTests.MSBuildTests.Verify_Correct_Registration_Order_For_WellKnown_Extensions()
