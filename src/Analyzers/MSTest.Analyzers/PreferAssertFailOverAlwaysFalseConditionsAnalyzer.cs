@@ -70,7 +70,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         var operation = (IInvocationOperation)context.Operation;
 
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
-        IsAlwaysFalse(operation, nullableSymbol))
+            IsAlwaysFalse(operation, nullableSymbol))
         {
             context.ReportDiagnostic(operation.CreateDiagnostic(Rule, operation.TargetMethod.Name));
         }
@@ -84,22 +84,16 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
             "AreEqual" => GetEqualityStatus(operation, ExpectedParameterName) == EqualityStatus.NotEqual,
             "AreNotEqual" => GetEqualityStatus(operation, NotExpectedParameterName) == EqualityStatus.Equal,
             "IsNotNull" => GetValueArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: null } },
-            "IsNull" => CheckIsNull(operation, nullableSymbol),
+            "IsNull" => GetValueArgument(operation) is { } valueArgumentOperation && IsNotNullableType(valueArgumentOperation, nullableSymbol),
             _ => false,
         };
 
-    private static bool CheckIsNull(IInvocationOperation operation, INamedTypeSymbol? nullableSymbol)
+    private static bool IsNotNullableType(IArgumentOperation valueArgumentOperation, INamedTypeSymbol? nullableSymbol)
     {
-        if (nullableSymbol is null)
-        {
-            return false;
-        }
-
-        IArgumentOperation? valueArg = GetValueArgument(operation);
-        ITypeSymbol? valueArgType = valueArg?.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
-
-        return !SymbolEqualityComparer.IncludeNullability.Equals(valueArgType?.OriginalDefinition, nullableSymbol)
-            && valueArgType?.NullableAnnotation != NullableAnnotation.Annotated;
+        ITypeSymbol? valueArgType = valueArgumentOperation.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
+        return valueArgType is not null
+            && valueArgType.NullableAnnotation == NullableAnnotation.NotAnnotated
+            && !SymbolEqualityComparer.IncludeNullability.Equals(valueArgType.OriginalDefinition, nullableSymbol);
     }
 
     private static IArgumentOperation? GetArgumentWithName(IInvocationOperation operation, string name)
