@@ -117,6 +117,30 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenIsNullAssertion_ValueParameterAsReferenceObjectIsNotNullable_WithoutEnableNullable_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void Test()
+                {
+                    ObjectClass obj = new ObjectClass();
+                    Assert.IsNull(obj);
+                }
+            }
+
+            public class ObjectClass
+            {
+
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     public async Task WhenIsNullAssertion_ValueParameterAsReferenceObjectIsNullable_NoDiagnostic()
     {
         string code = """
