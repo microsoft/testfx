@@ -159,7 +159,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
                     if (_platformInformation.BuildDate is { } buildDate)
                     {
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime})");
+                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime.ToShortDateString()})");
                     }
 
                     if (_runtimeFeature.IsDynamicCodeSupported)
