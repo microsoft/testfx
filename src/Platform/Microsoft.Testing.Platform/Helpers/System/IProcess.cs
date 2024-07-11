@@ -26,7 +26,7 @@ internal interface IProcess : IDisposable
 
 #if NETCOREAPP
     /// <inheritdoc cref="System.Diagnostics.Process.WaitForExitAsync(CancellationToken)" />
-    Task WaitForExitAsync(CancellationToken cancellationToken = default);
+    Task WaitForExitAsync();
 
 #endif
 

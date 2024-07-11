@@ -40,8 +40,8 @@ internal sealed class SystemProcess : IProcess, IDisposable
         => _process.WaitForExit();
 
 #if NETCOREAPP
-    public Task WaitForExitAsync(CancellationToken cancellationToken = default)
-        => _process.WaitForExitAsync(cancellationToken);
+    public Task WaitForExitAsync()
+        => _process.WaitForExitAsync();
 #endif
 
 #if NETCOREAPP
