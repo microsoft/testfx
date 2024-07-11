@@ -211,17 +211,17 @@
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
-        <target state="new">'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</target>
+        <target state="translated">'System.ComponentModel.DescriptionAttribute'는 테스트 컨텍스트에 영향을 주지 않으며 대신 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'를 사용하려고 한 것 같습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeMessageFormat">
         <source>Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</source>
-        <target state="new">Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</target>
+        <target state="translated">'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'를 사용하려고 했나요?</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeTitle">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</source>
-        <target state="new">'System.ComponentModel.DescriptionAttribute' has no effect on test methods</target>
+        <target state="translated">'System.ComponentModel.DescriptionAttribute'는 테스트 메서드에 영향을 주지 않습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -537,17 +537,17 @@
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="new">Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
+        <target state="translated">'[TestMethod]'를 포함하는 유형은 '[TestClass]'로 표시되어야 합니다. 그렇지 않으면 테스트 메서드가 자동으로 무시됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Class '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="new">Class '{0}' contains test methods and should be marked with '[TestClass]'</target>
+        <target state="translated">'{0}' 클래스에는 테스트 메서드가 포함되어 있으며 '[TestClass]'로 표시되어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]'</source>
-        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]'</target>
+        <target state="translated">'[TestMethod]'를 포함하는 유형은 '[TestClass]'로 표시되어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
