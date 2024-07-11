@@ -236,6 +236,16 @@
         <target state="translated">Místo trvalého neúspěšného vyhodnocovacího výrazu použijte „Assert.Fail“.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
+        <source>Review or remove the assertion as its condition is known to be always true</source>
+        <target state="new">Review or remove the assertion as its condition is known to be always true</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerTitle">
+        <source>Assertion condition is always true</source>
+        <target state="new">Assertion condition is always true</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
         <source>Prefer constructors over TestInitialize methods</source>
         <target state="translated">Upřednostňovat konstruktory před metodami TestInitialize</target>

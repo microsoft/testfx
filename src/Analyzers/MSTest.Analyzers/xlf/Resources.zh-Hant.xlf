@@ -234,6 +234,16 @@
         <target state="translated">使用 'Assert.Fail'，而不是一直失敗的聲明</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
+        <source>Review or remove the assertion as its condition is known to be always true</source>
+        <target state="new">Review or remove the assertion as its condition is known to be always true</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerTitle">
+        <source>Assertion condition is always true</source>
+        <target state="new">Assertion condition is always true</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
         <source>Prefer constructors over TestInitialize methods</source>
         <target state="translated">偏好建構函式勝於 TestInitialize 方法</target>

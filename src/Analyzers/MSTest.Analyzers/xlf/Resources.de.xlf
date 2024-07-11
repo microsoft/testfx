@@ -234,6 +234,16 @@
         <target state="translated">Verwenden Sie „Assert.Fail“ anstelle einer Assert-Anweisung, bei der immer ein Fehler auftritt.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
+        <source>Review or remove the assertion as its condition is known to be always true</source>
+        <target state="new">Review or remove the assertion as its condition is known to be always true</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerTitle">
+        <source>Assertion condition is always true</source>
+        <target state="new">Assertion condition is always true</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
         <source>Prefer constructors over TestInitialize methods</source>
         <target state="translated">Konstruktoren gegenüber TestInitialize-Methoden bevorzugen</target>

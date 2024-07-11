@@ -454,4 +454,10 @@
   <data name="DoNotUseSystemDescriptionAttributeDescription" xml:space="preserve">
     <value>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</value>
   </data>
+  <data name="ReviewAlwaysTrueAssertConditionAnalyzerTitle" xml:space="preserve">
+    <value>Assertion condition is always true</value>
+  </data>
+  <data name="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat" xml:space="preserve">
+    <value>Review or remove the assertion as its condition is known to be always true</value>
+  </data>
 </root>
