@@ -10,6 +10,163 @@ namespace MSTest.Analyzers.Test;
 [TestGroup]
 public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
+    public async Task WhenIsNullAssertion_ValueParameterIsNullable_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            #nullable enable
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int? var = null;
+                    Assert.IsNull(var);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenIsNullAssertion_ValueParameterIsNotNullable_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            #nullable enable
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int var = 3;
+                    [|Assert.IsNull(var)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenIsNullAssertion_ValueParameterAsPropertySymbolIsNotNullable_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            #nullable enable
+            [TestClass]
+            public class MyTestClass
+            {
+                private int var = 3;
+
+                [TestMethod]
+                public void Test()
+                {
+                    [|Assert.IsNull(var)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenIsNullAssertion_ValueParameterAsPropertySymbolIsNullable_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            #nullable enable
+            [TestClass]
+            public class MyTestClass
+            {
+                private int? var = 3;
+
+                [TestMethod]
+                public void Test()
+                {
+                    Assert.IsNull(var);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenIsNullAssertion_ValueParameterAsReferenceObjectIsNotNullable_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            #nullable enable
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void Test()
+                {
+                    ObjectClass obj = new ObjectClass();
+                    [|Assert.IsNull(obj)|];
+                }
+            }
+
+            public class ObjectClass
+            {
+
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenIsNullAssertion_ValueParameterAsReferenceObjectIsNotNullable_WithoutEnableNullable_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void Test()
+                {
+                    ObjectClass obj = new ObjectClass();
+                    Assert.IsNull(obj);
+                }
+            }
+
+            public class ObjectClass
+            {
+
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenIsNullAssertion_ValueParameterAsReferenceObjectIsNullable_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            #nullable enable
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void Test()
+                {
+                    ObjectClass? obj = null;
+
+                    Assert.IsNull(obj);
+                }
+            }
+
+            public class ObjectClass
+            {
+
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     public async Task WhenAssertIsTrueIsPassedTrue_NoDiagnostic()
     {
         string code = """
