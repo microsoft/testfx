@@ -2,13 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
-    MSTest.Analyzers.PreferNotUsingAlwaysTrueAssertConditionsAnalyzer,
+    MSTest.Analyzers.ReviewAlwaysTrueAssertConditionAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
 [TestGroup]
-public sealed class PreferNotUsingAlwaysTrueAssertConditionsAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
     public async Task WhenIsNotNullAssertion_ValueParameterIsNotNullable_NoDiagnostic()
     {

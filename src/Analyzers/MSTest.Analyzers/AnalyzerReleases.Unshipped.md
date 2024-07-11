@@ -9,4 +9,4 @@ MSTEST0026 | Usage | Info | AssertionArgsShouldAvoidConditionalAccessRuleId, [Do
 MSTEST0029 | Design | Disabled | PublicMethodShouldBeTestMethodAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0029)
 MSTEST0030 | Usage | Info | TypeContainingTestMethodShouldBeATestClassAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0030)
 MSTEST0031 | Usage | Info | DoNotUseSystemDescriptionAttributeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0031)
-MSTEST0032 | Usage | Info | PreferNotUsingAlwaysTrueAssertConditionsAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0032)
+MSTEST0032 | Usage | Info | ReviewAlwaysTrueAssertConditionAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0032)

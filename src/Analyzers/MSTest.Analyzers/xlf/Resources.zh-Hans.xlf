@@ -234,12 +234,12 @@
         <target state="translated">使用 “Assert.Fail” 而不是始终失败的断言</target>
         <note />
       </trans-unit>
-      <trans-unit id="PreferNotUsingAlwaysTrueAssertConditionsAnalyzerMessageFormat">
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
         <source>Always-passing 'Assert.{0}' assert</source>
         <target state="new">Always-passing 'Assert.{0}' assert</target>
         <note />
       </trans-unit>
-      <trans-unit id="PreferNotUsingAlwaysTrueAssertConditionsAnalyzerTitle">
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerTitle">
         <source>Always-passing assert</source>
         <target state="new">Always-passing assert</target>
         <note />

@@ -15,10 +15,10 @@ using MSTest.Analyzers.RoslynAnalyzerHelpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0032: <inheritdoc cref="Resources.PreferNotUsingAlwaysTrueAssertConditionsAnalyzerTitle"/>.
+/// MSTEST0032: <inheritdoc cref="Resources.ReviewAlwaysTrueAssertConditionAnalyzerTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-public sealed class PreferNotUsingAlwaysTrueAssertConditionsAnalyzer : DiagnosticAnalyzer
+public sealed class ReviewAlwaysTrueAssertConditionAnalyzer : DiagnosticAnalyzer
 {
     private enum EqualityStatus
     {
@@ -33,11 +33,11 @@ public sealed class PreferNotUsingAlwaysTrueAssertConditionsAnalyzer : Diagnosti
     private const string ConditionParameterName = "condition";
     private const string ValueParameterName = "value";
 
-    private static readonly LocalizableResourceString Title = new(nameof(Resources.PreferNotUsingAlwaysTrueAssertConditionsAnalyzerTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.PreferNotUsingAlwaysTrueAssertConditionsAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Title = new(nameof(Resources.ReviewAlwaysTrueAssertConditionAnalyzerTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.PreferNotUsingAlwaysTrueAssertConditionsAnalyzerRuleId,
+        DiagnosticIds.ReviewAlwaysTrueAssertConditionAnalyzerRuleId,
         Title,
         MessageFormat,
         null,

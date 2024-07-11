@@ -35,5 +35,5 @@ internal static class DiagnosticIds
     public const string PublicMethodShouldBeTestMethodRuleId = "MSTEST0029";
     public const string TypeContainingTestMethodShouldBeATestClassRuleId = "MSTEST0030";
     public const string DoNotUseSystemDescriptionAttributeRuleId = "MSTEST0031";
-    public const string PreferNotUsingAlwaysTrueAssertConditionsAnalyzerRuleId = "MSTEST0032";
+    public const string ReviewAlwaysTrueAssertConditionAnalyzerRuleId = "MSTEST0032";
 }
