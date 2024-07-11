@@ -481,4 +481,38 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyCleanup"),
             fixedCode);
     }
+
+    public async Task WhenAssemblyCleanupIsNotOnClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public struct MyTestClass
+            {
+                [AssemblyCleanup]
+                public static void [|AssemblyCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenAssemblyCleanupIsOnClassNotMarkedWithTestClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                [AssemblyCleanup]
+                public static void [|AssemblyCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

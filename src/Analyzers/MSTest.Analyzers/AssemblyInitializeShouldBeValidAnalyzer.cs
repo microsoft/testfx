@@ -37,26 +37,27 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
         context.RegisterCompilationStartAction(context =>
         {
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute, out INamedTypeSymbol? assemblyInitializeAttributeSymbol)
-                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext, out INamedTypeSymbol? testContextSymbol))
+                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext, out INamedTypeSymbol? testContextSymbol)
+                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
             {
                 INamedTypeSymbol? taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
                 INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
                 bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, assemblyInitializeAttributeSymbol, taskSymbol, valueTaskSymbol, testContextSymbol, canDiscoverInternals),
+                    context => AnalyzeSymbol(context, assemblyInitializeAttributeSymbol, taskSymbol, valueTaskSymbol, testContextSymbol, testClassAttributeSymbol, canDiscoverInternals),
                     SymbolKind.Method);
             }
         });
     }
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol assemblyInitializeAttributeSymbol, INamedTypeSymbol? taskSymbol,
-        INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol testContextSymbol, bool canDiscoverInternals)
+        INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol testContextSymbol, INamedTypeSymbol testClassAttributeSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
         if (methodSymbol.IsAssemblyInitializeMethod(assemblyInitializeAttributeSymbol)
             && !methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: true,
-                allowGenericType: false, testContextSymbol, out bool isFixable))
+                allowGenericType: false, testContextSymbol, testClassAttributeSymbol, fixtureAllowInheritedTestClass: false, out bool isFixable))
         {
             context.ReportDiagnostic(isFixable
                 ? methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name)
