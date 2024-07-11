@@ -454,10 +454,10 @@
   <data name="DoNotUseSystemDescriptionAttributeDescription" xml:space="preserve">
     <value>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</value>
   </data>
-  <data name="PreferAssertPassOverAlwaysTrueConditionsAnalyzerTitle" xml:space="preserve">
+  <data name="PreferNotUsingAlwaysTrueConditionsAnalyzerTitle" xml:space="preserve">
     <value>Always-passing assert</value>
   </data>
-  <data name="PreferAssertPassOverAlwaysTrueConditionsAnalyzerMessageFormat" xml:space="preserve">
+  <data name="PreferNotUsingAlwaysTrueConditionsAnalyzerMessageFormat" xml:space="preserve">
     <value>Always-passing 'Assert.{0}' assert</value>
   </data>
 </root>

@@ -234,12 +234,12 @@
         <target state="translated">Verwenden Sie „Assert.Fail“ anstelle einer Assert-Anweisung, bei der immer ein Fehler auftritt.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PreferAssertPassOverAlwaysTrueConditionsAnalyzerMessageFormat">
+      <trans-unit id="PreferNotUsingAlwaysTrueConditionsAnalyzerMessageFormat">
         <source>Always-passing 'Assert.{0}' assert</source>
         <target state="new">Always-passing 'Assert.{0}' assert</target>
         <note />
       </trans-unit>
-      <trans-unit id="PreferAssertPassOverAlwaysTrueConditionsAnalyzerTitle">
+      <trans-unit id="PreferNotUsingAlwaysTrueConditionsAnalyzerTitle">
         <source>Always-passing assert</source>
         <target state="new">Always-passing assert</target>
         <note />

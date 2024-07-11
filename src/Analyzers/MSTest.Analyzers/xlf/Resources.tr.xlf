@@ -234,12 +234,12 @@
         <target state="translated">Her zaman başarısız olan onaylama yerine 'Assert.Fail' seçeneğini kullanın</target>
         <note />
       </trans-unit>
-      <trans-unit id="PreferAssertPassOverAlwaysTrueConditionsAnalyzerMessageFormat">
+      <trans-unit id="PreferNotUsingAlwaysTrueConditionsAnalyzerMessageFormat">
         <source>Always-passing 'Assert.{0}' assert</source>
         <target state="new">Always-passing 'Assert.{0}' assert</target>
         <note />
       </trans-unit>
-      <trans-unit id="PreferAssertPassOverAlwaysTrueConditionsAnalyzerTitle">
+      <trans-unit id="PreferNotUsingAlwaysTrueConditionsAnalyzerTitle">
         <source>Always-passing assert</source>
         <target state="new">Always-passing assert</target>
         <note />

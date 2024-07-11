@@ -400,18 +400,18 @@ namespace MSTest.Analyzers {
         /// <summary>
         ///   Looks up a localized string similar to Always-passing &apos;Assert.{0}&apos; assert.
         /// </summary>
-        internal static string PreferAssertPassOverAlwaysTrueConditionsAnalyzerMessageFormat {
+        internal static string PreferNotUsingAlwaysTrueConditionsAnalyzerMessageFormat {
             get {
-                return ResourceManager.GetString("PreferAssertPassOverAlwaysTrueConditionsAnalyzerMessageFormat", resourceCulture);
+                return ResourceManager.GetString("PreferNotUsingAlwaysTrueConditionsAnalyzerMessageFormat", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Always-passing assert.
         /// </summary>
-        internal static string PreferAssertPassOverAlwaysTrueConditionsAnalyzerTitle {
+        internal static string PreferNotUsingAlwaysTrueConditionsAnalyzerTitle {
             get {
-                return ResourceManager.GetString("PreferAssertPassOverAlwaysTrueConditionsAnalyzerTitle", resourceCulture);
+                return ResourceManager.GetString("PreferNotUsingAlwaysTrueConditionsAnalyzerTitle", resourceCulture);
             }
         }
         
