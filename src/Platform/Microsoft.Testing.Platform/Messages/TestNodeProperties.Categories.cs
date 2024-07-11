@@ -15,7 +15,6 @@ internal static class TestNodePropertiesCategories
     public static Type[] WellKnownTestNodeTestRunOutcomeProperties { get; } =
         [
             typeof(PassedTestNodeStateProperty),
-            typeof(SkippedTestNodeStateProperty),
 
             typeof(FailedTestNodeStateProperty),
             typeof(ErrorTestNodeStateProperty),

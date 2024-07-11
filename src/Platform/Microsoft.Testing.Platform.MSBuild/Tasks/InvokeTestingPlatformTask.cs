@@ -370,7 +370,9 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             string summary = string.Format(
                 CultureInfo.CurrentCulture,
                 Resources.MSBuildResources.Summary,
-                runSummaryInfoRequest.TotalFailed > 0 ? Resources.MSBuildResources.Failed : Resources.MSBuildResources.Passed,
+                runSummaryInfoRequest.TotalFailed > 0 || runSummaryInfoRequest.TotalPassed == 0
+                    ? Resources.MSBuildResources.Failed
+                    : Resources.MSBuildResources.Passed,
                 runSummaryInfoRequest.TotalFailed,
                 runSummaryInfoRequest.TotalPassed,
                 runSummaryInfoRequest.TotalSkipped,

@@ -247,7 +247,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                 {
                     (true, _, _) => (false, PlatformResources.Aborted),
                     (false, _, _) when _totalTests < _minimumExpectedTest => (false, string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, _totalTests, _minimumExpectedTest)),
-                    (false, 0, _) => (false, PlatformResources.ZeroTestsRan),
+                    (false, _, _) when _totalTests == 0 || _totalTests == _totalSkippedTests => (false, PlatformResources.ZeroTestsRan),
                     (false, _, > 0) => (false, string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Failed)),
                     _ => (true, string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Passed)),
                 };
