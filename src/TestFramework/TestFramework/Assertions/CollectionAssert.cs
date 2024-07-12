@@ -2694,7 +2694,8 @@ public sealed class CollectionAssert
 
         public ComparerWrapper([NotNull] IComparer? comparer)
         {
-            _comparer = comparer ?? new ObjectComparer();
+            Assert.CheckParameterNotNull(comparer, "Assert", "comparer", string.Empty);
+            _comparer = comparer;
         }
 
         bool IEqualityComparer<T>.Equals(T? x, T? y) =>
