@@ -1,4 +1,7 @@
 ﻿#nullable enable
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreInstancesOfType<T>(System.Collections.Generic.IEnumerable<T?>? collection, System.Type? expectedType) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreInstancesOfType<T>(System.Collections.Generic.IEnumerable<T?>? collection, System.Type? expectedType, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreInstancesOfType<T>(System.Collections.Generic.IEnumerable<T?>? collection, System.Type? expectedType, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreNotNull<T>(System.Collections.Generic.IEnumerable<T?>? collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreNotNull<T>(System.Collections.Generic.IEnumerable<T?>? collection, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreNotNull<T>(System.Collections.Generic.IEnumerable<T?>? collection, string? message, params object?[]? parameters) -> void

@@ -1602,7 +1602,7 @@ public sealed class CollectionAssert
     /// <paramref name="expectedType"/>.
     /// </exception>
     public static void AllItemsAreInstancesOfType([NotNull] ICollection? collection, [NotNull] Type? expectedType)
-        => AllItemsAreInstancesOfType(collection, expectedType, string.Empty, null);
+        => AllItemsAreInstancesOfType(collection?.Cast<object>(), expectedType, string.Empty, null);
 
     /// <summary>
     /// Tests whether all elements in the specified collection are instances
@@ -1628,7 +1628,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AllItemsAreInstancesOfType([NotNull] ICollection? collection, [NotNull] Type? expectedType,
         string? message)
-        => AllItemsAreInstancesOfType(collection, expectedType, message, null);
+        => AllItemsAreInstancesOfType(collection?.Cast<object>(), expectedType, message, null);
 
     /// <summary>
     /// Tests whether all elements in the specified collection are instances
@@ -1657,6 +1657,90 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AllItemsAreInstancesOfType(
         [NotNull] ICollection? collection, [NotNull] Type? expectedType, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+        => AllItemsAreInstancesOfType(collection?.Cast<object>(), expectedType, message, parameters);
+
+    /// <summary>
+    /// Tests whether all elements in the specified collection are instances
+    /// of the expected type and throws an exception if the expected type is
+    /// not in the inheritance hierarchy of one or more of the elements.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="collection">
+    /// The collection containing elements the test expects to be of the
+    /// specified type.
+    /// </param>
+    /// <param name="expectedType">
+    /// The expected type of each element of <paramref name="collection"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null or, <paramref name="expectedType"/> is null,
+    /// or some elements of <paramref name="collection"/> do not inherit/implement
+    /// <paramref name="expectedType"/>.
+    /// </exception>
+    public static void AllItemsAreInstancesOfType<T>([NotNull] IEnumerable<T?>? collection, [NotNull] Type? expectedType)
+        => AllItemsAreInstancesOfType(collection, expectedType, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether all elements in the specified collection are instances
+    /// of the expected type and throws an exception if the expected type is
+    /// not in the inheritance hierarchy of one or more of the elements.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="collection">
+    /// The collection containing elements the test expects to be of the
+    /// specified type.
+    /// </param>
+    /// <param name="expectedType">
+    /// The expected type of each element of <paramref name="collection"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when an element in
+    /// <paramref name="collection"/> is not an instance of
+    /// <paramref name="expectedType"/>. The message is shown in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null or, <paramref name="expectedType"/> is null,
+    /// or some elements of <paramref name="collection"/> do not inherit/implement
+    /// <paramref name="expectedType"/>.
+    /// </exception>
+    public static void AllItemsAreInstancesOfType<T>([NotNull] IEnumerable<T?>? collection, [NotNull] Type? expectedType,
+        string? message)
+        => AllItemsAreInstancesOfType(collection, expectedType, message, null);
+
+    /// <summary>
+    /// Tests whether all elements in the specified collection are instances
+    /// of the expected type and throws an exception if the expected type is
+    /// not in the inheritance hierarchy of one or more of the elements.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="collection">
+    /// The collection containing elements the test expects to be of the
+    /// specified type.
+    /// </param>
+    /// <param name="expectedType">
+    /// The expected type of each element of <paramref name="collection"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when an element in
+    /// <paramref name="collection"/> is not an instance of
+    /// <paramref name="expectedType"/>. The message is shown in test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="collection"/> is null or, <paramref name="expectedType"/> is null,
+    /// or some elements of <paramref name="collection"/> do not inherit/implement
+    /// <paramref name="expectedType"/>.
+    /// </exception>
+    public static void AllItemsAreInstancesOfType<T>(
+        [NotNull] IEnumerable<T?>? collection, [NotNull] Type? expectedType, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreInstancesOfType", "collection", string.Empty);
         Assert.CheckParameterNotNull(expectedType, "CollectionAssert.AllItemsAreInstancesOfType", "expectedType", string.Empty);
