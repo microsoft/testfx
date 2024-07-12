@@ -17,4 +17,10 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains<T>
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.DoesNotContain<T>(System.Collections.Generic.IEnumerable<T?>? collection, T? element) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.DoesNotContain<T>(System.Collections.Generic.IEnumerable<T?>? collection, T? element, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.DoesNotContain<T>(System.Collections.Generic.IEnumerable<T?>? collection, T? element, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsNotSubsetOf<T>(System.Collections.Generic.IEnumerable<T?>? subset, System.Collections.Generic.IEnumerable<T?>? superset) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsNotSubsetOf<T>(System.Collections.Generic.IEnumerable<T?>? subset, System.Collections.Generic.IEnumerable<T?>? superset, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsNotSubsetOf<T>(System.Collections.Generic.IEnumerable<T?>? subset, System.Collections.Generic.IEnumerable<T?>? superset, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf<T>(System.Collections.Generic.IEnumerable<T?>? subset, System.Collections.Generic.IEnumerable<T?>? superset) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf<T>(System.Collections.Generic.IEnumerable<T?>? subset, System.Collections.Generic.IEnumerable<T?>? superset, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf<T>(System.Collections.Generic.IEnumerable<T?>? subset, System.Collections.Generic.IEnumerable<T?>? superset, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.TestIdGenerationStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
