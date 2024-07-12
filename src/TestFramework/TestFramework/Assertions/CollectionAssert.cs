@@ -2653,12 +2653,26 @@ public sealed class CollectionAssert
                 return false;
             }
 
-            IEnumerator expectedEnum = expected.GetEnumerator();
-            IEnumerator actualEnum = actual.GetEnumerator();
+            IEnumerator<T?> expectedEnum = expected.GetEnumerator();
+            IEnumerator<T?> actualEnum = actual.GetEnumerator();
             int i = 0;
             while (expectedEnum.MoveNext() && actualEnum.MoveNext())
             {
-                bool areEqual = comparer.Compare(expectedEnum.Current, actualEnum.Current) == 0;
+                if (expectedEnum.Current is null && actualEnum.Current is null)
+                {
+                    continue;
+                }
+
+                if (expectedEnum.Current is null || actualEnum.Current is null)
+                {
+                    reason = string.Format(
+                        CultureInfo.CurrentCulture,
+                        FrameworkMessages.ElementsAtIndexDontMatch,
+                        i);
+                    return false;
+                }
+
+                bool areEqual = comparer.Equals(expectedEnum.Current, actualEnum.Current);
                 if (!areEqual)
                 {
                     reason = string.Format(
