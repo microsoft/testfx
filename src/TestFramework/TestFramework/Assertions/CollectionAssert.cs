@@ -1789,7 +1789,7 @@ public sealed class CollectionAssert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(ICollection? expected, ICollection? actual)
-        => AreEqual(expected, actual, string.Empty, null);
+        => AreEqual(expected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collections are equal and throws an exception
@@ -1815,7 +1815,7 @@ public sealed class CollectionAssert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(ICollection? expected, ICollection? actual, string? message)
-        => AreEqual(expected, actual, message, null);
+        => AreEqual(expected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, message, null);
 
     /// <summary>
     /// Tests whether the specified collections are equal and throws an exception
@@ -1845,15 +1845,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreEqual(ICollection? expected, ICollection? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
-    {
-        string reason = string.Empty;
-        if (!AreCollectionsEqual(expected, actual, new ObjectComparer(), ref reason))
-        {
-            string userMessage = Assert.BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
-            Assert.ThrowAssertFailed("CollectionAssert.AreEqual", finalMessage);
-        }
-    }
+        => AreEqual(expected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, message, parameters);
 
     /// <summary>
     /// Tests whether the specified collections are equal and throws an exception
@@ -1876,7 +1868,7 @@ public sealed class CollectionAssert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer)
-        => AreEqual(expected, actual, comparer, string.Empty, null);
+        => AreEqual(expected?.Cast<object>(), actual?.Cast<object>(), new ComparerWrapper<object>(comparer), string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collections are equal and throws an exception
@@ -1905,7 +1897,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer,
         string? message)
-        => AreEqual(expected, actual, comparer, message, null);
+        => AreEqual(expected?.Cast<object>(), actual?.Cast<object>(), new ComparerWrapper<object>(comparer), message, null);
 
     /// <summary>
     /// Tests whether the specified collections are equal and throws an exception
@@ -1936,6 +1928,185 @@ public sealed class CollectionAssert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer,
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+        => AreEqual(expected?.Cast<object>(), actual?.Cast<object>(), new ComparerWrapper<object>(comparer), message, parameters);
+
+    /// <summary>
+    /// Tests whether the specified collections are equal and throws an exception
+    /// if the two collections are not equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Whether two elements are the same
+    /// is checked using <see cref="object.Equals(object, object)" /> method.
+    /// Different references to the same value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first collection to compare. This is the collection the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to
+    /// <paramref name="actual"/>.
+    /// </exception>
+    public static void AreEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual)
+        => AreEqual(expected, actual, EqualityComparer<T>.Default, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified collections are equal and throws an exception
+    /// if the two collections are not equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Whether two elements are the same
+    /// is checked using <see cref="object.Equals(object, object)" /> method.
+    /// Different references to the same value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first collection to compare. This is the collection the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is not equal to <paramref name="expected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to
+    /// <paramref name="actual"/>.
+    /// </exception>
+    public static void AreEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual, string? message)
+        => AreEqual(expected, actual, EqualityComparer<T>.Default, message, null);
+
+    /// <summary>
+    /// Tests whether the specified collections are equal and throws an exception
+    /// if the two collections are not equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Whether two elements are the same
+    /// is checked using <see cref="object.Equals(object, object)" /> method.
+    /// Different references to the same value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first collection to compare. This is the collection the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is not equal to <paramref name="expected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to
+    /// <paramref name="actual"/>.
+    /// </exception>
+    public static void AreEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+        params object?[]? parameters)
+        => AreEqual(expected, actual, EqualityComparer<T>.Default, message, parameters);
+
+    /// <summary>
+    /// Tests whether the specified collections are equal and throws an exception
+    /// if the two collections are not equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Different references to the same
+    /// value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first collection to compare. This is the collection the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to
+    /// <paramref name="actual"/>.
+    /// </exception>
+    public static void AreEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer)
+        => AreEqual(expected, actual, comparer, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified collections are equal and throws an exception
+    /// if the two collections are not equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Different references to the same
+    /// value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first collection to compare. This is the collection the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is not equal to <paramref name="expected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to
+    /// <paramref name="actual"/>.
+    /// </exception>
+    public static void AreEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
+        string? message)
+        => AreEqual(expected, actual, comparer, message, null);
+
+    /// <summary>
+    /// Tests whether the specified collections are equal and throws an exception
+    /// if the two collections are not equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Different references to the same
+    /// value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first collection to compare. This is the collection the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is not equal to <paramref name="expected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to
+    /// <paramref name="actual"/>.
+    /// </exception>
+    public static void AreEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         string reason = string.Empty;
@@ -1966,7 +2137,7 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual)
-        => AreNotEqual(notExpected, actual, string.Empty, null);
+        => AreNotEqual(notExpected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collections are unequal and throws an exception
@@ -1992,7 +2163,7 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual, string? message)
-        => AreNotEqual(notExpected, actual, message, null);
+        => AreNotEqual(notExpected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, message, null);
 
     /// <summary>
     /// Tests whether the specified collections are unequal and throws an exception
@@ -2022,15 +2193,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
-    {
-        string reason = string.Empty;
-        if (AreCollectionsEqual(notExpected, actual, new ObjectComparer(), ref reason))
-        {
-            string userMessage = Assert.BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
-            Assert.ThrowAssertFailed("CollectionAssert.AreNotEqual", finalMessage);
-        }
-    }
+        => AreNotEqual(notExpected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, message, parameters);
 
     /// <summary>
     /// Tests whether the specified collections are unequal and throws an exception
@@ -2053,7 +2216,7 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer)
-        => AreNotEqual(notExpected, actual, comparer, string.Empty, null);
+        => AreNotEqual(notExpected?.Cast<object>(), actual?.Cast<object>(), new ComparerWrapper<object>(comparer), string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collections are unequal and throws an exception
@@ -2082,7 +2245,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer,
         string? message)
-        => AreNotEqual(notExpected, actual, comparer, message, null);
+        => AreNotEqual(notExpected?.Cast<object>(), actual?.Cast<object>(), new ComparerWrapper<object>(comparer), message, null);
 
     /// <summary>
     /// Tests whether the specified collections are unequal and throws an exception
@@ -2114,6 +2277,185 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer,
         [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+        => AreNotEqual(notExpected?.Cast<object>(), actual?.Cast<object>(), new ComparerWrapper<object>(comparer), message, parameters);
+
+    /// <summary>
+    /// Tests whether the specified collections are unequal and throws an exception
+    /// if the two collections are equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Whether two elements are the same
+    /// is checked using <see cref="object.Equals(object, object)" /> method.
+    /// Different references to the same value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the tests expects
+    /// not to match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreNotEqual<T>(IEnumerable<T?>? notExpected, IEnumerable<T?>? actual)
+        => AreNotEqual(notExpected, actual, EqualityComparer<T>.Default, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified collections are unequal and throws an exception
+    /// if the two collections are equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Whether two elements are the same
+    /// is checked using <see cref="object.Equals(object, object)" /> method.
+    /// Different references to the same value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the tests expects
+    /// not to match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is equal to <paramref name="notExpected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreNotEqual<T>(IEnumerable<T?>? notExpected, IEnumerable<T?>? actual, string? message)
+        => AreNotEqual(notExpected, actual, EqualityComparer<T>.Default, message, null);
+
+    /// <summary>
+    /// Tests whether the specified collections are unequal and throws an exception
+    /// if the two collections are equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Whether two elements are the same
+    /// is checked using <see cref="object.Equals(object, object)" /> method.
+    /// Different references to the same value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the tests expects
+    /// not to match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is equal to <paramref name="notExpected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreNotEqual<T>(IEnumerable<T?>? notExpected, IEnumerable<T?>? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+        params object?[]? parameters)
+        => AreNotEqual(notExpected, actual, EqualityComparer<T>.Default, message, parameters);
+
+    /// <summary>
+    /// Tests whether the specified collections are unequal and throws an exception
+    /// if the two collections are equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Different references to the same
+    /// value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the tests expects
+    /// not to match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreNotEqual<T>(IEnumerable<T?>? notExpected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer)
+        => AreNotEqual(notExpected, actual, comparer, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified collections are unequal and throws an exception
+    /// if the two collections are equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Different references to the same
+    /// value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the tests expects
+    /// not to match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is equal to <paramref name="notExpected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreNotEqual<T>(IEnumerable<T?>? notExpected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
+        string? message)
+        => AreNotEqual(notExpected, actual, comparer, message, null);
+
+    /// <summary>
+    /// Tests whether the specified collections are unequal and throws an exception
+    /// if the two collections are equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Different references to the same
+    /// value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the tests expects
+    /// not to match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The compare implementation to use when comparing elements of the collection.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is equal to <paramref name="notExpected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreNotEqual<T>(IEnumerable<T?>? notExpected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         string reason = string.Empty;
         if (AreCollectionsEqual(notExpected, actual, comparer, ref reason))
@@ -2123,7 +2465,6 @@ public sealed class CollectionAssert
             Assert.ThrowAssertFailed("CollectionAssert.AreNotEqual", finalMessage);
         }
     }
-
     #endregion
 
     #region Helpers
@@ -2134,6 +2475,9 @@ public sealed class CollectionAssert
     /// of occurrences of the element in the subset must be less than or
     /// equal to the number of occurrences in the superset.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="subset">
     /// The collection the test expects to be contained in <paramref name="superset"/>.
     /// </param>
@@ -2153,8 +2497,8 @@ public sealed class CollectionAssert
         // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
 
         // Count the occurrences of each object in both collections.
-        Dictionary<object, int> subsetElements = GetElementCounts(subset.Cast<object>(), EqualityComparer<object>.Default, out int subsetNulls);
-        Dictionary<object, int> supersetElements = GetElementCounts(superset.Cast<object>(), EqualityComparer<object>.Default, out int supersetNulls);
+        Dictionary<object, int> subsetElements = GetElementCounts(subset?.Cast<object>(), EqualityComparer<object>.Default, out int subsetNulls);
+        Dictionary<object, int> supersetElements = GetElementCounts(superset?.Cast<object>(), EqualityComparer<object>.Default, out int supersetNulls);
 
         if (subsetNulls > supersetNulls)
         {
@@ -2193,7 +2537,7 @@ public sealed class CollectionAssert
     /// A dictionary containing the number of occurrences of each element
     /// in the specified collection.
     /// </returns>
-    private static Dictionary<T, int> GetElementCounts<T>(IEnumerable<T?> collection, IEqualityComparer<T> comparer, out int nullCount)
+    private static Dictionary<T, int> GetElementCounts<T>(IEnumerable<T?>? collection, IEqualityComparer<T> comparer, out int nullCount)
     {
         DebugEx.Assert(collection != null, "Collection is Null.");
 
@@ -2292,7 +2636,7 @@ public sealed class CollectionAssert
     }
 #pragma warning restore CS8714
 
-    private static bool AreCollectionsEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer,
+    private static bool AreCollectionsEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         ref string reason)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
@@ -2303,7 +2647,7 @@ public sealed class CollectionAssert
                 return false;
             }
 
-            if (expected.Count != actual.Count)
+            if (expected.Count() != actual.Count())
             {
                 reason = FrameworkMessages.NumberOfElementsDiff;
                 return false;
@@ -2342,6 +2686,23 @@ public sealed class CollectionAssert
     private class ObjectComparer : IComparer
     {
         int IComparer.Compare(object? x, object? y) => Equals(x, y) ? 0 : -1;
+    }
+
+    private class ComparerWrapper<T> : IEqualityComparer<T>
+    {
+        private readonly IComparer _comparer;
+
+        public ComparerWrapper([NotNull] IComparer? comparer)
+        {
+            _comparer = comparer ?? new ObjectComparer();
+        }
+
+        bool IEqualityComparer<T>.Equals(T? x, T? y) =>
+            // Use the comparer to check if the two items are equal
+            _comparer?.Compare(x, y) == 0;
+
+        public int GetHashCode(T obj) =>
+            obj == null ? 0 : obj.GetHashCode();
     }
     #endregion
 }
