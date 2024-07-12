@@ -701,7 +701,6 @@ public sealed class CollectionAssert
         params object?[]? parameters)
         => IsSubsetOf(subset?.Cast<object>(), superset?.Cast<object>(), message, parameters);
 
-
     /// <summary>
     /// Tests whether one collection is a subset of another collection and
     /// throws an exception if any element in the subset is not also in the
@@ -856,7 +855,6 @@ public sealed class CollectionAssert
     public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
         => IsNotSubsetOf(subset?.Cast<object>(), superset?.Cast<object>(), message, parameters);
-
 
     /// <summary>
     /// Tests whether one collection is not a subset of another collection and
@@ -1023,6 +1021,93 @@ public sealed class CollectionAssert
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
         [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => AreEquivalent(expected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, message, parameters);
+
+    /// <summary>
+    /// Tests whether two collections contain the same elements and throws an
+    /// exception if either collection contains an element not in the other
+    /// collection.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first collection to compare. This contains the elements the test
+    /// expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by
+    /// the code under test.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if any element was found in one of the collections but not the other.
+    /// </exception>
+    public static void AreEquivalent<T>(
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual)
+        => AreEquivalent(expected, actual, EqualityComparer<T>.Default, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether two collections contain the same elements and throws an
+    /// exception if either collection contains an element not in the other
+    /// collection.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first collection to compare. This contains the elements the test
+    /// expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by
+    /// the code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when an element was found
+    /// in one of the collections but not the other. The message is shown
+    /// in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if any element was found in one of the collections but not the other.
+    /// </exception>
+    public static void AreEquivalent<T>(
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual,
+        string? message)
+        => AreEquivalent(expected, actual, EqualityComparer<T>.Default, message, null);
+
+    /// <summary>
+    /// Tests whether two collections contain the same elements and throws an
+    /// exception if either collection contains an element not in the other
+    /// collection.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first collection to compare. This contains the elements the test
+    /// expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by
+    /// the code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when an element was found
+    /// in one of the collections but not the other. The message is shown
+    /// in test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if any element was found in one of the collections but not the other.
+    /// </exception>
+    public static void AreEquivalent<T>(
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual,
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+        => AreEquivalent(expected, actual, EqualityComparer<T>.Default, message, parameters);
 
     /// <summary>
     /// Tests whether two collections contain the same elements and throws an
@@ -1254,6 +1339,96 @@ public sealed class CollectionAssert
         [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
         [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => AreNotEquivalent(expected?.Cast<object>(), actual?.Cast<object>(), comparer: EqualityComparer<object>.Default, message, parameters);
+
+    /// <summary>
+    /// Tests whether two collections contain the different elements and throws an
+    /// exception if the two collections contain identical elements without regard
+    /// to order.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first collection to compare. This contains the elements the test
+    /// expects to be different than the actual collection.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by
+    /// the code under test.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if collections contain the same elements, including the same number of duplicate
+    /// occurrences of each element.
+    /// </exception>
+    public static void AreNotEquivalent<T>(
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual)
+        => AreNotEquivalent(expected, actual, EqualityComparer<T>.Default, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether two collections contain the different elements and throws an
+    /// exception if the two collections contain identical elements without regard
+    /// to order.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first collection to compare. This contains the elements the test
+    /// expects to be different than the actual collection.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by
+    /// the code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// contains the same elements as <paramref name="expected"/>. The message
+    /// is shown in test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if collections contain the same elements, including the same number of duplicate
+    /// occurrences of each element.
+    /// </exception>
+    public static void AreNotEquivalent<T>(
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual,
+        string? message)
+        => AreNotEquivalent(expected, actual, EqualityComparer<T>.Default, message, null);
+
+    /// <summary>
+    /// Tests whether two collections contain the different elements and throws an
+    /// exception if the two collections contain identical elements without regard
+    /// to order.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first collection to compare. This contains the elements the test
+    /// expects to be different than the actual collection.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by
+    /// the code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// contains the same elements as <paramref name="expected"/>. The message
+    /// is shown in test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if collections contain the same elements, including the same number of duplicate
+    /// occurrences of each element.
+    /// </exception>
+    public static void AreNotEquivalent<T>(
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual,
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+        => AreNotEquivalent(expected, actual, comparer: EqualityComparer<T>.Default, message, parameters);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
