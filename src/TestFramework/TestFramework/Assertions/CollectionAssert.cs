@@ -2737,7 +2737,7 @@ public sealed class CollectionAssert
             _comparer?.Compare(x, y) == 0;
 
         public int GetHashCode(T obj) =>
-            obj == null ? 0 : obj.GetHashCode();
+           throw new InvalidOperationException("GetHashCode is not suppose to be called in the wrapper.");
     }
     #endregion
 }
