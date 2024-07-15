@@ -599,8 +599,10 @@ public sealed class CollectionAssert
         message = Assert.ReplaceNulls(message);
 
         bool foundNull = false;
-        Dictionary<object, bool> table = [];
-        foreach (object? current in collection)
+#pragma warning disable CS8714
+        Dictionary<T, bool> table = [];
+#pragma warning restore CS8714
+        foreach (T? current in collection)
         {
             if (current == null)
             {
