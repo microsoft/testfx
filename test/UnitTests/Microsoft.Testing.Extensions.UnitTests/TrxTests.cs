@@ -299,11 +299,9 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         string trxContent = xml.ToString();
         string trxContentsPattern = @"
     <UnitTestResult .* testName=""TestMethod"" .* outcome=""Passed"" .*>
-      <Output>
-        <ResultFiles>
-          <ResultFile path=.*fileName"" />
-        </ResultFiles>
-      </Output>
+      <ResultFiles>
+        <ResultFile path=.*fileName"" />
+      </ResultFiles>
     </UnitTestResult>
  ";
         Assert.That(Regex.IsMatch(trxContent, trxContentsPattern));
