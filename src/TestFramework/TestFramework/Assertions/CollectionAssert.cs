@@ -259,7 +259,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void DoesNotContain([NotNull] ICollection? collection, object? element, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
-    => DoesNotContain(collection?.Cast<object>(), element, message, parameters);
+        => DoesNotContain(collection?.Cast<object>(), element, message, parameters);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified
