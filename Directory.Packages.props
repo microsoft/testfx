@@ -71,5 +71,7 @@
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.Management" Version="8.0.0" />
+    <!-- CVE-2024-38095 / Transitive deps of Microsoft.CodeAnalysis.CSharp.XXX.Testing -->
+    <PackageVersion Include="System.Formats.Asn1" Version="6.0.32" />
   </ItemGroup>
 </Project>
