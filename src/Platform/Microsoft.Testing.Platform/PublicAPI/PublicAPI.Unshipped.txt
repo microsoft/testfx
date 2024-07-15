@@ -1,8 +1,2 @@
 #nullable enable
-[TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability
-[TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability.GetBannerMessageAsync() -> System.Threading.Tasks.Task<string?>!
-[TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation
-[TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.BuildDate.get -> System.DateTimeOffset?
-[TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.CommitHash.get -> string?
-[TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.Name.get -> string!
-[TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.Version.get -> string?
+
