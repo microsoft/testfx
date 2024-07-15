@@ -525,6 +525,12 @@ internal sealed partial class TrxReportEngine
                 output.Add(errorInfoElement);
             }
 
+            // add collectorDataEntries details
+            if (output.HasElements && outcome != "NotExecuted")
+            {
+                unitTestResult.Add(output);
+            }
+
             if (_artifactsByTestNode.TryGetValue(testNode.Uid, out List<SessionFileArtifact>? fileArtifacts))
             {
                 var resultFiles = new XElement("ResultFiles");
@@ -536,13 +542,7 @@ internal sealed partial class TrxReportEngine
                         new XAttribute("path", fileArtifact.FileInfo.FullName)));
                 }
 
-                output.Add(resultFiles);
-            }
-
-            // add collectorDataEntries details
-            if (output.HasElements && outcome != "NotExecuted")
-            {
-                unitTestResult.Add(output);
+                unitTestResult.Add(resultFiles);
             }
 
             results.Add(unitTestResult);
