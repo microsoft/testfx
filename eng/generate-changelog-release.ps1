@@ -77,26 +77,29 @@ $discard = @(
 $prUrl = "$repoUrl/pull/"
 # $tagVersionNumber = $tag -replace '^v'
 # using .. because I want to know the changes that are on this branch, but don't care about the changes that I don't have https://stackoverflow.com/a/24186641/3065397
-$log = (git -C $Path log "$start..$end" --oneline --pretty="format:%s" --first-parent)
+$log = (git -C $Path log "$start..$end" --pretty="format:%s by @%ae" --first-parent)
 $issues = $log | ForEach-Object {
     if ($_ -notmatch $discard) {
-        if ($_ -match '^(?<message>.+)\s\(#(?<pr>\d+)\)?$') {
+        if ($_ -match '^(?<message>.+)\s\(#(?<pr>\d+)\) by @(?<author>.+)?$') {
             $message = "* $($matches.message)"
+
+            if ($matches.author) {
+                $message += " by @$($matches.author)"
+            }
+
             if ($matches.pr) {
                 $pr = $matches.pr
-                $message += " [#$pr]($prUrl$pr)"
+                $message += " in [#$pr]($prUrl$pr)"
             }
 
             if ($_ -like 'fix *') {
                 [pscustomobject]@{ category = "fix"; text = $message }
-            } elseif ($_ -like 'add *') {
-                [pscustomobject]@{ category = "add"; text = $message }
             } else {
-                [pscustomobject]@{ category = "unknown"; text = "* $_" }
+                [pscustomobject]@{ category = "add"; text = $message }
             }
         }
         else {
-            [pscustomobject]@{ category = "unknown"; text = "* $_" }
+            [pscustomobject]@{ category = "add"; text = "* $_" }
         }
     }
 } | Group-Object -Property category -AsHashTable
@@ -121,10 +124,6 @@ $($issues.add.text -join "`n")
 ### Fixed
 
 $($issues.fix.text -join "`n")
-
-### TO CLASSIFY
-
-$($issues.unknown.text -join "`n")
 
 ### Artifacts
 
@@ -159,12 +158,7 @@ $($issues.add.text -join "`n")
 
 $($issues.fix.text -join "`n")
 
-### TO CLASSIFY
-
-$($issues.unknown.text -join "`n")
-
 ### Artifacts
-
 
 * Microsoft.Testing.Extensions.CrashDump: [$PlatformVersion](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/$PlatformVersion)
 * Microsoft.Testing.Extensions.HangDump: [$PlatformVersion](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/$PlatformVersion)
