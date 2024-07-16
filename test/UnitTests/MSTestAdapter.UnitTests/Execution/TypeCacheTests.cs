@@ -134,7 +134,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
-        Verify(exception.Message.StartsWith("Unable to get default constructor for class " + className, StringComparison.Ordinal));
+        Verify(exception.Message.StartsWith("Cannot find a valid constructor for test class 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TypeCacheTests+DummyTestClassWithNoDefaultConstructor'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.", StringComparison.Ordinal));
     }
 
     public void GetTestMethodInfoShouldThrowIfTestContextHasATypeMismatch()
