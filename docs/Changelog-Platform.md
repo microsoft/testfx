@@ -21,8 +21,8 @@ See full log [here](https://github.com/microsoft/testanywhere/compare/v1.2.1...v
 
 * Microsoft.Testing.Extensions.CrashDump: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.3.1)
 * Microsoft.Testing.Extensions.HangDump: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.3.1)
-* Microsoft.Testing.Extensions.HotReload: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.3.1)
-* Microsoft.Testing.Extensions.Retry: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.3.1)
+* Microsoft.Testing.Extensions.HotReload: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.3.0)
+* Microsoft.Testing.Extensions.Retry: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.3.0)
 * Microsoft.Testing.Extensions.Telemetry: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.3.1)
 * Microsoft.Testing.Extensions.TrxReport: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.3.1)
 * Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.3.1)
