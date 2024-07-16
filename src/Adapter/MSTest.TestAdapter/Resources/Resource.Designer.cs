@@ -10,7 +10,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
     using System;
-    using System.Reflection;
     
     
     /// <summary>
@@ -40,7 +39,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.Resource", typeof(Resource).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.Resource", typeof(Resource).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -768,20 +767,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to get default constructor for class {0}..
-        /// </summary>
-        internal static string UTA_NoDefaultConstructor {
-            get {
-                return ResourceManager.GetString("UTA_NoDefaultConstructor", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor..
         /// </summary>
         internal static string UTA_NoTestResult {
             get {
                 return ResourceManager.GetString("UTA_NoTestResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find a valid constructor for test class &apos;{0}&apos;. Valid constructors are &apos;public&apos; and either parameterless or with one parameter of type &apos;TestContext&apos;..
+        /// </summary>
+        internal static string UTA_NoValidConstructor {
+            get {
+                return ResourceManager.GetString("UTA_NoValidConstructor", resourceCulture);
             }
         }
         

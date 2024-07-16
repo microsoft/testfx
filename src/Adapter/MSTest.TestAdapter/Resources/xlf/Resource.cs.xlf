@@ -146,6 +146,11 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
         <target state="translated">Nepodařilo se vytvořit instanci třídy {0}. Chyba: {1}.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="UTA_NoValidConstructor">
+        <source>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
+        <target state="new">Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_TestContextSetError">
         <source>Unable to set TestContext property for the class {0}. Error: {1}.</source>
         <target state="translated">Pro třídu {0} se nepodařilo nastavit vlastnost TestContext. Chyba: {1}.</target>
@@ -261,11 +266,6 @@ Chyba: {1}</target>
       <trans-unit id="UTA_MethodDoesNotExists">
         <source>Method {0}.{1} does not exist.</source>
         <target state="translated">Metoda {0}.{1} neexistuje.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_NoDefaultConstructor">
-        <source>Unable to get default constructor for class {0}.</source>
-        <target state="translated">Pro třídu {0} se nepodařilo najít výchozí konstruktor.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestContextLoadError">

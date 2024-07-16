@@ -51,12 +51,7 @@ public class TestMethodRunnerTests : TestContainer
         var testAssemblyInfo = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
         _testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
         _testContextImplementation = new TestContextImplementation(_testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>());
-        _testClassInfo = new TestClassInfo(
-            type: typeof(DummyTestClass),
-            constructor: constructorInfo,
-            testContextProperty: testContextProperty,
-            classAttribute: classAttribute,
-            parent: testAssemblyInfo);
+        _testClassInfo = new TestClassInfo(typeof(DummyTestClass), constructorInfo, true, testContextProperty, classAttribute, testAssemblyInfo);
 
         _globalTestMethodOptions = new TestMethodOptions()
         {
@@ -117,12 +112,7 @@ public class TestMethodRunnerTests : TestContainer
         var classAttribute = new UTF.TestClassAttribute();
         PropertyInfo testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 
-        var tci = new TestClassInfo(
-            type: typeof(DummyTestClass),
-            constructor: constructorInfo,
-            testContextProperty: testContextProperty,
-            classAttribute: classAttribute,
-            parent: tai);
+        var tci = new TestClassInfo(typeof(DummyTestClass), constructorInfo, true, testContextProperty, classAttribute, tai);
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, tci, _testMethodOptions, () => throw new Exception("DummyException"));
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
@@ -143,12 +133,7 @@ public class TestMethodRunnerTests : TestContainer
         var classAttribute = new UTF.TestClassAttribute();
         PropertyInfo testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 
-        var tci = new TestClassInfo(
-            type: typeof(DummyTestClass),
-            constructor: constructorInfo,
-            testContextProperty: testContextProperty,
-            classAttribute: classAttribute,
-            parent: tai)
+        var tci = new TestClassInfo(typeof(DummyTestClass), constructorInfo, true, testContextProperty, classAttribute, tai)
         {
             ClassInitializeMethod = typeof(TestMethodRunnerTests).GetMethod(
             "InitMethodThrowingException",

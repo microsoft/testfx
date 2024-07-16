@@ -738,7 +738,7 @@ public class TestMethodInfo : ITestMethod
         object? classInstance = null;
         try
         {
-            classInstance = Parent.Constructor.Invoke(null);
+            classInstance = Parent.Constructor.Invoke(Parent.IsParameterlessConstructor ? null : [TestMethodOptions.TestContext]);
         }
         catch (Exception ex)
         {

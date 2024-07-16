@@ -269,12 +269,22 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
     private TestClassInfo CreateClassInfo(Type classType, TestMethod testMethod)
     {
-        ConstructorInfo? constructor = classType.GetConstructor([]);
+        bool isParameterLessConstructor;
+        ConstructorInfo constructor;
 
-        if (constructor == null)
+        if (classType.GetConstructor([typeof(TestContext)]) is { } testContextCtor)
         {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_NoDefaultConstructor, testMethod.FullClassName);
-            throw new TypeInspectionException(message);
+            constructor = testContextCtor;
+            isParameterLessConstructor = false;
+        }
+        else if (classType.GetConstructor([]) is { } parameterLessCtor)
+        {
+            constructor = parameterLessCtor;
+            isParameterLessConstructor = true;
+        }
+        else
+        {
+            throw new TypeInspectionException(string.Format(CultureInfo.CurrentCulture, Resource.UTA_NoValidConstructor, testMethod.FullClassName));
         }
 
         PropertyInfo? testContextProperty = ResolveTestContext(classType);
@@ -283,7 +293,7 @@ internal class TypeCache : MarshalByRefObject
 
         TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetFirstDerivedAttributeOrDefault<TestClassAttribute>(classType, inherit: false);
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
-        var classInfo = new TestClassInfo(classType, constructor, testContextProperty, testClassAttribute, assemblyInfo);
+        var classInfo = new TestClassInfo(classType, constructor, isParameterLessConstructor, testContextProperty, testClassAttribute, assemblyInfo);
 
         // List holding the instance of the initialize/cleanup methods
         // to be passed into the tuples' queue  when updating the class info.
