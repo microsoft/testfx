@@ -13,7 +13,8 @@
   <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' != 'Windows_NT' ">
     <ProjectToBuild Include="$(RepoRoot)src/**/*.csproj" />
     <ProjectToBuild Include="$(RepoRoot)test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
-    <ProjectToBuild Include="$(RepoRoot)test/*/Microsoft.Testing.*/Microsoft.Testing.*.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)test/UnitTests/Microsoft.Testing.*/Microsoft.Testing.*.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj" />
     <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
   </ItemGroup>
 
