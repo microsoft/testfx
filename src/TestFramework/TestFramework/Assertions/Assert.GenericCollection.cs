@@ -9,38 +9,25 @@ using System.Reflection;
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// A collection of helper classes to test various conditions associated
-/// with collections within unit tests. If the condition being tested is not
-/// met, an exception is thrown.
+/// A collection of helper classes to test various conditions within
+/// unit tests. If the condition being tested is not met, an exception
+/// is thrown.
 /// </summary>
-[Obsolete("We have now Assert.XXX with all generic CollectionAsserts and Assert.XXXLegacy for old on")]
-public sealed class CollectionAssert
+public sealed partial class Assert
 {
-    #region Singleton constructor
-
-    private CollectionAssert()
-    {
-    }
-
-    /// <summary>
-    /// Gets the singleton instance of the CollectionAssert functionality.
-    /// </summary>
-    /// <remarks>
-    /// Users can use this to plug-in custom assertions through C# extension methods.
-    /// For instance, the signature of a custom assertion provider could be "public static void AreEqualUnordered(this CollectionAssert customAssert, ICollection expected, ICollection actual)"
-    /// Users could then use a syntax similar to the default assertions which in this case is "CollectionAssert.That.AreEqualUnordered(list1, list2);"
-    /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
-    /// </remarks>
-    public static CollectionAssert That { get; } = new CollectionAssert();
-
-    #endregion
-
+    #region Generic collection Assert
     #region Membership
 
     /// <summary>
     /// Tests whether the specified collection contains the specified element
     /// and throws an exception if the element is not in the collection.
     /// </summary>
+    /// <typeparam name="T1">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <typeparam name="T2">
+    /// The type of element to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection in which to search for the element.
     /// </param>
@@ -51,13 +38,19 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> does not contain
     /// element <paramref name="element"/>.
     /// </exception>
-    public static void Contains([NotNull] ICollection? collection, object? element)
+    public static void Contains<T1, T2>([NotNull] IEnumerable<T1?>? collection, T2? element)
         => Contains(collection, element, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collection contains the specified element
     /// and throws an exception if the element is not in the collection.
     /// </summary>
+    /// <typeparam name="T1">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <typeparam name="T2">
+    /// The type of element to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection in which to search for the element.
     /// </param>
@@ -73,13 +66,19 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> does not contain
     /// element <paramref name="element"/>.
     /// </exception>
-    public static void Contains([NotNull] ICollection? collection, object? element, string? message)
+    public static void Contains<T1, T2>([NotNull] IEnumerable<T1?>? collection, T2? element, string? message)
         => Contains(collection, element, message, null);
 
     /// <summary>
     /// Tests whether the specified collection contains the specified element
     /// and throws an exception if the element is not in the collection.
     /// </summary>
+    /// <typeparam name="T1">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <typeparam name="T2">
+    /// The type of element to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection in which to search for the element.
     /// </param>
@@ -98,7 +97,7 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> does not contain
     /// element <paramref name="element"/>.
     /// </exception>
-    public static void Contains([NotNull] ICollection? collection, object? element, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+    public static void Contains<T1, T2>([NotNull] IEnumerable<T1?>? collection, T2? element, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.Contains", "collection", string.Empty);
@@ -118,6 +117,12 @@ public sealed class CollectionAssert
     /// Tests whether the specified collection does not contain the specified
     /// element and throws an exception if the element is in the collection.
     /// </summary>
+    /// /// <typeparam name="T1">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <typeparam name="T2">
+    /// The type of element to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection in which to search for the element.
     /// </param>
@@ -128,13 +133,19 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains
     /// element <paramref name="element"/>.
     /// </exception>
-    public static void DoesNotContain([NotNull] ICollection? collection, object? element)
+    public static void DoesNotContain<T1, T2>([NotNull] IEnumerable<T1?>? collection, T2? element)
         => DoesNotContain(collection, element, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified
     /// element and throws an exception if the element is in the collection.
     /// </summary>
+    /// /// <typeparam name="T1">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <typeparam name="T2">
+    /// The type of element to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection in which to search for the element.
     /// </param>
@@ -150,13 +161,19 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains
     /// element <paramref name="element"/>.
     /// </exception>
-    public static void DoesNotContain([NotNull] ICollection? collection, object? element, string? message)
+    public static void DoesNotContain<T1, T2>([NotNull] IEnumerable<T1?>? collection, T2? element, string? message)
         => DoesNotContain(collection, element, message, null);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified
     /// element and throws an exception if the element is in the collection.
     /// </summary>
+    /// /// <typeparam name="T1">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <typeparam name="T2">
+    /// The type of element to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection in which to search for the element.
     /// </param>
@@ -175,7 +192,7 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains
     /// element <paramref name="element"/>.
     /// </exception>
-    public static void DoesNotContain([NotNull] ICollection? collection, object? element, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+    public static void DoesNotContain<T1, T2>([NotNull] IEnumerable<T1?>? collection, T2? element, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.DoesNotContain", "collection", string.Empty);
@@ -189,23 +206,16 @@ public sealed class CollectionAssert
         }
     }
 
-    /// <summary>
-    /// Tests whether all items in the specified collection are non-null and throws
-    /// an exception if any element is null.
-    /// </summary>
-    /// <param name="collection">
-    /// The collection in which to search for null elements.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains a null element.
-    /// </exception>
-    public static void AllItemsAreNotNull([NotNull] ICollection? collection)
+    public static void AllItemsAreNotNull<T>([NotNull] IEnumerable<T?>? collection)
         => AllItemsAreNotNull(collection, string.Empty, null);
 
     /// <summary>
     /// Tests whether all items in the specified collection are non-null and throws
     /// an exception if any element is null.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection in which to search for null elements.
     /// </param>
@@ -216,13 +226,16 @@ public sealed class CollectionAssert
     /// <exception cref="AssertFailedException">
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains a null element.
     /// </exception>
-    public static void AllItemsAreNotNull([NotNull] ICollection? collection, string? message)
+    public static void AllItemsAreNotNull<T>([NotNull] IEnumerable<T?>? collection, string? message)
         => AllItemsAreNotNull(collection, message, null);
 
     /// <summary>
     /// Tests whether all items in the specified collection are non-null and throws
     /// an exception if any element is null.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection in which to search for null elements.
     /// </param>
@@ -236,7 +249,7 @@ public sealed class CollectionAssert
     /// <exception cref="AssertFailedException">
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains a null element.
     /// </exception>
-    public static void AllItemsAreNotNull([NotNull] ICollection? collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+    public static void AllItemsAreNotNull<T>([NotNull] IEnumerable<T?>? collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreNotNull", "collection", string.Empty);
@@ -253,6 +266,9 @@ public sealed class CollectionAssert
     /// Tests whether all items in the specified collection are unique or not and
     /// throws if any two elements in the collection are equal.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection in which to search for duplicate elements.
     /// </param>
@@ -260,13 +276,16 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains at least one duplicate
     /// element.
     /// </exception>
-    public static void AllItemsAreUnique([NotNull] ICollection? collection)
+    public static void AllItemsAreUnique<T>([NotNull] IEnumerable<T?>? collection)
         => AllItemsAreUnique(collection, string.Empty, null);
 
     /// <summary>
     /// Tests whether all items in the specified collection are unique or not and
     /// throws if any two elements in the collection are equal.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection in which to search for duplicate elements.
     /// </param>
@@ -279,13 +298,16 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains at least one duplicate
     /// element.
     /// </exception>
-    public static void AllItemsAreUnique([NotNull] ICollection? collection, string? message)
+    public static void AllItemsAreUnique<T>([NotNull] IEnumerable<T?>? collection, string? message)
         => AllItemsAreUnique(collection, message, null);
 
     /// <summary>
     /// Tests whether all items in the specified collection are unique or not and
     /// throws if any two elements in the collection are equal.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection in which to search for duplicate elements.
     /// </param>
@@ -301,7 +323,7 @@ public sealed class CollectionAssert
     /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains at least one duplicate
     /// element.
     /// </exception>
-    public static void AllItemsAreUnique([NotNull] ICollection? collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+    public static void AllItemsAreUnique<T>([NotNull] IEnumerable<T?>? collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreUnique", "collection", string.Empty);
@@ -309,8 +331,10 @@ public sealed class CollectionAssert
         message = Assert.ReplaceNulls(message);
 
         bool foundNull = false;
-        Dictionary<object, bool> table = [];
-        foreach (object? current in collection)
+#pragma warning disable CS8714
+        Dictionary<T, bool> table = [];
+#pragma warning restore CS8714
+        foreach (T? current in collection)
         {
             if (current == null)
             {
@@ -363,6 +387,9 @@ public sealed class CollectionAssert
     /// throws an exception if any element in the subset is not also in the
     /// superset.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="subset">
     /// The collection expected to be a subset of <paramref name="superset"/>.
     /// </param>
@@ -374,7 +401,7 @@ public sealed class CollectionAssert
     /// or <paramref name="subset"/> contains at least one element not contained in
     /// <paramref name="superset"/>.
     /// </exception>
-    public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset)
+    public static void IsSubsetOf<T>([NotNull] IEnumerable<T?>? subset, [NotNull] IEnumerable<T?>? superset)
         => IsSubsetOf(subset, superset, string.Empty, null);
 
     /// <summary>
@@ -382,6 +409,9 @@ public sealed class CollectionAssert
     /// throws an exception if any element in the subset is not also in the
     /// superset.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="subset">
     /// The collection expected to be a subset of <paramref name="superset"/>.
     /// </param>
@@ -398,7 +428,7 @@ public sealed class CollectionAssert
     /// or <paramref name="subset"/> contains at least one element not contained in
     /// <paramref name="superset"/>.
     /// </exception>
-    public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message)
+    public static void IsSubsetOf<T>([NotNull] IEnumerable<T?>? subset, [NotNull] IEnumerable<T?>? superset, string? message)
         => IsSubsetOf(subset, superset, message, null);
 
     /// <summary>
@@ -406,6 +436,9 @@ public sealed class CollectionAssert
     /// throws an exception if any element in the subset is not also in the
     /// superset.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="subset">
     /// The collection expected to be a subset of <paramref name="superset"/>.
     /// </param>
@@ -425,7 +458,7 @@ public sealed class CollectionAssert
     /// or <paramref name="subset"/> contains at least one element not contained in
     /// <paramref name="superset"/>.
     /// </exception>
-    public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+    public static void IsSubsetOf<T>([NotNull] IEnumerable<T?>? subset, [NotNull] IEnumerable<T?>? superset, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsSubsetOf", "subset", string.Empty);
@@ -441,6 +474,9 @@ public sealed class CollectionAssert
     /// throws an exception if all elements in the subset are also in the
     /// superset.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="subset">
     /// The collection expected not to be a subset of <paramref name="superset"/>.
     /// </param>
@@ -451,7 +487,7 @@ public sealed class CollectionAssert
     /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
     /// or all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
     /// </exception>
-    public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset)
+    public static void IsNotSubsetOf<T>([NotNull] IEnumerable<T?>? subset, [NotNull] IEnumerable<T?>? superset)
         => IsNotSubsetOf(subset, superset, string.Empty, null);
 
     /// <summary>
@@ -459,6 +495,9 @@ public sealed class CollectionAssert
     /// throws an exception if all elements in the subset are also in the
     /// superset.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="subset">
     /// The collection expected not to be a subset of <paramref name="superset"/>.
     /// </param>
@@ -474,7 +513,7 @@ public sealed class CollectionAssert
     /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
     /// or all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
     /// </exception>
-    public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message)
+    public static void IsNotSubsetOf<T>([NotNull] IEnumerable<T?>? subset, [NotNull] IEnumerable<T?>? superset, string? message)
         => IsNotSubsetOf(subset, superset, message, null);
 
     /// <summary>
@@ -482,6 +521,9 @@ public sealed class CollectionAssert
     /// throws an exception if all elements in the subset are also in the
     /// superset.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="subset">
     /// The collection expected not to be a subset of <paramref name="superset"/>.
     /// </param>
@@ -500,7 +542,7 @@ public sealed class CollectionAssert
     /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
     /// or all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
     /// </exception>
-    public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+    public static void IsNotSubsetOf<T>([NotNull] IEnumerable<T?>? subset, [NotNull] IEnumerable<T?>? superset, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsNotSubsetOf", "subset", string.Empty);
@@ -520,6 +562,9 @@ public sealed class CollectionAssert
     /// exception if either collection contains an element not in the other
     /// collection.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first collection to compare. This contains the elements the test
     /// expects.
@@ -532,15 +577,18 @@ public sealed class CollectionAssert
     /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
     /// or if any element was found in one of the collections but not the other.
     /// </exception>
-    public static void AreEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual)
-        => AreEquivalent(expected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, string.Empty, null);
+    public static void AreEquivalent<T>(
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual)
+        => AreEquivalent(expected, actual, EqualityComparer<T>.Default, string.Empty, null);
 
     /// <summary>
     /// Tests whether two collections contain the same elements and throws an
     /// exception if either collection contains an element not in the other
     /// collection.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first collection to compare. This contains the elements the test
     /// expects.
@@ -558,16 +606,19 @@ public sealed class CollectionAssert
     /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
     /// or if any element was found in one of the collections but not the other.
     /// </exception>
-    public static void AreEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
+    public static void AreEquivalent<T>(
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual,
         string? message)
-        => AreEquivalent(expected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, message, null);
+        => AreEquivalent(expected, actual, EqualityComparer<T>.Default, message, null);
 
     /// <summary>
     /// Tests whether two collections contain the same elements and throws an
     /// exception if either collection contains an element not in the other
     /// collection.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first collection to compare. This contains the elements the test
     /// expects.
@@ -588,10 +639,10 @@ public sealed class CollectionAssert
     /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
     /// or if any element was found in one of the collections but not the other.
     /// </exception>
-    public static void AreEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
+    public static void AreEquivalent<T>(
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual,
         [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
-        => AreEquivalent(expected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, message, parameters);
+        => AreEquivalent(expected, actual, EqualityComparer<T>.Default, message, parameters);
 
     /// <summary>
     /// Tests whether two collections contain the same elements and throws an
@@ -748,6 +799,9 @@ public sealed class CollectionAssert
     /// exception if the two collections contain identical elements without regard
     /// to order.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first collection to compare. This contains the elements the test
     /// expects to be different than the actual collection.
@@ -761,15 +815,18 @@ public sealed class CollectionAssert
     /// or if collections contain the same elements, including the same number of duplicate
     /// occurrences of each element.
     /// </exception>
-    public static void AreNotEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual)
-        => AreNotEquivalent(expected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, string.Empty, null);
+    public static void AreNotEquivalent<T>(
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual)
+        => AreNotEquivalent(expected, actual, EqualityComparer<T>.Default, string.Empty, null);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
     /// exception if the two collections contain identical elements without regard
     /// to order.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first collection to compare. This contains the elements the test
     /// expects to be different than the actual collection.
@@ -788,16 +845,19 @@ public sealed class CollectionAssert
     /// or if collections contain the same elements, including the same number of duplicate
     /// occurrences of each element.
     /// </exception>
-    public static void AreNotEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
+    public static void AreNotEquivalent<T>(
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual,
         string? message)
-        => AreNotEquivalent(expected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, message, null);
+        => AreNotEquivalent(expected, actual, EqualityComparer<T>.Default, message, null);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
     /// exception if the two collections contain identical elements without regard
     /// to order.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first collection to compare. This contains the elements the test
     /// expects to be different than the actual collection.
@@ -819,10 +879,10 @@ public sealed class CollectionAssert
     /// or if collections contain the same elements, including the same number of duplicate
     /// occurrences of each element.
     /// </exception>
-    public static void AreNotEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
+    public static void AreNotEquivalent<T>(
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual,
         [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
-        => AreNotEquivalent(expected?.Cast<object>(), actual?.Cast<object>(), comparer: EqualityComparer<object>.Default, message, parameters);
+        => AreNotEquivalent(expected, actual, comparer: EqualityComparer<T>.Default, message, parameters);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
@@ -983,6 +1043,9 @@ public sealed class CollectionAssert
     /// of the expected type and throws an exception if the expected type is
     /// not in the inheritance hierarchy of one or more of the elements.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection containing elements the test expects to be of the
     /// specified type.
@@ -995,7 +1058,7 @@ public sealed class CollectionAssert
     /// or some elements of <paramref name="collection"/> do not inherit/implement
     /// <paramref name="expectedType"/>.
     /// </exception>
-    public static void AllItemsAreInstancesOfType([NotNull] ICollection? collection, [NotNull] Type? expectedType)
+    public static void AllItemsAreInstancesOfType<T>([NotNull] IEnumerable<T?>? collection, [NotNull] Type? expectedType)
         => AllItemsAreInstancesOfType(collection, expectedType, string.Empty, null);
 
     /// <summary>
@@ -1003,6 +1066,9 @@ public sealed class CollectionAssert
     /// of the expected type and throws an exception if the expected type is
     /// not in the inheritance hierarchy of one or more of the elements.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection containing elements the test expects to be of the
     /// specified type.
@@ -1020,7 +1086,7 @@ public sealed class CollectionAssert
     /// or some elements of <paramref name="collection"/> do not inherit/implement
     /// <paramref name="expectedType"/>.
     /// </exception>
-    public static void AllItemsAreInstancesOfType([NotNull] ICollection? collection, [NotNull] Type? expectedType,
+    public static void AllItemsAreInstancesOfType<T>([NotNull] IEnumerable<T?>? collection, [NotNull] Type? expectedType,
         string? message)
         => AllItemsAreInstancesOfType(collection, expectedType, message, null);
 
@@ -1029,6 +1095,9 @@ public sealed class CollectionAssert
     /// of the expected type and throws an exception if the expected type is
     /// not in the inheritance hierarchy of one or more of the elements.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="collection">
     /// The collection containing elements the test expects to be of the
     /// specified type.
@@ -1049,8 +1118,8 @@ public sealed class CollectionAssert
     /// or some elements of <paramref name="collection"/> do not inherit/implement
     /// <paramref name="expectedType"/>.
     /// </exception>
-    public static void AllItemsAreInstancesOfType(
-        [NotNull] ICollection? collection, [NotNull] Type? expectedType, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    public static void AllItemsAreInstancesOfType<T>(
+        [NotNull] IEnumerable<T?>? collection, [NotNull] Type? expectedType, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreInstancesOfType", "collection", string.Empty);
         Assert.CheckParameterNotNull(expectedType, "CollectionAssert.AllItemsAreInstancesOfType", "expectedType", string.Empty);
@@ -1087,6 +1156,9 @@ public sealed class CollectionAssert
     /// is checked using <see cref="object.Equals(object, object)" /> method.
     /// Different references to the same value are considered equal.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first collection to compare. This is the collection the tests expects.
     /// </param>
@@ -1098,8 +1170,8 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(ICollection? expected, ICollection? actual)
-        => AreEqual(expected, actual, string.Empty, null);
+    public static void AreEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual)
+        => AreEqual(expected, actual, EqualityComparer<T>.Default, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collections are equal and throws an exception
@@ -1108,6 +1180,9 @@ public sealed class CollectionAssert
     /// is checked using <see cref="object.Equals(object, object)" /> method.
     /// Different references to the same value are considered equal.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first collection to compare. This is the collection the tests expects.
     /// </param>
@@ -1124,8 +1199,8 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(ICollection? expected, ICollection? actual, string? message)
-        => AreEqual(expected, actual, message, null);
+    public static void AreEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual, string? message)
+        => AreEqual(expected, actual, EqualityComparer<T>.Default, message, null);
 
     /// <summary>
     /// Tests whether the specified collections are equal and throws an exception
@@ -1134,6 +1209,9 @@ public sealed class CollectionAssert
     /// is checked using <see cref="object.Equals(object, object)" /> method.
     /// Different references to the same value are considered equal.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first collection to compare. This is the collection the tests expects.
     /// </param>
@@ -1153,102 +1231,9 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(ICollection? expected, ICollection? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+    public static void AreEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
-    {
-        string reason = string.Empty;
-        if (!AreCollectionsEqual(expected, actual, new ObjectComparer(), ref reason))
-        {
-            string userMessage = Assert.BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
-            Assert.ThrowAssertFailed("CollectionAssert.AreEqual", finalMessage);
-        }
-    }
-
-    /// <summary>
-    /// Tests whether the specified collections are unequal and throws an exception
-    /// if the two collections are equal. Equality is defined as having the same
-    /// elements in the same order and quantity. Whether two elements are the same
-    /// is checked using <see cref="object.Equals(object, object)" /> method.
-    /// Different references to the same value are considered equal.
-    /// </summary>
-    /// <param name="notExpected">
-    /// The first collection to compare. This is the collection the tests expects
-    /// not to match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second collection to compare. This is the collection produced by the
-    /// code under test.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual(ICollection? notExpected, ICollection? actual)
-        => AreNotEqual(notExpected, actual, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified collections are unequal and throws an exception
-    /// if the two collections are equal. Equality is defined as having the same
-    /// elements in the same order and quantity. Whether two elements are the same
-    /// is checked using <see cref="object.Equals(object, object)" /> method.
-    /// Different references to the same value are considered equal.
-    /// </summary>
-    /// <param name="notExpected">
-    /// The first collection to compare. This is the collection the tests expects
-    /// not to match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second collection to compare. This is the collection produced by the
-    /// code under test.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="actual"/>
-    /// is equal to <paramref name="notExpected"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, string? message)
-        => AreNotEqual(notExpected, actual, message, null);
-
-    /// <summary>
-    /// Tests whether the specified collections are unequal and throws an exception
-    /// if the two collections are equal. Equality is defined as having the same
-    /// elements in the same order and quantity. Whether two elements are the same
-    /// is checked using <see cref="object.Equals(object, object)" /> method.
-    /// Different references to the same value are considered equal.
-    /// </summary>
-    /// <param name="notExpected">
-    /// The first collection to compare. This is the collection the tests expects
-    /// not to match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second collection to compare. This is the collection produced by the
-    /// code under test.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="actual"/>
-    /// is equal to <paramref name="notExpected"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
-        params object?[]? parameters)
-    {
-        string reason = string.Empty;
-        if (AreCollectionsEqual(notExpected, actual, new ObjectComparer(), ref reason))
-        {
-            string userMessage = Assert.BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
-            Assert.ThrowAssertFailed("CollectionAssert.AreNotEqual", finalMessage);
-        }
-    }
+        => AreEqual(expected, actual, EqualityComparer<T>.Default, message, parameters);
 
     /// <summary>
     /// Tests whether the specified collections are equal and throws an exception
@@ -1256,6 +1241,9 @@ public sealed class CollectionAssert
     /// elements in the same order and quantity. Different references to the same
     /// value are considered equal.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first collection to compare. This is the collection the tests expects.
     /// </param>
@@ -1270,7 +1258,7 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer)
+    public static void AreEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer)
         => AreEqual(expected, actual, comparer, string.Empty, null);
 
     /// <summary>
@@ -1279,6 +1267,9 @@ public sealed class CollectionAssert
     /// elements in the same order and quantity. Different references to the same
     /// value are considered equal.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first collection to compare. This is the collection the tests expects.
     /// </param>
@@ -1298,7 +1289,7 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer,
+    public static void AreEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         string? message)
         => AreEqual(expected, actual, comparer, message, null);
 
@@ -1308,6 +1299,9 @@ public sealed class CollectionAssert
     /// elements in the same order and quantity. Different references to the same
     /// value are considered equal.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first collection to compare. This is the collection the tests expects.
     /// </param>
@@ -1330,7 +1324,7 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer,
+    public static void AreEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         string reason = string.Empty;
@@ -1345,9 +1339,98 @@ public sealed class CollectionAssert
     /// <summary>
     /// Tests whether the specified collections are unequal and throws an exception
     /// if the two collections are equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Whether two elements are the same
+    /// is checked using <see cref="object.Equals(object, object)" /> method.
+    /// Different references to the same value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the tests expects
+    /// not to match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreNotEqual<T>(IEnumerable<T?>? notExpected, IEnumerable<T?>? actual)
+        => AreNotEqual(notExpected, actual, EqualityComparer<T>.Default, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified collections are unequal and throws an exception
+    /// if the two collections are equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Whether two elements are the same
+    /// is checked using <see cref="object.Equals(object, object)" /> method.
+    /// Different references to the same value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the tests expects
+    /// not to match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is equal to <paramref name="notExpected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreNotEqual<T>(IEnumerable<T?>? notExpected, IEnumerable<T?>? actual, string? message)
+        => AreNotEqual(notExpected, actual, EqualityComparer<T>.Default, message, null);
+
+    /// <summary>
+    /// Tests whether the specified collections are unequal and throws an exception
+    /// if the two collections are equal. Equality is defined as having the same
+    /// elements in the same order and quantity. Whether two elements are the same
+    /// is checked using <see cref="object.Equals(object, object)" /> method.
+    /// Different references to the same value are considered equal.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="notExpected">
+    /// The first collection to compare. This is the collection the tests expects
+    /// not to match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second collection to compare. This is the collection produced by the
+    /// code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is equal to <paramref name="notExpected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreNotEqual<T>(IEnumerable<T?>? notExpected, IEnumerable<T?>? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+        params object?[]? parameters)
+        => AreNotEqual(notExpected, actual, EqualityComparer<T>.Default, message, parameters);
+
+    /// <summary>
+    /// Tests whether the specified collections are unequal and throws an exception
+    /// if the two collections are equal. Equality is defined as having the same
     /// elements in the same order and quantity. Different references to the same
     /// value are considered equal.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="notExpected">
     /// The first collection to compare. This is the collection the tests expects
     /// not to match <paramref name="actual"/>.
@@ -1362,7 +1445,7 @@ public sealed class CollectionAssert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer)
+    public static void AreNotEqual<T>(IEnumerable<T?>? notExpected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer)
         => AreNotEqual(notExpected, actual, comparer, string.Empty, null);
 
     /// <summary>
@@ -1371,6 +1454,9 @@ public sealed class CollectionAssert
     /// elements in the same order and quantity. Different references to the same
     /// value are considered equal.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="notExpected">
     /// The first collection to compare. This is the collection the tests expects
     /// not to match <paramref name="actual"/>.
@@ -1390,7 +1476,7 @@ public sealed class CollectionAssert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer,
+    public static void AreNotEqual<T>(IEnumerable<T?>? notExpected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         string? message)
         => AreNotEqual(notExpected, actual, comparer, message, null);
 
@@ -1400,6 +1486,9 @@ public sealed class CollectionAssert
     /// elements in the same order and quantity. Different references to the same
     /// value are considered equal.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="notExpected">
     /// The first collection to compare. This is the collection the tests expects
     /// not to match <paramref name="actual"/>.
@@ -1422,7 +1511,7 @@ public sealed class CollectionAssert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer,
+    public static void AreNotEqual<T>(IEnumerable<T?>? notExpected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         string reason = string.Empty;
@@ -1433,6 +1522,7 @@ public sealed class CollectionAssert
             Assert.ThrowAssertFailed("CollectionAssert.AreNotEqual", finalMessage);
         }
     }
+    #endregion
 
     #endregion
 
@@ -1444,6 +1534,9 @@ public sealed class CollectionAssert
     /// of occurrences of the element in the subset must be less than or
     /// equal to the number of occurrences in the superset.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="subset">
     /// The collection the test expects to be contained in <paramref name="superset"/>.
     /// </param>
@@ -1454,7 +1547,7 @@ public sealed class CollectionAssert
     /// True if <paramref name="subset"/> is a subset of
     /// <paramref name="superset"/>, false otherwise.
     /// </returns>
-    internal static bool IsSubsetOfHelper(ICollection subset, ICollection superset)
+    internal static bool IsSubsetOfHelper<T>(IEnumerable<T?>? subset, IEnumerable<T?>? superset)
     {
         // $ CONSIDER: The current algorithm counts the number of occurrences of each
         // $ CONSIDER: element in each collection and then compares the count, resulting
@@ -1463,8 +1556,8 @@ public sealed class CollectionAssert
         // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
 
         // Count the occurrences of each object in both collections.
-        Dictionary<object, int> subsetElements = GetElementCounts(subset.Cast<object>(), EqualityComparer<object>.Default, out int subsetNulls);
-        Dictionary<object, int> supersetElements = GetElementCounts(superset.Cast<object>(), EqualityComparer<object>.Default, out int supersetNulls);
+        Dictionary<object, int> subsetElements = GetElementCounts(subset?.Cast<object>(), EqualityComparer<object>.Default, out int subsetNulls);
+        Dictionary<object, int> supersetElements = GetElementCounts(superset?.Cast<object>(), EqualityComparer<object>.Default, out int supersetNulls);
 
         if (subsetNulls > supersetNulls)
         {
@@ -1503,7 +1596,7 @@ public sealed class CollectionAssert
     /// A dictionary containing the number of occurrences of each element
     /// in the specified collection.
     /// </returns>
-    private static Dictionary<T, int> GetElementCounts<T>(IEnumerable<T?> collection, IEqualityComparer<T> comparer, out int nullCount)
+    private static Dictionary<T, int> GetElementCounts<T>(IEnumerable<T?>? collection, IEqualityComparer<T> comparer, out int nullCount)
     {
         DebugEx.Assert(collection != null, "Collection is Null.");
 
@@ -1602,7 +1695,7 @@ public sealed class CollectionAssert
     }
 #pragma warning restore CS8714
 
-    private static bool AreCollectionsEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer,
+    private static bool AreCollectionsEqual<T>(IEnumerable<T?>? expected, IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         ref string reason)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
@@ -1613,18 +1706,32 @@ public sealed class CollectionAssert
                 return false;
             }
 
-            if (expected.Count != actual.Count)
+            if (expected.Count() != actual.Count())
             {
                 reason = FrameworkMessages.NumberOfElementsDiff;
                 return false;
             }
 
-            IEnumerator expectedEnum = expected.GetEnumerator();
-            IEnumerator actualEnum = actual.GetEnumerator();
+            IEnumerator<T?> expectedEnum = expected.GetEnumerator();
+            IEnumerator<T?> actualEnum = actual.GetEnumerator();
             int i = 0;
             while (expectedEnum.MoveNext() && actualEnum.MoveNext())
             {
-                bool areEqual = comparer.Compare(expectedEnum.Current, actualEnum.Current) == 0;
+                if (expectedEnum.Current is null && actualEnum.Current is null)
+                {
+                    continue;
+                }
+
+                if (expectedEnum.Current is null || actualEnum.Current is null)
+                {
+                    reason = string.Format(
+                        CultureInfo.CurrentCulture,
+                        FrameworkMessages.ElementsAtIndexDontMatch,
+                        i);
+                    return false;
+                }
+
+                bool areEqual = comparer.Equals(expectedEnum.Current, actualEnum.Current);
                 if (!areEqual)
                 {
                     reason = string.Format(
@@ -1652,6 +1759,24 @@ public sealed class CollectionAssert
     private class ObjectComparer : IComparer
     {
         int IComparer.Compare(object? x, object? y) => Equals(x, y) ? 0 : -1;
+    }
+
+    private class ComparerWrapper<T> : IEqualityComparer<T>
+    {
+        private readonly IComparer _comparer;
+
+        public ComparerWrapper([NotNull] IComparer? comparer)
+        {
+            Assert.CheckParameterNotNull(comparer, "Assert", "comparer", string.Empty);
+            _comparer = comparer;
+        }
+
+        bool IEqualityComparer<T>.Equals(T? x, T? y) =>
+            // Use the comparer to check if the two items are equal
+            _comparer?.Compare(x, y) == 0;
+
+        public int GetHashCode(T obj) =>
+           throw new InvalidOperationException("GetHashCode is not suppose to be called in the wrapper.");
     }
     #endregion
 }
