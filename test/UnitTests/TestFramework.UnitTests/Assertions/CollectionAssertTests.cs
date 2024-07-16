@@ -11,6 +11,7 @@ using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
 
+[Obsolete("We have now Assert.XXX with all generic CollectionAsserts and Assert.XXXLegacy for old on")]
 public class CollectionAssertTests : TestContainer
 {
     public void ThatShouldReturnAnInstanceOfCollectionAssert() => Verify(CollectionAssert.That is not null);
