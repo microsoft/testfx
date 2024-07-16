@@ -4,9 +4,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="1.3.0" />[1.3.0] - 2024-07-15
+## <a name="1.3.1" />[1.3.1] - 2024-07-15
 
-See full log [here](https://github.com/microsoft/testanywhere/compare/v1.2.1...v1.3.0)
+See full log [here](https://github.com/microsoft/testanywhere/compare/v1.2.1...v1.3.1)
 
 ### Added
 
@@ -19,13 +19,13 @@ See full log [here](https://github.com/microsoft/testanywhere/compare/v1.2.1...v
 
 ### Artifacts
 
-* Microsoft.Testing.Extensions.CrashDump: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.3.0)
-* Microsoft.Testing.Extensions.HangDump: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.3.0)
-* Microsoft.Testing.Extensions.HotReload: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.3.0)
-* Microsoft.Testing.Extensions.Retry: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.3.0)
-* Microsoft.Testing.Extensions.Telemetry: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.3.0)
-* Microsoft.Testing.Extensions.TrxReport: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.3.0)
-* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.3.0)
-* Microsoft.Testing.Extensions.VSTestBridge: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.3.0)
-* Microsoft.Testing.Platform: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.3.0)
-* Microsoft.Testing.Platform.MSBuild: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.3.0)
+* Microsoft.Testing.Extensions.CrashDump: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.3.1)
+* Microsoft.Testing.Extensions.HangDump: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.3.1)
+* Microsoft.Testing.Extensions.HotReload: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.3.1)
+* Microsoft.Testing.Extensions.Retry: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.3.1)
+* Microsoft.Testing.Extensions.Telemetry: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.3.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.3.1)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.3.1)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.3.1)
+* Microsoft.Testing.Platform: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.3.1)
+* Microsoft.Testing.Platform.MSBuild: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.3.1)
