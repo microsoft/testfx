@@ -63,6 +63,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.4.3...v3.5.0)
 
 ### Fixed
 
+* Fix ResultFiles placement in TRX report by @nohwnd in [#3264](https://github.com/microsoft/testfx/pull/3264)
 * Use short date for platform build date on banner by @Evangelink in [#3249](https://github.com/microsoft/testfx/pull/3249)
 * Skipped tests count as not run by @Evangelink in [#3243](https://github.com/microsoft/testfx/pull/3243)
 * Fix running parallelized tests in STA thread by @eengyebrahim in [#3213](https://github.com/microsoft/testfx/pull/3213)
@@ -88,6 +89,11 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.4.3...v3.5.0)
 * Discriminate MissingMethodException from hot reload by @Evangelink in [#3098](https://github.com/microsoft/testfx/pull/3098)
 * Check that Reflect Helper caches inherited and non-inherited attributes separately by @nohwnd in [#3117](https://github.com/microsoft/testfx/pull/3117)
 * Fixes displaying arity for many (N instead of int.Max) by @engyebrahim in [#3115](https://github.com/microsoft/testfx/pull/3115)
+
+### New Contributors
+
+* @Mertsch made their first contribution in https://github.com/microsoft/testfx/pull/3045
+* @MichelZ made their first contribution in https://github.com/microsoft/testfx/pull/3053
 
 ### Artifacts
 
