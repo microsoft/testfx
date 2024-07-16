@@ -62,8 +62,6 @@ variables:
     value: ''
   - name: _BuildConfig
     value: Release
-  - name: _Products
-    value: $(parameters.products)
 
   - ${{ if eq(parameters.isRTM, True) }}:
     - name: _ReleaseVersionKind
@@ -84,7 +82,7 @@ variables:
       /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
       /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
       /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-      /p:ProductsToBuild=$(_Products)
+      /p:ProductsToBuild=${{parameters.products}}
 
 resources:
   repositories:
