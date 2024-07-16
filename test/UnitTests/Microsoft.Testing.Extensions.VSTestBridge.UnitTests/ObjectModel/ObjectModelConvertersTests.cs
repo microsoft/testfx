@@ -29,12 +29,12 @@ public sealed class ObjectModelConvertersTests : TestBase
         Assert.AreEqual("SomeUid", testNode.Uid.Value);
     }
 
-    public void ToTestNode_WhenTestCaseHasNoTestNodeUidProperty_TestNodeUidUsesFqn()
+    public void ToTestNode_WhenTestCaseHasNoTestNodeUidProperty_TestNodeUidUsesTestCaseId()
     {
         TestCase testCase = new("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
         var testNode = testCase.ToTestNode(false, TestClient);
 
-        Assert.AreEqual("SomeFqn", testNode.Uid.Value);
+        Assert.AreEqual(testCase.Id.ToString(), testNode.Uid.Value);
     }
 
     public void ToTestNode_WhenTestCaseHasDisplayName_TestNodeDisplayNameUsesIt()
