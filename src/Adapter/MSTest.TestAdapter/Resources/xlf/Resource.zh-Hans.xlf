@@ -146,6 +146,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">无法创建类 {0} 的实例。错误: {1}。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="UTA_NoValidConstructor">
+        <source>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
+        <target state="new">Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_TestContextSetError">
         <source>Unable to set TestContext property for the class {0}. Error: {1}.</source>
         <target state="translated">无法设置类 {0} 的 TestContext 属性。错误: {1}。</target>
@@ -261,11 +266,6 @@ Error: {1}</source>
       <trans-unit id="UTA_MethodDoesNotExists">
         <source>Method {0}.{1} does not exist.</source>
         <target state="translated">方法 {0}.{1} 不存在。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_NoDefaultConstructor">
-        <source>Unable to get default constructor for class {0}.</source>
-        <target state="translated">无法获取类 {0} 的默认构造函数。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestContextLoadError">

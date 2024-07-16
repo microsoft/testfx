@@ -43,6 +43,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo = new TestClassInfo(
             _testClassType,
             _testClassConstructor,
+            true,
             _testContextProperty,
             _testClassAttribute,
             _testAssemblyInfo);

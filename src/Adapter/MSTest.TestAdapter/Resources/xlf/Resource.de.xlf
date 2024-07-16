@@ -146,6 +146,11 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <target state="translated">Es kann keine Instanz der Klasse '{0}' erstellt werden. Fehler: {1}.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="UTA_NoValidConstructor">
+        <source>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
+        <target state="new">Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_TestContextSetError">
         <source>Unable to set TestContext property for the class {0}. Error: {1}.</source>
         <target state="translated">Die Eigenschaft 'TestContext' für die Klasse '{0}' kann nicht festgelegt werden. Fehler: {1}.</target>
@@ -261,11 +266,6 @@ Fehler: {1}</target>
       <trans-unit id="UTA_MethodDoesNotExists">
         <source>Method {0}.{1} does not exist.</source>
         <target state="translated">Die Methode "{0}.{1}" ist nicht vorhanden.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_NoDefaultConstructor">
-        <source>Unable to get default constructor for class {0}.</source>
-        <target state="translated">Der Standardkonstruktor für die Klasse "{0}" kann nicht abgerufen werden.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestContextLoadError">

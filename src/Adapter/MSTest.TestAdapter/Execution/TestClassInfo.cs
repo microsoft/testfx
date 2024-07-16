@@ -37,17 +37,14 @@ public class TestClassInfo
     internal TestClassInfo(
         Type type,
         ConstructorInfo constructor,
+        bool isParameterlessConstructor,
         PropertyInfo? testContextProperty,
         TestClassAttribute classAttribute,
         TestAssemblyInfo parent)
     {
-        DebugEx.Assert(type != null, "Type should not be null");
-        DebugEx.Assert(constructor != null, "Constructor should not be null");
-        DebugEx.Assert(parent != null, "Parent should not be null");
-        DebugEx.Assert(classAttribute != null, "ClassAttribute should not be null");
-
         ClassType = type;
         Constructor = constructor;
+        IsParameterlessConstructor = isParameterlessConstructor;
         TestContextProperty = testContextProperty;
         BaseClassCleanupMethodsStack = new Stack<MethodInfo>();
         BaseClassInitAndCleanupMethods = new Queue<Tuple<MethodInfo?, MethodInfo?>>();
@@ -76,6 +73,8 @@ public class TestClassInfo
     /// Gets the constructor.
     /// </summary>
     public ConstructorInfo Constructor { get; }
+
+    internal bool IsParameterlessConstructor { get; }
 
     /// <summary>
     /// Gets the test context property.

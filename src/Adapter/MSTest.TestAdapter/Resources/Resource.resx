@@ -223,8 +223,8 @@ Error: {1}</value>
   <data name="UTA_MethodDoesNotExists" xml:space="preserve">
     <value>Method {0}.{1} does not exist.</value>
   </data>
-  <data name="UTA_NoDefaultConstructor" xml:space="preserve">
-    <value>Unable to get default constructor for class {0}.</value>
+  <data name="UTA_NoValidConstructor" xml:space="preserve">
+    <value>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</value>
   </data>
   <data name="UTA_TestContextLoadError" xml:space="preserve">
     <value>Unable to find property {0}.TestContext. Error:{1}.</value>
