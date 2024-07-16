@@ -1,1 +1,5 @@
 ﻿#nullable enable
+MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor
+MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor.NonNullableReferenceNotInitializedSuppressor() -> void
+override MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void
+override MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor.SupportedSuppressions.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.SuppressionDescriptor!>
