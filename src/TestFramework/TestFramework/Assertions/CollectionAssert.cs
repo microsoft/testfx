@@ -13,6 +13,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// with collections within unit tests. If the condition being tested is not
 /// met, an exception is thrown.
 /// </summary>
+[Obsolete("We have now Assert.XXX with all generic CollectionAsserts and Assert.XXXLegacy for old ones.")]
 public sealed class CollectionAssert
 {
     #region Singleton constructor
