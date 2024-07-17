@@ -357,7 +357,7 @@ public class TestClassInfo
         throw testFailedException;
     }
 
-    internal UnitTestResult GetResultOrRunClassInitialize(ITestContext testContext, string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
+    internal UnitTestResult GetResultOrRunClassInitialize(ITestContext testContext, string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
@@ -373,7 +373,7 @@ public class TestClassInfo
                 return DoRun();
             }
 
-            UnitTestResult result = new();
+            UnitTestResult result = new(ObjectModelUnitTestOutcome.Error, "MSTest STATestClass ClassInitialize didn't complete");
             Thread entryPointThread = new(() => result = DoRun())
             {
                 Name = "MSTest STATestClass ClassInitialize",
@@ -408,7 +408,7 @@ public class TestClassInfo
         // Local functions
         UnitTestResult DoRun()
         {
-            UnitTestResult result = new();
+            UnitTestResult result = new(ObjectModelUnitTestOutcome.Passed, null);
 
             try
             {

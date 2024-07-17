@@ -165,7 +165,7 @@ internal class UnitTestRunner : MarshalByRefObject
                 }
                 else
                 {
-                    UnitTestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContext, assemblyInitializeResult.StandardOut, assemblyInitializeResult.StandardError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages);
+                    UnitTestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContext, assemblyInitializeResult.StandardOut!, assemblyInitializeResult.StandardError!, assemblyInitializeResult.DebugTrace!, assemblyInitializeResult.TestContextMessages!);
                     if (classInitializeResult.Outcome != UnitTestOutcome.Passed)
                     {
                         result = [classInitializeResult];
@@ -174,11 +174,7 @@ internal class UnitTestRunner : MarshalByRefObject
                     {
                         // Run the test method
                         var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext);
-                        result = testMethodRunner.Execute(
-                            assemblyInitializeResult.StandardOut + classInitializeResult.StandardOut,
-                            assemblyInitializeResult.StandardError + classInitializeResult.StandardError,
-                            assemblyInitializeResult.DebugTrace + classInitializeResult.DebugTrace,
-                            assemblyInitializeResult.TestContextMessages + classInitializeResult.TestContextMessages);
+                        result = testMethodRunner.Execute(classInitializeResult.StandardOut!, classInitializeResult.StandardError!, classInitializeResult.DebugTrace!, classInitializeResult.TestContextMessages!);
                     }
                 }
             }

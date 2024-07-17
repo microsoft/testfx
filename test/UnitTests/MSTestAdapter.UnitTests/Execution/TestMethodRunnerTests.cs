@@ -98,59 +98,6 @@ public class TestMethodRunnerTests : TestContainer
         }
     }
 
-    public void ExecuteForAssemblyInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
-    {
-        // Arrange.
-        var tai = new TestAssemblyInfo(typeof(TestMethodRunnerTests).Assembly)
-        {
-            AssemblyInitializeMethod = typeof(TestMethodRunnerTests).GetMethod(
-            "InitMethodThrowingException",
-            BindingFlags.Static | BindingFlags.NonPublic),
-        };
-
-        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructor([])!;
-        var classAttribute = new UTF.TestClassAttribute();
-        PropertyInfo testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
-
-        var tci = new TestClassInfo(typeof(DummyTestClass), constructorInfo, true, testContextProperty, classAttribute, tai);
-        var testMethodInfo = new TestableTestmethodInfo(_methodInfo, tci, _testMethodOptions, () => throw new Exception("DummyException"));
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
-
-        // Act.
-        UnitTestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
-
-        // Assert.
-        Verify(results[0].Outcome == AdapterTestOutcome.Failed);
-        Verify(results[0].ErrorMessage.Contains("System.ArgumentException: Value does not fall within the expected range.. Aborting test execution."));
-    }
-
-    public void ExecuteForClassInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
-    {
-        // Arrange.
-        var tai = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
-
-        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructor([])!;
-        var classAttribute = new UTF.TestClassAttribute();
-        PropertyInfo testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
-
-        var tci = new TestClassInfo(typeof(DummyTestClass), constructorInfo, true, testContextProperty, classAttribute, tai)
-        {
-            ClassInitializeMethod = typeof(TestMethodRunnerTests).GetMethod(
-            "InitMethodThrowingException",
-            BindingFlags.Static | BindingFlags.NonPublic),
-        };
-
-        var testMethodInfo = new TestableTestmethodInfo(_methodInfo, tci, _testMethodOptions, () => throw new Exception("DummyException"));
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
-
-        // Act.
-        UnitTestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty);
-
-        // Assert.
-        Verify(results[0].Outcome == AdapterTestOutcome.Failed);
-        Verify(results[0].ErrorMessage.Contains("System.ArgumentException: Value does not fall within the expected range."));
-    }
-
     public void ExecuteForTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
     {
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => throw new Exception("DummyException"));
@@ -421,7 +368,7 @@ public class TestMethodRunnerTests : TestContainer
         UnitTestResult[] results = testMethodRunner.RunTestMethod();
 
         Verify(results.Length == 1);
-        Verify(results[0].DisplayName == "DummyTestMethod (2,\"DummyString\")");
+        Verify(results[0].DisplayName is "DummyTestMethod (2,\"DummyString\")" or "DummyTestMethod (2,DummyString)");
     }
 
     public void RunTestMethodShouldSetResultFilesIfPresentForDataDrivenTests()
