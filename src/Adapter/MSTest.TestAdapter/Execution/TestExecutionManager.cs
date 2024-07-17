@@ -253,11 +253,6 @@ public class TestExecutionManager
 
         using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle);
 
-        // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
-        var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
-            typeof(UnitTestRunner),
-            [MSTestSettings.CurrentSettings])!;
-
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
         // Default test set is filtered tests based on user provided filter criteria
@@ -294,7 +289,11 @@ public class TestExecutionManager
         int parallelWorkers = sourceSettings.Workers;
         ExecutionScope parallelScope = sourceSettings.Scope;
         TestCase[] testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, TestMethodFilter)).ToArray();
-        InitializeClassCleanupManager(source, testRunner, testsToRun, sourceSettings);
+        UnitTestElement[] unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source)).ToArray();
+        // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
+        var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
+            typeof(UnitTestRunner),
+            [MSTestSettings.CurrentSettings, unitTestElements, (int)sourceSettings.ClassCleanupLifecycle])!;
 
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
         {
@@ -385,25 +384,6 @@ public class TestExecutionManager
         }
 
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
-    }
-
-    private static void InitializeClassCleanupManager(string source, UnitTestRunner testRunner, IEnumerable<TestCase> testsToRun,
-        TestAssemblySettings sourceSettings)
-    {
-        try
-        {
-            // We need the call to ToArray as the test runner is serializable
-            UnitTestElement[] unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source)).ToArray();
-            testRunner.InitializeClassCleanupManager(unitTestElements, (int)sourceSettings.ClassCleanupLifecycle);
-        }
-        catch (Exception ex)
-        {
-            // source might not support this if it's legacy make sure it's supported by checking for the type
-            if (ex.GetType().FullName != "System.Runtime.Remoting.RemotingException")
-            {
-                throw;
-            }
-        }
     }
 
     private void ExecuteTestsWithTestRunner(
