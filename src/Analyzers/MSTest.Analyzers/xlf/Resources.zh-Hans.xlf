@@ -236,12 +236,12 @@
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
         <source>Review or remove the assertion as its condition is known to be always true</source>
-        <target state="new">Review or remove the assertion as its condition is known to be always true</target>
+        <target state="translated">查看或移除断言，因为已知其条件始终为 true</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerTitle">
         <source>Assertion condition is always true</source>
-        <target state="new">Assertion condition is always true</target>
+        <target state="translated">断言条件始终为 true</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">

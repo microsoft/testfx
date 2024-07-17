@@ -213,17 +213,17 @@
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
-        <target state="new">'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</target>
+        <target state="translated">System.ComponentModel.DescriptionAttribute nemá v kontextu testů žádný účinek a pravděpodobně jste místo toho chtěli použít Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeMessageFormat">
         <source>Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</source>
-        <target state="new">Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</target>
+        <target state="translated">Nechtěli jste použít Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute?</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeTitle">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</source>
-        <target state="new">'System.ComponentModel.DescriptionAttribute' has no effect on test methods</target>
+        <target state="translated">System.ComponentModel.DescriptionAttribute nemá žádný vliv na testovací metody</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -238,12 +238,12 @@
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
         <source>Review or remove the assertion as its condition is known to be always true</source>
-        <target state="new">Review or remove the assertion as its condition is known to be always true</target>
+        <target state="translated">Zkontrolujte nebo odeberte kontrolní výraz, protože jeho podmínka je vždy true.</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerTitle">
         <source>Assertion condition is always true</source>
-        <target state="new">Assertion condition is always true</target>
+        <target state="translated">Podmínka kontrolního výrazu je vždy true.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
@@ -550,17 +550,17 @@
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="new">Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
+        <target state="translated">Typ obsahující [TestMethod] by měl mít označení [TestClass], jinak bude testovací metoda bez jakéhokoli upozornění ignorována.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Class '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="new">Class '{0}' contains test methods and should be marked with '[TestClass]'</target>
+        <target state="translated">Třída {0} obsahuje testovací metody a měla by mít označení [TestClass].</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]'</source>
-        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]'</target>
+        <target state="translated">Typ obsahující [TestMethod] by měl mít označení [TestClass]</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
