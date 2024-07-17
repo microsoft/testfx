@@ -236,7 +236,7 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetNestedLists();
         ICollection? collection2 = GetNotMatchingNestedLists();
 
-        VerifyThrows(() => CollectionAssert.AreEqual(collection1, collection2);
+        VerifyThrows(() => CollectionAssert.AreEqual(collection1, collection2));
     }
 
     public void CollectionAssertAreNotEqual_EqualNestedLists_Fails()
@@ -244,7 +244,7 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetNestedLists();
         ICollection? collection2 = GetNestedLists();
 
-        VerifyThrows(() => CollectionAssert.AreNotEqual(collection1, collection2);
+        VerifyThrows(() => CollectionAssert.AreNotEqual(collection1, collection2));
     }
 
     public void CollectionAssertAreNotEqualComparerNullabilityPostConditions()
