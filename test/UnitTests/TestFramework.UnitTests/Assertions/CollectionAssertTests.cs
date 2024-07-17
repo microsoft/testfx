@@ -217,34 +217,34 @@ public class CollectionAssertTests : TestContainer
 
     public void CollectionAssertAreEqual_EqualNestedLists_Passes()
     {
-        var list1 = new List<List<int>>
-        {
-            new() { 1, 2, 3 },
-            new() { 4, 5, 6 },
-        };
-        var list2 = new List<List<int>>
-        {
-            new() { 1, 2, 3 },
-            new() { 4, 5, 6 },
-        };
+        ICollection? collection1 = GetNestedLists();
+        ICollection? collection2 = GetNestedLists();
 
-        CollectionAssert.AreEqual(list1, list2);
+        CollectionAssert.AreEqual(collection1, collection2);
     }
 
     public void CollectionAssertAreNotEqual_NotEqualNestedLists_Passes()
     {
-        var list1 = new List<List<int>>
-        {
-            new() { 4, 5, 6 },
-            new() { 1, 2, 3 },
-        };
-        var list2 = new List<List<int>>
-        {
-            new() { 1, 2, 3 },
-            new() { 4, 5, 6 },
-        };
+        ICollection? collection1 = GetNestedLists();
+        ICollection? collection2 = GetNotMatchingNestedLists();
 
-        CollectionAssert.AreNotEqual(list1, list2);
+        CollectionAssert.AreNotEqual(collection1, collection2);
+    }
+
+    public void CollectionAssertAreEqual_NotEqualNestedLists_Fails()
+    {
+        ICollection? collection1 = GetNestedLists();
+        ICollection? collection2 = GetNotMatchingNestedLists();
+
+        VerifyThrows(() => CollectionAssert.AreEqual(collection1, collection2);
+    }
+
+    public void CollectionAssertAreNotEqual_EqualNestedLists_Fails()
+    {
+        ICollection? collection1 = GetNestedLists();
+        ICollection? collection2 = GetNestedLists();
+
+        VerifyThrows(() => CollectionAssert.AreNotEqual(collection1, collection2);
     }
 
     public void CollectionAssertAreNotEqualComparerNullabilityPostConditions()
@@ -395,6 +395,18 @@ public class CollectionAssertTests : TestContainer
     private ICollection? GetReversedMatchingSuperSet() => new[] { "item2", "item" };
 
     private ICollection? GetNotMatchingSuperSet() => new[] { "item3" };
+
+    private ICollection? GetNestedLists() => new List<List<int>>
+        {
+            new() { 1, 2, 3 },
+            new() { 4, 5, 6 },
+        };
+
+    private ICollection? GetNotMatchingNestedLists() => new List<List<int>>
+        {
+            new() { 4, 5, 6 },
+            new() { 1, 2, 3 },
+        };
 
     private Type? GetStringType() => typeof(string);
 
