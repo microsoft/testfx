@@ -30,7 +30,7 @@ internal static class ObjectModelConverters
     public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, ClientInfo client)
     {
         string testNodeUid = testCase.GetPropertyValue<string>(TestNodeUidProperty, null)
-            ?? testCase.Id.ToString();
+            ?? testCase.FullyQualifiedName;
 
         TestNode testNode = new()
         {
