@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
@@ -176,27 +177,45 @@ public sealed partial class Assert
         [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         IEqualityComparer<T> localComparer = comparer ?? EqualityComparer<T>.Default;
-        if (localComparer.Equals(expected!, actual!))
+        string userMessage;
+        string finalMessage;
+
+        if (expected is IEnumerable expectedEnum && actual is IEnumerable actualEnum)
         {
+            string reason = string.Empty;
+            if (!AreCollectionsEqual(expectedEnum, actualEnum, comparer, ref reason))
+            {
+                userMessage = Assert.BuildUserMessage(message, parameters);
+                finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
+                Assert.ThrowAssertFailed("CollectionAssert.AreEqual", finalMessage);
+            }
+
             return;
         }
+        else
+        {
+            if (localComparer.Equals(expected!, actual!))
+            {
+                return;
+            }
 
-        string userMessage = BuildUserMessage(message, parameters);
-        string finalMessage = actual != null && expected != null && !actual.GetType().Equals(expected.GetType())
-            ? string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualDifferentTypesFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                expected.GetType().FullName,
-                ReplaceNulls(actual),
-                actual.GetType().FullName)
-            : string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual));
+            userMessage = BuildUserMessage(message, parameters);
+            finalMessage = actual != null && expected != null && !actual.GetType().Equals(expected.GetType())
+                ? string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.AreEqualDifferentTypesFailMsg,
+                    userMessage,
+                    ReplaceNulls(expected),
+                    expected.GetType().FullName,
+                    ReplaceNulls(actual),
+                    actual.GetType().FullName)
+                : string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.AreEqualFailMsg,
+                    userMessage,
+                    ReplaceNulls(expected),
+                    ReplaceNulls(actual));
+        }
 
         ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
