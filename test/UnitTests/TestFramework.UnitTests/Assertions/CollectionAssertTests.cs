@@ -215,6 +215,38 @@ public class CollectionAssertTests : TestContainer
         comparer.ToString(); // no warning
     }
 
+    public void CollectionAssertAreEqual_EqualNestedLists_Passes()
+    {
+        var list1 = new List<List<int>>
+        {
+            new() { 1, 2, 3 },
+            new() { 4, 5, 6 },
+        };
+        var list2 = new List<List<int>>
+        {
+            new() { 1, 2, 3 },
+            new() { 4, 5, 6 },
+        };
+
+        CollectionAssert.AreEqual(list1, list2);
+    }
+
+    public void CollectionAssertAreNotEqual_NotEqualNestedLists_Passes()
+    {
+        var list1 = new List<List<int>>
+        {
+            new() { 4, 5, 6 },
+            new() { 1, 2, 3 },
+        };
+        var list2 = new List<List<int>>
+        {
+            new() { 1, 2, 3 },
+            new() { 4, 5, 6 },
+        };
+
+        CollectionAssert.AreNotEqual(list1, list2);
+    }
+
     public void CollectionAssertAreNotEqualComparerNullabilityPostConditions()
     {
         ICollection? collection1 = GetCollection();

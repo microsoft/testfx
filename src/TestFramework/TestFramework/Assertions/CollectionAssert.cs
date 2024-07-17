@@ -1605,43 +1605,57 @@ public sealed class CollectionAssert
         ref string reason)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
-        if (!ReferenceEquals(expected, actual))
+        if (ReferenceEquals(expected, actual))
         {
-            if ((expected == null) || (actual == null))
-            {
-                return false;
-            }
-
-            if (expected.Count != actual.Count)
-            {
-                reason = FrameworkMessages.NumberOfElementsDiff;
-                return false;
-            }
-
-            IEnumerator expectedEnum = expected.GetEnumerator();
-            IEnumerator actualEnum = actual.GetEnumerator();
-            int i = 0;
-            while (expectedEnum.MoveNext() && actualEnum.MoveNext())
-            {
-                bool areEqual = comparer.Compare(expectedEnum.Current, actualEnum.Current) == 0;
-                if (!areEqual)
-                {
-                    reason = string.Format(
-                        CultureInfo.CurrentCulture,
-                        FrameworkMessages.ElementsAtIndexDontMatch,
-                        i);
-                    return false;
-                }
-
-                i++;
-            }
-
-            // we come here only if we match
-            reason = FrameworkMessages.BothCollectionsSameElements;
+            reason = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.BothCollectionsSameReference, string.Empty);
             return true;
         }
 
-        reason = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.BothCollectionsSameReference, string.Empty);
+        return CompareCollections(expected, actual, comparer, ref reason);
+    }
+
+    private static bool CompareCollections(ICollection? expected, ICollection? actual, IComparer comparer, ref string reason)
+    {
+        if ((expected == null) || (actual == null))
+        {
+            return false;
+        }
+
+        if (expected.Count != actual.Count)
+        {
+            reason = FrameworkMessages.NumberOfElementsDiff;
+            return false;
+        }
+
+        IEnumerator expectedEnum = expected.GetEnumerator();
+        IEnumerator actualEnum = actual.GetEnumerator();
+
+        int position = 0;
+        while (expectedEnum.MoveNext() && actualEnum.MoveNext())
+        {
+            object? curExpected = expectedEnum.Current;
+            object? curActual = actualEnum.Current;
+
+            if (curExpected is ICollection curExpectedCollection && curActual is ICollection curActualCollection)
+            {
+                if (!CompareCollections(curExpectedCollection, curActualCollection, comparer, ref reason))
+                {
+                    return false;
+                }
+            }
+            else if (comparer.Compare(curExpected, curActual) != 0)
+            {
+                reason = string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.ElementsAtIndexDontMatch,
+                    position);
+                return false;
+            }
+
+            position++;
+        }
+
+        reason = FrameworkMessages.BothCollectionsSameElements;
         return true;
     }
 
