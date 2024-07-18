@@ -384,8 +384,7 @@ public class TestClassInfo
 
             try
             {
-                var threadTask = Task.Run(entryPointThread.Join);
-                threadTask.Wait();
+                entryPointThread.Join();
                 return result;
             }
             catch (Exception ex)
@@ -667,8 +666,7 @@ public class TestClassInfo
 
             try
             {
-                var threadTask = Task.Run(entryPointThread.Join);
-                threadTask.Wait();
+                entryPointThread.Join();
             }
             catch (Exception ex)
             {
