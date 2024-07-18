@@ -224,6 +224,13 @@ public class CollectionAssertTests : TestContainer
         CollectionAssert.AreEqual(collection1, collection2);
     }
 
+    public void CollectionAssertAreEqual_EqualDeeplyNestedLists_Passes()
+    {
+        ICollection? collection1 = GenerateDeeplyNestedCollection(7);
+        ICollection? collection2 = GenerateDeeplyNestedCollection(7);
+
+        CollectionAssert.AreEqual(collection1, collection2);
+    }
     public void CollectionAssertAreEqual_NotEqualNestedLists_Fails()
     {
         ICollection? collection1 = GetNestedLists();
@@ -415,6 +422,23 @@ public class CollectionAssertTests : TestContainer
     }
 
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
+
+    private static List<object> GenerateDeeplyNestedCollection(int depth)
+    {
+        if (depth == 0)
+        {
+            return new List<object> { new ReadOnlyCollection<int>(Enumerable.Range(1, 10).ToList()) };
+        }
+
+        var nestedCollection = new List<object>();
+        for (int i = 0; i < 10; i++)
+        {
+            nestedCollection.Add(GenerateDeeplyNestedCollection(depth - 1));
+        }
+
+        return nestedCollection;
+    }
+
     private ICollection? GetCollection() => new[] { "item" };
 
     private object? GetMatchingElement() => "item";
