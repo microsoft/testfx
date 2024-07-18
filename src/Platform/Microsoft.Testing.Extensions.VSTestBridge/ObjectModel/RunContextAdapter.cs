@@ -62,8 +62,7 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
     /// <inheritdoc />
     public IRunSettings? RunSettings { get; }
 
-    // We use heuristic to understand if the filter should be a TestCaseId or FullyQualifiedName.
-    // We know that in VSTest TestCaseId is a GUID and FullyQualifiedName is a string.
+    // We expect only GUID values in the testNodeUids.
     private static string CreateFilter(TestNodeUid[] testNodesUid)
     {
         StringBuilder filter = new();
