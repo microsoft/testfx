@@ -290,8 +290,8 @@ public class CollectionAssertTests : TestContainer
 
     public void CollectionAssertAreNotEqual_NotEqualDeeplyNestedLists_Passes()
     {
-        ICollection? collection1 = GenerateDeeplyNestedCollection(7);
-        ICollection? collection2 = GenerateDeeplyNestedCollection(7);
+        ICollection? collection1 = GenerateDeeplyNestedCollection(5);
+        ICollection? collection2 = GenerateDeeplyNestedCollection(4);
 
         CollectionAssert.AreNotEqual(collection1, collection2);
     }
