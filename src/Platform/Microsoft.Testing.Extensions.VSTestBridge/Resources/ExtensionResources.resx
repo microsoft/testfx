@@ -138,4 +138,7 @@
   <data name="TestRunParameterOptionArgumentIsNotParameter" xml:space="preserve">
     <value>argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</value>
   </data>
+  <data name="InvalidFilterValue" xml:space="preserve">
+    <value>Current implementation supports only GUID Id, i.e. Id=8b0475fc-ff66-43fb-a8ba-f6def1f78210</value>
+  </data>
 </root>
