@@ -1,3 +1,6 @@
 ﻿#nullable enable
 Microsoft.VisualStudio.TestTools.UnitTesting.STATestClassAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.STATestClassAttribute.STATestClassAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute.STATestMethodAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute.STATestMethodAttribute(string? displayName) -> void
