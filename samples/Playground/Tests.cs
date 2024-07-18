@@ -18,4 +18,14 @@ public class TestClass
     public void Test()
     {
     }
+
+    [TestMethod]
+    public void Test2()
+    {
+    }
+
+    [TestMethod]
+    public void Test3()
+    {
+    }
 }
