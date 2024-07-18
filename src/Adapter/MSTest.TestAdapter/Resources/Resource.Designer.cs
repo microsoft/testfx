@@ -604,7 +604,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be a valid integer value and cannot be less than 0..
+        ///   Looks up a localized string similar to UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0..
         /// </summary>
         internal static string UTA_ErrorInvalidTimeout {
             get {
