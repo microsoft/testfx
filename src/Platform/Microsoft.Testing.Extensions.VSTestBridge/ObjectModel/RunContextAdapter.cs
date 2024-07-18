@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Xml.Linq;
 
+using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -76,34 +77,7 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
             }
             else
             {
-                filter.Append("FullyQualifiedName=");
-                for (int k = 0; i < testNodesUid[i].Value.Length; i++)
-                {
-                    char currentChar = testNodesUid[i].Value[k];
-                    switch (currentChar)
-                    {
-                        case '\\':
-                        case '(':
-                        case ')':
-                        case '&':
-                        case '|':
-                        case '=':
-                        case '!':
-                        case '~':
-                            // If the symbol is not escaped, add an escape character.
-                            if (i - 1 < 0 || testNodesUid[i].Value[k - 1] != '\\')
-                            {
-                                filter.Append('\\');
-                            }
-
-                            filter.Append(currentChar);
-                            break;
-
-                        default:
-                            filter.Append(currentChar);
-                            break;
-                    }
-                }
+                throw new InvalidOperationException(ExtensionResources.InvalidFilterValue);
             }
 
             if (i != testNodesUid.Length - 1)

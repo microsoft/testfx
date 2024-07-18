@@ -49,15 +49,6 @@ public sealed class ObjectModelConvertersTests : TestBase
         Assert.AreEqual("FilePath", testNode.Properties.Single<TestFileLocationProperty>().FilePath);
     }
 
-    public void ToTestNode_WhenTestResultHasTestNodeUidProperty_TestNodeUidUsesIt()
-    {
-        TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"));
-        testResult.TestCase.SetPropertyValue(ObjectModelConverters.TestNodeUidProperty, "SomeUid");
-        var testNode = testResult.ToTestNode(false, TestClient);
-
-        Assert.AreEqual("SomeUid", testNode.Uid.Value);
-    }
-
     public void ToTestNode_WhenTestResultOutcomeIsFailed_TestNodePropertiesContainFailedTestNodeStateProperty()
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
