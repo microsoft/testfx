@@ -513,4 +513,22 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    public async Task WhenTestInitializeIsOnGenericClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass<T>
+            {
+                [TestInitialize]
+                public void TestInitialize()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
