@@ -4,6 +4,7 @@
 #nullable enable
 
 using System.Collections;
+using System.Collections.ObjectModel;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -223,14 +224,6 @@ public class CollectionAssertTests : TestContainer
         CollectionAssert.AreEqual(collection1, collection2);
     }
 
-    public void CollectionAssertAreNotEqual_NotEqualNestedLists_Passes()
-    {
-        ICollection? collection1 = GetNestedLists();
-        ICollection? collection2 = GetNotMatchingNestedLists();
-
-        CollectionAssert.AreNotEqual(collection1, collection2);
-    }
-
     public void CollectionAssertAreEqual_NotEqualNestedLists_Fails()
     {
         ICollection? collection1 = GetNestedLists();
@@ -239,12 +232,52 @@ public class CollectionAssertTests : TestContainer
         VerifyThrows(() => CollectionAssert.AreEqual(collection1, collection2));
     }
 
+    public void CollectionAssertAreEqual_EqualNonICollectionInnerCollection_Passes()
+    {
+        ICollection? collection1 = GetNonICollectionInnerCollection();
+        ICollection? collection2 = GetNonICollectionInnerCollection();
+
+        CollectionAssert.AreEqual(collection1, collection2);
+    }
+
+    public void CollectionAssertAreEqual_NotEqualNonICollectionInnerCollection_Fails()
+    {
+        ICollection? collection1 = GetNonICollectionInnerCollection();
+        ICollection? collection2 = GetNotMatchingGetNonICollectionInnerCollection();
+
+        VerifyThrows(() => CollectionAssert.AreEqual(collection1, collection2));
+    }
+
+    public void CollectionAssertAreNotEqual_NotEqualNestedLists_Passes()
+    {
+        ICollection? collection1 = GetNestedLists();
+        ICollection? collection2 = GetNotMatchingNestedLists();
+
+        CollectionAssert.AreNotEqual(collection1, collection2);
+    }
+
     public void CollectionAssertAreNotEqual_EqualNestedLists_Fails()
     {
         ICollection? collection1 = GetNestedLists();
         ICollection? collection2 = GetNestedLists();
 
         VerifyThrows(() => CollectionAssert.AreNotEqual(collection1, collection2));
+    }
+
+    public void CollectionAssertAreNotEqual_EqualNonICollectionInnerCollection_Fails()
+    {
+        ICollection? collection1 = GetNonICollectionInnerCollection();
+        ICollection? collection2 = GetNonICollectionInnerCollection();
+
+        VerifyThrows(() => CollectionAssert.AreEqual(collection1, collection2));
+    }
+
+    public void CollectionAssertAreNotEqual_NotEqualNonICollectionInnerCollection_Passes()
+    {
+        ICollection? collection1 = GetNonICollectionInnerCollection();
+        ICollection? collection2 = GetNotMatchingGetNonICollectionInnerCollection();
+
+        CollectionAssert.AreEqual(collection1, collection2);
     }
 
     public void CollectionAssertAreNotEqualComparerNullabilityPostConditions()
@@ -406,6 +439,18 @@ public class CollectionAssertTests : TestContainer
         {
             new() { 4, 5, 6 },
             new() { 1, 2, 3 },
+        };
+
+    private ICollection? GetNonICollectionInnerCollection() => new List<ReadOnlyCollection<int>>
+        {
+            new(new List<int> { 1, 2 }),
+            new(new List<int> { 3, 4 }),
+        };
+
+    private ICollection? GetNotMatchingGetNonICollectionInnerCollection() => new List<ReadOnlyCollection<int>>
+        {
+            new(new List<int> { 6, 5 }),
+            new(new List<int> { 3, 4 }),
         };
 
     private Type? GetStringType() => typeof(string);

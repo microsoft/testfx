@@ -1611,48 +1611,60 @@ public sealed class CollectionAssert
             return true;
         }
 
-        return CompareCollections(expected, actual, comparer, ref reason);
+        return CompareIEnumerable(expected, actual, comparer, ref reason);
     }
 
-    private static bool CompareCollections(ICollection? expected, ICollection? actual, IComparer comparer, ref string reason)
+    private static bool CompareIEnumerable(IEnumerable? expected, IEnumerable? actual, IComparer comparer, ref string reason)
     {
         if ((expected == null) || (actual == null))
         {
             return false;
         }
 
-        if (expected.Count != actual.Count)
+        var stack = new Stack<Tuple<IEnumerator, IEnumerator, int>>();
+        stack.Push(new(expected.GetEnumerator(), actual.GetEnumerator(), 0));
+
+        while (stack.Count > 0)
         {
-            reason = FrameworkMessages.NumberOfElementsDiff;
-            return false;
-        }
+            Tuple<IEnumerator, IEnumerator, int> cur = stack.Pop();
+            IEnumerator expectedEnum = cur.Item1;
+            IEnumerator actualEnum = cur.Item2;
+            int position = cur.Item3;
 
-        IEnumerator expectedEnum = expected.GetEnumerator();
-        IEnumerator actualEnum = actual.GetEnumerator();
-
-        int position = 0;
-        while (expectedEnum.MoveNext() && actualEnum.MoveNext())
-        {
-            object? curExpected = expectedEnum.Current;
-            object? curActual = actualEnum.Current;
-
-            if (curExpected is ICollection curExpectedCollection && curActual is ICollection curActualCollection)
+            while (expectedEnum.MoveNext())
             {
-                if (!CompareCollections(curExpectedCollection, curActualCollection, comparer, ref reason))
+                if (!actualEnum.MoveNext())
                 {
+                    reason = FrameworkMessages.NumberOfElementsDiff;
                     return false;
                 }
-            }
-            else if (comparer.Compare(curExpected, curActual) != 0)
-            {
-                reason = string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.ElementsAtIndexDontMatch,
-                    position);
-                return false;
+
+                object? curExpected = expectedEnum.Current;
+                object? curActual = actualEnum.Current;
+
+                if (curExpected is IEnumerable curExpectedEnum && curActual is IEnumerable curActualEnum)
+                {
+                    stack.Push(new(expectedEnum, actualEnum, position + 1));
+                    stack.Push(new(curExpectedEnum.GetEnumerator(), curActualEnum.GetEnumerator(), 0));
+                    break;
+                }
+                else if (comparer.Compare(curExpected, curActual) != 0)
+                {
+                    reason = string.Format(
+                        CultureInfo.CurrentCulture,
+                        FrameworkMessages.ElementsAtIndexDontMatch,
+                        position);
+                    return false;
+                }
+
+                position++;
             }
 
-            position++;
+            if (actualEnum.MoveNext())
+            {
+                reason = FrameworkMessages.NumberOfElementsDiff;
+                return false;
+            }
         }
 
         reason = FrameworkMessages.BothCollectionsSameElements;
