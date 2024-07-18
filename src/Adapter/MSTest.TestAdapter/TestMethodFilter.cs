@@ -25,7 +25,6 @@ internal class TestMethodFilter
             [Constants.PriorityProperty.Label] = Constants.PriorityProperty,
             [TestCaseProperties.FullyQualifiedName.Label] = TestCaseProperties.FullyQualifiedName,
             [TestCaseProperties.DisplayName.Label] = TestCaseProperties.DisplayName,
-            [TestCaseProperties.Id.Label] = TestCaseProperties.Id,
             [Constants.TestClassNameProperty.Label] = Constants.TestClassNameProperty,
         };
     }

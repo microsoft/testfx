@@ -20,6 +20,23 @@ public sealed class ObjectModelConvertersTests : TestBase
     {
     }
 
+    public void ToTestNode_WhenTestCaseHasTestNodeUidProperty_TestNodeUidUsesIt()
+    {
+        TestCase testCase = new("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+        testCase.SetPropertyValue(ObjectModelConverters.TestNodeUidProperty, "SomeUid");
+        var testNode = testCase.ToTestNode(false, TestClient);
+
+        Assert.AreEqual("SomeUid", testNode.Uid.Value);
+    }
+
+    public void ToTestNode_WhenTestCaseHasNoTestNodeUidProperty_TestNodeUidUsesFqn()
+    {
+        TestCase testCase = new("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+        var testNode = testCase.ToTestNode(false, TestClient);
+
+        Assert.AreEqual("SomeFqn", testNode.Uid.Value);
+    }
+
     public void ToTestNode_WhenTestCaseHasDisplayName_TestNodeDisplayNameUsesIt()
     {
         TestCase testCase = new("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs")

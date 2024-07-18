@@ -31,7 +31,8 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
     public RunContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, TestNodeUid[] testNodeUids)
         : this(commandLineOptions, runSettings)
     {
-        FilterExpressionWrapper = new(CreateFilter(testNodeUids));
+        // We assume that the UIDs we receive are TestCase.FullyQualifiedName values.
+        FilterExpressionWrapper = new(string.Join("|", testNodeUids.Select(ConvertToFullyQualifiedNameFilterString)));
     }
 
     // NOTE: Always false as it's TPv2 oriented and so not applicable to TA.
@@ -61,57 +62,38 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
     /// <inheritdoc />
     public IRunSettings? RunSettings { get; }
 
-    // We use heuristic to understand if the filter should be a TestCaseId or FullyQualifiedName.
-    // We know that in VSTest TestCaseId is a GUID and FullyQualifiedName is a string.
-    private static string CreateFilter(TestNodeUid[] testNodesUid)
+    private static string ConvertToFullyQualifiedNameFilterString(TestNodeUid testNodeUid)
     {
-        StringBuilder filter = new();
+        StringBuilder filterString = new("FullyQualifiedName=");
 
-        for (int i = 0; i < testNodesUid.Length; i++)
+        for (int i = 0; i < testNodeUid.Value.Length; i++)
         {
-            if (Guid.TryParse(testNodesUid[i].Value, out Guid guid))
+            char currentChar = testNodeUid.Value[i];
+            switch (currentChar)
             {
-                filter.Append("Id=");
-                filter.Append(guid.ToString());
-            }
-            else
-            {
-                filter.Append("FullyQualifiedName=");
-                for (int k = 0; i < testNodesUid[i].Value.Length; i++)
-                {
-                    char currentChar = testNodesUid[i].Value[k];
-                    switch (currentChar)
+                case '\\':
+                case '(':
+                case ')':
+                case '&':
+                case '|':
+                case '=':
+                case '!':
+                case '~':
+                    // If the symbol is not escaped, add an escape character.
+                    if (i - 1 < 0 || testNodeUid.Value[i - 1] != '\\')
                     {
-                        case '\\':
-                        case '(':
-                        case ')':
-                        case '&':
-                        case '|':
-                        case '=':
-                        case '!':
-                        case '~':
-                            // If the symbol is not escaped, add an escape character.
-                            if (i - 1 < 0 || testNodesUid[i].Value[k - 1] != '\\')
-                            {
-                                filter.Append('\\');
-                            }
-
-                            filter.Append(currentChar);
-                            break;
-
-                        default:
-                            filter.Append(currentChar);
-                            break;
+                        filterString.Append('\\');
                     }
-                }
-            }
 
-            if (i != testNodesUid.Length - 1)
-            {
-                filter.Append('|');
+                    filterString.Append(currentChar);
+                    break;
+
+                default:
+                    filterString.Append(currentChar);
+                    break;
             }
         }
 
-        return filter.ToString();
+        return filterString.ToString();
     }
 }
