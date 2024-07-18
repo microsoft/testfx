@@ -269,7 +269,7 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetNonICollectionInnerCollection();
         ICollection? collection2 = GetNonICollectionInnerCollection();
 
-        VerifyThrows(() => CollectionAssert.AreEqual(collection1, collection2));
+        VerifyThrows(() => CollectionAssert.AreNotEqual(collection1, collection2));
     }
 
     public void CollectionAssertAreNotEqual_NotEqualNonICollectionInnerCollection_Passes()
@@ -277,7 +277,7 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetNonICollectionInnerCollection();
         ICollection? collection2 = GetNotMatchingGetNonICollectionInnerCollection();
 
-        CollectionAssert.AreEqual(collection1, collection2);
+        CollectionAssert.AreNotEqual(collection1, collection2);
     }
 
     public void CollectionAssertAreNotEqualComparerNullabilityPostConditions()

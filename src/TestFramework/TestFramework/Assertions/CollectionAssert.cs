@@ -1660,7 +1660,7 @@ public sealed class CollectionAssert
                 position++;
             }
 
-            if (actualEnum.MoveNext())
+            if (actualEnum.MoveNext() && !expectedEnum.MoveNext())
             {
                 reason = FrameworkMessages.NumberOfElementsDiff;
                 return false;
