@@ -81,8 +81,7 @@ internal class TestMethodRunner
 
             try
             {
-                var threadTask = Task.Run(entryPointThread.Join);
-                threadTask.Wait();
+                entryPointThread.Join();
             }
             catch (Exception ex)
             {
