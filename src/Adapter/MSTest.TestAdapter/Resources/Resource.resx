@@ -212,7 +212,7 @@ Error: {1}</value>
     <value>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</value>
   </data>
   <data name="UTA_ErrorInvalidTimeout" xml:space="preserve">
-    <value>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be a valid integer value and cannot be less than 0.</value>
+    <value>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</value>
   </data>
   <data name="UTA_ErrorPredefinedTestProperty" xml:space="preserve">
     <value>UTA023: {0}: Cannot define predefined property {2} on method {1}.</value>
