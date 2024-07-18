@@ -287,6 +287,13 @@ public class CollectionAssertTests : TestContainer
         CollectionAssert.AreNotEqual(collection1, collection2);
     }
 
+    public void CollectionAssertAreNotEqual_NotEqualDeeplyNestedLists_Passes()
+    {
+        ICollection? collection1 = GenerateDeeplyNestedCollection(7);
+        ICollection? collection2 = GenerateDeeplyNestedCollection(5);
+
+        CollectionAssert.AreNotEqual(collection1, collection2);
+    }
     public void CollectionAssertAreNotEqualComparerNullabilityPostConditions()
     {
         ICollection? collection1 = GetCollection();
