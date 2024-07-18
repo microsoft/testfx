@@ -250,7 +250,7 @@ Hata: {1}</target>
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
         <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</source>
-        <target state="needs-review-translation">UTA054: {0}.{1} geçersiz Timeout özniteliğine sahip. Zaman aşımı geçerli bir tamsayı değer olmalıdır ve 0'dan küçük olamaz.</target>
+        <target state="new">UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorPredefinedTestProperty">
