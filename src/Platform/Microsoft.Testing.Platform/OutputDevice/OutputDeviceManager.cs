@@ -32,7 +32,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             }
         }
 
-        return new ConsoleOutputDevice(
+        return new ConsoleLoggerOutputDevice(
             serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetConsole(),
             serviceProvider.GetTestApplicationModuleInfo(),

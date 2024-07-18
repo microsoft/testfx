@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -14,10 +15,11 @@ using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
+using Microsoft.Testing.Platform.UI;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-internal class ConsoleOutputDevice : IPlatformOutputDevice,
+internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,
     ITestSessionLifetimeHandler
@@ -43,6 +45,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     private readonly ILogger? _logger;
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly bool _underProcessMonitor;
+    private readonly ConsoleLogger _consoleLogger;
 
     private int _totalTests;
     private int _totalPassedTests;
@@ -52,7 +55,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     private bool _bannerDisplayed;
     private TestRequestExecutionTimeInfo? _testRequestExecutionTimeInfo;
 
-    public ConsoleOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
+    public ConsoleLoggerOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
         bool isVSTestMode, bool isListTests, bool isServerMode, int minimumExpectedTest, FileLoggerProvider? fileLoggerProvider)
@@ -70,6 +73,8 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
         _isServerMode = isServerMode;
         _minimumExpectedTest = minimumExpectedTest;
         _fileLoggerProvider = fileLoggerProvider;
+        _consoleLogger = new ConsoleLogger(_environment, /* TODO: inject */ new SystemClock() /* TODO: inject console as well into Terminal */);
+
         if (_fileLoggerProvider is not null)
         {
             _logger = _fileLoggerProvider.CreateLogger(GetType().ToString());
@@ -335,6 +340,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
+            // TODO: forward
             switch (data)
             {
                 case FormattedTextOutputDeviceData formattedTextOutputDeviceData:
@@ -401,88 +407,113 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
         switch (value)
         {
             case TestNodeUpdateMessage testNodeStateChanged:
-                TimingProperty? timingProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>();
-                string? duration = timingProperty is null ? null :
-                    ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds);
 
+                TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case ErrorTestNodeStateProperty errorState:
-                        await HandleFailuresAsync(
-                            testNodeStateChanged.TestNode.DisplayName,
-                            isCancelled: false,
-                            duration: duration,
-                            errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
-                            errorStackTrace: errorState.Exception?.StackTrace,
-                            expected: null,
-                            actual: null);
+                        _consoleLogger.TestCompleted(
+                         assembly: "abc.dll",
+                         targetFramework: "net9.0",
+                         architecture: "x64",
+                         displayName: testNodeStateChanged.TestNode.DisplayName,
+                         outcome: Outcome.Error,
+                         duration: duration,
+                         errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
+                         errorStackTrace: errorState.Exception?.StackTrace,
+                         expected: null,
+                         actual: null);
                         break;
 
                     case FailedTestNodeStateProperty failedState:
-                        await HandleFailuresAsync(
-                            testNodeStateChanged.TestNode.DisplayName,
-                            isCancelled: false,
-                            duration: duration,
-                            errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
-                            errorStackTrace: failedState.Exception?.StackTrace,
-                            expected: failedState.Exception?.Data["assert.expected"] as string,
-                            actual: failedState.Exception?.Data["assert.actual"] as string);
+                        _consoleLogger.TestCompleted(
+                         assembly: "abc.dll",
+                         targetFramework: "net9.0",
+                         architecture: "x64",
+                         displayName: testNodeStateChanged.TestNode.DisplayName,
+                         outcome: Outcome.Fail,
+                         duration: duration,
+                         errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
+                         errorStackTrace: failedState.Exception?.StackTrace,
+                         expected: failedState.Exception?.Data["assert.expected"] as string,
+                         actual: failedState.Exception?.Data["assert.actual"] as string);
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
-                        await HandleFailuresAsync(
-                            testNodeStateChanged.TestNode.DisplayName,
-                            isCancelled: true,
-                            duration: duration,
-                            errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
-                            errorStackTrace: timeoutState.Exception?.StackTrace,
-                            expected: null,
-                            actual: null);
+                        _consoleLogger.TestCompleted(
+                         assembly: "abc.dll",
+                         targetFramework: "net9.0",
+                         architecture: "x64",
+                         displayName: testNodeStateChanged.TestNode.DisplayName,
+                         outcome: Outcome.Timeout,
+                         duration: duration,
+                         errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
+                         errorStackTrace: timeoutState.Exception?.StackTrace,
+                         expected: null,
+                         actual: null);
                         break;
 
                     case CancelledTestNodeStateProperty cancelledState:
-                        await HandleFailuresAsync(
-                            testNodeStateChanged.TestNode.DisplayName,
-                            isCancelled: true,
-                            duration: duration,
-                            errorMessage: cancelledState.Exception?.Message ?? cancelledState.Explanation,
-                            errorStackTrace: cancelledState.Exception?.StackTrace,
-                            expected: null,
-                            actual: null);
+                        _consoleLogger.TestCompleted(
+                         assembly: "abc.dll",
+                         targetFramework: "net9.0",
+                         architecture: "x64",
+                         displayName: testNodeStateChanged.TestNode.DisplayName,
+                         outcome: Outcome.Cancelled,
+                         duration: duration,
+                         errorMessage: cancelledState.Exception?.Message ?? cancelledState.Explanation,
+                         errorStackTrace: cancelledState.Exception?.StackTrace,
+                         expected: null,
+                         actual: null);
                         break;
 
                     case PassedTestNodeStateProperty:
-                        // In case of dotnet watch always display passed tests (it's slower to display but it's more user friendly).
-                        // For other run, skip displaying passed tests.
-                        if (_runtimeFeature.IsHotReloadEnabled)
-                        {
-                            await ConsoleWriteAsync(PlatformResources.PassedLowercase, ConsoleColor.DarkGreen);
-                            await ConsoleWriteAsync($" {testNodeStateChanged.TestNode.DisplayName}");
-                            await ConsoleWriteLineAsync($" {duration}", ConsoleColor.Gray);
-                        }
-
-                        _totalTests++;
-                        _totalPassedTests++;
+                        _consoleLogger.TestCompleted(
+                        assembly: "abc.dll",
+                        targetFramework: "net9.0",
+                        architecture: "x64",
+                        displayName: testNodeStateChanged.TestNode.DisplayName,
+                        outcome: Outcome.Passed,
+                        duration: duration,
+                        errorMessage: null,
+                        errorStackTrace: null,
+                        expected: null,
+                        actual: null);
                         break;
 
                     case SkippedTestNodeStateProperty:
-                        await ConsoleWriteAsync(PlatformResources.SkippedLowercase, ConsoleColor.Yellow);
-                        await ConsoleWriteAsync($" {testNodeStateChanged.TestNode.DisplayName}");
-                        await ConsoleWriteLineAsync($" {duration}", ConsoleColor.Gray);
-                        _totalTests++;
-                        _totalSkippedTests++;
+                        _consoleLogger.TestCompleted(
+                        assembly: "abc.dll",
+                        targetFramework: "net9.0",
+                        architecture: "x64",
+                        displayName: testNodeStateChanged.TestNode.DisplayName,
+                        outcome: Outcome.Skipped,
+                        duration: duration,
+                        errorMessage: null,
+                        errorStackTrace: null,
+                        expected: null,
+                        actual: null);
                         break;
                 }
 
                 break;
 
             case SessionFileArtifact sessionFileArtifact:
-                _sessionFilesArtifact.Add(sessionFileArtifact);
+                _consoleLogger.ArtifactAdded(
+                    filePath: sessionFileArtifact.FileInfo.FullName,
+                    displayName: sessionFileArtifact.DisplayName,
+                    description: sessionFileArtifact.Description
+                );
                 break;
             case FileArtifact fileArtifact:
-                _filesArtifact.Add(fileArtifact);
+                _consoleLogger.ArtifactAdded(
+                    filePath: fileArtifact.FileInfo.FullName,
+                    displayName: fileArtifact.DisplayName,
+                    description: fileArtifact.Description
+                );
                 break;
             case TestRequestExecutionTimeInfo testRequestExecutionTimeInfo:
+                // TODO: what is this?
                 _testRequestExecutionTimeInfo = testRequestExecutionTimeInfo;
                 break;
         }
