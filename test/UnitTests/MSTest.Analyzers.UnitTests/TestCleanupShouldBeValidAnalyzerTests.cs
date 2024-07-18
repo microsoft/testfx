@@ -515,4 +515,22 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    public async Task WhenTestCleanupIsOnGenericClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass<T>
+            {
+                [TestCleanup]
+                public void TestCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
