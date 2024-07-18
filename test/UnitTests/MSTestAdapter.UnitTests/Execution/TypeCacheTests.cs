@@ -917,10 +917,10 @@ public class TypeCacheTests : TestContainer
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
 
-    public void GetTestMethodInfoShouldThrowWhenTimeoutIsIncorrect()
+    public void GetTestMethodInfoShouldThrowWhenTimeoutIsNegative()
     {
         Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithIncorrectTimeout");
+        MethodInfo methodInfo = type.GetMethod("TestMethodWithNegativeTimeout");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
         _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<UTF.TimeoutAttribute>(methodInfo, false))
@@ -939,7 +939,36 @@ public class TypeCacheTests : TestContainer
         string expectedMessage =
             string.Format(
                 CultureInfo.InvariantCulture,
-                "UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be a valid integer value and cannot be less than 0.",
+                "UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.",
+                testMethod.FullClassName,
+                testMethod.Name);
+
+        Verify(expectedMessage == exception.Message);
+    }
+
+    public void GetTestMethodInfoShouldThrowWhenTimeoutIsZero()
+    {
+        Type type = typeof(DummyTestClassWithTestMethods);
+        MethodInfo methodInfo = type.GetMethod("TestMethodWithTimeoutOfZero");
+        var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+        _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<UTF.TimeoutAttribute>(methodInfo, false))
+            .Returns(true);
+
+        void A() => _typeCache.GetTestMethodInfo(
+                testMethod,
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
+                false);
+
+        Exception exception = VerifyThrows(A);
+
+        Verify(exception is not null);
+        Verify(exception is TypeInspectionException);
+
+        string expectedMessage =
+            string.Format(
+                CultureInfo.InvariantCulture,
+                "UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.",
                 testMethod.FullClassName,
                 testMethod.Name);
 
@@ -1413,7 +1442,13 @@ public class TypeCacheTests : TestContainer
 
         [UTF.TestMethod]
         [UTF.Timeout(-10)]
-        public void TestMethodWithIncorrectTimeout()
+        public void TestMethodWithNegativeTimeout()
+        {
+        }
+
+        [UTF.TestMethod]
+        [UTF.Timeout(0)]
+        public void TestMethodWithTimeoutOfZero()
         {
         }
 

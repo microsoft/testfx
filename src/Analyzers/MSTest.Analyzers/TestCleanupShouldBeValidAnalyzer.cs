@@ -55,7 +55,7 @@ public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
         var methodSymbol = (IMethodSymbol)context.Symbol;
         if (methodSymbol.IsTestCleanupMethod(testCleanupAttributeSymbol)
             && !methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: false,
-                allowGenericType: false, testContextSymbol: null, testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
+                allowGenericType: true, testContextSymbol: null, testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
         {
             context.ReportDiagnostic(isFixable
                 ? methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name)
