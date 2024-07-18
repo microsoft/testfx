@@ -55,7 +55,7 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
         var methodSymbol = (IMethodSymbol)context.Symbol;
         if (methodSymbol.IsTestInitializeMethod(testInitializeAttributeSymbol)
             && !methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: false,
-                allowGenericType: false, testContextSymbol: null, testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
+                allowGenericType: true, testContextSymbol: null, testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
         {
             context.ReportDiagnostic(isFixable
                 ? methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name)
