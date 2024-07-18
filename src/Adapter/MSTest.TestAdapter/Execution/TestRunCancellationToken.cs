@@ -20,6 +20,18 @@ public class TestRunCancellationToken
     /// </summary>
     private Action? _registeredCallback;
 
+    public TestRunCancellationToken()
+        : this(CancellationToken.None)
+    {
+    }
+
+    internal TestRunCancellationToken(CancellationToken cancellationToken)
+    {
+        CancellationToken = cancellationToken;
+    }
+
+    internal CancellationToken CancellationToken { get; }
+
     /// <summary>
     /// Gets a value indicating whether the test run is canceled.
     /// </summary>

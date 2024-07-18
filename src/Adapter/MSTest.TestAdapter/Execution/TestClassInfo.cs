@@ -4,11 +4,13 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
@@ -355,6 +357,95 @@ public class TestClassInfo
         throw testFailedException;
     }
 
+    internal UnitTestResult GetResultOrRunClassInitialize(ITestContext testContext, string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+    {
+        bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
+        bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        if (isSTATestClass
+            && isWindowsOS
+            && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+        {
+            // For optimization purposes, we duplicate some of the logic of RunClassInitialize here so we don't need to start
+            // a thread for nothing.
+            if ((ClassInitializeMethod is null && !BaseClassInitAndCleanupMethods.Any(p => p.Item1 != null))
+                || IsClassInitializeExecuted)
+            {
+                return DoRun();
+            }
+
+            UnitTestResult result = new(ObjectModelUnitTestOutcome.Error, "MSTest STATestClass ClassInitialize didn't complete");
+            Thread entryPointThread = new(() => result = DoRun())
+            {
+                Name = "MSTest STATestClass ClassInitialize",
+            };
+
+            entryPointThread.SetApartmentState(ApartmentState.STA);
+            entryPointThread.Start();
+
+            try
+            {
+                entryPointThread.Join();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
+                return new UnitTestResult(new TestFailedException(ObjectModelUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()));
+            }
+        }
+        else
+        {
+            // If the requested apartment state is STA and the OS is not Windows, then warn the user.
+            if (!isWindowsOS && isSTATestClass)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
+            }
+
+            return DoRun();
+        }
+
+        // Local functions
+        UnitTestResult DoRun()
+        {
+            UnitTestResult result = new(ObjectModelUnitTestOutcome.Passed, null);
+
+            try
+            {
+                using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                try
+                {
+                    // This runs the ClassInitialize methods only once but saves the
+                    RunClassInitialize(testContext.Context);
+                }
+                finally
+                {
+                    initializationLogs += logListener.GetAndClearStandardOutput();
+                    initializationTrace += logListener.GetAndClearDebugTrace();
+                    initializationErrorLogs += logListener.GetAndClearStandardError();
+                    initializationTestContextMessages += testContext.GetAndClearDiagnosticMessages();
+                }
+            }
+            catch (TestFailedException ex)
+            {
+                result = new UnitTestResult(ex);
+            }
+            catch (Exception ex)
+            {
+                result = new UnitTestResult(new TestFailedException(ObjectModelUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()));
+            }
+            finally
+            {
+                // Assembly initialize and class initialize logs are pre-pended to the first result.
+                result.StandardOut = initializationLogs;
+                result.StandardError = initializationErrorLogs;
+                result.DebugTrace = initializationTrace;
+                result.TestContextMessages = initializationTestContextMessages;
+            }
+
+            return result;
+        }
+    }
+
     private TestFailedException? InvokeInitializeMethod(MethodInfo methodInfo, TestContext testContext)
     {
         int? timeout = null;
@@ -538,6 +629,105 @@ public class TestClassInfo
         ClassCleanupException = testFailedException;
 
         throw testFailedException;
+    }
+
+    internal void RunClassCleanup(ITestContext testContext, ClassCleanupManager classCleanupManager, TestMethodInfo testMethodInfo, TestMethod testMethod, UnitTestResult[] results)
+    {
+        DebugEx.Assert(testMethodInfo.Parent == this, "Parent of testMethodInfo should be this TestClassInfo.");
+
+        classCleanupManager.MarkTestComplete(testMethodInfo, testMethod, out bool shouldRunEndOfClassCleanup);
+        if (!shouldRunEndOfClassCleanup)
+        {
+            return;
+        }
+
+        bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
+        bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        if (isSTATestClass
+            && isWindowsOS
+            && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+        {
+            // For optimization purposes, we duplicate some of the logic of ExecuteClassCleanup here so we don't need to start
+            // a thread for nothing.
+            if ((ClassCleanupMethod is null && BaseClassInitAndCleanupMethods.All(p => p.Item1 is null))
+                || IsClassCleanupExecuted)
+            {
+                DoRun();
+                return;
+            }
+
+            Thread entryPointThread = new(DoRun)
+            {
+                Name = "MSTest STATestClass ClassCleanup",
+            };
+
+            entryPointThread.SetApartmentState(ApartmentState.STA);
+            entryPointThread.Start();
+
+            try
+            {
+                entryPointThread.Join();
+            }
+            catch (Exception ex)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
+            }
+        }
+        else
+        {
+            // If the requested apartment state is STA and the OS is not Windows, then warn the user.
+            if (!isWindowsOS && isSTATestClass)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
+            }
+
+            DoRun();
+        }
+
+        // Local functions
+        void DoRun()
+        {
+            string? initializationLogs = string.Empty;
+            string? initializationErrorLogs = string.Empty;
+            string? initializationTrace = string.Empty;
+            string? initializationTestContextMessages = string.Empty;
+            try
+            {
+                using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                try
+                {
+                    ExecuteClassCleanup();
+                }
+                finally
+                {
+                    initializationLogs = logListener.GetAndClearStandardOutput();
+                    initializationErrorLogs = logListener.GetAndClearStandardError();
+                    initializationTrace = logListener.GetAndClearDebugTrace();
+                    initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+                }
+            }
+            catch (Exception ex)
+            {
+                if (results.Length > 0)
+                {
+                    UnitTestResult lastResult = results[results.Length - 1];
+                    lastResult.Outcome = ObjectModelUnitTestOutcome.Error;
+                    lastResult.ErrorMessage = ex.Message;
+                    lastResult.ErrorStackTrace = ex.StackTrace;
+                }
+            }
+            finally
+            {
+                if (results.Length > 0)
+                {
+                    UnitTestResult lastResult = results[results.Length - 1];
+                    lastResult.StandardOut += initializationLogs;
+                    lastResult.StandardError += initializationErrorLogs;
+                    lastResult.DebugTrace += initializationTrace;
+                    lastResult.TestContextMessages += initializationTestContextMessages;
+                }
+            }
+        }
     }
 
     private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, int remainingCleanupCount)

@@ -251,7 +251,7 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
         <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</source>
-        <target state="needs-review-translation">UTA054: {0}.{1} は無効な Timeout 属性を含んでいます。タイムアウトは有効な整数値でなければなりません。0 よりも小さい値にすることはできません。</target>
+        <target state="new">UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorPredefinedTestProperty">
