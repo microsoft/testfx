@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Text;
 using System.Xml.Linq;
 
-using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -62,7 +61,8 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
     /// <inheritdoc />
     public IRunSettings? RunSettings { get; }
 
-    // We expect only GUID values in the testNodeUids.
+    // We use heuristic to understand if the filter should be a TestCaseId or FullyQualifiedName.
+    // We know that in VSTest TestCaseId is a GUID and FullyQualifiedName is a string.
     private static string CreateFilter(TestNodeUid[] testNodesUid)
     {
         StringBuilder filter = new();
@@ -76,7 +76,34 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
             }
             else
             {
-                throw new InvalidOperationException(ExtensionResources.InvalidFilterValue);
+                filter.Append("FullyQualifiedName=");
+                for (int k = 0; k < testNodesUid[i].Value.Length; k++)
+                {
+                    char currentChar = testNodesUid[i].Value[k];
+                    switch (currentChar)
+                    {
+                        case '\\':
+                        case '(':
+                        case ')':
+                        case '&':
+                        case '|':
+                        case '=':
+                        case '!':
+                        case '~':
+                            // If the symbol is not escaped, add an escape character.
+                            if (i - 1 < 0 || testNodesUid[i].Value[k - 1] != '\\')
+                            {
+                                filter.Append('\\');
+                            }
+
+                            filter.Append(currentChar);
+                            break;
+
+                        default:
+                            filter.Append(currentChar);
+                            break;
+                    }
+                }
             }
 
             if (i != testNodesUid.Length - 1)
