@@ -61,15 +61,6 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Current implementation supports only GUID Id, i.e. Id=8b0475fc-ff66-43fb-a8ba-f6def1f78210.
-        /// </summary>
-        internal static string InvalidFilterValue {
-            get {
-                return ResourceManager.GetString("InvalidFilterValue", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to runsettings file &apos;{0}&apos; cannot be read.
         /// </summary>
         internal static string RunsettingsFileCannotBeRead {
