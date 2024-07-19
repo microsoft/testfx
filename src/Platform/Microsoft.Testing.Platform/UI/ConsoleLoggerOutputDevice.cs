@@ -76,7 +76,7 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
         {
             BaseDirectory = null, // "S:\\p\\testfx",
             ShowAssembly = true,
-            ShowAssemblyStartAndComplete = true,
+            ShowAssemblyStartAndComplete = false,
             ShowPassedTests = false,
             MinimumExpectedTests = minimumExpectedTest,
         });

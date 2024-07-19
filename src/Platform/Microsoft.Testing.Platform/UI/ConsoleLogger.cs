@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 #if !NET7_0_OR_GREATER
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 #endif
 using System.Globalization;
@@ -230,10 +230,52 @@ internal partial class ConsoleLogger : IDisposable
         try
         {
             EraseNodes();
-            Terminal.WriteLine(string.Empty);
             var stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine();
 
             IEnumerable<IGrouping<bool, LoggerArtifact>> artifactGroups = _artifacts.GroupBy(a => a.OutOfProcess);
+
+            int totalTests = _assemblies.Values.Sum(a => a.TotalTests);
+            int totalFailedTests = _assemblies.Values.Sum(a => a.FailedTests);
+            int totalSkippedTests = _assemblies.Values.Sum(a => a.SkippedTests);
+
+            bool notEnoughTests = totalTests < _options.MinimumExpectedTests;
+            bool allTestsWereSkipped = totalTests == 0 || totalTests == totalSkippedTests;
+            bool anyTestFailed = totalFailedTests > 0;
+            bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || _wasCancelled;
+            stringBuilder.Append(SetColor(runFailed ? TerminalColor.Red : TerminalColor.Green));
+
+            stringBuilder.Append($"Test run summary: ");
+
+            if (_wasCancelled)
+            {
+                stringBuilder.Append(PlatformResources.Aborted);
+            }
+            else if (notEnoughTests)
+            {
+                stringBuilder.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, _options.MinimumExpectedTests));
+            }
+            else if (anyTestFailed)
+            {
+                stringBuilder.Append(string.Format(CultureInfo.CurrentCulture, "{0}! ", PlatformResources.Failed));
+            }
+            else
+            {
+                stringBuilder.Append(string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Passed));
+            }
+
+            stringBuilder.AppendLine();
+
+            if (_options.ShowAssembly && _assemblies.Count > 1)
+            {
+                foreach (AssemblyRun assemblyRun in _assemblies.Values)
+                {
+                    stringBuilder.Append(SingleIndentation);
+                    AppendAssemblySummary(assemblyRun, stringBuilder);
+                }
+
+                stringBuilder.AppendLine();
+            }
 
             foreach (IGrouping<bool, LoggerArtifact> artifactGroup in artifactGroups)
             {
@@ -254,54 +296,68 @@ internal partial class ConsoleLogger : IDisposable
                 }
             }
 
-            int totalTests = _assemblies.Values.Sum(a => a.TotalTests);
-            int totalFailedTests = _assemblies.Values.Sum(a => a.FailedTests);
-            int totalSkippedTests = _assemblies.Values.Sum(a => a.SkippedTests);
-
-            bool notEnoughTests = totalTests < _options.MinimumExpectedTests;
-            bool allTestsWereSkipped = totalTests == 0 || totalTests == totalSkippedTests;
-            bool anyTestFailed = totalFailedTests > 0;
-            bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || _wasCancelled;
-            stringBuilder.Append(SetColor(runFailed ? TerminalColor.Red : TerminalColor.Green));
-
-            if (_wasCancelled)
-            {
-                stringBuilder.Append(PlatformResources.Aborted);
-            }
-            else if (notEnoughTests)
-            {
-                stringBuilder.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, _options.MinimumExpectedTests));
-            }
-            else if (anyTestFailed)
-            {
-                stringBuilder.Append(string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Failed));
-            }
-            else
-            {
-                stringBuilder.Append(string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Passed));
-            }
-
             int total = _assemblies.Values.Sum(t => t.TotalTests);
             int failed = _assemblies.Values.Sum(t => t.FailedTests);
             int passed = _assemblies.Values.Sum(t => t.PassedTests);
             int skipped = _assemblies.Values.Sum(t => t.SkippedTests);
-            string testDuration = (_testStartTime != null && _testEndTime != null ? (_testEndTime - _testStartTime).Value.TotalSeconds : 0).ToString("F1", CultureInfo.CurrentCulture);
+            TimeSpan runDuration = _testStartTime != null && _testEndTime != null ? (_testEndTime - _testStartTime).Value : TimeSpan.Zero;
 
             bool colorizeFailed = failed > 0;
             bool colorizePassed = passed > 0 && _buildErrorsCount == 0 && failed == 0;
             bool colorizeSkipped = skipped > 0 && skipped == total && _buildErrorsCount == 0 && failed == 0;
 
-            string summaryAndTotalText = $"Test summary: total: {total}";
-            string failedText = $"failed: {failed}";
-            string passedText = $"succeeded: {passed}";
-            string skippedText = $"skipped: {skipped}";
-            string durationText = $"duration: {testDuration}s";
+            string totalText = $"{SingleIndentation}total: {total}";
+            string failedText = $"{SingleIndentation}failed: {failed}";
+            string passedText = $"{SingleIndentation}succeeded: {passed}";
+            string skippedText = $"{SingleIndentation}skipped: {skipped}";
+            string durationText = $"{SingleIndentation}duration: ";
 
             failedText = colorizeFailed ? AnsiCodes.Colorize(failedText.ToString(), TerminalColor.DarkRed) : failedText;
             passedText = colorizePassed ? AnsiCodes.Colorize(passedText.ToString(), TerminalColor.DarkGreen) : passedText;
             skippedText = colorizeSkipped ? AnsiCodes.Colorize(skippedText.ToString(), TerminalColor.DarkYellow) : skippedText;
 
-            stringBuilder.Append(string.Join(CultureInfo.CurrentCulture.TextInfo.ListSeparator + " ", summaryAndTotalText, failedText, passedText, skippedText, durationText));
+            stringBuilder.Append(ResetColor());
+            stringBuilder.AppendLine(totalText);
+            if (colorizeFailed)
+            {
+                stringBuilder.Append(SetColor(TerminalColor.Red));
+            }
+
+            stringBuilder.AppendLine(failedText);
+
+            if (colorizeFailed)
+            {
+                stringBuilder.Append(ResetColor());
+            }
+
+            if (colorizePassed)
+            {
+                stringBuilder.Append(SetColor(TerminalColor.Green));
+            }
+
+            stringBuilder.AppendLine(passedText);
+
+            if (colorizePassed)
+            {
+                stringBuilder.Append(ResetColor());
+            }
+
+            if (colorizeSkipped)
+            {
+                stringBuilder.Append(SetColor(TerminalColor.DarkYellow));
+            }
+
+            stringBuilder.AppendLine(skippedText);
+
+            if (colorizeSkipped)
+            {
+                stringBuilder.Append(ResetColor());
+            }
+
+            stringBuilder.Append(SetColor(TerminalColor.Gray));
+            stringBuilder.Append(durationText);
+            AppendDuration(stringBuilder, runDuration);
+            stringBuilder.AppendLine();
 
             Terminal.WriteLine(stringBuilder.ToString());
         }
@@ -386,7 +442,7 @@ internal partial class ConsoleLogger : IDisposable
     /// <summary>
     /// Print a build result summary to the output.
     /// </summary>
-    private void AppendAssemblyResult(StringBuilder stringBuilder, bool succeeded, int countErrors, int countWarnings)
+    private static void AppendAssemblyResult(StringBuilder stringBuilder, bool succeeded, int countErrors, int countWarnings)
     {
         if (!succeeded)
         {
@@ -486,29 +542,13 @@ internal partial class ConsoleLogger : IDisposable
             urlString = uri.ToString();
         }
 
+        stringBuilder.Append(SetColor(TerminalColor.Gray));
         stringBuilder.Append(AnsiCodes.LinkPrefix);
         stringBuilder.Append(urlString);
         stringBuilder.Append(AnsiCodes.LinkInfix);
         stringBuilder.Append(path);
         stringBuilder.Append(AnsiCodes.LinkSuffix);
-    }
-
-    private static void WrapText(StringBuilder sb, string text, int maxLength, string indent)
-    {
-        int start = 0;
-        while (start < text.Length)
-        {
-            int length = Math.Min(maxLength - indent.Length, text.Length - start);
-            sb.Append(indent);
-#if NETCOREAPP
-            sb.Append(text.AsSpan().Slice(start, length));
-#else
-            sb.Append(text.Substring(start, length));
-#endif
-
-            sb.AppendLine();
-            start += length;
-        }
+        stringBuilder.Append(ResetColor());
     }
 
     internal void TestCompleted(
@@ -725,7 +765,7 @@ internal partial class ConsoleLogger : IDisposable
         stringBuilder.AppendLine();
     }
 
-    private void FormatErrorMessage(StringBuilder stringBuilder, string? errorMessage)
+    private static void FormatErrorMessage(StringBuilder stringBuilder, string? errorMessage)
     {
         if (RoslynString.IsNullOrWhiteSpace(errorMessage))
         {
@@ -791,14 +831,8 @@ internal partial class ConsoleLogger : IDisposable
                 {
                     EraseNodes();
 
-                    int failedTests = assemblyRun.FailedTests + assemblyRun.CancelledTests + assemblyRun.TimedOutTests;
-                    int warnings = 0;
-                    AppendAssemblyResult(stringBuilder, assemblyRun.FailedTests == 0, failedTests, warnings);
-                    stringBuilder.Append(' ');
-                    AppendAssemblyLinkTargetFrameworkAndArchitecture(stringBuilder, assembly, targetFramework, architecture);
-                    stringBuilder.Append(' ');
-                    AppendDuration(stringBuilder, assemblyRun.Stopwatch.Elapsed);
-                    Terminal.Write(stringBuilder.ToString());
+                    AppendAssemblySummary(assemblyRun, stringBuilder);
+                    Terminal.WriteLine(stringBuilder.ToString());
 
                     DisplayNodes();
                 }
@@ -808,6 +842,18 @@ internal partial class ConsoleLogger : IDisposable
                 }
             }
         }
+    }
+
+    private void AppendAssemblySummary(AssemblyRun assemblyRun, StringBuilder stringBuilder)
+    {
+        int failedTests = assemblyRun.FailedTests + assemblyRun.CancelledTests + assemblyRun.TimedOutTests;
+        int warnings = 0;
+
+        AppendAssemblyLinkTargetFrameworkAndArchitecture(stringBuilder, assemblyRun.AssemblyRunStartedUpdate.Assembly, assemblyRun.AssemblyRunStartedUpdate.TargetFramework, assemblyRun.AssemblyRunStartedUpdate.Architecture);
+        stringBuilder.Append(' ');
+        AppendAssemblyResult(stringBuilder, assemblyRun.FailedTests == 0, failedTests, warnings);
+        stringBuilder.Append(' ');
+        AppendDuration(stringBuilder, assemblyRun.Stopwatch.Elapsed);
     }
 
     private static void AppendDuration(StringBuilder stringBuilder, TimeSpan duration)
@@ -844,15 +890,3 @@ internal partial class ConsoleLogger : IDisposable
         WriteMessage(PlatformResources.CancellingTestSession);
     }
 }
-
-internal enum LoggerOutcome
-{
-    Error,
-    Fail,
-    Passed,
-    Skipped,
-    Timeout,
-    Cancelled
-}
-
-internal record class LoggerArtifact(bool OutOfProcess, string? Assembly, string? TargetFramework, string? Architecture, string? TestName, string Path);
