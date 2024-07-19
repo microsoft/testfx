@@ -76,10 +76,11 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
             }
             else
             {
+                TestNodeUid currentTestNodeUid = testNodesUid[i];
                 filter.Append("FullyQualifiedName=");
-                for (int k = 0; k < testNodesUid[i].Value.Length; k++)
+                for (int k = 0; k < currentTestNodeUid.Value.Length; k++)
                 {
-                    char currentChar = testNodesUid[i].Value[k];
+                    char currentChar = currentTestNodeUid.Value[k];
                     switch (currentChar)
                     {
                         case '\\':
@@ -91,7 +92,7 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
                         case '!':
                         case '~':
                             // If the symbol is not escaped, add an escape character.
-                            if (i - 1 < 0 || testNodesUid[i].Value[k - 1] != '\\')
+                            if (i - 1 < 0 || currentTestNodeUid.Value[k - 1] != '\\')
                             {
                                 filter.Append('\\');
                             }
