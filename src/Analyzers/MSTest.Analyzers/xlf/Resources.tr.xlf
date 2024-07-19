@@ -314,6 +314,21 @@
         <target state="translated">Genel türler test sınıfları olmalıdır</target>
         <note />
       </trans-unit>
+      <trans-unit id="SetClassCleanupBehaviorDescription">
+        <source>Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </source>
+        <target state="new">Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SetClassCleanupBehaviorMessageFormat">
+        <source>Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </source>
+        <target state="new">Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SetClassCleanupBehaviorTitle">
+        <source>Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </source>
+        <target state="new">Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
         <source>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)

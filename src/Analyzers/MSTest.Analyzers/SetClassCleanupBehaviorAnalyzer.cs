@@ -13,13 +13,11 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0011: <inheritdoc cref="Resources.ClassCleanupShouldBeValidTitle"/>.
+/// MSTEST0034: <inheritdoc cref="Resources.SetClassCleanupBehaviorTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class SetClassCleanupBehaviorAnalyzer : DiagnosticAnalyzer
 {
-
-
     private static readonly LocalizableResourceString Title = new(nameof(Resources.SetClassCleanupBehaviorTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.SetClassCleanupBehaviorDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.SetClassCleanupBehaviorMessageFormat), Resources.ResourceManager, typeof(Resources));
@@ -44,16 +42,17 @@ public sealed class SetClassCleanupBehaviorAnalyzer : DiagnosticAnalyzer
         context.RegisterCompilationStartAction(context =>
         {
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute, out INamedTypeSymbol? classCleanupAttributeSymbol)
-                 && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
+                 && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol)
+                 && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupBehavior, out INamedTypeSymbol? classCleanupBehaviorSymbol))
             {
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, classCleanupAttributeSymbol, testClassAttributeSymbol),
+                    context => AnalyzeSymbol(context, classCleanupAttributeSymbol, testClassAttributeSymbol, classCleanupBehaviorSymbol),
                     SymbolKind.Method);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol classCleanupAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol classCleanupAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol classCleanupBehaviorSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
@@ -65,17 +64,19 @@ public sealed class SetClassCleanupBehaviorAnalyzer : DiagnosticAnalyzer
 
         ImmutableArray<AttributeData> methodAttributes = methodSymbol.GetAttributes();
         bool hasCleanupAttr = false;
+        bool hasCleanupBehavior = false;
         foreach (AttributeData methodAttribute in methodAttributes)
         {
             if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, classCleanupAttributeSymbol))
             {
                 hasCleanupAttr = true;
+                hasCleanupBehavior = methodAttribute.ConstructorArguments.Any(arg => SymbolEqualityComparer.Default.Equals(arg.Type, classCleanupBehaviorSymbol));
             }
         }
 
-        if (hasCleanupAttr)
+        if (hasCleanupAttr && !hasCleanupBehavior)
         {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(SetClassCleanupBehaviorRule, methodSymbol.Name));
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(SetClassCleanupBehaviorRule));
         }
     }
 }
