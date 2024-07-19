@@ -317,18 +317,18 @@
         <note />
       </trans-unit>
       <trans-unit id="SetClassCleanupBehaviorDescription">
-        <source>Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </source>
-        <target state="new">Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </target>
+        <source>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'.</source>
+        <target state="new">Set a 'ClassCleanupBehavior' to '[ClassCleanup]'.</target>
         <note />
       </trans-unit>
       <trans-unit id="SetClassCleanupBehaviorMessageFormat">
-        <source>Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </source>
-        <target state="new">Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </target>
+        <source>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</source>
+        <target state="new">Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</target>
         <note />
       </trans-unit>
       <trans-unit id="SetClassCleanupBehaviorTitle">
-        <source>Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </source>
-        <target state="new">Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </target>
+        <source>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</source>
+        <target state="new">Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">

@@ -542,7 +542,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Set a &apos;ClassCleanupBehavior&apos; to &apos;[ClassCleanup]&apos; .
+        ///   Looks up a localized string similar to Set a &apos;ClassCleanupBehavior&apos; to &apos;[ClassCleanup]&apos;..
         /// </summary>
         internal static string SetClassCleanupBehaviorDescription {
             get {
@@ -551,7 +551,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Set a &apos;ClassCleanupBehavior&apos; to &apos;[ClassCleanup]&apos; .
+        ///   Looks up a localized string similar to Set a &apos;ClassCleanupBehavior&apos; to &apos;[ClassCleanup]&apos;.
         /// </summary>
         internal static string SetClassCleanupBehaviorMessageFormat {
             get {
@@ -560,7 +560,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Set a &apos;ClassCleanupBehavior&apos; to &apos;[ClassCleanup]&apos; .
+        ///   Looks up a localized string similar to Set a &apos;ClassCleanupBehavior&apos; to &apos;[ClassCleanup]&apos;.
         /// </summary>
         internal static string SetClassCleanupBehaviorTitle {
             get {

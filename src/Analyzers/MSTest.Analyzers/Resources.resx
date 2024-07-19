@@ -461,12 +461,12 @@
     <value>Review or remove the assertion as its condition is known to be always true</value>
   </data>
   <data name="SetClassCleanupBehaviorTitle" xml:space="preserve">
-    <value>Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </value>
+    <value>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</value>
   </data>
   <data name="SetClassCleanupBehaviorDescription" xml:space="preserve">
-    <value>Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </value>
+    <value>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'.</value>
   </data>
   <data name="SetClassCleanupBehaviorMessageFormat" xml:space="preserve">
-    <value>Set a 'ClassCleanupBehavior' to '[ClassCleanup]' </value>
+    <value>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</value>
   </data>
 </root>
