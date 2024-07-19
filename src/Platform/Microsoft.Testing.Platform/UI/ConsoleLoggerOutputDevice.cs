@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -19,17 +18,16 @@ using Microsoft.Testing.Platform.UI;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
+internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,
-    ITestSessionLifetimeHandler
+    ITestSessionLifetimeHandler,
+    IDisposable
 {
 #pragma warning disable SA1310 // Field names should not contain underscore
     private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
 #pragma warning restore SA1310 // Field names should not contain underscore
 
-    private readonly List<SessionFileArtifact> _sessionFilesArtifact = [];
-    private readonly List<FileArtifact> _filesArtifact = [];
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly IConsole _console;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
@@ -44,13 +42,14 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
     private readonly int _minimumExpectedTest;
     private readonly ILogger? _logger;
     private readonly FileLoggerProvider? _fileLoggerProvider;
+    private readonly IClock _clock;
     private readonly bool _underProcessMonitor;
     private readonly ConsoleLogger _consoleLogger;
+    private readonly string? _architecture;
+    private readonly string? _targetFramework;
+    private readonly string _assemblyName;
+    private readonly char[] _dash = new char[] { '-' };
 
-    private int _totalTests;
-    private int _totalPassedTests;
-    private int _totalFailedTests;
-    private int _totalSkippedTests;
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
     private TestRequestExecutionTimeInfo? _testRequestExecutionTimeInfo;
@@ -58,7 +57,7 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
     public ConsoleLoggerOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
-        bool isVSTestMode, bool isListTests, bool isServerMode, int minimumExpectedTest, FileLoggerProvider? fileLoggerProvider)
+        bool isVSTestMode, bool isListTests, bool isServerMode, int minimumExpectedTest, FileLoggerProvider? fileLoggerProvider, IClock clock)
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _console = console;
@@ -71,9 +70,16 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
         _isVSTestMode = isVSTestMode;
         _isListTests = isListTests;
         _isServerMode = isServerMode;
-        _minimumExpectedTest = minimumExpectedTest;
         _fileLoggerProvider = fileLoggerProvider;
-        _consoleLogger = new ConsoleLogger(_environment, /* TODO: inject */ new SystemClock() /* TODO: inject console as well into Terminal */);
+        _clock = clock;
+        _consoleLogger = new ConsoleLogger(clock /* TODO: inject console as well into Terminal */, new()
+        {
+            BaseDirectory = null, // "S:\\p\\testfx",
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+            ShowPassedTests = false,
+            MinimumExpectedTests = minimumExpectedTest,
+        });
 
         if (_fileLoggerProvider is not null)
         {
@@ -88,13 +94,37 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
             }
         }
 
+        if (_runtimeFeature.IsDynamicCodeSupported)
+        {
+#if !NETCOREAPP
+            _architecture = GetShortArchitecture(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+#else
+            _architecture = GetShortArchitecture(RuntimeInformation.RuntimeIdentifier);
+#endif
+            _targetFramework = GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+        }
+
+        _assemblyName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+
         if (environment.GetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
         {
             _bannerDisplayed = true;
         }
 
-        _testApplicationCancellationTokenSource.CancellationToken.Register(() => _console.WriteLine(PlatformResources.CancellingTestSession));
+        _consoleLogger.TestExecutionStarted(new TestRunStartedUpdate(1));
+
+        _testApplicationCancellationTokenSource.CancellationToken.Register(() => _consoleLogger.StartCancelling());
     }
+
+    private static string? GetShortTargetFramework(string frameworkDescription)
+        => frameworkDescription.StartsWith(".NET ", ignoreCase: false, CultureInfo.InvariantCulture)
+            ? $"net{frameworkDescription[5]}"
+            : frameworkDescription;
+
+    private string? GetShortArchitecture(string runtimeIdentifier)
+        => runtimeIdentifier.Contains('-')
+            ? runtimeIdentifier.Split(_dash, 2)[1]
+            : runtimeIdentifier;
 
     public Type[] DataTypesConsumed { get; } =
     [
@@ -170,12 +200,10 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
                     if (_runtimeFeature.IsDynamicCodeSupported)
                     {
                         stringBuilder.Append(" [");
-#if !NETCOREAPP
-                        stringBuilder.Append(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
-#else
-                        stringBuilder.Append(RuntimeInformation.RuntimeIdentifier);
-#endif
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $" - {RuntimeInformation.FrameworkDescription}]");
+                        stringBuilder.Append(_architecture);
+                        stringBuilder.Append(" - ");
+                        stringBuilder.Append(_targetFramework);
+                        stringBuilder.Append(']');
                     }
 
                     _console.WriteLine(stringBuilder.ToString());
@@ -207,6 +235,7 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
 
     public async Task DisplayBeforeSessionStartAsync()
     {
+        _consoleLogger.AssemblyRunStarted(new AssemblyRunStartedUpdate(_assemblyName, 0, _targetFramework, _architecture));
         if (_logger is not null && _logger.IsEnabled(LogLevel.Trace))
         {
             await _logger.LogTraceAsync("DisplayBeforeSessionStartAsync");
@@ -222,86 +251,10 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
-            string? runtimeInformation = null;
-            if (_runtimeFeature.IsDynamicCodeSupported)
-            {
-#if !NETCOREAPP
-                runtimeInformation = $"{RuntimeInformation.FrameworkDescription}";
-#else
-                runtimeInformation = $"{RuntimeInformation.RuntimeIdentifier} - {RuntimeInformation.FrameworkDescription}";
-#endif
-            }
-
-            string? moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
-#if !NETCOREAPP
-            moduleName = RoslynString.IsNullOrEmpty(moduleName)
-                ? _process.GetCurrentProcess().MainModule.FileName
-                : moduleName;
-#else
-            moduleName = RoslynString.IsNullOrEmpty(moduleName)
-                ? _environment.ProcessPath
-                : moduleName;
-#endif
-            string moduleOutput = moduleName is not null
-                ? $" for {moduleName}"
-                : string.Empty;
-
             if (!_firstCallTo_OnSessionStartingAsync)
             {
-                (bool isSuccess, string testRunResultMessage) = (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested, _totalTests, _totalFailedTests) switch
-                {
-                    (true, _, _) => (false, PlatformResources.Aborted),
-                    (false, _, _) when _totalTests < _minimumExpectedTest => (false, string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, _totalTests, _minimumExpectedTest)),
-                    (false, _, _) when _totalTests == 0 || _totalTests == _totalSkippedTests => (false, PlatformResources.ZeroTestsRan),
-                    (false, _, > 0) => (false, string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Failed)),
-                    _ => (true, string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Passed)),
-                };
-                ConsoleColor currentForeground = _console.GetForegroundColor();
-                ConsoleColor consoleColor = isSuccess ? ConsoleColor.Green : ConsoleColor.Red;
-                try
-                {
-                    _console.SetForegroundColor(consoleColor);
-                    _console.WriteLine($"{testRunResultMessage} - {PlatformResources.Failed}: {_totalFailedTests}, {PlatformResources.Passed}: {_totalPassedTests}, {PlatformResources.Skipped}: {_totalSkippedTests}, {PlatformResources.Total}: {_totalTests}{(_testRequestExecutionTimeInfo is not null ? $", Duration: {ToHumanReadableDuration(_testRequestExecutionTimeInfo.Value.TimingInfo.Duration.TotalMilliseconds)}" : string.Empty)} - {Path.GetFileName(moduleOutput)} {(runtimeInformation is null ? string.Empty : $"({runtimeInformation})")}");
-                }
-                finally
-                {
-                    _console.SetForegroundColor(currentForeground);
-                }
-
-                if (_sessionFilesArtifact.Count <= 0 && _filesArtifact.Count <= 0)
-                {
-                    return;
-                }
-
-                if (!_underProcessMonitor)
-                {
-                    _console.WriteLine();
-                }
-            }
-
-            StringBuilder artifacts = new();
-            bool hasArtifacts = false;
-            artifacts.AppendLine(_firstCallTo_OnSessionStartingAsync ? PlatformResources.OutOfProcessArtifactsProduced : PlatformResources.InProcessArtifactsProduced);
-            foreach (TestNodeFileArtifact testNodeFileArtifact in _sessionFilesArtifact.OfType<TestNodeFileArtifact>())
-            {
-                artifacts.AppendLine(CultureInfo.InvariantCulture, $"- {PlatformResources.ForTest} {testNodeFileArtifact.TestNode.DisplayName}: {testNodeFileArtifact.FileInfo.FullName}");
-            }
-
-            foreach (SessionFileArtifact sessionFileArtifact in _sessionFilesArtifact.Except(_sessionFilesArtifact.OfType<TestNodeFileArtifact>()))
-            {
-                artifacts.AppendLine(CultureInfo.InvariantCulture, $"- {sessionFileArtifact.FileInfo.FullName}");
-                hasArtifacts = true;
-            }
-
-            foreach (FileArtifact fileArtifact in _filesArtifact)
-            {
-                artifacts.AppendLine(CultureInfo.InvariantCulture, $"- {fileArtifact.FileInfo.FullName}");
-                hasArtifacts = true;
-            }
-
-            if (hasArtifacts)
-            {
-                _console.WriteLine(artifacts.ToString());
+                _consoleLogger.AssemblyRunCompleted(_assemblyName, _targetFramework, _architecture);
+                _consoleLogger.TestExecutionCompleted(_clock.UtcNow);
             }
         }
     }
@@ -411,13 +364,17 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
                 TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
+                    case InProgressTestNodeStateProperty:
+                        // do nothing.
+                        break;
+
                     case ErrorTestNodeStateProperty errorState:
                         _consoleLogger.TestCompleted(
-                         assembly: "abc.dll",
-                         targetFramework: "net9.0",
-                         architecture: "x64",
+                         assembly: _assemblyName,
+                         targetFramework: _targetFramework,
+                         architecture: _architecture,
                          displayName: testNodeStateChanged.TestNode.DisplayName,
-                         outcome: Outcome.Error,
+                         outcome: LoggerOutcome.Error,
                          duration: duration,
                          errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
                          errorStackTrace: errorState.Exception?.StackTrace,
@@ -427,11 +384,11 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
 
                     case FailedTestNodeStateProperty failedState:
                         _consoleLogger.TestCompleted(
-                         assembly: "abc.dll",
-                         targetFramework: "net9.0",
-                         architecture: "x64",
+                         assembly: _assemblyName,
+                         targetFramework: _targetFramework,
+                         architecture: _architecture,
                          displayName: testNodeStateChanged.TestNode.DisplayName,
-                         outcome: Outcome.Fail,
+                         outcome: LoggerOutcome.Fail,
                          duration: duration,
                          errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
                          errorStackTrace: failedState.Exception?.StackTrace,
@@ -441,11 +398,11 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
 
                     case TimeoutTestNodeStateProperty timeoutState:
                         _consoleLogger.TestCompleted(
-                         assembly: "abc.dll",
-                         targetFramework: "net9.0",
-                         architecture: "x64",
+                         assembly: _assemblyName,
+                         targetFramework: _targetFramework,
+                         architecture: _architecture,
                          displayName: testNodeStateChanged.TestNode.DisplayName,
-                         outcome: Outcome.Timeout,
+                         outcome: LoggerOutcome.Timeout,
                          duration: duration,
                          errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
                          errorStackTrace: timeoutState.Exception?.StackTrace,
@@ -455,11 +412,11 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
 
                     case CancelledTestNodeStateProperty cancelledState:
                         _consoleLogger.TestCompleted(
-                         assembly: "abc.dll",
-                         targetFramework: "net9.0",
-                         architecture: "x64",
+                         assembly: _assemblyName,
+                         targetFramework: _targetFramework,
+                         architecture: _architecture,
                          displayName: testNodeStateChanged.TestNode.DisplayName,
-                         outcome: Outcome.Cancelled,
+                         outcome: LoggerOutcome.Cancelled,
                          duration: duration,
                          errorMessage: cancelledState.Exception?.Message ?? cancelledState.Explanation,
                          errorStackTrace: cancelledState.Exception?.StackTrace,
@@ -469,11 +426,11 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
 
                     case PassedTestNodeStateProperty:
                         _consoleLogger.TestCompleted(
-                        assembly: "abc.dll",
-                        targetFramework: "net9.0",
-                        architecture: "x64",
+                        assembly: _assemblyName,
+                        targetFramework: _targetFramework,
+                        architecture: _architecture,
                         displayName: testNodeStateChanged.TestNode.DisplayName,
-                        outcome: Outcome.Passed,
+                        outcome: LoggerOutcome.Passed,
                         duration: duration,
                         errorMessage: null,
                         errorStackTrace: null,
@@ -483,11 +440,11 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
 
                     case SkippedTestNodeStateProperty:
                         _consoleLogger.TestCompleted(
-                        assembly: "abc.dll",
-                        targetFramework: "net9.0",
-                        architecture: "x64",
+                        assembly: _assemblyName,
+                        targetFramework: _targetFramework,
+                        architecture: _architecture,
                         displayName: testNodeStateChanged.TestNode.DisplayName,
-                        outcome: Outcome.Skipped,
+                        outcome: LoggerOutcome.Skipped,
                         duration: duration,
                         errorMessage: null,
                         errorStackTrace: null,
@@ -498,67 +455,51 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
 
                 break;
 
-            case SessionFileArtifact sessionFileArtifact:
-                _consoleLogger.ArtifactAdded(
-                    filePath: sessionFileArtifact.FileInfo.FullName,
-                    displayName: sessionFileArtifact.DisplayName,
-                    description: sessionFileArtifact.Description
-                );
+            case TestNodeFileArtifact artifact:
+                {
+                    bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
+                    _consoleLogger.ArtifactAdded(
+                        isOutOfProcessArtifact,
+                        _assemblyName,
+                        _targetFramework,
+                        _architecture,
+                        artifact.TestNode.DisplayName,
+                        artifact.FileInfo.FullName);
+                }
+
                 break;
-            case FileArtifact fileArtifact:
-                _consoleLogger.ArtifactAdded(
-                    filePath: fileArtifact.FileInfo.FullName,
-                    displayName: fileArtifact.DisplayName,
-                    description: fileArtifact.Description
-                );
+
+            case SessionFileArtifact artifact:
+                {
+                    bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
+                    _consoleLogger.ArtifactAdded(
+                        isOutOfProcessArtifact,
+                        _assemblyName,
+                        _targetFramework,
+                        _architecture,
+                        testName: null,
+                        artifact.FileInfo.FullName);
+                }
+
+                break;
+            case FileArtifact artifact:
+                {
+                    bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
+                    _consoleLogger.ArtifactAdded(
+                        isOutOfProcessArtifact,
+                        _assemblyName,
+                        _targetFramework,
+                        _architecture,
+                        testName: null,
+                        artifact.FileInfo.FullName);
+                }
+
                 break;
             case TestRequestExecutionTimeInfo testRequestExecutionTimeInfo:
                 // TODO: what is this?
                 _testRequestExecutionTimeInfo = testRequestExecutionTimeInfo;
                 break;
         }
-    }
-
-    protected virtual async Task HandleFailuresAsync(string testDisplayName, bool isCancelled, string? duration, string? errorMessage,
-        string? errorStackTrace, string? expected, string? actual)
-    {
-        await ConsoleWriteAsync(PlatformResources.FailedLowercase, ConsoleColor.DarkRed);
-        if (isCancelled)
-        {
-            await ConsoleWriteAsync($"({PlatformResources.CancelledLowercase})", ConsoleColor.DarkRed);
-        }
-
-        await ConsoleWriteAsync($" {testDisplayName}");
-        if (duration != null)
-        {
-            await ConsoleWriteAsync($" {duration}", ConsoleColor.Gray);
-        }
-
-        await ConsoleWriteAsync(_environment.NewLine);
-        await ConsoleWriteLineAsync(errorMessage, ConsoleColor.Red);
-
-        if (expected is not null)
-        {
-            await ConsoleWriteLineAsync($"{PlatformResources.Expected}:", ConsoleColor.Red);
-            await ConsoleWriteLineAsync(expected, ConsoleColor.Red);
-        }
-
-        if (actual is not null)
-        {
-            await ConsoleWriteLineAsync($"{PlatformResources.Actual}:", ConsoleColor.Red);
-            await ConsoleWriteLineAsync(actual, ConsoleColor.Red);
-        }
-
-        if (errorStackTrace != null)
-        {
-            await ConsoleWriteLineAsync($"{PlatformResources.StackTrace}:", ConsoleColor.DarkRed);
-            await ConsoleWriteLineAsync(errorStackTrace, ConsoleColor.DarkRed);
-        }
-
-        await ConsoleWriteAsync(_environment.NewLine);
-
-        _totalTests++;
-        _totalFailedTests++;
     }
 
     private async Task ConsoleWriteAsync(string? text, ConsoleColor? color = null)
@@ -605,50 +546,6 @@ internal class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
         }
     }
 
-    /// <summary>
-    /// Convert duration property text to human readable duration.
-    /// </summary>
-    internal /* for testing */ static string? ToHumanReadableDuration(double? durationInMs)
-    {
-        if (durationInMs is null or < 0)
-        {
-            return null;
-        }
-
-        var time = TimeSpan.FromMilliseconds(durationInMs.Value);
-
-        StringBuilder stringBuilder = new();
-        bool hasParentValue = false;
-
-        if (time.Days > 0)
-        {
-            stringBuilder.Append(CultureInfo.InvariantCulture, $"{time.Days}d");
-            hasParentValue = true;
-        }
-
-        if (time.Hours > 0 || hasParentValue)
-        {
-            stringBuilder.Append(CultureInfo.InvariantCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? time.Hours.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : time.Hours.ToString(CultureInfo.InvariantCulture))}h");
-            hasParentValue = true;
-        }
-
-        if (time.Minutes > 0 || hasParentValue)
-        {
-            stringBuilder.Append(CultureInfo.InvariantCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? time.Minutes.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : time.Minutes.ToString(CultureInfo.InvariantCulture))}m");
-            hasParentValue = true;
-        }
-
-        if (time.Seconds > 0 || hasParentValue)
-        {
-            stringBuilder.Append(CultureInfo.InvariantCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? time.Seconds.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : time.Seconds.ToString(CultureInfo.InvariantCulture))}s");
-            hasParentValue = true;
-        }
-
-        if (time.Milliseconds >= 0 || hasParentValue)
-        {
-            stringBuilder.Append(CultureInfo.InvariantCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? time.Milliseconds.ToString(CultureInfo.InvariantCulture).PadLeft(3, '0') : time.Milliseconds.ToString(CultureInfo.InvariantCulture))}ms");
-        }
-
-        return stringBuilder.ToString();
-    }
+    public void Dispose()
+        => _consoleLogger?.Dispose();
 }

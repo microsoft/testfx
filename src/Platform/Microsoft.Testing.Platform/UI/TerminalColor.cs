@@ -16,43 +16,50 @@ internal enum TerminalColor
     /// <summary>
     /// Red.
     /// </summary>
-    Red = 31,
+    DarkRed = 31,
 
     /// <summary>
     /// Green.
     /// </summary>
-    Green = 32,
+    DarkGreen = 32,
 
     /// <summary>
     /// Yellow.
     /// </summary>
-    Yellow = 33,
+    DarkYellow = 33,
 
     /// <summary>
     /// Blue.
     /// </summary>
-    Blue = 34,
+    DarkBlue = 34,
 
     /// <summary>
     /// Magenta.
     /// </summary>
-    Magenta = 35,
+    DarkMagenta = 35,
 
     /// <summary>
     /// Cyan.
     /// </summary>
-    Cyan = 36,
+    DarkCyan = 36,
 
     /// <summary>
     /// White.
     /// </summary>
-    White = 37,
+    DarkWhite = 37,
 
     /// <summary>
     /// Default.
     /// </summary>
     Default = 39,
 
-    Gray = 37,
-    DarkRed = 31,
+    // Bright black
+    Gray = 90,
+    Red = 91,
+    Green = 92,
+    Yellow = 93,
+    Blue = 94,
+    Magenta = 95,
+    Cyan = 96,
+    White = 97,
 }

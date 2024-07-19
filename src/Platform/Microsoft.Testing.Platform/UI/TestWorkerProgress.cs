@@ -2,7 +2,7 @@
 
 internal class TestWorkerProgress
 {
-    public TestWorkerProgress(int tests, int passed, int failed, int skipped, string assemblyName, string targetFramework, string architecture, StopwatchAbstraction stopwatch, string? detail)
+    public TestWorkerProgress(int tests, int passed, int failed, int skipped, string assemblyName, string? targetFramework, string? architecture, StopwatchAbstraction stopwatch, string? detail)
     {
         Tests = tests;
         Passed = passed;
@@ -16,12 +16,20 @@ internal class TestWorkerProgress
     }
 
     public int Tests { get; internal set; }
+
     public int Passed { get; internal set; }
+
     public int Failed { get; internal set; }
+
     public int Skipped { get; internal set; }
+
     public string AssemblyName { get; internal set; }
+
     public string TargetFramework { get; internal set; }
+
     public string Architecture { get; internal set; }
+
     public StopwatchAbstraction Stopwatch { get; internal set; }
+
     public string? Detail { get; internal set; }
 }

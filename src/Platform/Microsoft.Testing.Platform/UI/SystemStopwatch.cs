@@ -7,7 +7,7 @@ internal sealed class SystemStopwatch : StopwatchAbstraction
 {
     private readonly Stopwatch _stopwatch = new();
 
-    public override double ElapsedSeconds => _stopwatch.Elapsed.TotalSeconds;
+    public override TimeSpan Elapsed => _stopwatch.Elapsed;
 
     public override void Start() => _stopwatch.Start();
 

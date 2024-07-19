@@ -49,7 +49,7 @@ internal sealed class ProgressFrame
     {
         TestWorkerProgress p = _nodes[i].TestWorkerProgress;
 
-        string durationString = $"({p.Stopwatch.ElapsedSeconds:F1}s)";
+        string durationString = $"({p.Stopwatch.Elapsed.TotalSeconds:F1}s)";
 
         _nodes[i].DurationLength = durationString.Length;
 
@@ -70,9 +70,9 @@ internal sealed class ProgressFrame
         // string skippedRendered = AnsiCodes.Colorize(new string('?', skippedBuckets), TerminalColor.Yellow);
         // string? remainingRendered = AnsiCodes.Colorize(new string(' ', remainingBuckets), TerminalColor.White);
         string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
-        string passedRendered = AnsiCodes.Colorize("✔️" + passed.ToString(CultureInfo.InvariantCulture), TerminalColor.Green) + "/";
-        string failedRendered = AnsiCodes.Colorize("❌" + failed.ToString(CultureInfo.InvariantCulture), TerminalColor.Red) + "/";
-        string skippedRendered = AnsiCodes.Colorize("❔" + skipped.ToString(CultureInfo.InvariantCulture), TerminalColor.Yellow);
+        string passedRendered = AnsiCodes.Colorize("✔️" + passed.ToString(CultureInfo.InvariantCulture), TerminalColor.DarkGreen) + "/";
+        string failedRendered = AnsiCodes.Colorize("❌" + failed.ToString(CultureInfo.InvariantCulture), TerminalColor.DarkRed) + "/";
+        string skippedRendered = AnsiCodes.Colorize("❔" + skipped.ToString(CultureInfo.InvariantCulture), TerminalColor.DarkYellow);
         string? remainingRendered = null;
         return $"[{passedRendered}{failedRendered}{skippedRendered}{remainingRendered}] {p.AssemblyName} ({p.TargetFramework}|{p.Architecture}){detail}{AnsiCodes.SetCursorHorizontal(Width-durationString.Length)}{durationString}";
 
@@ -107,7 +107,7 @@ internal sealed class ProgressFrame
                 if (previousFrame._nodes[i] == _nodes[i])
                 {
                     // Same everything except time, AND same number of digits in time
-                    string durationString = $"({_nodes[i].TestWorkerProgress.Stopwatch.ElapsedSeconds:F1}s)";
+                    string durationString = $"({_nodes[i].TestWorkerProgress.Stopwatch.Elapsed.TotalSeconds:F1}s)";
                     sb.Append(CultureInfo.InvariantCulture, $"{AnsiCodes.SetCursorHorizontal(MaxColumn)}{AnsiCodes.MoveCursorBackward(durationString.Length)}{durationString}");
                 }
                 else

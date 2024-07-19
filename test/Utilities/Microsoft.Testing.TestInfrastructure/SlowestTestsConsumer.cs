@@ -39,11 +39,11 @@ public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHa
 
     public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
     {
-        Console.WriteLine("Slowest 10 tests");
-        foreach ((string testId, double milliseconds) in _testPerf.OrderByDescending(x => x.Milliseconds).Take(10))
-        {
-            Console.WriteLine($"{testId} {TimeSpan.FromMilliseconds(milliseconds).TotalSeconds:F5}s");
-        }
+        //Console.WriteLine("Slowest 10 tests");
+        //foreach ((string testId, double milliseconds) in _testPerf.OrderByDescending(x => x.Milliseconds).Take(10))
+        //{
+        //    Console.WriteLine($"{testId} {TimeSpan.FromMilliseconds(milliseconds).TotalSeconds:F5}s");
+        //}
 
         return Task.CompletedTask;
     }

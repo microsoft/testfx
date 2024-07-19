@@ -3,11 +3,11 @@
 
 namespace Microsoft.Testing.Platform.UI;
 
-internal sealed class AssemblyRunCompletedUpdate(string assembly, string targetFramework, string architecture)
+internal sealed class AssemblyRunCompletedUpdate(string assembly, string? targetFramework, string? architecture)
 {
     public string Assembly { get; } = assembly;
 
-    public string TargetFramework { get; } = targetFramework;
+    public string? TargetFramework { get; } = targetFramework;
 
-    public string Architecture { get; } = architecture;
+    public string? Architecture { get; } = architecture;
 }

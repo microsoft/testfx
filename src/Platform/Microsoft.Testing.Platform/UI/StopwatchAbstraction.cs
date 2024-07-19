@@ -9,5 +9,5 @@ internal abstract class StopwatchAbstraction
 
     public abstract void Stop();
 
-    public abstract double ElapsedSeconds { get; }
+    public abstract TimeSpan Elapsed { get; }
 }

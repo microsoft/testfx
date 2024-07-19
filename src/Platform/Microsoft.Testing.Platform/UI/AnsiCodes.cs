@@ -48,12 +48,12 @@ internal static class AnsiCodes
     public const string LinkPrefix = "\x1b]8;;";
 
     /// <summary>
-    /// <see cref="LinkPrefix"/>
+    /// <see cref="LinkPrefix"/>.
     /// </summary>
     public const string LinkInfix = "\x1b\\";
 
     /// <summary>
-    /// <see cref="LinkPrefix"/>
+    /// <see cref="LinkPrefix"/>.
     /// </summary>
     public const string LinkSuffix = "\x1b]8;;\x1b\\";
 
