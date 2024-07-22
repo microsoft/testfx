@@ -258,6 +258,10 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             {
                 // Do nothing we're cancelling
             }
+            catch (Exception ex)
+            {
+                Log.LogError(ex.ToString());
+            }
         });
 
     public override bool Execute()
