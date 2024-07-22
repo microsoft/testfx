@@ -56,8 +56,7 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzer : DiagnosticAnalyz
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
-        if (!methodSymbol.ContainingType.GetAttributes().Any(x => x.AttributeClass.Inherits(testClassAttributeSymbol))
-            || !methodSymbol.IsClassCleanupMethod(classCleanupAttributeSymbol))
+        if (!methodSymbol.ContainingType.GetAttributes().Any(x => x.AttributeClass.Inherits(testClassAttributeSymbol)))
         {
             return;
         }
