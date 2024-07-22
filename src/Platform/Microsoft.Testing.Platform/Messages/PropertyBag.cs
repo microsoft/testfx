@@ -167,12 +167,7 @@ public sealed partial class PropertyBag
             return default;
         }
 
-        if (_property is null)
-        {
-            return default;
-        }
-
-        if (_property.Count == 0)
+        if (_property is null || _property.Count == 0)
         {
             return default;
         }
