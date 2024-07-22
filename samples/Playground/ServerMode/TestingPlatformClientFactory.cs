@@ -138,8 +138,8 @@ public partial /* for codegen regx */ class TestingPlatformClientFactory
             },
 
             // OnExit = (_, exitCode) => NotepadWindow.WriteLine($"[OnExit] Process exit code '{exitCode}'"),
-            // Arguments = "--server --diagnostic --diagnostic-verbosity error",
-            Arguments = "--server",
+            Arguments = "--server --diagnostic --diagnostic-verbosity trace",
+            // Arguments = "--server",
             EnvironmentVariables = environmentVariables,
         };
 
@@ -199,6 +199,8 @@ public interface IProcessHandle
     Task<int> StopAsync();
 
     Task<int> WaitForExitAsync();
+
+    void WaitForExit();
 
     Task WriteInputAsync(string input);
 }
@@ -354,6 +356,8 @@ public sealed class ProcessHandle : IProcessHandle, IDisposable
 #endif
         return await Task.FromResult(_process.ExitCode);
     }
+
+    public void WaitForExit() => _process.WaitForExit();
 
     public async Task<int> StopAsync()
     {

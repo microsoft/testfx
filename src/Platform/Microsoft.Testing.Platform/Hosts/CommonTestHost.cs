@@ -55,6 +55,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         {
             await DisposeServiceProviderAsync(ServiceProvider, isProcessShutdown: true);
             await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>());
+            await DisposeHelper.DisposeAsync(ServiceProvider.GetTestApplicationCancellationTokenSource());
         }
 
         return exitCode;
@@ -165,6 +166,13 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
                 continue;
             }
 
+            // The ITestApplicationCancellationTokenSource contains the cancellation token and can be used by other services during the shutdown
+            // we will collect manually in the correct moment.
+            if (service is ITestApplicationCancellationTokenSource)
+            {
+                continue;
+            }
+
             if (filter is not null && !filter(service))
             {
                 continue;
@@ -173,7 +181,6 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
             // We need to ensure that we won't dispose special services till the shutdown
             if (!isProcessShutdown &&
                 service is ITelemetryCollector or
-                 ITestApplicationCancellationTokenSource or
                  ITestApplicationLifecycleCallbacks)
             {
                 continue;
