@@ -74,10 +74,10 @@ internal sealed class ProgressFrame
         string failedRendered = AnsiCodes.Colorize("❌" + failed.ToString(CultureInfo.InvariantCulture), TerminalColor.DarkRed) + "/";
         string skippedRendered = AnsiCodes.Colorize("❔" + skipped.ToString(CultureInfo.InvariantCulture), TerminalColor.DarkYellow);
         string? remainingRendered = null;
-        return $"[{passedRendered}{failedRendered}{skippedRendered}{remainingRendered}] {p.AssemblyName} ({p.TargetFramework}|{p.Architecture}){detail}{AnsiCodes.SetCursorHorizontal(Width-durationString.Length)}{durationString}";
+        return $"[{passedRendered}{failedRendered}{skippedRendered}{remainingRendered}] {p.AssemblyName} ({p.TargetFramework}|{p.Architecture}){detail}{AnsiCodes.SetCursorHorizontal(Width - durationString.Length)}{durationString}";
 
-        static int AsBucket(int total, int passed, int buckets)
-            => (int)Math.Round((decimal)passed / total * buckets, 0, MidpointRounding.AwayFromZero);
+        // static int AsBucket(int total, int passed, int buckets)
+        //    => (int)Math.Round((decimal)passed / total * buckets, 0, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>

@@ -34,7 +34,7 @@ public class HangDumpTests(ITestExecutionContext testExecutionContext) : TestBas
 
         ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateOptionArgumentsAsync(option, ["32"]).ConfigureAwait(false);
         Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage+ "aaaaaaaaaaaaaaaaaa"));
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
 
     public async Task IsInvalid_If_Timeout_Value_Has_IncorrectValue()

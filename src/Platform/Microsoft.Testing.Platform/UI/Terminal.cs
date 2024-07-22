@@ -32,31 +32,11 @@ internal sealed class Terminal : ITerminal
 
     /// <inheritdoc/>
     public int Height
-    {
-        get
-        {
-            if (Console.IsOutputRedirected)
-            {
-                return BigUnknownDimension;
-            }
-
-            return Console.BufferHeight;
-        }
-    }
+        => Console.IsOutputRedirected ? BigUnknownDimension : Console.BufferHeight;
 
     /// <inheritdoc/>
     public int Width
-    {
-        get
-        {
-            if (Console.IsOutputRedirected)
-            {
-                return BigUnknownDimension;
-            }
-
-            return Console.BufferWidth;
-        }
-    }
+        => Console.IsOutputRedirected ? BigUnknownDimension : Console.BufferWidth;
 
     /// <inheritdoc/>
     /// <remarks>

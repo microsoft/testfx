@@ -39,11 +39,9 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
     private readonly bool _isVSTestMode;
     private readonly bool _isListTests;
     private readonly bool _isServerMode;
-    private readonly int _minimumExpectedTest;
     private readonly ILogger? _logger;
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly IClock _clock;
-    private readonly bool _underProcessMonitor;
     private readonly ConsoleLogger _consoleLogger;
     private readonly string? _architecture;
     private readonly string? _targetFramework;
@@ -84,14 +82,6 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
         if (_fileLoggerProvider is not null)
         {
             _logger = _fileLoggerProvider.CreateLogger(GetType().ToString());
-        }
-
-        if (testHostControllerInfo.HasTestHostController)
-        {
-            if (environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{testHostControllerInfo.GetTestHostControllerPID(true)}") is not null)
-            {
-                _underProcessMonitor = true;
-            }
         }
 
         if (_runtimeFeature.IsDynamicCodeSupported)
@@ -352,6 +342,7 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
+        await Task.CompletedTask;
         if (cancellationToken.IsCancellationRequested)
         {
             return;

@@ -131,7 +131,7 @@ internal static class AnsiCodes
         => RoslynString.IsNullOrWhiteSpace(s) ? s ?? string.Empty : $"{CSI}{(int)color}{SetColor}{s}{SetDefaultColor}";
 
     public static string MakeBold(string? s)
-        => RoslynString.IsNullOrWhiteSpace(s) ? s ?? "" : $"{CSI}{SetBold}{s}{SetDefaultColor}";
+        => RoslynString.IsNullOrWhiteSpace(s) ? s ?? string.Empty : $"{CSI}{SetBold}{s}{SetDefaultColor}";
 
     public static string MoveCursorBackward(int count) => $"{CSI}{count}{MoveBackward}";
 
