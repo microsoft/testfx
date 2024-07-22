@@ -58,7 +58,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
         }
 
         _sessionUid = context.SessionUid;
-        return Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+        return Task.FromResult(new CreateTestSessionResult { IsSuccess = true });
     }
 
     /// <inheritdoc />
@@ -70,7 +70,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
         // Wait for remaining request processing
         await _incomingRequestCounter.WaitAsync(context.CancellationToken);
         _sessionUid = null;
-        return new CloseTestSessionResult() { IsSuccess = true };
+        return new CloseTestSessionResult { IsSuccess = true };
     }
 
     protected virtual void Dispose(bool disposing)
