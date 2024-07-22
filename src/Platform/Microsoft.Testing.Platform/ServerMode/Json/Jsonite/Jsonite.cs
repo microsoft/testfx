@@ -793,7 +793,7 @@ namespace Jsonite
                 this.indentChar = settings.IndentChar;
                 this.indentCount = settings.IndentCount;
                 this.indentLevel = 0;
-                writers = new Dictionary<Type, Action<object>>()
+                writers = new Dictionary<Type, Action<object>>
                 {
                     // These converters have to match to the one declared in JsonReflectorDefault.Converters
                     {typeof (string), value => WriteString((string) value)},

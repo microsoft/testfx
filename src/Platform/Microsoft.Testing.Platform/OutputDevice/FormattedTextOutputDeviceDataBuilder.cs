@@ -6,11 +6,11 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 internal static class FormattedTextOutputDeviceDataBuilder
 {
     public static FormattedTextOutputDeviceData CreateGreenConsoleColorText(string text)
-           => new(text) { ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green } };
+           => new(text) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.Green } };
 
     public static FormattedTextOutputDeviceData CreateRedConsoleColorText(string text)
-           => new(text) { ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Red } };
+           => new(text) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.Red } };
 
     public static FormattedTextOutputDeviceData CreateYellowConsoleColorText(string text)
-        => new(text) { ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Yellow } };
+        => new(text) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.Yellow } };
 }

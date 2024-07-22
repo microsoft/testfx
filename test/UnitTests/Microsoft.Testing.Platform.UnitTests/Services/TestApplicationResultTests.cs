@@ -26,7 +26,7 @@ public sealed class TestApplicationResultTests : TestBase
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -40,7 +40,7 @@ public sealed class TestApplicationResultTests : TestBase
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -55,7 +55,7 @@ public sealed class TestApplicationResultTests : TestBase
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -80,7 +80,7 @@ public sealed class TestApplicationResultTests : TestBase
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -95,7 +95,7 @@ public sealed class TestApplicationResultTests : TestBase
         await _testApplicationResult.SetTestAdapterTestSessionFailureAsync("Adapter error");
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -114,7 +114,7 @@ public sealed class TestApplicationResultTests : TestBase
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -123,7 +123,7 @@ public sealed class TestApplicationResultTests : TestBase
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -142,7 +142,7 @@ public sealed class TestApplicationResultTests : TestBase
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -160,7 +160,7 @@ public sealed class TestApplicationResultTests : TestBase
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",

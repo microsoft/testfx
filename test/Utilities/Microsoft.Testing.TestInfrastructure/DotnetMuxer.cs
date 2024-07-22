@@ -9,8 +9,8 @@ public class DotnetMuxer : IDisposable
 {
     private static readonly string Root = RootFinder.Find();
     private static readonly IDictionary<string, string> DefaultEnvironmentVariables
-        = new Dictionary<string, string>()
-            {
+        = new Dictionary<string, string>
+        {
                 { "DOTNET_ROOT", $"{Root}/.dotnet" },
                 { "DOTNET_INSTALL_DIR", $"{Root}/.dotnet" },
                 { "DOTNET_SKIP_FIRST_TIME_EXPERIENCE", "1" },

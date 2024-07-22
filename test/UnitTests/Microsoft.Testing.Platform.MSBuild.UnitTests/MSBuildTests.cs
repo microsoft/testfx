@@ -42,7 +42,7 @@ public class MSBuildTests : TestBase
             BuildEngine = _buildEngine.Object,
             TestingPlatformEntryPointSourcePath = new CustomTaskItem("obj/entryPointFile"),
             Language = new CustomTaskItem("C#"),
-            TestingPlatformBuilderHooks = new List<CustomTaskItem>()
+            TestingPlatformBuilderHooks = new List<CustomTaskItem>
             {
                 new CustomTaskItem("95914C54-6C6E-4AF7-9327-4905E1CE9DB7")
                 .Add("DisplayName", "DisplayName")

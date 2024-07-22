@@ -96,7 +96,7 @@ internal sealed partial class AppInsightsProvider :
         _telemetryClientFactory = telemetryClientFactory;
 
 #if NETCOREAPP
-        _payloads = Channel.CreateUnbounded<(string EventName, IDictionary<string, object> ParamsMap)>(new UnboundedChannelOptions()
+        _payloads = Channel.CreateUnbounded<(string EventName, IDictionary<string, object> ParamsMap)>(new UnboundedChannelOptions
         {
             // We process only 1 data at a time
             SingleReader = true,
