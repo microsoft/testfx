@@ -148,7 +148,7 @@ ancak, '{5}' türüyle {4} argüman aldı.</target>
       </trans-unit>
       <trans-unit id="UTA_NoValidConstructor">
         <source>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="new">Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <target state="translated">'{0}' test sınıfı için geçerli bir oluşturucu bulunamıyor. Geçerli oluşturucular 'public' ve parametresiz veya 'TestContext' türünde tek bir parametre içeriyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TestContextSetError">
@@ -250,7 +250,7 @@ Hata: {1}</target>
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
         <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</source>
-        <target state="new">UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</target>
+        <target state="translated">UTA054: {0}.{1} Timeout özniteliği geçersiz. Zaman aşımı değeri 0'dan büyük bir tamsayı olmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorPredefinedTestProperty">

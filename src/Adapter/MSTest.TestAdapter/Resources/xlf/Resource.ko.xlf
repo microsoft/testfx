@@ -148,7 +148,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_NoValidConstructor">
         <source>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="new">Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <target state="translated">테스트 클래스 '{0}'에 대한 유효한 생성자를 찾을 수 없습니다. 유효한 생성자는 'public'이며 매개 변수가 없거나 'TestContext' 유형의 매개 변수가 하나 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TestContextSetError">
@@ -250,7 +250,7 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
         <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</source>
-        <target state="new">UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</target>
+        <target state="translated">UTA054: {0}.{1}에 잘못된 Timeout 특성이 있습니다. 시간 제한 값은 0보다 큰 정수여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorPredefinedTestProperty">

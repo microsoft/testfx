@@ -148,7 +148,7 @@ pero recibió {4} argumento(s), con los tipos "{5}".</target>
       </trans-unit>
       <trans-unit id="UTA_NoValidConstructor">
         <source>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="new">Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <target state="translated">No se encuentra un constructor válido para la clase de prueba '{0}'. Los constructores válidos son 'public' y sin parámetros o con un parámetro de tipo 'TestContext'.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TestContextSetError">
@@ -250,7 +250,7 @@ Error: {1}</target>
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
         <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</source>
-        <target state="new">UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</target>
+        <target state="translated">UTA054: {0}.{1} tiene un atributo Timeout no válido. El tiempo de espera debe ser un valor entero mayor que 0.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorPredefinedTestProperty">
