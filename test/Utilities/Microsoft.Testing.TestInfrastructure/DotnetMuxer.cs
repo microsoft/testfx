@@ -15,7 +15,7 @@ public class DotnetMuxer : IDisposable
                 { "DOTNET_INSTALL_DIR", $"{Root}/.dotnet" },
                 { "DOTNET_SKIP_FIRST_TIME_EXPERIENCE", "1" },
                 { "DOTNET_MULTILEVEL_LOOKUP", "0" },
-            };
+        };
 
     private readonly string _dotnet;
     private readonly IDictionary<string, string> _environmentVariables;
