@@ -542,7 +542,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Set a &apos;ClassCleanupBehavior&apos; to &apos;[ClassCleanup]&apos;..
+        ///   Looks up a localized string similar to Without using  &apos;ClassCleanupBehavior.EndOfClass&apos;, the &apos;[ClassCleanup]&apos; will by default be run at the end of the assembly and not at the end of the class..
         /// </summary>
         internal static string SetClassCleanupEndOFClassBehaviorDescription {
             get {
@@ -551,7 +551,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Set a &apos;ClassCleanupBehavior&apos; to &apos;[ClassCleanup]&apos;.
+        ///   Looks up a localized string similar to Use &apos;ClassCleanupBehavior.EndOfClass&apos; with the &apos;[ClassCleanup]&apos;.
         /// </summary>
         internal static string SetClassCleanupEndOFClassBehaviorMessageFormat {
             get {
@@ -560,7 +560,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Set a &apos;ClassCleanupBehavior&apos; to &apos;[ClassCleanup]&apos;.
+        ///   Looks up a localized string similar to Use &apos;ClassCleanupBehavior.EndOfClass&apos; with the &apos;[ClassCleanup]&apos;.
         /// </summary>
         internal static string SetClassCleanupEndOFClassBehaviorTitle {
             get {

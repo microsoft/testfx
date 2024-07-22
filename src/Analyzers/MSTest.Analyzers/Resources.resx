@@ -461,12 +461,12 @@
     <value>Review or remove the assertion as its condition is known to be always true</value>
   </data>
   <data name="SetClassCleanupEndOFClassBehaviorTitle" xml:space="preserve">
-    <value>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</value>
+    <value>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</value>
   </data>
   <data name="SetClassCleanupEndOFClassBehaviorDescription" xml:space="preserve">
-    <value>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'.</value>
+    <value>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</value>
   </data>
   <data name="SetClassCleanupEndOFClassBehaviorMessageFormat" xml:space="preserve">
-    <value>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</value>
+    <value>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</value>
   </data>
 </root>
