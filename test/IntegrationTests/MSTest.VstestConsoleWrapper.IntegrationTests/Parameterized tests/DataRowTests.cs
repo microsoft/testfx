@@ -235,7 +235,11 @@ public class DataRowTests : CLITestBase
             "FourteenObjectArrays ([1],[2],[3],[4],[5],[6],[7],[8],[9],[10],[11],[12],[13],[14])",
             "FifteenObjectArrays ([1],[2],[3],[4],[5],[6],[7],[8],[9],[10],[11],[12],[13],[14],[15])",
             "SixteenObjectArrays ([1],[2],[3],[4],[5],[6],[7],[8],[9],[10],[11],[12],[13],[14],[15],[16])",
-            "MultipleIntegersWrappedWithParams (1,2,3,4,5)");
+            "MultipleIntegersWrappedWithParams (1,2,3,4,5)",
+            "MethodWithOverload (1)",
+            "MethodWithOverload (2)",
+            "MethodWithOverload (\"a\")",
+            "MethodWithOverload (\"b\")");
 
         ValidateFailedTests(
             false,
