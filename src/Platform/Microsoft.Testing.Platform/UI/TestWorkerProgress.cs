@@ -5,9 +5,8 @@ namespace Microsoft.Testing.Platform.UI;
 
 internal class TestWorkerProgress
 {
-    public TestWorkerProgress(int tests, int passed, int failed, int skipped, string assemblyName, string? targetFramework, string? architecture, StopwatchAbstraction stopwatch, string? detail)
+    public TestWorkerProgress(int passed, int failed, int skipped, string assemblyName, string? targetFramework, string? architecture, StopwatchAbstraction stopwatch, string? detail)
     {
-        Tests = tests;
         Passed = passed;
         Failed = failed;
         Skipped = skipped;
@@ -17,8 +16,6 @@ internal class TestWorkerProgress
         Stopwatch = stopwatch ?? throw new ArgumentNullException(nameof(stopwatch));
         Detail = detail;
     }
-
-    public int Tests { get; internal set; }
 
     public int Passed { get; internal set; }
 

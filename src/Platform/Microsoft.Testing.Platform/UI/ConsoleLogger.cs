@@ -8,10 +8,10 @@ using System.Globalization;
 #if !NET7_0_OR_GREATER
 using System.Reflection;
 #endif
+
 using System.Text;
 using System.Text.RegularExpressions;
 
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.UI;
@@ -82,10 +82,13 @@ internal partial class ConsoleLogger : IDisposable
     /// The two directory separator characters to be passed to methods like <see cref="string.IndexOfAny(char[])"/>.
     /// </summary>
     private readonly Dictionary<string, AssemblyRun> _assemblies = new();
-    private readonly IClock _clock;
     private readonly List<LoggerArtifact> _artifacts = new();
 
     private readonly ConsoleLoggerOptions _options;
+
+    private readonly bool _outputAnsi;
+
+    private readonly uint? _originalConsoleMode;
 
     /// <summary>
     /// Time of the oldest observed test target start.
@@ -153,58 +156,86 @@ internal partial class ConsoleLogger : IDisposable
 #endif
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ConsoleLogger"/> class.
-    /// </summary>
-    public ConsoleLogger(IClock clock, ConsoleLoggerOptions options)
-        : this(clock, new Terminal(), manualRefresh: false, options)
-    {
-    }
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="ConsoleLogger"/> class with custom terminal and manual refresh for testing.
     /// </summary>
-    internal /* for testing */ ConsoleLogger(IClock clock, ITerminal terminal, bool manualRefresh, ConsoleLoggerOptions options)
+    internal ConsoleLogger(ITerminal terminal, bool manualRefresh, ConsoleLoggerOptions options)
     {
         Terminal = terminal;
-        _clock = clock;
-        _manualRefresh = manualRefresh;
         _options = options;
+
+        if (_options.UseAnsi == YesNoAuto.No)
+        {
+            _outputAnsi = false;
+        }
+        else
+        {
+            (bool allowAnsi, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
+
+            _originalConsoleMode = originalConsoleMode;
+
+            if (_options.UseAnsi == YesNoAuto.Yes)
+            {
+                _outputAnsi = true;
+            }
+
+            if (_options.UseAnsi == YesNoAuto.Auto)
+            {
+                _outputAnsi = allowAnsi;
+            }
+        }
+
+        _manualRefresh = manualRefresh && _outputAnsi;
 
         // TODO: is this unsafe?
         _baseDirectory = _options.BaseDirectory ?? Directory.GetCurrentDirectory();
     }
 
-    public void TestExecutionStarted(TestRunStartedUpdate testRunStarted)
+    public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount)
     {
-        _progress = new TestWorkerProgress[testRunStarted.WorkerCount];
-        _testStartTime = _clock.UtcNow;
+        _progress = new TestWorkerProgress[workerCount];
+        _testStartTime = testStartTime;
+
         if (!_manualRefresh)
         {
             _refresher = new Thread(ThreadProc);
             _refresher.Start();
         }
 
-        if (Terminal.SupportsProgressReporting)
+        if (_outputAnsi && Terminal.SupportsProgressReporting)
         {
             Terminal.Write(AnsiCodes.SetProgressIndeterminate);
         }
     }
 
-    public void AssemblyRunStarted(AssemblyRunStartedUpdate assemblyRunStartedUpdate)
+    public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture)
     {
         if (_options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
         {
             var stringBuilder = new StringBuilder();
             stringBuilder.Append("Running tests from ");
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(stringBuilder, assemblyRunStartedUpdate.Assembly, assemblyRunStartedUpdate.TargetFramework, assemblyRunStartedUpdate.Architecture);
+            AppendAssemblyLinkTargetFrameworkAndArchitecture(stringBuilder, assembly, targetFramework, architecture);
             WriteMessage(stringBuilder.ToString());
         }
 
-        string key = $"{assemblyRunStartedUpdate.Assembly}|{assemblyRunStartedUpdate.TargetFramework}|{assemblyRunStartedUpdate.Architecture}";
+        GetOrAddAssemblyRun(assembly, targetFramework, architecture);
+    }
+
+    private AssemblyRun GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture)
+    {
+        string key = $"{assembly}|{targetFramework}|{architecture}";
+        if (_assemblies.TryGetValue(key, out AssemblyRun? asm))
+        {
+            return asm;
+        }
+
         int slotIndex = GetEmptySlot(_progress);
         StopwatchAbstraction sw = CreateStopwatch();
-        _assemblies.Add(key, new AssemblyRun(slotIndex, assemblyRunStartedUpdate, sw));
-        _progress[slotIndex] = new TestWorkerProgress(assemblyRunStartedUpdate.Tests, 0, 0, 0, Path.GetFileName(assemblyRunStartedUpdate.Assembly), assemblyRunStartedUpdate.TargetFramework, assemblyRunStartedUpdate.Architecture, sw, null);
+
+        var assemblyRun = new AssemblyRun(slotIndex, assembly, targetFramework, architecture, sw);
+        _assemblies.Add(key, assemblyRun);
+        _progress[slotIndex] = new TestWorkerProgress(0, 0, 0, Path.GetFileName(assembly), targetFramework, architecture, sw, detail: null);
+
+        return assemblyRun;
     }
 
     private static int GetEmptySlot(TestWorkerProgress?[] progress)
@@ -234,6 +265,31 @@ internal partial class ConsoleLogger : IDisposable
             stringBuilder.AppendLine();
 
             IEnumerable<IGrouping<bool, LoggerArtifact>> artifactGroups = _artifacts.GroupBy(a => a.OutOfProcess);
+            if (artifactGroups.Any())
+            {
+                stringBuilder.AppendLine();
+            }
+
+            foreach (IGrouping<bool, LoggerArtifact> artifactGroup in artifactGroups)
+            {
+                stringBuilder.Append(SingleIndentation);
+                stringBuilder.AppendLine(artifactGroup.Key ? PlatformResources.OutOfProcessArtifactsProduced : PlatformResources.InProcessArtifactsProduced);
+                foreach (LoggerArtifact artifact in artifactGroup)
+                {
+                    stringBuilder.Append(DoubleIndentation);
+                    stringBuilder.Append("- ");
+                    if (!RoslynString.IsNullOrWhiteSpace(artifact.TestName))
+                    {
+                        stringBuilder.Append(PlatformResources.ForTest);
+                        stringBuilder.Append(" '");
+                        stringBuilder.Append(artifact.TestName);
+                        stringBuilder.Append("': ");
+                    }
+
+                    AppendLink(stringBuilder, artifact.Path, lineNumber: null);
+                    stringBuilder.AppendLine();
+                }
+            }
 
             int totalTests = _assemblies.Values.Sum(a => a.TotalTests);
             int totalFailedTests = _assemblies.Values.Sum(a => a.FailedTests);
@@ -245,6 +301,7 @@ internal partial class ConsoleLogger : IDisposable
             bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || _wasCancelled;
             stringBuilder.Append(SetColor(runFailed ? TerminalColor.Red : TerminalColor.Green));
 
+            stringBuilder.AppendLine();
             stringBuilder.Append($"Test run summary: ");
 
             if (_wasCancelled)
@@ -275,25 +332,6 @@ internal partial class ConsoleLogger : IDisposable
                 }
 
                 stringBuilder.AppendLine();
-            }
-
-            foreach (IGrouping<bool, LoggerArtifact> artifactGroup in artifactGroups)
-            {
-                stringBuilder.AppendLine(artifactGroup.Key ? PlatformResources.OutOfProcessArtifactsProduced : PlatformResources.InProcessArtifactsProduced);
-                foreach (LoggerArtifact artifact in artifactGroup)
-                {
-                    stringBuilder.Append("- ");
-                    if (!RoslynString.IsNullOrWhiteSpace(artifact.TestName))
-                    {
-                        stringBuilder.Append(PlatformResources.ForTest);
-                        stringBuilder.Append(" '");
-                        stringBuilder.Append(artifact.TestName);
-                        stringBuilder.Append("': ");
-                    }
-
-                    AppendLink(stringBuilder, artifact.Path, lineNumber: null);
-                    stringBuilder.AppendLine();
-                }
             }
 
             int total = _assemblies.Values.Sum(t => t.TotalTests);
@@ -354,16 +392,15 @@ internal partial class ConsoleLogger : IDisposable
                 stringBuilder.Append(ResetColor());
             }
 
-            stringBuilder.Append(SetColor(TerminalColor.Gray));
             stringBuilder.Append(durationText);
-            AppendDuration(stringBuilder, runDuration);
+            AppendDuration(stringBuilder, runDuration, wrapInParentheses: false, colorize: false);
             stringBuilder.AppendLine();
 
             Terminal.WriteLine(stringBuilder.ToString());
         }
         finally
         {
-            if (Terminal.SupportsProgressReporting)
+            if (_outputAnsi && Terminal.SupportsProgressReporting)
             {
                 Terminal.Write(AnsiCodes.RemoveProgress);
             }
@@ -371,6 +408,7 @@ internal partial class ConsoleLogger : IDisposable
             Terminal.EndUpdate();
         }
 
+        NativeMethods.RestoreConsoleMode(_originalConsoleMode);
         _assemblies.Clear();
         _buildErrorsCount = 0;
         _testStartTime = null;
@@ -480,7 +518,7 @@ internal partial class ConsoleLogger : IDisposable
         }
     }
 
-    private void WriteMessage(string message)
+    public void WriteMessage(string message)
     {
         lock (_lock)
         {
@@ -570,12 +608,7 @@ internal partial class ConsoleLogger : IDisposable
         string? expected,
         string? actual)
     {
-        string key = $"{assembly}|{targetFramework}|{architecture}";
-        if (!_assemblies.TryGetValue(key, out AssemblyRun? asm))
-        {
-            asm = new AssemblyRun(GetEmptySlot(_progress), new AssemblyRunStartedUpdate(assembly, tests: 0, targetFramework, architecture), CreateStopwatch());
-            _assemblies[key] = asm;
-        }
+        AssemblyRun asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}"];
 
         switch (outcome)
         {
@@ -627,7 +660,7 @@ internal partial class ConsoleLogger : IDisposable
                     actual);
                 Terminal.Write(stringBuilder.ToString());
 
-                _progress[asm.SlotIndex] = new TestWorkerProgress(asm.AssemblyRunStartedUpdate.Tests, asm.PassedTests, asm.FailedTests, asm.SkippedTests, Path.GetFileName(asm.AssemblyRunStartedUpdate.Assembly), asm.AssemblyRunStartedUpdate.TargetFramework, asm.AssemblyRunStartedUpdate.Architecture, asm.Stopwatch, null);
+                _progress[asm.SlotIndex] = new TestWorkerProgress(asm.PassedTests, asm.FailedTests, asm.SkippedTests, Path.GetFileName(asm.Assembly), asm.TargetFramework, asm.Architecture, asm.Stopwatch, null);
                 DisplayNodes();
             }
             finally
@@ -822,8 +855,7 @@ internal partial class ConsoleLogger : IDisposable
 
     internal void AssemblyRunCompleted(string assembly, string? targetFramework, string? architecture)
     {
-        string key = $"{assembly}|{targetFramework}|{architecture}";
-        AssemblyRun assemblyRun = _assemblies[key];
+        AssemblyRun assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         assemblyRun.Stopwatch.Stop();
 
         _progress[assemblyRun.SlotIndex] = null;
@@ -856,17 +888,25 @@ internal partial class ConsoleLogger : IDisposable
         int failedTests = assemblyRun.FailedTests + assemblyRun.CancelledTests + assemblyRun.TimedOutTests;
         int warnings = 0;
 
-        AppendAssemblyLinkTargetFrameworkAndArchitecture(stringBuilder, assemblyRun.AssemblyRunStartedUpdate.Assembly, assemblyRun.AssemblyRunStartedUpdate.TargetFramework, assemblyRun.AssemblyRunStartedUpdate.Architecture);
+        AppendAssemblyLinkTargetFrameworkAndArchitecture(stringBuilder, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture);
         stringBuilder.Append(' ');
         AppendAssemblyResult(stringBuilder, assemblyRun.FailedTests == 0, failedTests, warnings);
         stringBuilder.Append(' ');
         AppendDuration(stringBuilder, assemblyRun.Stopwatch.Elapsed);
     }
 
-    private static void AppendDuration(StringBuilder stringBuilder, TimeSpan duration)
+    private static void AppendDuration(StringBuilder stringBuilder, TimeSpan duration, bool wrapInParentheses = true, bool colorize = true)
     {
-        stringBuilder.Append(SetColor(TerminalColor.Gray));
-        stringBuilder.Append('(');
+        if (colorize)
+        {
+            stringBuilder.Append(SetColor(TerminalColor.Gray));
+        }
+
+        if (wrapInParentheses)
+        {
+            stringBuilder.Append('(');
+        }
+
         if (duration.TotalMilliseconds < 1000)
         {
             stringBuilder.Append(duration.TotalMilliseconds.ToString("F0", CultureInfo.CurrentCulture));
@@ -878,9 +918,15 @@ internal partial class ConsoleLogger : IDisposable
             stringBuilder.Append('s');
         }
 
-        stringBuilder.Append(')');
+        if (wrapInParentheses)
+        {
+            stringBuilder.Append(')');
+        }
 
-        stringBuilder.Append(ResetColor());
+        if (colorize)
+        {
+            stringBuilder.Append(ResetColor());
+        }
     }
 
     public void Dispose() => ((IDisposable)_cts).Dispose();
@@ -896,4 +942,25 @@ internal partial class ConsoleLogger : IDisposable
         _wasCancelled = true;
         WriteMessage(PlatformResources.CancellingTestSession);
     }
+
+    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string text)
+    {
+        AssemblyRun asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
+        asm.AddError(text);
+        string redText = AnsiCodes.Colorize(text, TerminalColor.Red);
+
+        WriteMessage(redText);
+    }
+
+    internal void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string text)
+    {
+        AssemblyRun asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
+        asm.AddWarning(text);
+        string yellowText = AnsiCodes.Colorize(text, TerminalColor.Yellow);
+
+        WriteMessage(yellowText);
+    }
+
+    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, Exception exception) =>
+        WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString());
 }

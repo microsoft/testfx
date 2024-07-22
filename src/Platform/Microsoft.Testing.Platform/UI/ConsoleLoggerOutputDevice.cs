@@ -29,7 +29,6 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
 #pragma warning restore SA1310 // Field names should not contain underscore
 
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
-    private readonly IConsole _console;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly IAsyncMonitor _asyncMonitor;
     private readonly IRuntimeFeature _runtimeFeature;
@@ -58,7 +57,6 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
         bool isVSTestMode, bool isListTests, bool isServerMode, int minimumExpectedTest, FileLoggerProvider? fileLoggerProvider, IClock clock)
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
-        _console = console;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _asyncMonitor = asyncMonitor;
         _runtimeFeature = runtimeFeature;
@@ -70,10 +68,10 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
         _isServerMode = isServerMode;
         _fileLoggerProvider = fileLoggerProvider;
         _clock = clock;
-        _consoleLogger = new ConsoleLogger(clock /* TODO: inject console as well into Terminal */, new()
+        _consoleLogger = new ConsoleLogger(new Terminal(console), manualRefresh: false, new()
         {
-            BaseDirectory = null, // "S:\\p\\testfx",
-            ShowAssembly = true,
+            BaseDirectory = null,
+            ShowAssembly = false,
             ShowAssemblyStartAndComplete = false,
             ShowPassedTests = false,
             MinimumExpectedTests = minimumExpectedTest,
@@ -101,7 +99,7 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
             _bannerDisplayed = true;
         }
 
-        _consoleLogger.TestExecutionStarted(new TestRunStartedUpdate(1));
+        _consoleLogger.TestExecutionStarted(_clock.UtcNow, workerCount: 1);
 
         _testApplicationCancellationTokenSource.CancellationToken.Register(() => _consoleLogger.StartCancelling());
     }
@@ -166,7 +164,7 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
 
                 if (bannerMessage is not null)
                 {
-                    _console.WriteLine(bannerMessage);
+                    _consoleLogger.WriteMessage(bannerMessage);
                 }
                 else
                 {
@@ -196,28 +194,20 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
                         stringBuilder.Append(']');
                     }
 
-                    _console.WriteLine(stringBuilder.ToString());
+                    stringBuilder.AppendLine();
+                    _consoleLogger.WriteMessage(stringBuilder.ToString());
                 }
             }
 
             if (_fileLoggerProvider is not null)
             {
-                ConsoleColor currentForegroundColor = _console.GetForegroundColor();
-                try
+                if (_fileLoggerProvider.SyncFlush)
                 {
-                    _console.SetForegroundColor(ConsoleColor.Yellow);
-                    if (_fileLoggerProvider.SyncFlush)
-                    {
-                        _console.WriteLine(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
-                    }
-                    else
-                    {
-                        _console.WriteLine(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
-                    }
+                    _consoleLogger.WriteWarningMessage(_assemblyName, _targetFramework, _architecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
                 }
-                finally
+                else
                 {
-                    _console.SetForegroundColor(currentForegroundColor);
+                    _consoleLogger.WriteWarningMessage(_assemblyName, _targetFramework, _architecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
                 }
             }
         }
@@ -225,7 +215,7 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
 
     public async Task DisplayBeforeSessionStartAsync()
     {
-        _consoleLogger.AssemblyRunStarted(new AssemblyRunStartedUpdate(_assemblyName, 0, _targetFramework, _architecture));
+        _consoleLogger.AssemblyRunStarted(_assemblyName, _targetFramework, _architecture);
         if (_logger is not null && _logger.IsEnabled(LogLevel.Trace))
         {
             await _logger.LogTraceAsync("DisplayBeforeSessionStartAsync");
@@ -283,56 +273,42 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
-            // TODO: forward
             switch (data)
             {
                 case FormattedTextOutputDeviceData formattedTextOutputDeviceData:
+                    if (formattedTextOutputDeviceData.ForegroundColor is SystemConsoleColor color)
                     {
-                        ConsoleColor currentForegroundColor = _console.GetForegroundColor();
-                        ConsoleColor currentGetBackgroundColor = _console.GetBackgroundColor();
-                        try
+                        switch (color.ConsoleColor)
                         {
-                            if (formattedTextOutputDeviceData.BackgroundColor is SystemConsoleColor backgroundColor)
-                            {
-                                _console.SetBackgroundColor(backgroundColor.ConsoleColor);
-                            }
-
-                            if (formattedTextOutputDeviceData.ForegroundColor is SystemConsoleColor foregroundColor)
-                            {
-                                _console.SetForegroundColor(foregroundColor.ConsoleColor);
-                            }
-
-                            _console.WriteLine(formattedTextOutputDeviceData.Text);
+                            case ConsoleColor.Red:
+                                _consoleLogger.WriteErrorMessage(_assemblyName, _targetFramework, _architecture, formattedTextOutputDeviceData.Text);
+                                break;
+                            case ConsoleColor.Yellow:
+                                _consoleLogger.WriteWarningMessage(_assemblyName, _targetFramework, _architecture, formattedTextOutputDeviceData.Text);
+                                break;
+                            default:
+                                _consoleLogger.WriteMessage(formattedTextOutputDeviceData.Text);
+                                break;
                         }
-                        finally
-                        {
-                            _console.SetBackgroundColor(currentGetBackgroundColor);
-                            _console.SetForegroundColor(currentForegroundColor);
-                        }
-
-                        break;
                     }
+                    else
+                    {
+                        _consoleLogger.WriteMessage(formattedTextOutputDeviceData.Text);
+                    }
+
+                    break;
 
                 case TextOutputDeviceData textOutputDeviceData:
                     {
                         await LogDebugAsync(textOutputDeviceData.Text);
-                        _console.WriteLine(textOutputDeviceData.Text);
+                        _consoleLogger.WriteMessage(textOutputDeviceData.Text);
                         break;
                     }
 
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
                     {
-                        ConsoleColor currentForegroundColor = _console.GetForegroundColor();
-                        try
-                        {
-                            _console.SetForegroundColor(ConsoleColor.Red);
-                            await LogDebugAsync(exceptionOutputDeviceData.Exception.ToString());
-                            _console.WriteLine(exceptionOutputDeviceData.Exception);
-                        }
-                        finally
-                        {
-                            _console.SetForegroundColor(currentForegroundColor);
-                        }
+                        await LogDebugAsync(exceptionOutputDeviceData.Exception.ToString());
+                        _consoleLogger.WriteErrorMessage(_assemblyName, _targetFramework, _architecture, exceptionOutputDeviceData.Exception);
 
                         break;
                     }
@@ -490,50 +466,6 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
                 // TODO: what is this?
                 _testRequestExecutionTimeInfo = testRequestExecutionTimeInfo;
                 break;
-        }
-    }
-
-    private async Task ConsoleWriteAsync(string? text, ConsoleColor? color = null)
-    {
-        if (_isVSTestMode)
-        {
-            return;
-        }
-
-        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
-        {
-            ConsoleColor currentForegroundColor = _console.GetForegroundColor();
-            try
-            {
-                _console.SetForegroundColor(color ?? currentForegroundColor);
-                _console.Write(text);
-            }
-            finally
-            {
-                _console.SetForegroundColor(currentForegroundColor);
-            }
-        }
-    }
-
-    private async Task ConsoleWriteLineAsync(string? text, ConsoleColor? color = null)
-    {
-        if (_isVSTestMode)
-        {
-            return;
-        }
-
-        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
-        {
-            ConsoleColor currentForegroundColor = _console.GetForegroundColor();
-            try
-            {
-                _console.SetForegroundColor(color ?? currentForegroundColor);
-                _console.WriteLine(text);
-            }
-            finally
-            {
-                _console.SetForegroundColor(currentForegroundColor);
-            }
         }
     }
 

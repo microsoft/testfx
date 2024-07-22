@@ -5,16 +5,22 @@ namespace Microsoft.Testing.Platform.UI;
 
 internal sealed class AssemblyRun
 {
-    public AssemblyRun(int slotIndex, AssemblyRunStartedUpdate assemblyRunStartedUpdate, StopwatchAbstraction stopwatch)
+    public AssemblyRun(int slotIndex, string assembly, string? targetFramework, string? architecture, StopwatchAbstraction stopwatch)
     {
         SlotIndex = slotIndex;
-        AssemblyRunStartedUpdate = assemblyRunStartedUpdate;
+        Assembly = assembly;
+        TargetFramework = targetFramework;
+        Architecture = architecture;
         Stopwatch = stopwatch;
     }
 
     public int SlotIndex { get; }
 
-    public AssemblyRunStartedUpdate AssemblyRunStartedUpdate { get; }
+    public string Assembly { get; }
+
+    public string? TargetFramework { get; }
+
+    public string? Architecture { get; }
 
     public StopwatchAbstraction Stopwatch { get; }
 
@@ -33,4 +39,10 @@ internal sealed class AssemblyRun
     public int TimedOutTests { get; internal set; }
 
     public int CancelledTests { get; internal set; }
+
+    internal void AddError(string text)
+        => Messages.Add(new ErrorMessage(text));
+
+    internal void AddWarning(string text)
+        => Messages.Add(new WarningMessage(text));
 }

@@ -32,6 +32,6 @@ internal class AnsiDetector
         new("alacritty"), // Alacritty
     };
 
-    internal static bool IsAnsiSupported(string termType)
+    public static bool IsAnsiSupported(string? termType)
         => !RoslynString.IsNullOrEmpty(termType) && TerminalsRegexes.Any(regex => regex.IsMatch(termType));
 }

@@ -4,6 +4,8 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
+using Microsoft.Testing.Platform.Helpers;
+
 namespace Microsoft.Testing.Platform.UI;
 
 /// <summary>
@@ -11,32 +13,27 @@ namespace Microsoft.Testing.Platform.UI;
 /// </summary>
 internal sealed class Terminal : ITerminal
 {
-    private const int BigUnknownDimension = 2 << 23;
-
-    /// <summary>
-    /// The encoding read from <see cref="Console.OutputEncoding"/> when the terminal is constructed.
-    /// </summary>
-    private readonly Encoding _originalOutputEncoding;
+    private const int BigUnknownDimension = int.MaxValue;
 
     /// <summary>
     /// A string buffer used with <see cref="BeginUpdate"/>/<see cref="EndUpdate"/>.
     /// </summary>
     private readonly StringBuilder _outputBuilder = new();
 
+    private readonly IConsole _console;
+
     /// <summary>
     /// True if <see cref="BeginUpdate"/> was called and <c>Write*</c> methods are buffering instead of directly printing.
     /// </summary>
     private bool _isBuffering;
 
-    internal TextWriter Output { private get; set; }
-
     /// <inheritdoc/>
     public int Height
-        => Console.IsOutputRedirected ? BigUnknownDimension : Console.BufferHeight;
+        => _console.IsOutputRedirected ? BigUnknownDimension : _console.BufferHeight;
 
     /// <inheritdoc/>
     public int Width
-        => Console.IsOutputRedirected ? BigUnknownDimension : Console.BufferWidth;
+        => _console.IsOutputRedirected ? BigUnknownDimension : _console.BufferWidth;
 
     /// <inheritdoc/>
     /// <remarks>
@@ -44,23 +41,9 @@ internal sealed class Terminal : ITerminal
     /// </remarks>
     public bool SupportsProgressReporting { get; } = !RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
-    public Terminal()
+    public Terminal(IConsole console)
     {
-        _originalOutputEncoding = Console.OutputEncoding;
-        Console.OutputEncoding = Encoding.UTF8;
-
-        // Capture the TextWriter AFTER setting the encoding, because setting
-        // the encoding creates a new TextWriter in the Console class, but it's
-        // possible to hang on to the old one (with the wrong encoding) and emit
-        // garbage, as in https://github.com/dotnet/msbuild/issues/9030.
-        Output = Console.Out;
-    }
-
-    internal Terminal(TextWriter output)
-    {
-        Output = output;
-
-        _originalOutputEncoding = Encoding.UTF8;
+        _console = console;
     }
 
     /// <inheritdoc/>
@@ -84,7 +67,7 @@ internal sealed class Terminal : ITerminal
 
         _isBuffering = false;
 
-        Output.Write(_outputBuilder.ToString());
+        _console.Write(_outputBuilder.ToString());
         _outputBuilder.Clear();
     }
 
@@ -97,24 +80,9 @@ internal sealed class Terminal : ITerminal
         }
         else
         {
-            Output.Write(text);
+            _console.Write(text);
         }
     }
-
-#if NETCOREAPP
-    /// <inheritdoc/>
-    public void Write(ReadOnlySpan<char> text)
-    {
-        if (_isBuffering)
-        {
-            _outputBuilder.Append(text);
-        }
-        else
-        {
-            Output.Write(text);
-        }
-    }
-#endif
 
     /// <inheritdoc/>
     public void WriteLine(string text)
@@ -125,26 +93,9 @@ internal sealed class Terminal : ITerminal
         }
         else
         {
-            Output.WriteLine(text);
+            _console.WriteLine(text);
         }
     }
-
-#if NETCOREAPP
-    /// <inheritdoc/>
-    public void WriteLineFitToWidth(ReadOnlySpan<char> text)
-    {
-        ReadOnlySpan<char> truncatedText = text.Slice(0, Math.Min(text.Length, Width - 1));
-        if (_isBuffering)
-        {
-            _outputBuilder.Append(truncatedText);
-            _outputBuilder.AppendLine();
-        }
-        else
-        {
-            Output.WriteLine(truncatedText);
-        }
-    }
-#endif
 
     /// <inheritdoc/>
     public void WriteColor(TerminalColor color, string text)
@@ -175,21 +126,6 @@ internal sealed class Terminal : ITerminal
         else
         {
             WriteLine($"{AnsiCodes.CSI}{(int)color}{AnsiCodes.SetColor}{text}{AnsiCodes.SetDefaultColor}");
-        }
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        try
-        {
-            Console.OutputEncoding = _originalOutputEncoding;
-        }
-        catch
-        {
-            // In some terminal emulators setting back the previous console output encoding fails.
-            // See https://github.com/dotnet/msbuild/issues/9662.
-            // We do not want to throw an exception if it happens, since it is a non-essential failure in the logger.
         }
     }
 }

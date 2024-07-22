@@ -5,20 +5,4 @@ namespace Microsoft.Testing.Platform.UI;
 
 internal interface IMessage
 {
-    MessageSeverity Severity { get; }
-
-    object Message { get; }
-}
-
-internal enum MessageSeverity
-{
-    /// <summary>
-    /// Error.
-    /// </summary>
-    Error,
-
-    /// <summary>
-    /// Warning.
-    /// </summary>
-    Warning,
 }

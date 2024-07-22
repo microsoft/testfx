@@ -10,6 +10,12 @@ internal interface IConsole
 {
     event ConsoleCancelEventHandler? CancelKeyPress;
 
+    public int BufferHeight { get; }
+
+    public int BufferWidth { get; }
+
+    public bool IsOutputRedirected { get; }
+
     void SetForegroundColor(ConsoleColor color);
 
     void SetBackgroundColor(ConsoleColor color);

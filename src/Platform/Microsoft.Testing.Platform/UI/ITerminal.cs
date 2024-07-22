@@ -6,7 +6,7 @@ namespace Microsoft.Testing.Platform.UI;
 /// <summary>
 /// An abstraction of a terminal, built specifically to fit the <see cref="ConsoleLogger"/> needs.
 /// </summary>
-internal interface ITerminal : IDisposable
+internal interface ITerminal
 {
     /// <summary>
     /// Gets width of the terminal buffer.
@@ -41,25 +41,10 @@ internal interface ITerminal : IDisposable
     /// </summary>
     void Write(string text);
 
-#if NETCOREAPP
-    /// <summary>
-    /// Writes a string to the output. Or buffers it if <see cref="BeginUpdate"/> was called.
-    /// </summary>
-    void Write(ReadOnlySpan<char> text);
-#endif
-
     /// <summary>
     /// Writes a string to the output. Or buffers it if <see cref="BeginUpdate"/> was called.
     /// </summary>
     void WriteLine(string text);
-
-#if NETCOREAPP
-    /// <summary>
-    /// Writes a string to the output, truncating it if it wouldn't fit on one screen line.
-    /// Or buffers it if <see cref="BeginUpdate"/> was called.
-    /// </summary>
-    void WriteLineFitToWidth(ReadOnlySpan<char> text);
-#endif
 
     /// <summary>
     /// Writes a string to the output using the given color. Or buffers it if <see cref="BeginUpdate"/> was called.

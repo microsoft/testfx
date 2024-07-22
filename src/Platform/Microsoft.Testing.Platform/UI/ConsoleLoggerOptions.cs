@@ -29,4 +29,8 @@ internal class ConsoleLoggerOptions
     /// Gets minimum amount of tests to run.
     /// </summary>
     public int MinimumExpectedTests { get; init; }
+
+    public YesNoAuto UseProgress { get; init; }
+
+    public YesNoAuto UseAnsi { get; init; }
 }
