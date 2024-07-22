@@ -3,7 +3,6 @@
 
 using System.Reflection;
 
-using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -17,7 +16,7 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         // Opt-out telemetry
-        // Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+        Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 
         if (Environment.GetEnvironmentVariable("TESTSERVERMODE") != "1")
         {
