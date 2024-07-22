@@ -14,6 +14,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -24,28 +25,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 internal class UnitTestRunner : MarshalByRefObject
 {
     private readonly ConcurrentDictionary<string, TestMethodInfo> _fixtureTests = new();
-
-    /// <summary>
-    /// Type cache.
-    /// </summary>
     private readonly TypeCache _typeCache;
-
-    /// <summary>
-    /// Reflect helper.
-    /// </summary>
     private readonly ReflectHelper _reflectHelper;
-
-    /// <summary>
-    /// Class cleanup manager.
-    /// </summary>
-    private ClassCleanupManager? _classCleanupManager;
+    private readonly ClassCleanupManager _classCleanupManager;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
     /// </summary>
     /// <param name="settings"> Specifies adapter settings that need to be instantiated in the domain running these tests. </param>
-    public UnitTestRunner(MSTestSettings settings)
-        : this(settings, ReflectHelper.Instance)
+    public UnitTestRunner(MSTestSettings settings, UnitTestElement[] testsToRun, int? classCleanupLifecycle)
+        : this(settings, testsToRun, classCleanupLifecycle, ReflectHelper.Instance)
     {
     }
 
@@ -54,7 +43,7 @@ internal class UnitTestRunner : MarshalByRefObject
     /// </summary>
     /// <param name="settings"> Specifies adapter settings. </param>
     /// <param name="reflectHelper"> The reflect Helper. </param>
-    internal UnitTestRunner(MSTestSettings settings, ReflectHelper reflectHelper)
+    internal UnitTestRunner(MSTestSettings settings, UnitTestElement[] testsToRun, int? classCleanupLifecycle, ReflectHelper reflectHelper)
     {
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
@@ -62,28 +51,7 @@ internal class UnitTestRunner : MarshalByRefObject
 
         _reflectHelper = reflectHelper;
         _typeCache = new TypeCache(reflectHelper);
-    }
 
-    /// <summary>
-    /// Returns object to be used for controlling lifetime, null means infinite lifetime.
-    /// </summary>
-    /// <returns>
-    /// The <see cref="object"/>.
-    /// </returns>
-    [SecurityCritical]
-#if NET5_0_OR_GREATER
-    [Obsolete]
-#endif
-    public override object InitializeLifetimeService() => null!;
-
-    /// <summary>
-    /// Initialized the class cleanup manager for the unit test runner. Note, this can run over process-isolation,
-    /// and all inputs must be serializable from host process.
-    /// </summary>
-    /// <param name="testsToRun">the list of tests that will be run in this execution.</param>
-    /// <param name="classCleanupLifecycle">The assembly level class cleanup lifecycle.</param>
-    internal void InitializeClassCleanupManager(IEnumerable<UnitTestElement> testsToRun, int? classCleanupLifecycle)
-    {
         // We can't transport the Enum across AppDomain boundaries because of backwards and forwards compatibility.
         // So we're converting here if we can, or falling back to the default.
         ClassCleanupBehavior lifecycle = ClassCleanupBehavior.EndOfAssembly;
@@ -99,6 +67,18 @@ internal class UnitTestRunner : MarshalByRefObject
             _reflectHelper);
     }
 
+    /// <summary>
+    /// Returns object to be used for controlling lifetime, null means infinite lifetime.
+    /// </summary>
+    /// <returns>
+    /// The <see cref="object"/>.
+    /// </returns>
+    [SecurityCritical]
+#if NET5_0_OR_GREATER
+    [Obsolete]
+#endif
+    public override object InitializeLifetimeService() => null!;
+
     internal FixtureTestResult GetFixtureTestResult(TestMethod testMethod, string fixtureType)
     {
         // For the fixture methods, we need to return the appropriate result.
@@ -109,14 +89,14 @@ internal class UnitTestRunner : MarshalByRefObject
             {
                 return testMethodInfo.Parent.IsClassInitializeExecuted
                     ? new(true, GetOutcome(testMethodInfo.Parent.ClassInitializationException), testMethodInfo.Parent.ClassInitializationException?.Message)
-                    : new(true, ObjectModel.UnitTestOutcome.Inconclusive, null);
+                    : new(true, UnitTestOutcome.Inconclusive, null);
             }
 
             if (fixtureType == Constants.ClassCleanupFixtureTrait)
             {
                 return testMethodInfo.Parent.IsClassInitializeExecuted
                 ? new(testMethodInfo.Parent.IsClassInitializeExecuted, GetOutcome(testMethodInfo.Parent.ClassCleanupException), testMethodInfo.Parent.ClassCleanupException?.Message)
-                : new(true, ObjectModel.UnitTestOutcome.Inconclusive, null);
+                : new(true, UnitTestOutcome.Inconclusive, null);
             }
         }
 
@@ -132,9 +112,10 @@ internal class UnitTestRunner : MarshalByRefObject
             }
         }
 
-        return new(false, ObjectModel.UnitTestOutcome.Inconclusive, null);
+        return new(false, UnitTestOutcome.Inconclusive, null);
 
-        static ObjectModel.UnitTestOutcome GetOutcome(Exception? exception) => exception == null ? ObjectModel.UnitTestOutcome.Passed : ObjectModel.UnitTestOutcome.Failed;
+        // Local functions
+        static UnitTestOutcome GetOutcome(Exception? exception) => exception == null ? UnitTestOutcome.Passed : UnitTestOutcome.Failed;
     }
 
     /// <summary>
@@ -163,96 +144,149 @@ internal class UnitTestRunner : MarshalByRefObject
                 testContext,
                 MSTestSettings.CurrentSettings.CaptureDebugTraces);
 
-            if (_classCleanupManager == null && testMethodInfo is { Parent.HasExecutableCleanupMethod: true })
-            {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFoundClassCleanup);
-            }
-
+            UnitTestResult[] result;
             if (!IsTestMethodRunnable(testMethod, testMethodInfo, out UnitTestResult[]? notRunnableResult))
             {
-                if (_classCleanupManager is not null)
-                {
-                    RunRequiredCleanups(testContext, testMethodInfo, testMethod, notRunnableResult);
-                }
+                result = notRunnableResult;
+            }
+            else
+            {
+                DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
 
-                return notRunnableResult;
+                // Keep track of all non-runnable methods so that we can return the appropriate result at the end.
+                _fixtureTests.TryAdd(testMethod.AssemblyName, testMethodInfo);
+                _fixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo);
+
+                UnitTestResult assemblyInitializeResult = RunAssemblyInitializeIfNeeded(testMethodInfo, testContext);
+
+                if (assemblyInitializeResult.Outcome != UnitTestOutcome.Passed)
+                {
+                    result = [assemblyInitializeResult];
+                }
+                else
+                {
+                    UnitTestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContext, assemblyInitializeResult.StandardOut!, assemblyInitializeResult.StandardError!, assemblyInitializeResult.DebugTrace!, assemblyInitializeResult.TestContextMessages!);
+                    if (classInitializeResult.Outcome != UnitTestOutcome.Passed)
+                    {
+                        result = [classInitializeResult];
+                    }
+                    else
+                    {
+                        // Run the test method
+                        var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext);
+                        result = testMethodRunner.Execute(classInitializeResult.StandardOut!, classInitializeResult.StandardError!, classInitializeResult.DebugTrace!, classInitializeResult.TestContextMessages!);
+                    }
+                }
             }
 
-            DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
-
-            // Keep track of all non-runnable methods so that we can return the appropriate result at the end.
-            _fixtureTests.TryAdd(testMethod.AssemblyName, testMethodInfo);
-            _fixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo);
-
-            var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
-            UnitTestResult[] result = testMethodRunner.Execute();
-            RunRequiredCleanups(testContext, testMethodInfo, testMethod, result);
+            testMethodInfo?.Parent.RunClassCleanup(testContext, _classCleanupManager, testMethodInfo, testMethod, result);
+            RunAssemblyCleanupIfNeeded(testContext, _classCleanupManager, _typeCache, result);
             return result;
         }
         catch (TypeInspectionException ex)
         {
             // Catch any exception thrown while inspecting the test method and return failure.
-            return [new(ObjectModel.UnitTestOutcome.Failed, ex.Message)];
+            return [new(UnitTestOutcome.Failed, ex.Message)];
         }
     }
 
-    private void RunRequiredCleanups(ITestContext testContext, TestMethodInfo? testMethodInfo, TestMethod testMethod, UnitTestResult[] results)
+    private static UnitTestResult RunAssemblyInitializeIfNeeded(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
-        bool shouldRunClassCleanup = false;
-        bool shouldRunClassAndAssemblyCleanup = false;
-        if (testMethodInfo is not null)
-        {
-            _classCleanupManager?.MarkTestComplete(testMethodInfo, testMethod, out shouldRunClassCleanup, out shouldRunClassAndAssemblyCleanup);
-        }
+        string? initializationLogs = string.Empty;
+        string? initializationErrorLogs = string.Empty;
+        string? initializationTrace = string.Empty;
+        string? initializationTestContextMessages = string.Empty;
+        UnitTestResult result = new(UnitTestOutcome.Passed, null);
 
-        using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
         try
         {
-            if (shouldRunClassCleanup)
+            using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+            try
             {
-                testMethodInfo?.Parent.ExecuteClassCleanup();
+                testMethodInfo.Parent.Parent.RunAssemblyInitialize(testContext.Context);
             }
-
-            if (shouldRunClassAndAssemblyCleanup)
+            finally
             {
-                IEnumerable<TestClassInfo> classInfoCache = _typeCache.ClassInfoListWithExecutableCleanupMethods;
+                initializationLogs = logListener.GetAndClearStandardOutput();
+                initializationErrorLogs = logListener.GetAndClearStandardError();
+                initializationTrace = logListener.GetAndClearDebugTrace();
+                initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+            }
+        }
+        catch (TestFailedException ex)
+        {
+            result = new(ex);
+        }
+        catch (Exception ex)
+        {
+            result = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()));
+        }
+        finally
+        {
+            result.StandardOut = initializationLogs;
+            result.StandardError = initializationErrorLogs;
+            result.DebugTrace = initializationTrace;
+            result.TestContextMessages = initializationTestContextMessages;
+        }
+
+        return result;
+    }
+
+    private static void RunAssemblyCleanupIfNeeded(ITestContext testContext, ClassCleanupManager classCleanupManager, TypeCache typeCache, UnitTestResult[] results)
+    {
+        if (!classCleanupManager.ShouldRunEndOfAssemblyCleanup)
+        {
+            return;
+        }
+
+        string? initializationLogs = string.Empty;
+        string? initializationErrorLogs = string.Empty;
+        string? initializationTrace = string.Empty;
+        string? initializationTestContextMessages = string.Empty;
+        try
+        {
+            using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+            try
+            {
+                IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
                 foreach (TestClassInfo classInfo in classInfoCache)
                 {
                     classInfo.ExecuteClassCleanup();
                 }
 
-                IEnumerable<TestAssemblyInfo> assemblyInfoCache = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
+                IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
                 foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
                 {
                     assemblyInfo.ExecuteAssemblyCleanup();
                 }
             }
+            finally
+            {
+                initializationLogs = logListener.GetAndClearStandardOutput();
+                initializationErrorLogs = logListener.GetAndClearStandardError();
+                initializationTrace = logListener.GetAndClearDebugTrace();
+                initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+            }
         }
         catch (Exception ex)
         {
-            // We mainly expect TestFailedException here as each cleanup method is executed in a try-catch block but
-            // for the sake of the catch-all mechanism, let's keep it as Exception.
-            if (results.Length == 0)
-            {
-                return;
-            }
-
-            UnitTestResult lastResult = results[results.Length - 1];
-            lastResult.Outcome = ObjectModel.UnitTestOutcome.Failed;
-            lastResult.ErrorMessage = ex.Message;
-            lastResult.ErrorStackTrace = ex.StackTrace;
-        }
-        finally
-        {
-            string? cleanupTestContextMessages = testContext.GetAndClearDiagnosticMessages();
-
             if (results.Length > 0)
             {
                 UnitTestResult lastResult = results[results.Length - 1];
-                lastResult.StandardOut += logListener.StandardOutput;
-                lastResult.StandardError += logListener.StandardError;
-                lastResult.DebugTrace += logListener.DebugTrace;
-                lastResult.TestContextMessages += cleanupTestContextMessages;
+                lastResult.Outcome = UnitTestOutcome.Error;
+                lastResult.ErrorMessage = ex.Message;
+                lastResult.ErrorStackTrace = ex.StackTrace;
+            }
+        }
+        finally
+        {
+            if (results.Length > 0)
+            {
+                UnitTestResult lastResult = results[results.Length - 1];
+                lastResult.StandardOut += initializationLogs;
+                lastResult.StandardError += initializationErrorLogs;
+                lastResult.DebugTrace += initializationTrace;
+                lastResult.TestContextMessages += initializationTestContextMessages;
             }
         }
     }
@@ -276,7 +310,7 @@ internal class UnitTestRunner : MarshalByRefObject
                 notRunnableResult =
                 [
                     new(
-                        ObjectModel.UnitTestOutcome.NotFound,
+                        UnitTestOutcome.NotFound,
                         string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name)),
                 ];
                 return false;
@@ -289,7 +323,7 @@ internal class UnitTestRunner : MarshalByRefObject
             {
                 notRunnableResult =
                 [
-                    new(ObjectModel.UnitTestOutcome.NotRunnable, testMethodInfo.NotRunnableReason),
+                    new(UnitTestOutcome.NotRunnable, testMethodInfo.NotRunnableReason),
                 ];
                 return false;
             }
@@ -314,67 +348,12 @@ internal class UnitTestRunner : MarshalByRefObject
         if (isIgnoreAttributeOnClass || isIgnoreAttributeOnMethod)
         {
             {
-                notRunnableResult = [new UnitTestResult(ObjectModel.UnitTestOutcome.Ignored, ignoreMessage)];
+                notRunnableResult = [new UnitTestResult(UnitTestOutcome.Ignored, ignoreMessage)];
                 return false;
             }
         }
 
         notRunnableResult = null;
         return true;
-    }
-
-    private class ClassCleanupManager
-    {
-        private readonly ClassCleanupBehavior? _lifecycleFromMsTest;
-        private readonly ClassCleanupBehavior _lifecycleFromAssembly;
-        private readonly ReflectHelper _reflectHelper;
-        private readonly ConcurrentDictionary<string, HashSet<string>> _remainingTestsByClass;
-
-        public ClassCleanupManager(
-            IEnumerable<UnitTestElement> testsToRun,
-            ClassCleanupBehavior? lifecycleFromMsTest,
-            ClassCleanupBehavior lifecycleFromAssembly,
-            ReflectHelper reflectHelper)
-        {
-            IEnumerable<UnitTestElement> runnableTests = testsToRun.Where(t => t.Traits is null || !t.Traits.Any(t => t.Name == Constants.FixturesTestTrait));
-            _remainingTestsByClass =
-                new(runnableTests.GroupBy(t => t.TestMethod.FullClassName)
-                    .ToDictionary(
-                        g => g.Key,
-                        g => new HashSet<string>(g.Select(t => t.TestMethod.UniqueName))));
-            _lifecycleFromMsTest = lifecycleFromMsTest;
-            _lifecycleFromAssembly = lifecycleFromAssembly;
-            _reflectHelper = reflectHelper;
-        }
-
-        public void MarkTestComplete(TestMethodInfo testMethodInfo, TestMethod testMethod, out bool shouldRunEndOfClassCleanup,
-            out bool shouldRunEndOfAssemblyCleanup)
-        {
-            shouldRunEndOfClassCleanup = false;
-            shouldRunEndOfAssemblyCleanup = false;
-            if (!_remainingTestsByClass.TryGetValue(testMethodInfo.TestClassName, out HashSet<string>? testsByClass))
-            {
-                return;
-            }
-
-            lock (testsByClass)
-            {
-                testsByClass.Remove(testMethod.UniqueName);
-                if (testsByClass.Count == 0)
-                {
-                    _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
-                    if (testMethodInfo.Parent.HasExecutableCleanupMethod)
-                    {
-                        ClassCleanupBehavior cleanupLifecycle = _reflectHelper.GetClassCleanupBehavior(testMethodInfo.Parent)
-                            ?? _lifecycleFromMsTest
-                            ?? _lifecycleFromAssembly;
-
-                        shouldRunEndOfClassCleanup = cleanupLifecycle == ClassCleanupBehavior.EndOfClass;
-                    }
-                }
-
-                shouldRunEndOfAssemblyCleanup = _remainingTestsByClass.IsEmpty;
-            }
-        }
     }
 }
