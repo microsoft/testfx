@@ -84,7 +84,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         return nodeStatistics;
     }
 
-    internal /* for testing */ Task GetIdleUpdateTaskAsync() => _idleUpdateTask is not null ? _idleUpdateTask : Task.CompletedTask;
+    internal /* for testing */ Task GetIdleUpdateTaskAsync() => _idleUpdateTask ?? Task.CompletedTask;
 
     private async Task ProcessTestNodeUpdateAsync(TestNodeUpdateMessage update, CancellationToken cancellationToken)
     {

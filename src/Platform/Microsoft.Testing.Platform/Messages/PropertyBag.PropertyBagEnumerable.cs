@@ -25,10 +25,10 @@ public sealed partial class PropertyBag
         private IProperty? _current;
 
         // https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerator-1.current?view=netframework-4.8#remarks
-        public readonly IProperty Current => _current is null ? throw new InvalidOperationException("Invalid Current state, possible wrong usage.") : _current;
+        public readonly IProperty Current => _current ?? throw new InvalidOperationException("Invalid Current state, possible wrong usage.");
 
         // https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerator-1.current?view=netframework-4.8#remarks
-        readonly object IEnumerator.Current => _current is null ? throw new InvalidOperationException("Invalid Current state, possible wrong usage.") : _current;
+        readonly object IEnumerator.Current => _current ?? throw new InvalidOperationException("Invalid Current state, possible wrong usage.");
 
         public bool MoveNext()
         {
