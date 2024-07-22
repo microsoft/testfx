@@ -27,6 +27,9 @@ public class Program
 
             // Enable Trx
             // testApplicationBuilder.AddTrxReportProvider();
+
+            // Enable Telemetry
+            // testApplicationBuilder.AddAppInsightsTelemetryProvider();
             using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
             return await testApplication.RunAsync();
         }
@@ -49,6 +52,8 @@ public class Program
                 return Task.CompletedTask;
             });
             await runRequest.WaitCompletionAsync();
+
+            await client.ExitAsync();
 
             return 0;
         }
