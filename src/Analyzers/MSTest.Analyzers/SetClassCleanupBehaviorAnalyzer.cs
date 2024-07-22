@@ -13,17 +13,17 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0034: <inheritdoc cref="Resources.SetClassCleanupBehaviorTitle"/>.
+/// MSTEST0034: <inheritdoc cref="Resources.SetClassCleanupEndOFClassBehaviorTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-public sealed class SetClassCleanupBehaviorAnalyzer : DiagnosticAnalyzer
+public sealed class SetClassCleanupEndOFClassBehaviorAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly LocalizableResourceString Title = new(nameof(Resources.SetClassCleanupBehaviorTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString Description = new(nameof(Resources.SetClassCleanupBehaviorDescription), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.SetClassCleanupBehaviorMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Title = new(nameof(Resources.SetClassCleanupEndOFClassBehaviorTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.SetClassCleanupEndOFClassBehaviorDescription), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.SetClassCleanupEndOFClassBehaviorMessageFormat), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor SetClassCleanupBehaviorRule = DiagnosticDescriptorHelper.Create(
-        id: DiagnosticIds.SetClassCleanupBehaviorRuleId,
+    internal static readonly DiagnosticDescriptor SetClassCleanupEndOFClassBehaviorRule = DiagnosticDescriptorHelper.Create(
+        id: DiagnosticIds.SetClassCleanupEndOFClassBehaviorRuleId,
         Title,
         MessageFormat,
         Description,
@@ -32,7 +32,7 @@ public sealed class SetClassCleanupBehaviorAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(SetClassCleanupBehaviorRule);
+        = ImmutableArray.Create(SetClassCleanupEndOFClassBehaviorRule);
 
     public override void Initialize(AnalysisContext context)
     {
@@ -76,7 +76,7 @@ public sealed class SetClassCleanupBehaviorAnalyzer : DiagnosticAnalyzer
 
         if (hasCleanupAttr && !hasCleanupBehavior)
         {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(SetClassCleanupBehaviorRule));
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(SetClassCleanupEndOFClassBehaviorRule));
         }
     }
 }

@@ -544,27 +544,27 @@ namespace MSTest.Analyzers {
         /// <summary>
         ///   Looks up a localized string similar to Set a &apos;ClassCleanupBehavior&apos; to &apos;[ClassCleanup]&apos;..
         /// </summary>
-        internal static string SetClassCleanupBehaviorDescription {
+        internal static string SetClassCleanupEndOFClassBehaviorDescription {
             get {
-                return ResourceManager.GetString("SetClassCleanupBehaviorDescription", resourceCulture);
+                return ResourceManager.GetString("SetClassCleanupEndOFClassBehaviorDescription", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Set a &apos;ClassCleanupBehavior&apos; to &apos;[ClassCleanup]&apos;.
         /// </summary>
-        internal static string SetClassCleanupBehaviorMessageFormat {
+        internal static string SetClassCleanupEndOFClassBehaviorMessageFormat {
             get {
-                return ResourceManager.GetString("SetClassCleanupBehaviorMessageFormat", resourceCulture);
+                return ResourceManager.GetString("SetClassCleanupEndOFClassBehaviorMessageFormat", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Set a &apos;ClassCleanupBehavior&apos; to &apos;[ClassCleanup]&apos;.
         /// </summary>
-        internal static string SetClassCleanupBehaviorTitle {
+        internal static string SetClassCleanupEndOFClassBehaviorTitle {
             get {
-                return ResourceManager.GetString("SetClassCleanupBehaviorTitle", resourceCulture);
+                return ResourceManager.GetString("SetClassCleanupEndOFClassBehaviorTitle", resourceCulture);
             }
         }
         

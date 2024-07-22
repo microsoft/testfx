@@ -460,13 +460,13 @@
   <data name="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat" xml:space="preserve">
     <value>Review or remove the assertion as its condition is known to be always true</value>
   </data>
-  <data name="SetClassCleanupBehaviorTitle" xml:space="preserve">
+  <data name="SetClassCleanupEndOFClassBehaviorTitle" xml:space="preserve">
     <value>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</value>
   </data>
-  <data name="SetClassCleanupBehaviorDescription" xml:space="preserve">
+  <data name="SetClassCleanupEndOFClassBehaviorDescription" xml:space="preserve">
     <value>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'.</value>
   </data>
-  <data name="SetClassCleanupBehaviorMessageFormat" xml:space="preserve">
+  <data name="SetClassCleanupEndOFClassBehaviorMessageFormat" xml:space="preserve">
     <value>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</value>
   </data>
 </root>

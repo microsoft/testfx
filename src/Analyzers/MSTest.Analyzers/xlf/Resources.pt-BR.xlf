@@ -314,17 +314,17 @@
         <target state="translated">Os tipos públicos devem ser classes de teste</target>
         <note />
       </trans-unit>
-      <trans-unit id="SetClassCleanupBehaviorDescription">
+      <trans-unit id="SetClassCleanupEndOFClassBehaviorDescription">
         <source>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'.</source>
         <target state="new">Set a 'ClassCleanupBehavior' to '[ClassCleanup]'.</target>
         <note />
       </trans-unit>
-      <trans-unit id="SetClassCleanupBehaviorMessageFormat">
+      <trans-unit id="SetClassCleanupEndOFClassBehaviorMessageFormat">
         <source>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</source>
         <target state="new">Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</target>
         <note />
       </trans-unit>
-      <trans-unit id="SetClassCleanupBehaviorTitle">
+      <trans-unit id="SetClassCleanupEndOFClassBehaviorTitle">
         <source>Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</source>
         <target state="new">Set a 'ClassCleanupBehavior' to '[ClassCleanup]'</target>
         <note />
