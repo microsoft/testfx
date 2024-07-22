@@ -382,13 +382,20 @@ internal partial class ConsoleLogger : IDisposable
     /// </summary>
     private void ThreadProc()
     {
-        // 1_000 / 30 is a poor approx of 30Hz
-        while (!_cts.Token.WaitHandle.WaitOne(1_000 / 30))
+        try
         {
-            lock (_lock)
+            // 1_000 / 30 is a poor approx of 30Hz
+            while (!_cts.Token.WaitHandle.WaitOne(1_000 / 30))
             {
-                DisplayNodes();
+                lock (_lock)
+                {
+                    DisplayNodes();
+                }
             }
+        }
+        catch (ObjectDisposedException)
+        {
+            // When we dispose _cts too early this will throw.
         }
 
         EraseNodes();
