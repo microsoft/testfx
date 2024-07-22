@@ -63,7 +63,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         CancellationToken cancellationToken)
     {
         ArgumentGuard.IsNotNull(pipeNameDescription);
-        _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances);
+        _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
         _callback = callback;
         _environment = environment;
         _logger = logger;
