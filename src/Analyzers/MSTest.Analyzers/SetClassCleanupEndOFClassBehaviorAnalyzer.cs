@@ -73,7 +73,7 @@ public sealed class SetClassCleanupEndOFClassBehaviorAnalyzer : DiagnosticAnalyz
                 foreach (TypedConstant arg in methodAttribute.ConstructorArguments)
                 {
                     if (SymbolEqualityComparer.Default.Equals(arg.Type, classCleanupBehaviorSymbol)
-                        && arg.Value!.Equals(1))
+                        && arg.Value!.Equals(1)) // the value for EndOFClass behavior in the CleanupBehavior enum.
                     {
                         hasCleanupEndOClassBehavior = true;
                     }
