@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -67,13 +68,20 @@ internal class TestMethodRunner
     internal UnitTestResult[] Execute(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(_testMethodInfo.Parent.ClassAttribute);
+        bool isSTATestMethod = _testMethodInfo.TestMethodOptions.Executor is not null && AttributeComparer.IsDerived<STATestMethodAttribute>(_testMethodInfo.TestMethodOptions.Executor);
+        bool isSTARequested = isSTATestClass || isSTATestMethod;
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        if (isSTATestClass && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+        if (isSTARequested && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
             UnitTestResult[] results = Array.Empty<UnitTestResult>();
             Thread entryPointThread = new(() => results = SafeRunTestMethod(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages))
             {
-                Name = "MSTest STATestClass",
+                Name = (isSTATestClass, isSTATestMethod) switch
+                {
+                    (true, _) => "MSTest STATestClass",
+                    (_, true) => "MSTest STATestMethod",
+                    _ => throw ApplicationStateGuard.Unreachable(),
+                },
             };
 
             entryPointThread.SetApartmentState(ApartmentState.STA);
@@ -93,7 +101,7 @@ internal class TestMethodRunner
         else
         {
             // If the requested apartment state is STA and the OS is not Windows, then warn the user.
-            if (!isWindowsOS && isSTATestClass)
+            if (!isWindowsOS && isSTARequested)
             {
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
             }
