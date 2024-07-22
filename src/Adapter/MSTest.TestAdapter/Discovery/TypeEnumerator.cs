@@ -89,6 +89,7 @@ internal class TypeEnumerator
 
             if (_testMethodValidator.IsValidTestMethod(method, _type, warnings))
             {
+                // ToString() outputs method name and its signature. This is necessary for overloaded methods to be recognized as distinct tests.
                 foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.ToString() ?? method.Name);
                 UnitTestElement testMethod = GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings);
 
