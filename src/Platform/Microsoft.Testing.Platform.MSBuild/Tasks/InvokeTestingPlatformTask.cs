@@ -238,7 +238,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     }
 
     protected override void ProcessStarted()
-        => _connectionLoopTask = Task.Run(() =>
+        => _connectionLoopTask = Task.Run(async () =>
         {
             try
             {
@@ -249,7 +249,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                     pipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
                     pipeServer.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
                     pipeServer.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
-                    pipeServer.WaitConnectionAsync(_waitForConnections.Token).GetAwaiter().GetResult();
+                    await pipeServer.WaitConnectionAsync(_waitForConnections.Token);
                     _connections.Add(pipeServer);
                     Log.LogMessage(MessageImportance.Low, $"Client connected to '{_pipeNameDescription.Name}'");
                 }
