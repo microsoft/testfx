@@ -9,6 +9,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -72,6 +74,8 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     {
         _dynamicDataDeclaringType = dynamicDataDeclaringType;
     }
+
+    internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; set; }
 
     /// <summary>
     /// Gets or sets the name of method used to customize the display name in test results.
@@ -194,7 +198,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
             // so that null do appear as "null". If you remove the call, and do string.Join(",", new object[] { null, "a" }),
             // you will get empty string while with the call you will get "null,a".
             return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name,
-                string.Join(",", data.AsEnumerable()));
+                string.Join(",", data.AsEnumerable().Select(x => TestDataSourceUtilities.GetHumanizedArguments(x, TestIdGenerationStrategy))));
         }
 
         return null;
