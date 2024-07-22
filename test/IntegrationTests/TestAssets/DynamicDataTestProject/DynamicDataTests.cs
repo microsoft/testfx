@@ -82,6 +82,18 @@ public class DynamicDataTests
     [DynamicData(nameof(GetExampleTestCases), DynamicDataSourceType.Method)]
     public void StackOverflowException_Example(ExampleTestCase exampleTestCase) => Assert.IsNotNull(exampleTestCase.Example);
 
+    [DataTestMethod]
+    [DynamicData(nameof(StringAndInt32), DynamicDataSourceType.Method)]
+    public void MethodWithOverload(string x, int y)
+    {
+    }
+
+    [DataTestMethod]
+    [DynamicData(nameof(Int32AndString), DynamicDataSourceType.Method)]
+    public void MethodWithOverload(int x, string y)
+    {
+    }
+
     private static void ParseAndAssert(string userData, User expectedUser)
     {
         // Prepare
@@ -181,5 +193,17 @@ public class DynamicDataTests
         public string TestCaseName { get; set; }
 
         public ExampleClass Example { get; set; }
+    }
+
+    private static IEnumerable<object[]> StringAndInt32()
+    {
+        yield return new object[] { "1", 1 };
+        yield return new object[] { "2", 1 };
+    }
+
+    private static IEnumerable<object[]> Int32AndString()
+    {
+        yield return new object[] { 1, "0" };
+        yield return new object[] { 2, "2" };
     }
 }
