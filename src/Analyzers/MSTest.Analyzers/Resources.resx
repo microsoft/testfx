@@ -460,13 +460,13 @@
   <data name="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat" xml:space="preserve">
     <value>Review or remove the assertion as its condition is known to be always true</value>
   </data>
-  <data name="SetClassCleanupEndOFClassBehaviorTitle" xml:space="preserve">
+  <data name="UseClassCleanupBehaviorEndOfClassTitle" xml:space="preserve">
     <value>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</value>
   </data>
-  <data name="SetClassCleanupEndOFClassBehaviorDescription" xml:space="preserve">
+  <data name="UseClassCleanupBehaviorEndOfClassDescription" xml:space="preserve">
     <value>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</value>
   </data>
-  <data name="SetClassCleanupEndOFClassBehaviorMessageFormat" xml:space="preserve">
+  <data name="UseClassCleanupBehaviorEndOfClassMessageFormat" xml:space="preserve">
     <value>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</value>
   </data>
 </root>

@@ -37,5 +37,5 @@ internal static class DiagnosticIds
     public const string DoNotUseSystemDescriptionAttributeRuleId = "MSTEST0031";
     public const string ReviewAlwaysTrueAssertConditionAnalyzerRuleId = "MSTEST0032";
     public const string NonNullableReferenceNotInitializedSuppressorRuleId = "MSTEST0033";
-    public const string SetClassCleanupEndOFClassBehaviorRuleId = "MSTEST0034";
+    public const string UseClassCleanupBehaviorEndOfClassRuleId = "MSTEST0034";
 }

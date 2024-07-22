@@ -542,33 +542,6 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Without using  &apos;ClassCleanupBehavior.EndOfClass&apos;, the &apos;[ClassCleanup]&apos; will by default be run at the end of the assembly and not at the end of the class..
-        /// </summary>
-        internal static string SetClassCleanupEndOFClassBehaviorDescription {
-            get {
-                return ResourceManager.GetString("SetClassCleanupEndOFClassBehaviorDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Use &apos;ClassCleanupBehavior.EndOfClass&apos; with the &apos;[ClassCleanup]&apos;.
-        /// </summary>
-        internal static string SetClassCleanupEndOFClassBehaviorMessageFormat {
-            get {
-                return ResourceManager.GetString("SetClassCleanupEndOFClassBehaviorMessageFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Use &apos;ClassCleanupBehavior.EndOfClass&apos; with the &apos;[ClassCleanup]&apos;.
-        /// </summary>
-        internal static string SetClassCleanupEndOFClassBehaviorTitle {
-            get {
-                return ResourceManager.GetString("SetClassCleanupEndOFClassBehaviorTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Test classes, classes marked with the &apos;[TestClass]&apos; attribute, should respect the following layout to be considered valid by MSTest:
         ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
         ///- it should not be &apos;static&apos; (except if it contains only &apos;AssemblyInitialize&apos; and/or &apos;AssemblyCleanup&apos; methods)
@@ -964,6 +937,33 @@ namespace MSTest.Analyzers {
         internal static string UseAttributeOnTestMethodAnalyzerTitle {
             get {
                 return ResourceManager.GetString("UseAttributeOnTestMethodAnalyzerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Without using  &apos;ClassCleanupBehavior.EndOfClass&apos;, the &apos;[ClassCleanup]&apos; will by default be run at the end of the assembly and not at the end of the class..
+        /// </summary>
+        internal static string UseClassCleanupBehaviorEndOfClassDescription {
+            get {
+                return ResourceManager.GetString("UseClassCleanupBehaviorEndOfClassDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;ClassCleanupBehavior.EndOfClass&apos; with the &apos;[ClassCleanup]&apos;.
+        /// </summary>
+        internal static string UseClassCleanupBehaviorEndOfClassMessageFormat {
+            get {
+                return ResourceManager.GetString("UseClassCleanupBehaviorEndOfClassMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;ClassCleanupBehavior.EndOfClass&apos; with the &apos;[ClassCleanup]&apos;.
+        /// </summary>
+        internal static string UseClassCleanupBehaviorEndOfClassTitle {
+            get {
+                return ResourceManager.GetString("UseClassCleanupBehaviorEndOfClassTitle", resourceCulture);
             }
         }
         

@@ -1,9 +1,9 @@
 ﻿#nullable enable
 MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor
 MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor.NonNullableReferenceNotInitializedSuppressor() -> void
-MSTest.Analyzers.SetClassCleanupEndOFClassBehaviorAnalyzer
-MSTest.Analyzers.SetClassCleanupEndOFClassBehaviorAnalyzer.SetClassCleanupEndOFClassBehaviorAnalyzer() -> void
+MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer
+MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer.UseClassCleanupBehaviorEndOfClassAnalyzer() -> void
 override MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void
 override MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor.SupportedSuppressions.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.SuppressionDescriptor!>
-override MSTest.Analyzers.SetClassCleanupEndOFClassBehaviorAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
-override MSTest.Analyzers.SetClassCleanupEndOFClassBehaviorAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
