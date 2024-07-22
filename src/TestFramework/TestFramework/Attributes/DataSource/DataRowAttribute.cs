@@ -1,9 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
 using System.Globalization;
 using System.Reflection;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -87,37 +88,6 @@ public class DataRowAttribute : Attribute, ITestDataSource
             : data.AsEnumerable();
 
         return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name,
-            string.Join(",", displayData.Select(GetObjectString)));
-    }
-
-    /// <summary>
-    /// Recursively resolve collections of objects to a proper string representation.
-    /// </summary>
-    private static string? GetObjectString(object? obj)
-    {
-        if (TestIdGenerationStrategy != TestIdGenerationStrategy.FullyQualified)
-        {
-            return obj?.ToString();
-        }
-
-        if (obj == null)
-        {
-            return "null";
-        }
-
-        if (!obj.GetType().IsArray)
-        {
-            return obj switch
-            {
-                string s => $"\"{s}\"",
-                char c => $"'{c}'",
-                _ => obj.ToString(),
-            };
-        }
-
-        // We need to box the object here so that we can support value types
-        IEnumerable<object> boxedObjectEnumerable = ((IEnumerable)obj).Cast<object>();
-        IEnumerable<string?> elementStrings = boxedObjectEnumerable.Select(GetObjectString);
-        return $"[{string.Join(",", elementStrings)}]";
+            string.Join(",", displayData.Select(x => TestDataSourceUtilities.GetHumanizedArguments(x, TestIdGenerationStrategy))));
     }
 }

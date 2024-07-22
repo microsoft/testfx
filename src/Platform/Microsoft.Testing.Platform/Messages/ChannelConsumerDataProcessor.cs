@@ -16,7 +16,7 @@ internal class AsyncConsumerDataProcessor : IDisposable
 {
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
-    private readonly Channel<(IDataProducer DataProducer, IData Data)> _channel = Channel.CreateUnbounded<(IDataProducer DataProducer, IData Data)>(new UnboundedChannelOptions()
+    private readonly Channel<(IDataProducer DataProducer, IData Data)> _channel = Channel.CreateUnbounded<(IDataProducer DataProducer, IData Data)>(new UnboundedChannelOptions
     {
         // We process only 1 data at a time
         SingleReader = true,

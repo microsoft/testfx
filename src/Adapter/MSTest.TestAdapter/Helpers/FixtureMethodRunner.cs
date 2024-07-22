@@ -28,12 +28,12 @@ internal static class FixtureMethodRunner
 
         // We need to start a thread to handle "cancellation" and "timeout" scenarios.
         return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
-            ? RunWithTimeoutAndCancellationWithSTAThread(action, cancellationTokenSource, timeout, methodInfo, executionContextScope, methodCancelledMessageFormat, methodTimedOutMessageFormat)
-            : RunWithTimeoutAndCancellationWithThreadPool(action, cancellationTokenSource, timeout, methodInfo, executionContextScope, methodCancelledMessageFormat, methodTimedOutMessageFormat);
+            ? RunWithTimeoutAndCancellationWithSTAThread(action, cancellationTokenSource, timeout.Value, methodInfo, executionContextScope, methodCancelledMessageFormat, methodTimedOutMessageFormat)
+            : RunWithTimeoutAndCancellationWithThreadPool(action, cancellationTokenSource, timeout.Value, methodInfo, executionContextScope, methodCancelledMessageFormat, methodTimedOutMessageFormat);
     }
 
     private static TestFailedException? RunWithTimeoutAndCancellationWithThreadPool(
-        Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,
+        Action action, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
         IExecutionContextScope executionContextScope, string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
     {
         Exception? realException = null;
@@ -63,16 +63,7 @@ internal static class FixtureMethodRunner
 
         try
         {
-            if (!timeout.HasValue)
-            {
-                executionTask.Wait(cancellationTokenSource.Token);
-
-                // If we reach this line then the task has completed successfully.
-                // If the cancellation was requested, then either OCE or AggregateException with TCE will be thrown.
-                return null;
-            }
-
-            if (executionTask.Wait(timeout.Value, cancellationTokenSource.Token))
+            if (executionTask.Wait(timeout, cancellationTokenSource.Token))
             {
                 // If we reach this line then the task has completed successfully.
                 return null;
@@ -112,22 +103,22 @@ internal static class FixtureMethodRunner
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 #endif
     private static TestFailedException? RunWithTimeoutAndCancellationWithSTAThread(
-        Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,
+        Action action, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
         IExecutionContextScope executionContextScope, string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
     {
-        Exception? realException = null;
-        Thread executionThread = new(new ThreadStart(() =>
+        TaskCompletionSource<int> tcs = new();
+        Thread executionThread = new(() =>
         {
             try
             {
                 ExecutionContextService.RunActionOnContext(action, executionContextScope);
+                tcs.SetResult(0);
             }
             catch (Exception ex)
             {
-                realException = ex;
-                throw;
+                tcs.SetException(ex);
             }
-        }))
+        })
         {
             IsBackground = true,
             Name = "MSTest Fixture Execution Thread",
@@ -138,27 +129,10 @@ internal static class FixtureMethodRunner
 
         try
         {
-            // Creates a Task<bool> that represents the results of the execution thread.
-            var executionTask = Task.Run(
-                () =>
-                {
-                    if (timeout.HasValue)
-                    {
-                        return executionThread.Join(timeout.Value);
-                    }
-
-                    executionThread.Join();
-                    return true;
-                },
-                cancellationTokenSource.Token);
-            executionTask.Wait(cancellationTokenSource.Token);
-
             // If the execution thread completes before the timeout, the task will return true, otherwise false.
-            if (executionTask.Result)
+            if (tcs.Task.Wait(timeout, cancellationTokenSource.Token))
             {
-                return realException is not null
-                    ? throw realException
-                    : null;
+                return null;
             }
 
             // Timed out. For cancellation, either OCE or AggregateException with TCE will be thrown.
@@ -185,9 +159,9 @@ internal static class FixtureMethodRunner
         catch (Exception)
         {
             // We throw the real exception to have the original stack trace to elaborate up the chain.
-            if (realException is not null)
+            if (tcs.Task.Exception is not null)
             {
-                throw realException;
+                throw tcs.Task.Exception;
             }
 
             throw;

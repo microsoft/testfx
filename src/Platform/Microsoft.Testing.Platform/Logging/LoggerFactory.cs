@@ -35,7 +35,7 @@ internal sealed class LoggerFactory(ILoggerProvider[] loggerProviders, LogLevel 
 
     private ILogger[] CreateLoggers(string categoryName)
     {
-        List<ILogger> loggers = [];
+        List<ILogger> loggers = new(_loggerProviders.Length);
         foreach (ILoggerProvider loggerProvider in _loggerProviders)
         {
             loggers.Add(loggerProvider.CreateLogger(categoryName));

@@ -682,6 +682,9 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                     method: JsonRpcMethods.ClientLog,
                     @params: new LogEventArgs(logMessage),
                     _testApplicationCancellationTokenSource.CancellationToken,
+
+                    // We could receive some log messages after the exit, a real sample is if telemetry provider is too slow and we log a warning.
+                    checkServerExit: true,
                     rethrowException: false);
                 break;
         }

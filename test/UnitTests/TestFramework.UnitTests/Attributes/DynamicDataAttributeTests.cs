@@ -22,6 +22,7 @@ public class DynamicDataAttributeTests : TestContainer
         _dummyTestClass = new DummyTestClass();
         _testMethodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
+        DynamicDataAttribute.TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
     }
 
     public void GetDataShouldThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist()
@@ -249,13 +250,43 @@ public class DynamicDataAttributeTests : TestContainer
         string[] data2 = ["value1", null, "value2"];
 
         string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        Verify(displayName == "TestMethod1 (value1,value2,)");
+        Verify(displayName == "TestMethod1 (\"value1\",\"value2\",null)");
 
         displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data1);
-        Verify(displayName == "TestMethod1 (,value1,value2)");
+        Verify(displayName == "TestMethod1 (null,\"value1\",\"value2\")");
 
         displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data2);
-        Verify(displayName == "TestMethod1 (value1,,value2)");
+        Verify(displayName == "TestMethod1 (\"value1\",null,\"value2\")");
+    }
+
+    public void GetDisplayNameForArrayOfMultipleItems()
+    {
+        string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { "a", "b", "c" }]);
+        Verify(displayName == "TestMethod1 ([\"a\",\"b\",\"c\"])");
+    }
+
+    public void GetDisplayNameForMultipleArraysOfOneItem()
+    {
+        string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { "a" }, new[] { "1" }]);
+        Verify(displayName == "TestMethod1 ([\"a\"],[\"1\"])");
+    }
+
+    public void GetDisplayNameForMultipleArraysOfMultipleItems()
+    {
+        string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { "a", "b", "c" }, new[] { "1", "2", "3" }]);
+        Verify(displayName == "TestMethod1 ([\"a\",\"b\",\"c\"],[\"1\",\"2\",\"3\"])");
+    }
+
+    public void GetDisplayNameForMultipleArraysOfMultipleItemsValueTypes()
+    {
+        string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { 1, 2, 3 }, new[] { 4, 5, 6 }]);
+        Verify(displayName == "TestMethod1 ([1,2,3],[4,5,6])");
+    }
+
+    public void GetDisplayNameForMultipleArraysOfArraysOfMultipleItems()
+    {
+        string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { ["a", "b", "c"], ["d", "e", "f"], new[] { "gh", "ij", "kl" } }, new[] { 'm', 'n', 'o' }, new[] { ["1", "2", "3"], ["4", "5", "6"], new[] { "7", "8", "9" } }]);
+        Verify(displayName == "TestMethod1 ([[\"a\",\"b\",\"c\"],[\"d\",\"e\",\"f\"],[\"gh\",\"ij\",\"kl\"]],['m','n','o'],[[\"1\",\"2\",\"3\"],[\"4\",\"5\",\"6\"],[\"7\",\"8\",\"9\"]])");
     }
 
 #if NETCOREAPP

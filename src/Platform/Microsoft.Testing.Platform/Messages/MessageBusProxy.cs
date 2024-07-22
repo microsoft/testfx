@@ -19,7 +19,7 @@ internal sealed class MessageBusProxy : BaseMessageBus, IMessageBus
     public override async Task InitAsync()
     {
         EnsureMessageBusAvailable();
-        await InitAsync();
+        await _messageBus.InitAsync();
     }
 
     public void SetBuiltMessageBus(BaseMessageBus messageBus)

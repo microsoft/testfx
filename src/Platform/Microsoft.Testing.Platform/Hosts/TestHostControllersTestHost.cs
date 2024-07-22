@@ -331,14 +331,18 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
     private async Task DisposeServicesAsync()
     {
-        List<object> alreadyDisposed = [];
-        foreach (ITestHostProcessLifetimeHandler service in _testHostsInformation.LifetimeHandlers)
+        ITestHostEnvironmentVariableProvider[] variableProviders = _testHostsInformation.EnvironmentVariableProviders;
+        ITestHostProcessLifetimeHandler[] lifetimeHandlers = _testHostsInformation.LifetimeHandlers;
+
+        List<object> alreadyDisposed = new(lifetimeHandlers.Length + variableProviders.Length);
+
+        foreach (ITestHostProcessLifetimeHandler service in lifetimeHandlers)
         {
             await DisposeHelper.DisposeAsync(service);
             alreadyDisposed.Add(service);
         }
 
-        foreach (ITestHostEnvironmentVariableProvider service in _testHostsInformation.EnvironmentVariableProviders)
+        foreach (ITestHostEnvironmentVariableProvider service in variableProviders)
         {
             await DisposeHelper.DisposeAsync(service);
             alreadyDisposed.Add(service);

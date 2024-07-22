@@ -18,7 +18,7 @@ internal sealed class GetInProgressTestsResponseSerializer : BaseSerializer, INa
     public object Deserialize(Stream stream)
     {
         int readCount = ReadInt(stream);
-        List<(string, int)> tests = new();
+        List<(string, int)> tests = new(readCount);
         for (int i = 0; i < readCount; i++)
         {
             string testName = ReadString(stream);

@@ -20,16 +20,16 @@ public class DataExtensibilityTests : CLITestBase
     {
         InvokeVsTestForExecution([TestAssetName]);
         ValidatePassedTestsContain(
-            "DynamicDataTestMethod1 (string,2,True)",
-            "DynamicDataTestMethod2 (string,4,True)",
-            "DynamicDataTestMethod3 (string,2,True)",
-            "DynamicDataTestMethod3 (string,4,True)");
+            "DynamicDataTestMethod1 (\"string\",2,True)",
+            "DynamicDataTestMethod2 (\"string\",4,True)",
+            "DynamicDataTestMethod3 (\"string\",2,True)",
+            "DynamicDataTestMethod3 (\"string\",4,True)");
 
         ValidatePassedTestsContain(
-            "DynamicDataTestMethod4 (string,2,True)",
-            "DynamicDataTestMethod5 (string,4,True)",
-            "DynamicDataTestMethod6 (string,2,True)",
-            "DynamicDataTestMethod6 (string,4,True)");
+            "DynamicDataTestMethod4 (\"string\",2,True)",
+            "DynamicDataTestMethod5 (\"string\",4,True)",
+            "DynamicDataTestMethod6 (\"string\",2,True)",
+            "DynamicDataTestMethod6 (\"string\",4,True)");
 
         ValidateFailedTestsContain(
             false,

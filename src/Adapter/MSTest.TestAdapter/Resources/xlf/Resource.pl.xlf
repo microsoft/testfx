@@ -148,7 +148,7 @@ ale liczba odebranych argumentów to {4} z typami „{5}”.</target>
       </trans-unit>
       <trans-unit id="UTA_NoValidConstructor">
         <source>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="new">Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <target state="translated">Nie można odnaleźć prawidłowego konstruktora dla klasy testowej „{0}”. Prawidłowe konstruktory są „publiczne” i albo bez parametrów, albo z jednym parametrem typu „TestContext”.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TestContextSetError">
@@ -250,7 +250,7 @@ Błąd: {1}</target>
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
         <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</source>
-        <target state="new">UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</target>
+        <target state="translated">UTA054: {0}.{1} ma nieprawidłowy atrybut Timeout. Limit czasu musi być liczbą całkowitą większą niż 0.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorPredefinedTestProperty">
