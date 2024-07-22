@@ -70,11 +70,6 @@ public sealed partial class PropertyBag
     {
         ArgumentGuard.IsNotNull(properties);
 
-        if (!properties.Any())
-        {
-            return;
-        }
-
         foreach (IProperty property in properties)
         {
             if (property is TestNodeStateProperty testNodeStateProperty)
