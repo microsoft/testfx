@@ -19,7 +19,7 @@ public class DynamicDataTests : CLITestBase
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
-        VerifyE2E.ContainsTestsPassed(
+        VerifyE2E.TestsPassed(
             testResults,
             "DynamicDataTest_SourceProperty (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
             "Custom DynamicDataTestMethod DynamicDataTest_SourcePropertyOtherType_CustomDisplayName with 2 parameters",
@@ -47,7 +47,11 @@ public class DynamicDataTests : CLITestBase
             "UserDynamicDataTestMethod DynamicDataTest_SourceMethodOtherType_CustomDisplayNameOtherType with 2 parameters",
             "DynamicDataTest_SourceProperty (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
             "DynamicDataTest_SourcePropertyOtherType (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)",
-            "Custom DynamicDataTestMethod DynamicDataTest_SourceMethod_CustomDisplayName with 2 parameters");
+            "Custom DynamicDataTestMethod DynamicDataTest_SourceMethod_CustomDisplayName with 2 parameters",
+            "MethodWithOverload (\"1\",1)",
+            "MethodWithOverload (\"2\",1)",
+            "MethodWithOverload (1,\"0\")",
+            "MethodWithOverload (2,\"2\")");
 
         VerifyE2E.FailedTestCount(testResults, 0);
     }
