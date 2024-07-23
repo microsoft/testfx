@@ -599,6 +599,13 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         ServiceProvider serviceProvider = testFrameworkBuilderData.ServiceProvider;
         serviceProvider.AddService(testFrameworkBuilderData.MessageBusProxy);
 
+        // Check if we're connected to the dotnet test pipe
+        DotnetTestDataConsumer? dotnetTestDataConsumer = null;
+        if (testFrameworkBuilderData.DotnetTestPipeClient is not null)
+        {
+            dotnetTestDataConsumer = new DotnetTestDataConsumer(testFrameworkBuilderData.DotnetTestPipeClient);
+        }
+
         // Build and register "common non special" services - we need special treatment because extensions can start to log during the
         // creations and we could lose interesting diagnostic information.
         List<IDataConsumer> dataConsumersBuilder = [];
@@ -667,6 +674,13 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         }
 
         // Register the test session lifetime handlers container
+
+        // We register the lifetime handler if we're connected to the dotnet test pipe
+        if (dotnetTestDataConsumer is not null)
+        {
+            testSessionLifetimeHandlers.Add(dotnetTestDataConsumer);
+        }
+
         TestSessionLifetimeHandlersContainer testSessionLifetimeHandlersContainer = new(testSessionLifetimeHandlers);
         serviceProvider.AddService(testSessionLifetimeHandlersContainer);
 
@@ -677,6 +691,12 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetEnvironment());
         await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder);
+
+        // We register the data consumer handler if we're connected to the dotnet test pipe
+        if (dotnetTestDataConsumer is not null)
+        {
+            dataConsumersBuilder.Add(dotnetTestDataConsumer);
+        }
 
         IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();
 
