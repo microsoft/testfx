@@ -33,7 +33,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase
             Thread.Sleep(500);
 
             // Look for the pid file created by the test host.
-            string[] pidFile = Directory.GetFiles(Path.GetDirectoryName(testHost.FullName)!, "PID").ToArray();
+            string[] pidFile = Directory.GetFiles(Path.GetDirectoryName(testHost.FullName)!, "PID");
             if (pidFile.Length > 0)
             {
                 string pid = File.ReadAllText(pidFile[0]);

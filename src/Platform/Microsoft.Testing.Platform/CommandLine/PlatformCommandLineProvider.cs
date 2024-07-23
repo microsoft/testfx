@@ -127,9 +127,9 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         return int.Parse(arguments[0], CultureInfo.InvariantCulture);
     }
 
-    private static Task<ValidationResult> IsMinimumExpectedTestsOptionValidAsync(CommandLineOption option, string[] arguments)
+    private static Task<ValidationResult> IsMinimumExpectedTestsOptionValidAsync(CommandLineOption option, IReadOnlyList<string> arguments)
         => option.Name == MinimumExpectedTestsOptionKey
-            && (arguments.Length != 1 || !int.TryParse(arguments[0], out int value) || value == 0)
+            && (arguments.Count != 1 || !int.TryParse(arguments[0], out int value) || value == 0)
             ? ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument)
             : ValidationResult.ValidTask;
 

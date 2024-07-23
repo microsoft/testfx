@@ -8,7 +8,7 @@ namespace Microsoft.Testing.Platform.Messages;
 
 internal abstract class BaseMessageBus : IMessageBus, IDisposable
 {
-    public abstract IDataConsumer[] DataConsumerServices { get; }
+    public abstract IReadOnlyList<IDataConsumer> DataConsumerServices { get; }
 
     public abstract Task InitAsync();
 

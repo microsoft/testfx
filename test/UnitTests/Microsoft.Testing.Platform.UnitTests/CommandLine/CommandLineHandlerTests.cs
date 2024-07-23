@@ -313,7 +313,7 @@ public class CommandLineHandlerTests : TestBase
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => throw new NotImplementedException();
 
-        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, IReadOnlyList<string> arguments) => ValidationResult.ValidTask;
     }
 
     private sealed class ExtensionCommandLineProviderMockUnknownOption : ICommandLineOptionsProvider
@@ -341,7 +341,7 @@ public class CommandLineHandlerTests : TestBase
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => throw new NotImplementedException();
 
-        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, IReadOnlyList<string> arguments) => ValidationResult.ValidTask;
     }
 
     private sealed class ExtensionCommandLineProviderMockInvalidConfiguration : ICommandLineOptionsProvider
@@ -374,6 +374,6 @@ public class CommandLineHandlerTests : TestBase
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.InvalidTask("Invalid configuration errorMessage");
 
-        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, IReadOnlyList<string> arguments) => ValidationResult.ValidTask;
     }
 }

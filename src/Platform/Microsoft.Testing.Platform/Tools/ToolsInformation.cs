@@ -3,9 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Tools;
 
-internal sealed class ToolsInformation(ITool[] tools)
+internal sealed class ToolsInformation(IReadOnlyList<ITool> tools)
 {
-    public bool HasTools => Tools.Length > 0;
+    public bool HasTools => Tools.Count > 0;
 
-    public ITool[] Tools { get; } = tools;
+    public IReadOnlyList<ITool> Tools { get; } = tools;
 }

@@ -326,6 +326,6 @@ public sealed record TestMetadataProperty(string Key, string Value) : IProperty;
 
 internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
 
-internal sealed record SerializableNamedKeyValuePairsStringProperty(string Name, KeyValuePair<string, string>[] Pairs) : IProperty;
+internal sealed record SerializableNamedKeyValuePairsStringProperty(string Name, IReadOnlyList<KeyValuePair<string, string>> Pairs) : IProperty;
 
 internal sealed record SerializableNamedArrayStringProperty(string Name, string[] Values) : IProperty;

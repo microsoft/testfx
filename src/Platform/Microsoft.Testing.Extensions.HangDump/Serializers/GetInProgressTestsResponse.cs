@@ -6,9 +6,9 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.HangDump.Serializers;
 
-internal sealed class GetInProgressTestsResponse((string, int)[] tests) : IResponse
+internal sealed class GetInProgressTestsResponse(IReadOnlyList<(string, int)> tests) : IResponse
 {
-    public (string, int)[] Tests { get; } = tests;
+    public IReadOnlyList<(string, int)> Tests { get; } = tests;
 }
 
 internal sealed class GetInProgressTestsResponseSerializer : BaseSerializer, INamedPipeSerializer
@@ -26,13 +26,13 @@ internal sealed class GetInProgressTestsResponseSerializer : BaseSerializer, INa
             tests.Add((testName, unixTimeSeconds));
         }
 
-        return new GetInProgressTestsResponse(tests.ToArray());
+        return new GetInProgressTestsResponse(tests);
     }
 
     public void Serialize(object objectToSerialize, Stream stream)
     {
         var getInProgressTestsResponse = (GetInProgressTestsResponse)objectToSerialize;
-        WriteInt(stream, getInProgressTestsResponse.Tests.Length);
+        WriteInt(stream, getInProgressTestsResponse.Tests.Count);
         foreach ((string testName, int seconds) in getInProgressTestsResponse.Tests)
         {
             WriteString(stream, testName);

@@ -32,6 +32,6 @@ internal sealed class ToolsManager : IToolsManager
             tools.Add(tool);
         }
 
-        return new ToolsInformation(tools.ToArray());
+        return new ToolsInformation(tools);
     }
 }

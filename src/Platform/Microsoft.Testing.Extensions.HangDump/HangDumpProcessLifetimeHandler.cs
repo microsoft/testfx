@@ -335,7 +335,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
         GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), _testApplicationCancellationTokenSource.CancellationToken);
         await _namedPipeClient.RequestReplyAsync<ExitSignalActivityIndicatorTaskRequest, VoidResponse>(new ExitSignalActivityIndicatorTaskRequest(), _testApplicationCancellationTokenSource.CancellationToken);
-        if (tests.Tests.Length > 0)
+        if (tests.Tests.Count > 0)
         {
             string hangTestsFileName = Path.Combine(_configuration.GetTestResultDirectory(), Path.ChangeExtension(Path.GetFileName(finalDumpFileName), ".log"));
             using (FileStream fs = File.OpenWrite(hangTestsFileName))

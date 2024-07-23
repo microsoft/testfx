@@ -13,7 +13,7 @@ internal sealed class MessageBusProxy : BaseMessageBus, IMessageBus
 {
     private BaseMessageBus? _messageBus;
 
-    public override IDataConsumer[] DataConsumerServices
+    public override IReadOnlyList<IDataConsumer> DataConsumerServices
         => _messageBus is null ? [] : _messageBus.DataConsumerServices;
 
     public override async Task InitAsync()

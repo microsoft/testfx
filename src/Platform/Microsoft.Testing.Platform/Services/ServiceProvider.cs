@@ -46,7 +46,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
         _services.Add(service);
     }
 
-    public void AddServices(object[] services, bool throwIfSameInstanceExit = true)
+    public void AddServices(IEnumerable<object> services, bool throwIfSameInstanceExit = true)
     {
         foreach (object service in services)
         {

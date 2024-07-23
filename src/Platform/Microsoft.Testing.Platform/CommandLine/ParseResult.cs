@@ -67,12 +67,12 @@ internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Opt
                 return false;
             }
 
-            if (thisOptions[i].Arguments.Length != otherOptions[i].Arguments.Length)
+            if (thisOptions[i].Arguments.Count != otherOptions[i].Arguments.Count)
             {
                 return false;
             }
 
-            for (int j = 0; j < thisOptions[i].Arguments.Length; j++)
+            for (int j = 0; j < thisOptions[i].Arguments.Count; j++)
             {
                 if (thisOptions[i].Arguments[j] != otherOptions[i].Arguments[j])
                 {

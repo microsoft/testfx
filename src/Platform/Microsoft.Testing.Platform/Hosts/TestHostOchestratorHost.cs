@@ -16,7 +16,7 @@ internal class TestHostOrchestratorHost(TestHostOrchestratorConfiguration testHo
     public async Task<int> RunAsync()
     {
         ILogger logger = _serviceProvider.GetLoggerFactory().CreateLogger<TestHostOrchestratorHost>();
-        if (_testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 1)
+        if (_testHostOrchestratorConfiguration.TestHostOrchestrators.Count > 1)
         {
             throw new NotSupportedException("Multiple test orchestrator not supported");
         }

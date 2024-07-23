@@ -24,12 +24,12 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
     private readonly bool _isTraceLoggingEnabled;
     private readonly Dictionary<IDataConsumer, AsyncConsumerDataProcessor> _consumerProcessor = [];
     private readonly Dictionary<Type, List<AsyncConsumerDataProcessor>> _dataTypeConsumers = [];
-    private readonly IDataConsumer[] _dataConsumers;
+    private readonly IReadOnlyList<IDataConsumer> _dataConsumers;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private bool _disabled;
 
     public AsynchronousMessageBus(
-        IDataConsumer[] dataConsumers,
+        IReadOnlyList<IDataConsumer> dataConsumers,
         ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
         ITask task,
         ILoggerFactory loggerFactory,
@@ -43,7 +43,7 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
         _isTraceLoggingEnabled = _logger.IsEnabled(LogLevel.Trace);
     }
 
-    public override IDataConsumer[] DataConsumerServices
+    public override IReadOnlyList<IDataConsumer> DataConsumerServices
         => _dataConsumers;
 
     public override async Task InitAsync() => await BuildConsumerProducersAsync();

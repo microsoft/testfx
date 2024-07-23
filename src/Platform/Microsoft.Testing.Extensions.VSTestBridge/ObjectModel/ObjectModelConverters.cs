@@ -119,7 +119,7 @@ internal static class ObjectModelConverters
         // Add all the traits and categories we collected from different properties.
         if (testNodeTraits != null)
         {
-            testNode.Properties.Add(new SerializableNamedKeyValuePairsStringProperty("traits", testNodeTraits.ToArray()));
+            testNode.Properties.Add(new SerializableNamedKeyValuePairsStringProperty("traits", testNodeTraits));
         }
     }
 

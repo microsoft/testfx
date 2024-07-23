@@ -176,7 +176,7 @@ internal static class CommandLineOptionsValidator
             int arity = 0;
             foreach (OptionRecord optionEntry in groupedOptions)
             {
-                arity += optionEntry.Arguments.Length;
+                arity += optionEntry.Arguments.Count;
             }
 
             string optionName = groupedOptions.Key;
@@ -211,7 +211,7 @@ internal static class CommandLineOptionsValidator
         foreach (OptionRecord optionRecord in parseResult.Options)
         {
             (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionRecord.Option];
-            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, optionRecord.Arguments);
+            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, optionRecord.Arguments.ToArray());
             if (!result.IsValid)
             {
                 stringBuilder ??= new();

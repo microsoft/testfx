@@ -146,6 +146,6 @@ public class ArgumentArityTests : TestBase
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.ValidTask;
 
-        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, IReadOnlyList<string> arguments) => ValidationResult.ValidTask;
     }
 }

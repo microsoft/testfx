@@ -322,7 +322,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // ======= TEST HOST ORCHESTRATOR ======== //
         TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await TestHostOrchestratorManager.BuildAsync(serviceProvider);
-        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 0)
+        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Count > 0)
         {
             return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, serviceProvider);
         }
@@ -375,7 +375,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             systemEnvironment);
 
         // Build and register the test application lifecycle callbacks.
-        ITestApplicationLifecycleCallbacks[] testApplicationLifecycleCallback =
+        IReadOnlyList<ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallback =
             await ((TestHostManager)TestHost).BuildTestApplicationLifecycleCallbackAsync(serviceProvider);
         serviceProvider.AddServices(testApplicationLifecycleCallback);
 
@@ -634,8 +634,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         {
             // We keep the bag of the already created composite service factory to reuse the instance.
             List<ICompositeExtensionFactory> newBuiltCompositeServices = [];
-            (IExtension Consumer, int RegistrationOrder)[] consumers = await testFrameworkBuilderData.TestSessionManager.BuildDataConsumersAsync(serviceProvider, newBuiltCompositeServices);
-            (IExtension TestSessionLifetimeHandler, int RegistrationOrder)[] sessionLifeTimeHandlers = await testFrameworkBuilderData.TestSessionManager.BuildTestSessionLifetimeHandleAsync(serviceProvider, newBuiltCompositeServices);
+            IReadOnlyList<(IExtension Consumer, int RegistrationOrder)> consumers = await testFrameworkBuilderData.TestSessionManager.BuildDataConsumersAsync(serviceProvider, newBuiltCompositeServices);
+            IReadOnlyList<(IExtension TestSessionLifetimeHandler, int RegistrationOrder)> sessionLifeTimeHandlers = await testFrameworkBuilderData.TestSessionManager.BuildTestSessionLifetimeHandleAsync(serviceProvider, newBuiltCompositeServices);
 
             // Register the test session lifetime handlers for the notifications
             testSessionLifetimeHandlers.AddRange(sessionLifeTimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler));
@@ -678,8 +678,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             serviceProvider.GetEnvironment());
         await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder);
 
-        IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();
-
         // Build the message hub
         // If we're running discovery command line we don't want to process any messages coming from the adapter so we filter out all extensions
         // adding a custom message bus that will simply forward to the output display for better performance
@@ -699,7 +697,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         else
         {
             AsynchronousMessageBus concreteMessageBusService = new(
-                dataConsumerServices,
+                dataConsumersBuilder,
                 serviceProvider.GetTestApplicationCancellationTokenSource(),
                 serviceProvider.GetTask(),
                 serviceProvider.GetLoggerFactory(),

@@ -8,10 +8,10 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal sealed class AggregatedConfiguration(IConfigurationProvider[] configurationProviders, ITestApplicationModuleInfo testApplicationModuleInfo, IFileSystem fileSystem) : IConfiguration
+internal sealed class AggregatedConfiguration(IReadOnlyList<IConfigurationProvider> configurationProviders, ITestApplicationModuleInfo testApplicationModuleInfo, IFileSystem fileSystem) : IConfiguration
 {
     public const string DefaultTestResultFolderName = "TestResults";
-    private readonly IConfigurationProvider[] _configurationProviders = configurationProviders;
+    private readonly IReadOnlyList<IConfigurationProvider> _configurationProviders = configurationProviders;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
     private readonly IFileSystem _fileSystem = fileSystem;
     private string? _resultDirectory;

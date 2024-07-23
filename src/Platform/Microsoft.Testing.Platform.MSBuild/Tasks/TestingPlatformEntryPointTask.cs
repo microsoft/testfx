@@ -96,7 +96,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 
         if (!Log.HasLoggedErrors)
         {
-            ITaskItem[] taskItems = Reorder(TestingPlatformBuilderHooks);
+            IReadOnlyList<ITaskItem> taskItems = Reorder(TestingPlatformBuilderHooks);
 
             if (!Language.ItemSpec.Equals(CSharpLanguageSymbol, StringComparison.OrdinalIgnoreCase) &&
                 !Language.ItemSpec.Equals(VBLanguageSymbol, StringComparison.OrdinalIgnoreCase) &&
@@ -115,7 +115,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
         return !Log.HasLoggedErrors;
     }
 
-    private static ITaskItem[] Reorder(ITaskItem[] items)
+    private static IReadOnlyList<ITaskItem> Reorder(ITaskItem[] items)
     {
         List<ITaskItem> result = new(items.Length);
         int wellKnownBuilderHook_MicrosoftTestingPlatformExtensions_index = -1;
@@ -135,14 +135,14 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
             result.Add(items[wellKnownBuilderHook_MicrosoftTestingPlatformExtensions_index]);
         }
 
-        return result.ToArray();
+        return result;
     }
 
-    private static void GenerateEntryPoint(string language, ITaskItem[] taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
+    private static void GenerateEntryPoint(string language, IReadOnlyList<ITaskItem> taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
     {
         StringBuilder builder = new();
 
-        for (int i = 0; i < taskItems.Length; i++)
+        for (int i = 0; i < taskItems.Count; i++)
         {
             if (i != 0)
             {
@@ -151,7 +151,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
             }
 
             builder.Append(CultureInfo.InvariantCulture, $"{taskItems[i].GetMetadata(TypeFullNameMetadataName)}.AddExtensions(builder, args){(language == CSharpLanguageSymbol ? ";" : string.Empty)}");
-            if (i < taskItems.Length - 1)
+            if (i < taskItems.Count - 1)
             {
                 builder.AppendLine();
             }

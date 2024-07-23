@@ -96,7 +96,7 @@ internal sealed class TestHostManager : ITestHostManager
         _testApplicationLifecycleCallbacksFactories.Add(testApplicationLifecycleCallbacks);
     }
 
-    internal async Task<ITestApplicationLifecycleCallbacks[]> BuildTestApplicationLifecycleCallbackAsync(ServiceProvider serviceProvider)
+    internal async Task<IReadOnlyList<ITestApplicationLifecycleCallbacks>> BuildTestApplicationLifecycleCallbackAsync(ServiceProvider serviceProvider)
     {
         List<ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacks = [];
         foreach (Func<IServiceProvider, ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacksFactory in _testApplicationLifecycleCallbacksFactories)
@@ -120,7 +120,7 @@ internal sealed class TestHostManager : ITestHostManager
             }
         }
 
-        return testApplicationLifecycleCallbacks.ToArray();
+        return testApplicationLifecycleCallbacks;
     }
 
     public void AddDataConsumer(Func<IServiceProvider, IDataConsumer> dataConsumerFactory)
@@ -143,7 +143,7 @@ internal sealed class TestHostManager : ITestHostManager
         _factoryOrdering.Add(compositeServiceFactory);
     }
 
-    internal async Task<(IExtension Consumer, int RegistrationOrder)[]> BuildDataConsumersAsync(ServiceProvider serviceProvider, List<ICompositeExtensionFactory> alreadyBuiltServices)
+    internal async Task<IReadOnlyList<(IExtension Consumer, int RegistrationOrder)>> BuildDataConsumersAsync(ServiceProvider serviceProvider, List<ICompositeExtensionFactory> alreadyBuiltServices)
     {
         List<(IExtension Consumer, int RegistrationOrder)> dataConsumers = [];
         foreach (Func<IServiceProvider, IDataConsumer> dataConsumerFactory in _dataConsumerFactories)
@@ -214,7 +214,7 @@ internal sealed class TestHostManager : ITestHostManager
             }
         }
 
-        return dataConsumers.ToArray();
+        return dataConsumers;
     }
 
     public void AddTestSessionLifetimeHandle(Func<IServiceProvider, ITestSessionLifetimeHandler> testSessionLifetimeHandleFactory)
@@ -237,7 +237,7 @@ internal sealed class TestHostManager : ITestHostManager
         _factoryOrdering.Add(compositeServiceFactory);
     }
 
-    internal async Task<(IExtension TestSessionLifetimeHandler, int RegistrationOrder)[]> BuildTestSessionLifetimeHandleAsync(ServiceProvider serviceProvider, List<ICompositeExtensionFactory> alreadyBuiltServices)
+    internal async Task<IReadOnlyList<(IExtension TestSessionLifetimeHandler, int RegistrationOrder)>> BuildTestSessionLifetimeHandleAsync(ServiceProvider serviceProvider, List<ICompositeExtensionFactory> alreadyBuiltServices)
     {
         List<(IExtension TestSessionLifetimeHandler, int RegistrationOrder)> testSessionLifetimeHandlers = [];
         foreach (Func<IServiceProvider, ITestSessionLifetimeHandler> testSessionLifetimeHandlerFactory in _testSessionLifetimeHandlerFactories)
@@ -309,6 +309,6 @@ internal sealed class TestHostManager : ITestHostManager
             }
         }
 
-        return testSessionLifetimeHandlers.ToArray();
+        return testSessionLifetimeHandlers;
     }
 }

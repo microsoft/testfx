@@ -65,7 +65,7 @@ internal static class CommandLineParser
                     }
                     else
                     {
-                        options.Add(new(currentOption, currentOptionArguments.ToArray()));
+                        options.Add(new(currentOption, currentOptionArguments));
                         currentOptionArguments.Clear();
                         ParseOptionAndSeparators(args[i], out currentOption, out currentArg);
                         argumentHandled = true;
@@ -115,7 +115,7 @@ internal static class CommandLineParser
                 }
             }
 
-            options.Add(new(currentOption, currentOptionArguments.ToArray()));
+            options.Add(new(currentOption, currentOptionArguments));
         }
 
         return new CommandLineParseResult(toolName, options, errors, args);

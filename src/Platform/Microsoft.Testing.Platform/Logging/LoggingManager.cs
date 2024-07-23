@@ -33,6 +33,6 @@ internal sealed class LoggingManager : ILoggingManager
             loggerProviders.Add(serviceInstance);
         }
 
-        return new LoggerFactory(loggerProviders.ToArray(), logLevel, monitor);
+        return new LoggerFactory(loggerProviders, logLevel, monitor);
     }
 }

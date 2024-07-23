@@ -228,7 +228,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
             ApplicationStateGuard.Ensure(_testStartTime is not null);
 
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
-            _clock, _tests.ToArray(), _failedTestsCount, _passedTestsCount, _artifactsByExtension, _artifactsByTestNode,
+            _clock, _tests, _failedTestsCount, _passedTestsCount, _artifactsByExtension, _artifactsByTestNode,
             _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, cancellationToken);
             string reportFileName = await trxReportGeneratorEngine.GenerateReportAsync();
 

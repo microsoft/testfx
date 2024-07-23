@@ -115,7 +115,7 @@ public class TempDirectory : IDisposable
     /// <summary>
     /// Copy given files into the TempDirectory and return the updated paths that are pointing to TempDirectory.
     /// </summary>
-    public string[] CopyFile(params string[] filePaths)
+    public List<string> CopyFile(params string[] filePaths)
     {
         List<string> paths = new(filePaths.Length);
         foreach (string filePath in filePaths)
@@ -125,7 +125,7 @@ public class TempDirectory : IDisposable
             paths.Add(destination);
         }
 
-        return paths.ToArray();
+        return paths;
     }
 
     /// <summary>
