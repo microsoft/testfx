@@ -374,86 +374,86 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
 
                     case ErrorTestNodeStateProperty errorState:
                         _consoleLogger.TestCompleted(
-                         assembly: _assemblyName,
-                         targetFramework: _targetFramework,
-                         architecture: _architecture,
-                         displayName: testNodeStateChanged.TestNode.DisplayName,
-                         outcome: LoggerOutcome.Error,
-                         duration: duration,
-                         errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
-                         errorStackTrace: errorState.Exception?.StackTrace,
-                         expected: null,
-                         actual: null);
+                            _assemblyName,
+                            _targetFramework,
+                            _architecture,
+                            testNodeStateChanged.TestNode.DisplayName,
+                            LoggerOutcome.Error,
+                            duration,
+                            errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
+                            errorState.Exception?.StackTrace,
+                            expected: null,
+                            actual: null);
                         break;
 
                     case FailedTestNodeStateProperty failedState:
                         _consoleLogger.TestCompleted(
-                         assembly: _assemblyName,
-                         targetFramework: _targetFramework,
-                         architecture: _architecture,
-                         displayName: testNodeStateChanged.TestNode.DisplayName,
-                         outcome: LoggerOutcome.Fail,
-                         duration: duration,
-                         errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
-                         errorStackTrace: failedState.Exception?.StackTrace,
-                         expected: failedState.Exception?.Data["assert.expected"] as string,
-                         actual: failedState.Exception?.Data["assert.actual"] as string);
+                             _assemblyName,
+                             _targetFramework,
+                             _architecture,
+                             testNodeStateChanged.TestNode.DisplayName,
+                             LoggerOutcome.Fail,
+                             duration,
+                             errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
+                             failedState.Exception?.StackTrace,
+                             expected: failedState.Exception?.Data["assert.expected"] as string,
+                             actual: failedState.Exception?.Data["assert.actual"] as string);
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
                         _consoleLogger.TestCompleted(
-                         assembly: _assemblyName,
-                         targetFramework: _targetFramework,
-                         architecture: _architecture,
-                         displayName: testNodeStateChanged.TestNode.DisplayName,
-                         outcome: LoggerOutcome.Timeout,
-                         duration: duration,
-                         errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
-                         errorStackTrace: timeoutState.Exception?.StackTrace,
-                         expected: null,
-                         actual: null);
+                             _assemblyName,
+                             _targetFramework,
+                             _architecture,
+                             testNodeStateChanged.TestNode.DisplayName,
+                             LoggerOutcome.Timeout,
+                             duration,
+                             errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
+                             timeoutState.Exception?.StackTrace,
+                             expected: null,
+                             actual: null);
                         break;
 
                     case CancelledTestNodeStateProperty cancelledState:
                         _consoleLogger.TestCompleted(
-                         assembly: _assemblyName,
-                         targetFramework: _targetFramework,
-                         architecture: _architecture,
-                         displayName: testNodeStateChanged.TestNode.DisplayName,
-                         outcome: LoggerOutcome.Cancelled,
-                         duration: duration,
-                         errorMessage: cancelledState.Exception?.Message ?? cancelledState.Explanation,
-                         errorStackTrace: cancelledState.Exception?.StackTrace,
-                         expected: null,
-                         actual: null);
+                             _assemblyName,
+                             _targetFramework,
+                             _architecture,
+                             testNodeStateChanged.TestNode.DisplayName,
+                             LoggerOutcome.Cancelled,
+                             duration,
+                             errorMessage: cancelledState.Exception?.Message ?? cancelledState.Explanation,
+                             cancelledState.Exception?.StackTrace,
+                             expected: null,
+                             actual: null);
                         break;
 
                     case PassedTestNodeStateProperty:
                         _consoleLogger.TestCompleted(
-                        assembly: _assemblyName,
-                        targetFramework: _targetFramework,
-                        architecture: _architecture,
-                        displayName: testNodeStateChanged.TestNode.DisplayName,
-                        outcome: LoggerOutcome.Passed,
-                        duration: duration,
-                        errorMessage: null,
-                        errorStackTrace: null,
-                        expected: null,
-                        actual: null);
+                            _assemblyName,
+                            _targetFramework,
+                            _architecture,
+                            testNodeStateChanged.TestNode.DisplayName,
+                            outcome: LoggerOutcome.Passed,
+                            duration: duration,
+                            errorMessage: null,
+                            errorStackTrace: null,
+                            expected: null,
+                            actual: null);
                         break;
 
                     case SkippedTestNodeStateProperty:
                         _consoleLogger.TestCompleted(
-                        assembly: _assemblyName,
-                        targetFramework: _targetFramework,
-                        architecture: _architecture,
-                        displayName: testNodeStateChanged.TestNode.DisplayName,
-                        outcome: LoggerOutcome.Skipped,
-                        duration: duration,
-                        errorMessage: null,
-                        errorStackTrace: null,
-                        expected: null,
-                        actual: null);
+                            _assemblyName,
+                            _targetFramework,
+                            _architecture,
+                            testNodeStateChanged.TestNode.DisplayName,
+                            LoggerOutcome.Skipped,
+                            duration,
+                            errorMessage: null,
+                            errorStackTrace: null,
+                            expected: null,
+                            actual: null);
                         break;
                 }
 
@@ -500,7 +500,6 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
 
                 break;
             case TestRequestExecutionTimeInfo testRequestExecutionTimeInfo:
-                // TODO: what is this?
                 _testRequestExecutionTimeInfo = testRequestExecutionTimeInfo;
                 break;
         }

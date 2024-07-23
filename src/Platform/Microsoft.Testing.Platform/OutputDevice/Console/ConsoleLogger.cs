@@ -43,15 +43,9 @@ internal partial class ConsoleLogger : IDisposable
 
     private readonly uint? _originalConsoleMode;
 
-    /// <summary>
-    /// Time of the oldest observed test target start.
-    /// </summary>
-    private DateTimeOffset? _testStartTime;
+    private DateTimeOffset? _testExecutionStartTime;
 
-    /// <summary>
-    /// Time of the most recently observed test target finished.
-    /// </summary>
-    private DateTimeOffset? _testEndTime;
+    private DateTimeOffset? _testExecutionEndTime;
 
     private int _buildErrorsCount;
 
@@ -117,9 +111,14 @@ internal partial class ConsoleLogger : IDisposable
 
         bool showProgress = _options.ShowProgress;
         ConsoleWithProgress consoleWithProgress;
+
+        // When not writing to ANSI we write the progress to screen and leave it there so we don't want to write it more often than every few seconds.
+        int nonAnsiUpdateCadenceInMs = 3_000;
+        // When writing to ANSI we update the progress in place and it should look responsive so we update every few ms, roughly 30 FPS.
+        int ansiUpdateCadenceInMs = 33;
         if (!_options.UseAnsi)
         {
-            consoleWithProgress = new ConsoleWithProgress(new AnsiTerminal(console, _options.BaseDirectory), showProgress, updateEvery: 33);
+            consoleWithProgress = new ConsoleWithProgress(new NonAnsiTerminal(console), showProgress, updateEvery: nonAnsiUpdateCadenceInMs);
         }
         else
         {
@@ -127,8 +126,8 @@ internal partial class ConsoleLogger : IDisposable
             (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
             _originalConsoleMode = originalConsoleMode;
             consoleWithProgress = consoleAcceptsAnsiCodes
-                ? new ConsoleWithProgress(new AnsiTerminal(console, _options.BaseDirectory), showProgress, updateEvery: 33)
-                : new ConsoleWithProgress(new NonAnsiTerminal(console), showProgress, updateEvery: 3_000);
+                ? new ConsoleWithProgress(new AnsiTerminal(console, _options.BaseDirectory), showProgress, updateEvery: ansiUpdateCadenceInMs)
+                : new ConsoleWithProgress(new NonAnsiTerminal(console), showProgress, updateEvery: nonAnsiUpdateCadenceInMs);
         }
 
         _consoleWithProgress = consoleWithProgress;
@@ -136,7 +135,7 @@ internal partial class ConsoleLogger : IDisposable
 
     public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount)
     {
-        _testStartTime = testStartTime;
+        _testExecutionStartTime = testStartTime;
         _consoleWithProgress.StartShowingProgress(workerCount);
     }
 
@@ -146,7 +145,8 @@ internal partial class ConsoleLogger : IDisposable
         {
             _consoleWithProgress.WriteToTerminal(terminal =>
             {
-                terminal.Append("Running tests from ");
+                terminal.Append(PlatformResources.RunningTestsFrom);
+                terminal.Append(' ');
                 AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly, targetFramework, architecture);
             });
         }
@@ -174,7 +174,7 @@ internal partial class ConsoleLogger : IDisposable
 
     internal void TestExecutionCompleted(DateTimeOffset endTime)
     {
-        _testEndTime = endTime;
+        _testExecutionEndTime = endTime;
         _consoleWithProgress.StopShowingProgress();
 
         _consoleWithProgress.WriteToTerminal(AppendTestRunSummary);
@@ -182,8 +182,8 @@ internal partial class ConsoleLogger : IDisposable
         NativeMethods.RestoreConsoleMode(_originalConsoleMode);
         _assemblies.Clear();
         _buildErrorsCount = 0;
-        _testStartTime = null;
-        _testEndTime = null;
+        _testExecutionStartTime = null;
+        _testExecutionEndTime = null;
     }
 
     private void AppendTestRunSummary(ITerminal terminal)
@@ -228,7 +228,8 @@ internal partial class ConsoleLogger : IDisposable
         terminal.SetColor(runFailed ? TerminalColor.Red : TerminalColor.Green);
 
         terminal.AppendLine();
-        terminal.Append($"Test run summary: ");
+        terminal.Append(PlatformResources.TestRunSummary);
+        terminal.Append(' ');
 
         if (_wasCancelled)
         {
@@ -264,7 +265,7 @@ internal partial class ConsoleLogger : IDisposable
         int failed = _assemblies.Values.Sum(t => t.FailedTests);
         int passed = _assemblies.Values.Sum(t => t.PassedTests);
         int skipped = _assemblies.Values.Sum(t => t.SkippedTests);
-        TimeSpan runDuration = _testStartTime != null && _testEndTime != null ? (_testEndTime - _testStartTime).Value : TimeSpan.Zero;
+        TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
 
         bool colorizeFailed = failed > 0;
         bool colorizePassed = passed > 0 && _buildErrorsCount == 0 && failed == 0;
@@ -330,10 +331,10 @@ internal partial class ConsoleLogger : IDisposable
             // If the build failed, we print one of three red strings.
             string text = (countErrors > 0, countWarnings > 0) switch
             {
-                (true, true) => $"failed with {countErrors} error(s) and {countWarnings} warning(s)",
-                (true, _) => $"failed with {countErrors} errors(s)",
-                (false, true) => $"failed with {countWarnings} warning(s)",
-                _ => "failed",
+                (true, true) => string.Format(CultureInfo.CurrentCulture, PlatformResources.FailedWithErrorsAndWarnings, countErrors, countWarnings),
+                (true, _) => string.Format(CultureInfo.CurrentCulture, PlatformResources.FailedWithErrors, countErrors),
+                (false, true) => string.Format(CultureInfo.CurrentCulture, PlatformResources.FailedWithWarnings, countWarnings),
+                _ => PlatformResources.FailedLowercase,
             };
             terminal.Append(text);
             terminal.ResetColor();

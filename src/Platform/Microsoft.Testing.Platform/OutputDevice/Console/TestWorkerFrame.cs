@@ -51,7 +51,7 @@ internal sealed class TestWorkerFrame
         string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
         terminal.Append('[');
         terminal.SetColor(TerminalColor.DarkGreen);
-        terminal.Append("✔️");
+        terminal.Append("✅");
         terminal.Append(passed.ToString(CultureInfo.CurrentCulture));
         terminal.ResetColor();
 
