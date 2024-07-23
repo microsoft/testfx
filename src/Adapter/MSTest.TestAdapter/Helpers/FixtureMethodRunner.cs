@@ -62,8 +62,10 @@ internal static class FixtureMethodRunner
                 action();
                 return null;
             }
-            catch (OperationCanceledException) // Ideally we would like to check that the token of the exception matches cancellationTokenSource but TestContext instances are not well defined so we have to handle the exception entirely.
+            catch (OperationCanceledException)
             {
+                // Ideally we would like to check that the token of the exception matches cancellationTokenSource but TestContext
+                // instances are not well defined so we have to handle the exception entirely.
                 return new(
                     UnitTestOutcome.Timeout,
                     timeoutTokenSource.Token.IsCancellationRequested
