@@ -41,19 +41,21 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzer : DiagnosticAnalyzer
         context.RegisterCompilationStartAction(context =>
         {
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol)
-                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
+                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol)
+                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute, out INamedTypeSymbol? testInitializeAttributeSymbol)
+                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute, out INamedTypeSymbol? testCleanupAttributeSymbol))
             {
                 bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
                 INamedTypeSymbol? taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
                 INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testMethodAttributeSymbol, testClassAttributeSymbol, taskSymbol, valueTaskSymbol, canDiscoverInternals),
+                    context => AnalyzeSymbol(context, testMethodAttributeSymbol, testClassAttributeSymbol, testInitializeAttributeSymbol, testCleanupAttributeSymbol, taskSymbol, valueTaskSymbol, canDiscoverInternals),
                     SymbolKind.Method);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol? taskSymbol,
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol testInitializeAttributeSymbol, INamedTypeSymbol testCleanupAttributeSymbol, INamedTypeSymbol? taskSymbol,
         INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
@@ -84,17 +86,20 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzer : DiagnosticAnalyzer
         }
 
         ImmutableArray<AttributeData> methodAttributes = methodSymbol.GetAttributes();
-        bool isTestMethod = false;
+        // check if the method has testMethod, testInitialize or testCleanup attribute
+        bool hasValidAttribute = false;
         foreach (AttributeData methodAttribute in methodAttributes)
         {
             // Check if method is a test method or inherit from the TestMethod attribute.
-            if (methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol))
+            if (methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol)
+                || SymbolEqualityComparer.Default.Equals(testMethodAttributeSymbol, testInitializeAttributeSymbol)
+                || SymbolEqualityComparer.Default.Equals(testMethodAttributeSymbol, testCleanupAttributeSymbol))
             {
-                isTestMethod = true;
+                hasValidAttribute = true;
             }
         }
 
-        if (isTestMethod)
+        if (hasValidAttribute)
         {
             return;
         }
