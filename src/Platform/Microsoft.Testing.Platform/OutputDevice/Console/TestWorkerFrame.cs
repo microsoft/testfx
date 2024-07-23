@@ -3,7 +3,7 @@
 
 using System.Globalization;
 
-namespace Microsoft.Testing.Platform.UI;
+namespace Microsoft.Testing.Platform.OutputDevice.Console;
 
 /// <summary>
 /// Captures <see cref="TestWorker"/> that was rendered to screen, so we can only partially update the screen on next update.

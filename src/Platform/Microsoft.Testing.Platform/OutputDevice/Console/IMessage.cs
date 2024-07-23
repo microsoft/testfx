@@ -1,9 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Testing.Platform.UI;
+namespace Microsoft.Testing.Platform.OutputDevice.Console;
 
 /// <summary>
-/// A warning message that was sent during run.
+/// Error or warning message that was sent to screen during the build.
 /// </summary>
-internal record class WarningMessage(string Text) : IMessage;
+internal interface IMessage
+{
+}

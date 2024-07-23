@@ -6,8 +6,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
-namespace Microsoft.Testing.Platform.UI;
+namespace Microsoft.Testing.Platform.OutputDevice.Console;
 
 /// <summary>
 /// Console writer that is used when writing ANSI is allowed. It is capable of batching as many updates as possible and writing them at the end,
@@ -15,6 +16,17 @@ namespace Microsoft.Testing.Platform.UI;
 /// </summary>
 internal class AnsiTerminal : ITerminal
 {
+    private static readonly string[] KnownFileExtensions = new string[]
+    {
+        ".cs",
+        ".vb",
+        ".fs",
+        ".trx",
+        ".coverage",
+        ".log",
+        ".txt",
+    };
+
     private readonly IConsole _console;
     private readonly string? _baseDirectory;
     private readonly bool _useBusyIndicator;
@@ -25,7 +37,6 @@ internal class AnsiTerminal : ITerminal
     public AnsiTerminal(IConsole console, string? baseDirectory)
     {
         _console = console;
-        // TODO: is this unsafe?
         _baseDirectory = baseDirectory ?? Directory.GetCurrentDirectory();
 
         // Output ansi code to get spinner on top of a terminal, to indicate in-progress task.
@@ -141,7 +152,7 @@ internal class AnsiTerminal : ITerminal
     {
         if (_isBatching)
         {
-            throw new InvalidOperationException("Console is already in batching mode.");
+            throw new InvalidOperationException(PlatformResources.ConsoleIsAlreadyInBatchingMode);
         }
 
         _stringBuilder.Clear();
@@ -163,9 +174,12 @@ internal class AnsiTerminal : ITerminal
 
         // For non code files, point to the directory, so we don't end up running the
         // exe by clicking at the link.
-        bool linkToFile = path.EndsWith(".cs", ignoreCase: true, CultureInfo.CurrentCulture)
-            || path.EndsWith(".fs", ignoreCase: true, CultureInfo.CurrentCulture)
-            || path.EndsWith(".vb", ignoreCase: true, CultureInfo.CurrentCulture);
+        string? extension = Path.GetExtension(path);
+        bool linkToFile = false;
+        if (!RoslynString.IsNullOrWhiteSpace(extension) && KnownFileExtensions.Contains(extension))
+        {
+            linkToFile = true;
+        }
 
         bool knownNonExistingFile = path.StartsWith("/_/", ignoreCase: false, CultureInfo.CurrentCulture);
 

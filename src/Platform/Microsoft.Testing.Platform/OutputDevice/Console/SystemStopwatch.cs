@@ -3,7 +3,7 @@
 
 using System.Diagnostics;
 
-namespace Microsoft.Testing.Platform.UI;
+namespace Microsoft.Testing.Platform.OutputDevice.Console;
 
 internal sealed class SystemStopwatch : StopwatchAbstraction
 {

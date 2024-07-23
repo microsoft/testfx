@@ -331,6 +331,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Console is already in batching mode..
+        /// </summary>
+        internal static string ConsoleIsAlreadyInBatchingMode {
+            get {
+                return ResourceManager.GetString("ConsoleIsAlreadyInBatchingMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Creates the right test execution filter for console mode.
         /// </summary>
         internal static string ConsoleTestExecutionFilterFactoryDescription {

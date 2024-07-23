@@ -7,7 +7,7 @@
 // https://github.com/keqingrong/supports-ansi/blob/master/index.js
 using System.Text.RegularExpressions;
 
-namespace Microsoft.Testing.Platform.UI;
+namespace Microsoft.Testing.Platform.OutputDevice.Console;
 
 /// <summary>
 /// Works together with the <see cref="NativeMethods"/> to figure out if the current console is capable of using ANSI output codes.

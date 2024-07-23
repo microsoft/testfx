@@ -4,7 +4,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace Microsoft.Testing.Platform.UI;
+namespace Microsoft.Testing.Platform.OutputDevice.Console;
 
 internal class NativeMethods
 {
@@ -30,7 +30,7 @@ internal class NativeMethods
 
     internal static (bool AcceptAnsiColorCodes, bool OutputIsScreen, uint? OriginalConsoleMode) QueryIsScreenAndTryEnableAnsiColorCodes(StreamHandleType handleType = StreamHandleType.StdOut)
     {
-        if (Console.IsOutputRedirected)
+        if (System.Console.IsOutputRedirected)
         {
             // There's no ANSI terminal support if console output is redirected.
             return (AcceptAnsiColorCodes: false, OutputIsScreen: false, OriginalConsoleMode: null);

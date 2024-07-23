@@ -6,7 +6,7 @@ using System.Text;
 
 using Microsoft.Testing.Platform.Helpers;
 
-namespace Microsoft.Testing.Platform.UI;
+namespace Microsoft.Testing.Platform.OutputDevice.Console;
 
 /// <summary>
 /// Non-ANSI terminal that writes text using the standard Console.Foreground color capabilities to stay compatible with

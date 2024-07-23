@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
-namespace Microsoft.Testing.Platform.UI;
+namespace Microsoft.Testing.Platform.OutputDevice.Console;
 
 /// <summary>
 /// Console logger that outputs test progress and is capable of writing ANSI or non-ANSI output via the given terminal.
