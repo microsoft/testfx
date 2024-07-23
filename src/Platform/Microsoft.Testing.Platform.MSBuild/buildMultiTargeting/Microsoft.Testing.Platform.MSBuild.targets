@@ -252,6 +252,7 @@
                                ProjectFullPath="$(MSBuildProjectFullPath)"
                                TestingPlatformShowTestsFailure="$(TestingPlatformShowTestsFailure)"
                                TestingPlatformCommandLineArguments="$(TestingPlatformCommandLineArguments)"
+                               VSTestCLIRunSettings="$(VSTestCLIRunSettings)"
                                TestingPlatformCaptureOutput="$(TestingPlatformCaptureOutput)"
                                DotnetHostPath="$(DOTNET_HOST_PATH)" />
   </Target>
