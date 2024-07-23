@@ -208,7 +208,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments!.ItemSpec} ");
         }
 
-        if (VSTestCLIRunSettings is not null && VSTestCLIRunSettings.Length > 0)
+        if (VSTestCLIRunSettings?.Length > 0)
         {
             foreach (ITaskItem taskItem in VSTestCLIRunSettings)
             {
