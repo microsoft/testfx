@@ -83,6 +83,8 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
     public ITaskItem? TestingPlatformCommandLineArguments { get; set; }
 
+    public ITaskItem[]? VSTestCLIRunSettings { get; set; }
+
     private bool IsNetCoreApp => TargetFrameworkIdentifier.ItemSpec == ".NETCoreApp";
 
     protected override string ToolName
@@ -204,6 +206,14 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         if (!string.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
         {
             builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments!.ItemSpec} ");
+        }
+
+        if (VSTestCLIRunSettings is not null && VSTestCLIRunSettings.Length > 0)
+        {
+            foreach (ITaskItem taskItem in VSTestCLIRunSettings)
+            {
+                builder.AppendTextUnquoted($" {taskItem.ItemSpec}");
+            }
         }
 
         return builder.ToString();
