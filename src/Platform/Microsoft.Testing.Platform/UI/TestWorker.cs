@@ -3,9 +3,9 @@
 
 namespace Microsoft.Testing.Platform.UI;
 
-internal class TestWorkerProgress
+internal class TestWorker
 {
-    public TestWorkerProgress(int passed, int failed, int skipped, string assemblyName, string? targetFramework, string? architecture, StopwatchAbstraction stopwatch, string? detail)
+    public TestWorker(int passed, int failed, int skipped, string assemblyName, string? targetFramework, string? architecture, StopwatchAbstraction stopwatch, string? detail)
     {
         Passed = passed;
         Failed = failed;

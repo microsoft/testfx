@@ -9,9 +9,9 @@ using System.Globalization;
 using System.Reflection;
 #endif
 
-using System.Text;
 using System.Text.RegularExpressions;
 
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.UI;
@@ -32,51 +32,7 @@ internal partial class ConsoleLogger : IDisposable
 
     internal const string TripleIndentation = $"{SingleIndentation}{SingleIndentation}{SingleIndentation}";
 
-    /// <summary>
-    /// Protects access to state shared between the logger callbacks and the rendering thread.
-    /// </summary>
-    private readonly object _lock = new();
-
-    /// <summary>
-    /// A cancellation token to signal the rendering thread that it should exit.
-    /// </summary>
-    private readonly CancellationTokenSource _cts = new();
-
-    /// <summary>
-    /// Directory to which all the paths are relative.
-    /// </summary>
-    private readonly string? _baseDirectory;
-
-    /// <summary>
-    /// Tracks the work currently being done by build nodes. Null means the node is not doing any work worth reporting.
-    /// </summary>
-    /// <remarks>
-    /// There is no locking around access to this data structure despite it being accessed concurrently by multiple threads.
-    /// However, reads and writes to locations in an array is atomic, so locking is not required.
-    /// </remarks>
-    private TestWorkerProgress?[] _progress = Array.Empty<TestWorkerProgress>();
-
-    /// <summary>
-    /// The thread that performs periodic refresh of the console output.
-    /// </summary>
-    private Thread? _refresher;
-
-    /// <summary>
-    /// What is currently displaying in Nodes section as strings representing per-node console output.
-    /// </summary>
-    private ProgressFrame _currentFrame = new(Array.Empty<TestWorkerProgress>(), 0, 0);
-
-    /// <summary>
-    /// Gets the <see cref="Terminal"/> to write console output to.
-    /// </summary>
-    private ITerminal Terminal { get; }
-
     internal Func<StopwatchAbstraction> CreateStopwatch { get; set; } = SystemStopwatch.StartNew;
-
-    /// <summary>
-    /// Refresh manually instead of using update thread when testing.
-    /// </summary>
-    private readonly bool _manualRefresh;
 
     /// <summary>
     /// The two directory separator characters to be passed to methods like <see cref="string.IndexOfAny(char[])"/>.
@@ -86,7 +42,7 @@ internal partial class ConsoleLogger : IDisposable
 
     private readonly ConsoleLoggerOptions _options;
 
-    private readonly bool _outputAnsi;
+    private readonly ConsoleWithProgress _consoleWithProgress;
 
     private readonly uint? _originalConsoleMode;
 
@@ -158,63 +114,47 @@ internal partial class ConsoleLogger : IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="ConsoleLogger"/> class with custom terminal and manual refresh for testing.
     /// </summary>
-    internal ConsoleLogger(ITerminal terminal, bool manualRefresh, ConsoleLoggerOptions options)
+    internal ConsoleLogger(IConsole console, ConsoleLoggerOptions options)
     {
-        Terminal = terminal;
         _options = options;
 
+        bool showProgress = _options.ShowProgress;
+        ConsoleWithProgress consoleWithProgress;
         if (_options.UseAnsi == YesNoAuto.No)
         {
-            _outputAnsi = false;
+            consoleWithProgress = new ConsoleWithProgress(new NonAnsiTerminal(console), showProgress, updateEvery: 3_000);
+        }
+        else if (_options.UseAnsi == YesNoAuto.Yes)
+        {
+            consoleWithProgress = new ConsoleWithProgress(new AnsiTerminal(console, _options.BaseDirectory), showProgress, updateEvery: 33);
         }
         else
         {
-            (bool allowAnsi, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
-
+            (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
             _originalConsoleMode = originalConsoleMode;
-
-            if (_options.UseAnsi == YesNoAuto.Yes)
-            {
-                _outputAnsi = true;
-            }
-
-            if (_options.UseAnsi == YesNoAuto.Auto)
-            {
-                _outputAnsi = allowAnsi;
-            }
+            consoleWithProgress = consoleAcceptsAnsiCodes
+                ? new ConsoleWithProgress(new AnsiTerminal(console, _options.BaseDirectory), showProgress, updateEvery: 33)
+                : new ConsoleWithProgress(new NonAnsiTerminal(console), showProgress, updateEvery: 3_000);
         }
 
-        _manualRefresh = manualRefresh && _outputAnsi;
-
-        // TODO: is this unsafe?
-        _baseDirectory = _options.BaseDirectory ?? Directory.GetCurrentDirectory();
+        _consoleWithProgress = consoleWithProgress;
     }
 
     public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount)
     {
-        _progress = new TestWorkerProgress[workerCount];
         _testStartTime = testStartTime;
-
-        if (!_manualRefresh)
-        {
-            _refresher = new Thread(ThreadProc);
-            _refresher.Start();
-        }
-
-        if (_outputAnsi && Terminal.SupportsProgressReporting)
-        {
-            Terminal.Write(AnsiCodes.SetProgressIndeterminate);
-        }
+        _consoleWithProgress.StartShowingProgress(workerCount);
     }
 
     public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture)
     {
         if (_options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
         {
-            var stringBuilder = new StringBuilder();
-            stringBuilder.Append("Running tests from ");
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(stringBuilder, assembly, targetFramework, architecture);
-            WriteMessage(stringBuilder.ToString());
+            _consoleWithProgress.WriteToTerminal(terminal =>
+            {
+                terminal.Append("Running tests from ");
+                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly, targetFramework, architecture);
+            });
         }
 
         GetOrAddAssemblyRun(assembly, targetFramework, architecture);
@@ -228,185 +168,22 @@ internal partial class ConsoleLogger : IDisposable
             return asm;
         }
 
-        int slotIndex = GetEmptySlot(_progress);
         StopwatchAbstraction sw = CreateStopwatch();
+        var progress = new TestWorker(0, 0, 0, Path.GetFileName(assembly), targetFramework, architecture, sw, detail: null);
+        int slotIndex = _consoleWithProgress.AddWorker(progress);
 
         var assemblyRun = new AssemblyRun(slotIndex, assembly, targetFramework, architecture, sw);
         _assemblies.Add(key, assemblyRun);
-        _progress[slotIndex] = new TestWorkerProgress(0, 0, 0, Path.GetFileName(assembly), targetFramework, architecture, sw, detail: null);
 
         return assemblyRun;
-    }
-
-    private static int GetEmptySlot(TestWorkerProgress?[] progress)
-    {
-        for (int i = 0; i < progress.Length; i++)
-        {
-            if (progress[i] == null)
-            {
-                return i;
-            }
-        }
-
-        throw new InvalidOperationException("No empty slot found");
     }
 
     internal void TestExecutionCompleted(DateTimeOffset endTime)
     {
         _testEndTime = endTime;
-        _cts.Cancel();
-        _refresher?.Join();
+        _consoleWithProgress.StopShowingProgress();
 
-        Terminal.BeginUpdate();
-        try
-        {
-            EraseNodes();
-            var stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine();
-
-            IEnumerable<IGrouping<bool, LoggerArtifact>> artifactGroups = _artifacts.GroupBy(a => a.OutOfProcess);
-            if (artifactGroups.Any())
-            {
-                stringBuilder.AppendLine();
-            }
-
-            foreach (IGrouping<bool, LoggerArtifact> artifactGroup in artifactGroups)
-            {
-                stringBuilder.Append(SingleIndentation);
-                stringBuilder.AppendLine(artifactGroup.Key ? PlatformResources.OutOfProcessArtifactsProduced : PlatformResources.InProcessArtifactsProduced);
-                foreach (LoggerArtifact artifact in artifactGroup)
-                {
-                    stringBuilder.Append(DoubleIndentation);
-                    stringBuilder.Append("- ");
-                    if (!RoslynString.IsNullOrWhiteSpace(artifact.TestName))
-                    {
-                        stringBuilder.Append(PlatformResources.ForTest);
-                        stringBuilder.Append(" '");
-                        stringBuilder.Append(artifact.TestName);
-                        stringBuilder.Append("': ");
-                    }
-
-                    AppendLink(stringBuilder, artifact.Path, lineNumber: null);
-                    stringBuilder.AppendLine();
-                }
-            }
-
-            int totalTests = _assemblies.Values.Sum(a => a.TotalTests);
-            int totalFailedTests = _assemblies.Values.Sum(a => a.FailedTests);
-            int totalSkippedTests = _assemblies.Values.Sum(a => a.SkippedTests);
-
-            bool notEnoughTests = totalTests < _options.MinimumExpectedTests;
-            bool allTestsWereSkipped = totalTests == 0 || totalTests == totalSkippedTests;
-            bool anyTestFailed = totalFailedTests > 0;
-            bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || _wasCancelled;
-            stringBuilder.Append(SetColor(runFailed ? TerminalColor.Red : TerminalColor.Green));
-
-            stringBuilder.AppendLine();
-            stringBuilder.Append($"Test run summary: ");
-
-            if (_wasCancelled)
-            {
-                stringBuilder.Append(PlatformResources.Aborted);
-            }
-            else if (notEnoughTests)
-            {
-                stringBuilder.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, _options.MinimumExpectedTests));
-            }
-            else if (anyTestFailed)
-            {
-                stringBuilder.Append(string.Format(CultureInfo.CurrentCulture, "{0}! ", PlatformResources.Failed));
-            }
-            else
-            {
-                stringBuilder.Append(string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Passed));
-            }
-
-            stringBuilder.AppendLine();
-
-            if (_options.ShowAssembly && _assemblies.Count > 1)
-            {
-                foreach (AssemblyRun assemblyRun in _assemblies.Values)
-                {
-                    stringBuilder.Append(SingleIndentation);
-                    AppendAssemblySummary(assemblyRun, stringBuilder);
-                }
-
-                stringBuilder.AppendLine();
-            }
-
-            int total = _assemblies.Values.Sum(t => t.TotalTests);
-            int failed = _assemblies.Values.Sum(t => t.FailedTests);
-            int passed = _assemblies.Values.Sum(t => t.PassedTests);
-            int skipped = _assemblies.Values.Sum(t => t.SkippedTests);
-            TimeSpan runDuration = _testStartTime != null && _testEndTime != null ? (_testEndTime - _testStartTime).Value : TimeSpan.Zero;
-
-            bool colorizeFailed = failed > 0;
-            bool colorizePassed = passed > 0 && _buildErrorsCount == 0 && failed == 0;
-            bool colorizeSkipped = skipped > 0 && skipped == total && _buildErrorsCount == 0 && failed == 0;
-
-            string totalText = $"{SingleIndentation}total: {total}";
-            string failedText = $"{SingleIndentation}failed: {failed}";
-            string passedText = $"{SingleIndentation}succeeded: {passed}";
-            string skippedText = $"{SingleIndentation}skipped: {skipped}";
-            string durationText = $"{SingleIndentation}duration: ";
-
-            failedText = colorizeFailed ? AnsiCodes.Colorize(failedText.ToString(), TerminalColor.DarkRed) : failedText;
-            passedText = colorizePassed ? AnsiCodes.Colorize(passedText.ToString(), TerminalColor.DarkGreen) : passedText;
-            skippedText = colorizeSkipped ? AnsiCodes.Colorize(skippedText.ToString(), TerminalColor.DarkYellow) : skippedText;
-
-            stringBuilder.Append(ResetColor());
-            stringBuilder.AppendLine(totalText);
-            if (colorizeFailed)
-            {
-                stringBuilder.Append(SetColor(TerminalColor.Red));
-            }
-
-            stringBuilder.AppendLine(failedText);
-
-            if (colorizeFailed)
-            {
-                stringBuilder.Append(ResetColor());
-            }
-
-            if (colorizePassed)
-            {
-                stringBuilder.Append(SetColor(TerminalColor.Green));
-            }
-
-            stringBuilder.AppendLine(passedText);
-
-            if (colorizePassed)
-            {
-                stringBuilder.Append(ResetColor());
-            }
-
-            if (colorizeSkipped)
-            {
-                stringBuilder.Append(SetColor(TerminalColor.DarkYellow));
-            }
-
-            stringBuilder.AppendLine(skippedText);
-
-            if (colorizeSkipped)
-            {
-                stringBuilder.Append(ResetColor());
-            }
-
-            stringBuilder.Append(durationText);
-            AppendDuration(stringBuilder, runDuration, wrapInParentheses: false, colorize: false);
-            stringBuilder.AppendLine();
-
-            Terminal.WriteLine(stringBuilder.ToString());
-        }
-        finally
-        {
-            if (_outputAnsi && Terminal.SupportsProgressReporting)
-            {
-                Terminal.Write(AnsiCodes.RemoveProgress);
-            }
-
-            Terminal.EndUpdate();
-        }
+        _consoleWithProgress.WriteToTerminal(AppendTestRunSummary);
 
         NativeMethods.RestoreConsoleMode(_originalConsoleMode);
         _assemblies.Clear();
@@ -415,83 +192,147 @@ internal partial class ConsoleLogger : IDisposable
         _testEndTime = null;
     }
 
-    /// <summary>
-    /// The <see cref="_refresher"/> thread proc.
-    /// </summary>
-    private void ThreadProc()
+    private void AppendTestRunSummary(ITerminal terminal)
     {
-        try
+        terminal.AppendLine();
+
+        IEnumerable<IGrouping<bool, LoggerArtifact>> artifactGroups = _artifacts.GroupBy(a => a.OutOfProcess);
+        if (artifactGroups.Any())
         {
-            // 1_000 / 30 is a poor approx of 30Hz
-            while (!_cts.Token.WaitHandle.WaitOne(1_000 / 30))
+            terminal.AppendLine();
+        }
+
+        foreach (IGrouping<bool, LoggerArtifact> artifactGroup in artifactGroups)
+        {
+            terminal.Append(SingleIndentation);
+            terminal.AppendLine(artifactGroup.Key ? PlatformResources.OutOfProcessArtifactsProduced : PlatformResources.InProcessArtifactsProduced);
+            foreach (LoggerArtifact artifact in artifactGroup)
             {
-                lock (_lock)
+                terminal.Append(DoubleIndentation);
+                terminal.Append("- ");
+                if (!RoslynString.IsNullOrWhiteSpace(artifact.TestName))
                 {
-                    DisplayNodes();
+                    terminal.Append(PlatformResources.ForTest);
+                    terminal.Append(" '");
+                    terminal.Append(artifact.TestName);
+                    terminal.Append("': ");
                 }
+
+                terminal.AppendLink(artifact.Path, lineNumber: null);
+                terminal.AppendLine();
             }
         }
-        catch (ObjectDisposedException)
+
+        int totalTests = _assemblies.Values.Sum(a => a.TotalTests);
+        int totalFailedTests = _assemblies.Values.Sum(a => a.FailedTests);
+        int totalSkippedTests = _assemblies.Values.Sum(a => a.SkippedTests);
+
+        bool notEnoughTests = totalTests < _options.MinimumExpectedTests;
+        bool allTestsWereSkipped = totalTests == 0 || totalTests == totalSkippedTests;
+        bool anyTestFailed = totalFailedTests > 0;
+        bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || _wasCancelled;
+        terminal.SetColor(runFailed ? TerminalColor.Red : TerminalColor.Green);
+
+        terminal.AppendLine();
+        terminal.Append($"Test run summary: ");
+
+        if (_wasCancelled)
         {
-            // When we dispose _cts too early this will throw.
+            terminal.Append(PlatformResources.Aborted);
+        }
+        else if (notEnoughTests)
+        {
+            terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, _options.MinimumExpectedTests));
+        }
+        else if (anyTestFailed)
+        {
+            terminal.Append(string.Format(CultureInfo.CurrentCulture, "{0}! ", PlatformResources.Failed));
+        }
+        else
+        {
+            terminal.Append(string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Passed));
         }
 
-        EraseNodes();
-    }
+        terminal.AppendLine();
 
-    /// <summary>
-    /// Render Nodes section.
-    /// It shows what all build nodes do.
-    /// </summary>
-    internal void DisplayNodes()
-    {
-        ProgressFrame newFrame = new(_progress, width: Terminal.Width, height: Terminal.Height);
-
-        // Do not render delta but clear everything if Terminal width or height have changed.
-        if (newFrame.Width != _currentFrame.Width || newFrame.Height != _currentFrame.Height)
+        if (_options.ShowAssembly && _assemblies.Count > 1)
         {
-            EraseNodes();
+            foreach (AssemblyRun assemblyRun in _assemblies.Values)
+            {
+                terminal.Append(SingleIndentation);
+                AppendAssemblySummary(assemblyRun, terminal);
+            }
+
+            terminal.AppendLine();
         }
 
-        string rendered = newFrame.Render(_currentFrame);
+        int total = _assemblies.Values.Sum(t => t.TotalTests);
+        int failed = _assemblies.Values.Sum(t => t.FailedTests);
+        int passed = _assemblies.Values.Sum(t => t.PassedTests);
+        int skipped = _assemblies.Values.Sum(t => t.SkippedTests);
+        TimeSpan runDuration = _testStartTime != null && _testEndTime != null ? (_testEndTime - _testStartTime).Value : TimeSpan.Zero;
 
-        // Hide the cursor to prevent it from jumping around as we overwrite the live lines.
-        Terminal.Write(AnsiCodes.HideCursor);
-        try
-        {
-            Terminal.Write(rendered);
-        }
-        finally
-        {
-            Terminal.Write(AnsiCodes.ShowCursor);
-        }
+        bool colorizeFailed = failed > 0;
+        bool colorizePassed = passed > 0 && _buildErrorsCount == 0 && failed == 0;
+        bool colorizeSkipped = skipped > 0 && skipped == total && _buildErrorsCount == 0 && failed == 0;
 
-        _currentFrame = newFrame;
-    }
+        string totalText = $"{SingleIndentation}total: {total}";
+        string failedText = $"{SingleIndentation}failed: {failed}";
+        string passedText = $"{SingleIndentation}succeeded: {passed}";
+        string skippedText = $"{SingleIndentation}skipped: {skipped}";
+        string durationText = $"{SingleIndentation}duration: ";
 
-    /// <summary>
-    /// Erases the previously printed live node output.
-    /// </summary>
-    private void EraseNodes()
-    {
-        if (_currentFrame.ProgressCount == 0)
+        terminal.ResetColor();
+        terminal.AppendLine(totalText);
+        if (colorizeFailed)
         {
-            return;
+            terminal.SetColor(TerminalColor.Red);
         }
 
-        Terminal.WriteLine($"{AnsiCodes.CSI}{_currentFrame.ProgressCount + 1}{AnsiCodes.MoveUpToLineStart}");
-        Terminal.Write($"{AnsiCodes.CSI}{AnsiCodes.EraseInDisplay}");
-        _currentFrame.Clear();
+        terminal.AppendLine(failedText);
+
+        if (colorizeFailed)
+        {
+            terminal.ResetColor();
+        }
+
+        if (colorizePassed)
+        {
+            terminal.SetColor(TerminalColor.Green);
+        }
+
+        terminal.AppendLine(passedText);
+
+        if (colorizePassed)
+        {
+            terminal.ResetColor();
+        }
+
+        if (colorizeSkipped)
+        {
+            terminal.SetColor(TerminalColor.DarkYellow);
+        }
+
+        terminal.AppendLine(skippedText);
+
+        if (colorizeSkipped)
+        {
+            terminal.ResetColor();
+        }
+
+        terminal.Append(durationText);
+        AppendDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);
+        terminal.AppendLine();
     }
 
     /// <summary>
     /// Print a build result summary to the output.
     /// </summary>
-    private static void AppendAssemblyResult(StringBuilder stringBuilder, bool succeeded, int countErrors, int countWarnings)
+    private static void AppendAssemblyResult(ITerminal terminal, bool succeeded, int countErrors, int countWarnings)
     {
         if (!succeeded)
         {
-            stringBuilder.Append(SetColor(TerminalColor.DarkRed));
+            terminal.SetColor(TerminalColor.DarkRed);
             // If the build failed, we print one of three red strings.
             string text = (countErrors > 0, countWarnings > 0) switch
             {
@@ -500,100 +341,21 @@ internal partial class ConsoleLogger : IDisposable
                 (false, true) => $"failed with {countWarnings} warning(s)",
                 _ => "failed",
             };
-            stringBuilder.Append(text);
-            stringBuilder.Append(ResetColor());
-            AnsiCodes.Colorize(text, TerminalColor.DarkRed);
+            terminal.Append(text);
+            terminal.ResetColor();
         }
         else if (countWarnings > 0)
         {
-            stringBuilder.Append(SetColor(TerminalColor.DarkYellow));
-            stringBuilder.Append(CultureInfo.CurrentCulture, $"succeeded with {countWarnings} warning(s)");
-            stringBuilder.Append(ResetColor());
+            terminal.SetColor(TerminalColor.DarkYellow);
+            terminal.Append($"succeeded with {countWarnings} warning(s)");
+            terminal.ResetColor();
         }
         else
         {
-            stringBuilder.Append(SetColor(TerminalColor.DarkGreen));
-            stringBuilder.Append(PlatformResources.PassedLowercase);
-            stringBuilder.Append(ResetColor());
+            terminal.SetColor(TerminalColor.DarkGreen);
+            terminal.Append(PlatformResources.PassedLowercase);
+            terminal.ResetColor();
         }
-    }
-
-    public void WriteMessage(string message)
-    {
-        lock (_lock)
-        {
-            // Calling erase helps to clear the screen before printing the message
-            // The immediate output will not overlap with node status reporting
-            EraseNodes();
-            Terminal.WriteLine(message);
-        }
-    }
-
-    private void AppendLink(StringBuilder stringBuilder, string? path, int? lineNumber)
-    {
-        if (RoslynString.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-
-        // For non code files, point to the directory, so we don't end up running the
-        // exe by clicking at the link.
-        bool linkToFile = path.EndsWith(".cs", ignoreCase: true, CultureInfo.CurrentCulture)
-            || path.EndsWith(".fs", ignoreCase: true, CultureInfo.CurrentCulture)
-            || path.EndsWith(".vb", ignoreCase: true, CultureInfo.CurrentCulture);
-
-        bool knownNonExistingFile = path.StartsWith("/_/", ignoreCase: false, CultureInfo.CurrentCulture);
-
-        string linkPath = path;
-        if (!linkToFile)
-        {
-            try
-            {
-                linkPath = Path.GetDirectoryName(linkPath) ?? linkPath;
-            }
-            catch
-            {
-                // Ignore all GetDirectoryName errors.
-            }
-        }
-
-        // If the output path is under the initial working directory, make the console output relative to that to save space.
-        if (_baseDirectory != null && path.StartsWith(_baseDirectory, FileUtilities.PathComparison))
-        {
-            if (path.Length > _baseDirectory.Length
-                && (path[_baseDirectory.Length] == Path.DirectorySeparatorChar
-                    || path[_baseDirectory.Length] == Path.AltDirectorySeparatorChar))
-            {
-                path = path.Substring(_baseDirectory.Length + 1);
-            }
-        }
-
-        if (lineNumber != null)
-        {
-            path += $":{lineNumber}";
-        }
-
-        if (knownNonExistingFile)
-        {
-            stringBuilder.Append(path);
-            return;
-        }
-
-        // Generates file:// schema url string which is better handled by various Terminal clients than raw folder name.
-        string urlString = linkPath.ToString();
-        if (Uri.TryCreate(urlString, UriKind.Absolute, out Uri? uri))
-        {
-            // url.ToString() un-escapes the URL which is needed for our case file://
-            urlString = uri.ToString();
-        }
-
-        stringBuilder.Append(SetColor(TerminalColor.Gray));
-        stringBuilder.Append(AnsiCodes.LinkPrefix);
-        stringBuilder.Append(urlString);
-        stringBuilder.Append(AnsiCodes.LinkInfix);
-        stringBuilder.Append(path);
-        stringBuilder.Append(AnsiCodes.LinkSuffix);
-        stringBuilder.Append(ResetColor());
     }
 
     internal void TestCompleted(
@@ -638,40 +400,24 @@ internal partial class ConsoleLogger : IDisposable
                 break;
         }
 
-        lock (_lock)
-        {
-            Terminal.BeginUpdate();
-            try
-            {
-                EraseNodes();
-
-                var stringBuilder = new StringBuilder();
-                RenderTestCompleted(
-                    stringBuilder,
-                    assembly,
-                    targetFramework,
-                    architecture,
-                    displayName,
-                    outcome,
-                    duration,
-                    errorMessage,
-                    errorStackTrace,
-                    expected,
-                    actual);
-                Terminal.Write(stringBuilder.ToString());
-
-                _progress[asm.SlotIndex] = new TestWorkerProgress(asm.PassedTests, asm.FailedTests, asm.SkippedTests, Path.GetFileName(asm.Assembly), asm.TargetFramework, asm.Architecture, asm.Stopwatch, null);
-                DisplayNodes();
-            }
-            finally
-            {
-                Terminal.EndUpdate();
-            }
-        }
+        var update = new TestWorker(asm.PassedTests, asm.FailedTests, asm.SkippedTests, Path.GetFileName(asm.Assembly), asm.TargetFramework, asm.Architecture, asm.Stopwatch, null);
+        _consoleWithProgress.UpdateProgress(asm.SlotIndex, update);
+        _consoleWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
+            terminal,
+            assembly,
+            targetFramework,
+            architecture,
+            displayName,
+            outcome,
+            duration,
+            errorMessage,
+            errorStackTrace,
+            expected,
+            actual));
     }
 
     internal /* for testing */ void RenderTestCompleted(
-        StringBuilder stringBuilder,
+        ITerminal terminal,
         string assembly,
         string? targetFramework,
         string? architecture,
@@ -704,127 +450,121 @@ internal partial class ConsoleLogger : IDisposable
             _ => throw new NotImplementedException(),
         };
 
-        stringBuilder.Append(SetColor(color));
-        stringBuilder.Append(outcomeText);
-        stringBuilder.Append(ResetColor());
-        stringBuilder.Append(' ');
-        stringBuilder.Append(displayName);
-        stringBuilder.Append(SetColor(TerminalColor.Gray));
-        stringBuilder.Append(' ');
-        stringBuilder.Append(CultureInfo.CurrentCulture, $"({duration.TotalSeconds:F1}s)");
+        terminal.SetColor(color);
+        terminal.Append(outcomeText);
+        terminal.ResetColor();
+        terminal.Append(' ');
+        terminal.Append(displayName);
+        terminal.SetColor(TerminalColor.Gray);
+        terminal.Append(' ');
+        terminal.Append($"({duration.TotalSeconds:F1}s)");
         if (_options.ShowAssembly)
         {
-            stringBuilder.AppendLine();
-            stringBuilder.Append(SingleIndentation);
-            stringBuilder.Append("from ");
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(stringBuilder, assembly, targetFramework, architecture);
+            terminal.AppendLine();
+            terminal.Append(SingleIndentation);
+            terminal.Append("from ");
+            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly, targetFramework, architecture);
         }
 
-        stringBuilder.AppendLine();
+        terminal.AppendLine();
 
-        FormatErrorMessage(stringBuilder, errorMessage);
-        ConsoleLogger.FormatExpectedAndActual(stringBuilder, expected, actual);
-        FormatStackTrace(stringBuilder, errorStackTrace);
+        FormatErrorMessage(terminal, errorMessage);
+        FormatExpectedAndActual(terminal, expected, actual);
+        FormatStackTrace(terminal, errorStackTrace);
     }
 
-    private void AppendAssemblyLinkTargetFrameworkAndArchitecture(StringBuilder stringBuilder, string assembly, string? targetFramework, string? architecture)
+    private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture)
     {
-        AppendLink(stringBuilder, assembly, lineNumber: null);
+        terminal.AppendLink(assembly, lineNumber: null);
         if (!RoslynString.IsNullOrWhiteSpace(architecture) && !RoslynString.IsNullOrWhiteSpace(targetFramework))
         {
-            stringBuilder.Append(" (");
-            stringBuilder.Append(targetFramework);
-            stringBuilder.Append('|');
-            stringBuilder.Append(architecture);
-            stringBuilder.Append(')');
+            terminal.Append(" (");
+            terminal.Append(targetFramework);
+            terminal.Append('|');
+            terminal.Append(architecture);
+            terminal.Append(')');
         }
     }
 
-    private void FormatStackTrace(StringBuilder stringBuilder, string? errorStackTrace)
+    private static void FormatStackTrace(ITerminal terminal, string? errorStackTrace)
     {
         if (RoslynString.IsNullOrWhiteSpace(errorStackTrace))
         {
             return;
         }
 
-        stringBuilder.Append(SetColor(TerminalColor.DarkRed));
-        stringBuilder.Append(SingleIndentation);
-        stringBuilder.Append(PlatformResources.StackTrace);
-        stringBuilder.AppendLine(":");
+        terminal.SetColor(TerminalColor.DarkRed);
+        terminal.Append(SingleIndentation);
+        terminal.Append(PlatformResources.StackTrace);
+        terminal.AppendLine(":");
 
         if (!errorStackTrace.Contains('\n'))
         {
-            AppendStackFrame(stringBuilder, errorStackTrace);
+            AppendStackFrame(terminal, errorStackTrace);
             return;
         }
 
         string[] lines = errorStackTrace.Split(NewLineStrings, StringSplitOptions.None);
         foreach (string line in lines)
         {
-            AppendStackFrame(stringBuilder, line);
+            AppendStackFrame(terminal, line);
         }
 
-        stringBuilder.Append(ResetColor());
+        terminal.ResetColor();
     }
 
-    private void AppendStackFrame(StringBuilder stringBuilder, string stackTraceLine)
+    private static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
     {
-        stringBuilder.Append(DoubleIndentation);
+        terminal.Append(DoubleIndentation);
         Match match = GetFrameRegex().Match(stackTraceLine);
         if (match.Success)
         {
-            stringBuilder.Append(SetColor(TerminalColor.Gray));
-            stringBuilder.Append("at ");
-            stringBuilder.Append(ResetColor());
-            stringBuilder.Append(SetColor(TerminalColor.Red));
-            stringBuilder.Append(match.Groups["code"].Value);
-            stringBuilder.Append(SetColor(TerminalColor.Gray));
-            stringBuilder.Append(" in ");
+            terminal.SetColor(TerminalColor.Gray);
+            terminal.Append("at ");
+            terminal.ResetColor();
+            terminal.SetColor(TerminalColor.Red);
+            terminal.Append(match.Groups["code"].Value);
+            terminal.SetColor(TerminalColor.Gray);
+            terminal.Append(" in ");
             int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
-            AppendLink(stringBuilder, match.Groups["file"].Value, line);
-            stringBuilder.AppendLine();
+            terminal.AppendLink(match.Groups["file"].Value, line);
+            terminal.AppendLine();
         }
     }
 
-    private static void FormatExpectedAndActual(StringBuilder stringBuilder, string? expected, string? actual)
+    private static void FormatExpectedAndActual(ITerminal terminal, string? expected, string? actual)
     {
         if (RoslynString.IsNullOrWhiteSpace(expected) && RoslynString.IsNullOrWhiteSpace(actual))
         {
             return;
         }
 
-        stringBuilder.Append(SetColor(TerminalColor.Red));
-        stringBuilder.Append(SingleIndentation);
-        stringBuilder.AppendLine(PlatformResources.Expected);
-        AppendIndentedMessage(stringBuilder, expected, DoubleIndentation);
-        stringBuilder.AppendLine();
-        stringBuilder.Append(SingleIndentation);
-        stringBuilder.AppendLine(PlatformResources.Actual);
-        AppendIndentedMessage(stringBuilder, actual, DoubleIndentation);
-        stringBuilder.Append(ResetColor());
-        stringBuilder.AppendLine();
+        terminal.SetColor(TerminalColor.Red);
+        terminal.Append(SingleIndentation);
+        terminal.AppendLine(PlatformResources.Expected);
+        AppendIndentedMessage(terminal, expected, DoubleIndentation);
+        terminal.AppendLine();
+        terminal.Append(SingleIndentation);
+        terminal.AppendLine(PlatformResources.Actual);
+        AppendIndentedMessage(terminal, actual, DoubleIndentation);
+        terminal.ResetColor();
+        terminal.AppendLine();
     }
 
-    private static void FormatErrorMessage(StringBuilder stringBuilder, string? errorMessage)
+    private static void FormatErrorMessage(ITerminal terminal, string? errorMessage)
     {
         if (RoslynString.IsNullOrWhiteSpace(errorMessage))
         {
             return;
         }
 
-        stringBuilder.Append(SetColor(TerminalColor.Red));
-        AppendIndentedMessage(stringBuilder, errorMessage, SingleIndentation);
-        stringBuilder.Append(ResetColor());
-        stringBuilder.AppendLine();
+        terminal.SetColor(TerminalColor.Red);
+        AppendIndentedMessage(terminal, errorMessage, SingleIndentation);
+        terminal.ResetColor();
+        terminal.AppendLine();
     }
 
-    private static string SetColor(TerminalColor color)
-        => $"{AnsiCodes.CSI}{(int)color}{AnsiCodes.SetColor}";
-
-    private static string ResetColor()
-        => AnsiCodes.SetDefaultColor;
-
-    private static void AppendIndentedMessage(StringBuilder stringBuilder, string? message, string indent)
+    private static void AppendIndentedMessage(ITerminal terminal, string? message, string indent)
     {
         if (RoslynString.IsNullOrWhiteSpace(message))
         {
@@ -833,8 +573,8 @@ internal partial class ConsoleLogger : IDisposable
 
         if (!message.Contains('\n'))
         {
-            stringBuilder.Append(indent);
-            stringBuilder.Append(message?.TrimStart(' '));
+            terminal.Append(indent);
+            terminal.Append(message.TrimStart(' '));
             return;
         }
 
@@ -847,9 +587,9 @@ internal partial class ConsoleLogger : IDisposable
             // But this does not play nicely with ANSI escape codes. And if you
             // run in narrow terminal and then widen it the text does not reflow correctly. And you also have harder time copying
             // values when the assertion message is longer.
-            stringBuilder.Append(indent);
-            stringBuilder.Append(trimmedLine);
-            stringBuilder.AppendLine();
+            terminal.Append(indent);
+            terminal.Append(trimmedLine);
+            terminal.AppendLine();
         }
     }
 
@@ -858,78 +598,61 @@ internal partial class ConsoleLogger : IDisposable
         AssemblyRun assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         assemblyRun.Stopwatch.Stop();
 
-        _progress[assemblyRun.SlotIndex] = null;
+        _consoleWithProgress.RemoveProgress(assemblyRun.SlotIndex);
 
         if (_options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
         {
-            lock (_lock)
-            {
-                Terminal.BeginUpdate();
-                var stringBuilder = new StringBuilder();
-                try
-                {
-                    EraseNodes();
-
-                    AppendAssemblySummary(assemblyRun, stringBuilder);
-                    Terminal.WriteLine(stringBuilder.ToString());
-
-                    DisplayNodes();
-                }
-                finally
-                {
-                    Terminal.EndUpdate();
-                }
-            }
+            _consoleWithProgress.WriteToTerminal(terminal => AppendAssemblySummary(assemblyRun, terminal));
         }
     }
 
-    private void AppendAssemblySummary(AssemblyRun assemblyRun, StringBuilder stringBuilder)
+    private static void AppendAssemblySummary(AssemblyRun assemblyRun, ITerminal terminal)
     {
         int failedTests = assemblyRun.FailedTests + assemblyRun.CancelledTests + assemblyRun.TimedOutTests;
         int warnings = 0;
 
-        AppendAssemblyLinkTargetFrameworkAndArchitecture(stringBuilder, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture);
-        stringBuilder.Append(' ');
-        AppendAssemblyResult(stringBuilder, assemblyRun.FailedTests == 0, failedTests, warnings);
-        stringBuilder.Append(' ');
-        AppendDuration(stringBuilder, assemblyRun.Stopwatch.Elapsed);
+        AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture);
+        terminal.Append(' ');
+        AppendAssemblyResult(terminal, assemblyRun.FailedTests == 0, failedTests, warnings);
+        terminal.Append(' ');
+        AppendDuration(terminal, assemblyRun.Stopwatch.Elapsed);
     }
 
-    private static void AppendDuration(StringBuilder stringBuilder, TimeSpan duration, bool wrapInParentheses = true, bool colorize = true)
+    private static void AppendDuration(ITerminal terminal, TimeSpan duration, bool wrapInParentheses = true, bool colorize = true)
     {
         if (colorize)
         {
-            stringBuilder.Append(SetColor(TerminalColor.Gray));
+            terminal.SetColor(TerminalColor.Gray);
         }
 
         if (wrapInParentheses)
         {
-            stringBuilder.Append('(');
+            terminal.Append('(');
         }
 
         if (duration.TotalMilliseconds < 1000)
         {
-            stringBuilder.Append(duration.TotalMilliseconds.ToString("F0", CultureInfo.CurrentCulture));
-            stringBuilder.Append("ms");
+            terminal.Append(duration.TotalMilliseconds.ToString("F0", CultureInfo.CurrentCulture));
+            terminal.Append("ms");
         }
         else
         {
-            stringBuilder.Append(duration.TotalSeconds.ToString("F1", CultureInfo.CurrentCulture));
-            stringBuilder.Append('s');
+            terminal.Append(duration.TotalSeconds.ToString("F1", CultureInfo.CurrentCulture));
+            terminal.Append('s');
         }
 
         if (wrapInParentheses)
         {
-            stringBuilder.Append(')');
+            terminal.Append(')');
         }
 
         if (colorize)
         {
-            stringBuilder.Append(ResetColor());
+            terminal.ResetColor();
         }
     }
 
-    public void Dispose() => ((IDisposable)_cts).Dispose();
+    public void Dispose() => _consoleWithProgress.Dispose();
 
     public void ArtifactAdded(bool outOfProcess, string? assembly, string? targetFramework, string? architecture, string? testName, string path)
         => _artifacts.Add(new LoggerArtifact(outOfProcess, assembly, targetFramework, architecture, testName, path));
@@ -940,27 +663,42 @@ internal partial class ConsoleLogger : IDisposable
     internal void StartCancelling()
     {
         _wasCancelled = true;
-        WriteMessage(PlatformResources.CancellingTestSession);
+        _consoleWithProgress.WriteToTerminal(terminal =>
+        {
+            terminal.AppendLine();
+            terminal.AppendLine(PlatformResources.CancellingTestSession);
+            terminal.AppendLine();
+        });
     }
 
     internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string text)
     {
         AssemblyRun asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddError(text);
-        string redText = AnsiCodes.Colorize(text, TerminalColor.Red);
 
-        WriteMessage(redText);
+        _consoleWithProgress.WriteToTerminal(terminal =>
+        {
+            terminal.SetColor(TerminalColor.Red);
+            terminal.Append(text);
+            terminal.ResetColor();
+        });
     }
 
     internal void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string text)
     {
         AssemblyRun asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddWarning(text);
-        string yellowText = AnsiCodes.Colorize(text, TerminalColor.Yellow);
-
-        WriteMessage(yellowText);
+        _consoleWithProgress.WriteToTerminal(terminal =>
+        {
+            terminal.SetColor(TerminalColor.Yellow);
+            terminal.Append(text);
+            terminal.ResetColor();
+        });
     }
 
     internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, Exception exception) =>
         WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString());
+
+    internal void WriteMessage(string text)
+        => _consoleWithProgress.WriteToTerminal(terminal => terminal.Append(text));
 }

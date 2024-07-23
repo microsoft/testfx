@@ -30,7 +30,7 @@ internal class ConsoleLoggerOptions
     /// </summary>
     public int MinimumExpectedTests { get; init; }
 
-    public YesNoAuto UseProgress { get; init; }
+    public bool ShowProgress { get; init; }
 
     public YesNoAuto UseAnsi { get; init; }
 }

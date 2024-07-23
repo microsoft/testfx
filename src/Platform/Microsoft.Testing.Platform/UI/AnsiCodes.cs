@@ -115,7 +115,7 @@ internal static class AnsiCodes
     /// <see href="https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC">ConEmu specific OSC codes.</see><br/>
     /// <see href="https://iterm2.com/documentation-escape-codes.html">iTerm2 proprietary escape codes.</see>
     /// </remarks>
-    public const string SetProgressIndeterminate = "\x1b]9;4;3;\x1b\\";
+    public const string SetBusySpinner = "\x1b]9;4;3;\x1b\\";
 
     /// <summary>
     /// Remove progress state, restoring taskbar status to normal. <br/>
@@ -125,7 +125,7 @@ internal static class AnsiCodes
     /// <see href="https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC">ConEmu specific OSC codes.</see><br/>
     /// <see href="https://iterm2.com/documentation-escape-codes.html">iTerm2 proprietary escape codes.</see>
     /// </remarks>
-    public const string RemoveProgress = "\x1b]9;4;0;\x1b\\";
+    public const string RemoveBusySpinner = "\x1b]9;4;0;\x1b\\";
 
     public static string Colorize(string? s, TerminalColor color)
         => RoslynString.IsNullOrWhiteSpace(s) ? s ?? string.Empty : $"{CSI}{(int)color}{SetColor}{s}{SetDefaultColor}";

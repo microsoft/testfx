@@ -3,56 +3,41 @@
 
 namespace Microsoft.Testing.Platform.UI;
 
-/// <summary>
-/// An abstraction of a terminal, built specifically to fit the <see cref="ConsoleLogger"/> needs.
-/// </summary>
 internal interface ITerminal
 {
-    /// <summary>
-    /// Gets width of the terminal buffer.
-    /// </summary>
     int Width { get; }
 
-    /// <summary>
-    /// Gets height of the terminal buffer.
-    /// </summary>
     int Height { get; }
 
-    /// <summary>
-    /// Gets a value indicating whether <see langword="true"/> if the terminal emulator supports progress reporting.
-    /// </summary>
-    bool SupportsProgressReporting { get; }
+    void Append(char value);
 
-    /// <summary>
-    /// Starts buffering the text passed via the <c>Write*</c> methods.
-    /// </summary>
-    /// <remarks>
-    /// Upon calling this method, the terminal should be buffering all output internally until <see cref="EndUpdate"/> is called.
-    /// </remarks>
-    void BeginUpdate();
+    void Append(string value);
 
-    /// <summary>
-    /// Flushes the text buffered between <see cref="BeginUpdate"/> was called and now into the output.
-    /// </summary>
-    void EndUpdate();
+    void AppendLine();
 
-    /// <summary>
-    /// Writes a string to the output. Or buffers it if <see cref="BeginUpdate"/> was called.
-    /// </summary>
-    void Write(string text);
+    void AppendLine(string value);
 
-    /// <summary>
-    /// Writes a string to the output. Or buffers it if <see cref="BeginUpdate"/> was called.
-    /// </summary>
-    void WriteLine(string text);
+    void AppendLink(string path, int? lineNumber);
 
-    /// <summary>
-    /// Writes a string to the output using the given color. Or buffers it if <see cref="BeginUpdate"/> was called.
-    /// </summary>
-    void WriteColor(TerminalColor color, string text);
+    void SetColor(TerminalColor color);
 
-    /// <summary>
-    /// Writes a string to the output using the given color. Or buffers it if <see cref="BeginUpdate"/> was called.
-    /// </summary>
-    void WriteColorLine(TerminalColor color, string text);
+    void ResetColor();
+
+    void ShowCursor();
+
+    void HideCursor();
+
+    void StartUpdate();
+
+    void StopUpdate();
+
+    void EraseProgress();
+
+    void RenderProgress(TestWorker?[] progress);
+
+    void StartBusyIndicator();
+
+    void StopBusyIndicator();
+
+    OutputBuilder CreateOutputBuilder();
 }

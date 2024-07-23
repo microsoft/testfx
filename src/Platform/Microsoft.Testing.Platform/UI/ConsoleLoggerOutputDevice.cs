@@ -68,13 +68,16 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
         _isServerMode = isServerMode;
         _fileLoggerProvider = fileLoggerProvider;
         _clock = clock;
-        _consoleLogger = new ConsoleLogger(new Terminal(console), manualRefresh: false, new()
+        bool verbose = false;
+        _consoleLogger = new ConsoleLogger(console, new()
         {
             BaseDirectory = null,
-            ShowAssembly = false,
-            ShowAssemblyStartAndComplete = false,
-            ShowPassedTests = false,
+            ShowAssembly = verbose,
+            ShowAssemblyStartAndComplete = verbose,
+            ShowPassedTests = verbose,
             MinimumExpectedTests = minimumExpectedTest,
+            UseAnsi = YesNoAuto.Auto,
+            ShowProgress = true,
         });
 
         if (_fileLoggerProvider is not null)

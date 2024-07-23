@@ -29,6 +29,8 @@ public class HangDumpTests(ITestExecutionContext testExecutionContext) : TestBas
 
     public async Task IsValid_If_Timeout_Value_Has_CorrectValue()
     {
+        Thread.Sleep(10_000);
+
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
         CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTimeoutOptionName);
 
@@ -39,6 +41,11 @@ public class HangDumpTests(ITestExecutionContext testExecutionContext) : TestBas
 
     public async Task IsInvalid_If_Timeout_Value_Has_IncorrectValue()
     {
+        bool a = true;
+        if (a)
+        {
+            throw new Exception("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        }
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
         CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTimeoutOptionName);
 
