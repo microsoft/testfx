@@ -433,7 +433,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 serviceProvider,
                 BuildTestFrameworkAsync,
                 (TestFrameworkManager)TestFramework,
-                (TestHostManager)TestHost);
+                (TestHostManager)TestHost,
+                dotnetTestPipeClient);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
             ITestHost? actualTestHost = testControllerConnection is not null
@@ -735,8 +736,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         ServiceProvider serviceProvider,
         Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
         TestFrameworkManager testFrameworkManager,
-        TestHostManager testHostManager)
-        => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager);
+        TestHostManager testHostManager,
+        NamedPipeClient? dotnetTestPipeClient)
+        => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager, dotnetTestPipeClient);
 
     protected virtual bool SkipAddingService(object service) => false;
 
