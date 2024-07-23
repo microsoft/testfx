@@ -62,17 +62,17 @@ internal sealed class Condition
     /// <summary>
     /// Gets toolName of the property used in condition.
     /// </summary>
-    internal string Name { get; private set; }
+    internal string Name { get; }
 
     /// <summary>
     /// Gets value for the property.
     /// </summary>
-    internal string Value { get; private set; }
+    internal string Value { get; }
 
     /// <summary>
     /// Gets operation to be performed.
     /// </summary>
-    internal Operation Operation { get; private set; }
+    internal Operation Operation { get; }
 
     /// <summary>
     /// Evaluate this condition for testObject.
