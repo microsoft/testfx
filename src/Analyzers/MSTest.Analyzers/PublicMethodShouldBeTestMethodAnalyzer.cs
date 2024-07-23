@@ -92,8 +92,8 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzer : DiagnosticAnalyzer
         {
             // Check if method is a test method or inherit from the TestMethod attribute.
             if (methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol)
-                || SymbolEqualityComparer.Default.Equals(testMethodAttributeSymbol, testInitializeAttributeSymbol)
-                || SymbolEqualityComparer.Default.Equals(testMethodAttributeSymbol, testCleanupAttributeSymbol))
+                || SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, testInitializeAttributeSymbol)
+                || SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, testCleanupAttributeSymbol))
             {
                 hasValidAttribute = true;
             }
