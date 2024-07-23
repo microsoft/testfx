@@ -9,6 +9,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [AttributeUsage(AttributeTargets.Method)]
 public sealed class TimeoutAttribute : Attribute
 {
+    private bool _isCooperativeCancellation;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TimeoutAttribute"/> class.
     /// </summary>
@@ -35,4 +37,21 @@ public sealed class TimeoutAttribute : Attribute
     /// Gets the timeout in milliseconds.
     /// </summary>
     public int Timeout { get; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the method should be cooperatively cancelled on timeout.
+    /// When set to <see langword="true"/>, the method should be designed to cooperatively cancel itself when the timeout is reached.
+    /// Otherwise, when set to <see langword="false"/>, the task method will be unobserved.
+    /// </summary>
+    public bool CooperativeCancellation
+    {
+        get => _isCooperativeCancellation;
+        set
+        {
+            IsCooperativeCancellationSet = true;
+            _isCooperativeCancellation = value;
+        }
+    }
+
+    internal bool IsCooperativeCancellationSet { get; private set; }
 }
