@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
@@ -15,7 +16,8 @@ internal class TestFrameworkBuilderData(ServiceProvider serviceProvider, ITestEx
     ITestFrameworkInvoker testExecutionRequestInvoker, ITestExecutionFilterFactory testExecutionFilterFactory,
     IPlatformOutputDevice platformOutputDisplayService, IEnumerable<IDataConsumer> serverPerCallConsumers,
     TestFrameworkManager testFrameworkManager, TestHostManager testSessionManager, MessageBusProxy messageBusProxy,
-    bool isForDiscoveryRequest)
+    bool isForDiscoveryRequest,
+    NamedPipeClient? dotnetTestPipeClient = null)
 {
     public ServiceProvider ServiceProvider { get; } = serviceProvider;
 
@@ -36,4 +38,6 @@ internal class TestFrameworkBuilderData(ServiceProvider serviceProvider, ITestEx
     public MessageBusProxy MessageBusProxy { get; } = messageBusProxy;
 
     public bool IsForDiscoveryRequest { get; } = isForDiscoveryRequest;
+
+    public NamedPipeClient? DotnetTestPipeClient { get; } = dotnetTestPipeClient;
 }
