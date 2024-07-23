@@ -3,4 +3,7 @@
 
 namespace Microsoft.Testing.Platform.UI;
 
+/// <summary>
+/// An error message that was sent to output during the build.
+/// </summary>
 internal record class ErrorMessage(string Text) : IMessage;

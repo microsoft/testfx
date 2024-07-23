@@ -6,9 +6,9 @@ using System.Globalization;
 namespace Microsoft.Testing.Platform.UI;
 
 /// <summary>
-/// Capture states on nodes to be rendered on display.
+/// Captures <see cref="TestWorker"/> that was rendered to screen, so we can only partially update the screen on next update.
 /// </summary>
-internal sealed class ProgressFrame
+internal sealed class TestWorkerFrame
 {
     private const int MaxColumn = 120;
 
@@ -20,7 +20,7 @@ internal sealed class ProgressFrame
 
     public int ProgressCount { get; private set; }
 
-    public ProgressFrame(TestWorker?[] nodes, int width, int height)
+    public TestWorkerFrame(TestWorker?[] nodes, int width, int height)
     {
         Width = Math.Min(width, MaxColumn);
         Height = height;
@@ -90,7 +90,7 @@ internal sealed class ProgressFrame
     /// <summary>
     /// Render VT100 string to update from current to next frame.
     /// </summary>
-    public void Render(ProgressFrame previousFrame, AnsiTerminal terminal)
+    public void Render(TestWorkerFrame previousFrame, AnsiTerminal terminal)
     {
         // Move cursor back to 1st line of progress.
         terminal.MoveCursorUp(previousFrame.ProgressCount + 1);

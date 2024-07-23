@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.UI;
 
+/// <summary>
+/// An ANSI or non-ANSI terminal that is capable of rendering the messages from <see cref="ConsoleWithProgress"/>.
+/// </summary>
 internal interface ITerminal
 {
     int Width { get; }
@@ -38,6 +41,4 @@ internal interface ITerminal
     void StartBusyIndicator();
 
     void StopBusyIndicator();
-
-    OutputBuilder CreateOutputBuilder();
 }

@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.UI;
 
+/// <summary>
+/// Error or warning message that was sent to screen during the build.
+/// </summary>
 internal interface IMessage
 {
 }

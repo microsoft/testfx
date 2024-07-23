@@ -18,6 +18,9 @@ using Microsoft.Testing.Platform.UI;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
+/// <summary>
+/// Implementation of output device that ties testing platform to the console logger.
+/// </summary>
 internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,

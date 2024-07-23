@@ -17,11 +17,8 @@ using Microsoft.Testing.Platform.Resources;
 namespace Microsoft.Testing.Platform.UI;
 
 /// <summary>
-/// A logger which updates the console output "live" during the build.
+/// Console logger that outputs test progress and is capable of writing ANSI or non-ANSI output via the given terminal.
 /// </summary>
-/// <remarks>
-/// Uses ANSI/VT100 control codes to erase and overwrite lines as the build is progressing.
-/// </remarks>
 internal partial class ConsoleLogger : IDisposable
 {
     private static readonly string[] NewLineStrings = { "\r\n", "\n" };

@@ -9,6 +9,10 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.UI;
 
+/// <summary>
+/// Console writer that is used when writing ANSI is allowed. It is capable of batching as many updates as possible and writing them at the end,
+/// because the terminal is responsible for rendering the colors and control codes.
+/// </summary>
 internal class AnsiTerminal : ITerminal
 {
     private readonly IConsole _console;
@@ -16,7 +20,7 @@ internal class AnsiTerminal : ITerminal
     private readonly bool _useBusyIndicator;
     private readonly StringBuilder _stringBuilder = new();
     private bool _isBatching;
-    private ProgressFrame _currentFrame = new(Array.Empty<TestWorker>(), 0, 0);
+    private TestWorkerFrame _currentFrame = new(Array.Empty<TestWorker>(), 0, 0);
 
     public AnsiTerminal(IConsole console, string? baseDirectory)
     {
@@ -260,7 +264,7 @@ internal class AnsiTerminal : ITerminal
 
     public void RenderProgress(TestWorker?[] progress)
     {
-        ProgressFrame newFrame = new(progress, Width, Height);
+        TestWorkerFrame newFrame = new(progress, Width, Height);
 
         // Do not render delta but clear everything if Terminal width or height have changed.
         if (newFrame.Width != _currentFrame.Width || newFrame.Height != _currentFrame.Height)
@@ -300,7 +304,4 @@ internal class AnsiTerminal : ITerminal
 
         ShowCursor();
     }
-
-    public OutputBuilder CreateOutputBuilder()
-        => new(this);
 }

@@ -3,4 +3,7 @@
 
 namespace Microsoft.Testing.Platform.UI;
 
+/// <summary>
+/// A warning message that was sent during run.
+/// </summary>
 internal record class WarningMessage(string Text) : IMessage;

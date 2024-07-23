@@ -30,7 +30,13 @@ internal class ConsoleLoggerOptions
     /// </summary>
     public int MinimumExpectedTests { get; init; }
 
+    /// <summary>
+    /// Gets a value indicating whether we should write the progress periodically to screen. When ANSI is allowed we update the progress as often as we can. When it is not allowed we update it every 3 seconds.
+    /// </summary>
     public bool ShowProgress { get; init; }
 
+    /// <summary>
+    /// Gets a value indicating whether we should use ANSI escape codes or disable them. When true the capabilities of the console are autodetected.
+    /// </summary>
     public bool UseAnsi { get; init; }
 }

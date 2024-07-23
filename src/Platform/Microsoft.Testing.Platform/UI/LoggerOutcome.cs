@@ -6,6 +6,9 @@
 #endif
 namespace Microsoft.Testing.Platform.UI;
 
+/// <summary>
+/// Outcome of a test.
+/// </summary>
 internal enum LoggerOutcome
 {
     /// <summary>

@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.UI;
 
+/// <summary>
+/// Console that updates the progress in place when progress reporting is enabled.
+/// </summary>
 internal partial class ConsoleWithProgress : IDisposable
 {
     /// <summary>

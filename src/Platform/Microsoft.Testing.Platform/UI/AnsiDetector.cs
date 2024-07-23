@@ -9,6 +9,9 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.Testing.Platform.UI;
 
+/// <summary>
+/// Works together with the <see cref="NativeMethods"/> to figure out if the current console is capable of using ANSI output codes.
+/// </summary>
 internal class AnsiDetector
 {
     private static readonly Regex[] TerminalsRegexes =

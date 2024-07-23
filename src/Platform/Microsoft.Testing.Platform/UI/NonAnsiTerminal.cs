@@ -8,6 +8,10 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.UI;
 
+/// <summary>
+/// Non-ANSI terminal that writes text using the standard Console.Foreground color capabilities to stay compatible with
+/// standard Windows command line, and other command lines that are not capable of ANSI, or when output is redirected.
+/// </summary>
 internal class NonAnsiTerminal : ITerminal
 {
     private readonly IConsole _console;
@@ -233,7 +237,4 @@ internal class NonAnsiTerminal : ITerminal
     {
         // nop
     }
-
-    public OutputBuilder CreateOutputBuilder()
-        => new(this);
 }
