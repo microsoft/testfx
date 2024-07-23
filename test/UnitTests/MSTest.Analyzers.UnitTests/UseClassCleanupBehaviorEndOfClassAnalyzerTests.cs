@@ -98,4 +98,59 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    public async Task UsingClassCleanup_WithoutCleanupBehaviorAndWithInheritanceBehavior_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
+                public static void [|ClassCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task UsingClassCleanup_WithCleanupBehaviorEndOFAssemblyAndWithInheritanceBehavior_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfAssembly)]
+                public static void [|ClassCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+
+    public async Task UsingClassCleanup_WithCleanupBehaviorEndOFClassAndWithInheritanceBehavior_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
+                public static void ClassCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
