@@ -68,6 +68,9 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
         _isServerMode = isServerMode;
         _fileLoggerProvider = fileLoggerProvider;
         _clock = clock;
+
+        // This is single exe run, don't show all the details of assemblies and their summaries
+        // and don't show passed tests.
         bool verbose = false;
         _consoleLogger = new ConsoleLogger(console, new()
         {
@@ -76,7 +79,7 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
             ShowAssemblyStartAndComplete = verbose,
             ShowPassedTests = verbose,
             MinimumExpectedTests = minimumExpectedTest,
-            UseAnsi = YesNoAuto.Auto,
+            UseAnsi = true,
             ShowProgress = true,
         });
 

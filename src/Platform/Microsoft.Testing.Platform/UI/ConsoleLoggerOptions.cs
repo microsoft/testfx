@@ -32,5 +32,5 @@ internal class ConsoleLoggerOptions
 
     public bool ShowProgress { get; init; }
 
-    public YesNoAuto UseAnsi { get; init; }
+    public bool UseAnsi { get; init; }
 }

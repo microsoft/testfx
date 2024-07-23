@@ -120,16 +120,13 @@ internal partial class ConsoleLogger : IDisposable
 
         bool showProgress = _options.ShowProgress;
         ConsoleWithProgress consoleWithProgress;
-        if (_options.UseAnsi == YesNoAuto.No)
-        {
-            consoleWithProgress = new ConsoleWithProgress(new NonAnsiTerminal(console), showProgress, updateEvery: 3_000);
-        }
-        else if (_options.UseAnsi == YesNoAuto.Yes)
+        if (!_options.UseAnsi)
         {
             consoleWithProgress = new ConsoleWithProgress(new AnsiTerminal(console, _options.BaseDirectory), showProgress, updateEvery: 33);
         }
         else
         {
+            // Autodetect.
             (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
             _originalConsoleMode = originalConsoleMode;
             consoleWithProgress = consoleAcceptsAnsiCodes
@@ -401,19 +398,22 @@ internal partial class ConsoleLogger : IDisposable
         }
 
         var update = new TestWorker(asm.PassedTests, asm.FailedTests, asm.SkippedTests, Path.GetFileName(asm.Assembly), asm.TargetFramework, asm.Architecture, asm.Stopwatch, null);
-        _consoleWithProgress.UpdateProgress(asm.SlotIndex, update);
-        _consoleWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
-            terminal,
-            assembly,
-            targetFramework,
-            architecture,
-            displayName,
-            outcome,
-            duration,
-            errorMessage,
-            errorStackTrace,
-            expected,
-            actual));
+        _consoleWithProgress.UpdateWorker(asm.SlotIndex, update);
+        if (outcome != LoggerOutcome.Passed || _options.ShowPassedTests)
+        {
+            _consoleWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
+                terminal,
+                assembly,
+                targetFramework,
+                architecture,
+                displayName,
+                outcome,
+                duration,
+                errorMessage,
+                errorStackTrace,
+                expected,
+                actual));
+        }
     }
 
     internal /* for testing */ void RenderTestCompleted(
@@ -598,7 +598,7 @@ internal partial class ConsoleLogger : IDisposable
         AssemblyRun assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         assemblyRun.Stopwatch.Stop();
 
-        _consoleWithProgress.RemoveProgress(assemblyRun.SlotIndex);
+        _consoleWithProgress.RemoveWorker(assemblyRun.SlotIndex);
 
         if (_options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
         {

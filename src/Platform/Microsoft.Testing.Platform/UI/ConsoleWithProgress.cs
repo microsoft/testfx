@@ -57,16 +57,21 @@ internal partial class ConsoleWithProgress : IDisposable
 
     public int AddWorker(TestWorker testWorker)
     {
-        for (int i = 0; i < _workers.Length; i++)
+        if (_showProgress)
         {
-            if (_workers[i] == null)
+            for (int i = 0; i < _workers.Length; i++)
             {
-                _workers[i] = testWorker;
-                return i;
+                if (_workers[i] == null)
+                {
+                    _workers[i] = testWorker;
+                    return i;
+                }
             }
+
+            throw new InvalidOperationException("No empty slot found");
         }
 
-        throw new InvalidOperationException("No empty slot found");
+        return 0;
     }
 
     public void StartShowingProgress(int workerCount)
@@ -115,7 +120,7 @@ internal partial class ConsoleWithProgress : IDisposable
         }
     }
 
-    internal void RemoveProgress(int slotIndex)
+    internal void RemoveWorker(int slotIndex)
     {
         if (_showProgress)
         {
@@ -123,7 +128,7 @@ internal partial class ConsoleWithProgress : IDisposable
         }
     }
 
-    internal void UpdateProgress(int slotIndex, TestWorker update)
+    internal void UpdateWorker(int slotIndex, TestWorker update)
     {
         if (_showProgress)
         {

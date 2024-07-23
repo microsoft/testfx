@@ -254,7 +254,7 @@ internal class AnsiTerminal : ITerminal
         }
 
         AppendLine($"{AnsiCodes.CSI}{_currentFrame.ProgressCount + 1}{AnsiCodes.MoveUpToLineStart}");
-        AppendLine($"{AnsiCodes.CSI}{AnsiCodes.EraseInDisplay}");
+        Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInDisplay}");
         _currentFrame.Clear();
     }
 
@@ -268,8 +268,6 @@ internal class AnsiTerminal : ITerminal
             EraseProgress();
         }
 
-        HideCursor();
-
         StartUpdate();
         try
         {
@@ -278,7 +276,6 @@ internal class AnsiTerminal : ITerminal
         finally
         {
             StopUpdate();
-            ShowCursor();
         }
 
         _currentFrame = newFrame;
@@ -290,6 +287,8 @@ internal class AnsiTerminal : ITerminal
         {
             Append(AnsiCodes.SetBusySpinner);
         }
+
+        HideCursor();
     }
 
     public void StopBusyIndicator()
@@ -298,6 +297,8 @@ internal class AnsiTerminal : ITerminal
         {
             Append(AnsiCodes.RemoveBusySpinner);
         }
+
+        ShowCursor();
     }
 
     public OutputBuilder CreateOutputBuilder()
