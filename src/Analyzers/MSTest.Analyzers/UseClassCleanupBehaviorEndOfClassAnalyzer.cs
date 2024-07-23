@@ -73,7 +73,7 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzer : DiagnosticAnalyz
                 {
                     // one is the value for EndOFClass behavior in the CleanupBehavior enum.
                     if (SymbolEqualityComparer.Default.Equals(arg.Type, classCleanupBehaviorSymbol)
-                        && arg.Value!.Equals(1))
+                        && 1.Equals(arg.Value))
                     {
                         hasCleanupEndOClassBehavior = true;
                     }
