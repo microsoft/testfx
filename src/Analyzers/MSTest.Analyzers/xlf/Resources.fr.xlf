@@ -314,6 +314,21 @@
         <target state="translated">Les types publics doivent être des classes de test</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
+        <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
+        <target state="new">Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
+        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
+        <target state="new">Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseClassCleanupBehaviorEndOfClassTitle">
+        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
+        <target state="new">Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
         <source>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)

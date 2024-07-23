@@ -941,6 +941,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Without using  &apos;ClassCleanupBehavior.EndOfClass&apos;, the &apos;[ClassCleanup]&apos; will by default be run at the end of the assembly and not at the end of the class..
+        /// </summary>
+        internal static string UseClassCleanupBehaviorEndOfClassDescription {
+            get {
+                return ResourceManager.GetString("UseClassCleanupBehaviorEndOfClassDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;ClassCleanupBehavior.EndOfClass&apos; with the &apos;[ClassCleanup]&apos;.
+        /// </summary>
+        internal static string UseClassCleanupBehaviorEndOfClassMessageFormat {
+            get {
+                return ResourceManager.GetString("UseClassCleanupBehaviorEndOfClassMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;ClassCleanupBehavior.EndOfClass&apos; with the &apos;[ClassCleanup]&apos;.
+        /// </summary>
+        internal static string UseClassCleanupBehaviorEndOfClassTitle {
+            get {
+                return ResourceManager.GetString("UseClassCleanupBehaviorEndOfClassTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute &apos;[Parallelize]&apos; to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute &apos;[DoNotParallelize]&apos;..
         /// </summary>
         internal static string UseParallelizeAttributeAnalyzerDescription {
