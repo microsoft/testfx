@@ -28,7 +28,7 @@ public class ThreadSafeStringWriter : StringWriter
     /// we initiate this AsyncLocal in a place that is a separate Task for each test, and so any output that is written into a common stream
     /// (e.g. via Console.WriteLine - which is static, and hence common), will them be multiplexed by the appropriate AsyncLocal, and in effect
     /// we will get outputs splits for each test even if two tests run at the same time and write into console.
-    /// See https://github.com/microsoft/testfx/pull/1705 for a fix of a related bug, in that bug we intialized the state too early, and it then inherited
+    /// See https://github.com/microsoft/testfx/pull/1705 for a fix of a related bug, in that bug we initialized the state too early, and it then inherited
     /// the same state to every Task (for every test) that we were running, and it all broke.
     /// </summary>
     /// <param name="formatProvider">
