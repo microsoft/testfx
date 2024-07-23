@@ -2,7 +2,7 @@
   "profiles": {
     "MSTest.Acceptance.IntegrationTests": {
       "commandName": "Project",
-      "commandLineArgs": "--treenode-filter /*/*/InitializeAndCleanupTimeout/CooperativeCancellation*/**"
+      "commandLineArgs": "--treenode-filter /*/*/*/**"
     }
   }
 }
