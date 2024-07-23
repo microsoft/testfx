@@ -3,9 +3,9 @@
 
 namespace Microsoft.Testing.Platform.UI;
 
-internal sealed class AssemblyRun
+internal sealed class TestModule
 {
-    public AssemblyRun(int slotIndex, string assembly, string? targetFramework, string? architecture, StopwatchAbstraction stopwatch)
+    public TestModule(int slotIndex, string assembly, string? targetFramework, string? architecture, StopwatchAbstraction stopwatch)
     {
         SlotIndex = slotIndex;
         Assembly = assembly;

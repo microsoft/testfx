@@ -17,13 +17,12 @@ internal static class OutputFormatter
             return "<empty>";
         }
 
-#pragma warning disable IDE0046 // Convert to conditional expression
         if (RoslynString.IsNullOrWhiteSpace(text))
         {
             return text.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t");
         }
-#pragma warning restore IDE0046 // Convert to conditional expression
 
+        // Fallback to returning original string.
         return text;
     }
 }

@@ -68,6 +68,7 @@ internal sealed class ProgressFrame
         terminal.Append("❔");
         terminal.Append(skipped.ToString(CultureInfo.CurrentCulture));
         terminal.ResetColor();
+        terminal.Append(']');
 
         terminal.Append(' ');
         terminal.Append(p.AssemblyName);

@@ -37,7 +37,7 @@ internal partial class ConsoleLogger : IDisposable
     /// <summary>
     /// The two directory separator characters to be passed to methods like <see cref="string.IndexOfAny(char[])"/>.
     /// </summary>
-    private readonly Dictionary<string, AssemblyRun> _assemblies = new();
+    private readonly Dictionary<string, TestModule> _assemblies = new();
     private readonly List<LoggerArtifact> _artifacts = new();
 
     private readonly ConsoleLoggerOptions _options;
@@ -157,10 +157,10 @@ internal partial class ConsoleLogger : IDisposable
         GetOrAddAssemblyRun(assembly, targetFramework, architecture);
     }
 
-    private AssemblyRun GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture)
+    private TestModule GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture)
     {
         string key = $"{assembly}|{targetFramework}|{architecture}";
-        if (_assemblies.TryGetValue(key, out AssemblyRun? asm))
+        if (_assemblies.TryGetValue(key, out TestModule? asm))
         {
             return asm;
         }
@@ -169,7 +169,7 @@ internal partial class ConsoleLogger : IDisposable
         var progress = new TestWorker(0, 0, 0, Path.GetFileName(assembly), targetFramework, architecture, sw, detail: null);
         int slotIndex = _consoleWithProgress.AddWorker(progress);
 
-        var assemblyRun = new AssemblyRun(slotIndex, assembly, targetFramework, architecture, sw);
+        var assemblyRun = new TestModule(slotIndex, assembly, targetFramework, architecture, sw);
         _assemblies.Add(key, assemblyRun);
 
         return assemblyRun;
@@ -254,7 +254,7 @@ internal partial class ConsoleLogger : IDisposable
 
         if (_options.ShowAssembly && _assemblies.Count > 1)
         {
-            foreach (AssemblyRun assemblyRun in _assemblies.Values)
+            foreach (TestModule assemblyRun in _assemblies.Values)
             {
                 terminal.Append(SingleIndentation);
                 AppendAssemblySummary(assemblyRun, terminal);
@@ -367,7 +367,7 @@ internal partial class ConsoleLogger : IDisposable
         string? expected,
         string? actual)
     {
-        AssemblyRun asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}"];
+        TestModule asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}"];
 
         switch (outcome)
         {
@@ -595,7 +595,7 @@ internal partial class ConsoleLogger : IDisposable
 
     internal void AssemblyRunCompleted(string assembly, string? targetFramework, string? architecture)
     {
-        AssemblyRun assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
+        TestModule assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         assemblyRun.Stopwatch.Stop();
 
         _consoleWithProgress.RemoveWorker(assemblyRun.SlotIndex);
@@ -606,7 +606,7 @@ internal partial class ConsoleLogger : IDisposable
         }
     }
 
-    private static void AppendAssemblySummary(AssemblyRun assemblyRun, ITerminal terminal)
+    private static void AppendAssemblySummary(TestModule assemblyRun, ITerminal terminal)
     {
         int failedTests = assemblyRun.FailedTests + assemblyRun.CancelledTests + assemblyRun.TimedOutTests;
         int warnings = 0;
@@ -673,7 +673,7 @@ internal partial class ConsoleLogger : IDisposable
 
     internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string text)
     {
-        AssemblyRun asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
+        TestModule asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddError(text);
 
         _consoleWithProgress.WriteToTerminal(terminal =>
@@ -686,7 +686,7 @@ internal partial class ConsoleLogger : IDisposable
 
     internal void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string text)
     {
-        AssemblyRun asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
+        TestModule asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddWarning(text);
         _consoleWithProgress.WriteToTerminal(terminal =>
         {
