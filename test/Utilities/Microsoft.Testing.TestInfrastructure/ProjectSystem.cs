@@ -123,7 +123,7 @@ public class CSharpProject : Project
         AddOrUpdateFileContent(_projectFileName, _projectContent.ToString());
     }
 
-    public string ProjectFile { get; private set; }
+    public string ProjectFile { get; }
 
     public void AddPackageReference(string name, string version)
     {
@@ -159,7 +159,7 @@ public abstract class Folder
         FolderPath = Path.GetFullPath(folderPath);
     }
 
-    public string FolderPath { get; private set; }
+    public string FolderPath { get; }
 
     public string AddOrUpdateFileContent(string relativePath, string fileContent)
     {
