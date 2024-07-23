@@ -22,7 +22,7 @@ internal class TestHostOrchestratorManager : ITestHostOrchestratorManager
 
     public async Task<TestHostOrchestratorConfiguration> BuildAsync(ServiceProvider serviceProvider)
     {
-        if (_factories is null || _factories.Count == 0)
+        if (_factories is null)
         {
             return new TestHostOrchestratorConfiguration([]);
         }
