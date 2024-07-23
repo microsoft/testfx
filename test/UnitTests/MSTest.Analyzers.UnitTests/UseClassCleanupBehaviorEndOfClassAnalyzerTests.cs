@@ -135,7 +135,6 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-
     public async Task UsingClassCleanup_WithCleanupBehaviorEndOFClassAndWithInheritanceBehavior_NoDiagnostic()
     {
         string code = """
