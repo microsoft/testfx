@@ -67,9 +67,9 @@ public partial class TestId : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
-            "DynamicDataArraysTests (0,System.Int32[])",
-            "DynamicDataArraysTests (0,System.Int32[])",
-            "DynamicDataArraysTests (0,System.Int32[])");
+            "DynamicDataArraysTests (0,[])",
+            "DynamicDataArraysTests (0,[0])",
+            "DynamicDataArraysTests (0,[0,0,0])");
 
         // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();

@@ -174,7 +174,7 @@ internal sealed class Condition
         {
             // If only parameter values is passed, create condition with default property name,
             // default operation and given condition string as parameter value.
-            return new Condition(DefaultPropertyName, DefaultOperation, FilterHelper.Unescape(conditionString!.Trim()));
+            return new Condition(DefaultPropertyName, DefaultOperation, FilterHelper.Unescape(conditionString.Trim()));
         }
 
         if (parts.Length != 3)

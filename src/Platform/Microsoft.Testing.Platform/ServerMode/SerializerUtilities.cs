@@ -136,9 +136,9 @@ internal static class SerializerUtilities
             [JsonRpcStrings.Description] = res.Description,
         });
 
-        Serializers[typeof(DiscoverResponseArgs)] = new ObjectSerializer<DiscoverResponseArgs>(res => new Dictionary<string, object?>() { });
+        Serializers[typeof(DiscoverResponseArgs)] = new ObjectSerializer<DiscoverResponseArgs>(res => new Dictionary<string, object?> { });
 
-        Serializers[typeof(RunResponseArgs)] = new ObjectSerializer<RunResponseArgs>(res => new Dictionary<string, object?>()
+        Serializers[typeof(RunResponseArgs)] = new ObjectSerializer<RunResponseArgs>(res => new Dictionary<string, object?>
         {
             [JsonRpcStrings.Attachments] = res.Artifacts.Select(f => Serialize(f)).ToList<object>(),
         });

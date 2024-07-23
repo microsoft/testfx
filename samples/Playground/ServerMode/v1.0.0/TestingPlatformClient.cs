@@ -163,6 +163,7 @@ public sealed class TestingPlatformClient : IDisposable
     {
         JsonRpcClient.Dispose();
         _tcpClient.Dispose();
+        _processHandler.WaitForExit();
         _processHandler.Dispose();
     }
 

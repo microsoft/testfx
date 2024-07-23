@@ -145,7 +145,7 @@ internal sealed class TrxProcessLifetimeHandler :
 
         foreach (KeyValuePair<IDataProducer, List<FileArtifact>> prodArtifacts in _fileArtifacts)
         {
-            var perProducerArtifact = new List<SessionFileArtifact>();
+            var perProducerArtifact = new List<SessionFileArtifact>(prodArtifacts.Value.Count);
             var extensionInfo = new ExtensionInfo(prodArtifacts.Key.Uid, prodArtifacts.Key.Version, prodArtifacts.Key.DisplayName, prodArtifacts.Key.Description);
             foreach (FileArtifact fileArtifact in prodArtifacts.Value)
             {

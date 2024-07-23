@@ -70,11 +70,6 @@ public sealed partial class PropertyBag
     {
         ArgumentGuard.IsNotNull(properties);
 
-        if (!properties.Any())
-        {
-            return;
-        }
-
         foreach (IProperty property in properties)
         {
             if (property is TestNodeStateProperty testNodeStateProperty)
@@ -167,13 +162,23 @@ public sealed partial class PropertyBag
             return default;
         }
 
-        IEnumerable<TProperty> matchingValues = _property is null ? Array.Empty<TProperty>() : _property.OfType<TProperty>();
+        if (_property is null || _property.Count == 0)
+        {
+            return default;
+        }
 
-        return !matchingValues.Any()
-            ? default
-            : matchingValues.Skip(1).Any()
-                ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
-                : matchingValues.First();
+        IEnumerable<TProperty> matchingValues = _property.OfType<TProperty>();
+
+        using IEnumerator<TProperty> enumerator = matchingValues.GetEnumerator();
+        if (!enumerator.MoveNext())
+        {
+            return default;
+        }
+
+        TProperty property = enumerator.Current!;
+        return enumerator.MoveNext()
+            ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
+            : property;
     }
 
     [SuppressMessage("Naming", "CA1720:Identifier contains type name", Justification = "No interop")]

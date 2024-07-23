@@ -92,8 +92,8 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.4.3...v3.5.0)
 
 ### New Contributors
 
-* @Mertsch made their first contribution in https://github.com/microsoft/testfx/pull/3045
-* @MichelZ made their first contribution in https://github.com/microsoft/testfx/pull/3053
+* @Mertsch made their first contribution in [#3045](https://github.com/microsoft/testfx/pull/3045)
+* @MichelZ made their first contribution in [#3053](https://github.com/microsoft/testfx/pull/3053)
 
 ### Artifacts
 

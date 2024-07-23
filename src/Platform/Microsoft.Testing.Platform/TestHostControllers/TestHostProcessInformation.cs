@@ -26,12 +26,8 @@ internal class TestHostProcessInformation : ITestHostProcessInformation
     public int PID { get; }
 
     public int ExitCode
-        => _exitCode is null
-            ? throw new InvalidOperationException(PlatformResources.ProcessHasNotYetExitedErrorMessage)
-            : _exitCode.Value;
+        => _exitCode ?? throw new InvalidOperationException(PlatformResources.ProcessHasNotYetExitedErrorMessage);
 
     public bool HasExitedGracefully
-        => _hasExitedGracefully is null
-            ? throw new InvalidOperationException(PlatformResources.ProcessHasNotYetExitedErrorMessage)
-            : _hasExitedGracefully.Value;
+        => _hasExitedGracefully ?? throw new InvalidOperationException(PlatformResources.ProcessHasNotYetExitedErrorMessage);
 }

@@ -83,6 +83,8 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
     public ITaskItem? TestingPlatformCommandLineArguments { get; set; }
 
+    public ITaskItem[]? VSTestCLIRunSettings { get; set; }
+
     private bool IsNetCoreApp => TargetFrameworkIdentifier.ItemSpec == ".NETCoreApp";
 
     protected override string ToolName
@@ -206,6 +208,14 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments!.ItemSpec} ");
         }
 
+        if (VSTestCLIRunSettings?.Length > 0)
+        {
+            foreach (ITaskItem taskItem in VSTestCLIRunSettings)
+            {
+                builder.AppendTextUnquoted($" {taskItem.ItemSpec}");
+            }
+        }
+
         return builder.ToString();
     }
 
@@ -238,7 +248,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     }
 
     protected override void ProcessStarted()
-        => _connectionLoopTask = Task.Run(() =>
+        => _connectionLoopTask = Task.Run(async () =>
         {
             try
             {
@@ -249,7 +259,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                     pipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
                     pipeServer.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
                     pipeServer.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
-                    pipeServer.WaitConnectionAsync(_waitForConnections.Token).GetAwaiter().GetResult();
+                    await pipeServer.WaitConnectionAsync(_waitForConnections.Token);
                     _connections.Add(pipeServer);
                     Log.LogMessage(MessageImportance.Low, $"Client connected to '{_pipeNameDescription.Name}'");
                 }
@@ -257,6 +267,10 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             catch (OperationCanceledException) when (_waitForConnections.IsCancellationRequested)
             {
                 // Do nothing we're cancelling
+            }
+            catch (Exception ex)
+            {
+                Log.LogError(ex.ToString());
             }
         });
 
