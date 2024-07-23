@@ -111,9 +111,37 @@ internal partial class ConsoleLoggerOutputDevice : IPlatformOutputDevice,
     }
 
     private static string? GetShortTargetFramework(string frameworkDescription)
-        => frameworkDescription.StartsWith(".NET ", ignoreCase: false, CultureInfo.InvariantCulture)
-            ? $"net{frameworkDescription[5]}"
-            : frameworkDescription;
+    {
+        // https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.runtimeinformation.frameworkdescription?view=net-8.0
+        string netFramework = ".NET Framework";
+        if (frameworkDescription.StartsWith(netFramework, ignoreCase: false, CultureInfo.InvariantCulture))
+        {
+            // .NET Framework 4.7.2
+            return frameworkDescription.Length > (netFramework.Length + 6)
+                ? $"net{frameworkDescription[netFramework.Length + 1]}{frameworkDescription[netFramework.Length + 3]}{frameworkDescription[netFramework.Length + 5]}"
+                : frameworkDescription;
+        }
+
+        string netCore = ".NET Core";
+        if (frameworkDescription.StartsWith(netCore, ignoreCase: false, CultureInfo.InvariantCulture))
+        {
+            // .NET Core 3.1
+            return frameworkDescription.Length > (netCore.Length + 4)
+                ? $"net{frameworkDescription[netCore.Length + 1]}{frameworkDescription[netCore.Length + 3]}"
+                : frameworkDescription;
+        }
+
+        string net = ".NET";
+        if (frameworkDescription.StartsWith(net, ignoreCase: false, CultureInfo.InvariantCulture))
+        {
+            // .NET 5
+            return frameworkDescription.Length > (net.Length + 2)
+                ? $"net{frameworkDescription[net.Length + 1]}"
+                : frameworkDescription;
+        }
+
+        return frameworkDescription;
+    }
 
     private string? GetShortArchitecture(string runtimeIdentifier)
         => runtimeIdentifier.Contains('-')
