@@ -14,7 +14,7 @@ internal static class FailedTestHelper
         string targetPath,
         out string errorCode, out string file, out int lineNumber, out string message, out string? lowPriorityMessage)
     {
-        errorCode = failedTestInfoRequest.IsCancelled ? "test canceled" : "test failed";
+        errorCode = failedTestInfoRequest.IsCanceled ? "test canceled" : "test failed";
         if (StackTraceHelper.TryFindLocationFromStackFrame(failedTestInfoRequest.ErrorStackTrace, out string? filePath, out lineNumber, out string? place))
         {
         }

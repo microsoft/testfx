@@ -17,7 +17,7 @@ internal static class FixtureMethodRunner
 {
     internal static TestFailedException? RunWithTimeoutAndCancellation(
         Action action, CancellationTokenSource cancellationTokenSource, TimeoutInfo? timeoutInfo, MethodInfo methodInfo,
-        IExecutionContextScope executionContextScope, string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
+        IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         // If no timeout is specified, we can run the action directly. This avoids any overhead of creating a task/thread and
         // ensures that the execution context is preserved (as we run the action on the current thread).
@@ -29,16 +29,16 @@ internal static class FixtureMethodRunner
 
         if (timeoutInfo.Value.CooperativeCancellation)
         {
-            return RunWithCooperativeCancellation(action, cancellationTokenSource, timeoutInfo.Value, methodInfo, methodCancelledMessageFormat, methodTimedOutMessageFormat);
+            return RunWithCooperativeCancellation(action, cancellationTokenSource, timeoutInfo.Value, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat);
         }
 
         // We need to start a thread to handle "cancellation" and "timeout" scenarios.
         return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
-            ? RunWithTimeoutAndCancellationWithSTAThread(action, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, executionContextScope, methodCancelledMessageFormat, methodTimedOutMessageFormat)
-            : RunWithTimeoutAndCancellationWithThreadPool(action, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, executionContextScope, methodCancelledMessageFormat, methodTimedOutMessageFormat);
+            ? RunWithTimeoutAndCancellationWithSTAThread(action, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, executionContextScope, methodCanceledMessageFormat, methodTimedOutMessageFormat)
+            : RunWithTimeoutAndCancellationWithThreadPool(action, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, executionContextScope, methodCanceledMessageFormat, methodTimedOutMessageFormat);
     }
 
-    private static TestFailedException? RunWithCooperativeCancellation(Action action, CancellationTokenSource cancellationTokenSource, TimeoutInfo timeoutInfo, MethodInfo methodInfo, string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
+    private static TestFailedException? RunWithCooperativeCancellation(Action action, CancellationTokenSource cancellationTokenSource, TimeoutInfo timeoutInfo, MethodInfo methodInfo, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         CancellationTokenSource? timeoutTokenSource = null;
         try
@@ -77,7 +77,7 @@ internal static class FixtureMethodRunner
                             timeoutInfo.Timeout)
                         : string.Format(
                             CultureInfo.InvariantCulture,
-                            methodCancelledMessageFormat,
+                            methodCanceledMessageFormat,
                             methodInfo.DeclaringType!.FullName,
                             methodInfo.Name));
             }
@@ -90,7 +90,7 @@ internal static class FixtureMethodRunner
 
     private static TestFailedException? RunWithTimeoutAndCancellationWithThreadPool(
         Action action, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
-        IExecutionContextScope executionContextScope, string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
+        IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         Exception? realException = null;
         Task? executionTask;
@@ -114,7 +114,7 @@ internal static class FixtureMethodRunner
         {
             return new(
                 UnitTestOutcome.Timeout,
-                string.Format(CultureInfo.InvariantCulture, methodCancelledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
+                string.Format(CultureInfo.InvariantCulture, methodCanceledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
         }
 
         try
@@ -141,7 +141,7 @@ internal static class FixtureMethodRunner
         {
             return new(
                 UnitTestOutcome.Timeout,
-                string.Format(CultureInfo.InvariantCulture, methodCancelledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
+                string.Format(CultureInfo.InvariantCulture, methodCanceledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
         }
         catch (Exception)
         {
@@ -160,7 +160,7 @@ internal static class FixtureMethodRunner
 #endif
     private static TestFailedException? RunWithTimeoutAndCancellationWithSTAThread(
         Action action, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
-        IExecutionContextScope executionContextScope, string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
+        IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         TaskCompletionSource<int> tcs = new();
         Thread executionThread = new(() =>
@@ -210,7 +210,7 @@ internal static class FixtureMethodRunner
         {
             return new(
                 UnitTestOutcome.Timeout,
-                string.Format(CultureInfo.InvariantCulture, methodCancelledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
+                string.Format(CultureInfo.InvariantCulture, methodCanceledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
         }
         catch (Exception)
         {

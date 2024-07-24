@@ -296,11 +296,11 @@ internal sealed class Json
                                 break;
                             }
 
-                        case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
+                        case CancelledTestNodeStateProperty canceledTestNodeStateProperty:
                             {
                                 properties.Add(("execution-state", "canceled"));
-                                Exception? exception = cancelledTestNodeStateProperty.Exception;
-                                properties.Add(("error.message", cancelledTestNodeStateProperty.Explanation ?? exception?.Message));
+                                Exception? exception = canceledTestNodeStateProperty.Exception;
+                                properties.Add(("error.message", canceledTestNodeStateProperty.Explanation ?? exception?.Message));
                                 if (exception is not null)
                                 {
                                     properties.Add(("error.stacktrace", exception.StackTrace ?? string.Empty));

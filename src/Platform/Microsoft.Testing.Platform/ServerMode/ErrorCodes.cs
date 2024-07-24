@@ -22,7 +22,7 @@ internal class ErrorCodes
 
     #region LSP error codes
     public static readonly int LspErrorRangeStart = -32899;
-    public static readonly int RequestCancelled = -32800;
+    public static readonly int RequestCanceled = -32800;
     public static readonly int LspErrorRangeEnd = -32800;
     #endregion
 

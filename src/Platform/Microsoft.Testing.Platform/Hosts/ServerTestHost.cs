@@ -317,8 +317,8 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                 // We don't return the stack of the exception if we're canceling the single request because it's expected and it's not an exception.
                 (string errorMessage, int errorCode) =
                     rpcState.CancellationToken.IsCancellationRequested
-                    ? (string.Empty, ErrorCodes.RequestCancelled)
-                    : (e.ToString(), ErrorCodes.RequestCancelled);
+                    ? (string.Empty, ErrorCodes.RequestCanceled)
+                    : (e.ToString(), ErrorCodes.RequestCanceled);
 
                 await SendErrorAsync(reqId: request.Id, errorCode: errorCode, message: errorMessage, data: null, _testApplicationCancellationTokenSource.CancellationToken);
                 CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetCanceled());
