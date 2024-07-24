@@ -677,7 +677,7 @@ internal partial class ConsoleLogger : IDisposable
         _consoleWithProgress.WriteToTerminal(terminal =>
         {
             terminal.SetColor(TerminalColor.Red);
-            terminal.Append(text);
+            terminal.AppendLine(text);
             terminal.ResetColor();
         });
     }
@@ -689,7 +689,7 @@ internal partial class ConsoleLogger : IDisposable
         _consoleWithProgress.WriteToTerminal(terminal =>
         {
             terminal.SetColor(TerminalColor.Yellow);
-            terminal.Append(text);
+            terminal.AppendLine(text);
             terminal.ResetColor();
         });
     }
