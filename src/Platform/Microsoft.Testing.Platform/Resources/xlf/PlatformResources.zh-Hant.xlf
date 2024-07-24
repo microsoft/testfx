@@ -13,13 +13,13 @@
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
-        <source>cancelled</source>
-        <target state="translated">已取消</target>
+        <source>canceled</source>
+        <target state="needs-review-translation">已取消</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
-        <source>Cancelling the test session...</source>
-        <target state="translated">正在取消測試工作階段...</target>
+        <source>Canceling the test session...</source>
+        <target state="needs-review-translation">正在取消測試工作階段...</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -689,14 +689,14 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occured during byte conversion</source>
-        <target state="translated">位元組轉換期間發生非預期的例外狀況</target>
+        <source>An unexpected exception occurred during byte conversion</source>
+        <target state="needs-review-translation">位元組轉換期間發生非預期的例外狀況</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="translated">'FileLogger.WriteLogToFileAsync' 中發生未預期的例外狀況。
+        <target state="needs-review-translation">'FileLogger.WriteLogToFileAsync' 中發生未預期的例外狀況。
 {0}</target>
         <note>{0} exception ToString</note>
       </trans-unit>

@@ -13,13 +13,13 @@
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
-        <source>cancelled</source>
-        <target state="translated">Cancelado</target>
+        <source>canceled</source>
+        <target state="needs-review-translation">Cancelado</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
-        <source>Cancelling the test session...</source>
-        <target state="translated">Cancelando a sessão de teste...</target>
+        <source>Canceling the test session...</source>
+        <target state="needs-review-translation">Cancelando a sessão de teste...</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -689,14 +689,14 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occured during byte conversion</source>
-        <target state="translated">Ocorreu uma exceção inesperada durante a conversão de bytes</target>
+        <source>An unexpected exception occurred during byte conversion</source>
+        <target state="needs-review-translation">Ocorreu uma exceção inesperada durante a conversão de bytes</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="translated">Ocorreu uma exceção inesperada em 'FileLogger.WriteLogToFileAsync'.
+        <target state="needs-review-translation">Ocorreu uma exceção inesperada em 'FileLogger.WriteLogToFileAsync'.
 {0}</target>
         <note>{0} exception ToString</note>
       </trans-unit>

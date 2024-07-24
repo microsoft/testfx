@@ -266,7 +266,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             }
             catch (OperationCanceledException) when (_waitForConnections.IsCancellationRequested)
             {
-                // Do nothing we're cancelling
+                // Do nothing we're canceling
             }
             catch (Exception ex)
             {

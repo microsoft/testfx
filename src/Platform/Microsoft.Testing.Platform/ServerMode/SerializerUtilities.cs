@@ -319,7 +319,7 @@ internal static class SerializerUtilities
 
                             case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
                                 {
-                                    properties["execution-state"] = "cancelled";
+                                    properties["execution-state"] = "canceled";
                                     properties["error.message"] = cancelledTestNodeStateProperty.Explanation ?? cancelledTestNodeStateProperty.Exception?.Message;
                                     if (cancelledTestNodeStateProperty.Exception != null)
                                     {

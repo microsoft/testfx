@@ -20,7 +20,7 @@ public class AbortionTests : AcceptanceTestBase
         _testAssetFixture = testAssetFixture;
     }
 
-    // We retry because sometime the Cancelling the session message is not showing up.
+    // We retry because sometime the Canceling the session message is not showing up.
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task AbortWithCTRLPlusC_TestHost_Succeeded(string tfm)
         => await RetryHelper.RetryAsync(
@@ -42,7 +42,7 @@ public class AbortionTests : AcceptanceTestBase
                 // Manual test works pretty always as expected, looks like the implementation is different, we care more on .NET Core.
                 if (TargetFrameworks.Net.Select(x => x.Arguments).Contains(tfm))
                 {
-                    testHostResult.AssertOutputMatchesRegex("Cancelling the test session.*");
+                    testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
                 }
 
                 testHostResult.AssertOutputMatchesRegex("Aborted - Failed: 0, Passed: 0, Skipped: 0, Total: 0 -.*");
@@ -130,7 +130,7 @@ internal class DummyAdapter : ITestFramework, IDataProducer
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         // This will trigger pressing CTRL+C that should propagate through the platform
-        // and down to us as the context.Cancellation token being cancelled.
+        // and down to us as the context.Cancellation token being canceled.
         // It should happen almost immediately, but we allow 15 seconds for this to happen
         // if it does not happen then the platform does not handle cancellation correctly and
         // the test fails.

@@ -13,13 +13,13 @@
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
-        <source>cancelled</source>
-        <target state="translated">취소됨</target>
+        <source>canceled</source>
+        <target state="needs-review-translation">취소됨</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
-        <source>Cancelling the test session...</source>
-        <target state="translated">테스트 세션을 취소하는 중...</target>
+        <source>Canceling the test session...</source>
+        <target state="needs-review-translation">테스트 세션을 취소하는 중...</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -689,14 +689,14 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occured during byte conversion</source>
-        <target state="translated">바이트 변환 중 예기치 않은 예외 발생</target>
+        <source>An unexpected exception occurred during byte conversion</source>
+        <target state="needs-review-translation">바이트 변환 중 예기치 않은 예외 발생</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="translated">'FileLogger.WriteLogToFileAsync'에서 예기치 않은 예외가 발생했습니다.
+        <target state="needs-review-translation">'FileLogger.WriteLogToFileAsync'에서 예기치 않은 예외가 발생했습니다.
 {0}</target>
         <note>{0} exception ToString</note>
       </trans-unit>

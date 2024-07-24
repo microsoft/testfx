@@ -298,7 +298,7 @@ internal sealed class Json
 
                         case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
                             {
-                                properties.Add(("execution-state", "cancelled"));
+                                properties.Add(("execution-state", "canceled"));
                                 Exception? exception = cancelledTestNodeStateProperty.Exception;
                                 properties.Add(("error.message", cancelledTestNodeStateProperty.Explanation ?? exception?.Message));
                                 if (exception is not null)

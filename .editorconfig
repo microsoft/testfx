@@ -9,6 +9,16 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 # (Please don't specify an indent_size here; that has too many unintended consequences.)
 
+vsspell_dictionary_languages = en-US
+vsspell_section_id = 842f80e2d4aa4288afdcd0e42833eeaf
+vsspell_ignored_words_842f80e2d4aa4288afdcd0e42833eeaf = runsettings|nullable|args|testhost|mutex|trx|vstest|arity|async|bool|inlined|json|jsonite|jsonrpc|localhost|readonly|xml|stylecop|indices|dotnet
+
+# Xml localization files
+[*.xlf]
+vsspell_spell_check_as_you_type = false
+vsspell_include_in_project_spell_check = false
+vsspell_code_analyzers_enabled = false
+
 # Shell scripts
 [*.sh]
 end_of_line = lf

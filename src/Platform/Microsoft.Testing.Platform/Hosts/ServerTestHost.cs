@@ -314,7 +314,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             }
             catch (OperationCanceledException e)
             {
-                // We don't return the stack of the exception if we're cancelling the single request because it's expected and it's not an exception.
+                // We don't return the stack of the exception if we're canceling the single request because it's expected and it's not an exception.
                 (string errorMessage, int errorCode) =
                     rpcState.CancellationToken.IsCancellationRequested
                     ? (string.Empty, ErrorCodes.RequestCancelled)

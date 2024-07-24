@@ -8,8 +8,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
-        <source>Assembly cleanup method '{0}.{1}' was cancelled</source>
-        <target state="translated">Méthode de nettoyage de l'assemblage '{0}.{1}' a été annulé</target>
+        <source>Assembly cleanup method '{0}.{1}' was canceled</source>
+        <target state="needs-review-translation">Méthode de nettoyage de l'assemblage '{0}.{1}' a été annulé</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
@@ -18,8 +18,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
-        <source>Assembly initialize method '{0}.{1}' was cancelled</source>
-        <target state="translated">La méthode d’initialisation de l’assembly « {0}.{1} » a été annulée</target>
+        <source>Assembly initialize method '{0}.{1}' was canceled</source>
+        <target state="needs-review-translation">La méthode d’initialisation de l’assembly « {0}.{1} » a été annulée</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRunTestArgumentsMismatchError">
@@ -42,8 +42,8 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
-        <source>Class cleanup method '{0}.{1}' was cancelled</source>
-        <target state="translated">Méthode de nettoyage de classe '{0}.{1}' a été annulé</target>
+        <source>Class cleanup method '{0}.{1}' was canceled</source>
+        <target state="needs-review-translation">Méthode de nettoyage de classe '{0}.{1}' a été annulé</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
@@ -52,8 +52,8 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
-        <source>Class initialize method '{0}.{1}' was cancelled</source>
-        <target state="translated">La méthode d’initialisation de la classe « {0}.{1} » a été annulée</target>
+        <source>Class initialize method '{0}.{1}' was canceled</source>
+        <target state="needs-review-translation">La méthode d’initialisation de la classe « {0}.{1} » a été annulée</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
@@ -77,8 +77,8 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
-        <source>Test cleanup method '{0}.{1}' was cancelled</source>
-        <target state="translated">Tester la méthode de nettoyage '{0}.{1}' a été annulé</target>
+        <source>Test cleanup method '{0}.{1}' was canceled</source>
+        <target state="needs-review-translation">Tester la méthode de nettoyage '{0}.{1}' a été annulé</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeTimedOut">
@@ -87,8 +87,8 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
-        <source>Test initialize method '{0}.{1}' was cancelled</source>
-        <target state="translated">Test initialiser la méthode '{0}.{1}' a été annulé</target>
+        <source>Test initialize method '{0}.{1}' was canceled</source>
+        <target state="needs-review-translation">Test initialiser la méthode '{0}.{1}' a été annulé</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
