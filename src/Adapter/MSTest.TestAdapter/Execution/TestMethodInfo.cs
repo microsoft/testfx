@@ -644,8 +644,8 @@ public class TestMethodInfo : ITestMethod
 
     private TestFailedException? InvokeInitializeMethod(MethodInfo methodInfo, object classInstance)
     {
-        int? timeout = null;
-        if (Parent.TestInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int localTimeout))
+        TimeoutInfo? timeout = null;
+        if (Parent.TestInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
         {
             timeout = localTimeout;
         }
@@ -662,8 +662,8 @@ public class TestMethodInfo : ITestMethod
 
     private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, object classInstance, int remainingCleanupCount)
     {
-        int? timeout = null;
-        if (Parent.TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int localTimeout))
+        TimeoutInfo? timeout = null;
+        if (Parent.TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
         {
             timeout = localTimeout;
         }

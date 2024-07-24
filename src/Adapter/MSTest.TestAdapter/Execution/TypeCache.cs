@@ -434,11 +434,11 @@ internal class TypeCache : MarshalByRefObject
                             throw new TypeInspectionException(message);
                         }
 
-                        assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = timeoutAttribute.Timeout;
+                        assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = new(timeoutAttribute);
                     }
                     else if (MSTestSettings.CurrentSettings.AssemblyInitializeTimeout > 0)
                     {
-                        assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = MSTestSettings.CurrentSettings.AssemblyInitializeTimeout;
+                        assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = new(FixtureKind.AssemblyInitialize);
                     }
                 }
                 else if (IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
@@ -453,11 +453,11 @@ internal class TypeCache : MarshalByRefObject
                             throw new TypeInspectionException(message);
                         }
 
-                        assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = timeoutAttribute.Timeout;
+                        assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = new(timeoutAttribute);
                     }
                     else if (MSTestSettings.CurrentSettings.AssemblyCleanupTimeout > 0)
                     {
-                        assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = MSTestSettings.CurrentSettings.AssemblyCleanupTimeout;
+                        assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = new(FixtureKind.AssemblyCleanup);
                     }
                 }
             }
@@ -573,11 +573,11 @@ internal class TypeCache : MarshalByRefObject
                     throw new TypeInspectionException(message);
                 }
 
-                classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+                classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, new(timeoutAttribute));
             }
             else if (MSTestSettings.CurrentSettings.ClassInitializeTimeout > 0)
             {
-                classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.ClassInitializeTimeout);
+                classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, new(FixtureKind.ClassInitialize));
             }
 
             if (isBase)
@@ -606,11 +606,11 @@ internal class TypeCache : MarshalByRefObject
                     throw new TypeInspectionException(message);
                 }
 
-                classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+                classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, new(timeoutAttribute));
             }
             else if (MSTestSettings.CurrentSettings.ClassCleanupTimeout > 0)
             {
-                classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.ClassCleanupTimeout);
+                classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, new(FixtureKind.ClassCleanup));
             }
 
             if (isBase)
@@ -672,11 +672,11 @@ internal class TypeCache : MarshalByRefObject
                     throw new TypeInspectionException(message);
                 }
 
-                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, new(timeoutAttribute));
             }
             else if (MSTestSettings.CurrentSettings.TestInitializeTimeout > 0)
             {
-                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.TestInitializeTimeout);
+                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, new(FixtureKind.TestInitialize));
             }
 
             if (!isBase)
@@ -703,11 +703,11 @@ internal class TypeCache : MarshalByRefObject
                     throw new TypeInspectionException(message);
                 }
 
-                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, new(timeoutAttribute));
             }
             else if (MSTestSettings.CurrentSettings.TestCleanupTimeout > 0)
             {
-                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.TestCleanupTimeout);
+                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, new(FixtureKind.TestCleanup));
             }
 
             if (!isBase)

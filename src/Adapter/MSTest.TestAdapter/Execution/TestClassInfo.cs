@@ -50,12 +50,12 @@ public class TestClassInfo
         TestContextProperty = testContextProperty;
         BaseClassCleanupMethodsStack = new Stack<MethodInfo>();
         BaseClassInitAndCleanupMethods = new Queue<Tuple<MethodInfo?, MethodInfo?>>();
-        ClassInitializeMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
-        ClassCleanupMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
+        ClassInitializeMethodTimeoutMilliseconds = new Dictionary<MethodInfo, TimeoutInfo>();
+        ClassCleanupMethodTimeoutMilliseconds = new Dictionary<MethodInfo, TimeoutInfo>();
         BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
         BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
-        TestInitializeMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
-        TestCleanupMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
+        TestInitializeMethodTimeoutMilliseconds = new Dictionary<MethodInfo, TimeoutInfo>();
+        TestCleanupMethodTimeoutMilliseconds = new Dictionary<MethodInfo, TimeoutInfo>();
         Parent = parent;
         ClassAttribute = classAttribute;
         _testClassExecuteSyncObject = new object();
@@ -111,25 +111,25 @@ public class TestClassInfo
     /// Gets the timeout for the class initialize methods.
     /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
-    internal Dictionary<MethodInfo, int> ClassInitializeMethodTimeoutMilliseconds { get; }
+    internal Dictionary<MethodInfo, TimeoutInfo> ClassInitializeMethodTimeoutMilliseconds { get; }
 
     /// <summary>
     /// Gets the timeout for the class cleanup methods.
     /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
-    internal Dictionary<MethodInfo, int> ClassCleanupMethodTimeoutMilliseconds { get; }
+    internal Dictionary<MethodInfo, TimeoutInfo> ClassCleanupMethodTimeoutMilliseconds { get; }
 
     /// <summary>
     /// Gets the timeout for the test initialize methods.
     /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
-    internal Dictionary<MethodInfo, int> TestInitializeMethodTimeoutMilliseconds { get; }
+    internal Dictionary<MethodInfo, TimeoutInfo> TestInitializeMethodTimeoutMilliseconds { get; }
 
     /// <summary>
     /// Gets the timeout for the test cleanup methods.
     /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
-    internal Dictionary<MethodInfo, int> TestCleanupMethodTimeoutMilliseconds { get; }
+    internal Dictionary<MethodInfo, TimeoutInfo> TestCleanupMethodTimeoutMilliseconds { get; }
 
     /// <summary>
     /// Gets a value indicating whether class initialize has executed.
@@ -448,8 +448,8 @@ public class TestClassInfo
 
     private TestFailedException? InvokeInitializeMethod(MethodInfo methodInfo, TestContext testContext)
     {
-        int? timeout = null;
-        if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int localTimeout))
+        TimeoutInfo? timeout = null;
+        if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
         {
             timeout = localTimeout;
         }
@@ -732,8 +732,8 @@ public class TestClassInfo
 
     private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, int remainingCleanupCount)
     {
-        int? timeout = null;
-        if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int localTimeout))
+        TimeoutInfo? timeout = null;
+        if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
         {
             timeout = localTimeout;
         }
