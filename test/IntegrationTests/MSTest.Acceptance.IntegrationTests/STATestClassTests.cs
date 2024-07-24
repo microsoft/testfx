@@ -107,7 +107,6 @@ public sealed class STATestClassTests : AcceptanceTestBase
             yield return (AssetName, AssetName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
