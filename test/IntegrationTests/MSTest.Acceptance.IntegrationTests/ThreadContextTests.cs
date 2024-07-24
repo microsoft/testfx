@@ -759,19 +759,16 @@ public class DerivedClassIntermediateClassWithoutTestInitCleanupBaseClassWithout
             yield return (InitToTestProjectName, InitToTestProjectName,
                 InitToTestSourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (CultureFlowsProjectName, CultureFlowsProjectName,
                 CultureFlowsSourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (CultureFlowsInheritanceProjectName, CultureFlowsInheritanceProjectName,
                 CultureFlowsInheritanceSourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
     }

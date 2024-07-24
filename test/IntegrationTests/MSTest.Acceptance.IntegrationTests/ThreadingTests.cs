@@ -248,7 +248,6 @@ public sealed class ThreadingTests : AcceptanceTestBase
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", ProjectName)
                 .PatchCodeWithReplace("$GenerateEntryPoint$", "true")
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (STAThreadProjectName, STAThreadProjectName,
@@ -256,33 +255,28 @@ public sealed class ThreadingTests : AcceptanceTestBase
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", STAThreadProjectName)
                 .PatchCodeWithReplace("$GenerateEntryPoint$", "false")
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (LifecycleAttributesVoidProjectName, LifecycleAttributesVoidProjectName,
                 LifecycleAttributesVoidSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (LifecycleAttributesTaskProjectName, LifecycleAttributesTaskProjectName,
                 LifecycleAttributesTaskSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ParallelAttribute$", string.Empty)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (LifecycleWithParallelAttributesTaskProjectName, LifecycleWithParallelAttributesTaskProjectName,
                 LifecycleAttributesTaskSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ParallelAttribute$", "[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]")
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (LifecycleAttributesValueTaskProjectName, LifecycleAttributesValueTaskProjectName,
                 LifecycleAttributesValueTaskSource
                 .PatchTargetFrameworks(TargetFrameworks.Net)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 

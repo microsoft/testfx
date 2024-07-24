@@ -227,19 +227,8 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 #endif
             }
 
-            string? moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
-#if !NETCOREAPP
-            moduleName = RoslynString.IsNullOrEmpty(moduleName)
-                ? _process.GetCurrentProcess().MainModule.FileName
-                : moduleName;
-#else
-            moduleName = RoslynString.IsNullOrEmpty(moduleName)
-                ? _environment.ProcessPath
-                : moduleName;
-#endif
-            string moduleOutput = moduleName is not null
-                ? $" for {moduleName}"
-                : string.Empty;
+            string moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+            string moduleOutput = $" for {moduleName}";
 
             if (!_firstCallTo_OnSessionStartingAsync)
             {
