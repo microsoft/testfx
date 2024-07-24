@@ -48,6 +48,7 @@ public sealed class TimeoutAttribute : Attribute
         get => _isCooperativeCancellation;
         set
         {
+            // Attributes don't allow nullable boolean, so we need this to know that the value was set explicitly.
             IsCooperativeCancellationSet = true;
             _isCooperativeCancellation = value;
         }
