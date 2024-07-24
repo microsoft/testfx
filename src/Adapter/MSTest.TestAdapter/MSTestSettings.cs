@@ -65,6 +65,7 @@ public class MSTestSettings
         TestInitializeTimeout = 0;
         TestCleanupTimeout = 0;
         TreatClassAndAssemblyCleanupWarningsAsErrors = false;
+        CooperativeCancellationTimeout = false;
     }
 
     /// <summary>
@@ -199,6 +200,11 @@ public class MSTestSettings
     internal bool ConsiderFixturesAsSpecialTests { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether all timeouts should be cooperative.
+    /// </summary>
+    internal bool CooperativeCancellationTimeout { get; private set; }
+
+    /// <summary>
     /// Populate settings based on existing settings object.
     /// </summary>
     /// <param name="settings">The existing settings object.</param>
@@ -230,6 +236,7 @@ public class MSTestSettings
         CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
         CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
         CurrentSettings.ConsiderFixturesAsSpecialTests = settings.ConsiderFixturesAsSpecialTests;
+        CurrentSettings.CooperativeCancellationTimeout = settings.CooperativeCancellationTimeout;
     }
 
     /// <summary>
@@ -566,6 +573,16 @@ public class MSTestSettings
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
                                 settings.ConsiderFixturesAsSpecialTests = result;
+                            }
+
+                            break;
+                        }
+
+                    case "COOPERATIVECANCELLATIONTIMEOUT":
+                        {
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.CooperativeCancellationTimeout = result;
                             }
 
                             break;

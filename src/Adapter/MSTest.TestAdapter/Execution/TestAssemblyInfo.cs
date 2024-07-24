@@ -58,12 +58,12 @@ public class TestAssemblyInfo
     /// <summary>
     /// Gets or sets the AssemblyInitializeMethod timeout.
     /// </summary>
-    internal int? AssemblyInitializeMethodTimeoutMilliseconds { get; set; }
+    internal TimeoutInfo? AssemblyInitializeMethodTimeoutMilliseconds { get; set; }
 
     /// <summary>
     /// Gets or sets the AssemblyCleanupMethod timeout.
     /// </summary>
-    internal int? AssemblyCleanupMethodTimeoutMilliseconds { get; set; }
+    internal TimeoutInfo? AssemblyCleanupMethodTimeoutMilliseconds { get; set; }
 
     /// <summary>
     /// Gets <c>AssemblyCleanup</c> method for the assembly.
