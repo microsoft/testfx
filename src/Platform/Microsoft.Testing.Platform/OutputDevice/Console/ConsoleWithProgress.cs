@@ -83,7 +83,8 @@ internal partial class ConsoleWithProgress : IDisposable
         {
             _workers = new TestWorker[workerCount];
             _terminal.StartBusyIndicator();
-            _refresher = new Thread(ThreadProc);
+            // If we crash unexpectedly without completing this thread we don't want it to keep the process running.
+            _refresher = new Thread(ThreadProc) { IsBackground = true };
             _refresher.Start();
         }
     }
