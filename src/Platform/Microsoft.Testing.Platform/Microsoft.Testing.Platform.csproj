@@ -129,8 +129,5 @@ This package provides the core platform and the .NET implementation of the proto
       <PackagePath>build/$(TargetFramework)</PackagePath>
     </TfmSpecificPackageFile>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="UI\" />
-  </ItemGroup>
 
 </Project>
