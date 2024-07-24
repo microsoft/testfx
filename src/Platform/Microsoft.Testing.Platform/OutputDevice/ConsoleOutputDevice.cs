@@ -72,20 +72,6 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
         _fileLoggerProvider = fileLoggerProvider;
         _clock = clock;
 
-        // This is single exe run, don't show all the details of assemblies and their summaries
-        // and don't show passed tests.
-        bool verbose = false;
-        _consoleLogger = new ConsoleLogger(console, new()
-        {
-            BaseDirectory = null,
-            ShowAssembly = verbose,
-            ShowAssemblyStartAndComplete = verbose,
-            ShowPassedTests = verbose,
-            MinimumExpectedTests = minimumExpectedTest,
-            UseAnsi = true,
-            ShowProgress = true,
-        });
-
         if (_fileLoggerProvider is not null)
         {
             _logger = _fileLoggerProvider.CreateLogger(GetType().ToString());
@@ -108,6 +94,21 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
             _bannerDisplayed = true;
         }
 
+
+        // This is single exe run, don't show all the details of assemblies and their summaries
+        // and don't show passed tests.
+        bool verbose = false;
+        _consoleLogger = new ConsoleLogger(console, new()
+        {
+            BaseDirectory = null,
+            ShowAssembly = verbose,
+            ShowAssemblyStartAndComplete = verbose,
+            ShowPassedTests = verbose,
+            MinimumExpectedTests = minimumExpectedTest,
+            UseAnsi = true,
+            // TestHost controller is not running any tests and it should not be writing progress.
+            ShowProgress = !testHostControllerInfo.CurrentProcessIsTestHostController,
+        });
         _consoleLogger.TestExecutionStarted(_clock.UtcNow, workerCount: 1);
 
         _testApplicationCancellationTokenSource.CancellationToken.Register(() => _consoleLogger.StartCancelling());

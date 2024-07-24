@@ -7,5 +7,7 @@ internal interface ITestHostControllerInfo
 {
     bool HasTestHostController { get; }
 
+    bool CurrentProcessIsTestHostController { get; set; }
+
     int? GetTestHostControllerPID(bool throwIfMissing = true);
 }
