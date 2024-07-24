@@ -13,6 +13,8 @@ public sealed class STATestClassTests : AcceptanceTestBase
 {
     private readonly TestAssetFixture _testAssetFixture;
     private const string AssetName = "STATestClass";
+    private const string TimeoutAssetName = "TimeoutSTATestClass";
+    private const string CooperativeTimeoutAssetName = "CooperativeTimeoutSTATestClass";
 
     // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
     public STATestClassTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
@@ -73,6 +75,106 @@ public sealed class STATestClassTests : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task STATestClass_OnWindows_OnLifeCycleTestClass_WithTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetTimeoutAssetPath, TimeoutAssetName, currentTfm);
+        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
+
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.ClassInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.Constructor");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.TestInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.TestMethod1");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.TestCleanup");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.Dispose");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.ClassCleanup");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task STATestClass_OnWindows_OnLifeCycleTestClassWithLastTestSkipped_WithTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetTimeoutAssetPath, TimeoutAssetName, currentTfm);
+        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClassWithLastTestSkipped");
+
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 1, Total: 2");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.ClassInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.Constructor");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.TestInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.TestMethod1");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.TestCleanup");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.Dispose");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.ClassCleanup");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task STATestClass_OnWindows_OnLifeCycleTestClass_WithCooperativeTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetCooperativeTimeoutAssetPath, CooperativeTimeoutAssetName, currentTfm);
+        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
+
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.ClassInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.Constructor");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.TestInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.TestMethod1");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.TestCleanup");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.Dispose");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.ClassCleanup");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task STATestClass_OnWindows_OnLifeCycleTestClassWithLastTestSkipped_WithCooperativeTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetCooperativeTimeoutAssetPath, CooperativeTimeoutAssetName, currentTfm);
+        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClassWithLastTestSkipped");
+
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 1, Total: 2");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.ClassInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.Constructor");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.TestInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.TestMethod1");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.TestCleanup");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.Dispose");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.ClassCleanup");
+        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task DerivedSTATestClass_OnWindows_OnTestClassWithClassCleanupEndOfAssembly_ClassCleanupIsMTA(string currentTfm)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -102,12 +204,31 @@ public sealed class STATestClassTests : AcceptanceTestBase
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 
+        public string TargetTimeoutAssetPath => GetAssetPath(TimeoutAssetName);
+
+        public string TargetCooperativeTimeoutAssetPath => GetAssetPath(CooperativeTimeoutAssetName);
+
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
             yield return (AssetName, AssetName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$ProjectName$", AssetName)
+                .PatchCodeWithReplace("$TimeoutAttribute$", string.Empty)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+            yield return (TimeoutAssetName, TimeoutAssetName,
+                SourceCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$ProjectName$", TimeoutAssetName)
+                .PatchCodeWithReplace("$TimeoutAttribute$", ", Timeout(5000)")
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+            yield return (CooperativeTimeoutAssetName, CooperativeTimeoutAssetName,
+                SourceCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$ProjectName$", CooperativeTimeoutAssetName)
+                .PatchCodeWithReplace("$TimeoutAttribute$", ", Timeout(5000, CooperativeCancellation = true)")
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
@@ -123,7 +244,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
     </MSTest>
 </RunSettings>
 
-#file STATestClass.csproj
+#file $ProjectName$.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -155,14 +276,14 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [STATestClass]
 public class LifeCycleTestClass : IDisposable
 {
-    [AssemblyInitialize]
+    [AssemblyInitialize$TimeoutAttribute$]
     public static void AssemblyInitialize(TestContext context)
     {
         Console.WriteLine("LifeCycleTestClass.AssemblyInitialize");
         ThreadAssert.AssertApartmentStateIsMTA();
     }
 
-    [AssemblyCleanup]
+    [AssemblyCleanup$TimeoutAttribute$]
     public static void AssemblyCleanup()
     {
         Console.WriteLine("LifeCycleTestClass.AssemblyCleanup");
@@ -175,35 +296,35 @@ public class LifeCycleTestClass : IDisposable
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [ClassInitialize]
+    [ClassInitialize$TimeoutAttribute$]
     public static void ClassInitialize(TestContext context)
     {
         Console.WriteLine("LifeCycleTestClass.ClassInitialize");
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(ClassCleanupBehavior.EndOfClass)$TimeoutAttribute$]
     public static void ClassCleanup()
     {
         Console.WriteLine("LifeCycleTestClass.ClassCleanup");
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [TestInitialize]
+    [TestInitialize$TimeoutAttribute$]
     public void TestInitialize()
     {
         Console.WriteLine("LifeCycleTestClass.TestInitialize");
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [TestCleanup]
+    [TestCleanup$TimeoutAttribute$]
     public void TestCleanup()
     {
         Console.WriteLine("LifeCycleTestClass.TestCleanup");
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [TestMethod]
+    [TestMethod$TimeoutAttribute$]
     public void TestMethod1()
     {
         Console.WriteLine("LifeCycleTestClass.TestMethod1");
@@ -226,35 +347,35 @@ public class LifeCycleTestClassWithLastTestSkipped : IDisposable
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [ClassInitialize]
+    [ClassInitialize$TimeoutAttribute$]
     public static void ClassInitialize(TestContext context)
     {
         Console.WriteLine("LifeCycleTestClassWithLastTestSkipped.ClassInitialize");
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(ClassCleanupBehavior.EndOfClass)$TimeoutAttribute$]
     public static void ClassCleanup()
     {
         Console.WriteLine("LifeCycleTestClassWithLastTestSkipped.ClassCleanup");
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [TestInitialize]
+    [TestInitialize$TimeoutAttribute$]
     public void TestInitialize()
     {
         Console.WriteLine("LifeCycleTestClassWithLastTestSkipped.TestInitialize");
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [TestCleanup]
+    [TestCleanup$TimeoutAttribute$]
     public void TestCleanup()
     {
         Console.WriteLine("LifeCycleTestClassWithLastTestSkipped.TestCleanup");
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [TestMethod]
+    [TestMethod$TimeoutAttribute$]
     public void TestMethod1()
     {
         Console.WriteLine("LifeCycleTestClassWithLastTestSkipped.TestMethod1");
@@ -288,35 +409,35 @@ public class TestClassWithClassCleanupEndOfAssembly : IDisposable
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [ClassInitialize]
+    [ClassInitialize$TimeoutAttribute$]
     public static void ClassInitialize(TestContext context)
     {
         Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.ClassInitialize");
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [ClassCleanup(ClassCleanupBehavior.EndOfAssembly)]
+    [ClassCleanup(ClassCleanupBehavior.EndOfAssembly)$TimeoutAttribute$]
     public static void ClassCleanup()
     {
         Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.ClassCleanup");
         ThreadAssert.AssertApartmentStateIsMTA();
     }
 
-    [TestInitialize]
+    [TestInitialize$TimeoutAttribute$]
     public void TestInitialize()
     {
         Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.TestInitialize");
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [TestCleanup]
+    [TestCleanup$TimeoutAttribute$]
     public void TestCleanup()
     {
         Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.TestCleanup");
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [TestMethod]
+    [TestMethod$TimeoutAttribute$]
     public void TestMethod1()
     {
         Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.TestMethod1");
