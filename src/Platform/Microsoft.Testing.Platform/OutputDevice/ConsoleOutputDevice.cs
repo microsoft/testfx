@@ -94,7 +94,6 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
             _bannerDisplayed = true;
         }
 
-
         // This is single exe run, don't show all the details of assemblies and their summaries
         // and don't show passed tests.
         bool verbose = false;
