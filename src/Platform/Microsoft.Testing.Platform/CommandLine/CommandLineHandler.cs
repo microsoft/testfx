@@ -120,14 +120,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Runtime location: {runtimeLocation}"));
 #endif
 
-            string? moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
-            moduleName = RoslynString.IsNullOrEmpty(moduleName)
-#if NETCOREAPP
-                ? _environment.ProcessPath
-#else
-                ? _process.GetCurrentProcess().MainModule.FileName
-#endif
-                : moduleName;
+            string moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Test module: {moduleName}"));
         }
 

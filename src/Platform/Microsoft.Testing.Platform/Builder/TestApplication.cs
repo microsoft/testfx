@@ -188,14 +188,7 @@ public sealed class TestApplication : ITestApplication
 #endif
         await logger.LogInformationAsync($"IsDynamicCodeSupported: {isDynamicCodeSupported}");
 
-        string? moduleName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
-        moduleName = RoslynString.IsNullOrEmpty(moduleName)
-#if !NETCOREAPP
-            ? systemProcessHandler.GetCurrentProcess().MainModule.FileName
-#else
-            ? environment.ProcessPath
-#endif
-            : moduleName;
+        string moduleName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
         await logger.LogInformationAsync($"Test module: {moduleName}");
         await logger.LogInformationAsync($"Command line arguments: '{(args.Length == 0 ? string.Empty : args.Aggregate((a, b) => $"{a} {b}"))}'");
 
