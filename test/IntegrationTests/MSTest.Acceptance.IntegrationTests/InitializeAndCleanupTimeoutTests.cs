@@ -258,8 +258,7 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
             new() { ["TASKDELAY_TESTMETHOD"] = "1" });
 
         testHostResult.AssertOutputContains("TestMethod started");
-        testHostResult.AssertOutputContains("Test method TestClass.TestMethod threw exception:");
-        testHostResult.AssertOutputContains("System.Threading.Tasks.TaskCanceledException: A task was canceled.");
+        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted.");
         testHostResult.AssertOutputDoesNotContain("TestMethod completed");
     }
 
@@ -354,8 +353,7 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
             new() { ["CHECKTOKEN_TESTMETHOD"] = "1" });
 
         testHostResult.AssertOutputContains("TestMethod started");
-        testHostResult.AssertOutputContains("Test method TestClass.TestMethod threw exception:");
-        testHostResult.AssertOutputContains("System.OperationCanceledException: The operation was canceled.");
+        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted.");
     }
 
     private async Task RunAndAssertTestWasCanceledAsync(string rootFolder, string assetName, string tfm, string envVarPrefix, string entryKind)

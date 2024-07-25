@@ -45,17 +45,6 @@ variables:
     value: False
   - name: _RunAsPublic
     value: True
-  # Set default value for variables of PR and Public builds
-  - name: _SignType
-    value: test
-  - name: _SignArgs
-    value: ''
-  - name: _Sign
-    value: False
-  - name: _InternalBuildArgs
-    value: ' '
-  - name: _ReleaseVersionKind
-    value: ''
 
 stages:
 
@@ -104,7 +93,6 @@ stages:
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
-            $(_InternalBuildArgs)
             /p:Test=false
             /p:FastAcceptanceTest=true
           name: Build

@@ -30,6 +30,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
     private readonly TestHostControllerConfiguration _testHostsInformation;
     private readonly IEnvironment _environment;
     private readonly IClock _clock;
+    private readonly NamedPipeClient? _dotnetTestPipeClient;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<TestHostControllersTestHost> _logger;
     private readonly ManualResetEventSlim _waitForPid = new(false);
@@ -39,12 +40,13 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
     private int? _testHostPID;
 
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, IEnvironment environment,
-        ILoggerFactory loggerFactory, IClock clock)
+        ILoggerFactory loggerFactory, IClock clock, NamedPipeClient? dotnetTestPipeClient = null)
         : base(serviceProvider)
     {
         _testHostsInformation = testHostsInformation;
         _environment = environment;
         _clock = clock;
+        _dotnetTestPipeClient = dotnetTestPipeClient;
         _loggerFactory = loggerFactory;
         _logger = _loggerFactory.CreateLogger<TestHostControllersTestHost>();
     }
@@ -127,6 +129,12 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             if (display is IDataConsumer dataConsumerDisplay)
             {
                 dataConsumersBuilder.Add(dataConsumerDisplay);
+            }
+
+            // We register the DotnetTestDataConsumer as last to ensure that it will be the last one to consume the data.
+            if (_dotnetTestPipeClient is not null)
+            {
+                dataConsumersBuilder.Add(new DotnetTestDataConsumer(_dotnetTestPipeClient));
             }
 
             AsynchronousMessageBus concreteMessageBusService = new(

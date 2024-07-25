@@ -266,6 +266,13 @@ public class TestMethodInfo : ITestMethod
                     // Expected Exception was thrown, so Pass the test
                     result.Outcome = UTF.UnitTestOutcome.Passed;
                 }
+                else if (realException is OperationCanceledException oce && oce.CancellationToken == TestMethodOptions.TestContext?.Context.CancellationTokenSource.Token)
+                {
+                    result.Outcome = UTF.UnitTestOutcome.Timeout;
+                    result.TestFailureException = new TestFailedException(
+                        ObjectModelUnitTestOutcome.Timeout,
+                        string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName));
+                }
                 else
                 {
                     // This block should not throw. If it needs to throw, then handling of
