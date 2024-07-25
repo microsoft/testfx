@@ -145,7 +145,6 @@ static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions.UnitTes
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.CurrentSettings.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.IsLegacyScenario(Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.IMessageLogger! logger) -> bool
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.PopulateSettings(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings! settings) -> void
-static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.PopulateSettings(Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext? context) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.RunConfigurationSettings.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.RunConfigurationSettings!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.RunConfigurationSettings.PopulateSettings(Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext? context) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.RunConfigurationSettings!
 static Microsoft.VisualStudio.TestTools.UnitTesting.TestApplicationBuilderExtensions.AddMSTest(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, System.Func<System.Collections.Generic.IEnumerable<System.Reflection.Assembly!>!>! getTestAssemblies) -> void
