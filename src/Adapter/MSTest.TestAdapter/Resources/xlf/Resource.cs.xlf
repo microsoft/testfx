@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
         <source>Assembly cleanup method '{0}.{1}' was canceled</source>
-        <target state="needs-review-translation">Metoda čištění sestavení {0}.{1} bylo zrušeno.</target>
+        <target state="new">Assembly cleanup method '{0}.{1}' was canceled</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
         <source>Assembly initialize method '{0}.{1}' was canceled</source>
-        <target state="needs-review-translation">Metoda inicializace sestavení {0}.{1} byla zrušena.</target>
+        <target state="new">Assembly initialize method '{0}.{1}' was canceled</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRunTestArgumentsMismatchError">
@@ -43,7 +43,7 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
         <source>Class cleanup method '{0}.{1}' was canceled</source>
-        <target state="needs-review-translation">Metoda čištění třídy {0}.{1} bylo zrušeno.</target>
+        <target state="new">Class cleanup method '{0}.{1}' was canceled</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
@@ -53,7 +53,7 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
         <source>Class initialize method '{0}.{1}' was canceled</source>
-        <target state="needs-review-translation">Metoda inicializace třídy {0}.{1} byla zrušena.</target>
+        <target state="new">Class initialize method '{0}.{1}' was canceled</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
@@ -78,7 +78,7 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
         <source>Test cleanup method '{0}.{1}' was canceled</source>
-        <target state="needs-review-translation">Metoda čištění testu {0}.{1} bylo zrušeno.</target>
+        <target state="new">Test cleanup method '{0}.{1}' was canceled</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeTimedOut">
@@ -88,7 +88,7 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
         <source>Test initialize method '{0}.{1}' was canceled</source>
-        <target state="needs-review-translation">Metoda inicializace testu {0}.{1} byla zrušena.</target>
+        <target state="new">Test initialize method '{0}.{1}' was canceled</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
