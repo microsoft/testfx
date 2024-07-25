@@ -14,12 +14,12 @@
       </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>canceled</source>
-        <target state="needs-review-translation">отменено</target>
+        <target state="new">canceled</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
-        <target state="needs-review-translation">Отмена тестового сеанса...</target>
+        <target state="new">Canceling the test session...</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -690,13 +690,13 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
         <source>An unexpected exception occurred during byte conversion</source>
-        <target state="needs-review-translation">При преобразовании байт возникло непредвиденное исключение</target>
+        <target state="new">An unexpected exception occurred during byte conversion</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="needs-review-translation">В "FileLogger.WriteLogToFileAsync" произошло непредвиденное исключение.
+        <target state="new">An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</target>
         <note>{0} exception ToString</note>
       </trans-unit>
