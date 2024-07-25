@@ -385,20 +385,29 @@ public class MSTestSettings
                 {
                     case "CAPTURETRACEOUTPUT":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
-                            {
-                                settings.CaptureDebugTraces = result;
-                            }
+                            string value = reader.ReadInnerXml();
+                            settings.CaptureDebugTraces = bool.TryParse(value, out result)
+                                ? result
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidCaptureTraceOutputValue,
+                                        value));
 
                             break;
                         }
 
                     case "ENABLEBASECLASSTESTMETHODSFROMOTHERASSEMBLIES":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
-                            {
-                                settings.EnableBaseClassTestMethodsFromOtherAssemblies = result;
-                            }
+                            string value = reader.ReadInnerXml();
+
+                            settings.EnableBaseClassTestMethodsFromOtherAssemblies = bool.TryParse(reader.ReadInnerXml(), out result)
+                                ? result
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidEnableBaseClassTestMethodsFromOtherAssembliesValue,
+                                        value));
 
                             break;
                         }
@@ -412,49 +421,67 @@ public class MSTestSettings
                                     string.Format(
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidClassCleanupLifecycleValue,
-                                        value,
-                                        string.Join(", ", Enum.GetNames(typeof(ClassCleanupBehavior)))));
+                                        value));
 
                             break;
                         }
 
                     case "FORCEDLEGACYMODE":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
-                            {
-                                settings.ForcedLegacyMode = result;
-                            }
+                            string value = reader.ReadInnerXml();
+
+                            settings.ForcedLegacyMode = bool.TryParse(reader.ReadInnerXml(), out result)
+                                ? result
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidForcedLegacyModeValue,
+                                        value));
 
                             break;
                         }
 
                     case "MAPINCONCLUSIVETOFAILED":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
-                            {
-                                settings.MapInconclusiveToFailed = result;
-                            }
+                            string value = reader.ReadInnerXml();
+
+                            settings.MapInconclusiveToFailed = bool.TryParse(reader.ReadInnerXml(), out result)
+                                ? result
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidMapInconclusiveToFailedValue,
+                                        value));
 
                             break;
                         }
 
                     case "MAPNOTRUNNABLETOFAILED":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
-                            {
-                                settings.MapNotRunnableToFailed = result;
-                            }
+                            string value = reader.ReadInnerXml();
+
+                            settings.MapNotRunnableToFailed = bool.TryParse(reader.ReadInnerXml(), out result)
+                                ? result
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidMapNotRunnableToFailedValue,
+                                        value));
 
                             break;
                         }
 
                     case "TREATDISCOVERYWARNINGSASERRORS":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
-                            {
-                                settings.TreatDiscoveryWarningsAsErrors = result;
-                            }
+                            string value = reader.ReadInnerXml();
 
+                            settings.TreatDiscoveryWarningsAsErrors = bool.TryParse(reader.ReadInnerXml(), out result)
+                                ? result
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidTreatDiscoveryWarningsAsErrorsValue,
+                                        value));
                             break;
                         }
 
@@ -500,10 +527,15 @@ public class MSTestSettings
 
                     case "CONSIDEREMPTYDATASOURCEASINCONCLUSIVE":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out bool considerEmptyDataSourceAsInconclusive))
-                            {
-                                settings.ConsiderEmptyDataSourceAsInconclusive = considerEmptyDataSourceAsInconclusive;
-                            }
+                            string value = reader.ReadInnerXml();
+
+                            settings.ConsiderEmptyDataSourceAsInconclusive = bool.TryParse(reader.ReadInnerXml(), out bool considerEmptyDataSourceAsInconclusive)
+                                ? considerEmptyDataSourceAsInconclusive
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidConsiderEmptyDataSourceAsInconclusiveValue,
+                                        value));
 
                             break;
                         }
@@ -560,30 +592,43 @@ public class MSTestSettings
 
                     case "TREATCLASSANDASSEMBLYCLEANUPWARNINGSASERRORS":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
-                            {
-                                settings.TreatClassAndAssemblyCleanupWarningsAsErrors = result;
-                            }
+                            string value = reader.ReadInnerXml();
 
+                            settings.TreatClassAndAssemblyCleanupWarningsAsErrors = bool.TryParse(reader.ReadInnerXml(), out result)
+                                ? result
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidTreatClassAndAssemblyCleanupWarningsAsErrorsValue,
+                                        value));
                             break;
                         }
 
                     case "CONSIDERFIXTURESASSPECIALTESTS":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
-                            {
-                                settings.ConsiderFixturesAsSpecialTests = result;
-                            }
+                            string value = reader.ReadInnerXml();
 
+                            settings.ConsiderFixturesAsSpecialTests = bool.TryParse(reader.ReadInnerXml(), out result)
+                                ? result
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidConsiderFixturesAsSpecialTestsValue,
+                                        value));
                             break;
                         }
 
                     case "COOPERATIVECANCELLATIONTIMEOUT":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
-                            {
-                                settings.CooperativeCancellationTimeout = result;
-                            }
+                            string value = reader.ReadInnerXml();
+
+                            settings.CooperativeCancellationTimeout = bool.TryParse(reader.ReadInnerXml(), out result)
+                                ? result
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidCooperativeCancellationTimeoutValue,
+                                        value));
 
                             break;
                         }
