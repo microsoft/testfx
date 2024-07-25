@@ -1,1 +1,2 @@
 ﻿#nullable enable
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.PopulateSettings(Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext? context, Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.IMessageLogger! logger) -> void
