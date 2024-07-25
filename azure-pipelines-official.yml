@@ -132,7 +132,6 @@ extends:
             - script: eng\common\CIBuild.cmd
                 -configuration $(_BuildConfig)
                 -prepareMachine
-                /p:DotNetSignType=real
                 /p:TeamName=$(_TeamName)
                 /p:DotNetFinalVersionKind=$(_ReleaseVersionKind)
                 /p:DotNetPublishUsingPipelines=true
