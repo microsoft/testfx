@@ -70,21 +70,6 @@ variables:
       value: release
 
   - group: DotNet-Symbol-Server-Pats
-  - name: _SignType
-    value: real
-  - name: _SignArgs
-    value: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName) /p:Sign=$(_Sign)
-  - name: _Sign
-    value: True
-  - name: _InternalBuildArgs
-    value: /p:DotNetSignType=$(_SignType)
-      /p:TeamName=$(_TeamName)
-      /p:DotNetFinalVersionKind=$(_ReleaseVersionKind)
-      /p:DotNetPublishUsingPipelines=true
-      /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-      /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
-      /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-      /p:ProductsToBuild=$(_Products)
 
 resources:
   repositories:
@@ -147,7 +132,13 @@ extends:
             - script: eng\common\CIBuild.cmd
                 -configuration $(_BuildConfig)
                 -prepareMachine
-                $(_InternalBuildArgs)
+                /p:TeamName=$(_TeamName)
+                /p:DotNetFinalVersionKind=$(_ReleaseVersionKind)
+                /p:DotNetPublishUsingPipelines=true
+                /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+                /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+                /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+                /p:ProductsToBuild=$(_Products)
                 /p:Test=false
               name: Build
               displayName: Build
