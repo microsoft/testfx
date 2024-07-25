@@ -29,7 +29,7 @@ internal static class FixtureMethodRunner
 
         if (timeoutInfo.Value.CooperativeCancellation)
         {
-            return RunWithCooperativeCancellation(action, cancellationTokenSource, timeoutInfo.Value, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat);
+            return RunWithCooperativeCancellation(action, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat);
         }
 
         // We need to start a thread to handle "cancellation" and "timeout" scenarios.
@@ -38,12 +38,12 @@ internal static class FixtureMethodRunner
             : RunWithTimeoutAndCancellationWithThreadPool(action, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, executionContextScope, methodCanceledMessageFormat, methodTimedOutMessageFormat);
     }
 
-    private static TestFailedException? RunWithCooperativeCancellation(Action action, CancellationTokenSource cancellationTokenSource, TimeoutInfo timeoutInfo, MethodInfo methodInfo, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
+    private static TestFailedException? RunWithCooperativeCancellation(Action action, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         CancellationTokenSource? timeoutTokenSource = null;
         try
         {
-            timeoutTokenSource = new(timeoutInfo.Timeout);
+            timeoutTokenSource = new(timeout);
             timeoutTokenSource.Token.Register(cancellationTokenSource.Cancel);
             if (timeoutTokenSource.Token.IsCancellationRequested)
             {
@@ -54,7 +54,7 @@ internal static class FixtureMethodRunner
                         methodTimedOutMessageFormat,
                         methodInfo.DeclaringType!.FullName,
                         methodInfo.Name,
-                        timeoutInfo.Timeout));
+                        timeout));
             }
 
             try
@@ -74,7 +74,7 @@ internal static class FixtureMethodRunner
                             methodTimedOutMessageFormat,
                             methodInfo.DeclaringType!.FullName,
                             methodInfo.Name,
-                            timeoutInfo.Timeout)
+                            timeout)
                         : string.Format(
                             CultureInfo.InvariantCulture,
                             methodCanceledMessageFormat,
