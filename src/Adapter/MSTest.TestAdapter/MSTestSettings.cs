@@ -489,10 +489,12 @@ public class MSTestSettings
                         {
                             string fileName = reader.ReadInnerXml();
 
-                            if (!StringEx.IsNullOrEmpty(fileName))
-                            {
-                                settings.TestSettingsFile = fileName;
-                            }
+                            settings.TestSettingsFile = StringEx.IsNullOrEmpty(fileName)
+                                ? fileName
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidTestSettingsFileValue));
 
                             break;
                         }
@@ -507,21 +509,29 @@ public class MSTestSettings
 
                     case "TESTTIMEOUT":
                         {
-                            if (int.TryParse(reader.ReadInnerXml(), out int testTimeout) && testTimeout > 0)
-                            {
-                                settings.TestTimeout = testTimeout;
-                            }
+                            string value = reader.ReadInnerXml();
 
+                            settings.TestTimeout = int.TryParse(reader.ReadInnerXml(), out int testTimeout) && testTimeout > 0
+                                ? testTimeout
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidTestTimeoutValue,
+                                        value));
                             break;
                         }
 
                     case "ASSEMBLYCLEANUPTIMEOUT":
                         {
-                            if (int.TryParse(reader.ReadInnerXml(), out int assemblyCleanupTimeout) && assemblyCleanupTimeout > 0)
-                            {
-                                settings.AssemblyCleanupTimeout = assemblyCleanupTimeout;
-                            }
+                            string value = reader.ReadInnerXml();
 
+                            settings.AssemblyCleanupTimeout = int.TryParse(reader.ReadInnerXml(), out int assemblyCleanupTimeout) && assemblyCleanupTimeout > 0
+                                ? assemblyCleanupTimeout
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidAssemblyCleanupTimeoutValue,
+                                        value));
                             break;
                         }
 
@@ -542,51 +552,72 @@ public class MSTestSettings
 
                     case "ASSEMBLYINITIALIZETIMEOUT":
                         {
-                            if (int.TryParse(reader.ReadInnerXml(), out int assemblyInitializeTimeout) && assemblyInitializeTimeout > 0)
-                            {
-                                settings.AssemblyInitializeTimeout = assemblyInitializeTimeout;
-                            }
+                            string value = reader.ReadInnerXml();
 
+                            settings.AssemblyInitializeTimeout = int.TryParse(reader.ReadInnerXml(), out int assemblyInitializeTimeout) && assemblyInitializeTimeout > 0
+                                ? assemblyInitializeTimeout
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidAssemblyInitializeTimeoutValue,
+                                        value));
                             break;
                         }
 
                     case "CLASSINITIALIZETIMEOUT":
                         {
-                            if (int.TryParse(reader.ReadInnerXml(), out int classInitializeTimeout) && classInitializeTimeout > 0)
-                            {
-                                settings.ClassInitializeTimeout = classInitializeTimeout;
-                            }
+                            string value = reader.ReadInnerXml();
 
+                            settings.ClassInitializeTimeout = int.TryParse(reader.ReadInnerXml(), out int classInitializeTimeout) && classInitializeTimeout > 0
+                                ? classInitializeTimeout
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidClassInitializeTimeoutValue,
+                                        value));
                             break;
                         }
 
                     case "CLASSCLEANUPTIMEOUT":
                         {
-                            if (int.TryParse(reader.ReadInnerXml(), out int classCleanupTimeout) && classCleanupTimeout > 0)
-                            {
-                                settings.ClassCleanupTimeout = classCleanupTimeout;
-                            }
+                            string value = reader.ReadInnerXml();
 
+                            settings.ClassCleanupTimeout = int.TryParse(reader.ReadInnerXml(), out int classCleanupTimeout) && classCleanupTimeout > 0
+                                ? classCleanupTimeout
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidClassCleanupTimeoutValue,
+                                        value));
                             break;
                         }
 
                     case "TESTINITIALIZETIMEOUT":
                         {
-                            if (int.TryParse(reader.ReadInnerXml(), out int testInitializeTimeout) && testInitializeTimeout > 0)
-                            {
-                                settings.TestInitializeTimeout = testInitializeTimeout;
-                            }
+                            string value = reader.ReadInnerXml();
+
+                            settings.TestInitializeTimeout = int.TryParse(reader.ReadInnerXml(), out int testInitializeTimeout) && testInitializeTimeout > 0
+                                ? testInitializeTimeout
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidTestInitializeTimeoutValue,
+                                        value));
 
                             break;
                         }
 
                     case "TESTCLEANUPTIMEOUT":
                         {
-                            if (int.TryParse(reader.ReadInnerXml(), out int testCleanupTimeout) && testCleanupTimeout > 0)
-                            {
-                                settings.TestCleanupTimeout = testCleanupTimeout;
-                            }
+                            string value = reader.ReadInnerXml();
 
+                            settings.TestCleanupTimeout = int.TryParse(reader.ReadInnerXml(), out int testCleanupTimeout) && testCleanupTimeout > 0
+                                ? testCleanupTimeout
+                                : throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidTestCleanupTimeoutValue,
+                                        value));
                             break;
                         }
 
