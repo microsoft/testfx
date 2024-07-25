@@ -83,7 +83,7 @@ public sealed class CancellationTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIs(2);
-        testHostResult.AssertOutputContains("Test 'UnitTest1.TestMethod' execution has been aborted.");
+        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted.");
         testHostResult.AssertOutputContains("Failed!");
     }
 
