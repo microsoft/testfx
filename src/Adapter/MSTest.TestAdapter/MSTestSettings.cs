@@ -245,7 +245,7 @@ public class MSTestSettings
     /// <param name="context">
     /// The discovery context that contains the runsettings.
     /// </param>
-    public static void PopulateSettings(IDiscoveryContext? context)
+    public static void PopulateSettings(IDiscoveryContext? context, IMessageLogger logger)
     {
         RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
@@ -256,7 +256,7 @@ public class MSTestSettings
             return;
         }
 
-        MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias);
+        MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias, logger);
 
         // If a user specifies MSTestV2 in the runsettings, then prefer that over the v1 settings.
         if (aliasSettings != null)
@@ -265,7 +265,7 @@ public class MSTestSettings
         }
         else
         {
-            MSTestSettings? settings = GetSettings(context.RunSettings.SettingsXml, SettingsName);
+            MSTestSettings? settings = GetSettings(context.RunSettings.SettingsXml, SettingsName, logger);
 
             CurrentSettings = settings ?? new MSTestSettings();
         }
@@ -297,7 +297,7 @@ public class MSTestSettings
     /// <returns> The settings if found. Null otherwise. </returns>
     internal static MSTestSettings? GetSettings(
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
-        string settingName)
+        string settingName, IMessageLogger logger)
     {
         if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
         {
@@ -321,7 +321,7 @@ public class MSTestSettings
         if (!reader.EOF)
         {
             // read nodeName element.
-            return ToSettings(reader.ReadSubtree());
+            return ToSettings(reader.ReadSubtree(), logger);
         }
 
         return null;
@@ -341,7 +341,7 @@ public class MSTestSettings
     /// </summary>
     /// <param name="reader">Reader to load the settings from.</param>
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
-    private static MSTestSettings ToSettings(XmlReader reader)
+    private static MSTestSettings ToSettings(XmlReader reader, IMessageLogger logger)
     {
         ValidateArg.NotNull(reader, "reader");
 
@@ -385,29 +385,20 @@ public class MSTestSettings
                 {
                     case "CAPTURETRACEOUTPUT":
                         {
-                            string value = reader.ReadInnerXml();
-                            settings.CaptureDebugTraces = bool.TryParse(value, out result)
-                                ? result
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidCaptureTraceOutputValue,
-                                        value));
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.CaptureDebugTraces = result;
+                            }
 
                             break;
                         }
 
                     case "ENABLEBASECLASSTESTMETHODSFROMOTHERASSEMBLIES":
                         {
-                            string value = reader.ReadInnerXml();
-
-                            settings.EnableBaseClassTestMethodsFromOtherAssemblies = bool.TryParse(reader.ReadInnerXml(), out result)
-                                ? result
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidEnableBaseClassTestMethodsFromOtherAssembliesValue,
-                                        value));
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.EnableBaseClassTestMethodsFromOtherAssemblies = result;
+                            }
 
                             break;
                         }
@@ -421,67 +412,49 @@ public class MSTestSettings
                                     string.Format(
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidClassCleanupLifecycleValue,
-                                        value));
+                                        value,
+                                        string.Join(", ", Enum.GetNames(typeof(ClassCleanupBehavior)))));
 
                             break;
                         }
 
                     case "FORCEDLEGACYMODE":
                         {
-                            string value = reader.ReadInnerXml();
-
-                            settings.ForcedLegacyMode = bool.TryParse(reader.ReadInnerXml(), out result)
-                                ? result
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidForcedLegacyModeValue,
-                                        value));
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.ForcedLegacyMode = result;
+                            }
 
                             break;
                         }
 
                     case "MAPINCONCLUSIVETOFAILED":
                         {
-                            string value = reader.ReadInnerXml();
-
-                            settings.MapInconclusiveToFailed = bool.TryParse(reader.ReadInnerXml(), out result)
-                                ? result
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidMapInconclusiveToFailedValue,
-                                        value));
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.MapInconclusiveToFailed = result;
+                            }
 
                             break;
                         }
 
                     case "MAPNOTRUNNABLETOFAILED":
                         {
-                            string value = reader.ReadInnerXml();
-
-                            settings.MapNotRunnableToFailed = bool.TryParse(reader.ReadInnerXml(), out result)
-                                ? result
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidMapNotRunnableToFailedValue,
-                                        value));
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.MapNotRunnableToFailed = result;
+                            }
 
                             break;
                         }
 
                     case "TREATDISCOVERYWARNINGSASERRORS":
                         {
-                            string value = reader.ReadInnerXml();
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.TreatDiscoveryWarningsAsErrors = result;
+                            }
 
-                            settings.TreatDiscoveryWarningsAsErrors = bool.TryParse(reader.ReadInnerXml(), out result)
-                                ? result
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidTreatDiscoveryWarningsAsErrorsValue,
-                                        value));
                             break;
                         }
 
@@ -489,12 +462,10 @@ public class MSTestSettings
                         {
                             string fileName = reader.ReadInnerXml();
 
-                            settings.TestSettingsFile = StringEx.IsNullOrEmpty(fileName)
-                                ? fileName
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidTestSettingsFileValue));
+                            if (!StringEx.IsNullOrEmpty(fileName))
+                            {
+                                settings.TestSettingsFile = fileName;
+                            }
 
                             break;
                         }
@@ -509,157 +480,110 @@ public class MSTestSettings
 
                     case "TESTTIMEOUT":
                         {
-                            string value = reader.ReadInnerXml();
+                            if (int.TryParse(reader.ReadInnerXml(), out int testTimeout) && testTimeout > 0)
+                            {
+                                settings.TestTimeout = testTimeout;
+                            }
 
-                            settings.TestTimeout = int.TryParse(reader.ReadInnerXml(), out int testTimeout) && testTimeout > 0
-                                ? testTimeout
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidTestTimeoutValue,
-                                        value));
                             break;
                         }
 
                     case "ASSEMBLYCLEANUPTIMEOUT":
                         {
-                            string value = reader.ReadInnerXml();
+                            if (int.TryParse(reader.ReadInnerXml(), out int assemblyCleanupTimeout) && assemblyCleanupTimeout > 0)
+                            {
+                                settings.AssemblyCleanupTimeout = assemblyCleanupTimeout;
+                            }
 
-                            settings.AssemblyCleanupTimeout = int.TryParse(reader.ReadInnerXml(), out int assemblyCleanupTimeout) && assemblyCleanupTimeout > 0
-                                ? assemblyCleanupTimeout
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidAssemblyCleanupTimeoutValue,
-                                        value));
                             break;
                         }
 
                     case "CONSIDEREMPTYDATASOURCEASINCONCLUSIVE":
                         {
-                            string value = reader.ReadInnerXml();
-
-                            settings.ConsiderEmptyDataSourceAsInconclusive = bool.TryParse(reader.ReadInnerXml(), out bool considerEmptyDataSourceAsInconclusive)
-                                ? considerEmptyDataSourceAsInconclusive
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidConsiderEmptyDataSourceAsInconclusiveValue,
-                                        value));
+                            if (bool.TryParse(reader.ReadInnerXml(), out bool considerEmptyDataSourceAsInconclusive))
+                            {
+                                settings.ConsiderEmptyDataSourceAsInconclusive = considerEmptyDataSourceAsInconclusive;
+                            }
 
                             break;
                         }
 
                     case "ASSEMBLYINITIALIZETIMEOUT":
                         {
-                            string value = reader.ReadInnerXml();
+                            if (int.TryParse(reader.ReadInnerXml(), out int assemblyInitializeTimeout) && assemblyInitializeTimeout > 0)
+                            {
+                                settings.AssemblyInitializeTimeout = assemblyInitializeTimeout;
+                            }
 
-                            settings.AssemblyInitializeTimeout = int.TryParse(reader.ReadInnerXml(), out int assemblyInitializeTimeout) && assemblyInitializeTimeout > 0
-                                ? assemblyInitializeTimeout
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidAssemblyInitializeTimeoutValue,
-                                        value));
                             break;
                         }
 
                     case "CLASSINITIALIZETIMEOUT":
                         {
-                            string value = reader.ReadInnerXml();
+                            if (int.TryParse(reader.ReadInnerXml(), out int classInitializeTimeout) && classInitializeTimeout > 0)
+                            {
+                                settings.ClassInitializeTimeout = classInitializeTimeout;
+                            }
 
-                            settings.ClassInitializeTimeout = int.TryParse(reader.ReadInnerXml(), out int classInitializeTimeout) && classInitializeTimeout > 0
-                                ? classInitializeTimeout
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidClassInitializeTimeoutValue,
-                                        value));
                             break;
                         }
 
                     case "CLASSCLEANUPTIMEOUT":
                         {
-                            string value = reader.ReadInnerXml();
+                            if (int.TryParse(reader.ReadInnerXml(), out int classCleanupTimeout) && classCleanupTimeout > 0)
+                            {
+                                settings.ClassCleanupTimeout = classCleanupTimeout;
+                            }
 
-                            settings.ClassCleanupTimeout = int.TryParse(reader.ReadInnerXml(), out int classCleanupTimeout) && classCleanupTimeout > 0
-                                ? classCleanupTimeout
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidClassCleanupTimeoutValue,
-                                        value));
                             break;
                         }
 
                     case "TESTINITIALIZETIMEOUT":
                         {
-                            string value = reader.ReadInnerXml();
-
-                            settings.TestInitializeTimeout = int.TryParse(reader.ReadInnerXml(), out int testInitializeTimeout) && testInitializeTimeout > 0
-                                ? testInitializeTimeout
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidTestInitializeTimeoutValue,
-                                        value));
+                            if (int.TryParse(reader.ReadInnerXml(), out int testInitializeTimeout) && testInitializeTimeout > 0)
+                            {
+                                settings.TestInitializeTimeout = testInitializeTimeout;
+                            }
 
                             break;
                         }
 
                     case "TESTCLEANUPTIMEOUT":
                         {
-                            string value = reader.ReadInnerXml();
+                            if (int.TryParse(reader.ReadInnerXml(), out int testCleanupTimeout) && testCleanupTimeout > 0)
+                            {
+                                settings.TestCleanupTimeout = testCleanupTimeout;
+                            }
 
-                            settings.TestCleanupTimeout = int.TryParse(reader.ReadInnerXml(), out int testCleanupTimeout) && testCleanupTimeout > 0
-                                ? testCleanupTimeout
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidTestCleanupTimeoutValue,
-                                        value));
                             break;
                         }
 
                     case "TREATCLASSANDASSEMBLYCLEANUPWARNINGSASERRORS":
                         {
-                            string value = reader.ReadInnerXml();
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.TreatClassAndAssemblyCleanupWarningsAsErrors = result;
+                            }
 
-                            settings.TreatClassAndAssemblyCleanupWarningsAsErrors = bool.TryParse(reader.ReadInnerXml(), out result)
-                                ? result
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidTreatClassAndAssemblyCleanupWarningsAsErrorsValue,
-                                        value));
                             break;
                         }
 
                     case "CONSIDERFIXTURESASSPECIALTESTS":
                         {
-                            string value = reader.ReadInnerXml();
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.ConsiderFixturesAsSpecialTests = result;
+                            }
 
-                            settings.ConsiderFixturesAsSpecialTests = bool.TryParse(reader.ReadInnerXml(), out result)
-                                ? result
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidConsiderFixturesAsSpecialTestsValue,
-                                        value));
                             break;
                         }
 
                     case "COOPERATIVECANCELLATIONTIMEOUT":
                         {
-                            string value = reader.ReadInnerXml();
-
-                            settings.CooperativeCancellationTimeout = bool.TryParse(reader.ReadInnerXml(), out result)
-                                ? result
-                                : throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidCooperativeCancellationTimeoutValue,
-                                        value));
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.CooperativeCancellationTimeout = result;
+                            }
 
                             break;
                         }
