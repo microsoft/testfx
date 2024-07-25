@@ -892,7 +892,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         Verify(methodInfo == testMethodInfo.TestMethod);
-        Verify(testMethodInfo.TestMethodOptions.Timeout == 0);
+        Verify(testMethodInfo.TestMethodOptions.TimeoutInfo.Timeout == 0);
         Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
@@ -912,7 +912,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         Verify(methodInfo == testMethodInfo.TestMethod);
-        Verify(testMethodInfo.TestMethodOptions.Timeout == 10);
+        Verify(testMethodInfo.TestMethodOptions.TimeoutInfo.Timeout == 10);
         Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
@@ -997,7 +997,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(testMethodInfo.TestMethodOptions.Timeout == 4000);
+        Verify(testMethodInfo.TestMethodOptions.TimeoutInfo.Timeout == 4000);
     }
 
     public void GetTestMethodInfoWhenTimeoutAttributeSetShouldReturnTimeoutBasedOnAttributeEvenIfGlobalTimeoutSet()
@@ -1025,10 +1025,10 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(testMethodInfo.TestMethodOptions.Timeout == 10);
+        Verify(testMethodInfo.TestMethodOptions.TimeoutInfo.Timeout == 10);
     }
 
-    public void GetTestMethodInfoForInvalidGLobalTimeoutShouldReturnTestMethodInfoWithTimeoutZero()
+    public void GetTestMethodInfoForInvalidGlobalTimeoutShouldReturnTestMethodInfoWithTimeoutZero()
     {
         string runSettingsXml =
             """
@@ -1050,7 +1050,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(testMethodInfo.TestMethodOptions.Timeout == 0);
+        Verify(testMethodInfo.TestMethodOptions.TimeoutInfo.Timeout == 0);
     }
 
     public void GetTestMethodInfoShouldReturnTestMethodInfoForMethodsAdornedWithADerivedTestMethodAttribute()
@@ -1066,7 +1066,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         Verify(methodInfo == testMethodInfo.TestMethod);
-        Verify(testMethodInfo.TestMethodOptions.Timeout == 0);
+        Verify(testMethodInfo.TestMethodOptions.TimeoutInfo.Timeout == 0);
         Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
         Verify(testMethodInfo.TestMethodOptions.Executor is DerivedTestMethodAttribute);
@@ -1185,7 +1185,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         Verify(methodInfo == testMethodInfo.TestMethod);
-        Verify(testMethodInfo.TestMethodOptions.Timeout == 0);
+        Verify(testMethodInfo.TestMethodOptions.TimeoutInfo.Timeout == 0);
         Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
@@ -1203,7 +1203,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         Verify(methodInfo == testMethodInfo.TestMethod);
-        Verify(testMethodInfo.TestMethodOptions.Timeout == 0);
+        Verify(testMethodInfo.TestMethodOptions.TimeoutInfo.Timeout == 0);
         Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
@@ -1227,7 +1227,7 @@ public class TypeCacheTests : TestContainer
         // The two MethodInfo instances will have different ReflectedType properties,
         // so cannot be compared directly. Use MethodHandle to verify it's the same.
         Verify(methodInfo.MethodHandle == testMethodInfo.TestMethod.MethodHandle);
-        Verify(testMethodInfo.TestMethodOptions.Timeout == 0);
+        Verify(testMethodInfo.TestMethodOptions.TimeoutInfo.Timeout == 0);
         Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
