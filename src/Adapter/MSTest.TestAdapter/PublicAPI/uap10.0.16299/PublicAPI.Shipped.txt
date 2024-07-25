@@ -145,5 +145,6 @@ static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.IsL
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.PopulateSettings(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings! settings) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.PopulateSettings(Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext? context) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.RunConfigurationSettings.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.RunConfigurationSettings!
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.PopulateSettings(Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext? context) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.RunConfigurationSettings.PopulateSettings(Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext? context) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.RunConfigurationSettings!
 virtual Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.Invoke(object?[]? arguments) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult!
