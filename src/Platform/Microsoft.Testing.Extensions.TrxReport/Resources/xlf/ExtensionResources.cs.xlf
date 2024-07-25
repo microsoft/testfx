@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="TrxComparerToolDescription">
         <source>This tool allows to compare and highlights differences between 2 TRX reports</source>
-        <target state="needs-review-translation">Tento nástroj umožňuje porovnat rozdíly mezi 2 sestavami TRX a zobrazit přehled těchto rozdílů.</target>
+        <target state="new">This tool allows to compare and highlights differences between 2 TRX reports</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolDisplayName">

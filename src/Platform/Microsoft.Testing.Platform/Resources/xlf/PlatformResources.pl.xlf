@@ -14,12 +14,12 @@
       </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>canceled</source>
-        <target state="needs-review-translation">anulowano</target>
+        <target state="new">canceled</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
-        <target state="needs-review-translation">Trwa anulowanie sesji testowej...</target>
+        <target state="new">Canceling the test session...</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -690,13 +690,13 @@ Więcej informacji o telemetrii platformy testowej firmy Microsoft: https://aka.
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
         <source>An unexpected exception occurred during byte conversion</source>
-        <target state="needs-review-translation">Wystąpił nieoczekiwany wyjątek podczas konwersji bajtów</target>
+        <target state="new">An unexpected exception occurred during byte conversion</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="needs-review-translation">Wystąpił nieoczekiwany wyjątek w elemencie „FileLogger.WriteLogToFileAsync”.
+        <target state="new">An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</target>
         <note>{0} exception ToString</note>
       </trans-unit>

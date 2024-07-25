@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="TrxComparerToolDescription">
         <source>This tool allows to compare and highlights differences between 2 TRX reports</source>
-        <target state="needs-review-translation">Questo strumento consente di confrontare e confrontare le differenze di vista tra 2 report TRX</target>
+        <target state="new">This tool allows to compare and highlights differences between 2 TRX reports</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolDisplayName">
