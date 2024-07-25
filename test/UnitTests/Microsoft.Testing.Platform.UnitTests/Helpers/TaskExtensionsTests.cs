@@ -48,13 +48,13 @@ public sealed class TaskExtensionsTests : TestBase
         Assert.AreEqual(cancellationTokenSource.Token, exception.CancellationToken);
     }
 
-    public async Task CancellationAsync_NonCancelled_Succeeds()
+    public async Task CancellationAsync_NonCanceled_Succeeds()
     {
         CancellationTokenSource cancellationTokenSource = new();
         await Task.Delay(TimeSpan.FromSeconds(1)).WithCancellationAsync(cancellationTokenSource.Token);
     }
 
-    public async Task CancellationAsync_NonCancelledWithArgument_Succeeds()
+    public async Task CancellationAsync_NonCanceledWithArgument_Succeeds()
     {
         CancellationTokenSource cancellationTokenSource = new();
         Assert.AreEqual("Hello", await DoSomething().WithCancellationAsync(cancellationTokenSource.Token));

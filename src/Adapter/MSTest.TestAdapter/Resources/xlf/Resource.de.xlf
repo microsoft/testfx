@@ -8,8 +8,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
-        <source>Assembly cleanup method '{0}.{1}' was cancelled</source>
-        <target state="translated">Die Assemblybereinigungsmethode „{0}.{1}“ wurde abgebrochen</target>
+        <source>Assembly cleanup method '{0}.{1}' was canceled</source>
+        <target state="needs-review-translation">Die Assemblybereinigungsmethode „{0}.{1}“ wurde abgebrochen</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
@@ -18,8 +18,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
-        <source>Assembly initialize method '{0}.{1}' was cancelled</source>
-        <target state="translated">Die Assemblyinitialisierungsmethode "{0}.{1}" wurde abgebrochen</target>
+        <source>Assembly initialize method '{0}.{1}' was canceled</source>
+        <target state="needs-review-translation">Die Assemblyinitialisierungsmethode "{0}.{1}" wurde abgebrochen</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRunTestArgumentsMismatchError">
@@ -42,8 +42,8 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
-        <source>Class cleanup method '{0}.{1}' was cancelled</source>
-        <target state="translated">Die Klassenbereinigungsmethode „{0}.{1}“ wurde abgebrochen</target>
+        <source>Class cleanup method '{0}.{1}' was canceled</source>
+        <target state="needs-review-translation">Die Klassenbereinigungsmethode „{0}.{1}“ wurde abgebrochen</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
@@ -52,8 +52,8 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
-        <source>Class initialize method '{0}.{1}' was cancelled</source>
-        <target state="translated">Die Klasseninitialisierungsmethode "{0}.{1}" wurde abgebrochen</target>
+        <source>Class initialize method '{0}.{1}' was canceled</source>
+        <target state="needs-review-translation">Die Klasseninitialisierungsmethode "{0}.{1}" wurde abgebrochen</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
@@ -77,8 +77,8 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
-        <source>Test cleanup method '{0}.{1}' was cancelled</source>
-        <target state="translated">Die Testbereinigungsmethode „{0}.{1}“ wurde abgebrochen</target>
+        <source>Test cleanup method '{0}.{1}' was canceled</source>
+        <target state="needs-review-translation">Die Testbereinigungsmethode „{0}.{1}“ wurde abgebrochen</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeTimedOut">
@@ -87,8 +87,8 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
-        <source>Test initialize method '{0}.{1}' was cancelled</source>
-        <target state="translated">Die Testinitialisierungsmethode „{0}.{1}“ wurde abgebrochen</target>
+        <source>Test initialize method '{0}.{1}' was canceled</source>
+        <target state="needs-review-translation">Die Testinitialisierungsmethode „{0}.{1}“ wurde abgebrochen</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">

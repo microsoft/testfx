@@ -108,7 +108,7 @@ internal sealed class ConsoleTestHost(
             requestExecuteStop ??= _clock.UtcNow;
 
             exitCode = ExitCodes.TestSessionAborted;
-            await _logger.LogInformationAsync("Test session cancelled.");
+            await _logger.LogInformationAsync("Test session canceled.");
         }
         finally
         {

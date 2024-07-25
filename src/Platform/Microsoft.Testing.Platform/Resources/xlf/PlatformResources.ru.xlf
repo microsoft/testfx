@@ -13,13 +13,13 @@
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
-        <source>cancelled</source>
-        <target state="translated">отменено</target>
+        <source>canceled</source>
+        <target state="needs-review-translation">отменено</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
-        <source>Cancelling the test session...</source>
-        <target state="translated">Отмена тестового сеанса...</target>
+        <source>Canceling the test session...</source>
+        <target state="needs-review-translation">Отмена тестового сеанса...</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -689,14 +689,14 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occured during byte conversion</source>
-        <target state="translated">При преобразовании байт возникло непредвиденное исключение</target>
+        <source>An unexpected exception occurred during byte conversion</source>
+        <target state="needs-review-translation">При преобразовании байт возникло непредвиденное исключение</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="translated">В "FileLogger.WriteLogToFileAsync" произошло непредвиденное исключение.
+        <target state="needs-review-translation">В "FileLogger.WriteLogToFileAsync" произошло непредвиденное исключение.
 {0}</target>
         <note>{0} exception ToString</note>
       </trans-unit>
