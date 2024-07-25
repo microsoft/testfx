@@ -310,7 +310,8 @@ public class DataRowTests : CLITestBase
             "MethodWithOverload (1)",
             "MethodWithOverload (2)",
             "MethodWithOverload (\"a\")",
-            "MethodWithOverload (\"b\")");
+            "MethodWithOverload (\"b\")",
+            "NullValueOnObjectArray ([null])");
 
         VerifyE2E.TestsFailed(
             testResults,
