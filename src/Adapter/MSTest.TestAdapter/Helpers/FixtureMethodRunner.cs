@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -23,8 +24,24 @@ internal static class FixtureMethodRunner
         // ensures that the execution context is preserved (as we run the action on the current thread).
         if (timeoutInfo is null)
         {
-            action();
-            return null;
+            try
+            {
+                action();
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Exception realException = ex.GetRealException();
+
+                if (realException is OperationCanceledException oce && oce.CancellationToken == cancellationTokenSource.Token)
+                {
+                    return new(
+                        UnitTestOutcome.Timeout,
+                        string.Format(CultureInfo.InvariantCulture, methodCanceledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
+                }
+
+                throw;
+            }
         }
 
         if (timeoutInfo.Value.CooperativeCancellation)
