@@ -245,7 +245,43 @@ public class MSTestSettings
     /// <param name="context">
     /// The discovery context that contains the runsettings.
     /// </param>
-    public static void PopulateSettings(IDiscoveryContext? context, IMessageLogger logger)
+    [Obsolete("this function will be removed in v4.0.0")]
+    public static void PopulateSettings(IDiscoveryContext? context)
+    {
+        RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
+
+        if (context?.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
+        {
+            // This will contain default adapter settings
+            CurrentSettings = new MSTestSettings();
+            return;
+        }
+
+        MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias, null);
+
+        // If a user specifies MSTestV2 in the runsettings, then prefer that over the v1 settings.
+        if (aliasSettings != null)
+        {
+            CurrentSettings = aliasSettings;
+        }
+        else
+        {
+            MSTestSettings? settings = GetSettings(context.RunSettings.SettingsXml, SettingsName, null);
+
+            CurrentSettings = settings ?? new MSTestSettings();
+        }
+
+        SetGlobalSettings(context.RunSettings.SettingsXml, CurrentSettings);
+    }
+
+    /// <summary>
+    /// Populate adapter settings from the context.
+    /// </summary>
+    /// <param name="context">
+    /// <param name="logger"> The logger for messages. </param>
+    /// The discovery context that contains the runsettings.
+    /// </param>
+    internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger logger)
     {
         RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
@@ -294,10 +330,11 @@ public class MSTestSettings
     /// </summary>
     /// <param name="runSettingsXml"> The xml with the settings passed from the test platform. </param>
     /// <param name="settingName"> The name of the adapter settings to fetch - Its either MSTest or MSTestV2. </param>
+    /// <param name="logger"> The logger for messages. </param>
     /// <returns> The settings if found. Null otherwise. </returns>
     internal static MSTestSettings? GetSettings(
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
-        string settingName, IMessageLogger logger)
+        string settingName, IMessageLogger? logger)
     {
         if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
         {
@@ -340,8 +377,9 @@ public class MSTestSettings
     /// Convert the parameter xml to TestSettings.
     /// </summary>
     /// <param name="reader">Reader to load the settings from.</param>
+    /// <param name="logger"> The logger for messages. </param>
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
-    private static MSTestSettings ToSettings(XmlReader reader, IMessageLogger logger)
+    private static MSTestSettings ToSettings(XmlReader reader, IMessageLogger? logger)
     {
         ValidateArg.NotNull(reader, "reader");
 
