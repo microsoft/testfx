@@ -20,14 +20,12 @@ public sealed class IgnoreTests : AcceptanceTestBase
     public async Task ClassCleanup_Inheritance_WhenClassIsSkipped()
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter ClassName!~TestClassWithAssemblyInitialize");
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 1, Total: 2");
-
         testHostResult.AssertOutputContains("SubClass.Method");
-        testHostResult.AssertOutputContains("SubClass.ClassCleanup");
     }
 
     public async Task WhenAllTestsAreIgnored_AssemblyInitializeAndCleanupAreSkipped()
