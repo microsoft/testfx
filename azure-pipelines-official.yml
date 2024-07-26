@@ -64,6 +64,11 @@ variables:
     value: Release
   - name: _Products
     value: ${{parameters.products}}
+  # _SignType and _Sign are required for signing even if not used directly here
+  - name: _SignType
+    value: real
+  - name: _Sign
+    value: True
 
   - ${{ if eq(parameters.isRTM, True) }}:
     - name: _ReleaseVersionKind
