@@ -140,14 +140,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="needs-review-translation">Methoden, die mit [ClassInitialize] gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
-– "öffentlich" sein 
-– "statisch" sein
-– nicht generisch oder für eine generische Klasse definiert sein
-– einen einfachen Parameter vom Typ „TestContext“ annehmen
-– der Rückgabetyp muss "void", "Task" oder "ValueTask" sein
-– nicht "async void" sein
-– keine spezielle Methode sein (Finalizer, Operator...)</target>
+        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">

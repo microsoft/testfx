@@ -140,14 +140,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="needs-review-translation">標示為 [ClassInitialize] 的方法應該遵循下列配置才能有效:
-- 為 'public' 
-- 為 'static'
-- 非為泛型也不是在泛型類別上所定義
-- 接受型別為 'TestContext' 的單一參數
-- 傳回型別應為 'void'、'Task' 或 'ValueTask'
-- 非為 'async void'
-- 非為特殊方法 (完成項、運算子...)。</target>
+        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
