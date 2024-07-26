@@ -231,8 +231,9 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
             "--settings my.runsettings",
             new() { ["TASKDELAY_TESTINIT"] = "1" });
 
-        testHostResult.AssertOutputDoesNotContain("TestInit started");
-        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted");
+        testHostResult.AssertOutputContains("TestInit started");
+        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' was canceled");
+        testHostResult.AssertOutputDoesNotContain("TestInit completed");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -243,8 +244,9 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
             "--settings my.runsettings",
             new() { ["TASKDELAY_TESTCLEANUP"] = "1" });
 
-        testHostResult.AssertOutputDoesNotContain("TestInit started");
-        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted");
+        testHostResult.AssertOutputContains("TestCleanup started");
+        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' was canceled");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup completed");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -255,8 +257,9 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
             "--settings my.runsettings",
             new() { ["TASKDELAY_TESTMETHOD"] = "1" });
 
-        testHostResult.AssertOutputDoesNotContain("TestMethod started");
-        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted");
+        testHostResult.AssertOutputContains("TestMethod started");
+        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted.");
+        testHostResult.AssertOutputDoesNotContain("TestMethod completed");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -323,8 +326,9 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
             "--settings my.runsettings",
             new() { ["CHECKTOKEN_TESTINIT"] = "1" });
 
-        testHostResult.AssertOutputDoesNotContain("TestInit started");
-        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted");
+        testHostResult.AssertOutputContains("TestInit started");
+        testHostResult.AssertOutputDoesNotContain("TestInit completed");
+        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' timed out");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -335,8 +339,9 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
             "--settings my.runsettings",
             new() { ["CHECKTOKEN_TESTCLEANUP"] = "1" });
 
-        testHostResult.AssertOutputDoesNotContain("TestCleanup started");
-        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted");
+        testHostResult.AssertOutputContains("TestCleanup started");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup completed");
+        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' timed out");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -347,8 +352,8 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
             "--settings my.runsettings",
             new() { ["CHECKTOKEN_TESTMETHOD"] = "1" });
 
-        testHostResult.AssertOutputDoesNotContain("TestMethod started");
-        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted");
+        testHostResult.AssertOutputContains("TestMethod started");
+        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted.");
     }
 
     private async Task RunAndAssertTestWasCanceledAsync(string rootFolder, string assetName, string tfm, string envVarPrefix, string entryKind)

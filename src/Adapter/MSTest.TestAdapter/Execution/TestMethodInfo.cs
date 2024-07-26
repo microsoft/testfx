@@ -48,7 +48,7 @@ public class TestMethodInfo : ITestMethod
     /// <summary>
     /// Gets a value indicating whether timeout is set.
     /// </summary>
-    public bool IsTimeoutSet => TestMethodOptions.Timeout != TimeoutWhenNotSet;
+    public bool IsTimeoutSet => TestMethodOptions.TimeoutInfo.Timeout != TimeoutWhenNotSet;
 
     /// <summary>
     /// Gets the reason why the test is not runnable.
@@ -265,6 +265,13 @@ public class TestMethodInfo : ITestMethod
                 {
                     // Expected Exception was thrown, so Pass the test
                     result.Outcome = UTF.UnitTestOutcome.Passed;
+                }
+                else if (realException is OperationCanceledException oce && oce.CancellationToken == TestMethodOptions.TestContext?.Context.CancellationTokenSource.Token)
+                {
+                    result.Outcome = UTF.UnitTestOutcome.Timeout;
+                    result.TestFailureException = new TestFailedException(
+                        ObjectModelUnitTestOutcome.Timeout,
+                        string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName));
                 }
                 else
                 {
@@ -791,6 +798,49 @@ public class TestMethodInfo : ITestMethod
     {
         DebugEx.Assert(IsTimeoutSet, "Timeout should be set");
 
+        if (TestMethodOptions.TimeoutInfo.CooperativeCancellation)
+        {
+            CancellationTokenSource? timeoutTokenSource = null;
+            try
+            {
+                timeoutTokenSource = new(TestMethodOptions.TimeoutInfo.Timeout);
+                timeoutTokenSource.Token.Register(TestMethodOptions.TestContext!.Context.CancellationTokenSource.Cancel);
+                if (timeoutTokenSource.Token.IsCancellationRequested)
+                {
+                    return new()
+                    {
+                        Outcome = UTF.UnitTestOutcome.Timeout,
+                        TestFailureException = new TestFailedException(
+                            ObjectModelUnitTestOutcome.Timeout,
+                            string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName)),
+                    };
+                }
+
+                try
+                {
+                    return ExecuteInternal(arguments);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Ideally we would like to check that the token of the exception matches cancellationTokenSource but TestContext
+                    // instances are not well defined so we have to handle the exception entirely.
+                    return new()
+                    {
+                        Outcome = UTF.UnitTestOutcome.Timeout,
+                        TestFailureException = new TestFailedException(
+                            ObjectModelUnitTestOutcome.Timeout,
+                            timeoutTokenSource.Token.IsCancellationRequested
+                                ? string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName)
+                                : string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName)),
+                    };
+                }
+            }
+            finally
+            {
+                timeoutTokenSource?.Dispose();
+            }
+        }
+
         TestResult? result = null;
         Exception? failure = null;
 
@@ -807,7 +857,7 @@ public class TestMethodInfo : ITestMethod
         }
 
         CancellationToken cancelToken = TestMethodOptions.TestContext!.Context.CancellationTokenSource.Token;
-        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TestMethodOptions.Timeout, cancelToken))
+        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TestMethodOptions.TimeoutInfo.Timeout, cancelToken))
         {
             if (failure != null)
             {
