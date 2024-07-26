@@ -137,8 +137,9 @@
 - take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Чтобы методы, отмеченные [ClassInitialize], были допустимыми, они должны соответствовать следующему макету:
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
+        <target state="needs-review-translation">Чтобы методы, отмеченные [ClassInitialize], были допустимыми, они должны соответствовать следующему макету:
 – должны быть "общедоступными" 
 – должны быть "статическими"
 – не должны быть универсальным и не должны определяться в универсальном классе

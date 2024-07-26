@@ -137,8 +137,9 @@
 - take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">[ClassInitialize] ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gerekir:
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
+        <target state="needs-review-translation">[ClassInitialize] ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gerekir:
 - 'public' olmalı
 - 'static' olmalı
 - genel olamaz veya genel bir sınıf üzerinde tanımlanamaz
