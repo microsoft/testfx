@@ -108,8 +108,9 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">[ClassCleanup] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
+        <target state="needs-review-translation">[ClassCleanup] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
 - 'public' である 
 - 'static' ではありません
 - ジェネリックではなく、ジェネリック クラスでも定義されていない

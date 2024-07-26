@@ -108,8 +108,9 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">I metodi contrassegnati con [ClassCleanup] devono seguire il layout seguente per essere validi:
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
+        <target state="needs-review-translation">I metodi contrassegnati con [ClassCleanup] devono seguire il layout seguente per essere validi:
 - devono essere 'public' 
 - non devono essere 'static'
 - non devono essere generici né definiti in una classe generica
