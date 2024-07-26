@@ -137,8 +137,9 @@
 - take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Les méthodes marquées par [ClassInitialize] doivent respecter le schéma suivant pour être valides : 
+- not be a special method (finalizer, operator...).
+- have an inheritance behavior parameter if the containing class is abstract</source>
+        <target state="needs-review-translation">Les méthodes marquées par [ClassInitialize] doivent respecter le schéma suivant pour être valides : 
 - être « public » 
 - être "statique"
 - ne pas être générique ni être défini sur une classe générique
