@@ -38,7 +38,8 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
         {
             if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute, out INamedTypeSymbol? classInitializeAttributeSymbol)
                 || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext, out INamedTypeSymbol? testContextSymbol)
-                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
+                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol)
+                || !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingInheritanceBehavior, out INamedTypeSymbol? inheritanceBehavior))
             {
                 return;
             }
@@ -48,18 +49,29 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
             bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
             context.RegisterSymbolAction(
-                context => AnalyzeSymbol(context, classInitializeAttributeSymbol, taskSymbol, valueTaskSymbol, testContextSymbol, inheritanceBehaviorSymbol, testClassAttributeSymbol, canDiscoverInternals),
+                context => AnalyzeSymbol(context, classInitializeAttributeSymbol, taskSymbol, valueTaskSymbol, testContextSymbol, inheritanceBehaviorSymbol, testClassAttributeSymbol, canDiscoverInternals, inheritanceBehavior),
                 SymbolKind.Method);
         });
     }
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol classInitializeAttributeSymbol, INamedTypeSymbol? taskSymbol,
         INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol testContextSymbol, INamedTypeSymbol? inheritanceBehaviorSymbol, INamedTypeSymbol testClassAttributeSymbol,
-        bool canDiscoverInternals)
+        bool canDiscoverInternals, INamedTypeSymbol? inheritanceBehavior)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
+        bool hasInheritanceBehavior = false;
+        foreach (AttributeData methodAttribute in methodSymbol.GetAttributes())
+        {
+            if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, classInitializeAttributeSymbol)
+                && methodAttribute.ConstructorArguments.Any(arg => SymbolEqualityComparer.Default.Equals(arg.Type, inheritanceBehavior)))
+            {
+                hasInheritanceBehavior = true;
+            }
+        }
+
         if (methodSymbol.IsClassInitializeMethod(classInitializeAttributeSymbol)
+            && (!methodSymbol.ContainingType.IsAbstract || hasInheritanceBehavior)
             && !methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: true,
                 allowGenericType: methodSymbol.IsInheritanceModeSet(inheritanceBehaviorSymbol, classInitializeAttributeSymbol), testContextSymbol,
                 testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
