@@ -123,6 +123,7 @@ public class TestAssemblyInfo
         // No assembly initialize => nothing to do.
         if (AssemblyInitializeMethod == null)
         {
+            IsAssemblyInitializeExecuted = true;
             return;
         }
 
