@@ -62,6 +62,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">テスト '{0}' は実行タイムアウトを超えました。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="InvalidValue">
+        <source>Invalid Value for '{0}', couldn't parse it.</source>
+        <target state="new">Invalid Value for '{0}', couldn't parse it.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
         <target state="translated">Runsettings エントリ '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' は、Windows OS 以外ではサポートされていません。</target>

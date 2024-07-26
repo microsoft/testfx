@@ -61,6 +61,11 @@ pero recibió {4} argumento(s), con los tipos "{5}".</target>
         <target state="translated">La prueba '{0}' superó el tiempo de espera de ejecución.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="InvalidValue">
+        <source>Invalid Value for '{0}', couldn't parse it.</source>
+        <target state="new">Invalid Value for '{0}', couldn't parse it.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
         <target state="translated">La entrada runsettings "&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;" no se admite en sistemas operativos que no son de Windows.</target>

@@ -407,4 +407,7 @@ Error: {1}</value>
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</value>
   </data>
+  <data name="InvalidValue" xml:space="preserve">
+    <value>Invalid Value for '{0}', couldn't parse it.</value>
+  </data>
 </root>
