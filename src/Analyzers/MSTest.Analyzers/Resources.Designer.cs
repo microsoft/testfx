@@ -243,7 +243,7 @@ namespace MSTest.Analyzers {
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- not be &apos;async void&apos;
         ///- not be a special method (finalizer, operator...)
-        ///- the attribute should have an inheritance behavior parameter if the containing class is abstract..
+        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should be specified if the class is &apos;abstract&apos;..
         /// </summary>
         internal static string ClassInitializeShouldBeValidDescription {
             get {

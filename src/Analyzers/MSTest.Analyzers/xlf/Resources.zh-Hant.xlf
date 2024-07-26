@@ -138,7 +138,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
-- the attribute should have an inheritance behavior parameter if the containing class is abstract.</source>
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
         <target state="needs-review-translation">標示為 [ClassInitialize] 的方法應該遵循下列配置才能有效:
 - 為 'public' 
 - 為 'static'
