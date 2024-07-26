@@ -110,14 +110,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="needs-review-translation">Los métodos marcados con [ClassCleanup] deben seguir el siguiente diseño para ser válidos:
-- ser "public" 
-- no ser "static"
-- no ser genérico ni estar definido en una clase genérica
-- no tomar ningún parámetro
-- el tipo de valor devuelto debería ser "void", "Task" o "ValueTask"
-- no ser "async void"
-- no ser un método especial (finalizador, operador...).</target>
+        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
