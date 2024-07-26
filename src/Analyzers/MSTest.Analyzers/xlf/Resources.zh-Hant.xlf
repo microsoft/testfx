@@ -110,14 +110,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="needs-review-translation">標示為 [ClassCleanup] 的方法應該遵循下列配置才能有效:
-- 為 'public' 
-- 非為 'static'
-- 非為泛型，也不是在泛型類別上所定義
-- 不接受任何參數
-- 傳回型別應為 'void'、'Task' 或 'ValueTask'
-- 非為 'async void'
-- 非為特殊方法 (完成項、運算子...)。</target>
+        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
