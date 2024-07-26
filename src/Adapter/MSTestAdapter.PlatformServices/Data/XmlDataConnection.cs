@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
@@ -96,13 +96,15 @@ internal sealed class XmlDataConnection : TestDataConnection
                 Locale = CultureInfo.CurrentCulture,
             };
             string path = FixPath(_fileName) ?? Path.GetFullPath(_fileName);
+
+            // ReadXmlSchema and ReadXml should use the overload with XmlReader to avoid DTD processing
             if (schemaOnly)
             {
-                dataSet.ReadXmlSchema(path);
+                dataSet.ReadXmlSchema(new XmlTextReader(path));
             }
             else
             {
-                dataSet.ReadXml(path);
+                dataSet.ReadXml(new XmlTextReader(path));
             }
 
             return dataSet;
