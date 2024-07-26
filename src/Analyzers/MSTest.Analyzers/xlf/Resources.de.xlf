@@ -137,8 +137,9 @@
 - take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Methoden, die mit [ClassInitialize] gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
+        <target state="needs-review-translation">Methoden, die mit [ClassInitialize] gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
 – "öffentlich" sein 
 – "statisch" sein
 – nicht generisch oder für eine generische Klasse definiert sein

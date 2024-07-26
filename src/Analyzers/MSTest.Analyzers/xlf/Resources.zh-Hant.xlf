@@ -137,8 +137,9 @@
 - take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">標示為 [ClassInitialize] 的方法應該遵循下列配置才能有效:
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
+        <target state="needs-review-translation">標示為 [ClassInitialize] 的方法應該遵循下列配置才能有效:
 - 為 'public' 
 - 為 'static'
 - 非為泛型也不是在泛型類別上所定義
