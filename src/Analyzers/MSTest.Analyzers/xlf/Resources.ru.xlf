@@ -137,8 +137,8 @@
 - take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).
-- the attribute should have an inheritance behavior parameter if the containing class is abstract</source>
+- not be a special method (finalizer, operator...)
+- the attribute should have an inheritance behavior parameter if the containing class is abstract.</source>
         <target state="needs-review-translation">Чтобы методы, отмеченные [ClassInitialize], были допустимыми, они должны соответствовать следующему макету:
 – должны быть "общедоступными" 
 – должны быть "статическими"

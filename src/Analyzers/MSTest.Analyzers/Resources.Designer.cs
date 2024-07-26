@@ -242,8 +242,8 @@ namespace MSTest.Analyzers {
         ///- take a single parameter of type &apos;TestContext&apos;
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...).
-        ///- the attribute should have an inheritance behavior parameter if the containing class is abstract.
+        ///- not be a special method (finalizer, operator...)
+        ///- the attribute should have an inheritance behavior parameter if the containing class is abstract..
         /// </summary>
         internal static string ClassInitializeShouldBeValidDescription {
             get {

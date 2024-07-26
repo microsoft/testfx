@@ -197,8 +197,8 @@
 - take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).
-- the attribute should have an inheritance behavior parameter if the containing class is abstract</value>
+- not be a special method (finalizer, operator...)
+- the attribute should have an inheritance behavior parameter if the containing class is abstract.</value>
   </data>
   <data name="ClassInitializeShouldBeValidMessageFormat" xml:space="preserve">
     <value>ClassInitialize method '{0}' signature is invalid</value>
