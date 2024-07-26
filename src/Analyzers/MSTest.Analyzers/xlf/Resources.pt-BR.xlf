@@ -138,7 +138,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).
-- have an inheritance behavior parameter if the containing class is abstract</source>
+- the attribute should have an inheritance behavior parameter if the containing class is abstract</source>
         <target state="needs-review-translation">Os métodos marcados com [ClassInitialize] devem seguir o seguinte layout para serem válidos:
 — ser "público" 
 — ser "estático"
