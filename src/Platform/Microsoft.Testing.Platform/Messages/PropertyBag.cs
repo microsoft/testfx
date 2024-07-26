@@ -23,103 +23,14 @@ public sealed partial class PropertyBag
     internal /* for testing */ Property? _property;
 #pragma warning restore SA1401 // Fields should be private
 
-    public PropertyBag()
-    {
-    }
-
-    public PropertyBag(params IProperty[] properties)
-    {
-        ArgumentGuard.IsNotNull(properties);
-
-        if (properties.Length == 0)
-        {
-            return;
-        }
-
-        for (int i = 0; i < properties.Length; i++)
-        {
-            if (properties[i] is TestNodeStateProperty testNodeStateProperty)
-            {
-                if (_testNodeStateProperty is not null)
-                {
-                    ThrowDuplicatedPropertyType(properties[i]);
-                }
-
-                _testNodeStateProperty = testNodeStateProperty;
-            }
-            else
-            {
-                if (_property is null)
-                {
-                    _property = new(properties[i]);
-                }
-                else
-                {
-                    if (_property.Contains(properties[i]))
-                    {
-                        ThrowDuplicatedPropertyInstance(properties[i]);
-                    }
-
-                    _property = new(properties[i], _property);
-                }
-            }
-        }
-    }
-
-    public PropertyBag(IEnumerable<IProperty> properties)
+    internal PropertyBag(IEnumerable<IProperty> properties, TestNodeStateProperty testNodeStateProperty)
     {
         ArgumentGuard.IsNotNull(properties);
 
         foreach (IProperty property in properties)
         {
-            if (property is TestNodeStateProperty testNodeStateProperty)
-            {
-                if (_testNodeStateProperty is not null)
-                {
-                    ThrowDuplicatedPropertyType(property);
-                }
-
-                _testNodeStateProperty = testNodeStateProperty;
-            }
-            else
-            {
-                if (_property is null)
-                {
-                    _property = new(property);
-                }
-                else
-                {
-                    if (_property.Contains(property))
-                    {
-                        ThrowDuplicatedPropertyInstance(property);
-                    }
-
-                    _property = new(property, _property);
-                }
-            }
-        }
-    }
-
-    public int Count => _property is null
-        ? _testNodeStateProperty is null ? 0 : 1
-        : _property.Count + (_testNodeStateProperty is not null ? 1 : 0);
-
-    public void Add(IProperty property)
-    {
-        ArgumentGuard.IsNotNull(property);
-
-        // Optimized access to the TestNodeStateProperty, it's one of the most used property.
-        if (property is TestNodeStateProperty testNodeStateProperty)
-        {
-            if (_testNodeStateProperty is not null)
-            {
-                ThrowDuplicatedPropertyType(property);
-            }
-
             _testNodeStateProperty = testNodeStateProperty;
-        }
-        else
-        {
+
             if (_property is null)
             {
                 _property = new(property);
@@ -135,6 +46,10 @@ public sealed partial class PropertyBag
             }
         }
     }
+
+    public int Count => _property is null
+        ? _testNodeStateProperty is null ? 0 : 1
+        : _property.Count + (_testNodeStateProperty is not null ? 1 : 0);
 
     public bool Any<TProperty>()
         where TProperty : IProperty

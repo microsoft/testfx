@@ -7,11 +7,18 @@ namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 public class TestNode
 {
-    public required TestNodeUid Uid { get; init; }
+    internal TestNode(TestNodeUid uid, string displayName, PropertyBag properties)
+    {
+        Uid = uid;
+        DisplayName = displayName;
+        Properties = properties;
+    }
 
-    public required string DisplayName { get; init; }
+    public TestNodeUid Uid { get; }
 
-    public PropertyBag Properties { get; init; } = new();
+    public string DisplayName { get; }
+
+    public PropertyBag Properties { get; }
 
     public override string ToString()
     {
