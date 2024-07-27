@@ -44,7 +44,7 @@ internal sealed class TestCaseFilterExpression : ITestCaseFilterExpression
     public string[]? ValidForProperties(IEnumerable<string>? supportedProperties, Func<string, TestProperty?> propertyProvider)
     {
         string[]? invalidProperties = null;
-        if (_filterWrapper != null && _validForMatch)
+        if (_validForMatch)
         {
             invalidProperties = _filterWrapper.ValidForProperties(supportedProperties, propertyProvider);
         }
@@ -62,12 +62,6 @@ internal sealed class TestCaseFilterExpression : ITestCaseFilterExpression
 
         if (!_validForMatch)
         {
-            return false;
-        }
-
-        if (_filterWrapper == null)
-        {
-            // can be null when parsing error occurs. Invalid filter results in no match.
             return false;
         }
 
