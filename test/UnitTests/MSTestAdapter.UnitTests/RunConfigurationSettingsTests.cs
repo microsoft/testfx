@@ -19,7 +19,6 @@ public class RunConfigurationSettingsTests : TestContainer
     private readonly Mock<IRunSettings> _mockRunSettings;
     private readonly Mock<IMessageLogger> _mockMessageLogger;
 
-
     public RunConfigurationSettingsTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
@@ -92,7 +91,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultConfigurationSettingsWhenDiscoveryContextIsNull()
     {
-        MSTestSettings.PopulateSettings((IDiscoveryContext)null, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Verify(settings.CollectSourceInformation);
