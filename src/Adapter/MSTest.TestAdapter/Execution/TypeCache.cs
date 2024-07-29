@@ -297,7 +297,7 @@ internal class TypeCache : MarshalByRefObject
 
         // List holding the instance of the initialize/cleanup methods
         // to be passed into the tuples' queue  when updating the class info.
-        var initAndCleanupMethods = new MethodInfo[2];
+        var initAndCleanupMethods = new MethodInfo?[2];
 
         // List of instance methods present in the type as well its base type
         // which is used to decide whether TestInitialize/TestCleanup methods
@@ -533,14 +533,35 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="initAndCleanupMethods"> An array with the Initialize and Cleanup Methods Info. </param>
     private static void UpdateInfoWithInitializeAndCleanupMethods(
         TestClassInfo classInfo,
-        ref MethodInfo[] initAndCleanupMethods)
+        ref MethodInfo?[] initAndCleanupMethods)
     {
-        if (initAndCleanupMethods.Any(x => x != null))
+        DebugEx.Assert(initAndCleanupMethods.Length == 2, "initAndCleanupMethods.Length == 2");
+
+        MethodInfo? initMethod = initAndCleanupMethods[0];
+        MethodInfo? cleanupMethod = initAndCleanupMethods[1];
+
+        if (initMethod is not null)
         {
+            classInfo.BaseClassInitMethods.Add(initMethod);
+        }
+
+        if (cleanupMethod is not null)
+        {
+            classInfo.BaseClassCleanupMethods.Add(cleanupMethod);
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            classInfo.BaseClassCleanupMethodsStack.Push(cleanupMethod);
+#pragma warning restore CS0618 // Type or member is obsolete
+        }
+
+        if (initMethod is not null || cleanupMethod is not null)
+        {
+#pragma warning disable CS0618 // Type or member is obsolete - kept in case someone is using it
             classInfo.BaseClassInitAndCleanupMethods.Enqueue(
-                    new Tuple<MethodInfo?, MethodInfo?>(
-                        initAndCleanupMethods.FirstOrDefault(),
-                        initAndCleanupMethods.LastOrDefault()));
+                new Tuple<MethodInfo?, MethodInfo?>(
+                    initMethod,
+                    initAndCleanupMethods.LastOrDefault()));
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         initAndCleanupMethods = new MethodInfo[2];
@@ -557,7 +578,7 @@ internal class TypeCache : MarshalByRefObject
         TestClassInfo classInfo,
         MethodInfo methodInfo,
         bool isBase,
-        ref MethodInfo[] initAndCleanupMethods)
+        ref MethodInfo?[] initAndCleanupMethods)
     {
         bool isInitializeMethod = IsAssemblyOrClassInitializeMethod<ClassInitializeAttribute>(methodInfo);
         bool isCleanupMethod = IsAssemblyOrClassCleanupMethod<ClassCleanupAttribute>(methodInfo);
