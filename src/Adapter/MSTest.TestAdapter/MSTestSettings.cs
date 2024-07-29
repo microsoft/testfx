@@ -429,7 +429,7 @@ public class MSTestSettings
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "CaptureDebugTraces"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "CaptureTraceOutput"));
                             }
 
                             break;
@@ -530,7 +530,7 @@ public class MSTestSettings
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "TestSettingsFile"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "SettingsFile"));
                             }
 
                             break;
