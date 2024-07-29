@@ -60,6 +60,7 @@ public class TestExecutionManagerTests : TestContainer
         _runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression((p) => true));
         _frameworkHandle = new TestableFrameworkHandle();
         _cancellationToken = new TestRunCancellationToken();
+        _mockMessageLogger = new Mock<IMessageLogger>();
 
         _testExecutionManager = new TestExecutionManager(
             new EnvironmentWrapper(),

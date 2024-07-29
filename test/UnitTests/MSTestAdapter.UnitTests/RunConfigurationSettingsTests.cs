@@ -25,6 +25,8 @@ public class RunConfigurationSettingsTests : TestContainer
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         _mockDiscoveryContext = new Mock<IDiscoveryContext>();
         _mockRunSettings = new Mock<IRunSettings>();
+        _mockMessageLogger = new Mock<IMessageLogger>();
+
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
