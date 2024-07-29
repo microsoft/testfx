@@ -110,15 +110,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</target>
+        <target state="translated">Metody oznaczone za pomocą [ClassCleanup] powinny być zgodne z następującym układem, aby były prawidłowe:
+— być „publiczne” 
+— nie być „statyczne”
+— nie być ogólne ani zdefiniowane w klasie ogólnej
+— nie przyjmować żadnego parametru
+— zwracany typ powinien mieć wartość „void”, „Taks” lub „ValueTask”
+— nie być „async void”
+— powinna to być metoda specjalna (finalizator, operator...)
+—Parametr atrybutu „InheritanceBehavior.BeforeEachDerivedClass” powinien być określony, jeśli klasa ma wartość „abstract”.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -141,15 +141,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</target>
+        <target state="translated">Metody oznaczone za pomocą [ClassInitialize] powinny być zgodne z następującym układem, aby były prawidłowe:
+— być „publiczne” 
+— być „statyczne”
+— nie być ogólne ani być zdefiniowane w klasie ogólnej
+— przyjmować pojedynczy parametr typu „TestContext”
+— zwracany typ powinien mieć wartość „void”, „Taks” lub „ValueTask”
+— nie być „async void”
+— powinna to być metoda specjalna (finalizator, operator...)
+—Parametr atrybutu „InheritanceBehavior.BeforeEachDerivedClass” powinien być określony, jeśli klasa ma wartość „abstract”.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -320,17 +320,17 @@
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
         <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
-        <target state="new">Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</target>
+        <target state="translated">Bez użycia elementu „ClassCleanupBehavior.EndOfClass” element „[ClassCleanup]” będzie domyślnie uruchamiany na końcu zestawu, a nie na końcu klasy.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
         <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="new">Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</target>
+        <target state="translated">Użyj elementu „ClassCleanupBehavior.EndOfClass” z elementem „[ClassCleanup]”</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassTitle">
         <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="new">Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</target>
+        <target state="translated">Użyj elementu „ClassCleanupBehavior.EndOfClass” z elementem „[ClassCleanup]”</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
