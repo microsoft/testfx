@@ -90,6 +90,39 @@ public class MSTestSettingsTests : TestContainer
         Verify(adapterSettings.MapInconclusiveToFailed);
     }
 
+    public void RunSettings_WithInvalidValues_GettingAWarningForEachInvalidSetting()
+    {
+        string runSettingxml =
+            """
+            <RunSettings>
+                <MSTestV2>
+                    <CooperativeCancellationTimeout>3</CooperativeCancellationTimeout>
+                    <ConsiderFixturesAsSpecialTests>3</ConsiderFixturesAsSpecialTests>
+                    <TestCleanupTimeout>timeout</TestCleanupTimeout>
+                    <TestInitializeTimeout>timeout</TestInitializeTimeout>
+                    <ClassCleanupTimeout>timeout</ClassCleanupTimeout>
+                    <ClassInitializeTimeout>timeout</ClassInitializeTimeout>
+                    <AssemblyInitializeTimeout>timeout</AssemblyInitializeTimeout>
+                    <ConsiderEmptyDataSourceAsInconclusive>3</ConsiderEmptyDataSourceAsInconclusive>
+                    <AssemblyCleanupTimeout>timeout</AssemblyCleanupTimeout>
+                    <SettingsFile></SettingsFile>
+                    <CaptureTraceOutput>3</CaptureTraceOutput>
+                    <MapInconclusiveToFailed>3</MapInconclusiveToFailed>
+                    <MapNotRunnableToFailed>3</MapNotRunnableToFailed>
+                    <TreatDiscoveryWarningsAsErrors>3</TreatDiscoveryWarningsAsErrors>
+                    <EnableBaseClassTestMethodsFromOtherAssemblies>3</EnableBaseClassTestMethodsFromOtherAssemblies>
+                    <TestTimeout>timeout</TestTimeout>
+                    <TreatClassAndAssemblyCleanupWarningsAsErrors>3</TreatClassAndAssemblyCleanupWarningsAsErrors>
+                    <ForcedLegacyMode>3</ForcedLegacyMode>
+               </MSTestV2>
+            </RunSettings>
+            """;
+
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(18));
+    }
+
     public void MapNotRunnableToFailedShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
