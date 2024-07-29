@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
@@ -16,6 +17,8 @@ public class RunConfigurationSettingsTests : TestContainer
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
     private readonly Mock<IDiscoveryContext> _mockDiscoveryContext;
     private readonly Mock<IRunSettings> _mockRunSettings;
+    private readonly Mock<IMessageLogger> _mockMessageLogger;
+
 
     public RunConfigurationSettingsTests()
     {
@@ -87,7 +90,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultConfigurationSettingsWhenDiscoveryContextIsNull()
     {
-        MSTestSettings.PopulateSettings((IDiscoveryContext)null);
+        MSTestSettings.PopulateSettings((IDiscoveryContext)null, _mockMessageLogger.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Verify(settings.CollectSourceInformation);
@@ -95,7 +98,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
     {
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Verify(settings.CollectSourceInformation);
@@ -104,7 +107,7 @@ public class RunConfigurationSettingsTests : TestContainer
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
     {
         _mockDiscoveryContext.Setup(md => md.RunSettings.SettingsXml).Returns(string.Empty);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Verify(settings.CollectSourceInformation);
@@ -123,7 +126,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Verify(settings is not null);
@@ -146,7 +149,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Verify(settings is not null);
