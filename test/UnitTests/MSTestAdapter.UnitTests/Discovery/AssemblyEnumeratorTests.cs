@@ -70,7 +70,6 @@ public class AssemblyEnumeratorTests : TestContainer
                 }
             });
         var mockMessageLogger = new Mock<IMessageLogger>();
-
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, mockMessageLogger.Object);
         var assemblyEnumerator = new AssemblyEnumerator(adapterSettings)
         {
