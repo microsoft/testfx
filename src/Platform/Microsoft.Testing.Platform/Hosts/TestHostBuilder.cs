@@ -380,7 +380,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AddServices(testApplicationLifecycleCallback);
 
         // ServerMode and Console mode uses different host
-        if (commandLineHandler.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey))
+        if (commandLineHandler.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && !TestHostBuilder.HasDotnetTestServerOption(commandLineHandler))
         {
             // Build the server mode with the user preferences
             IMessageHandlerFactory messageHandlerFactory = ((ServerModeManager)ServerMode).Build(serviceProvider);
@@ -480,9 +480,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // If we are in server mode and the pipe name is provided
         // then, we need to connect to the pipe server.
-        if (commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
-            serverArgs.Length == 1 &&
-            serverArgs[0].Equals(ServerOptionValue, StringComparison.Ordinal) &&
+        if (HasDotnetTestServerOption(commandLineHandler) &&
             commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
         {
             namedPipeClient = new(arguments[0]);
@@ -493,6 +491,11 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         return namedPipeClient;
     }
+
+    private static bool HasDotnetTestServerOption(CommandLineHandler commandLineHandler) =>
+        commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
+        serverArgs.Length == 1 &&
+        serverArgs[0].Equals(ServerOptionValue, StringComparison.Ordinal);
 
     private static async Task<NamedPipeClient?> ConnectToTestHostProcessMonitorIfAvailableAsync(
         IProcessHandler processHandler,
@@ -604,7 +607,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         DotnetTestDataConsumer? dotnetTestDataConsumer = null;
         if (testFrameworkBuilderData.DotnetTestPipeClient is not null)
         {
-            dotnetTestDataConsumer = new DotnetTestDataConsumer(testFrameworkBuilderData.DotnetTestPipeClient);
+            dotnetTestDataConsumer = new DotnetTestDataConsumer(testFrameworkBuilderData.DotnetTestPipeClient, _testApplicationModuleInfo);
         }
 
         // Build and register "common non special" services - we need special treatment because extensions can start to log during the

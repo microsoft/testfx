@@ -13,7 +13,12 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
  * TestHostProcessPIDRequestSerializer: 2
  * CommandLineOptionMessagesSerializer: 3
  * ModuleSerializer: 4
+ * SuccessfulTestResultMessageSerializer: 5
+ * FailedTestResultMessageSerializer: 6
+ * FileArtifactInfoSerializer: 7
+ * SessionEventSerializer: 8
 */
+
 internal static class RegisterSerializers
 {
     public static void RegisterAllSerializers(this NamedPipeBase namedPipeBase)
@@ -22,5 +27,9 @@ internal static class RegisterSerializers
         namedPipeBase.RegisterSerializer(new TestHostProcessExitRequestSerializer(), typeof(TestHostProcessExitRequest));
         namedPipeBase.RegisterSerializer(new TestHostProcessPIDRequestSerializer(), typeof(TestHostProcessPIDRequest));
         namedPipeBase.RegisterSerializer(new CommandLineOptionMessagesSerializer(), typeof(CommandLineOptionMessages));
+        namedPipeBase.RegisterSerializer(new SuccessfulTestResultMessageSerializer(), typeof(SuccessfulTestResultMessage));
+        namedPipeBase.RegisterSerializer(new FailedTestResultMessageSerializer(), typeof(FailedTestResultMessage));
+        namedPipeBase.RegisterSerializer(new FileArtifactInfoSerializer(), typeof(FileArtifactInfo));
+        namedPipeBase.RegisterSerializer(new TestSessionEventSerializer(), typeof(TestSessionEvent));
     }
 }
