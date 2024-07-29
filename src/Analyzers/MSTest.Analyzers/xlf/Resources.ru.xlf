@@ -108,15 +108,17 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
         <target state="translated">Чтобы методы, отмеченные [ClassCleanup], были допустимыми, они должны соответствовать следующему макету:
 – должны быть "общедоступными" 
 – не должны быть "статическими"
-– не должны быть универсальным и не должны определяться в универсальном классе
+– не должны быть универсальными и не должны определяться в универсальном классе
 – не должны принимать никаких параметров
 – тип возвращаемого значения должен быть "void", "Task" или "ValueTask"
 – не должны быть асинхронными и не возвращающими значения ("async void")
-– не должны быть специальными методом (метод завершения, оператор...).</target>
+– не должны быть специальными методом (метод завершения, оператор...)
+– должен быть указан параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass", если класс является "абстрактным".</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -139,14 +141,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="needs-review-translation">Чтобы методы, отмеченные [ClassInitialize], были допустимыми, они должны соответствовать следующему макету:
+        <target state="translated">Чтобы методы, отмеченные [ClassInitialize], были допустимыми, они должны соответствовать следующему макету:
 – должны быть "общедоступными" 
 – должны быть "статическими"
-– не должны быть универсальным и не должны определяться в универсальном классе
+– не должны быть универсальными и не должны определяться в универсальном классе
 – должны принимать один параметр типа "TestContext"
 – тип возвращаемого значения должен быть "void", "Task" или "ValueTask"
 – не должны быть асинхронными и не возвращающими значения ("async void")
-– не должны быть специальными методом (метод завершения, оператор...).</target>
+– не должны быть специальными методом (метод завершения, оператор...)
+– должен быть указан параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass", если класс является "абстрактным".</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">

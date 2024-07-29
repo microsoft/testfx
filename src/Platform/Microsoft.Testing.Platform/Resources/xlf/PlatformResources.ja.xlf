@@ -14,12 +14,12 @@
       </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>canceled</source>
-        <target state="new">canceled</target>
+        <target state="translated">キャンセルされました</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
-        <target state="new">Canceling the test session...</target>
+        <target state="translated">テスト セッションを取り消しています...</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -691,13 +691,13 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
         <source>An unexpected exception occurred during byte conversion</source>
-        <target state="new">An unexpected exception occurred during byte conversion</target>
+        <target state="translated">バイト変換中に予期しない例外が発生しました</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="new">An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
+        <target state="translated">'FileLogger.WriteLogToFileAsync' で予期しない例外が発生しました。
 {0}</target>
         <note>{0} exception ToString</note>
       </trans-unit>

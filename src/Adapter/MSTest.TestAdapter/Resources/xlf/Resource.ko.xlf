@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
         <source>Assembly cleanup method '{0}.{1}' was canceled</source>
-        <target state="new">Assembly cleanup method '{0}.{1}' was canceled</target>
+        <target state="translated">어셈블리 정리 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
         <source>Assembly initialize method '{0}.{1}' was canceled</source>
-        <target state="new">Assembly initialize method '{0}.{1}' was canceled</target>
+        <target state="translated">어셈블리 초기화 메서드 '{0}.{1}'(이)가 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRunTestArgumentsMismatchError">
@@ -43,7 +43,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
         <source>Class cleanup method '{0}.{1}' was canceled</source>
-        <target state="new">Class cleanup method '{0}.{1}' was canceled</target>
+        <target state="translated">클래스 정리 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
@@ -53,7 +53,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
         <source>Class initialize method '{0}.{1}' was canceled</source>
-        <target state="new">Class initialize method '{0}.{1}' was canceled</target>
+        <target state="translated">'클래스 초기화 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
@@ -83,7 +83,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
         <source>Test cleanup method '{0}.{1}' was canceled</source>
-        <target state="new">Test cleanup method '{0}.{1}' was canceled</target>
+        <target state="translated">테스트 정리 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeTimedOut">
@@ -93,7 +93,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
         <source>Test initialize method '{0}.{1}' was canceled</source>
-        <target state="new">Test initialize method '{0}.{1}' was canceled</target>
+        <target state="translated">테스트 초기화 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">

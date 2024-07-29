@@ -109,16 +109,17 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Aby byly metody s označením [ClassCleanup] platné, musí se řídit následujícím rozložením: 
-.
-– být „public“
-– nesmí být „static“
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
+        <target state="translated">Aby byly metody s označením [ClassCleanup] platné, musí se řídit následujícím rozložením:
+– mít hodnotu public 
+– nesmí mít hodnotu static
 – nesmí být obecné ani definované pro obecnou třídu
 – nesmí přijímat žádné parametry
-– návratový typ musí být void, Task nebo ValueTask,
-– nesmí být „async void“
-– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
+– návratový typ musí být void, Task nebo ValueTask
+– nesmí mít hodnotu async void
+– nesmí se jednat o speciální metodu (finalizační metoda, operátor…)
+– pokud je třída abstract, měl by být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -141,14 +142,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="needs-review-translation">Aby byly metody s označením [ClassInitialize] platné, musí se řídit následujícím rozložením: 
-– být „public“
-– být „static“
+        <target state="translated">Aby byly metody s označením [ClassInitialize] platné, musí se řídit následujícím rozložením:
+– mít hodnotu public 
+– mít hodnotu static
 – nesmí být obecné ani definované pro obecnou třídu
 – převzít jeden parametr typu TestContext
-– návratový typ musí být void, Task nebo ValueTask,
-– nesmí být „async void“
-– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
+– návratový typ musí být void, Task nebo ValueTask
+– nesmí mít hodnotu async void
+– nesmí se jednat o speciální metodu (finalizační metoda, operátor…)
+– pokud je třída abstract, měl by být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">

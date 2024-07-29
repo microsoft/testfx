@@ -108,15 +108,17 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
         <target state="translated">[ClassCleanup] ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gerekir:
 - 'public' olmalı
 - 'static' olamaz
 - genel olamaz veya genel bir sınıf üzerinde tanımlanamaz
 - herhangi bir parametre alamaz
-- dönüş türü 'void', 'Task' veya 'ValueTask' olmalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
 - 'async void' olamaz
-- özel bir yöntem (sonlandırıcı, işleç...) olamaz.</target>
+- özel bir yöntem (sonlandırıcı, işleç...) olamaz
+Sınıf 'abstract' ise -'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -139,14 +141,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="needs-review-translation">[ClassInitialize] ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gerekir:
+        <target state="translated">[ClassInitialize] ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gerekir:
 - 'public' olmalı
 - 'static' olmalı
 - genel olamaz veya genel bir sınıf üzerinde tanımlanamaz
 - 'TestContext' türünde tek bir parametre almalıdır
-- dönüş türü 'void', 'Task' veya 'ValueTask' olmalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
 - 'async void' olamaz
-- özel bir yöntem (sonlandırıcı, işleç...) olamaz.</target>
+- özel bir yöntem (sonlandırıcı, işleç...) olamaz
+Sınıf 'abstract' ise -'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">

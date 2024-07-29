@@ -14,12 +14,12 @@
       </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>canceled</source>
-        <target state="new">canceled</target>
+        <target state="translated">已取消</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
-        <target state="new">Canceling the test session...</target>
+        <target state="translated">正在取消測試工作階段...</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -690,13 +690,13 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
         <source>An unexpected exception occurred during byte conversion</source>
-        <target state="new">An unexpected exception occurred during byte conversion</target>
+        <target state="translated">位元組轉換期間發生未預期的例外狀況</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="new">An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
+        <target state="translated">'FileLogger.WriteLogToFileAsync' 發生未預期的例外狀況。
 {0}</target>
         <note>{0} exception ToString</note>
       </trans-unit>
