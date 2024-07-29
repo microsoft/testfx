@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Xml;
@@ -54,7 +54,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(!adapterSettings.MapInconclusiveToFailed);
     }
@@ -69,7 +69,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.MapNotRunnableToFailed);
     }
@@ -85,7 +85,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.MapInconclusiveToFailed);
     }
@@ -101,7 +101,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.MapNotRunnableToFailed);
     }
@@ -116,7 +116,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
 
         Verify(!adapterSettings.ForcedLegacyMode);
     }
@@ -132,7 +132,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
 
         Verify(adapterSettings.ForcedLegacyMode);
     }
@@ -147,7 +147,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
 
         Verify(adapterSettings.TestSettingsFile is null);
     }
@@ -163,7 +163,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
 
         Verify(adapterSettings.TestSettingsFile is not null);
     }
@@ -178,7 +178,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
     }
@@ -194,7 +194,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
     }
@@ -209,7 +209,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.CaptureDebugTraces);
     }
@@ -225,7 +225,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(!adapterSettings.CaptureDebugTraces);
     }
@@ -241,7 +241,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.TestTimeout == 4000);
     }
@@ -256,7 +256,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.TestTimeout == 0);
     }
@@ -271,7 +271,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(!adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
     }
@@ -287,7 +287,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
     }
@@ -302,7 +302,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(!adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
@@ -318,7 +318,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
@@ -333,7 +333,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(!adapterSettings.ParallelizationWorkers.HasValue);
         Verify(!adapterSettings.ParallelizationScope.HasValue);
@@ -352,7 +352,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
 
         Verify(exception is not null);
         Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
@@ -372,7 +372,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
 
         Verify(exception is not null);
         Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
@@ -392,7 +392,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.ParallelizationWorkers == 2);
     }
@@ -410,7 +410,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
     }
@@ -427,7 +427,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
         Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.ClassLevel);
@@ -444,7 +444,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
         Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.ClassLevel);
@@ -464,7 +464,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.ParallelizationWorkers == 127);
         Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.MethodLevel);
@@ -483,7 +483,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
 
         Verify(exception is not null);
         Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
@@ -503,7 +503,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.MethodLevel);
     }
@@ -521,7 +521,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
 
         Verify(exception is not null);
         Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
@@ -541,7 +541,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.TestSettingsFile is not null);
     }
@@ -561,7 +561,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.TestSettingsFile is not null);
         Verify(adapterSettings.ParallelizationWorkers == 127);
@@ -580,7 +580,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.TestSettingsFile is not null);
     }
@@ -595,7 +595,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         Verify(!MSTestSettings.CurrentSettings.DisableParallelization);
     }
@@ -613,7 +613,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         Verify(MSTestSettings.CurrentSettings.DisableParallelization);
     }
@@ -643,7 +643,7 @@ public class MSTestSettingsTests : TestContainer
                 }
             });
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
         _testablePlatformServiceProvider.MockSettingsProvider.Verify(sp => sp.Load(It.IsAny<XmlReader>()), Times.Once);
     }
 
@@ -672,7 +672,7 @@ public class MSTestSettingsTests : TestContainer
                 }
             });
 
-        MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
         Verify(expectedrunSettingxml == observedxml);
     }
 
@@ -722,7 +722,7 @@ public class MSTestSettingsTests : TestContainer
                 }
             });
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
 
         // Assert.
         Verify(dummyPlatformSpecificSetting);
@@ -780,7 +780,7 @@ public class MSTestSettingsTests : TestContainer
                 }
             });
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
 
         // Assert.
         Verify(dummyPlatformSpecificSetting);
@@ -834,7 +834,7 @@ public class MSTestSettingsTests : TestContainer
                 }
             });
 
-        MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
 
         // Assert.
         Verify(!outOfScopeCall);
@@ -892,7 +892,7 @@ public class MSTestSettingsTests : TestContainer
                 }
             });
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
 
         // Assert.
         Verify(dummyPlatformSpecificSetting);
@@ -930,7 +930,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         MSTestSettings adapterSettings2 = MSTestSettings.CurrentSettings;
@@ -962,7 +962,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        var settings = MSTestSettings.GetSettings(runsettingsXml, MSTestSettings.SettingsName);
+        var settings = MSTestSettings.GetSettings(runsettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
 
         MSTestSettings.PopulateSettings(settings);
 
@@ -977,7 +977,7 @@ public class MSTestSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultAdapterSettingsWhenDiscoveryContextIsNull()
     {
-        MSTestSettings.PopulateSettings((IDiscoveryContext)null);
+        MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         Verify(adapterSettings.CaptureDebugTraces);
@@ -989,7 +989,7 @@ public class MSTestSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
     {
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         Verify(adapterSettings.CaptureDebugTraces);
@@ -1002,7 +1002,7 @@ public class MSTestSettingsTests : TestContainer
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
     {
         _mockDiscoveryContext.Setup(md => md.RunSettings.SettingsXml).Returns(string.Empty);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         Verify(adapterSettings.CaptureDebugTraces);
@@ -1025,7 +1025,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1052,7 +1052,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1082,7 +1082,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1115,7 +1115,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1135,7 +1135,7 @@ public class MSTestSettingsTests : TestContainer
 
     public void IsLegacyScenarioReturnsFalseWhenDiscoveryContextIsNull()
     {
-        MSTestSettings.PopulateSettings((IDiscoveryContext)null);
+        MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object);
         Verify(!MSTestSettings.IsLegacyScenario(null));
     }
 
@@ -1152,7 +1152,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
         Verify(!MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object));
     }
 
@@ -1168,7 +1168,7 @@ public class MSTestSettingsTests : TestContainer
             """;
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
         Verify(!MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object));
     }
 
@@ -1184,7 +1184,7 @@ public class MSTestSettingsTests : TestContainer
             """;
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
         Verify(MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object));
     }
 
@@ -1200,7 +1200,7 @@ public class MSTestSettingsTests : TestContainer
             """;
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
         Verify(MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object));
         _mockMessageLogger.Verify(logger => logger.SendMessage(TestMessageLevel.Warning, Resource.LegacyScenariosNotSupportedWarning), Times.Once);
     }
