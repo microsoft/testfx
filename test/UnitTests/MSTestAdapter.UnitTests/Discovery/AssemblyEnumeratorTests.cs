@@ -12,6 +12,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
@@ -68,8 +69,9 @@ public class AssemblyEnumeratorTests : TestContainer
                     actualReader.ReadInnerXml();
                 }
             });
+        var mockMessageLogger = new Mock<IMessageLogger>();
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, mockMessageLogger.Object);
         var assemblyEnumerator = new AssemblyEnumerator(adapterSettings)
         {
             RunSettingsXml = runSettingsXml,
