@@ -60,11 +60,6 @@ internal sealed class TestCaseFilterExpression : ITestCaseFilterExpression
         ValidateArg.NotNull(testCase, nameof(testCase));
         ValidateArg.NotNull(propertyValueProvider, nameof(propertyValueProvider));
 
-        if (!_validForMatch)
-        {
-            return false;
-        }
-
-        return _filterWrapper.Evaluate(propertyValueProvider);
+        return _validForMatch && _filterWrapper.Evaluate(propertyValueProvider);
     }
 }
