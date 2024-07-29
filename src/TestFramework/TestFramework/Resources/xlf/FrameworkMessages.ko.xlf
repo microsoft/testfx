@@ -230,7 +230,7 @@
       </trans-unit>
       <trans-unit id="NoExceptionThrown">
         <source>Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</source>
-        <target state="needs-review-translation">{1} 예외를 예상했지만 예외가 throw되지 않았습니다. {0}</target>
+        <target state="new">Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="WrongExceptionThrown">
