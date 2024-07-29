@@ -110,15 +110,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</target>
+        <target state="translated">Os métodos marcados com [ClassCleanup] devem seguir o seguinte layout para serem válidos:
+- ser 'público' 
+- não ser 'estático'
+- não ser genérico nem definido em uma classe genérica
+- não aceitar nenhum parâmetro
+- o tipo de retorno deve ser 'nulo', 'Tarefa' ou 'ValueTask'
+- não ser 'nulo assíncrono'
+- não ser um método especial (finalizador, operador...)
+-O parâmetro de atributo 'InheritanceBehavior.BeforeEachDerivedClass' deve ser especificado se a classe for 'abstrata'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -141,15 +141,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</target>
+        <target state="translated">Os métodos marcados com [ClassInitialize] devem seguir o seguinte layout para serem válidos:
+- ser 'público' 
+- ser 'estático'
+- não ser genérico nem ser definido em uma classe genérica
+- aceitar um único parâmetro do tipo 'TestContext'
+- o tipo de retorno deve ser 'nulo', 'Tarefa' ou 'ValueTask'
+- não ser 'nulo assíncrono'
+- não ser um método especial (finalizador, operador...)
+-O parâmetro de atributo 'InheritanceBehavior.BeforeEachDerivedClass' deve ser especificado se a classe for 'abstrata'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">

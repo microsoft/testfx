@@ -320,17 +320,17 @@
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
         <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
-        <target state="new">Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</target>
+        <target state="translated">如不使用 'ClassCleanupBehavior.EndOfClass'，則預設會在組件結尾執行 '[ClassCleanup]'，而非在類別的結尾執行。</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
         <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="new">Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</target>
+        <target state="translated">搭配使用 'ClassCleanupBehavior.EndOfClass' 和 '[ClassCleanup]'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassTitle">
         <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="new">Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</target>
+        <target state="translated">搭配使用 'ClassCleanupBehavior.EndOfClass' 和 '[ClassCleanup]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
