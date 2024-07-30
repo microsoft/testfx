@@ -35,3 +35,20 @@ public interface ITestDataSource
     /// </returns>
     string? GetDisplayName(MethodInfo methodInfo, object?[]? data);
 }
+
+internal interface IInternalTestDataSource : ITestDataSource
+{
+    /// <summary>
+    /// Gets the display name corresponding to test data row for displaying in TestResults.
+    /// </summary>
+    /// <param name="methodInfo">
+    /// The method info of test method.
+    /// </param>
+    /// <param name="data">
+    /// The test data which is passed to test method.
+    /// </param>
+    /// <returns>
+    /// The <see cref="string"/>.
+    /// </returns>
+    string? GetDisplayName(MethodInfo methodInfo, object?[]? data, string? testMethodDisplayName);
+}

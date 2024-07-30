@@ -369,7 +369,9 @@ internal class TestMethodRunner
             string? displayName = _test.Name;
             if (testDataSource != null)
             {
-                displayName = testDataSource.GetDisplayName(_testMethodInfo.MethodInfo, data);
+                displayName = testDataSource is IInternalTestDataSource newDataSource
+                    ? newDataSource.GetDisplayName(_testMethodInfo.MethodInfo, data, _test.DisplayName)
+                    : testDataSource.GetDisplayName(_testMethodInfo.MethodInfo, data);
             }
             else if (hasDisplayName)
             {

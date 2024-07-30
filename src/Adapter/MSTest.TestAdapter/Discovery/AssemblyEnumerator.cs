@@ -425,7 +425,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 UnitTestElement discoveredTest = test.Clone();
                 // Make the test not data driven, because it had no data.
                 discoveredTest.TestMethod.DataType = DynamicDataType.None;
-                discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
+                discoveredTest.DisplayName = dataSource is IInternalTestDataSource newDataSource
+                    ? newDataSource.GetDisplayName(methodInfo, null, test.DisplayName)
+                    : dataSource.GetDisplayName(methodInfo, null);
+                discoveredTest.DisplayName ??= test.DisplayName;
+
                 tests.Add(discoveredTest);
                 continue;
             }
@@ -437,7 +441,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
             foreach (object?[] d in data)
             {
                 UnitTestElement discoveredTest = test.Clone();
-                discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+                discoveredTest.DisplayName = dataSource is IInternalTestDataSource newDataSource
+                    ? newDataSource.GetDisplayName(methodInfo, d, test.DisplayName)
+                    : dataSource.GetDisplayName(methodInfo, d);
+                discoveredTest.DisplayName ??= test.DisplayName;
 
                 // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
 #pragma warning disable CS0618 // Type or member is obsolete
