@@ -108,15 +108,17 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
         <target state="translated">[ClassCleanup] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
-- 'public' である 
+- 'public' です
 - 'static' ではありません
 - ジェネリックではなく、ジェネリック クラスでも定義されていない
 - パラメーターを受け取りません
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
 - 'async void' ではありません
-- 特殊なメソッド (ファイナライザー、演算子...) ではありません。</target>
+- 特殊なメソッド (ファイナライザー、演算子...) ではありません
+- クラスが 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定する必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -139,14 +141,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="needs-review-translation">[ClassInitialize] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
-- 'public' である 
-- 'static' である
-- ジェネリックではなく、ジェネリック クラスでも定義されていない
+        <target state="translated">[ClassInitialize] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
+- 'public' です
+- 'static' です
+- ジェネリックではなく、ジェネリック クラスでも定義されていません
 - 'TestContext' 型のパラメーターを 1 つ受け取ります
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
 - 'async void' ではありません
-- 特殊なメソッド (ファイナライザー、演算子...) ではありません。</target>
+- 特殊なメソッド (ファイナライザー、演算子...) ではありません
+- クラスが 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定する必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">

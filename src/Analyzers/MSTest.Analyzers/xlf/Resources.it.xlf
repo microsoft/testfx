@@ -108,15 +108,17 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
         <target state="translated">I metodi contrassegnati con [ClassCleanup] devono seguire il layout seguente per essere validi:
-- devono essere 'public' 
-- non devono essere 'static'
-- non devono essere generici né definiti in una classe generica
+- devono essere "public" 
+- non devono essere "static"
+- non devono essere generici o definiti in una classe generica
 - non devono accettare alcun parametro
-- il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
-- non devono essere 'async void'
-- non devono essere un metodo speciale (finalizzatore, operatore...).</target>
+- il tipo restituito deve essere "void", "Task" o "ValueTask"
+- non devono essere "async void"
+- non devono essere metodi speciali (finalizer, operator...)
+- È necessario specificare il parametro dell'attributo -'InheritanceBehavior.BeforeEachDerivedClass' se la classe è 'abstract'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -139,14 +141,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="needs-review-translation">I metodi contrassegnati con [ClassInitialize] devono seguire il layout seguente per essere validi:
-- devono essere 'public' 
-- devono essere 'static'
-- non devono essere generici né essere definiti in una classe generica
-- devono accettare un singolo parametro di tipo 'TestContext'
-- il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
-- non devono essere 'async void'
-- non devono essere un metodo speciale (finalizzatore, operatore...).</target>
+        <target state="translated">I metodi contrassegnati con [ClassInitialize] devono seguire il layout seguente per essere validi:
+- devono essere "public" 
+- devono essere "static"
+- non devono essere generici o definiti in una classe generica
+- devono accettare un singolo parametro di tipo "TestContext"
+- il tipo restituito deve essere "void", "Task" o "ValueTask"
+- non devono essere "async void"
+- non devono essere metodi speciali (finalizer, operator...)
+- È necessario specificare il parametro dell'attributo -'InheritanceBehavior.BeforeEachDerivedClass' se la classe è 'abstract'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">

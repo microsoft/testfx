@@ -108,15 +108,17 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">標示為 [ClassCleanup] 的方法應該遵循下列配置才能有效:
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
+        <target state="translated">標示 [ClassCleanup] 的方法應該遵循下列配置，才會有效:
 - 為 'public' 
-- 非為 'static'
-- 非為泛型，也不是在泛型類別上所定義
-- 不接受任何參數
-- 傳回型別應為 'void'、'Task' 或 'ValueTask'
-- 非為 'async void'
-- 非為特殊方法 (完成項、運算子...)。</target>
+- 不是 'static'
+- 不是泛型，也不是在泛型類別上定義
+- 未接受任何參數
+- 傳回類型應為 'void'、'Task' 或 'ValueTask'
+- 不是 'async void'
+- 不是特殊方法 (finalizer、operator...)
+- 如果類別為 'abstract'，應指定 'InheritanceBehavior.BeforeEachDerivedClass' 屬性參數。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -139,14 +141,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="needs-review-translation">標示為 [ClassInitialize] 的方法應該遵循下列配置才能有效:
+        <target state="translated">標示 [ClassInitialize] 的方法應該遵循下列配置，才會有效:
 - 為 'public' 
 - 為 'static'
-- 非為泛型也不是在泛型類別上所定義
-- 接受型別為 'TestContext' 的單一參數
-- 傳回型別應為 'void'、'Task' 或 'ValueTask'
-- 非為 'async void'
-- 非為特殊方法 (完成項、運算子...)。</target>
+- 不是泛型，也不是在泛型類別上定義
+- 接受類型為 'TestContext' 的單一參數
+- 傳回類型應為 'void'、'Task' 或 'ValueTask'
+- 不是 'async void'
+- 不是特殊方法 (finalizer、operator...)
+- 如果類別為 'abstract'，應指定 'InheritanceBehavior.BeforeEachDerivedClass' 屬性參數。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -317,17 +320,17 @@
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
         <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
-        <target state="new">Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</target>
+        <target state="translated">如不使用 'ClassCleanupBehavior.EndOfClass'，則預設會在組件結尾執行 '[ClassCleanup]'，而非在類別的結尾執行。</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
         <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="new">Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</target>
+        <target state="translated">搭配使用 'ClassCleanupBehavior.EndOfClass' 和 '[ClassCleanup]'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassTitle">
         <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="new">Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</target>
+        <target state="translated">搭配使用 'ClassCleanupBehavior.EndOfClass' 和 '[ClassCleanup]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">

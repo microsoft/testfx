@@ -108,15 +108,17 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
         <target state="translated">[ClassCleanup]으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
-- 'public'이어야 합니다.
-- 'static'이 아니어야 합니다.
+- 'public'이어야 함
+- 'static'이 아니어야 함
 - 제네릭이 아니거나 제네릭 클래스에 정의되지 않음
 - 매개 변수를 사용하지 않음
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
-- 'async void'가 아니어야 합니다.
-- 특수 메서드(종료자, 연산자...)가 아님.</target>
+- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 함
+- 'async void'가 아니어야 함
+- 특수 메서드(종료자, 연산자...)가 아님
+-클래스가 'abstract'인 경우 'InheritanceBehavior.BeforeEachDerivedClass' 속성 매개 변수를 지정해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -139,14 +141,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="needs-review-translation">[ClassInitialize]로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
-- 'public'이어야 합니다.
-- 'static'이어야 합니다.
+        <target state="translated">[ClassInitialize]로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
+- 'public'이어야 함
+- 'static'이어야 함
 - 제네릭이 아니거나 제네릭 클래스에 정의되지 않음
 - 'TestContext' 형식의 단일 매개 변수 사용
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
-- 'async void'가 아니어야 합니다.
-- 특수 메서드(종료자, 연산자...)가 아님.</target>
+- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 함
+- 'async void'가 아니어야 함
+- 특수 메서드(종료자, 연산자...)가 아님
+-클래스가 'abstract'인 경우 'InheritanceBehavior.BeforeEachDerivedClass' 속성 매개 변수를 지정해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">

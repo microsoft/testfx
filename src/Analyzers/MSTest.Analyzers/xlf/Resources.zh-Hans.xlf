@@ -108,15 +108,17 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
         <target state="translated">标记有 [ClassCleanup] 的方法应遵循以下布局才会有效:
-- 是 “public” 
-- 不是 “static”
+- 是“public”
+- 不是“static”
 - 不是泛型的，也不是在泛型类上定义的
 - 不采用任何参数
-- 返回类型应为 "void"、"Task" 或 "ValueTask"
-- 不是 “async void”
-- 不是特殊方法(终结器、运算符...)。</target>
+- 返回类型应为“void”、“Task”或“ValueTask”
+- 不是“async void”
+- 不是特殊方法(终结器、运算符...)
+-“InheritanceBehavior.BeforeEachDerivedClass”属性参数应在类为“abstract”时指定。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -139,14 +141,15 @@
 - not be 'async void'
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="needs-review-translation">标记有 [ClassInitialize] 的方法应遵循以下布局才会有效:
-- 是 “public” 
-- 是 “static”
+        <target state="translated">标记有 [ClassInitialize] 的方法应遵循以下布局才会有效:
+- 是“public”
+- 是“static”
 - 不是泛型的，也不是在泛型类上定义的
-- 采用 “TestContext” 类型的单个参数
-- 返回类型应为 "void"、"Task" 或 "ValueTask"
-- 不是 “async void”
-- 不是特殊方法(终结器、运算符...)。</target>
+- 采用“TestContext”类型的单个参数
+- 返回类型应为“void”、“Task”或“ValueTask”
+- 不是“async void”
+- 不是特殊方法(终结器、运算符...)
+-“InheritanceBehavior.BeforeEachDerivedClass”属性参数应在类为“abstract”时指定。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
