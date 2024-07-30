@@ -347,7 +347,7 @@ internal class ReflectHelper : MarshalByRefObject
 
         var cleanupBehaviors =
             new HashSet<ClassCleanupBehavior?>(
-                classInfo.BaseClassCleanupMethodsStack
+                classInfo.BaseClassCleanupMethods
                 .Select(x => GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(x, inherit: true)?.CleanupBehavior))
             {
                 classInfo.ClassCleanupMethod == null ? null : GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(classInfo.ClassCleanupMethod, inherit: true)?.CleanupBehavior,
