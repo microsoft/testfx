@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Attribute to define in-line data for a test method.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public class DataRowAttribute : Attribute, IInternalTestDataSource
+public class DataRowAttribute : Attribute, ITestDataSource
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
@@ -66,10 +66,7 @@ public class DataRowAttribute : Attribute, IInternalTestDataSource
 
     /// <inheritdoc />
     public virtual string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
-        => ((IInternalTestDataSource)this).GetDisplayName(methodInfo, data, null);
-
-    string? IInternalTestDataSource.GetDisplayName(MethodInfo methodInfo, object?[]? data, string? testMethodDisplayName)
         => !string.IsNullOrWhiteSpace(DisplayName)
             ? DisplayName
-            : TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, testMethodDisplayName, TestIdGenerationStrategy);
+            : TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, TestIdGenerationStrategy);
 }

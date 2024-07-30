@@ -33,7 +33,7 @@ public enum DynamicDataSourceType
 /// Attribute to define dynamic data for a test method.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public sealed class DynamicDataAttribute : Attribute, IInternalTestDataSource
+public sealed class DynamicDataAttribute : Attribute, ITestDataSource
 {
     private readonly string _dynamicDataSourceName;
     private readonly DynamicDataSourceType _dynamicDataSourceType;
@@ -167,9 +167,6 @@ public sealed class DynamicDataAttribute : Attribute, IInternalTestDataSource
 
     /// <inheritdoc />
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
-        => ((IInternalTestDataSource)this).GetDisplayName(methodInfo, data, null);
-
-    string? IInternalTestDataSource.GetDisplayName(MethodInfo methodInfo, object?[]? data, string? testMethodDisplayName)
     {
         if (DynamicDataDisplayName != null)
         {
@@ -195,7 +192,7 @@ public sealed class DynamicDataAttribute : Attribute, IInternalTestDataSource
                 : method.Invoke(null, [methodInfo, data]) as string;
         }
 
-        return TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, testMethodDisplayName, TestIdGenerationStrategy);
+        return TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, TestIdGenerationStrategy);
     }
 
     private static bool TryGetData(object dataSource, [NotNullWhen(true)] out IEnumerable<object[]>? data)

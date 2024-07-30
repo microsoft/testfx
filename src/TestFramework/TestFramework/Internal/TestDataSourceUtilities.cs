@@ -9,8 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 internal static class TestDataSourceUtilities
 {
-    public static string? ComputeDefaultDisplayName(MethodInfo methodInfo, object?[]? data, string? testMethodDisplayName,
-        TestIdGenerationStrategy testIdGenerationStrategy)
+    public static string? ComputeDefaultDisplayName(MethodInfo methodInfo, object?[]? data, TestIdGenerationStrategy testIdGenerationStrategy)
     {
         if (data is null)
         {
@@ -26,7 +25,9 @@ internal static class TestDataSourceUtilities
             ? [data.AsEnumerable()]
             : data.AsEnumerable();
 
-        string methodDisplayName = testIdGenerationStrategy == TestIdGenerationStrategy.FullyQualified ? testMethodDisplayName ?? methodInfo.Name : methodInfo.Name;
+        string methodDisplayName = testIdGenerationStrategy == TestIdGenerationStrategy.FullyQualified && methodInfo is ReflectionTestMethodInfo reflectionTestMethodInfo
+            ? reflectionTestMethodInfo.DisplayName
+            : methodInfo.Name;
 
         return string.Format(
             CultureInfo.CurrentCulture,

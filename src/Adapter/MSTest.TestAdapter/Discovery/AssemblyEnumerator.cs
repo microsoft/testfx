@@ -13,6 +13,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 
@@ -383,16 +384,14 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
     private static bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
     {
-        MethodInfo methodInfo = testMethodInfo.MethodInfo;
-
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
         // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
-        IEnumerable<ITestDataSource>? testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(methodInfo, inherit: false).OfType<ITestDataSource>();
+        IEnumerable<ITestDataSource>? testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(testMethodInfo.MethodInfo, inherit: false).OfType<ITestDataSource>();
 
         try
         {
-            return ProcessTestDataSourceTests(test, methodInfo, testDataSources, tests);
+            return ProcessTestDataSourceTests(test, new(testMethodInfo.MethodInfo, test.DisplayName), testDataSources, tests);
         }
         catch (Exception ex)
         {
@@ -402,7 +401,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, IEnumerable<ITestDataSource> testDataSources,
+    private static bool ProcessTestDataSourceTests(UnitTestElement test, ReflectionTestMethodInfo methodInfo, IEnumerable<ITestDataSource> testDataSources,
         List<UnitTestElement> tests)
     {
         foreach (ITestDataSource dataSource in testDataSources)
@@ -425,10 +424,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 UnitTestElement discoveredTest = test.Clone();
                 // Make the test not data driven, because it had no data.
                 discoveredTest.TestMethod.DataType = DynamicDataType.None;
-                discoveredTest.DisplayName = dataSource is IInternalTestDataSource newDataSource
-                    ? newDataSource.GetDisplayName(methodInfo, null, test.DisplayName)
-                    : dataSource.GetDisplayName(methodInfo, null);
-                discoveredTest.DisplayName ??= test.DisplayName;
+                discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
 
                 tests.Add(discoveredTest);
                 continue;
@@ -441,10 +437,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             foreach (object?[] d in data)
             {
                 UnitTestElement discoveredTest = test.Clone();
-                discoveredTest.DisplayName = dataSource is IInternalTestDataSource newDataSource
-                    ? newDataSource.GetDisplayName(methodInfo, d, test.DisplayName)
-                    : dataSource.GetDisplayName(methodInfo, d);
-                discoveredTest.DisplayName ??= test.DisplayName;
+                discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
 
                 // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
 #pragma warning disable CS0618 // Type or member is obsolete
