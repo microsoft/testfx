@@ -109,8 +109,9 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="translated">标记有 [ClassCleanup] 的方法应遵循以下布局才会有效:
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
+        <target state="needs-review-translation">标记有 [ClassCleanup] 的方法应遵循以下布局才会有效:
 - 是“public”
 - 不是“static”
 - 不是泛型的，也不是在泛型类上定义的

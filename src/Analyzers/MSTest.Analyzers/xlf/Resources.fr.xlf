@@ -109,8 +109,9 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="translated">Les méthodes marquées par [ClassCleanup] doivent respecter le schéma suivant pour être valides : 
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
+        <target state="needs-review-translation">Les méthodes marquées par [ClassCleanup] doivent respecter le schéma suivant pour être valides : 
 - être « public » 
 - ne pas être 'statique'
 - ne pas être générique ni défini sur une classe générique
