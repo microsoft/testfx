@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.TestPlatform.AdapterUtilities;
@@ -77,8 +77,8 @@ internal static class TestCaseExtensions
             (int)TestIdGenerationStrategy.FullyQualified);
 
         TestMethod testMethod = testCase.ContainsManagedMethodAndType()
-            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, isAsync, testIdGenerationStrategy)
-            : new(name, testClassName!, source, isAsync, testIdGenerationStrategy);
+            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, isAsync, testCase.DisplayName, testIdGenerationStrategy)
+            : new(name, testClassName!, source, isAsync, testCase.DisplayName, testIdGenerationStrategy);
         var dataType = (DynamicDataType)testCase.GetPropertyValue(Constants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
         {
@@ -87,8 +87,6 @@ internal static class TestCaseExtensions
             testMethod.DataType = dataType;
             testMethod.SerializedData = data;
         }
-
-        testMethod.DisplayName = testCase.DisplayName;
 
         if (testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) is string declaringClassName && declaringClassName != testClassName)
         {
