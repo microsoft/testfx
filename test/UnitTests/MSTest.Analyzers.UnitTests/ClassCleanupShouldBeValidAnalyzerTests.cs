@@ -645,4 +645,22 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    public async Task WhenClassCleanupIsOnSealedClassMarkedWithTestClass_AndWithInheritanceBehaviorNone_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class MyTestClass
+            {
+                [ClassCleanup(InheritanceBehavior.None)]
+                public static void ClassCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
