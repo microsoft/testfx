@@ -20,7 +20,7 @@ internal static class DiagnosticIds
     public const string AssemblyCleanupShouldBeValidRuleId = "MSTEST0013";
     public const string DataRowShouldBeValidRuleId = "MSTEST0014";
     public const string TestMethodShouldNotBeIgnoredRuleId = "MSTEST0015";
-    public const string TestClassShouldHaveTestMethodRuleId = "MSTEST0016";    
+    public const string TestClassShouldHaveTestMethodRuleId = "MSTEST0016";
     public const string AssertionArgsShouldBePassedInCorrectOrderRuleId = "MSTEST0017";
     public const string DynamicDataShouldBeValidRuleId = "MSTEST0018";
     public const string PreferTestInitializeOverConstructorRuleId = "MSTEST0019";

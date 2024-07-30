@@ -473,4 +473,28 @@
   <data name="UseClassCleanupBehaviorEndOfClassMessageFormat" xml:space="preserve">
     <value>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</value>
   </data>
+  <data name="DynamicDataShouldBeValidTitle" xml:space="preserve">
+    <value>DynamicData should be valid</value>
+  </data>
+  <data name="DynamicDataShouldBeValidDescription" xml:space="preserve">
+    <value>'DynamicData' entry should have the following layout to be valid:
+- should only be set on a test method;
+- member should be defined on the type specified;
+- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_OnTestMethod" xml:space="preserve">
+    <value>'[DynamicData]' should only be set on a test method</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_MemberNotFound" xml:space="preserve">
+    <value>Cannot find member '{0}.{1}'</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_TooManyMembers" xml:space="preserve">
+    <value>Found more than one member with name '{0}'</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_MemberProperty" xml:space="preserve">
+    <value>Member '{0}' should be a property</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_MemberMethod" xml:space="preserve">
+    <value>Member '{0}' should be a method</value>
+  </data>
 </root>

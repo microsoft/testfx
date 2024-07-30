@@ -232,6 +232,47 @@
         <target state="translated">'System.ComponentModel.DescriptionAttribute'는 테스트 메서드에 영향을 주지 않습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidDescription">
+        <source>'DynamicData' entry should have the following layout to be valid:
+- should only be set on a test method;
+- member should be defined on the type specified;
+- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</source>
+        <target state="new">'DynamicData' entry should have the following layout to be valid:
+- should only be set on a test method;
+- member should be defined on the type specified;
+- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberMethod">
+        <source>Member '{0}' should be a method</source>
+        <target state="new">Member '{0}' should be a method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberNotFound">
+        <source>Cannot find member '{0}.{1}'</source>
+        <target state="new">Cannot find member '{0}.{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberProperty">
+        <source>Member '{0}' should be a property</source>
+        <target state="new">Member '{0}' should be a property</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_OnTestMethod">
+        <source>'[DynamicData]' should only be set on a test method</source>
+        <target state="new">'[DynamicData]' should only be set on a test method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
+        <source>Found more than one member with name '{0}'</source>
+        <target state="new">Found more than one member with name '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidTitle">
+        <source>DynamicData should be valid</source>
+        <target state="new">DynamicData should be valid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
         <target state="translated">항상 실패하는 'Assert.{0}' 어설션 대신 'Assert.Fail'을 사용합니다.</target>

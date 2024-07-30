@@ -384,6 +384,72 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;DynamicData&apos; entry should have the following layout to be valid:
+        ///- should only be set on a test method;
+        ///- member should be defined on the type specified;
+        ///- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise..
+        /// </summary>
+        internal static string DynamicDataShouldBeValidDescription {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Member &apos;{0}&apos; should be a method.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_MemberMethod {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find member &apos;{0}.{1}&apos;.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_MemberNotFound {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Member &apos;{0}&apos; should be a property.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_MemberProperty {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; should only be set on a test method.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_OnTestMethod {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_OnTestMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found more than one member with name &apos;{0}&apos;.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_TooManyMembers {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_TooManyMembers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DynamicData should be valid.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidTitle {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use &apos;Assert.Fail&apos; instead of an always-failing &apos;Assert.{0}&apos; assert.
         /// </summary>
         internal static string PreferAssertFailOverAlwaysFalseConditionsMessageFormat {
