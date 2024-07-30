@@ -36,6 +36,17 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(1);
     }
 
+    public void ParameterizedTestsWithTestMethodSettingDisplayName_DataIsPrefixWithDisplayName()
+    {
+        InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~OverriddenTestMethodDisplayNameForParameterizedTest");
+
+        ValidatePassedTestsContain(
+            "SomeCustomDisplayName2 (\"SomeData\")",
+            "SomeCustomDisplayName3 (\"SomeData\")");
+
+        ValidatePassedTestsCount(2);
+    }
+
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
