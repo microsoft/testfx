@@ -398,7 +398,7 @@ public class MSTestSettings
                     case "CAPTURETRACEOUTPUT":
                         {
                             string value = reader.ReadInnerXml();
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            if (bool.TryParse(value, out result))
                             {
                                 settings.CaptureDebugTraces = result;
                             }
@@ -413,7 +413,7 @@ public class MSTestSettings
                     case "ENABLEBASECLASSTESTMETHODSFROMOTHERASSEMBLIES":
                         {
                             string value = reader.ReadInnerXml();
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            if (bool.TryParse(value, out result))
                             {
                                 settings.EnableBaseClassTestMethodsFromOtherAssemblies = result;
                             }
@@ -443,7 +443,7 @@ public class MSTestSettings
                     case "FORCEDLEGACYMODE":
                         {
                             string value = reader.ReadInnerXml();
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            if (bool.TryParse(value, out result))
                             {
                                 settings.ForcedLegacyMode = result;
                             }
@@ -458,7 +458,7 @@ public class MSTestSettings
                     case "MAPINCONCLUSIVETOFAILED":
                         {
                             string value = reader.ReadInnerXml();
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            if (bool.TryParse(value, out result))
                             {
                                 settings.MapInconclusiveToFailed = result;
                             }
@@ -473,7 +473,7 @@ public class MSTestSettings
                     case "MAPNOTRUNNABLETOFAILED":
                         {
                             string value = reader.ReadInnerXml();
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            if (bool.TryParse(value, out result))
                             {
                                 settings.MapNotRunnableToFailed = result;
                             }
@@ -488,7 +488,7 @@ public class MSTestSettings
                     case "TREATDISCOVERYWARNINGSASERRORS":
                         {
                             string value = reader.ReadInnerXml();
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            if (bool.TryParse(value, out result))
                             {
                                 settings.TreatDiscoveryWarningsAsErrors = result;
                             }
@@ -527,7 +527,7 @@ public class MSTestSettings
                     case "TESTTIMEOUT":
                         {
                             string value = reader.ReadInnerXml();
-                            if (int.TryParse(reader.ReadInnerXml(), out int testTimeout) && testTimeout > 0)
+                            if (int.TryParse(value, out int testTimeout) && testTimeout > 0)
                             {
                                 settings.TestTimeout = testTimeout;
                             }
@@ -542,7 +542,7 @@ public class MSTestSettings
                     case "ASSEMBLYCLEANUPTIMEOUT":
                         {
                             string value = reader.ReadInnerXml();
-                            if (int.TryParse(reader.ReadInnerXml(), out int assemblyCleanupTimeout) && assemblyCleanupTimeout > 0)
+                            if (int.TryParse(value, out int assemblyCleanupTimeout) && assemblyCleanupTimeout > 0)
                             {
                                 settings.AssemblyCleanupTimeout = assemblyCleanupTimeout;
                             }
@@ -557,7 +557,7 @@ public class MSTestSettings
                     case "CONSIDEREMPTYDATASOURCEASINCONCLUSIVE":
                         {
                             string value = reader.ReadInnerXml();
-                            if (bool.TryParse(reader.ReadInnerXml(), out bool considerEmptyDataSourceAsInconclusive))
+                            if (bool.TryParse(value, out bool considerEmptyDataSourceAsInconclusive))
                             {
                                 settings.ConsiderEmptyDataSourceAsInconclusive = considerEmptyDataSourceAsInconclusive;
                             }
@@ -572,7 +572,7 @@ public class MSTestSettings
                     case "ASSEMBLYINITIALIZETIMEOUT":
                         {
                             string value = reader.ReadInnerXml();
-                            if (int.TryParse(reader.ReadInnerXml(), out int assemblyInitializeTimeout) && assemblyInitializeTimeout > 0)
+                            if (int.TryParse(value, out int assemblyInitializeTimeout) && assemblyInitializeTimeout > 0)
                             {
                                 settings.AssemblyInitializeTimeout = assemblyInitializeTimeout;
                             }
@@ -587,7 +587,7 @@ public class MSTestSettings
                     case "CLASSINITIALIZETIMEOUT":
                         {
                             string value = reader.ReadInnerXml();
-                            if (int.TryParse(reader.ReadInnerXml(), out int classInitializeTimeout) && classInitializeTimeout > 0)
+                            if (int.TryParse(value, out int classInitializeTimeout) && classInitializeTimeout > 0)
                             {
                                 settings.ClassInitializeTimeout = classInitializeTimeout;
                             }
@@ -602,7 +602,7 @@ public class MSTestSettings
                     case "CLASSCLEANUPTIMEOUT":
                         {
                             string value = reader.ReadInnerXml();
-                            if (int.TryParse(reader.ReadInnerXml(), out int classCleanupTimeout) && classCleanupTimeout > 0)
+                            if (int.TryParse(value, out int classCleanupTimeout) && classCleanupTimeout > 0)
                             {
                                 settings.ClassCleanupTimeout = classCleanupTimeout;
                             }
@@ -617,7 +617,7 @@ public class MSTestSettings
                     case "TESTINITIALIZETIMEOUT":
                         {
                             string value = reader.ReadInnerXml();
-                            if (int.TryParse(reader.ReadInnerXml(), out int testInitializeTimeout) && testInitializeTimeout > 0)
+                            if (int.TryParse(value, out int testInitializeTimeout) && testInitializeTimeout > 0)
                             {
                                 settings.TestInitializeTimeout = testInitializeTimeout;
                             }
@@ -632,7 +632,7 @@ public class MSTestSettings
                     case "TESTCLEANUPTIMEOUT":
                         {
                             string value = reader.ReadInnerXml();
-                            if (int.TryParse(reader.ReadInnerXml(), out int testCleanupTimeout) && testCleanupTimeout > 0)
+                            if (int.TryParse(value, out int testCleanupTimeout) && testCleanupTimeout > 0)
                             {
                                 settings.TestCleanupTimeout = testCleanupTimeout;
                             }
@@ -647,7 +647,7 @@ public class MSTestSettings
                     case "TREATCLASSANDASSEMBLYCLEANUPWARNINGSASERRORS":
                         {
                             string value = reader.ReadInnerXml();
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            if (bool.TryParse(value, out result))
                             {
                                 settings.TreatClassAndAssemblyCleanupWarningsAsErrors = result;
                             }
@@ -662,7 +662,7 @@ public class MSTestSettings
                     case "CONSIDERFIXTURESASSPECIALTESTS":
                         {
                             string value = reader.ReadInnerXml();
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            if (bool.TryParse(value, out result))
                             {
                                 settings.ConsiderFixturesAsSpecialTests = result;
                             }
@@ -677,7 +677,7 @@ public class MSTestSettings
                     case "COOPERATIVECANCELLATIONTIMEOUT":
                         {
                             string value = reader.ReadInnerXml();
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            if (bool.TryParse(value, out result))
                             {
                                 settings.CooperativeCancellationTimeout = result;
                             }
