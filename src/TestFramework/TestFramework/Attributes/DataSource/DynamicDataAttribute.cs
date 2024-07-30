@@ -192,16 +192,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
                 : method.Invoke(null, [methodInfo, data]) as string;
         }
 
-        if (data != null)
-        {
-            // We want to force call to `data.AsEnumerable()` to ensure that objects are casted to strings (using ToString())
-            // so that null do appear as "null". If you remove the call, and do string.Join(",", new object[] { null, "a" }),
-            // you will get empty string while with the call you will get "null,a".
-            return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name,
-                string.Join(",", data.AsEnumerable().Select(x => TestDataSourceUtilities.GetHumanizedArguments(x, TestIdGenerationStrategy))));
-        }
-
-        return null;
+        return TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, TestIdGenerationStrategy);
     }
 
     private static bool TryGetData(object dataSource, [NotNullWhen(true)] out IEnumerable<object[]>? data)
