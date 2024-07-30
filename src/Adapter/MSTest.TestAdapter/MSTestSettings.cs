@@ -246,33 +246,7 @@ public class MSTestSettings
     /// The discovery context that contains the runsettings.
     /// </param>
     [Obsolete("this function will be removed in v4.0.0")]
-    public static void PopulateSettings(IDiscoveryContext? context)
-    {
-        RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
-
-        if (context?.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
-        {
-            // This will contain default adapter settings
-            CurrentSettings = new MSTestSettings();
-            return;
-        }
-
-        MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias, null);
-
-        // If a user specifies MSTestV2 in the runsettings, then prefer that over the v1 settings.
-        if (aliasSettings != null)
-        {
-            CurrentSettings = aliasSettings;
-        }
-        else
-        {
-            MSTestSettings? settings = GetSettings(context.RunSettings.SettingsXml, SettingsName, null);
-
-            CurrentSettings = settings ?? new MSTestSettings();
-        }
-
-        SetGlobalSettings(context.RunSettings.SettingsXml, CurrentSettings);
-    }
+    public static void PopulateSettings(IDiscoveryContext? context) => PopulateSettings(context, null);
 
     /// <summary>
     /// Populate adapter settings from the context.
@@ -281,7 +255,7 @@ public class MSTestSettings
     /// <param name="logger"> The logger for messages. </param>
     /// The discovery context that contains the runsettings.
     /// </param>
-    internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger logger)
+    internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger)
     {
         RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
