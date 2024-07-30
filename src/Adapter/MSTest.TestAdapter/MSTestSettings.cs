@@ -397,13 +397,14 @@ public class MSTestSettings
                 {
                     case "CAPTURETRACEOUTPUT":
                         {
+                            string value = reader.ReadInnerXml();
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
                                 settings.CaptureDebugTraces = result;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "CaptureTraceOutput"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "CaptureTraceOutput"));
                             }
 
                             break;
@@ -411,13 +412,14 @@ public class MSTestSettings
 
                     case "ENABLEBASECLASSTESTMETHODSFROMOTHERASSEMBLIES":
                         {
+                            string value = reader.ReadInnerXml();
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
                                 settings.EnableBaseClassTestMethodsFromOtherAssemblies = result;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "EnableBaseClassTestMethodsFromOtherAssemblies"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "EnableBaseClassTestMethodsFromOtherAssemblies"));
                             }
 
                             break;
@@ -440,13 +442,14 @@ public class MSTestSettings
 
                     case "FORCEDLEGACYMODE":
                         {
+                            string value = reader.ReadInnerXml();
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
                                 settings.ForcedLegacyMode = result;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "ForcedLegacyMode"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "ForcedLegacyMode"));
                             }
 
                             break;
@@ -454,13 +457,14 @@ public class MSTestSettings
 
                     case "MAPINCONCLUSIVETOFAILED":
                         {
+                            string value = reader.ReadInnerXml();
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
                                 settings.MapInconclusiveToFailed = result;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "MapInconclusiveToFailed"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "MapInconclusiveToFailed"));
                             }
 
                             break;
@@ -468,13 +472,14 @@ public class MSTestSettings
 
                     case "MAPNOTRUNNABLETOFAILED":
                         {
+                            string value = reader.ReadInnerXml();
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
                                 settings.MapNotRunnableToFailed = result;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "MapNotRunnableToFailed"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "MapNotRunnableToFailed"));
                             }
 
                             break;
@@ -482,13 +487,14 @@ public class MSTestSettings
 
                     case "TREATDISCOVERYWARNINGSASERRORS":
                         {
+                            string value = reader.ReadInnerXml();
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
                                 settings.TreatDiscoveryWarningsAsErrors = result;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "TreatDiscoveryWarningsAsErrors"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "TreatDiscoveryWarningsAsErrors"));
                             }
 
                             break;
@@ -504,7 +510,7 @@ public class MSTestSettings
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "SettingsFile"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, fileName, "SettingsFile"));
                             }
 
                             break;
@@ -520,13 +526,14 @@ public class MSTestSettings
 
                     case "TESTTIMEOUT":
                         {
+                            string value = reader.ReadInnerXml();
                             if (int.TryParse(reader.ReadInnerXml(), out int testTimeout) && testTimeout > 0)
                             {
                                 settings.TestTimeout = testTimeout;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "TestTimeout"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "TestTimeout"));
                             }
 
                             break;
@@ -534,13 +541,14 @@ public class MSTestSettings
 
                     case "ASSEMBLYCLEANUPTIMEOUT":
                         {
+                            string value = reader.ReadInnerXml();
                             if (int.TryParse(reader.ReadInnerXml(), out int assemblyCleanupTimeout) && assemblyCleanupTimeout > 0)
                             {
                                 settings.AssemblyCleanupTimeout = assemblyCleanupTimeout;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "AssemblyCleanupTimeout"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "AssemblyCleanupTimeout"));
                             }
 
                             break;
@@ -548,13 +556,14 @@ public class MSTestSettings
 
                     case "CONSIDEREMPTYDATASOURCEASINCONCLUSIVE":
                         {
+                            string value = reader.ReadInnerXml();
                             if (bool.TryParse(reader.ReadInnerXml(), out bool considerEmptyDataSourceAsInconclusive))
                             {
                                 settings.ConsiderEmptyDataSourceAsInconclusive = considerEmptyDataSourceAsInconclusive;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "ConsiderEmptyDataSourceAsInconclusive"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "ConsiderEmptyDataSourceAsInconclusive"));
                             }
 
                             break;
@@ -562,13 +571,14 @@ public class MSTestSettings
 
                     case "ASSEMBLYINITIALIZETIMEOUT":
                         {
+                            string value = reader.ReadInnerXml();
                             if (int.TryParse(reader.ReadInnerXml(), out int assemblyInitializeTimeout) && assemblyInitializeTimeout > 0)
                             {
                                 settings.AssemblyInitializeTimeout = assemblyInitializeTimeout;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "AssemblyInitializeTimeout"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "AssemblyInitializeTimeout"));
                             }
 
                             break;
@@ -576,13 +586,14 @@ public class MSTestSettings
 
                     case "CLASSINITIALIZETIMEOUT":
                         {
+                            string value = reader.ReadInnerXml();
                             if (int.TryParse(reader.ReadInnerXml(), out int classInitializeTimeout) && classInitializeTimeout > 0)
                             {
                                 settings.ClassInitializeTimeout = classInitializeTimeout;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "ClassInitializeTimeout"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "ClassInitializeTimeout"));
                             }
 
                             break;
@@ -590,13 +601,14 @@ public class MSTestSettings
 
                     case "CLASSCLEANUPTIMEOUT":
                         {
+                            string value = reader.ReadInnerXml();
                             if (int.TryParse(reader.ReadInnerXml(), out int classCleanupTimeout) && classCleanupTimeout > 0)
                             {
                                 settings.ClassCleanupTimeout = classCleanupTimeout;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "ClassCleanupTimeout"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "ClassCleanupTimeout"));
                             }
 
                             break;
@@ -604,13 +616,14 @@ public class MSTestSettings
 
                     case "TESTINITIALIZETIMEOUT":
                         {
+                            string value = reader.ReadInnerXml();
                             if (int.TryParse(reader.ReadInnerXml(), out int testInitializeTimeout) && testInitializeTimeout > 0)
                             {
                                 settings.TestInitializeTimeout = testInitializeTimeout;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "TestInitializeTimeout"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "TestInitializeTimeout"));
                             }
 
                             break;
@@ -618,13 +631,14 @@ public class MSTestSettings
 
                     case "TESTCLEANUPTIMEOUT":
                         {
+                            string value = reader.ReadInnerXml();
                             if (int.TryParse(reader.ReadInnerXml(), out int testCleanupTimeout) && testCleanupTimeout > 0)
                             {
                                 settings.TestCleanupTimeout = testCleanupTimeout;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "TestCleanupTimeout"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "TestCleanupTimeout"));
                             }
 
                             break;
@@ -632,13 +646,14 @@ public class MSTestSettings
 
                     case "TREATCLASSANDASSEMBLYCLEANUPWARNINGSASERRORS":
                         {
+                            string value = reader.ReadInnerXml();
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
                                 settings.TreatClassAndAssemblyCleanupWarningsAsErrors = result;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "TreatClassAndAssemblyCleanupWarningsAsErrors"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "TreatClassAndAssemblyCleanupWarningsAsErrors"));
                             }
 
                             break;
@@ -646,13 +661,14 @@ public class MSTestSettings
 
                     case "CONSIDERFIXTURESASSPECIALTESTS":
                         {
+                            string value = reader.ReadInnerXml();
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
                                 settings.ConsiderFixturesAsSpecialTests = result;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "ConsiderFixturesAsSpecialTests"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "ConsiderFixturesAsSpecialTests"));
                             }
 
                             break;
@@ -660,13 +676,14 @@ public class MSTestSettings
 
                     case "COOPERATIVECANCELLATIONTIMEOUT":
                         {
+                            string value = reader.ReadInnerXml();
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
                                 settings.CooperativeCancellationTimeout = result;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, "CooperativeCancellationTimeout"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "CooperativeCancellationTimeout"));
                             }
 
                             break;

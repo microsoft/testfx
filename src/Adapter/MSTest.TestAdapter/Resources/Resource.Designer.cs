@@ -342,7 +342,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid Value for &apos;{0}&apos;, couldn&apos;t parse it..
+        ///   Looks up a localized string similar to Invalid value &apos;{0}&apos; for runsettings entry &apos;{1}&apos;, setting will be ignored..
         /// </summary>
         internal static string InvalidValue {
             get {

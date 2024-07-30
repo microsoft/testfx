@@ -62,8 +62,8 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <note></note>
       </trans-unit>
       <trans-unit id="InvalidValue">
-        <source>Invalid Value for '{0}', couldn't parse it.</source>
-        <target state="new">Invalid Value for '{0}', couldn't parse it.</target>
+        <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
+        <target state="new">Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</target>
         <note />
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
