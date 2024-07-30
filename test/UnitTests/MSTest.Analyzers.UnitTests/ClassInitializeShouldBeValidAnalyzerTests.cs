@@ -657,7 +657,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
             public sealed class MyTestClass
             {
                 [ClassInitialize(InheritanceBehavior.None)]
-                public static void [|ClassInitialize|](TestContext testContext)
+                public static void ClassInitialize(TestContext testContext)
                 {
                 }
             }
