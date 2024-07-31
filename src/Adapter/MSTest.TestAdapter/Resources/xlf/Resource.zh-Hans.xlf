@@ -61,6 +61,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">测试“{0}”的执行超时。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="InvalidValue">
+        <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
+        <target state="new">Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
         <target state="translated">非 Windows 操作系统不支持 Runsettings 条目 "&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;"。</target>

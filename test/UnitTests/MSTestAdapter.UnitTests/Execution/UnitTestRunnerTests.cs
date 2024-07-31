@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
@@ -26,6 +27,7 @@ public class UnitTestRunnerTests : TestContainer
 {
     private readonly Dictionary<string, object> _testRunParameters;
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly Mock<IMessageLogger> _mockMessageLogger;
 
     private UnitTestRunner _unitTestRunner;
 
@@ -33,7 +35,7 @@ public class UnitTestRunnerTests : TestContainer
     {
         _testRunParameters = [];
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-
+        _mockMessageLogger = new Mock<IMessageLogger>();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
         _unitTestRunner = new UnitTestRunner(GetSettingsWithDebugTrace(false), Array.Empty<UnitTestElement>(), null);
@@ -72,7 +74,7 @@ public class UnitTestRunnerTests : TestContainer
                 }
             });
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
         var assemblyEnumerator = new UnitTestRunner(adapterSettings, Array.Empty<UnitTestElement>(), null);
 
         Verify(MSTestSettings.CurrentSettings.ForcedLegacyMode);
@@ -343,7 +345,7 @@ public class UnitTestRunnerTests : TestContainer
                 }
             });
 
-        return MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName);
+        return MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
     }
 
     #endregion

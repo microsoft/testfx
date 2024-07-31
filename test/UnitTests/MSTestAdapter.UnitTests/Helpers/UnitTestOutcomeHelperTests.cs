@@ -5,6 +5,9 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -23,8 +26,8 @@ public class UnitTestOutcomeHelperTests : TestContainer
               </MSTestV2>
             </RunSettings>
             """;
-
-        _adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var mockMessageLogger = new Mock<IMessageLogger>();
+        _adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, mockMessageLogger.Object);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomePassedShouldReturnTestOutcomePassed()

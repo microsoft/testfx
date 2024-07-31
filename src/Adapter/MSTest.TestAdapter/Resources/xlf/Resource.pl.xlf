@@ -61,6 +61,11 @@ ale liczba odebranych argumentów to {4} z typami „{5}”.</target>
         <target state="translated">Test „{0}” przekroczył okres limitu czasu na wykonanie.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="InvalidValue">
+        <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
+        <target state="new">Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
         <target state="translated">Wpis runsettings „&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;” nie jest obsługiwany w systemach operacyjnych innych niż Windows.</target>
