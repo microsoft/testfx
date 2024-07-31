@@ -23,6 +23,7 @@ internal static class ExitCodes
     public const int MinimumExpectedTestsPolicyViolation = 9;
     public const int TestAdapterTestSessionFailure = 10;
     public const int DependentProcessExited = 11;
+    public const int IncompatibleProtocolVersion = 12;
 
     public static string StringifyExitCode(int exitCode) => exitCode switch
     {

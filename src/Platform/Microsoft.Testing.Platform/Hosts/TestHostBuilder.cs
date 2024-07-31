@@ -344,7 +344,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             TestHostControllerConfiguration testHostControllers = await ((TestHostControllersManager)TestHostControllers).BuildAsync(testHostControllersServiceProvider);
             if (testHostControllers.RequireProcessRestart)
             {
-                TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, systemEnvironment, loggerFactory, systemClock);
+                TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, systemEnvironment, loggerFactory, systemClock, dotnetTestPipeClient, _testApplicationModuleInfo);
 
                 await LogTestHostCreatedAsync(
                     serviceProvider,
@@ -434,7 +434,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 BuildTestFrameworkAsync,
                 (TestFrameworkManager)TestFramework,
                 (TestHostManager)TestHost,
-                dotnetTestPipeClient);
+                dotnetTestPipeClient,
+                _testApplicationModuleInfo);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
             ITestHost? actualTestHost = testControllerConnection is not null
@@ -740,8 +741,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
         TestFrameworkManager testFrameworkManager,
         TestHostManager testHostManager,
-        NamedPipeClient? dotnetTestPipeClient)
-        => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager, dotnetTestPipeClient);
+        NamedPipeClient? dotnetTestPipeClient,
+        ITestApplicationModuleInfo testApplicationModuleInfo)
+        => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager, dotnetTestPipeClient, testApplicationModuleInfo);
 
     protected virtual bool SkipAddingService(object service) => false;
 

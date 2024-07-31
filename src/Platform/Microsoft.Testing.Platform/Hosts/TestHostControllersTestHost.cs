@@ -39,8 +39,8 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
     private int? _testHostPID;
 
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, IEnvironment environment,
-        ILoggerFactory loggerFactory, IClock clock)
-        : base(serviceProvider)
+        ILoggerFactory loggerFactory, IClock clock, NamedPipeClient? dotnetTestPipeClient = null, ITestApplicationModuleInfo? testApplicationModuleInfo = null)
+        : base(serviceProvider, dotnetTestPipeClient, testApplicationModuleInfo)
     {
         _testHostsInformation = testHostsInformation;
         _environment = environment;
