@@ -1,4 +1,6 @@
 ﻿#nullable enable
+MSTest.Analyzers.DynamicDataShouldBeValidAnalyzer
+MSTest.Analyzers.DynamicDataShouldBeValidAnalyzer.DynamicDataShouldBeValidAnalyzer() -> void
 MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor
 MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor.NonNullableReferenceNotInitializedSuppressor() -> void
 MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer
@@ -7,6 +9,8 @@ MSTest.Analyzers.UseDeploymentItemWithTestClassAnalyzer
 MSTest.Analyzers.UseDeploymentItemWithTestClassAnalyzer.UseDeploymentItemWithTestClassAnalyzer() -> void
 MSTest.Analyzers.UseDeploymentItemWithTestMethodAnalyzer
 MSTest.Analyzers.UseDeploymentItemWithTestMethodAnalyzer.UseDeploymentItemWithTestMethodAnalyzer() -> void
+override MSTest.Analyzers.DynamicDataShouldBeValidAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.DynamicDataShouldBeValidAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void
 override MSTest.Analyzers.NonNullableReferenceNotInitializedSuppressor.SupportedSuppressions.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.SuppressionDescriptor!>
 override MSTest.Analyzers.UseClassCleanupBehaviorEndOfClassAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void

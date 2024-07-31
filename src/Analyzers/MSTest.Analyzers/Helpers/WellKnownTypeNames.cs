@@ -20,6 +20,8 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingDeploymentItemAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDiscoverInternalsAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternalsAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDoNotParallelizeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DoNotParallelizeAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingDynamicDataAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingDynamicDataSourceType = "Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType";
     public const string MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingIgnoreAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingInheritanceBehavior = "Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior";
@@ -35,12 +37,16 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestPropertyAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.WorkItemAttribute";
 
+    public const string SystemCollectionsGenericIEnumerable1 = "System.Collections.Generic.IEnumerable`1";
     public const string SystemDescriptionAttribute = "System.ComponentModel.DescriptionAttribute";
     public const string SystemIAsyncDisposable = "System.IAsyncDisposable";
     public const string SystemIDisposable = "System.IDisposable";
     public const string SystemNullable = "System.Nullable`1";
+    public const string SystemReflectionMethodInfo = "System.Reflection.MethodInfo";
+    public const string SystemRuntimeCompilerServicesITuple = "System.Runtime.CompilerServices.ITuple";
     public const string SystemThreadingTasksTask = "System.Threading.Tasks.Task";
     public const string SystemThreadingTasksTask1 = "System.Threading.Tasks.Task`1";
     public const string SystemThreadingTasksValueTask = "System.Threading.Tasks.ValueTask";
     public const string SystemThreadingTasksValueTask1 = "System.Threading.Tasks.ValueTask`1";
+    public const string SystemType = "System.Type";
 }
