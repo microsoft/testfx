@@ -47,7 +47,7 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzer : Diagnos
             {
                 context.RegisterSymbolAction(
                     context => AnalyzeSymbol(context, testMethodAttributeSymbol, testClassAttributeSymbol, deploymentItemAttributeSymbol),
-                    SymbolKind.NamedType, SymbolKind.Method);
+                    new[] { SymbolKind.NamedType, SymbolKind.Method });
             }
         });
     }
@@ -55,24 +55,35 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzer : Diagnos
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol deploymentItemAttributeSymbol)
     {
         var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
-        if (namedTypeSymbol.TypeKind != TypeKind.Class && context.Symbol is not IMethodSymbol)
-        {
-            return;
-        }
 
         bool hasDeploymentItemAttribute = false;
         bool isTestMethodOrTestClass = false;
-        foreach (AttributeData attribute in namedTypeSymbol.GetAttributes())
+        if (namedTypeSymbol.TypeKind == TypeKind.Class)
         {
-            if (attribute.AttributeClass.Inherits(testClassAttributeSymbol)
-                || attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
+            foreach (AttributeData attribute in namedTypeSymbol.GetAttributes())
             {
-                isTestMethodOrTestClass = true;
+                if (attribute.AttributeClass.Inherits(testClassAttributeSymbol))
+                {
+                    isTestMethodOrTestClass = true;
+                }
+                else if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, deploymentItemAttributeSymbol))
+                {
+                    hasDeploymentItemAttribute = true;
+                }
             }
-
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, deploymentItemAttributeSymbol))
+        }
+        else if (context.Symbol is IMethodSymbol methodSymbol)
+        {
+            foreach (AttributeData attribute in methodSymbol.GetAttributes())
             {
-                hasDeploymentItemAttribute = true;
+                if (attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
+                {
+                    isTestMethodOrTestClass = true;
+                }
+                else if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, deploymentItemAttributeSymbol))
+                {
+                    hasDeploymentItemAttribute = true;
+                }
             }
         }
 
