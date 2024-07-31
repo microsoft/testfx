@@ -17,6 +17,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.CssProjectStructureAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDataRowAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDescriptionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingDeploymentItemAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDiscoverInternalsAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternalsAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDoNotParallelizeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DoNotParallelizeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute";
