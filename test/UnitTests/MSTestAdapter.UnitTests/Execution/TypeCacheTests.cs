@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
@@ -25,6 +26,7 @@ public class TypeCacheTests : TestContainer
     private readonly TypeCache _typeCache;
 
     private readonly Mock<ReflectHelper> _mockReflectHelper;
+    private readonly Mock<IMessageLogger> _mockMessageLogger;
 
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
@@ -32,6 +34,7 @@ public class TypeCacheTests : TestContainer
     {
         _mockReflectHelper = new Mock<ReflectHelper>();
         _typeCache = new TypeCache(_mockReflectHelper.Object);
+        _mockMessageLogger = new Mock<IMessageLogger>();
 
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
@@ -978,7 +981,7 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias));
+        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
 
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod");
@@ -1003,7 +1006,7 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias));
+        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
 
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithTimeout");
@@ -1031,7 +1034,7 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias));
+        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
 
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod");
