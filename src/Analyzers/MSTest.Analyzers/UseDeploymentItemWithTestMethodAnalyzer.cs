@@ -13,17 +13,17 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0034: <inheritdoc cref="Resources.UseDeploymentItemWithTestMethodOrTestClassTitle"/>.
+/// MSTEST0036: <inheritdoc cref="Resources.UseDeploymentItemWithTestMethodOrTestClassTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzer : DiagnosticAnalyzer
+public sealed class UseDeploymentItemWithTestMethodAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseDeploymentItemWithTestMethodOrTestClassTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.UseDeploymentItemWithTestMethodOrTestClassDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseDeploymentItemWithTestMethodOrTestClassMessageFormat), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor UseDeploymentItemWithTestMethodOrTestClassRule = DiagnosticDescriptorHelper.Create(
-        id: DiagnosticIds.UseDeploymentItemWithTestMethodOrTestClassRuleId,
+        DiagnosticIds.UseDeploymentItemWithTestMethodRuleId,
         Title,
         MessageFormat,
         Description,
@@ -42,54 +42,36 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzer : Diagnos
         context.RegisterCompilationStartAction(context =>
         {
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol)
-                 && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol)
                  && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDeploymentItemAttribute, out INamedTypeSymbol? deploymentItemAttributeSymbol))
             {
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testMethodAttributeSymbol, testClassAttributeSymbol, deploymentItemAttributeSymbol),
-                    new[] { SymbolKind.NamedType, SymbolKind.Method });
+                    context => AnalyzeSymbol(context, testMethodAttributeSymbol, deploymentItemAttributeSymbol),
+                    SymbolKind.Method);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol deploymentItemAttributeSymbol)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol deploymentItemAttributeSymbol)
     {
-        var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
+        var methodSymbol = (IMethodSymbol)context.Symbol;
 
         bool hasDeploymentItemAttribute = false;
         bool isTestMethodOrTestClass = false;
-        if (namedTypeSymbol.TypeKind == TypeKind.Class)
+        foreach (AttributeData attribute in methodSymbol.GetAttributes())
         {
-            foreach (AttributeData attribute in namedTypeSymbol.GetAttributes())
+            if (attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
             {
-                if (attribute.AttributeClass.Inherits(testClassAttributeSymbol))
-                {
-                    isTestMethodOrTestClass = true;
-                }
-                else if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, deploymentItemAttributeSymbol))
-                {
-                    hasDeploymentItemAttribute = true;
-                }
+                isTestMethodOrTestClass = true;
             }
-        }
-        else if (context.Symbol is IMethodSymbol methodSymbol)
-        {
-            foreach (AttributeData attribute in methodSymbol.GetAttributes())
+            else if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, deploymentItemAttributeSymbol))
             {
-                if (attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
-                {
-                    isTestMethodOrTestClass = true;
-                }
-                else if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, deploymentItemAttributeSymbol))
-                {
-                    hasDeploymentItemAttribute = true;
-                }
+                hasDeploymentItemAttribute = true;
             }
         }
 
         if (hasDeploymentItemAttribute && !isTestMethodOrTestClass)
         {
-            context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(UseDeploymentItemWithTestMethodOrTestClassRule));
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(UseDeploymentItemWithTestMethodOrTestClassRule));
         }
     }
 }

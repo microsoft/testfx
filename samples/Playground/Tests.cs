@@ -14,8 +14,8 @@ public class TestClass
 {
     public TestContext TestContext { get; set; }
 
-    [TestMethod]
-    public void Test()
+    [DeploymentItem("")]
+    public static void Test()
     {
     }
 
