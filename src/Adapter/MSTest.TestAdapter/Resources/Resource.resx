@@ -410,4 +410,7 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="InvalidValue" xml:space="preserve">
     <value>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</value>
   </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_MemberType" xml:space="preserve">
+    <value>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</value>
+  </data>
 </root>
