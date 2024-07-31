@@ -396,7 +396,25 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Member &apos;{0}&apos; should be a method.
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; data member &apos;{0}.{1}&apos; signature is invalid.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_DataMemberSignature {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_DataMemberSignature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; display name method &apos;{0}.{1}&apos; signature is invalid.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; should be a method.
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_MemberMethod {
             get {
@@ -405,7 +423,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot find member &apos;{0}.{1}&apos;.
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; cannot be found.
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_MemberNotFound {
             get {
@@ -414,11 +432,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Member &apos;{0}&apos; should be a property.
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; referenced member &apos;{0}.{1}&apos; should return &apos;IEnumerable&lt;object[]&gt;&apos;, &apos;IEnumerable&lt;Tuple&gt;` or &apos;IEnumerable&lt;ValueTuple&gt;&apos;.
         /// </summary>
-        internal static string DynamicDataShouldBeValidMessageFormat_MemberProperty {
+        internal static string DynamicDataShouldBeValidMessageFormat_MemberType {
             get {
-                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberProperty", resourceCulture);
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberType", resourceCulture);
             }
         }
         
@@ -432,7 +450,25 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Found more than one member with name &apos;{0}&apos;.
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a method so you should set &apos;DynamicDataSourceType.Method&apos;.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeMethod {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a property so you should set &apos;DynamicDataSourceType.Property&apos;.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeProperty {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicDta]&apos; member &apos;{0}.{1}&apos; is found more than once.
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_TooManyMembers {
             get {

@@ -486,15 +486,27 @@
     <value>'[DynamicData]' should only be set on a test method</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_MemberNotFound" xml:space="preserve">
-    <value>Cannot find member '{0}.{1}'</value>
+    <value>'[DynamicData]' member '{0}.{1}' cannot be found</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_TooManyMembers" xml:space="preserve">
-    <value>Found more than one member with name '{0}'</value>
+    <value>'[DynamicDta]' member '{0}.{1}' is found more than once</value>
   </data>
-  <data name="DynamicDataShouldBeValidMessageFormat_MemberProperty" xml:space="preserve">
-    <value>Member '{0}' should be a property</value>
+  <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_MemberMethod" xml:space="preserve">
-    <value>Member '{0}' should be a method</value>
+    <value>'[DynamicData]' member '{0}.{1}' should be a method</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_MemberType" xml:space="preserve">
+    <value>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature" xml:space="preserve">
+    <value>'[DynamicData]' display name method '{0}.{1}' signature is invalid</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_DataMemberSignature" xml:space="preserve">
+    <value>'[DynamicData]' data member '{0}.{1}' signature is invalid</value>
   </data>
 </root>
