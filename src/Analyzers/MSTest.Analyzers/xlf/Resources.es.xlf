@@ -109,8 +109,9 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="translated">Los métodos marcados con [ClassCleanup] deben seguir el siguiente diseño para ser válidos:
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
+        <target state="needs-review-translation">Los métodos marcados con [ClassCleanup] deben seguir el siguiente diseño para ser válidos:
 - ser "público" 
 - no ser "estático"
 - no ser genérico ni estar definido en una clase genérica
@@ -140,8 +141,9 @@ Se debe especificar el parámetro del atributo 'InheritanceBehavior.BeforeEachDe
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'.</source>
-        <target state="translated">Los métodos marcados con [ClassInitialize] deberían seguir el siguiente diseño para ser válidos:
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
+        <target state="needs-review-translation">Los métodos marcados con [ClassInitialize] deberían seguir el siguiente diseño para ser válidos:
 - ser "público" 
 - ser "estático"
 - no ser genérico ni estar definido en una clase genérica
