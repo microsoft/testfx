@@ -111,15 +111,16 @@
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
-        <target state="needs-review-translation">[ClassCleanup] ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gerekir:
-- 'public' olmalı
-- 'static' olamaz
-- genel olamaz veya genel bir sınıf üzerinde tanımlanamaz
-- herhangi bir parametre alamaz
-- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
-- 'async void' olamaz
-- özel bir yöntem (sonlandırıcı, işleç...) olamaz
-Sınıf 'abstract' ise -'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir.</target>
+        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -143,15 +144,16 @@ Sınıf 'abstract' ise -'InheritanceBehavior.BeforeEachDerivedClass' öznitelik 
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
-        <target state="needs-review-translation">[ClassInitialize] ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gerekir:
-- 'public' olmalı
-- 'static' olmalı
-- genel olamaz veya genel bir sınıf üzerinde tanımlanamaz
-- 'TestContext' türünde tek bir parametre almalıdır
-- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
-- 'async void' olamaz
-- özel bir yöntem (sonlandırıcı, işleç...) olamaz
-Sınıf 'abstract' ise -'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir.</target>
+        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
