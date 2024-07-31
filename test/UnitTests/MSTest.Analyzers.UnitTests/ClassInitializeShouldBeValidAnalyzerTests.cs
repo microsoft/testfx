@@ -665,4 +665,22 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+    
+    public async Task WhenClassInitializeIsOnSealedClassMarkedWithTestClass_AndDefaultInheritanceBehavior_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class MyTestClass
+            {
+                [ClassInitialize]
+                public static void ClassInitialize(TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
