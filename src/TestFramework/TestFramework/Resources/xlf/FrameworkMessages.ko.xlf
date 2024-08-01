@@ -230,12 +230,12 @@
       </trans-unit>
       <trans-unit id="NoExceptionThrown">
         <source>Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</source>
-        <target state="new">Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</target>
+        <target state="translated">예상 예외 형식:&lt;{1}&gt; 하지만 예외가 발생하지 않음. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="WrongExceptionThrown">
         <source>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</source>
-        <target state="new">Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</target>
+        <target state="translated">예상 예외 형식:&lt;{1}&gt;. 실제 예상 형식:&lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">

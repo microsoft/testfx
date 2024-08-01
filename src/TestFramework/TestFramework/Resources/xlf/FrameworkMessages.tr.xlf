@@ -230,12 +230,12 @@
       </trans-unit>
       <trans-unit id="NoExceptionThrown">
         <source>Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</source>
-        <target state="new">Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</target>
+        <target state="translated">Beklenen özel durum türü:&lt;{1}&gt; ancak hiçbir özel durum oluşmadı. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="WrongExceptionThrown">
         <source>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</source>
-        <target state="new">Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Beklenen özel durum türü:&lt;{1}&gt;. Gerçek özel durum türü:&lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">

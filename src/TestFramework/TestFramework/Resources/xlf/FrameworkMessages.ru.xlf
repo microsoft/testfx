@@ -230,12 +230,12 @@
       </trans-unit>
       <trans-unit id="NoExceptionThrown">
         <source>Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</source>
-        <target state="new">Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</target>
+        <target state="translated">Ожидаемый тип исключения:&lt;{1}&gt; но исключение не создано. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="WrongExceptionThrown">
         <source>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</source>
-        <target state="new">Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Ожидаемый тип исключения:&lt;{1}&gt;. Фактический тип исключения:&lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
