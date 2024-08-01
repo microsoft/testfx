@@ -31,7 +31,7 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
         }
 
         string vsProgramFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft Visual Studio");
-        string? vSDiagnostics = Directory.GetFiles(vsProgramFile, "VSDiagnostics.exe", SearchOption.AllDirectories).SingleOrDefault()
+        string vSDiagnostics = Directory.GetFiles(vsProgramFile, "VSDiagnostics.exe", SearchOption.AllDirectories).SingleOrDefault()
             ?? throw new InvalidOperationException("VSDiagnostics.exe not found");
         string agentConfig = Path.Combine(Path.GetDirectoryName(vSDiagnostics)!, "AgentConfigs", _agentConfigName);
         if (!File.Exists(agentConfig))
