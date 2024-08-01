@@ -509,4 +509,13 @@
   <data name="DynamicDataShouldBeValidMessageFormat_DataMemberSignature" xml:space="preserve">
     <value>'[DynamicData]' data member '{0}.{1}' signature is invalid</value>
   </data>
+  <data name="UseDeploymentItemWithTestMethodOrTestClassTitle" xml:space="preserve">
+    <value>'[DeploymentItem]' can be specified only on test class or test method</value>
+  </data>
+  <data name="UseDeploymentItemWithTestMethodOrTestClassDescription" xml:space="preserve">
+    <value>Wrong placement of '[DeploymentItem]'.</value>
+  </data>
+  <data name="UseDeploymentItemWithTestMethodOrTestClassMessageFormat" xml:space="preserve">
+    <value>'[DeploymentItem]' can be specified only on test class or test method</value>
+  </data>
 </root>
