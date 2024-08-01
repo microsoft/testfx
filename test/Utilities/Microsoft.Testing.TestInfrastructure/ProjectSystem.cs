@@ -164,7 +164,7 @@ public abstract class Folder
     public string AddOrUpdateFileContent(string relativePath, string fileContent)
     {
         string finalPath = Path.Combine(FolderPath, relativePath);
-        string? finalPathDirectory = Path.GetDirectoryName(finalPath) ?? throw new InvalidOperationException("Unexpected null 'finalPathDirectory'");
+        string finalPathDirectory = Path.GetDirectoryName(finalPath) ?? throw new InvalidOperationException("Unexpected null 'finalPathDirectory'");
         Directory.CreateDirectory(finalPathDirectory);
         File.WriteAllText(finalPath, fileContent);
         return finalPath;
