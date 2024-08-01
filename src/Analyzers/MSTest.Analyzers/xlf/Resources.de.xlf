@@ -663,11 +663,6 @@
         <target state="translated">[{0}] kann nur für Methoden festgelegt werden, die mit [TestMethod] markiert sind.</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassDescription">
-        <source>Wrong placement of '[DeploymentItem]'.</source>
-        <target state="new">Wrong placement of '[DeploymentItem]'.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>

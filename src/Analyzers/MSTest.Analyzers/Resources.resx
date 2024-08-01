@@ -512,9 +512,6 @@
   <data name="UseDeploymentItemWithTestMethodOrTestClassTitle" xml:space="preserve">
     <value>'[DeploymentItem]' can be specified only on test class or test method</value>
   </data>
-  <data name="UseDeploymentItemWithTestMethodOrTestClassDescription" xml:space="preserve">
-    <value>Wrong placement of '[DeploymentItem]'.</value>
-  </data>
   <data name="UseDeploymentItemWithTestMethodOrTestClassMessageFormat" xml:space="preserve">
     <value>'[DeploymentItem]' can be specified only on test class or test method</value>
   </data>

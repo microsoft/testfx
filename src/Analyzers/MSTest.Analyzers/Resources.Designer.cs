@@ -1074,15 +1074,6 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Wrong placement of &apos;[DeploymentItem]&apos;..
-        /// </summary>
-        internal static string UseDeploymentItemWithTestMethodOrTestClassDescription {
-            get {
-                return ResourceManager.GetString("UseDeploymentItemWithTestMethodOrTestClassDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &apos;[DeploymentItem]&apos; can be specified only on test class or test method.
         /// </summary>
         internal static string UseDeploymentItemWithTestMethodOrTestClassMessageFormat {
