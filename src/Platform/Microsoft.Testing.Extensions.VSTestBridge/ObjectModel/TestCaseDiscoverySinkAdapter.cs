@@ -63,7 +63,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
     /// <inheritdoc/>
     public void SendTestCase(TestCase discoveredTest)
     {
-        _logger.LogTraceAsync("BridgeTestCaseDiscoverySink.SendTestCase").Await();
+        _logger.LogTrace("BridgeTestCaseDiscoverySink.SendTestCase");
 
         _cancellationToken.ThrowIfCancellationRequested();
 
