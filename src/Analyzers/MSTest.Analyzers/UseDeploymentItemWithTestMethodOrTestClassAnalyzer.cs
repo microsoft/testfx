@@ -18,14 +18,13 @@ namespace MSTest.Analyzers;
 public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseDeploymentItemWithTestMethodOrTestClassTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString Description = new(nameof(Resources.UseDeploymentItemWithTestMethodOrTestClassDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseDeploymentItemWithTestMethodOrTestClassMessageFormat), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor UseDeploymentItemWithTestMethodOrTestClassRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseDeploymentItemWithTestMethodOrTestClassRuleId,
         Title,
         MessageFormat,
-        Description,
+        null,
         Category.Usage,
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
@@ -55,43 +54,25 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzer : Diagnos
     {
         bool hasDeploymentItemAttribute = false;
         bool isTestMethodOrTestClass = false;
-        if (context.Symbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.TypeKind == TypeKind.Class)
+        foreach (AttributeData attribute in context.Symbol.GetAttributes())
         {
-            foreach (AttributeData attribute in namedTypeSymbol.GetAttributes())
+            if (context.Symbol.Kind == SymbolKind.NamedType && attribute.AttributeClass.Inherits(testClassAttributeSymbol))
             {
-                if (attribute.AttributeClass.Inherits(testClassAttributeSymbol))
-                {
-                    isTestMethodOrTestClass = true;
-                }
-                else if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, deploymentItemAttributeSymbol))
-                {
-                    hasDeploymentItemAttribute = true;
-                }
+                isTestMethodOrTestClass = true;
             }
-
-            if (hasDeploymentItemAttribute && !isTestMethodOrTestClass)
+            else if (context.Symbol.Kind == SymbolKind.Method && attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
             {
-                context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(UseDeploymentItemWithTestMethodOrTestClassRule));
+                isTestMethodOrTestClass = true;
+            }
+            else if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, deploymentItemAttributeSymbol))
+            {
+                hasDeploymentItemAttribute = true;
             }
         }
-        else if (context.Symbol is IMethodSymbol methodSymbol)
-        {
-            foreach (AttributeData attribute in methodSymbol.GetAttributes())
-            {
-                if (attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
-                {
-                    isTestMethodOrTestClass = true;
-                }
-                else if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, deploymentItemAttributeSymbol))
-                {
-                    hasDeploymentItemAttribute = true;
-                }
-            }
 
-            if (hasDeploymentItemAttribute && !isTestMethodOrTestClass)
-            {
-                context.ReportDiagnostic(methodSymbol.CreateDiagnostic(UseDeploymentItemWithTestMethodOrTestClassRule));
-            }
+        if (hasDeploymentItemAttribute && !isTestMethodOrTestClass)
+        {
+            context.ReportDiagnostic(context.Symbol.CreateDiagnostic(UseDeploymentItemWithTestMethodOrTestClassRule));
         }
     }
 }
