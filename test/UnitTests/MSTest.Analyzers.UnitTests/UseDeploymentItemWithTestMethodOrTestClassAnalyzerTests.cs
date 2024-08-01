@@ -43,4 +43,76 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzerTests(ITes
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    public async Task WhenInheritedTestClassAttributeHasDeploymentItem_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class InheritedTestClass : TestClassAttribute
+            {}
+
+            [InheritedTestClass]
+            [DeploymentItem("")]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenInheritedTestMethodAttributeHasDeploymentItem_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class InheritedTestMethod : TestMethodAttribute
+            {}
+            
+            [TestClass]
+            public class MyTestClass
+            {
+                [InheritedTestMethod]
+                [DeploymentItem("")]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenAClassHasDeploymentItem_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [DeploymentItem("")]
+            public class [|MyTestClass|]
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenAMethodHasDeploymentItem_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DeploymentItem("")]
+                public void [|MyTestMethod|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
