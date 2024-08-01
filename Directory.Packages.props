@@ -15,7 +15,7 @@
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>17.10.0</MicrosoftNETTestSdkVersion>
-    <MicrosoftPlaywrightVersion>1.44.0</MicrosoftPlaywrightVersion>
+    <MicrosoftPlaywrightVersion>1.45.1</MicrosoftPlaywrightVersion>
     <!-- CVE-2017-0247 -->
     <SystemNetWebSocketsClientVersion>4.3.1</SystemNetWebSocketsClientVersion>
     <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
