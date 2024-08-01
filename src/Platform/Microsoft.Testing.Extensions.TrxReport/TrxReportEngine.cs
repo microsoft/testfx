@@ -158,7 +158,7 @@ internal sealed partial class TrxReportEngine
 
             AddTimes(testRun);
 
-            // If the user added the the trxFileName the runDeploymentRoot would stay the same, We think it's a bug but I found that same behavior on vstest
+            // If the user added the trxFileName the runDeploymentRoot would stay the same, We think it's a bug but I found that same behavior on vstest
             string runDeploymentRoot = AddTestSettings(testRun, testRunName);
             string trxFileName = $"{runDeploymentRoot}.trx";
             if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
@@ -489,7 +489,7 @@ internal sealed partial class TrxReportEngine
             unitTestResult.SetAttributeValue("relativeResultsDirectory", executionId);
 
             // Below we're escaping most "dynamic body" using .Replace("\0", ""), because this is an invalid xml character.
-            // There're other invalid xml characters, but they're transformed inside the writer in a correct way so we try to
+            // There are other invalid xml characters, but they're transformed inside the writer in a correct way so we try to
             // rely on the built-in escaping/conversion.
             // i.e. https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.Xml/src/System/Xml/Core/XmlEncodedRawTextWriter.cs#L890
             var output = new XElement("Output");

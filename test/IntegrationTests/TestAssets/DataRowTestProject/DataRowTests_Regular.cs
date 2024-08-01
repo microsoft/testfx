@@ -234,4 +234,8 @@ public class DataRowTests_Regular
     public void MethodWithOverload(int i)
     {
     }
+
+    [TestMethod]
+    [DataRow(null)]
+    public void NullValueOnObjectArray(object[] o) => Assert.IsNull(o);
 }

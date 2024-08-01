@@ -211,7 +211,7 @@ public class ServerTests : TestBase
         msg = await WaitForMessage(messageHandler, (RpcMessage? rpcMessage) => rpcMessage is ErrorMessage, "Wait cancelRequest", cancellationTokenSource.Token);
 
         var error = (ErrorMessage)msg!;
-        Assert.AreEqual(ErrorCodes.RequestCancelled, error.ErrorCode);
+        Assert.AreEqual(ErrorCodes.RequestCanceled, error.ErrorCode);
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
 

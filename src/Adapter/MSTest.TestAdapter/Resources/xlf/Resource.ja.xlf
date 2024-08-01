@@ -8,7 +8,7 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
-        <source>Assembly cleanup method '{0}.{1}' was cancelled</source>
+        <source>Assembly cleanup method '{0}.{1}' was canceled</source>
         <target state="translated">アセンブリ クリーンアップ メソッド '{0}.{1}' が取り消されました</target>
         <note />
       </trans-unit>
@@ -18,7 +18,7 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
-        <source>Assembly initialize method '{0}.{1}' was cancelled</source>
+        <source>Assembly initialize method '{0}.{1}' was canceled</source>
         <target state="translated">アセンブリ初期化メソッド '{0}.{1}' が取り消されました</target>
         <note />
       </trans-unit>
@@ -43,7 +43,7 @@ but received {4} argument(s), with types '{5}'.</source>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
-        <source>Class cleanup method '{0}.{1}' was cancelled</source>
+        <source>Class cleanup method '{0}.{1}' was canceled</source>
         <target state="translated">クラス クリーンアップ メソッド '{0}.{1}' が取り消されました</target>
         <note />
       </trans-unit>
@@ -53,14 +53,24 @@ but received {4} argument(s), with types '{5}'.</source>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
-        <source>Class initialize method '{0}.{1}' was cancelled</source>
+        <source>Class initialize method '{0}.{1}' was canceled</source>
         <target state="translated">クラス初期化メソッド '{0}.{1}' が取り消されました</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
+        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
+        <target state="new">'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">テスト '{0}' は実行タイムアウトを超えました。</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidValue">
+        <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
+        <target state="new">Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</target>
+        <note />
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
@@ -78,7 +88,7 @@ but received {4} argument(s), with types '{5}'.</source>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
-        <source>Test cleanup method '{0}.{1}' was cancelled</source>
+        <source>Test cleanup method '{0}.{1}' was canceled</source>
         <target state="translated">テスト クリーンアップ メソッド '{0}.{1}' が取り消されました</target>
         <note />
       </trans-unit>
@@ -88,7 +98,7 @@ but received {4} argument(s), with types '{5}'.</source>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
-        <source>Test initialize method '{0}.{1}' was cancelled</source>
+        <source>Test initialize method '{0}.{1}' was canceled</source>
         <target state="translated">テスト初期化メソッド '{0}.{1}' が取り消されました</target>
         <note />
       </trans-unit>

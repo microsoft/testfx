@@ -23,9 +23,8 @@ internal sealed class ConsoleTestHost(
     Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
     TestFrameworkManager testFrameworkManager,
     TestHostManager testHostManager,
-    NamedPipeClient? dotnetTestPipeClient = null,
-    ITestApplicationModuleInfo? testApplicationModuleInfo = null)
-    : CommonTestHost(serviceProvider, dotnetTestPipeClient, testApplicationModuleInfo)
+    NamedPipeClient? dotnetTestPipeClient = null)
+    : CommonTestHost(serviceProvider, dotnetTestPipeClient)
 {
     private static readonly ClientInfo Client = new("testingplatform-console", AppVersion.DefaultSemVer);
 
@@ -109,7 +108,7 @@ internal sealed class ConsoleTestHost(
             requestExecuteStop ??= _clock.UtcNow;
 
             exitCode = ExitCodes.TestSessionAborted;
-            await _logger.LogInformationAsync("Test session cancelled.");
+            await _logger.LogInformationAsync("Test session canceled.");
         }
         finally
         {

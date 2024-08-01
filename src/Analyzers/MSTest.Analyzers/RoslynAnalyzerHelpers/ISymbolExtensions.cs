@@ -54,5 +54,15 @@ namespace Analyzer.Utilities.Extensions
 
             return visibility;
         }
+
+        public static ITypeSymbol? GetMemberType(this ISymbol? symbol)
+            => symbol switch
+            {
+                IEventSymbol eventSymbol => eventSymbol.Type,
+                IFieldSymbol fieldSymbol => fieldSymbol.Type,
+                IMethodSymbol methodSymbol => methodSymbol.ReturnType,
+                IPropertySymbol propertySymbol => propertySymbol.Type,
+                _ => null,
+            };
     }
 }

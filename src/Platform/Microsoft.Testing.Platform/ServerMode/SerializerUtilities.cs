@@ -317,13 +317,13 @@ internal static class SerializerUtilities
                                     break;
                                 }
 
-                            case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
+                            case CancelledTestNodeStateProperty canceledTestNodeStateProperty:
                                 {
-                                    properties["execution-state"] = "cancelled";
-                                    properties["error.message"] = cancelledTestNodeStateProperty.Explanation ?? cancelledTestNodeStateProperty.Exception?.Message;
-                                    if (cancelledTestNodeStateProperty.Exception != null)
+                                    properties["execution-state"] = "canceled";
+                                    properties["error.message"] = canceledTestNodeStateProperty.Explanation ?? canceledTestNodeStateProperty.Exception?.Message;
+                                    if (canceledTestNodeStateProperty.Exception != null)
                                     {
-                                        properties["error.stacktrace"] = cancelledTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
+                                        properties["error.stacktrace"] = canceledTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
                                     }
 
                                     break;

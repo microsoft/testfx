@@ -54,11 +54,13 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol? inheritanceBehaviorSymbol, INamedTypeSymbol testClassAttributeSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-
+        bool isInheritanceModeSet = methodSymbol.IsInheritanceModeSet(inheritanceBehaviorSymbol, classCleanupAttributeSymbol);
         if (methodSymbol.IsClassInitializeMethod(classCleanupAttributeSymbol)
-            && !methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: true,
-                allowGenericType: methodSymbol.IsInheritanceModeSet(inheritanceBehaviorSymbol, classCleanupAttributeSymbol), testContextSymbol: null,
-                testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
+            && (!methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: true,
+                allowGenericType: isInheritanceModeSet, testContextSymbol: null,
+                testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable)
+                || (!isInheritanceModeSet && methodSymbol.ContainingType.IsAbstract)
+                || (isInheritanceModeSet && methodSymbol.ContainingType.IsSealed)))
         {
             context.ReportDiagnostic(isFixable
                 ? methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name)

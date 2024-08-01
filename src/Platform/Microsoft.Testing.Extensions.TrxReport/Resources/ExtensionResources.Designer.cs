@@ -88,7 +88,7 @@ namespace Microsoft.Testing.Extensions.TestReports.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This tool allows to compare and highights differences between 2 TRX reports.
+        ///   Looks up a localized string similar to This tool allows to compare and highlights differences between 2 TRX reports.
         /// </summary>
         internal static string TrxComparerToolDescription {
             get {

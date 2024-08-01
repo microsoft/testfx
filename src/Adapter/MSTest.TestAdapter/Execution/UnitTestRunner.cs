@@ -179,8 +179,12 @@ internal class UnitTestRunner : MarshalByRefObject
                 }
             }
 
-            testMethodInfo?.Parent.RunClassCleanup(testContext, _classCleanupManager, testMethodInfo, testMethod, result);
-            RunAssemblyCleanupIfNeeded(testContext, _classCleanupManager, _typeCache, result);
+            if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true)
+            {
+                testMethodInfo?.Parent.RunClassCleanup(testContext, _classCleanupManager, testMethodInfo, testMethod, result);
+                RunAssemblyCleanupIfNeeded(testContext, _classCleanupManager, _typeCache, result);
+            }
+
             return result;
         }
         catch (TypeInspectionException ex)

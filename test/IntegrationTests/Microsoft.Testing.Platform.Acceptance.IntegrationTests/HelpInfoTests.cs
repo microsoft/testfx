@@ -442,12 +442,12 @@ Registered tools:
     Command: ms-trxcompare
     Name: TRX comparer tool
     Version: *
-    Description: This tool allows to compare and highights differences between 2 TRX reports
+    Description: This tool allows to compare and highlights differences between 2 TRX reports
     Tool command line providers:
       TrxCompareTool
         Name: TRX comparer tool
         Version: *
-        Description: This tool allows to compare and highights differences between 2 TRX reports
+        Description: This tool allows to compare and highlights differences between 2 TRX reports
         Options:
           --baseline-trx
             Arity: 1

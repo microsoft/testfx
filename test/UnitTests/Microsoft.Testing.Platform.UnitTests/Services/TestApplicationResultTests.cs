@@ -65,7 +65,7 @@ public sealed class TestApplicationResultTests : TestBase
         Assert.AreEqual(ExitCodes.AtLeastOneTestFailed, await _testApplicationResult.GetProcessExitCodeAsync());
     }
 
-    public async Task GetProcessExitCodeAsync_If_Cancelled_Returns_TestSessionAborted()
+    public async Task GetProcessExitCodeAsync_If_Canceled_Returns_TestSessionAborted()
     {
         Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
         testApplicationCancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(() =>

@@ -63,7 +63,7 @@ internal class AsyncConsumerDataProcessor : IDisposable
                 {
                     // We don't enqueue the data if the consumer is the producer of the data.
                     // We could optimize this if and make a get with type/all but producers, but it
-                    // could be overengineering.
+                    // could be over-engineering.
                     if (dataProducer.Uid == DataConsumer.Uid)
                     {
                         continue;

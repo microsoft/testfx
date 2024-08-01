@@ -274,7 +274,7 @@ internal sealed partial class FilterExpression
         // Will have the nodes.
         Stack<FilterExpression> filterStack = new();
 
-        // Will contain the nodes results to use them in thier parent result's calculation
+        // Will contain the nodes results to use them in their parent result's calculation
         // and at the end will have the root result.
         Stack<T> result = new();
 

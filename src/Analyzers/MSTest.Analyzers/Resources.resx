@@ -181,7 +181,9 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</value>
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</value>
   </data>
   <data name="ClassCleanupShouldBeValidMessageFormat" xml:space="preserve">
     <value>ClassCleanup method '{0}' signature is invalid</value>
@@ -197,7 +199,9 @@
 - take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</value>
+- not be a special method (finalizer, operator...)
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</value>
   </data>
   <data name="ClassInitializeShouldBeValidMessageFormat" xml:space="preserve">
     <value>ClassInitialize method '{0}' signature is invalid</value>
@@ -468,5 +472,41 @@
   </data>
   <data name="UseClassCleanupBehaviorEndOfClassMessageFormat" xml:space="preserve">
     <value>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</value>
+  </data>
+  <data name="DynamicDataShouldBeValidTitle" xml:space="preserve">
+    <value>DynamicData should be valid</value>
+  </data>
+  <data name="DynamicDataShouldBeValidDescription" xml:space="preserve">
+    <value>'DynamicData' entry should have the following layout to be valid:
+- should only be set on a test method;
+- member should be defined on the type specified;
+- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_OnTestMethod" xml:space="preserve">
+    <value>'[DynamicData]' should only be set on a test method</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_MemberNotFound" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' cannot be found</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_TooManyMembers" xml:space="preserve">
+    <value>'[DynamicDta]' member '{0}.{1}' is found more than once</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_MemberMethod" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' should be a method</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_MemberType" xml:space="preserve">
+    <value>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature" xml:space="preserve">
+    <value>'[DynamicData]' display name method '{0}.{1}' signature is invalid</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_DataMemberSignature" xml:space="preserve">
+    <value>'[DynamicData]' data member '{0}.{1}' signature is invalid</value>
   </data>
 </root>

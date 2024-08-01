@@ -208,7 +208,9 @@ namespace MSTest.Analyzers {
         ///- not take any parameter
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)..
+        ///- not be a special method (finalizer, operator...)
+        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should be specified if the class is &apos;abstract&apos;
+        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should n [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ClassCleanupShouldBeValidDescription {
             get {
@@ -242,7 +244,9 @@ namespace MSTest.Analyzers {
         ///- take a single parameter of type &apos;TestContext&apos;
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)..
+        ///- not be a special method (finalizer, operator...)
+        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should be specified if the class is &apos;abstract&apos;
+        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; att [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ClassInitializeShouldBeValidDescription {
             get {
@@ -376,6 +380,108 @@ namespace MSTest.Analyzers {
         internal static string DoNotUseSystemDescriptionAttributeTitle {
             get {
                 return ResourceManager.GetString("DoNotUseSystemDescriptionAttributeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;DynamicData&apos; entry should have the following layout to be valid:
+        ///- should only be set on a test method;
+        ///- member should be defined on the type specified;
+        ///- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise..
+        /// </summary>
+        internal static string DynamicDataShouldBeValidDescription {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; data member &apos;{0}.{1}&apos; signature is invalid.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_DataMemberSignature {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_DataMemberSignature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; display name method &apos;{0}.{1}&apos; signature is invalid.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; should be a method.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_MemberMethod {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; cannot be found.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_MemberNotFound {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; referenced member &apos;{0}.{1}&apos; should return &apos;IEnumerable&lt;object[]&gt;&apos;, &apos;IEnumerable&lt;Tuple&gt;` or &apos;IEnumerable&lt;ValueTuple&gt;&apos;.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_MemberType {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; should only be set on a test method.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_OnTestMethod {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_OnTestMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a method so you should set &apos;DynamicDataSourceType.Method&apos;.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeMethod {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a property so you should set &apos;DynamicDataSourceType.Property&apos;.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeProperty {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicDta]&apos; member &apos;{0}.{1}&apos; is found more than once.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_TooManyMembers {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_TooManyMembers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DynamicData should be valid.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidTitle {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidTitle", resourceCulture);
             }
         }
         

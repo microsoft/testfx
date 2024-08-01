@@ -94,12 +94,10 @@ public class ParameterizedTestTests : AcceptanceTestBase
             yield return (DynamicDataAssetName, DynamicDataAssetName,
                 SourceCodeDynamicData
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
             yield return (DataSourceAssetName, DataSourceAssetName,
                 SourceCodeDataSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 

@@ -79,7 +79,7 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to cancelled.
+        ///   Looks up a localized string similar to canceled.
         /// </summary>
         internal static string CancelledLowercase {
             get {
@@ -88,7 +88,7 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cancelling the test session....
+        ///   Looks up a localized string similar to Canceling the test session....
         /// </summary>
         internal static string CancellingTestSession {
             get {
@@ -1274,7 +1274,7 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An unexpected exception occured during byte conversion.
+        ///   Looks up a localized string similar to An unexpected exception occurred during byte conversion.
         /// </summary>
         internal static string UnexpectedExceptionDuringByteConversionErrorMessage {
             get {
@@ -1283,7 +1283,7 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An unexpected exception occured in &apos;FileLogger.WriteLogToFileAsync&apos;.
+        ///   Looks up a localized string similar to An unexpected exception occurred in &apos;FileLogger.WriteLogToFileAsync&apos;.
         ///{0}.
         /// </summary>
         internal static string UnexpectedExceptionInFileLoggerErrorMessage {

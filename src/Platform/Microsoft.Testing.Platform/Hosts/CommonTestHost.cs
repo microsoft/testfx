@@ -18,9 +18,11 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPipeClient? dotnetTestPipeClient = null, ITestApplicationModuleInfo? testApplicationModuleInfo = null) : ITestHost
+internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPipeClient? dotnetTestPipeClient = null) : ITestHost
 {
-    public ServiceProvider ServiceProvider { get; } = serviceProvider;
+    public ServiceProvider ServiceProvider => serviceProvider;
+
+    protected NamedPipeClient? DotnetTestPipeClient => dotnetTestPipeClient;
 
     protected abstract bool RunTestApplicationLifeCycleCallbacks { get; }
 
@@ -32,6 +34,8 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPip
         try
         {
             bool isDotnetTestHandshakeSuccessful = default;
+            ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
+
             if (dotnetTestPipeClient is not null)
             {
                 isDotnetTestHandshakeSuccessful = await IsDotnetTestHandshakeSuccessfulAsync(dotnetTestPipeClient, testApplicationModuleInfo, testApplicationCancellationToken);
@@ -66,7 +70,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPip
         }
         catch (OperationCanceledException) when (testApplicationCancellationToken.IsCancellationRequested)
         {
-            // We do nothing we're cancelling
+            // We do nothing we're canceling
             exitCode = ExitCodes.TestSessionAborted;
         }
         finally
@@ -124,11 +128,11 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPip
         }
         catch (OperationCanceledException) when (testSessionCancellationToken.IsCancellationRequested)
         {
-            // Do nothing we're cancelled
+            // Do nothing we're canceled
         }
 
         // We keep the display after session out of the OperationCanceledException catch because we want to notify the IPlatformOutputDevice
-        // also in case of cancellation. Most likely it needs to notify users that the session was cancelled.
+        // also in case of cancellation. Most likely it needs to notify users that the session was canceled.
         await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo, testSessionCancellationToken);
     }
 

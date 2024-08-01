@@ -344,7 +344,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             TestHostControllerConfiguration testHostControllers = await ((TestHostControllersManager)TestHostControllers).BuildAsync(testHostControllersServiceProvider);
             if (testHostControllers.RequireProcessRestart)
             {
-                TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, systemEnvironment, loggerFactory, systemClock, dotnetTestPipeClient, _testApplicationModuleInfo);
+                TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, systemEnvironment, loggerFactory, systemClock, dotnetTestPipeClient);
 
                 await LogTestHostCreatedAsync(
                     serviceProvider,
@@ -743,7 +743,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         TestHostManager testHostManager,
         NamedPipeClient? dotnetTestPipeClient,
         ITestApplicationModuleInfo testApplicationModuleInfo)
-        => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager, dotnetTestPipeClient, testApplicationModuleInfo);
+        => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager, dotnetTestPipeClient);
 
     protected virtual bool SkipAddingService(object service) => false;
 
