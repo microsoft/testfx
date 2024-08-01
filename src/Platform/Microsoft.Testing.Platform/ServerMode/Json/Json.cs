@@ -692,28 +692,25 @@ internal sealed class Json
 
         if (deserializerFound && deserializer is JsonElementDeserializer<T> objectDeserializer)
         {
-            T obj = objectDeserializer.CreateObject(this, element);
-            return obj;
+            return objectDeserializer.CreateObject(this, element);
         }
 
         if (deserializerFound && deserializer is JsonCollectionDeserializer<T> collectionDeserializer)
         {
-            T obj = collectionDeserializer.CreateObject(this, element);
-            return obj;
+            return collectionDeserializer.CreateObject(this, element);
         }
 
         if (deserializerFound && deserializer is JsonElementDeserializer<object> baseObjectDeserializer)
         {
-            var obj = (T)baseObjectDeserializer.CreateObject(this, element);
-            return obj;
+            return (T)baseObjectDeserializer.CreateObject(this, element);
         }
 
         if (deserializerFound && deserializer is JsonCollectionDeserializer<object> baseCollectionDeserializer)
         {
-            var obj = (T)baseCollectionDeserializer.CreateObject(this, element);
-            return obj;
+            return (T)baseCollectionDeserializer.CreateObject(this, element);
         }
 
+        // Cannot find deserializer
         throw new InvalidOperationException($"Cannot find deserializer for {typeof(T)}.");
     }
 
