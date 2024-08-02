@@ -3,21 +3,21 @@
   <file datatype="xml" source-language="en" target-language="ru" original="../Resources.resx">
     <body>
       <trans-unit id="AssemblyCleanupShouldBeValidDescription">
-        <source>Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
+        <source>Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
 -it can't be declared on a generic class
--it should be public
--it should be static
--it should not be async void
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
 -it should not take any parameter
--return type should be void, Task or ValueTask
+-return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
--The type should be a class.
--The class should be public or internal (if the test project is using the [DiscoverInternals] attribute).
--The class shouldn't be static.
--The class should be marked with [TestClass] (or a derived attribute)
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="needs-review-translation">Чтобы методы, отмеченные [AssemblyCleanup], были допустимыми, они должны соответствовать следующему макету:
 – должны быть "общедоступными" 
@@ -40,21 +40,21 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
-        <source>Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
+        <source>Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
 -it can't be declared on a generic class
--it should be public
--it should be static
--it should not be async void
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should take one parameter of type TestContext
--return type should be void, Task or ValueTask
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
--The type should be a class.
--The class should be public or internal (if the test project is using the [DiscoverInternals] attribute).
--The class shouldn't be static.
--The class should be marked with [TestClass] (or a derived attribute)
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="needs-review-translation">Чтобы методы, отмеченные [AssemblyInitialize], были допустимыми, они должны соответствовать следующему макету:
 – должны быть "общедоступными" 
@@ -117,41 +117,41 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
-        <source>Methods marked with [ClassCleanup] should follow the following layout to be valid:
--it can't be declared on a generic class without the InheritanceBehavior mode is set
--it should be public
--it should be static
--it should not be async void
+        <source>Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
 -it should not take any parameter
--return type should be void, Task or ValueTask
--InheritanceBehavior.BeforeEachDerivedClass attribute parameter should be specified if the class is abstract.
--InheritanceBehavior.BeforeEachDerivedClass attribute parameter should not be specified if the class is `sealed`.
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
 
 The type declaring these methods should also respect the following rules:
--The type should be a class.
--The class should be public or internal (if the test project is using the [DiscoverInternals] attribute).
--The class shouldn't be static.
--If the class is sealed, it should be marked with [TestClass] (or a derived attribute)
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
--it can't be declared on a generic class without the InheritanceBehavior mode is set
--it should be public
--it should be static
--it should not be async void
+        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
 -it should not take any parameter
--return type should be void, Task or ValueTask
--InheritanceBehavior.BeforeEachDerivedClass attribute parameter should be specified if the class is abstract.
--InheritanceBehavior.BeforeEachDerivedClass attribute parameter should not be specified if the class is `sealed`.
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
 
 The type declaring these methods should also respect the following rules:
--The type should be a class.
--The class should be public or internal (if the test project is using the [DiscoverInternals] attribute).
--The class shouldn't be static.
--If the class is sealed, it should be marked with [TestClass] (or a derived attribute)
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</target>
         <note />
       </trans-unit>
@@ -166,41 +166,41 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidDescription">
-        <source>Methods marked with [ClassInitialize] should follow the following layout to be valid:
--it can't be declared on a generic class without the InheritanceBehavior mode is set
--it should be public
--it should be static
--it should not be async void
+        <source>Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should take one parameter of type TestContext
--return type should be void, Task or ValueTask
--InheritanceBehavior.BeforeEachDerivedClass attribute parameter should be specified if the class is abstract.
--InheritanceBehavior.BeforeEachDerivedClass attribute parameter should not be specified if the class is `sealed`.
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
 
 The type declaring these methods should also respect the following rules:
--The type should be a class.
--The class should be public or internal (if the test project is using the [DiscoverInternals] attribute).
--The class shouldn't be static.
--If the class is sealed, it should be marked with [TestClass] (or a derived attribute)
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
--it can't be declared on a generic class without the InheritanceBehavior mode is set
--it should be public
--it should be static
--it should not be async void
+        <target state="new">Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should take one parameter of type TestContext
--return type should be void, Task or ValueTask
--InheritanceBehavior.BeforeEachDerivedClass attribute parameter should be specified if the class is abstract.
--InheritanceBehavior.BeforeEachDerivedClass attribute parameter should not be specified if the class is `sealed`.
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
 
 The type declaring these methods should also respect the following rules:
--The type should be a class.
--The class should be public or internal (if the test project is using the [DiscoverInternals] attribute).
--The class shouldn't be static.
--If the class is sealed, it should be marked with [TestClass] (or a derived attribute)
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</target>
         <note />
       </trans-unit>
@@ -493,21 +493,21 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
-        <source>Methods marked with [TestCleanup] should follow the following layout to be valid:
--it should be public
--it should not be abstract
--it should not be async void
--it should not be static
+        <source>Methods marked with '[TestCleanup]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
 -it should not take any parameter
--return type should be void, Task or ValueTask
+-return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
--The type should be a class.
--The class should be public or internal (if the test project is using the [DiscoverInternals] attribute).
--The class shouldn't be static.
--If the class is sealed, it should be marked with [TestClass] (or a derived attribute).</source>
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
         <target state="needs-review-translation">Чтобы методы, отмеченные [TestCleanup], были действительными, они должны соответствовать следующему макету:
 – должны быть "общедоступными" 
 – не должны быть "статическими"
@@ -573,21 +573,21 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidDescription">
-        <source>Methods marked with [TestInitialize] should follow the following layout to be valid:
--it should be public
--it should not be abstract
--it should not be async void
--it should not be static
+        <source>Methods marked with '[TestInitialize]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
 -it should not take any parameter
--return type should be void, Task or ValueTask
+-return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
--The type should be a class.
--The class should be public or internal (if the test project is using the [DiscoverInternals] attribute).
--The class shouldn't be static.
--If the class is sealed, it should be marked with [TestClass] (or a derived attribute).</source>
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
         <target state="needs-review-translation">Чтобы методы, отмеченные [TestInitialize], были допустимыми, они должны соответствовать следующему макету:
 – должны быть "общедоступными" 
 – не должны быть "статическими"
