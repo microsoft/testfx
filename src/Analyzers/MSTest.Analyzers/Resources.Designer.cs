@@ -62,14 +62,18 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-        ///- be &apos;public&apos; 
-        ///- be &apos;static&apos;
-        ///- not be generic nor defined on a generic class
-        ///- not take any parameter
-        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)
-        ///- it&apos;s class should be marked with &apos;TestClassAttribute&apos;..
+        ///-it can&apos;t be declared on a generic class
+        ///-it should be public
+        ///-it should be static
+        ///-it should not be async void
+        ///-it should not be a special method (finalizer, operator...).
+        ///-it should not be generic
+        ///-it should not take any parameter
+        ///-return type should be void, Task or ValueTask
+        ///
+        ///The type declaring these methods should also respect the following rules:
+        ///-The type should be a class.
+        ///-The class should be public or [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string AssemblyCleanupShouldBeValidDescription {
             get {
@@ -97,14 +101,18 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-        ///- be &apos;public&apos; 
-        ///- be &apos;static&apos;
-        ///- not be generic nor be defined on a generic class
-        ///- take a single parameter of type &apos;TestContext&apos;
-        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)
-        ///- it&apos;s class should be marked with &apos;TestClassAttribute&apos;..
+        ///-it can&apos;t be declared on a generic class
+        ///-it should be public
+        ///-it should be static
+        ///-it should not be async void
+        ///-it should not be a special method (finalizer, operator...).
+        ///-it should not be generic
+        ///-it should take one parameter of type TestContext
+        ///-return type should be void, Task or ValueTask
+        ///
+        ///The type declaring these methods should also respect the following rules:
+        ///-The type should be a class.
+        ///-The class  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidDescription {
             get {
@@ -204,15 +212,15 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [ClassCleanup] should follow the following layout to be valid:
-        ///- be &apos;public&apos; 
-        ///- not be &apos;static&apos;
-        ///- not be generic nor defined on a generic class
-        ///- not take any parameter
-        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)
-        ///-if it&apos;s class is &apos;sealed&apos;, it should be marked with &apos;TestClassAttribute&apos;
-        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should be specified if the class is &apos;abstract&apos;        /// [rest of string was truncated]&quot;;.
+        ///-it can&apos;t be declared on a generic class without the InheritanceBehavior mode is set
+        ///-it should be public
+        ///-it should be static
+        ///-it should not be async void
+        ///-it should not be a special method (finalizer, operator...).
+        ///-it should not be generic
+        ///-it should not take any parameter
+        ///-return type should be void, Task or ValueTask
+        ///-InheritanceBehavior.BeforeEachDerivedClass attribute parameter should be specified if the class [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ClassCleanupShouldBeValidDescription {
             get {
@@ -240,15 +248,15 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [ClassInitialize] should follow the following layout to be valid:
-        ///- be &apos;public&apos; 
-        ///- be &apos;static&apos;
-        ///- not be generic nor be defined on a generic class
-        ///- take a single parameter of type &apos;TestContext&apos;
-        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)
-        ///-if it&apos;s class is &apos;sealed&apos;, it should be marked with &apos;TestClassAttribute&apos;
-        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should be specified if [rest of string was truncated]&quot;;.
+        ///-it can&apos;t be declared on a generic class without the InheritanceBehavior mode is set
+        ///-it should be public
+        ///-it should be static
+        ///-it should not be async void
+        ///-it should not be a special method (finalizer, operator...).
+        ///-it should not be generic
+        ///-it should take one parameter of type TestContext
+        ///-return type should be void, Task or ValueTask
+        ///-InheritanceBehavior.BeforeEachDerivedClass attribute parameter should be spe [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ClassInitializeShouldBeValidDescription {
             get {
@@ -726,15 +734,18 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [TestCleanup] should follow the following layout to be valid:
-        ///- be &apos;public&apos; 
-        ///- not be &apos;static&apos;
-        ///- not be generic or be defined on a generic class
-        ///- not be &apos;abstract&apos;
-        ///- not take any parameter
-        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)
-        ///-if it&apos;s class is &apos;sealed&apos;, it should be marked with &apos;TestClassAttribute&apos;..
+        ///-it should be public
+        ///-it should not be abstract
+        ///-it should not be async void
+        ///-it should not be static
+        ///-it should not be a special method (finalizer, operator...).
+        ///-it should not be generic
+        ///-it should not take any parameter
+        ///-return type should be void, Task or ValueTask
+        ///
+        ///The type declaring these methods should also respect the following rules:
+        ///-The type should be a class.
+        ///-The class should be public or internal (if  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string TestCleanupShouldBeValidDescription {
             get {
@@ -829,15 +840,18 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [TestInitialize] should follow the following layout to be valid:
-        ///- be &apos;public&apos; 
-        ///- not be &apos;static&apos;
-        ///- not be generic nor defined on a generic class
-        ///- not be &apos;abstract&apos;
-        ///- not take any parameter
-        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)
-        ///-if it&apos;s class is &apos;sealed&apos;, it should be marked with &apos;TestClassAttribute&apos;..
+        ///-it should be public
+        ///-it should not be abstract
+        ///-it should not be async void
+        ///-it should not be static
+        ///-it should not be a special method (finalizer, operator...).
+        ///-it should not be generic
+        ///-it should not take any parameter
+        ///-return type should be void, Task or ValueTask
+        ///
+        ///The type declaring these methods should also respect the following rules:
+        ///-The type should be a class.
+        ///-The class should be public or internal ( [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string TestInitializeShouldBeValidDescription {
             get {
