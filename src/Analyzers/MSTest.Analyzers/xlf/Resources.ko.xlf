@@ -19,14 +19,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">[AssemblyCleanup]으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
-- 'public'이어야 합니다.
-- 'static'이어야 합니다.
-- 제네릭이 아니거나 제네릭 클래스에 정의되지 않음
-- 매개 변수를 사용하지 않음
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
-- 'async void'가 아니어야 합니다.
-- 특수 메서드(종료자, 연산자...)가 아님.</target>
+        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -56,14 +64,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">[AssemblyInitialize]로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
-- 'public'이어야 합니다.
-- 'static'이어야 합니다.
-- 제네릭이 아니거나 제네릭 클래스에 정의되지 않음
-- 'TestContext' 형식의 단일 매개 변수 사용
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
-- 'async void'가 아니어야 합니다.
-- 특수 메서드(종료자, 연산자...)가 아님.</target>
+        <target state="new">Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -135,16 +151,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">[ClassCleanup]으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
-- 'public'이어야 함
-- 'static'이 아니어야 함
-- 제네릭이 아니거나 제네릭 클래스에 정의되지 않음
-- 매개 변수를 사용하지 않음
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 함
-- 'async void'가 아니어야 함
-- 특수 메서드(종료자, 연산자...)가 아님
-- 클래스가 'abstract'인 경우 'InheritanceBehavior.BeforeEachDerivedClass' 특성 매개 변수를 지정해야 합니다.
-- 클래스가 'sealed'인 경우 'InheritanceBehavior.BeforeEachDerivedClass' 특성 매개 변수를 지정하면 안 됩니다.</target>
+        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -176,16 +200,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">[ClassInitialize]로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
-- 'public'이어야 함
-- 'static'이어야 함
-- 제네릭이 아니거나 제네릭 클래스에 정의되지 않음
-- 'TestContext' 형식의 단일 매개 변수 사용
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 함
-- 'async void'가 아니어야 함
-- 특수 메서드(종료자, 연산자...)가 아님
-- 클래스가 'abstract'인 경우 'InheritanceBehavior.BeforeEachDerivedClass' 특성 매개 변수를 지정해야 합니다.
-- 클래스가 'sealed'인 경우 'InheritanceBehavior.BeforeEachDerivedClass' 특성 매개 변수를 지정하면 안 됩니다.</target>
+        <target state="new">Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -492,15 +524,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="needs-review-translation">[TestCleanup]으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
-- 'public'이어야 합니다.
-- 'static'이 아니어야 합니다.
-- 제네릭이 아니거나 제네릭 클래스에 정의되지 않음
-- 'abstract'가 아니어야 합니다.
-- 매개 변수를 사용하지 않음
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
-- 'async void'가 아니어야 합니다.
-- 특수 메서드(종료자, 연산자...)가 아님.</target>
+        <target state="new">Methods marked with '[TestCleanup]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -573,15 +611,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="needs-review-translation">[TestInitialize]로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
-- 'public'이어야 합니다.
-- 'static'이 아니어야 합니다.
-- 제네릭이 아니거나 제네릭 클래스에 정의되지 않음
-- 'abstract'가 아니어야 합니다.
-- 매개 변수를 사용하지 않음
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
-- 'async void'가 아니어야 합니다.
-- 특수 메서드(종료자, 연산자...)가 아님.</target>
+        <target state="new">Methods marked with '[TestInitialize]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
