@@ -387,7 +387,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
         // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
-        IEnumerable<ITestDataSource>? testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(testMethodInfo.MethodInfo, inherit: false).OfType<ITestDataSource>();
+        IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(testMethodInfo.MethodInfo, inherit: false).OfType<ITestDataSource>();
 
         try
         {
