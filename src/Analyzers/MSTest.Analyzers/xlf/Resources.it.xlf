@@ -19,14 +19,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">I metodi contrassegnati con [AssemblyCleanup] devono seguire il layout seguente per essere validi:
-- devono essere 'public' 
-- devono essere 'static'
-- non devono essere generici né definiti in una classe generica
-- non devono accettare alcun parametro
-- il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
-- non devono essere 'async void'
-- non devono essere un metodo speciale (finalizzatore, operatore...).</target>
+        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -56,14 +64,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">I metodi contrassegnati con [AssemblyInitialize] devono seguire il layout seguente per essere validi:
-- devono essere 'public' 
-- devono essere 'static'
-- non devono essere generici né essere definiti in una classe generica
-- devono accettare un singolo parametro di tipo 'TestContext'
-- il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
-- non devono essere 'async void'
-- non devono essere un metodo speciale (finalizzatore, operatore...).</target>
+        <target state="new">Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -508,15 +524,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="needs-review-translation">I metodi contrassegnati con [TestCleanup] devono seguire il layout seguente per essere validi:
-- devono essere 'public' 
-- non devono essere 'static'
-- non devono essere generici o definiti in una classe generica
-- non devono essere 'abstract'
-- non devono accettare alcun parametro
-- il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
-- non devono essere 'async void'
-- non devono essere un metodo speciale (finalizzatore, operatore...).</target>
+        <target state="new">Methods marked with '[TestCleanup]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -588,15 +610,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="needs-review-translation">I metodi contrassegnati con [TestInitialize] devono seguire il layout seguente per essere validi:
-- devono essere 'public' 
-- non devono essere 'static'
-- non devono essere generici né definiti in una classe generica
-- non devono essere 'abstract'
-- non devono accettare alcun parametro
-- il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
-- non devono essere 'async void'
-- non devono essere un metodo speciale (finalizzatore, operatore...).</target>
+        <target state="new">Methods marked with '[TestInitialize]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
