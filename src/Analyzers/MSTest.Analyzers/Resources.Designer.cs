@@ -1078,6 +1078,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;[DeploymentItem]&apos; can be specified only on test class or test method.
+        /// </summary>
+        internal static string UseDeploymentItemWithTestMethodOrTestClassMessageFormat {
+            get {
+                return ResourceManager.GetString("UseDeploymentItemWithTestMethodOrTestClassMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DeploymentItem]&apos; can be specified only on test class or test method.
+        /// </summary>
+        internal static string UseDeploymentItemWithTestMethodOrTestClassTitle {
+            get {
+                return ResourceManager.GetString("UseDeploymentItemWithTestMethodOrTestClassTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute &apos;[Parallelize]&apos; to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute &apos;[DoNotParallelize]&apos;..
         /// </summary>
         internal static string UseParallelizeAttributeAnalyzerDescription {
