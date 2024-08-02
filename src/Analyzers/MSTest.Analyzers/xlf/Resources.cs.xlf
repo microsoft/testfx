@@ -10,8 +10,9 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Aby byly metody s označením [AssemblyCleanup] platné, musí se řídit následujícím rozložením: 
+- not be a special method (finalizer, operator...)
+- it's class should be marked with 'TestClassAttribute'.</source>
+        <target state="needs-review-translation">Aby byly metody s označením [AssemblyCleanup] platné, musí se řídit následujícím rozložením: 
 – být „public“
 – být „static“
 – nesmí být obecné ani definované pro obecnou třídu
@@ -39,8 +40,9 @@
 - take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Aby byly metody s označením [AssemblyInitialize] platné, musí se řídit následujícím rozložením: 
+- not be a special method (finalizer, operator...)
+- it's class should be marked with 'TestClassAttribute'.</source>
+        <target state="needs-review-translation">Aby byly metody s označením [AssemblyInitialize] platné, musí se řídit následujícím rozložením: 
 .
 – být „public“
 – být „static“
@@ -110,6 +112,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
         <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
@@ -120,6 +123,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
         <note />
@@ -143,6 +147,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
         <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
@@ -153,6 +158,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
         <note />
@@ -454,8 +460,9 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Aby byly metody s označením [TestCleanup] platné, musí se řídit následujícím rozložením: 
+- not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'.</source>
+        <target state="needs-review-translation">Aby byly metody s označením [TestCleanup] platné, musí se řídit následujícím rozložením: 
 .
 – být „public“
 – nesmí být „static“
@@ -529,8 +536,9 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Aby byly metody s označením [TestInitialize] platné, musí se řídit následujícím rozložením: 
+- not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'.</source>
+        <target state="needs-review-translation">Aby byly metody s označením [TestInitialize] platné, musí se řídit následujícím rozložením: 
 .
 – být „public“
 – nesmí být „static“

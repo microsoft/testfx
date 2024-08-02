@@ -68,7 +68,8 @@ namespace MSTest.Analyzers {
         ///- not take any parameter
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)..
+        ///- not be a special method (finalizer, operator...)
+        ///- it&apos;s class should be marked with &apos;TestClassAttribute&apos;..
         /// </summary>
         internal static string AssemblyCleanupShouldBeValidDescription {
             get {
@@ -102,7 +103,8 @@ namespace MSTest.Analyzers {
         ///- take a single parameter of type &apos;TestContext&apos;
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)..
+        ///- not be a special method (finalizer, operator...)
+        ///- it&apos;s class should be marked with &apos;TestClassAttribute&apos;..
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidDescription {
             get {
@@ -209,8 +211,8 @@ namespace MSTest.Analyzers {
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- not be &apos;async void&apos;
         ///- not be a special method (finalizer, operator...)
-        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should be specified if the class is &apos;abstract&apos;
-        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should n [rest of string was truncated]&quot;;.
+        ///-if it&apos;s class is &apos;sealed&apos;, it should be marked with &apos;TestClassAttribute&apos;
+        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should be specified if the class is &apos;abstract&apos;        /// [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ClassCleanupShouldBeValidDescription {
             get {
@@ -245,8 +247,8 @@ namespace MSTest.Analyzers {
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- not be &apos;async void&apos;
         ///- not be a special method (finalizer, operator...)
-        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should be specified if the class is &apos;abstract&apos;
-        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; att [rest of string was truncated]&quot;;.
+        ///-if it&apos;s class is &apos;sealed&apos;, it should be marked with &apos;TestClassAttribute&apos;
+        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should be specified if [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ClassInitializeShouldBeValidDescription {
             get {
@@ -731,7 +733,8 @@ namespace MSTest.Analyzers {
         ///- not take any parameter
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)..
+        ///- not be a special method (finalizer, operator...)
+        ///-if it&apos;s class is &apos;sealed&apos;, it should be marked with &apos;TestClassAttribute&apos;..
         /// </summary>
         internal static string TestCleanupShouldBeValidDescription {
             get {
@@ -833,7 +836,8 @@ namespace MSTest.Analyzers {
         ///- not take any parameter
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)..
+        ///- not be a special method (finalizer, operator...)
+        ///-if it&apos;s class is &apos;sealed&apos;, it should be marked with &apos;TestClassAttribute&apos;..
         /// </summary>
         internal static string TestInitializeShouldBeValidDescription {
             get {

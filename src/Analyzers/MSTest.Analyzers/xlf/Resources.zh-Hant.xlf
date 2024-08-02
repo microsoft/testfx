@@ -10,8 +10,9 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">標示為 [AssemblyCleanup] 的方法應該遵循下列配置才能有效:
+- not be a special method (finalizer, operator...)
+- it's class should be marked with 'TestClassAttribute'.</source>
+        <target state="needs-review-translation">標示為 [AssemblyCleanup] 的方法應該遵循下列配置才能有效:
 - 為 'public' 
 - 為 'static'
 - 非為泛型，也不是在泛型類別上所定義
@@ -39,8 +40,9 @@
 - take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">標示為 [AssemblyInitialize] 的方法應該遵循下列配置才能有效:
+- not be a special method (finalizer, operator...)
+- it's class should be marked with 'TestClassAttribute'.</source>
+        <target state="needs-review-translation">標示為 [AssemblyInitialize] 的方法應該遵循下列配置才能有效:
 - 為 'public' 
 - 為 'static'
 - 非為泛型也不是在泛型類別上所定義
@@ -109,6 +111,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
         <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
@@ -119,6 +122,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
         <note />
@@ -142,6 +146,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
         <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
@@ -152,6 +157,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
         <note />
@@ -453,8 +459,9 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">標示為 [TestCleanup] 的方法應該遵循下列配置才能有效:
+- not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'.</source>
+        <target state="needs-review-translation">標示為 [TestCleanup] 的方法應該遵循下列配置才能有效:
 - 為 'public' 
 - 非為 'static'
 - 非為泛型或不是在泛型類別上所定義
@@ -527,8 +534,9 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">標示為 [TestInitialize] 的方法應該遵循下列配置才能有效:
+- not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'.</source>
+        <target state="needs-review-translation">標示為 [TestInitialize] 的方法應該遵循下列配置才能有效:
 - 為 'public' 
 - 非為 'static'
 - 非為泛型，也不是在泛型類別上所定義

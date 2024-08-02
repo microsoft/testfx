@@ -10,8 +10,9 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Metody oznaczone za pomocą [AssemblyCleanup] powinny być zgodne z następującym układem, aby były prawidłowe:
+- not be a special method (finalizer, operator...)
+- it's class should be marked with 'TestClassAttribute'.</source>
+        <target state="needs-review-translation">Metody oznaczone za pomocą [AssemblyCleanup] powinny być zgodne z następującym układem, aby były prawidłowe:
 — być „publiczne” 
 — być "statyczne"
 — nie być ogólne ani zdefiniowane w klasie ogólnej
@@ -39,8 +40,9 @@
 - take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Metody oznaczone za pomocą [AssemblyInitialize] powinny być zgodne z następującym układem, aby były prawidłowe:
+- not be a special method (finalizer, operator...)
+- it's class should be marked with 'TestClassAttribute'.</source>
+        <target state="needs-review-translation">Metody oznaczone za pomocą [AssemblyInitialize] powinny być zgodne z następującym układem, aby były prawidłowe:
 — być „publiczne” 
 — być "statyczne"
 - nie być ogólne ani być zdefiniowane w klasie ogólnej
@@ -109,6 +111,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
         <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
@@ -119,6 +122,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
         <note />
@@ -142,6 +146,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
         <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
@@ -152,6 +157,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
         <note />
@@ -453,8 +459,9 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Metody oznaczone jako [TestCleanup] powinny być zgodne z następującym układem, aby były prawidłowe:
+- not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'.</source>
+        <target state="needs-review-translation">Metody oznaczone jako [TestCleanup] powinny być zgodne z następującym układem, aby były prawidłowe:
 — być „publiczne” 
 — nie być „statyczne”
 — nie być ogólne lub być zdefiniowane w klasie ogólnej
@@ -527,8 +534,9 @@ nie być „abstrakcyjne”
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Metody oznaczone znakiem [TestInitialize] powinny być zgodne z następującym układem, aby były prawidłowe:
+- not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'.</source>
+        <target state="needs-review-translation">Metody oznaczone znakiem [TestInitialize] powinny być zgodne z następującym układem, aby były prawidłowe:
 — być „publiczne” 
 — nie być „statyczne”
 — nie być ogólne ani zdefiniowane w klasie ogólnej

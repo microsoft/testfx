@@ -125,7 +125,8 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</value>
+- not be a special method (finalizer, operator...)
+- it's class should be marked with 'TestClassAttribute'.</value>
   </data>
   <data name="AssemblyCleanupShouldBeValidMessageFormat" xml:space="preserve">
     <value>AssemblyCleanup method '{0}' signature is invalid</value>
@@ -141,7 +142,8 @@
 - take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</value>
+- not be a special method (finalizer, operator...)
+- it's class should be marked with 'TestClassAttribute'.</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat" xml:space="preserve">
     <value>AssemblyInitialize method '{0}' signature is invalid</value>
@@ -182,6 +184,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</value>
   </data>
@@ -200,6 +203,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</value>
   </data>
@@ -323,7 +327,8 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</value>
+- not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'.</value>
   </data>
   <data name="TestCleanupShouldBeValidMessageFormat" xml:space="preserve">
     <value>TestCleanup method '{0}' signature is invalid</value>
@@ -365,7 +370,8 @@
 - not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
-- not be a special method (finalizer, operator...).</value>
+- not be a special method (finalizer, operator...)
+-if it's class is 'sealed', it should be marked with 'TestClassAttribute'.</value>
   </data>
   <data name="TestInitializeShouldBeValidMessageFormat" xml:space="preserve">
     <value>TestInitialize method '{0}' signature is invalid</value>
