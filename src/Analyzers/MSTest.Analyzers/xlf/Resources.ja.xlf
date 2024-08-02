@@ -111,16 +111,16 @@
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
-        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
+        <target state="translated">[ClassCleanup] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
+- 'public' です
+- 'static' ではありません
+- ジェネリックではなく、ジェネリック クラスでも定義されていない
+- パラメーターを受け取りません
+- 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
+- 'async void' ではありません
+- 特殊なメソッド (ファイナライザー、演算子...) ではありません
+- クラスが 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定する必要があります
+- クラスが 'sealed' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定しない必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -144,16 +144,16 @@
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
-        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
+        <target state="translated">[ClassInitialize] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
+- 'public' です
+- 'static' です
+- ジェネリックではなく、ジェネリック クラスでも定義されていません
+- 'TestContext' 型のパラメーターを 1 つ受け取ります
+- 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
+- 'async void' ではありません
+- 特殊なメソッド (ファイナライザー、演算子...) ではありません
+- クラスが 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定する必要があります
+- クラスが 'sealed' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定しない必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -237,60 +237,60 @@
 - should only be set on a test method;
 - member should be defined on the type specified;
 - member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</source>
-        <target state="new">'DynamicData' entry should have the following layout to be valid:
-- should only be set on a test method;
-- member should be defined on the type specified;
-- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</target>
+        <target state="translated">'DynamicData' エントリを有効にするには、次のレイアウトが必要です。
+- テスト メソッドにのみ設定する必要があります。
+- メンバーは、指定された型で定義する必要があります。
+- DynamicDataSourceType.Method が指定されている場合はメンバーはメソッド、それ以外の場合はプロパティである必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DataMemberSignature">
         <source>'[DynamicData]' data member '{0}.{1}' signature is invalid</source>
-        <target state="new">'[DynamicData]' data member '{0}.{1}' signature is invalid</target>
+        <target state="translated">'[DynamicData]' データ メンバー '{0}.{1}' の署名が無効です</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature">
         <source>'[DynamicData]' display name method '{0}.{1}' signature is invalid</source>
-        <target state="new">'[DynamicData]' display name method '{0}.{1}' signature is invalid</target>
+        <target state="translated">'[DynamicData]' 表示名メソッド '{0}.{1}' の署名が無効です</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberMethod">
         <source>'[DynamicData]' member '{0}.{1}' should be a method</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' should be a method</target>
+        <target state="translated">'[DynamicData]' メンバー '{0}.{1}' はメソッドである必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberNotFound">
         <source>'[DynamicData]' member '{0}.{1}' cannot be found</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' cannot be found</target>
+        <target state="translated">'[DynamicData]' メンバー '{0}.{1}' が見つかりません</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="new">'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</target>
+        <target state="translated">'[DynamicData]' の参照されるメンバー '{0}.{1}' は、'IEnumerable&lt;object[]&gt;'、'IEnumerable&lt;Tuple&gt;`、'IEnumerable&lt;ValueTuple&gt;' のいずれかを返す必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_OnTestMethod">
         <source>'[DynamicData]' should only be set on a test method</source>
-        <target state="new">'[DynamicData]' should only be set on a test method</target>
+        <target state="translated">'[DynamicData]' はテスト メソッドでのみ設定する必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</target>
+        <target state="translated">'[DynamicData]' メンバー '{0}.{1}' はメソッドであるため、'DynamicDataSourceType.Method' を設定する必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
         <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</target>
+        <target state="translated">'[DynamicData]' メンバー '{0}.{1}' はプロパティであるため、'DynamicDataSourceType.Property' を設定する必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
         <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
-        <target state="new">'[DynamicDta]' member '{0}.{1}' is found more than once</target>
+        <target state="translated">'[DynamicDta]' メンバー '{0}.{1}' が複数回見つかりました</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
         <source>DynamicData should be valid</source>
-        <target state="new">DynamicData should be valid</target>
+        <target state="translated">DynamicData は有効である必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
