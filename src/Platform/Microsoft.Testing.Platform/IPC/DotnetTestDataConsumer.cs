@@ -40,119 +40,135 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (value is TestNodeUpdateMessage testNodeUpdateMessage)
+        switch (value)
         {
-            string state = string.Empty;
-            string? reason = string.Empty;
-            string? errorMessage = string.Empty;
-            string? errorStackTrace = string.Empty;
+            case TestNodeUpdateMessage testNodeUpdateMessage:
 
-            TestNodeStateProperty nodeState = testNodeUpdateMessage.TestNode.Properties.Single<TestNodeStateProperty>();
+                GetTestNodeDetails(testNodeUpdateMessage, out string state, out string? reason, out string? errorMessage, out string? errorStackTrace);
 
-            if (nodeState is PassedTestNodeStateProperty)
-            {
+                switch (state)
+                {
+                    case TestStates.Passed:
+                    case TestStates.Skipped:
+                        SuccessfulTestResultMessage successfulTestResultMessage = new(
+                           testNodeUpdateMessage.TestNode.Uid.Value,
+                           testNodeUpdateMessage.TestNode.DisplayName,
+                           state,
+                           reason ?? string.Empty,
+                           testNodeUpdateMessage.SessionUid.Value,
+                           _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+
+                        await _dotnetTestPipeClient.RequestReplyAsync<SuccessfulTestResultMessage, VoidResponse>(successfulTestResultMessage, cancellationToken);
+                        break;
+
+                    case TestStates.Failed:
+                        FailedTestResultMessage testResultMessage = new(
+                           testNodeUpdateMessage.TestNode.Uid.Value,
+                           testNodeUpdateMessage.TestNode.DisplayName,
+                           state,
+                           reason ?? string.Empty,
+                           errorMessage ?? string.Empty,
+                           errorStackTrace ?? string.Empty,
+                           testNodeUpdateMessage.SessionUid.Value,
+                           _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+
+                        await _dotnetTestPipeClient.RequestReplyAsync<FailedTestResultMessage, VoidResponse>(testResultMessage, cancellationToken);
+                        break;
+                }
+
+                break;
+
+            case TestNodeFileArtifact testNodeFileArtifact:
+                FileArtifactInfo fileArtifactInfo = new(
+                    testNodeFileArtifact.FileInfo.FullName,
+                    testNodeFileArtifact.DisplayName,
+                    testNodeFileArtifact.Description ?? string.Empty,
+                    testNodeFileArtifact.TestNode.Uid.Value,
+                    testNodeFileArtifact.TestNode.DisplayName,
+                    testNodeFileArtifact.SessionUid.Value,
+                    _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+
+                await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactInfo, VoidResponse>(fileArtifactInfo, cancellationToken);
+                break;
+
+            case SessionFileArtifact sessionFileArtifact:
+                fileArtifactInfo = new(
+                    sessionFileArtifact.FileInfo.FullName,
+                    sessionFileArtifact.DisplayName,
+                    sessionFileArtifact.Description ?? string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    sessionFileArtifact.SessionUid.Value,
+                    _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+
+                await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactInfo, VoidResponse>(fileArtifactInfo, cancellationToken);
+                break;
+
+            case FileArtifact fileArtifact:
+                fileArtifactInfo = new(
+                   fileArtifact.FileInfo.FullName,
+                   fileArtifact.DisplayName,
+                   fileArtifact.Description ?? string.Empty,
+                   string.Empty,
+                   string.Empty,
+                   string.Empty,
+                   _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+
+                await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactInfo, VoidResponse>(fileArtifactInfo, cancellationToken);
+                break;
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private static void GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage, out string state, out string? reason, out string? errorMessage, out string? errorStackTrace)
+    {
+        state = string.Empty;
+        reason = string.Empty;
+        errorMessage = string.Empty;
+        errorStackTrace = string.Empty;
+        TestNodeStateProperty nodeState = testNodeUpdateMessage.TestNode.Properties.Single<TestNodeStateProperty>();
+
+        switch (nodeState)
+        {
+            case PassedTestNodeStateProperty:
                 state = TestStates.Passed;
                 reason = nodeState.Explanation;
-            }
-            else if (nodeState is SkippedTestNodeStateProperty)
-            {
+                break;
+
+            case SkippedTestNodeStateProperty:
                 state = TestStates.Skipped;
                 reason = nodeState.Explanation;
-            }
-            else if (nodeState is FailedTestNodeStateProperty failedTestNodeStateProperty)
-            {
+                break;
+
+            case FailedTestNodeStateProperty failedTestNodeStateProperty:
                 state = TestStates.Failed;
                 reason = nodeState.Explanation;
                 errorMessage = failedTestNodeStateProperty.Exception?.Message;
                 errorStackTrace = failedTestNodeStateProperty.Exception?.StackTrace;
-            }
-            else if (nodeState is ErrorTestNodeStateProperty errorTestNodeStateProperty)
-            {
+                break;
+
+            case ErrorTestNodeStateProperty errorTestNodeStateProperty:
                 state = TestStates.Error;
                 reason = nodeState.Explanation;
                 errorMessage = errorTestNodeStateProperty.Exception?.Message;
                 errorStackTrace = errorTestNodeStateProperty.Exception?.StackTrace;
-            }
-            else if (nodeState is TimeoutTestNodeStateProperty timeoutTestNodeStateProperty)
-            {
+                break;
+
+            case TimeoutTestNodeStateProperty timeoutTestNodeStateProperty:
                 state = TestStates.Timeout;
                 reason = nodeState.Explanation;
                 errorMessage = timeoutTestNodeStateProperty.Exception?.Message;
                 errorStackTrace = timeoutTestNodeStateProperty.Exception?.StackTrace;
-            }
-            else if (nodeState is CancelledTestNodeStateProperty cancelledTestNodeStateProperty)
-            {
+                break;
+
+            case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
                 state = TestStates.Cancelled;
                 reason = nodeState.Explanation;
                 errorMessage = cancelledTestNodeStateProperty.Exception?.Message;
                 errorStackTrace = cancelledTestNodeStateProperty.Exception?.StackTrace;
-            }
-
-            if (state is TestStates.Passed or TestStates.Skipped)
-            {
-                SuccessfulTestResultMessage successfulTestResultMessage = new(
-                    testNodeUpdateMessage.TestNode.Uid.Value,
-                    testNodeUpdateMessage.TestNode.DisplayName,
-                    state,
-                    reason ?? string.Empty,
-                    testNodeUpdateMessage.SessionUid.Value,
-                    _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-
-                await _dotnetTestPipeClient.RequestReplyAsync<SuccessfulTestResultMessage, VoidResponse>(successfulTestResultMessage, cancellationToken);
-            }
-            else
-            {
-                FailedTestResultMessage testResultMessage = new(
-                    testNodeUpdateMessage.TestNode.Uid.Value,
-                    testNodeUpdateMessage.TestNode.DisplayName,
-                    state,
-                    reason ?? string.Empty,
-                    errorMessage ?? string.Empty,
-                    errorStackTrace ?? string.Empty,
-                    testNodeUpdateMessage.SessionUid.Value,
-                    _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-
-                await _dotnetTestPipeClient.RequestReplyAsync<FailedTestResultMessage, VoidResponse>(testResultMessage, cancellationToken);
-            }
+                break;
         }
-        else if (value is TestNodeFileArtifact testNodeFileArtifact)
-        {
-            FileArtifactInfo fileArtifactInfo = new(
-                testNodeFileArtifact.FileInfo.FullName,
-                testNodeFileArtifact.DisplayName,
-                testNodeFileArtifact.Description ?? string.Empty,
-                testNodeFileArtifact.TestNode.Uid.Value,
-                testNodeFileArtifact.TestNode.DisplayName,
-                testNodeFileArtifact.SessionUid.Value,
-                _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-            await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactInfo, VoidResponse>(fileArtifactInfo, cancellationToken);
-        }
-        else if (value is SessionFileArtifact sessionFileArtifact)
-        {
-            FileArtifactInfo fileArtifactInfo = new(
-                sessionFileArtifact.FileInfo.FullName,
-                sessionFileArtifact.DisplayName,
-                sessionFileArtifact.Description ?? string.Empty,
-                string.Empty,
-                string.Empty,
-                sessionFileArtifact.SessionUid.Value,
-                _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-            await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactInfo, VoidResponse>(fileArtifactInfo, cancellationToken);
-        }
-        else if (value is FileArtifact fileArtifact)
-        {
-            FileArtifactInfo fileArtifactInfo = new(
-                fileArtifact.FileInfo.FullName,
-                fileArtifact.DisplayName,
-                fileArtifact.Description ?? string.Empty,
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-            await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactInfo, VoidResponse>(fileArtifactInfo, cancellationToken);
-        }
-
-        await Task.CompletedTask;
     }
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
