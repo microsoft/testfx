@@ -58,7 +58,7 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="new">'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</target>
+        <target state="translated">"[DynamicData]"-Element "{0}.{1}" muss "IEnumerable"&lt;"object[]&gt;", "IEnumerable&lt;Tuple&gt;" oder "IEnumerable&lt;ValueTuple&gt;" zurückgeben.</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
@@ -68,7 +68,7 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
       </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
-        <target state="new">Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</target>
+        <target state="translated">Ungültiger Wert "{0}" für runsettings-Eintrag "{1}". Die Einstellung wird ignoriert.</target>
         <note />
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">

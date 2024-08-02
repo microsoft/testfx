@@ -111,16 +111,16 @@
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
-        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
+        <target state="translated">[ClassCleanup] ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gereklidir:
+- 'public' olmalı
+- 'static' olamaz
+- genel olamaz veya genel bir sınıf üzerinde tanımlanamaz
+- herhangi bir parametre alamaz
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
+- 'async void' olamaz
+- özel bir yöntem (sonlandırıcı, işleç...) olamaz
+Sınıf 'abstract' ise -'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir.
+Sınıf 'sealed' ise -'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -144,16 +144,16 @@
 - not be a special method (finalizer, operator...)
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
-        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
+        <target state="translated">[ClassInitialize] ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gereklidir:
+- 'public' olmalı
+- 'static' olmalı
+- genel olamaz veya genel bir sınıf üzerinde tanımlanamaz
+- 'TestContext' türünde tek bir parametre almalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
+- 'async void' olamaz
+- özel bir yöntem (sonlandırıcı, işleç...) olamaz
+Sınıf 'abstract' ise -'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir.
+Sınıf 'sealed' ise -'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -237,60 +237,60 @@
 - should only be set on a test method;
 - member should be defined on the type specified;
 - member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</source>
-        <target state="new">'DynamicData' entry should have the following layout to be valid:
-- should only be set on a test method;
-- member should be defined on the type specified;
-- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</target>
+        <target state="translated">'[DynamicData]' girdisinin geçerli olması için aşağıdaki koşulları karşılamalıdır:
+- yalnızca bir test yönteminde ayarlanmalıdır; 
+- üye belirtilen türde tanımlanmalıdır;
+- DynamicDataSourceType.Method belirtilmişse üye bir yöntem olmalı, aksi takdirde bir özellik olmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DataMemberSignature">
         <source>'[DynamicData]' data member '{0}.{1}' signature is invalid</source>
-        <target state="new">'[DynamicData]' data member '{0}.{1}' signature is invalid</target>
+        <target state="translated">'[DynamicData]' veri üyesi '{0}.{1}' imzası geçersiz</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature">
         <source>'[DynamicData]' display name method '{0}.{1}' signature is invalid</source>
-        <target state="new">'[DynamicData]' display name method '{0}.{1}' signature is invalid</target>
+        <target state="translated">'[DynamicData]' görünen ad yöntemi '{0}.{1}' imzası geçersiz</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberMethod">
         <source>'[DynamicData]' member '{0}.{1}' should be a method</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' should be a method</target>
+        <target state="translated">'[DynamicData]' üyesi '{0}.{1}' bir yöntem olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberNotFound">
         <source>'[DynamicData]' member '{0}.{1}' cannot be found</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' cannot be found</target>
+        <target state="translated">'[DynamicData]' üyesi '{0}.{1}' bulunamıyor</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="new">'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</target>
+        <target state="translated">'[DynamicData]' başvurulan üyesi '{0}.{1}' şu değerleri döndürmelidir: 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` veya 'IEnumerable&lt;ValueTuple&gt;'</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_OnTestMethod">
         <source>'[DynamicData]' should only be set on a test method</source>
-        <target state="new">'[DynamicData]' should only be set on a test method</target>
+        <target state="translated">'[DynamicData]' yalnızca bir test yönteminde ayarlanmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</target>
+        <target state="translated">'[DynamicData]' üyesi '{0}.{1}' bir yöntem olduğundan 'DynamicDataSourceType.Method' öğesini ayarlamalısınız</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
         <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</target>
+        <target state="translated">'[DynamicData]' üyesi '{0}.{1}' bir özellik olduğundan 'DynamicDataSourceType.Property' öğesini ayarlamalısınız</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
         <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
-        <target state="new">'[DynamicDta]' member '{0}.{1}' is found more than once</target>
+        <target state="translated">'[DynamicDta]' üyesi '{0}.{1}' birden çok kez bulundu</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
         <source>DynamicData should be valid</source>
-        <target state="new">DynamicData should be valid</target>
+        <target state="translated">DynamicData geçerli olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
