@@ -23,109 +23,93 @@ internal sealed class Json
         // Serialize response types.
         _serializers[typeof(RequestMessage)] = new JsonObjectSerializer<RequestMessage>(request =>
          {
-             var list = new (string, object?)[4]
+             return new[]
              {
                  (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Id, request.Id),
                  (JsonRpcStrings.Method, request.Method),
                  (JsonRpcStrings.Params, request.Params),
              };
-
-             return list;
          });
 
         _serializers[typeof(ResponseMessage)] = new JsonObjectSerializer<ResponseMessage>(response =>
         {
-            var list = new (string, object?)[3]
+            return new[]
             {
                  (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Id, response.Id),
                  (JsonRpcStrings.Result, response.Result),
             };
-
-            return list;
         });
 
         _serializers[typeof(NotificationMessage)] = new JsonObjectSerializer<NotificationMessage>(notification =>
         {
-            var list = new (string, object?)[3]
+            return new[]
             {
                  (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Method, notification.Method),
                  (JsonRpcStrings.Params, notification.Params),
             };
-
-            return list;
         });
 
         _serializers[typeof(ErrorMessage)] = new JsonObjectSerializer<ErrorMessage>(error =>
         {
-            var errorMsg = new (string, object?)[3]
+            var errorMsg = new (string, object?)[]
             {
                 (JsonRpcStrings.Code, error.ErrorCode),
                 (JsonRpcStrings.Data, error.Data ?? new()),
                 (JsonRpcStrings.Message, error.Message),
             };
 
-            var list = new (string, object?)[4]
+            return new (string, object?)[]
             {
                  (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Code, error.ErrorCode),
                  (JsonRpcStrings.Id, error.Id),
                  (JsonRpcStrings.Error, errorMsg),
             };
-
-            return list;
         });
 
         _serializers[typeof(InitializeResponseArgs)] = new JsonObjectSerializer<InitializeResponseArgs>(response =>
         {
-            var list = new (string, object?)[3]
+            return new (string, object?)[]
             {
                 (JsonRpcStrings.ProcessId, response.ProcessId),
                 (JsonRpcStrings.ServerInfo, response.ServerInfo),
                 (JsonRpcStrings.Capabilities, response.Capabilities),
             };
-
-            return list;
         });
 
         _serializers[typeof(ServerInfo)] = new JsonObjectSerializer<ServerInfo>(info =>
         {
-            var list = new (string, object?)[2]
+            return new (string, object?)[]
             {
                 (JsonRpcStrings.Name, info.Name),
                 (JsonRpcStrings.Version, info.Version),
             };
-
-            return list;
         });
 
         _serializers[typeof(ServerCapabilities)] = new JsonObjectSerializer<ServerCapabilities>(capabilities =>
         {
-            var list = new (string, object?)[1]
+            return new (string, object?)[]
             {
                 (JsonRpcStrings.Testing, capabilities.TestingCapabilities),
             };
-
-            return list;
         });
 
         _serializers[typeof(ServerTestingCapabilities)] = new JsonObjectSerializer<ServerTestingCapabilities>(capabilities =>
         {
-            var list = new (string, object?)[3]
+            return new (string, object?)[]
             {
                 (JsonRpcStrings.SupportsDiscovery, capabilities.SupportsDiscovery),
                 (JsonRpcStrings.MultiRequestSupport, capabilities.MultiRequestSupport),
                 (JsonRpcStrings.VSTestProviderSupport, capabilities.VSTestProviderSupport),
             };
-
-            return list;
         });
 
         _serializers[typeof(Artifact)] = new JsonObjectSerializer<Artifact>(artifact =>
         {
-            var list = new (string, object?)[5]
+            return new (string, object?)[]
             {
                 (JsonRpcStrings.Uri, artifact.Uri),
                 (JsonRpcStrings.Producer, artifact.Producer),
@@ -133,42 +117,34 @@ internal sealed class Json
                 (JsonRpcStrings.DisplayName, artifact.DisplayName),
                 (JsonRpcStrings.Description, artifact.Description),
             };
-
-            return list;
         });
 
         _serializers[typeof(DiscoverResponseArgs)] = new JsonObjectSerializer<DiscoverResponseArgs>(response => []);
 
         _serializers[typeof(RunResponseArgs)] = new JsonObjectSerializer<RunResponseArgs>(response =>
         {
-            var list = new (string, object?)[1]
+            return new (string, object?)[]
             {
                 (JsonRpcStrings.Attachments, response.Artifacts),
             };
-
-            return list;
         });
 
         _serializers[typeof(TestNodeUpdateMessage)] = new JsonObjectSerializer<TestNodeUpdateMessage>(message =>
         {
-            var list = new (string, object?)[2]
+            return new (string, object?)[]
             {
                 (JsonRpcStrings.Node, message.TestNode),
                 (JsonRpcStrings.Parent, message.ParentTestNodeUid?.Value),
             };
-
-            return list;
         });
 
         _serializers[typeof(TestNodeStateChangedEventArgs)] = new JsonObjectSerializer<TestNodeStateChangedEventArgs>(message =>
         {
-            var list = new (string, object?)[2]
+            return new (string, object?)[]
             {
                 (JsonRpcStrings.RunId, message.RunId),
                 (JsonRpcStrings.Changes, message.Changes),
             };
-
-            return list;
         });
 
         _serializers[typeof(TestNode)] = new JsonObjectSerializer<TestNode>(message =>
@@ -335,56 +311,47 @@ internal sealed class Json
 
         _serializers[typeof(LogEventArgs)] = new JsonObjectSerializer<LogEventArgs>(message =>
         {
-            var list = new (string, object?)[2]
+            return new (string, object?)[]
             {
                 (JsonRpcStrings.Level, message.LogMessage.Level.ToString()),
                 (JsonRpcStrings.Message, message.LogMessage.Message),
             };
-
-            return list;
         });
 
         _serializers[typeof(CancelRequestArgs)] = new JsonObjectSerializer<CancelRequestArgs>(request =>
         {
-            var list = new (string, object?)[1]
+            return new (string, object?)[]
             {
                 (JsonRpcStrings.Id, request.CancelRequestId),
             };
-
-            return list;
         });
 
         _serializers[typeof(TelemetryEventArgs)] = new JsonObjectSerializer<TelemetryEventArgs>(ev =>
         {
-            var list = new (string, object?)[2]
+            return new (string, object?)[]
             {
                 (JsonRpcStrings.EventName, ev.EventName),
                 (JsonRpcStrings.Metrics, ev.Metrics),
             };
-
-            return list;
         });
 
         _serializers[typeof(ProcessInfoArgs)] = new JsonObjectSerializer<ProcessInfoArgs>(info =>
         {
-            var list = new (string, object?)[4]
+            return new (string, object?)[]
             {
                 (JsonRpcStrings.Program, info.Program),
                 (JsonRpcStrings.Args, info.Args),
                 (JsonRpcStrings.WorkingDirectory, info.WorkingDirectory),
                 (JsonRpcStrings.EnvironmentVariables, info.EnvironmentVariables),
             };
-            return list;
         });
 
         _serializers[typeof(AttachDebuggerInfoArgs)] = new JsonObjectSerializer<AttachDebuggerInfoArgs>(info =>
         {
-            var list = new (string, object?)[1]
+            return new (string, object?)[]
             {
                 (JsonRpcStrings.ProcessId, info.ProcessId),
             };
-
-            return list;
         });
 
         // Serializers
@@ -725,28 +692,25 @@ internal sealed class Json
 
         if (deserializerFound && deserializer is JsonElementDeserializer<T> objectDeserializer)
         {
-            T obj = objectDeserializer.CreateObject(this, element);
-            return obj;
+            return objectDeserializer.CreateObject(this, element);
         }
 
         if (deserializerFound && deserializer is JsonCollectionDeserializer<T> collectionDeserializer)
         {
-            T obj = collectionDeserializer.CreateObject(this, element);
-            return obj;
+            return collectionDeserializer.CreateObject(this, element);
         }
 
         if (deserializerFound && deserializer is JsonElementDeserializer<object> baseObjectDeserializer)
         {
-            var obj = (T)baseObjectDeserializer.CreateObject(this, element);
-            return obj;
+            return (T)baseObjectDeserializer.CreateObject(this, element);
         }
 
         if (deserializerFound && deserializer is JsonCollectionDeserializer<object> baseCollectionDeserializer)
         {
-            var obj = (T)baseCollectionDeserializer.CreateObject(this, element);
-            return obj;
+            return (T)baseCollectionDeserializer.CreateObject(this, element);
         }
 
+        // Cannot find deserializer
         throw new InvalidOperationException($"Cannot find deserializer for {typeof(T)}.");
     }
 
