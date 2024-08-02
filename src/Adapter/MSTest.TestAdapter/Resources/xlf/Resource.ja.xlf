@@ -59,7 +59,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="new">'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</target>
+        <target state="translated">'[DynamicData]' の参照されるメンバー '{0}.{1}' は、'IEnumerable&lt;object[]&gt;'、'IEnumerable&lt;Tuple&gt;`、'IEnumerable&lt;ValueTuple&gt;' のいずれかを返す必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
@@ -69,7 +69,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
-        <target state="new">Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</target>
+        <target state="translated">runsettings エントリ '{1}' の値 '{0}' は無効です。設定は無視されます。</target>
         <note />
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
