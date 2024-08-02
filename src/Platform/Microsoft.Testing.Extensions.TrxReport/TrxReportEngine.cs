@@ -251,9 +251,9 @@ internal sealed partial class TrxReportEngine
         var document = XDocument.Load(trxFile.FullName);
         XElement deployment = document.Element(_namespaceUri + "TestRun")?.Element(_namespaceUri + "TestSettings")?.Element(_namespaceUri + "Deployment")
             ?? throw new InvalidOperationException("Deployment element not found");
-        string? runDeploymentRoot = deployment.Attribute("runDeploymentRoot")?.Value
+        string runDeploymentRoot = deployment.Attribute("runDeploymentRoot")?.Value
             ?? throw new InvalidOperationException("Unexpected null 'runDeploymentRoot'");
-        XElement? resultSummary = document.Element(_namespaceUri + "TestRun")?.Element(_namespaceUri + "ResultSummary")
+        XElement resultSummary = document.Element(_namespaceUri + "TestRun")?.Element(_namespaceUri + "ResultSummary")
             ?? throw new InvalidOperationException("ResultSummary element not found");
         XElement? collectorDataEntries = resultSummary.Element(_namespaceUri + "CollectorDataEntries");
         if (collectorDataEntries is null)

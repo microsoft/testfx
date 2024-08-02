@@ -392,7 +392,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 new(serviceProvider, BuildTestFrameworkAsync, messageHandlerFactory, (TestFrameworkManager)TestFramework, (TestHostManager)TestHost);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
-            ITestHost? actualTestHost = testControllerConnection is not null
+            ITestHost actualTestHost = testControllerConnection is not null
                 ? new TestHostControlledHost(testControllerConnection, serverTestHost, testApplicationCancellationTokenSource.CancellationToken)
                 : serverTestHost;
 
@@ -437,7 +437,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 dotnetTestPipeClient);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
-            ITestHost? actualTestHost = testControllerConnection is not null
+            ITestHost actualTestHost = testControllerConnection is not null
                 ? new TestHostControlledHost(testControllerConnection, consoleHost, testApplicationCancellationTokenSource.CancellationToken)
                 : consoleHost;
 
@@ -508,7 +508,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         }
 
         string pipeEnvironmentVariable = $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{testHostControllerInfo.GetTestHostControllerPID(true)}";
-        string? pipeName = environment.GetEnvironmentVariable(pipeEnvironmentVariable) ?? throw new InvalidOperationException($"Unexpected null pipe name from environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}'");
+        string pipeName = environment.GetEnvironmentVariable(pipeEnvironmentVariable) ?? throw new InvalidOperationException($"Unexpected null pipe name from environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}'");
 
         // RemoveVariable the environment variable so that it doesn't get passed to the eventually children processes
         environment.SetEnvironmentVariable(pipeEnvironmentVariable, string.Empty);
