@@ -96,7 +96,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPip
             { HandshakeInfoPropertyNames.Framework, RuntimeInformation.FrameworkDescription },
             { HandshakeInfoPropertyNames.OS, RuntimeInformation.OSDescription },
             { HandshakeInfoPropertyNames.ProtocolVersion, ProtocolConstants.Version },
-            { HandshakeInfoPropertyNames.HostType, this is ConsoleTestHost ? nameof(ConsoleTestHost) : nameof(TestHostControllersTestHost) },
+            { HandshakeInfoPropertyNames.HostType, this.GetType().Name },
             { HandshakeInfoPropertyNames.ModulePath, testApplicationModuleInfo?.GetCurrentTestApplicationFullPath() ?? string.Empty },
         });
 
