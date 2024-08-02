@@ -110,7 +110,7 @@ public partial class AssertTests : TestContainer
 
     public void AreNotEqualShouldFailWhenNotEqualDoubleWithMessage()
     {
-        Exception? ex = VerifyThrows(() => Assert.AreNotEqual(0.1, 0.1, "A Message"));
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(0.1, 0.1, "A Message"));
         Verify(ex.Message.Contains("A Message"));
     }
 

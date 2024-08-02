@@ -332,9 +332,9 @@ public class CollectionAssertTests : TestContainer
 
     public void CollectionAssertAreEquivalent_WithMatchingNullableSets_DoesNotThrow()
     {
-        ICollection? retSetWithNulls = new[] { "item", null };
+        ICollection retSetWithNulls = new[] { "item", null };
 
-        ICollection? getMatchingSetWithNulls = new[] { "item", null };
+        ICollection getMatchingSetWithNulls = new[] { "item", null };
 
         CollectionAssert.AreEquivalent(retSetWithNulls, getMatchingSetWithNulls);
     }

@@ -333,7 +333,7 @@ namespace Analyzer.Utilities.PooledObjects
             var accumulator = new Dictionary<K, ArrayBuilder<T>>(Count, comparer);
             for (int i = 0; i < Count; i++)
             {
-                T? item = this[i];
+                T item = this[i];
                 K key = keySelector(item);
                 if (!accumulator.TryGetValue(key, out ArrayBuilder<T>? bucket))
                 {

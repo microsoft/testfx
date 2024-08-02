@@ -245,9 +245,9 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>Categories defined.</returns>
     internal virtual /* for tests, we are mocking this */ string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
     {
-        IEnumerable<TestCategoryBaseAttribute>? methodCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(categoryAttributeProvider, inherit: true);
-        IEnumerable<TestCategoryBaseAttribute>? typeCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(owningType, inherit: true);
-        IEnumerable<TestCategoryBaseAttribute>? assemblyCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(owningType.Assembly, inherit: true);
+        IEnumerable<TestCategoryBaseAttribute> methodCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(categoryAttributeProvider, inherit: true);
+        IEnumerable<TestCategoryBaseAttribute> typeCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(owningType, inherit: true);
+        IEnumerable<TestCategoryBaseAttribute> assemblyCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(owningType.Assembly, inherit: true);
 
         return methodCategories.Concat(typeCategories).Concat(assemblyCategories).SelectMany(c => c.TestCategories).ToArray();
     }
