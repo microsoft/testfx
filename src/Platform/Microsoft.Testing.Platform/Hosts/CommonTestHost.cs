@@ -75,14 +75,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPip
         }
         finally
         {
-#if NETCOREAPP
-            if (dotnetTestPipeClient is not null)
-            {
-                await dotnetTestPipeClient.DisposeAsync();
-            }
-#else
-            dotnetTestPipeClient?.Dispose();
-#endif
+            await DisposeHelper.DisposeAsync(dotnetTestPipeClient);
 
             await DisposeServiceProviderAsync(ServiceProvider, isProcessShutdown: true);
             await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>());
