@@ -33,40 +33,18 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPip
         int exitCode;
         try
         {
-            bool isDotnetTestHandshakeSuccessful = default;
+            if (dotnetTestPipeClient is null)
+            {
+                exitCode = await RunTestAppAsync(testApplicationCancellationToken);
+                return exitCode;
+            }
+
             ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
+            bool isDotnetTestHandshakeSuccessful = await DoHandshakeAsync(dotnetTestPipeClient, testApplicationModuleInfo, testApplicationCancellationToken);
 
-            if (dotnetTestPipeClient is not null)
-            {
-                isDotnetTestHandshakeSuccessful = await IsDotnetTestHandshakeSuccessfulAsync(dotnetTestPipeClient, testApplicationModuleInfo, testApplicationCancellationToken);
-            }
-
-            if (isDotnetTestHandshakeSuccessful)
-            {
-                if (RunTestApplicationLifeCycleCallbacks)
-                {
-                    // Get the test application lifecycle callbacks to be able to call the before run
-                    foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
-                    {
-                        await testApplicationLifecycleCallbacks.BeforeRunAsync(testApplicationCancellationToken);
-                    }
-                }
-
-                exitCode = await InternalRunAsync();
-
-                if (RunTestApplicationLifeCycleCallbacks)
-                {
-                    foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
-                    {
-                        await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken);
-                        await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks);
-                    }
-                }
-            }
-            else
-            {
-                exitCode = ExitCodes.IncompatibleProtocolVersion;
-            }
+            exitCode = isDotnetTestHandshakeSuccessful
+                ? await RunTestAppAsync(testApplicationCancellationToken)
+                : ExitCodes.IncompatibleProtocolVersion;
         }
         catch (OperationCanceledException) when (testApplicationCancellationToken.IsCancellationRequested)
         {
@@ -75,24 +53,41 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPip
         }
         finally
         {
-#if NETCOREAPP
-            if (dotnetTestPipeClient is not null)
-            {
-                await dotnetTestPipeClient.DisposeAsync();
-            }
-#else
-            dotnetTestPipeClient?.Dispose();
-#endif
-
             await DisposeServiceProviderAsync(ServiceProvider, isProcessShutdown: true);
             await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>());
             await DisposeHelper.DisposeAsync(ServiceProvider.GetTestApplicationCancellationTokenSource());
+            await DisposeHelper.DisposeAsync(dotnetTestPipeClient);
         }
 
         return exitCode;
     }
 
-    private async Task<bool> IsDotnetTestHandshakeSuccessfulAsync(NamedPipeClient dotnetTestPipeClient, ITestApplicationModuleInfo? testApplicationModuleInfo, CancellationToken testApplicationCancellationToken)
+    private async Task<int> RunTestAppAsync(CancellationToken testApplicationCancellationToken)
+    {
+        if (RunTestApplicationLifeCycleCallbacks)
+        {
+            // Get the test application lifecycle callbacks to be able to call the before run
+            foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
+            {
+                await testApplicationLifecycleCallbacks.BeforeRunAsync(testApplicationCancellationToken);
+            }
+        }
+
+        int exitCode = await InternalRunAsync();
+
+        if (RunTestApplicationLifeCycleCallbacks)
+        {
+            foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
+            {
+                await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken);
+                await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks);
+            }
+        }
+
+        return exitCode;
+    }
+
+    private async Task<bool> DoHandshakeAsync(NamedPipeClient dotnetTestPipeClient, ITestApplicationModuleInfo? testApplicationModuleInfo, CancellationToken testApplicationCancellationToken)
     {
         HandshakeInfo handshakeInfo = new(new Dictionary<string, string>()
         {
