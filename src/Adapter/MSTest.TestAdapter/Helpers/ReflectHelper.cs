@@ -462,20 +462,6 @@ internal class ReflectHelper : MarshalByRefObject
         }
     }
 
-    internal IEnumerable<TAttribute>? GetNonDerivedAttributes<TAttribute>(MethodInfo methodInfo, bool inherit)
-        where TAttribute : Attribute
-    {
-        Attribute[] cachedAttributes = GetCustomAttributesCached(methodInfo, inherit);
-
-        foreach (Attribute cachedAttribute in cachedAttributes)
-        {
-            if (AttributeComparer.IsNonDerived<TAttribute>(cachedAttribute))
-            {
-                yield return (TAttribute)cachedAttribute;
-            }
-        }
-    }
-
     /// <summary>
     /// Reflection helper that is accessing Reflection directly, and won't cache the results.
     /// </summary>
