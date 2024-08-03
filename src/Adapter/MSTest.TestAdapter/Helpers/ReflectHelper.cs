@@ -437,9 +437,7 @@ internal class ReflectHelper : MarshalByRefObject
             try
             {
                 object[]? attributes = NotCachedReflectionAccessor.GetCustomAttributesNotCached(attributeProvider, inherit);
-                return attributes is Attribute[] arr
-                    ? arr
-                    : attributes?.Cast<Attribute>().ToArray() ?? Array.Empty<Attribute>();
+                return attributes is null ? [] : attributes as Attribute[] ?? attributes.Cast<Attribute>().ToArray();
             }
             catch (Exception ex)
             {
