@@ -23,7 +23,6 @@ public static class CrashDumpExtensions
         builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider
             => new CrashDumpEnvironmentVariableProvider(
                 serviceProvider.GetConfiguration(),
-                serviceProvider.GetMessageBus(),
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetTestApplicationModuleInfo(),
                 crashDumpGeneratorConfiguration,
