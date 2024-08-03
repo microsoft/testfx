@@ -10,13 +10,6 @@ namespace Microsoft.Testing.Platform.IPC;
 
 internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
-    private readonly NamedPipeClient _dotnetTestPipeClient;
-
-    public DotnetTestDataConsumer(NamedPipeClient dotnetTestPipeClient)
-    {
-        _dotnetTestPipeClient = dotnetTestPipeClient;
-    }
-
     public Type[] DataTypesConsumed => new[]
     {
         typeof(TestNodeUpdateMessage),

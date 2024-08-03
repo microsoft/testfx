@@ -604,7 +604,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         DotnetTestDataConsumer? dotnetTestDataConsumer = null;
         if (testFrameworkBuilderData.DotnetTestPipeClient is not null)
         {
-            dotnetTestDataConsumer = new DotnetTestDataConsumer(testFrameworkBuilderData.DotnetTestPipeClient);
+            dotnetTestDataConsumer = new DotnetTestDataConsumer();
         }
 
         // Build and register "common non special" services - we need special treatment because extensions can start to log during the

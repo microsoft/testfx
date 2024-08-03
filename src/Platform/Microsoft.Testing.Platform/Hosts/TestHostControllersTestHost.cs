@@ -134,7 +134,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             // We register the DotnetTestDataConsumer as last to ensure that it will be the last one to consume the data.
             if (_dotnetTestPipeClient is not null)
             {
-                dataConsumersBuilder.Add(new DotnetTestDataConsumer(_dotnetTestPipeClient));
+                dataConsumersBuilder.Add(new DotnetTestDataConsumer());
             }
 
             AsynchronousMessageBus concreteMessageBusService = new(
