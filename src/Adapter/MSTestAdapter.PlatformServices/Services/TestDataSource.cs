@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 public class TestDataSource : ITestDataSource
 {
 #if NETFRAMEWORK
-    public IEnumerable<object>? GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
+    public IEnumerable<object>? GetData(ITestMethod testMethodInfo, ITestContext testContext)
 #else
     IEnumerable<object>? ITestDataSource.GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
 #endif
@@ -42,7 +42,7 @@ public class TestDataSource : ITestDataSource
             Path.GetDirectoryName(new Uri(testMethodInfo.MethodInfo.Module.Assembly.CodeBase).LocalPath),
         ];
 
-        List<UTF.TestResult> dataRowResults = [];
+        List<TestResult> dataRowResults = [];
 
         // Connect to data source.
         TestDataConnectionFactory factory = new();
@@ -50,11 +50,11 @@ public class TestDataSource : ITestDataSource
         string providerNameInvariant;
         string? connectionString;
         string? tableName;
-        UTF.DataAccessMethod dataAccessMethod;
+        DataAccessMethod dataAccessMethod;
 
         try
         {
-            GetConnectionProperties(testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false)[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
+            GetConnectionProperties(testMethodInfo.GetAttributes<DataSourceAttribute>(false)[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
         }
         catch
         {
@@ -109,7 +109,7 @@ public class TestDataSource : ITestDataSource
     /// <param name="dataAccessMethod">The data access method.</param>
     /// <param name="length">Number of permutations.</param>
     /// <returns>Permutations.</returns>
-    private static IEnumerable<int> GetPermutation(UTF.DataAccessMethod dataAccessMethod, int length)
+    private static IEnumerable<int> GetPermutation(DataAccessMethod dataAccessMethod, int length)
     {
         switch (dataAccessMethod)
         {
@@ -133,8 +133,8 @@ public class TestDataSource : ITestDataSource
     /// <param name="connectionString">The connection string.</param>
     /// <param name="tableName">The table name.</param>
     /// <param name="dataAccessMethod">The data access method.</param>
-    private static void GetConnectionProperties(UTF.DataSourceAttribute dataSourceAttribute, out string providerNameInvariant,
-        out string? connectionString, out string? tableName, out UTF.DataAccessMethod dataAccessMethod)
+    private static void GetConnectionProperties(DataSourceAttribute dataSourceAttribute, out string providerNameInvariant,
+        out string? connectionString, out string? tableName, out DataAccessMethod dataAccessMethod)
     {
         if (StringEx.IsNullOrEmpty(dataSourceAttribute.DataSourceSettingName))
         {
@@ -145,14 +145,14 @@ public class TestDataSource : ITestDataSource
             return;
         }
 
-        UTF.DataSourceElement element = TestConfiguration.ConfigurationSection.DataSources[dataSourceAttribute.DataSourceSettingName]
+        DataSourceElement element = TestConfiguration.ConfigurationSection.DataSources[dataSourceAttribute.DataSourceSettingName]
 #pragma warning disable CA2201 // Do not raise reserved exception types
             ?? throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_DataSourceConfigurationSectionMissing, dataSourceAttribute.DataSourceSettingName));
 #pragma warning restore CA2201 // Do not raise reserved exception types
         providerNameInvariant = ConfigurationManager.ConnectionStrings[element.ConnectionString].ProviderName;
         connectionString = ConfigurationManager.ConnectionStrings[element.ConnectionString].ConnectionString;
         tableName = element.DataTableName;
-        dataAccessMethod = (UTF.DataAccessMethod)Enum.Parse(typeof(UTF.DataAccessMethod), element.DataAccessMethod);
+        dataAccessMethod = (DataAccessMethod)Enum.Parse(typeof(DataAccessMethod), element.DataAccessMethod);
     }
 #endif
 }

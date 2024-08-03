@@ -7,7 +7,7 @@ namespace MSTest.Acceptance.IntegrationTests.Messages.V100;
 
 public sealed record ClientCapabilities(
     [property: JsonProperty("testing")]
-    MSTest.Acceptance.IntegrationTests.Messages.V100.ClientTestingCapabilities Testing);
+    ClientTestingCapabilities Testing);
 
 public sealed record ClientTestingCapabilities(
     [property: JsonProperty("debuggerProvider")]

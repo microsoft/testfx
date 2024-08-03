@@ -212,7 +212,7 @@ internal class TestMethodRunner
         {
             // In legacy scenario
 #pragma warning disable CS0618 // Type or member is obsolete
-            if (_test.TestIdGenerationStrategy == UTF.TestIdGenerationStrategy.Legacy)
+            if (_test.TestIdGenerationStrategy == TestIdGenerationStrategy.Legacy)
             {
                 parentStopwatch.Stop();
                 var parentResult = new TestResult

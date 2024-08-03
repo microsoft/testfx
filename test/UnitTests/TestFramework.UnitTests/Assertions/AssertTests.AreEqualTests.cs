@@ -396,7 +396,7 @@ public partial class AssertTests : TestContainer
     {
         public override bool Equals(object? obj) => true;
 
-        public override int GetHashCode() => throw new System.NotImplementedException();
+        public override int GetHashCode() => throw new NotImplementedException();
     }
 
     private sealed class EquatableType : IEquatable<EquatableType>

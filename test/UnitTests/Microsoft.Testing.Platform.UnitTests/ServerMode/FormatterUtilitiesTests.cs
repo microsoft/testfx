@@ -325,7 +325,7 @@ public class FormatterUtilitiesTests : TestBase
             return new TestNodeUpdateMessage(
                 default,
                 GetSampleTestNode(),
-                new Extensions.Messages.TestNodeUid("parent-uid"));
+                new TestNodeUid("parent-uid"));
         }
 
         if (type == typeof(RunResponseArgs))
@@ -424,7 +424,7 @@ public class FormatterUtilitiesTests : TestBase
             TestNode testNode = new()
             {
                 DisplayName = "DisplayName",
-                Uid = new Extensions.Messages.TestNodeUid("uid"),
+                Uid = new TestNodeUid("uid"),
             };
 
             testNode.Properties.Add(new SerializableKeyValuePairStringProperty("key", "value"));

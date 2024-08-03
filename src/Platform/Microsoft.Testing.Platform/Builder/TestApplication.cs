@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 #if NETCOREAPP
@@ -248,7 +249,7 @@ public sealed class TestApplication : ITestApplication
     {
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER) == "1")
         {
-            System.Diagnostics.Debugger.Launch();
+            Debugger.Launch();
         }
     }
 
