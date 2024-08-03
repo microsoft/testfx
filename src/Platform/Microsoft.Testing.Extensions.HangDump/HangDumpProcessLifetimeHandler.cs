@@ -41,7 +41,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private readonly IEnvironment _environment;
     private readonly IConfiguration _configuration;
     private readonly IProcessHandler _processHandler;
-    private readonly IServiceProvider _serviceProvider;
     private readonly IClock _clock;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly PipeNameDescription _pipeNameDescription;
@@ -89,7 +88,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         _environment = environment;
         _configuration = configuration;
         _processHandler = processHandler;
-        _serviceProvider = serviceProvider;
         _clock = clock;
         _testApplicationCancellationTokenSource = serviceProvider.GetTestApplicationCancellationTokenSource();
         _dumpFileNamePattern = $"{Path.GetFileNameWithoutExtension(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_%p_hang.dmp";
