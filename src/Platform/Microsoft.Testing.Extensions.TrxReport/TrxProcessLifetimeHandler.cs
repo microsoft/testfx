@@ -276,8 +276,6 @@ internal sealed class TrxProcessLifetimeHandler :
 
         public string Description => throw new NotImplementedException();
 
-        public ICapability[] Capabilities => throw new NotImplementedException();
-
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
 
         public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => throw new NotImplementedException();
