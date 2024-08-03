@@ -90,11 +90,11 @@ public class TestDataSource : ITestDataSource
         }
         catch (Exception ex)
         {
-            string message = ExceptionExtensions.GetExceptionMessage(ex);
+            string message = ex.GetExceptionMessage();
 
             // TODO: Change exception type to more specific one.
 #pragma warning disable CA2201 // Do not raise reserved exception types
-            throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorDataConnectionFailed, ex.Message), ex);
+            throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorDataConnectionFailed, message), ex);
 #pragma warning restore CA2201 // Do not raise reserved exception types
         }
 #else
