@@ -160,10 +160,14 @@ internal sealed partial class TrxReportEngine
 
             // If the user added the trxFileName the runDeploymentRoot would stay the same, We think it's a bug but I found that same behavior on vstest
             string runDeploymentRoot = AddTestSettings(testRun, testRunName);
-            string trxFileName = $"{runDeploymentRoot}.trx";
+            string trxFileName;
             if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
             {
                 trxFileName = ReplaceInvalidFileNameChars(fileName[0]);
+            }
+            else
+            {
+                trxFileName = $"{runDeploymentRoot}.trx";
             }
 
             AddResults(testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out string resultSummaryOutcome);
