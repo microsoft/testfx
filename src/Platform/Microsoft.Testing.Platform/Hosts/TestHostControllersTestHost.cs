@@ -270,11 +270,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             }
 
             await _logger.LogDebugAsync($"Wait for test host process exit");
-#if !NETCOREAPP
-            testHostProcess.WaitForExit();
-#else
             await testHostProcess.WaitForExitAsync();
-#endif
 
             if (_testHostsInformation.LifetimeHandlers.Length > 0)
             {
