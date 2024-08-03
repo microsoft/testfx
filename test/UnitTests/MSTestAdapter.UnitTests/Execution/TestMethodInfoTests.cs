@@ -716,7 +716,7 @@ public class TestMethodInfoTests : TestContainer
         _testClassInfo.BaseTestCleanupMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod"));
 
         _testMethodInfo.Invoke(null);
-        _testMethodInfo.Invoke(null);
+        UTF.TestResult result = _testMethodInfo.Invoke(null);
 
         var expectedCallOrder = new List<string>
                                     {
