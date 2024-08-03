@@ -349,12 +349,8 @@ public sealed class ProcessHandle : IProcessHandle, IDisposable
         {
             return _exitCode;
         }
-#if NETCOREAPP
+
         await _process.WaitForExitAsync();
-#else
-        _process.WaitForExit();
-#endif
-        return await Task.FromResult(_process.ExitCode);
     }
 
     public void WaitForExit() => _process.WaitForExit();
@@ -413,11 +409,7 @@ public sealed class ProcessHandle : IProcessHandle, IDisposable
     {
         try
         {
-#if NETCOREAPP
             process.Kill(true);
-#else
-            process.Kill();
-#endif
         }
         catch (InvalidOperationException)
         {
