@@ -202,7 +202,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
         }
 
         ITrxReportCapability? trxCapability = _testFrameworkCapabilities.GetCapability<ITrxReportCapability>();
-        if (_isEnabled && trxCapability is not null && trxCapability?.IsSupported == true)
+        if (_isEnabled && trxCapability is not null && trxCapability.IsSupported == true)
         {
             _adapterSupportTrxCapability = true;
             trxCapability.Enable();

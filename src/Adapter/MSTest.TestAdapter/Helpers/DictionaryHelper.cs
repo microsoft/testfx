@@ -12,19 +12,19 @@ internal static class DictionaryHelper
         string overwriteFriendlyName = "overwrite")
         where TKey : IEquatable<TKey>
     {
-        if ((source == null || source?.Count == 0) && (overwrite == null || overwrite?.Count == 0))
+        if ((source?.Count == 0) && (overwrite?.Count == 0))
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("DictionaryHelper.ConcatWithOverwrites: Both {0} and {1} dictionaries are null or empty, returning empty dictionary.", sourceFriendlyName, overwriteFriendlyName);
             return new Dictionary<TKey, TValue>();
         }
 
-        if (overwrite == null || overwrite?.Count == 0)
+        if (overwrite?.Count == 0)
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("DictionaryHelper.ConcatWithOverwrites: The {0} is null or empty, returning the {1} dictionary.", overwriteFriendlyName, sourceFriendlyName);
             return source!.ToDictionary(p => p.Key, p => p.Value);
         }
 
-        if (source == null || source?.Count == 0)
+        if (source?.Count == 0)
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("DictionaryHelper.ConcatWithOverwrites: The {0} is null or empty, returning the {1} dictionary.", sourceFriendlyName, overwriteFriendlyName);
             return overwrite!.ToDictionary(p => p.Key, p => p.Value);
