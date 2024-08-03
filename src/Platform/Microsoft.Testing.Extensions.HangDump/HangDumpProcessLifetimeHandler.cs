@@ -33,7 +33,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     IDisposable
 #endif
 {
-    private readonly HangDumpConfiguration _hangDumpConfiguration;
     private readonly IMessageBus _messageBus;
     private readonly IOutputDevice _outputDisplay;
     private readonly ICommandLineOptions _commandLineOptions;
@@ -64,7 +63,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private NamedPipeClient? _namedPipeClient;
 
     public HangDumpProcessLifetimeHandler(
-        HangDumpConfiguration hangDumpConfiguration,
         PipeNameDescription pipeNameDescription,
         IMessageBus messageBus,
         IOutputDevice outputDisplay,
@@ -80,7 +78,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     {
         _logger = loggerFactory.CreateLogger<HangDumpProcessLifetimeHandler>();
         _traceEnabled = _logger.IsEnabled(LogLevel.Trace);
-        _hangDumpConfiguration = hangDumpConfiguration;
         _pipeNameDescription = pipeNameDescription;
         _messageBus = messageBus;
         _outputDisplay = outputDisplay;
