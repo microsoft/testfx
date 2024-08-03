@@ -368,11 +368,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         };
 
         diagnosticsClient.WriteDump(dumpType, finalDumpFileName, true);
-        NotifyCrashDumpServiceIfEnabled();
-        using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
-        process.Kill();
-        await process.WaitForExitAsync();
-
 #else
         MiniDumpWriteDump.MiniDumpTypeOption miniDumpTypeOption = _dumpType.ToLowerInvariant().Trim() switch
         {
@@ -383,11 +378,13 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         };
 
         MiniDumpWriteDump.CollectDumpUsingMiniDumpWriteDump(_testHostProcessInformation.PID, finalDumpFileName, miniDumpTypeOption);
+#endif
+
         NotifyCrashDumpServiceIfEnabled();
         using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
         process.Kill();
-        process.WaitForExit();
-#endif
+        await process.WaitForExitAsync();
+
         _dumpFileTaken = finalDumpFileName;
     }
 
