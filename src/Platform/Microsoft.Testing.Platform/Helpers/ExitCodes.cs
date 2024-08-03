@@ -23,21 +23,4 @@ internal static class ExitCodes
     public const int MinimumExpectedTestsPolicyViolation = 9;
     public const int TestAdapterTestSessionFailure = 10;
     public const int DependentProcessExited = 11;
-
-    public static string StringifyExitCode(int exitCode) => exitCode switch
-    {
-        Success => nameof(Success),
-        GenericFailure => nameof(GenericFailure),
-        AtLeastOneTestFailed => nameof(AtLeastOneTestFailed),
-        TestSessionAborted => nameof(TestSessionAborted),
-        InvalidPlatformSetup => nameof(InvalidPlatformSetup),
-        InvalidCommandLine => nameof(InvalidCommandLine),
-        FeatureNotImplemented => nameof(FeatureNotImplemented),
-        TestHostProcessExitedNonGracefully => nameof(TestHostProcessExitedNonGracefully),
-        ZeroTests => nameof(ZeroTests),
-        MinimumExpectedTestsPolicyViolation => nameof(MinimumExpectedTestsPolicyViolation),
-        TestAdapterTestSessionFailure => nameof(TestAdapterTestSessionFailure),
-        DependentProcessExited => nameof(DependentProcessExited),
-        _ => exitCode.ToString(CultureInfo.InvariantCulture),
-    };
 }
