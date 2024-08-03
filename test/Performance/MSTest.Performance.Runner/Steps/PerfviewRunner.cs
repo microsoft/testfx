@@ -76,7 +76,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
             process.Kill();
         });
 
-        process.WaitForExit();
+        await process.WaitForExitAsync();
 
         if (!succeded)
         {

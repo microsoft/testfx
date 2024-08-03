@@ -76,7 +76,7 @@ internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
 """;
 
         string configFilePath = Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "Config.xml");
-        File.WriteAllText(configFilePath, config);
+        await File.WriteAllTextAsync(configFilePath, config);
         StringBuilder commandLine = new();
         commandLine.Append(CultureInfo.InvariantCulture, $"/Config \"{configFilePath}\" /launch \"{payload.TestHost.FullName}\" /outdir \"{Path.GetDirectoryName(payload.TestHost.FullName)!}\"");
 

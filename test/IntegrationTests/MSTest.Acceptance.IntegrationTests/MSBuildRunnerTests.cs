@@ -53,9 +53,15 @@ public class MSBuildRunnerTests : AcceptanceTestBase
 """ :
            string.Empty));
 
-        string projectContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "MSTestProject.csproj", SearchOption.AllDirectories).Single());
-        string testSourceContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "UnitTest1.cs", SearchOption.AllDirectories).Single());
-        string nugetConfigContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "NuGet.config", SearchOption.AllDirectories).Single());
+        Task<string> GetFile(string file)
+        {
+            string path = Directory.GetFiles(generator.TargetAssetPath, file, SearchOption.AllDirectories).Single();
+            return File.ReadAllTextAsync(path);
+        }
+
+        string projectContent = await GetFile("MSTestProject.csproj");
+        string testSourceContent = await GetFile("UnitTest1.cs");
+        string nugetConfigContent = await GetFile("NuGet.config");
 
         // Create a solution with 3 projects
         using TempDirectory tempDirectory = new();
@@ -65,7 +71,7 @@ public class MSBuildRunnerTests : AcceptanceTestBase
         for (int i = 0; i < 3; i++)
         {
             CSharpProject project = solution.CreateCSharpProject($"TestProject{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : [singleTfmOrMultiTfm]);
-            File.WriteAllText(project.ProjectFile, projectContent);
+            await File.WriteAllTextAsync(project.ProjectFile, projectContent);
             project.AddOrUpdateFileContent("UnitTest1.cs", testSourceContent);
         }
 

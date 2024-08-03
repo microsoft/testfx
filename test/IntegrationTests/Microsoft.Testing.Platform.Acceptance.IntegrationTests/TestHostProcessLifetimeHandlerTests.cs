@@ -24,9 +24,9 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        Assert.AreEqual(File.ReadAllText(Path.Combine(testHost.DirectoryName, "BeforeTestHostProcessStartAsync.txt")), "TestHostProcessLifetimeHandler.BeforeTestHostProcessStartAsync");
-        Assert.AreEqual(File.ReadAllText(Path.Combine(testHost.DirectoryName, "OnTestHostProcessStartedAsync.txt")), "TestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync");
-        Assert.AreEqual(File.ReadAllText(Path.Combine(testHost.DirectoryName, "OnTestHostProcessExitedAsync.txt")), "TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync");
+        Assert.AreEqual(await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "BeforeTestHostProcessStartAsync.txt")), "TestHostProcessLifetimeHandler.BeforeTestHostProcessStartAsync");
+        Assert.AreEqual(await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "OnTestHostProcessStartedAsync.txt")), "TestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync");
+        Assert.AreEqual(await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "OnTestHostProcessExitedAsync.txt")), "TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -132,7 +132,7 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode() 
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test1",
             DisplayName = "Test1",

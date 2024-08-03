@@ -118,7 +118,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
             // Setup the server channel with the testhost controller
             _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
-            _logger.LogTrace($"Hang dump pipe name: '{_pipeNameDescription.Name}'");
+            await _logger.LogTraceAsync($"Hang dump pipe name: '{_pipeNameDescription.Name}'");
             _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
             _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
             _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));

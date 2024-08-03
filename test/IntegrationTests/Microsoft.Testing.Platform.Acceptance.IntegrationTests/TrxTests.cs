@@ -59,7 +59,7 @@ Out of process file artifacts produced:
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
 
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
-        string trxContent = File.ReadAllText(trxFile);
+        string trxContent = await File.ReadAllTextAsync(trxFile);
         Assert.That(Regex.IsMatch(trxContent, @"Test host process pid: .* crashed\."), trxContent);
         Assert.That(trxContent.Contains("""<ResultSummary outcome="Failed">"""), trxContent);
     }
@@ -75,7 +75,7 @@ Out of process file artifacts produced:
 
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
 
-        string trxContent = File.ReadAllText(trxFile);
+        string trxContent = await File.ReadAllTextAsync(trxFile);
 
         // check if the tests have been added to Results, TestDefinitions, TestEntries and ResultSummary.
         Assert.That(trxContent.Contains(@"<UnitTestResult "), trxContent);
@@ -111,7 +111,7 @@ Out of process file artifacts produced:
 
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
 
-        string trxContent = File.ReadAllText(trxFile);
+        string trxContent = await File.ReadAllTextAsync(trxFile);
 
         // check if the test have been added to TestDefinitions twice as the number of the data driven tests.
         string trxContentsPattern = """

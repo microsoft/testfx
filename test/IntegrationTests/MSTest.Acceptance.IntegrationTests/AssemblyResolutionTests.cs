@@ -31,18 +31,20 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
     {
         // Arrange
         string runSettingsFilePath = Path.Combine(_testAssetFixture.TestHost.DirectoryName, ".runsettings");
-        File.WriteAllText(runSettingsFilePath, $"""
-            <?xml version="1.0" encoding="utf-8"?>
-            <RunSettings>
-              <RunConfiguration>
-              </RunConfiguration>
-              <MSTestV2>
-                <AssemblyResolution>
-                  <Directory path="{_testAssetFixture.MainDllFolder.Path}" />
-                </AssemblyResolution>
-              </MSTestV2>
-            </RunSettings>
-            """);
+        await File.WriteAllTextAsync(
+            runSettingsFilePath,
+            $"""
+             <?xml version="1.0" encoding="utf-8"?>
+             <RunSettings>
+               <RunConfiguration>
+               </RunConfiguration>
+               <MSTestV2>
+                 <AssemblyResolution>
+                   <Directory path="{_testAssetFixture.MainDllFolder.Path}" />
+                 </AssemblyResolution>
+               </MSTestV2>
+             </RunSettings>
+             """);
 
         // Act
         TestHostResult testHostResult = await _testAssetFixture.TestHost.ExecuteAsync($"--settings {runSettingsFilePath}");

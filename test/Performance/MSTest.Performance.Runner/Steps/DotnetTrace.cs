@@ -48,7 +48,7 @@ internal class DotnetTrace : IStep<BuildArtifact, Files>
         process.BeginOutputReadLine();
         process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
 
-        process.WaitForExit();
+        await process.WaitForExitAsync();
 
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);

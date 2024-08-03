@@ -56,13 +56,13 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                 switch (mode)
                 {
                     case Mode.Enabled:
-                        File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": true"));
+                        await File.WriteAllTextAsync(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": true"));
                         testHostResult = await testHost.ExecuteAsync(null, new() { { "UNOBSERVEDTASKEXCEPTION", "1" } });
                         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
                         testHostResult.AssertOutputContains("[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException(testhost controller workflow)]");
                         break;
                     case Mode.Disabled:
-                        File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": false"));
+                        await File.WriteAllTextAsync(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": false"));
                         testHostResult = await testHost.ExecuteAsync(null, new() { { "UNOBSERVEDTASKEXCEPTION", "1" } });
                         testHostResult.AssertExitCodeIs(ExitCodes.Success);
                         testHostResult.AssertOutputDoesNotContain("[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException]");
@@ -74,7 +74,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                         testHostResult.AssertOutputDoesNotContain("[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException]");
                         break;
                     case Mode.DisabledByEnvironmentVariable:
-                        File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": true"));
+                        await File.WriteAllTextAsync(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": true"));
                         testHostResult = await testHost.ExecuteAsync(null, new()
                         {
                             { "UNOBSERVEDTASKEXCEPTION", "1" },
@@ -84,7 +84,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                         testHostResult.AssertOutputDoesNotContain("[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException]");
                         break;
                     case Mode.EnabledByEnvironmentVariable:
-                        File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": false"));
+                        await File.WriteAllTextAsync(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": false"));
                         testHostResult = await testHost.ExecuteAsync(null, new()
                         {
                             { "UNOBSERVEDTASKEXCEPTION", "1" },
@@ -116,14 +116,14 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                 switch (mode)
                 {
                     case Mode.Enabled:
-                        File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": true"));
+                        await File.WriteAllTextAsync(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": true"));
                         testHostResult = await testHost.ExecuteAsync(null, new() { { "UNHANDLEDEXCEPTION", "1" } });
                         testHostResult.AssertOutputContains("[UnhandledExceptionHandler.OnCurrentDomainUnhandledException(testhost controller workflow)]");
                         testHostResult.AssertOutputContains("IsTerminating: True");
                         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
                         break;
                     case Mode.Disabled:
-                        File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": false"));
+                        await File.WriteAllTextAsync(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": false"));
                         testHostResult = await testHost.ExecuteAsync(null, new() { { "UNHANDLEDEXCEPTION", "1" } });
                         Assert.IsTrue(testHostResult.StandardError.Contains("Unhandled exception", StringComparison.OrdinalIgnoreCase), testHostResult.ToString());
                         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
@@ -134,7 +134,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
                         break;
                     case Mode.DisabledByEnvironmentVariable:
-                        File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": true"));
+                        await File.WriteAllTextAsync(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": true"));
                         testHostResult = await testHost.ExecuteAsync(null, new()
                          {
                              { "UNHANDLEDEXCEPTION", "1" },
@@ -145,7 +145,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
                         break;
                     case Mode.EnabledByEnvironmentVariable:
-                        File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": false"));
+                        await File.WriteAllTextAsync(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": false"));
                         testHostResult = await testHost.ExecuteAsync(null, new()
                         {
                             { "UNHANDLEDEXCEPTION", "1" },

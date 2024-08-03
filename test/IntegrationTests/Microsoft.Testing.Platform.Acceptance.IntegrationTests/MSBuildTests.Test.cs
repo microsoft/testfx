@@ -168,7 +168,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
 
                 string outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, "MSBuild Tests_net8.0_x86.log", SearchOption.AllDirectories).Single();
                 Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
-                string logFileContent = File.ReadAllText(outputFileLog);
+                string logFileContent = await File.ReadAllTextAsync(outputFileLog);
                 Assert.IsTrue(Regex.IsMatch(logFileContent, ".*win-x86.*"), logFileContent);
                 Assert.IsTrue(Regex.IsMatch(logFileContent, @".*dotnet\.exe run.*"), logFileContent);
                 Assert.IsTrue(Regex.IsMatch(logFileContent, @".*--arch x86.*"), logFileContent);

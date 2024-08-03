@@ -79,13 +79,15 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", string.Empty));
 
-        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
-<Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-</Project>
-""");
+        await File.WriteAllTextAsync(
+            Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"),
+            """
+            <Project>
+              <PropertyGroup>
+                <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+              </PropertyGroup>
+            </Project>
+            """);
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
@@ -116,13 +118,15 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", string.Empty));
 
-        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
-<Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-</Project>
-""");
+        await File.WriteAllTextAsync(
+            Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"),
+            """
+            <Project>
+              <PropertyGroup>
+                <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+              </PropertyGroup>
+            </Project>
+            """);
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
@@ -153,13 +157,15 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", string.Empty));
 
-        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
-<Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-</Project>
-""");
+        await File.WriteAllTextAsync(
+            Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"),
+            $"""
+             <Project>
+               <PropertyGroup>
+                 <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+               </PropertyGroup>
+             </Project>
+             """);
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
@@ -185,13 +191,15 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", string.Empty));
 
-        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
-<Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-</Project>
-""");
+        await File.WriteAllTextAsync(
+            Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"),
+            """
+            <Project>
+              <PropertyGroup>
+                <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+              </PropertyGroup>
+            </Project>
+            """);
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath} /warnAsError", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
@@ -261,13 +269,15 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", msbuildExtensionEnableFragment));
 
-        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
-<Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-</Project>
-""");
+        await File.WriteAllTextAsync(
+            Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"),
+            """
+            <Project>
+              <PropertyGroup>
+                <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+              </PropertyGroup>
+            </Project>
+            """);
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath} /warnAsError", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
@@ -296,13 +306,15 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"));
 
-        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
-<Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-</Project>
-""");
+        await File.WriteAllTextAsync(
+            Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"),
+            """
+            <Project>
+              <PropertyGroup>
+                <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+              </PropertyGroup>
+            </Project>
+            """);
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
@@ -342,13 +354,15 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", enableDefaultExtensions ? string.Empty : "<TestingExtensionsProfile>None</TestingExtensionsProfile>"));
 
-        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
-<Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-</Project>
-""");
+        await File.WriteAllTextAsync(
+            Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"),
+            """
+            <Project>
+              <PropertyGroup>
+                <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+              </PropertyGroup>
+            </Project>
+            """);
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
@@ -381,13 +395,15 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", "<TestingExtensionsProfile>WrongName</TestingExtensionsProfile>"));
 
-        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
-<Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-</Project>
-""");
+        await File.WriteAllTextAsync(
+            Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"),
+            """
+            <Project>
+              <PropertyGroup>
+                <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+              </PropertyGroup>
+            </Project>
+            """);
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
         Assert.AreEqual(1, compilationResult.ExitCode);
@@ -419,13 +435,15 @@ namespace MSTestSdkTest
         """)
                        .PatchCodeWithReplace("$Extensions$", string.Empty));
 
-                File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
-<Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-</Project>
-""");
+                await File.WriteAllTextAsync(
+                    Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"),
+                    """
+                    <Project>
+                      <PropertyGroup>
+                        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+                      </PropertyGroup>
+                    </Project>
+                    """);
 
                 DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"publish -r {RID} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
                 compilationResult.AssertOutputNotContains("warning");

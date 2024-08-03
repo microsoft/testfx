@@ -168,7 +168,7 @@ public class FileLoggerTests : TestBase, IDisposable
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockFileStreamFactory.Object);
-        fileLogger.Log(currentLogLevel, Message, null, Formatter, Category);
+        await fileLogger.LogAsync(currentLogLevel, Message, null, Formatter, Category);
 
         if (LogTestHelpers.IsLogEnabled(defaultLogLevel, currentLogLevel))
         {
@@ -202,7 +202,7 @@ public class FileLoggerTests : TestBase, IDisposable
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockFileStreamFactory.Object);
-        fileLogger.Log(currentLogLevel, Message, null, Formatter, Category);
+        await fileLogger.LogAsync(currentLogLevel, Message, null, Formatter, Category);
 
         if (LogTestHelpers.IsLogEnabled(defaultLogLevel, currentLogLevel))
         {

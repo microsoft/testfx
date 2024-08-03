@@ -391,7 +391,7 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
             ? TestHost.LocateFrom(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm)
             : TestHost.LocateFrom(_testAssetFixture.CodeWithNoTimeoutAssetPath, TestAssetFixture.CodeWithNoTimeout, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
-        File.WriteAllText(runSettingsFilePath, runSettings);
+        await File.WriteAllTextAsync(runSettingsFilePath, runSettings);
 
         var stopwatch = Stopwatch.StartNew();
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new() { { $"TIMEOUT_{InfoByKind[entryKind].EnvVarSuffix}", "1" } });

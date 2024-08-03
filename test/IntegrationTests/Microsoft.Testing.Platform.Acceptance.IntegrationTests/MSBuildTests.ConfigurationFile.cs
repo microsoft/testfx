@@ -30,12 +30,12 @@ public class MSBuildTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, "MSBuildTests", tfm, verb: verb, buildConfiguration: compilationMode);
         string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildTests.testingplatformconfig.json");
         Assert.IsTrue(File.Exists(generatedConfigurationFile));
-        Assert.AreEqual(ConfigurationContent.Trim(), File.ReadAllText(generatedConfigurationFile).Trim());
+        Assert.AreEqual(ConfigurationContent.Trim(), (await File.ReadAllTextAsync(generatedConfigurationFile)).Trim());
         Assert.IsTrue(compilationResult.StandardOutput.Contains("Microsoft Testing Platform configuration file written"));
 
         compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:normal -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.IsTrue(File.Exists(generatedConfigurationFile));
-        Assert.AreEqual(ConfigurationContent.Trim(), File.ReadAllText(generatedConfigurationFile).Trim());
+        Assert.AreEqual(ConfigurationContent.Trim(), (await File.ReadAllTextAsync(generatedConfigurationFile)).Trim());
         compilationResult.StandardOutput.Contains("Microsoft Testing Platform configuration file written");
         Assert.IsTrue(Regex.IsMatch(
             compilationResult.StandardOutput,

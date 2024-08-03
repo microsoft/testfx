@@ -215,7 +215,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         if (!testHostProcessInformation.HasExitedGracefully)
         {
-            _logger.LogDebug($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}', disposing _activityIndicatorMutex(is null: '{_activityIndicatorMutex is null}')");
+            await _logger.LogDebugAsync($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}', disposing _activityIndicatorMutex(is null: '{_activityIndicatorMutex is null}')");
             _activityIndicatorMutex?.Dispose();
         }
 
@@ -227,7 +227,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     private async Task ActivityTimerAsync()
     {
-        _logger.LogDebug($"Wait for mutex name from the test host");
+        await _logger.LogDebugAsync($"Wait for mutex name from the test host");
 
         if (!_mutexNameReceived.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
@@ -236,7 +236,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         ApplicationStateGuard.Ensure(_activityTimerMutexName is not null);
 
-        _logger.LogDebug($"Open activity mutex '{_activityTimerMutexName}'");
+        await _logger.LogDebugAsync($"Open activity mutex '{_activityTimerMutexName}'");
 
         if (!Mutex.TryOpenExisting(_activityTimerMutexName, out _activityIndicatorMutex))
         {
@@ -251,7 +251,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             {
                 if (_traceEnabled)
                 {
-                    _logger.LogTrace($"Wait for activity signal");
+                    await _logger.LogTraceAsync($"Wait for activity signal");
                 }
 
                 if (!_activityIndicatorMutex.WaitOne(_activityTimerValue))
@@ -262,7 +262,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
                 if (_traceEnabled)
                 {
-                    _logger.LogTrace($"Activity signal received by the test host '{_clock.UtcNow}'");
+                    await _logger.LogTraceAsync($"Activity signal received by the test host '{_clock.UtcNow}'");
                 }
 
                 // We don't release in case of exit because we will release after the timeout check to unblock the client and exit the task
@@ -278,42 +278,42 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
             if (_traceEnabled)
             {
-                _logger.LogTrace($"Exit 'ActivityTimerAsync'");
+                await _logger.LogTraceAsync($"Exit 'ActivityTimerAsync'");
             }
         }
         catch (AbandonedMutexException)
         {
             // If the mutex is abandoned from the test host crash we will get an exception
-            _logger.LogDebug($"Mutex '{_activityTimerMutexName}' is abandoned");
+            await _logger.LogDebugAsync($"Mutex '{_activityTimerMutexName}' is abandoned");
         }
         catch (ObjectDisposedException)
         {
             // If test host exit in a non gracefully way on process exit we dispose the mutex to unlock the activity timer.
             // In this way we release also the dispose.
-            _logger.LogDebug($"Mutex '{_activityTimerMutexName}' is disposed");
+            await _logger.LogDebugAsync($"Mutex '{_activityTimerMutexName}' is disposed");
         }
 
         if (!timeoutFired)
         {
             try
             {
-                _logger.LogDebug($"Timeout is not fired release activity mutex handle to allow test host to close");
+                await _logger.LogDebugAsync($"Timeout is not fired release activity mutex handle to allow test host to close");
                 _activityIndicatorMutex.ReleaseMutex();
             }
             catch (AbandonedMutexException)
             {
                 // If the mutex is abandoned from the test host crash we will get an exception
-                _logger.LogDebug($"Mutex '{_activityTimerMutexName}' is abandoned, during last release");
+                await _logger.LogDebugAsync($"Mutex '{_activityTimerMutexName}' is abandoned, during last release");
             }
             catch (ObjectDisposedException)
             {
                 // If test host exit in a non gracefully way on process exit we dispose the mutex to unlock the activity timer.
-                _logger.LogDebug($"Mutex '{_activityTimerMutexName}' is disposed, during last release");
+                await _logger.LogDebugAsync($"Mutex '{_activityTimerMutexName}' is disposed, during last release");
             }
         }
 
         _activityIndicatorMutex.Dispose();
-        _logger.LogDebug($"Activity indicator disposed");
+        await _logger.LogDebugAsync($"Activity indicator disposed");
 
         if (timeoutFired)
         {
@@ -419,10 +419,19 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             await _activityIndicatorTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
         }
 
-        _namedPipeClient?.Dispose();
+        if (_namedPipeClient != null)
+        {
+            await _namedPipeClient.DisposeAsync();
+        }
+
         _waitConsumerPipeName.Dispose();
         _mutexNameReceived.Dispose();
-        _singleConnectionNamedPipeServer?.Dispose();
+
+        if (_singleConnectionNamedPipeServer != null)
+        {
+            await _singleConnectionNamedPipeServer.DisposeAsync();
+        }
+
         _pipeNameDescription.Dispose();
     }
 #endif

@@ -65,11 +65,17 @@ public class MSBuildTests_Solution : AcceptanceTestBase
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
 
-        string projectContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "MSBuildTests.csproj", SearchOption.AllDirectories).Single());
-        string programSourceContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "Program.cs", SearchOption.AllDirectories).Single());
-        string unitTestSourceContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "UnitTest1.cs", SearchOption.AllDirectories).Single());
-        string usingsSourceContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "Usings.cs", SearchOption.AllDirectories).Single());
-        string nugetConfigContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "NuGet.config", SearchOption.AllDirectories).Single());
+        Task<string> GetFile(string file)
+        {
+            string path = Directory.GetFiles(generator.TargetAssetPath, file, SearchOption.AllDirectories).Single();
+            return File.ReadAllTextAsync(path);
+        }
+
+        string projectContent = await GetFile("MSBuildTests.csproj");
+        string programSourceContent = await GetFile("Program.cs");
+        string unitTestSourceContent = await GetFile("UnitTest1.cs");
+        string usingsSourceContent = await GetFile("Usings.cs");
+        string nugetConfigContent = await GetFile("NuGet.config");
 
         // Create a solution with 3 projects
         using TempDirectory tempDirectory = new();
@@ -79,7 +85,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase
         for (int i = 0; i < 3; i++)
         {
             CSharpProject project = solution.CreateCSharpProject($"TestProject{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : [singleTfmOrMultiTfm]);
-            File.WriteAllText(project.ProjectFile, projectContent);
+            await File.WriteAllTextAsync(project.ProjectFile, projectContent);
             project.AddOrUpdateFileContent("Program.cs", programSourceContent.PatchCodeWithReplace("$ProjectName$", $"TestProject{i}"));
             project.AddOrUpdateFileContent("UnitTest1.cs", unitTestSourceContent);
             project.AddOrUpdateFileContent("Usings.cs", usingsSourceContent);
