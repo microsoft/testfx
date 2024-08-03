@@ -279,7 +279,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Add the platform output device to the service provider.
         var toolsServiceProvider = (ServiceProvider)serviceProvider.Clone();
         toolsServiceProvider.TryAddService(platformOutputDevice);
-        ToolsInformation toolsInformation = await ((ToolsManager)Tools).BuildAsync(toolsServiceProvider);
+        IReadOnlyList<ITool> toolsInformation = await ((ToolsManager)Tools).BuildAsync(toolsServiceProvider);
         if (loggingState.CommandLineParseResult.HasTool)
         {
             // Add the platform output device to the service provider.
@@ -307,7 +307,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             }
             else
             {
-                await commandLineHandler.PrintHelpAsync(toolsInformation.Tools);
+                await commandLineHandler.PrintHelpAsync(toolsInformation);
             }
 
             return new InformativeCommandLineTestHost(0, dotnetTestPipeClient);
@@ -316,7 +316,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // If --info is invoked we return
         if (commandLineHandler.IsInfoInvoked())
         {
-            await commandLineHandler.PrintInfoAsync(toolsInformation.Tools);
+            await commandLineHandler.PrintInfoAsync(toolsInformation);
             return new InformativeCommandLineTestHost(0, dotnetTestPipeClient);
         }
 
