@@ -5,7 +5,6 @@ using System.Globalization;
 
 using Microsoft.Testing.Extensions.TestReports.Resources;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers;
-using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
