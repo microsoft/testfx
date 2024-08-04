@@ -28,14 +28,9 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 #endif
     private readonly IEnvironment _environment;
 
-#if NETCOREAPP
-    [SuppressMessage("CodeQuality", "IDE0052:RemoveVariable unread private members", Justification = "Used in netstandard")]
-#endif
-    private readonly IProcessHandler _process;
-
     public CommandLineHandler(CommandLineParseResult parseResult, IReadOnlyCollection<ICommandLineOptionsProvider> extensionsCommandLineOptionsProviders,
         IReadOnlyCollection<ICommandLineOptionsProvider> systemCommandLineOptionsProviders, ITestApplicationModuleInfo testApplicationModuleInfo,
-        IRuntimeFeature runtimeFeature, IPlatformOutputDevice platformOutputDevice, IEnvironment environment, IProcessHandler process)
+        IRuntimeFeature runtimeFeature, IPlatformOutputDevice platformOutputDevice, IEnvironment environment)
     {
         ParseResult = parseResult;
         ExtensionsCommandLineOptionsProviders = extensionsCommandLineOptionsProviders;
@@ -45,7 +40,6 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
         _runtimeFeature = runtimeFeature;
         _platformOutputDevice = platformOutputDevice;
         _environment = environment;
-        _process = process;
     }
 
     public IEnumerable<ICommandLineOptionsProvider> CommandLineOptionsProviders { get; }

@@ -19,22 +19,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">標示為 '[AssemblyCleanup]' 的方法應該遵循下列配置才能有效:
+-其不能在泛型類別上宣告
+- 其應為 'public'
+- 其應為 'static'
+- 其不應為 'async void'
+- 其不應為特殊方法 (完成項、運算子...)。
+- 其不應為泛型
+- 其不應接受任何參數
+- 傳回類型應為 'void'、'Task' 或 'ValueTask'
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+宣告這些方法的類型還應遵循以下規則:
+-類型應為類別
+-類別應為 'public' 或 'internal' (如果測試專案使用 '[DiscoverInternals]' 屬性)
+-類別不應為 'static'
+-類別應標示為 '[TestClass]' (或衍生屬性)。
+-類別不應為泛型。</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -64,22 +64,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">標示為 '[AssemblyInitialize]' 的方法應該遵循下列配置才能有效:
+-其不能在泛型類別上宣告
+- 其應為 'public'
+- 其應為 'static'
+- 其不應為 'async void'
+- 其不應為特殊方法 (完成項、運算子...)。
+- 其不應為泛型
+- 其應該接受類型為 'TestContext' 的一個參數
+- 傳回類型應為 'void'、'Task' 或 'ValueTask'
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+宣告這些方法的類型還應遵循以下規則:
+-類型應為類別
+-類別應為 'public' 或 'internal' (如果測試專案使用 '[DiscoverInternals]' 屬性)
+-類別不應為 'static'
+-類別應標示為 '[TestClass]' (或衍生屬性)。
+-類別不應為泛型。</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -151,24 +151,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">標示 '[ClassCleanup]' 的方法應該遵循下列配置，才會有效:
+-未設定 'InheritanceBehavior' 模式的情況下不能在泛型類別上宣告它
+- 其應為 'public'
+- 其應為 'static'
+- 其不應為 'async void'
+- 其不應為特殊方法 (完成項、運算子...)。
+- 其不應為泛型
+- 其不應接受任何參數
+- 傳回類型應為 'void'、'Task' 或 'ValueTask'
+- 如果類別為 'abstract'，應指定 'InheritanceBehavior.BeforeEachDerivedClass' 屬性參數。
+- 如果類別為 'sealed'，則不應指定 'InheritanceBehavior.BeforeEachDerivedClass' 屬性參數。
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+宣告這些方法的類型還應遵循以下規則:
+-類型應為類別
+-類別應為 'public' 或 'internal' (如果測試專案使用 '[DiscoverInternals]' 屬性)
+-類別不應為 'static'
+-如果類別是 'sealed'，則應標示為 '[TestClass]' (或衍生屬性)。
+-類別不應為泛型。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -200,24 +200,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">標示 '[ClassInitialize]' 的方法應該遵循下列配置，才會有效:
+-未設定 'InheritanceBehavior' 模式的情況下不能在泛型類別上宣告它
+- 其應為 'public'
+- 其應為 'static'
+- 其不應為 'async void'
+- 其不應為特殊方法 (完成項、運算子...)。
+- 其不應為泛型
+- 其應該接受類型為 'TestContext' 的一個參數
+- 傳回類型應為 'void'、'Task' 或 'ValueTask'
+- 如果類別為 'abstract'，應指定 'InheritanceBehavior.BeforeEachDerivedClass' 屬性參數。
+- 如果類別為 'sealed'，則不應指定 'InheritanceBehavior.BeforeEachDerivedClass' 屬性參數。
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+宣告這些方法的類型還應遵循以下規則:
+-類型應為類別
+-類別應為 'public' 或 'internal' (如果測試專案使用 '[DiscoverInternals]' 屬性)
+-類別不應為 'static'
+-如果類別是 'sealed'，則應標示為 '[TestClass]' (或衍生屬性)。
+-類別不應為泛型。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -301,60 +301,60 @@ The type declaring these methods should also respect the following rules:
 - should only be set on a test method;
 - member should be defined on the type specified;
 - member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</source>
-        <target state="new">'DynamicData' entry should have the following layout to be valid:
-- should only be set on a test method;
-- member should be defined on the type specified;
-- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</target>
+        <target state="translated">'DynamicData' 項目應具有下列配置為有效: 
+- 應該只在測試方法上設定;
+- 應在指定的類型上定義成員;
+- 如果指定了 DynamicDataSourceType.Method，則成員應為方法，否則應為屬性。</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DataMemberSignature">
         <source>'[DynamicData]' data member '{0}.{1}' signature is invalid</source>
-        <target state="new">'[DynamicData]' data member '{0}.{1}' signature is invalid</target>
+        <target state="translated">'[DynamicData]' 資料成員 '{0}.{1}' 簽章無效</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature">
         <source>'[DynamicData]' display name method '{0}.{1}' signature is invalid</source>
-        <target state="new">'[DynamicData]' display name method '{0}.{1}' signature is invalid</target>
+        <target state="translated">'[DynamicData]' 顯示名稱方法 '{0}.{1}' 簽章無效</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberMethod">
         <source>'[DynamicData]' member '{0}.{1}' should be a method</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' should be a method</target>
+        <target state="translated">'[DynamicData]' 成員 '{0}.{1}' 應為方法</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberNotFound">
         <source>'[DynamicData]' member '{0}.{1}' cannot be found</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' cannot be found</target>
+        <target state="translated">找不到 '[DynamicData]' 成員 '{0}.{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="new">'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</target>
+        <target state="translated">'[DynamicData]' 參考成員 '{0}.{1}' 應傳回 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_OnTestMethod">
         <source>'[DynamicData]' should only be set on a test method</source>
-        <target state="new">'[DynamicData]' should only be set on a test method</target>
+        <target state="translated">[DynamicData]' 只能在測試方法上設定</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</target>
+        <target state="translated">'[DynamicData]' 成員 '{0}.{1}' 是方法，因此您應該設定 'DynamicDataSourceType.Method'</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
         <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</target>
+        <target state="translated">'[DynamicData]' 成員 '{0}.{1}' 是屬性，因此您應該設定 'DynamicDataSourceType.Property'</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
         <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
-        <target state="new">'[DynamicDta]' member '{0}.{1}' is found more than once</target>
+        <target state="translated">多次發現 '[DynamicDta]' 成員 '{0}.{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
         <source>DynamicData should be valid</source>
-        <target state="new">DynamicData should be valid</target>
+        <target state="translated">DynamicData 應該有效</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -524,21 +524,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestCleanup]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">標示為 '[TestCleanup]' 的方法應該遵循下列配置才能有效:
+- 其應為 'public'
+- 其不應為 'abstract'
+- 其不應為 'async void'
+- 其不應為 'static'
+- 其不應為特殊方法 (完成項、運算子...)。
+- 其不應為泛型
+- 其不應接受任何參數
+- 傳回類型應為 'void'、'Task' 或 'ValueTask'
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+宣告這些方法的類型還應遵循以下規則:
+-類型應為類別
+-類別應為 'public' 或 'internal' (如果測試專案使用 '[DiscoverInternals]' 屬性)
+-類別不應為 'static'
+-如果類別是 'sealed'，則應標示為 '[TestClass]' (或衍生屬性)。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -610,21 +610,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestInitialize]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">標示為 '[TestInitialize]' 的方法應該遵循下列配置才能有效:
+- 其應為 'public'
+- 其不應為 'abstract'
+- 其不應為 'async void'
+- 其不應為 'static'
+- 其不應為特殊方法 (完成項、運算子...)。
+- 其不應為泛型
+- 其不應接受任何參數
+- 傳回類型應為 'void'、'Task' 或 'ValueTask'
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+宣告這些方法的類型還應遵循以下規則:
+-類型應為類別
+-類別應為 'public' 或 'internal' (如果測試專案使用 '[DiscoverInternals]' 屬性)
+-類別不應為 'static'
+-如果類別是 'sealed'，則應標示為 '[TestClass]' (或衍生屬性)。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
@@ -753,12 +753,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
+        <target state="translated">'[DeploymentItem]' 只能在測試類或測試方法上指定</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
+        <target state="translated">'[DeploymentItem]' 只能在測試類或測試方法上指定</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

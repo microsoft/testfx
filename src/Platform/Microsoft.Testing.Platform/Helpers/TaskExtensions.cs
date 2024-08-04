@@ -71,22 +71,7 @@ internal static class TaskExtensions
             return;
         }
 
-#if NET6_0_OR_GREATER
         await task.WaitAsync(cancellationToken).ConfigureAwait(false);
-#else
-        TaskCompletionSource<bool> taskCompletionSource = new();
-        using CancellationTokenRegistration tokenRegistration = cancellationToken.Register(() => taskCompletionSource.TrySetCanceled());
-        if (task == await Task.WhenAny(task, taskCompletionSource.Task).ConfigureAwait(false))
-        {
-            taskCompletionSource.SetResult(true);
-            await task.ConfigureAwait(false);
-            return;
-        }
-        else
-        {
-            throw new OperationCanceledException(cancellationToken);
-        }
-#endif
     }
 
     // We observe by default because usually we're no more interested in the result of the task
@@ -115,7 +100,7 @@ internal static class TaskExtensions
             await task.ConfigureAwait(false);
             return;
         }
-#if NET6_0_OR_GREATER
+
         try
         {
             await task.WaitAsync(timeout).ConfigureAwait(false);
@@ -124,18 +109,6 @@ internal static class TaskExtensions
         {
             throw new TimeoutException(CreateMessage(timeout, filePath, lineNumber));
         }
-#else
-        CancellationTokenSource cts = new();
-        if (task == await Task.WhenAny(task, Task.Delay(timeout, cts.Token)).ConfigureAwait(false))
-        {
-            await cts.CancelAsync();
-            await task.ConfigureAwait(false);
-        }
-        else
-        {
-            throw new TimeoutException(CreateMessage(timeout, filePath, lineNumber));
-        }
-#endif
     }
 
     // We observe by default because usually we're no more interested in the result of the task
@@ -164,7 +137,7 @@ internal static class TaskExtensions
             await task.ConfigureAwait(false);
             return;
         }
-#if NET6_0_OR_GREATER
+
         try
         {
             await task.WaitAsync(timeout, token).ConfigureAwait(false);
@@ -173,24 +146,6 @@ internal static class TaskExtensions
         {
             throw new TimeoutException(CreateMessage(timeout, filePath, lineNumber));
         }
-#else
-        CancellationTokenSource cts = new();
-        var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token, cts.Token);
-        if (task == await Task.WhenAny(task, Task.Delay(timeout, linkedTokenSource.Token)).ConfigureAwait(false))
-        {
-            await cts.CancelAsync();
-            await task.ConfigureAwait(false);
-        }
-        else
-        {
-            if (token.IsCancellationRequested)
-            {
-                throw new TaskCanceledException(task);
-            }
-
-            throw new TimeoutException(CreateMessage(timeout, filePath, lineNumber));
-        }
-#endif
     }
 
     private static string CreateMessage(TimeSpan timeout, string? filePath, int lineNumber)

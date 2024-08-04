@@ -36,7 +36,6 @@ public static class TrxReportExtensions
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetTestFramework(),
                 serviceProvider.GetTestFrameworkCapabilities(),
-                commandLine,
                 serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
                 serviceProvider.GetLoggerFactory().CreateLogger<TrxReportGenerator>()));
 

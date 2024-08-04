@@ -50,7 +50,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
     public IPlatformOutputDeviceManager OutputDisplay { get; } = new PlatformOutputDeviceManager();
 
-    public ICommandLineManager CommandLine { get; } = new CommandLineManager(runtimeFeature, environment, processHandler, testApplicationModuleInfo);
+    public ICommandLineManager CommandLine { get; } = new CommandLineManager(runtimeFeature, environment, testApplicationModuleInfo);
 
     public ITelemetryManager Telemetry { get; } = new TelemetryManager();
 
