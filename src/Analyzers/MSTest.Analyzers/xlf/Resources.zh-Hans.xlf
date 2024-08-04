@@ -19,22 +19,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">标记有“[AssemblyCleanup]”的方法应遵循以下布局才会有效:
+-不能在泛型类上声明它
+- 它应为“public”
+- 它应为“static”
+- 它不应为“async void”
+- 它不应是特殊方法(终结器、运算符...)。
+- 它不应是泛型的
+- 它不应采用任何参数
+- 返回类型应为“void”、“Task”或“ValueTask”
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+声明这些方法的类型还应遵循以下规则:
+-类型应为类
+-类应为“public”或“internal”(如果测试项目正在使用“[DiscoverInternals]”属性)
+-类不应为“static”
+-应使用“[TestClass]”(或派生属性)标记类
+-类不应是泛型的。</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -64,22 +64,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">标记有“[AssemblyInitialize]”的方法应遵循以下布局才会有效:
+-不能在泛型类上声明它
+- 它应为“public”
+- 它应为“static”
+- 它不应为“async void”
+- 它不应是特殊方法(终结器、运算符...)。
+- 它不应是泛型的
+- 它应采用“TestContext”类型的一个参数
+- 返回类型应为“void”、“Task”或“ValueTask”
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+声明这些方法的类型还应遵循以下规则:
+-类型应为类
+-类应为“public”或“internal”(如果测试项目正在使用“[DiscoverInternals]”属性)
+-类不应为“static”
+-应使用“[TestClass]”(或派生属性)标记类
+-类不应是泛型的。</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -151,24 +151,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">标记有“[ClassCleanup]”的方法应遵循以下布局才会有效:
+-如果未设置“InheritanceBehavior”模式，则不能在泛型类上声明它
+- 它应为“public”
+- 它应为“static”
+- 它不应为“async void”
+- 它不应是特殊方法(终结器、运算符...)。
+- 它不应是泛型的
+- 它不应采用任何参数
+- 返回类型应为“void”、“Task”或“ValueTask”
+- "InheritanceBehavior.BeforeEachDerivedClass" 属性参数应在类为 "abstract" 时指定
+- "InheritanceBehavior.BeforeEachDerivedClass" 属性参数不应在类为 "sealed" 时指定
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+声明这些方法的类型还应遵循以下规则:
+-类型应为类
+-类应为“public”或“internal”(如果测试项目正在使用“[DiscoverInternals]”属性)
+-类不应为“static”
+-如果类为“sealed”，则应使用“[TestClass]”(或派生属性)标记该类
+-类不应是泛型的。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -200,24 +200,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">标记有“[ClassInitialize]”的方法应遵循以下布局才会有效:
+-如果未设置“InheritanceBehavior”模式，则不能在泛型类上声明它
+- 它应为“public”
+- 它应为“static”
+- 它不应为“async void”
+- 它不应是特殊方法(终结器、运算符...)。
+- 它不应是泛型的
+- 它应采用“TestContext”类型的一个参数
+- 返回类型应为“void”、“Task”或“ValueTask”
+- "InheritanceBehavior.BeforeEachDerivedClass" 属性参数应在类为 "abstract" 时指定
+- "InheritanceBehavior.BeforeEachDerivedClass" 属性参数不应在类为 "sealed" 时指定
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+声明这些方法的类型还应遵循以下规则:
+-类型应为类
+-类应为“public”或“internal”(如果测试项目正在使用“[DiscoverInternals]”属性)
+-类不应为“static”
+-如果类为“sealed”，则应使用“[TestClass]”(或派生属性)标记该类
+-类不应是泛型的。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -524,21 +524,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestCleanup]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">标记有“[TestCleanup]”的方法应遵循以下布局才会有效:
+- 它应为“public”
+- 它不应为“abstract”
+- 它不应为“async void”
+- 它不应为“static”
+- 它不应是特殊方法(终结器、运算符...)。
+- 它不应是泛型的
+- 它不应采用任何参数
+- 返回类型应为“void”、“Task”或“ValueTask”
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+声明这些方法的类型还应遵循以下规则:
+-类型应为类
+-类应为“public”或“internal”(如果测试项目正在使用“[DiscoverInternals]”属性)
+-类不应为“static”
+-如果类为“sealed”，则应使用“[TestClass]”(或派生属性)标记该类。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -610,21 +610,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestInitialize]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">标记有“[TestInitialize]”的方法应遵循以下布局才会有效:
+- 它应为“public”
+- 它不应为“abstract”
+- 它不应为“async void”
+- 它不应为“static”
+- 它不应是特殊方法(终结器、运算符...)。
+- 它不应是泛型的
+- 它不应采用任何参数
+- 返回类型应为“void”、“Task”或“ValueTask”
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+声明这些方法的类型还应遵循以下规则:
+-类型应为类
+-类应为“public”或“internal”(如果测试项目正在使用“[DiscoverInternals]”属性)
+-类不应为“static”
+-如果类为“sealed”，则应使用“[TestClass]”(或派生属性)标记该类。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
