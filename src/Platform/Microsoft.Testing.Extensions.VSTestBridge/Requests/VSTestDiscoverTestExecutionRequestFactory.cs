@@ -26,7 +26,6 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
     private readonly ITestFrameworkCapabilities _testFrameworkCapabilities;
     private readonly ITestFramework _testFrameworkAdapter;
     private readonly ICommandLineOptions _commandLineService;
-    private readonly ILogger<VSTestDiscoverTestExecutionRequestFactory> _logger;
     private readonly string[] _assemblyPaths;
     private readonly VSTestTestExecutionFilter _testExecutionFilter;
     private readonly IDiscoveryContext _discoveryContext;
@@ -34,13 +33,12 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
     private readonly ITestCaseDiscoverySink _discoverySink;
 
     internal VSTestDiscoverTestExecutionRequestFactory(ITestFrameworkCapabilities testFrameworkCapabilities, ITestFramework testFrameworkAdapter,
-        ICommandLineOptions commandLineService, ILoggerFactory loggerFactory, string[] assemblyPaths, VSTestTestExecutionFilter testExecutionFilter,
+        ICommandLineOptions commandLineService, string[] assemblyPaths, VSTestTestExecutionFilter testExecutionFilter,
         IDiscoveryContext discoveryContext, IMessageLogger messageLogger, ITestCaseDiscoverySink discoverySink)
     {
         _testFrameworkCapabilities = testFrameworkCapabilities;
         _testFrameworkAdapter = testFrameworkAdapter;
         _commandLineService = commandLineService;
-        _logger = loggerFactory.CreateLogger<VSTestDiscoverTestExecutionRequestFactory>();
         _assemblyPaths = assemblyPaths;
         _discoveryContext = discoveryContext;
         _messageLogger = messageLogger;
