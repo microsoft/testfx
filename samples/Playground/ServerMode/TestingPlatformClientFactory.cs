@@ -345,12 +345,12 @@ public sealed class ProcessHandle : IProcessHandle, IDisposable
 
     public async Task<int> WaitForExitAsync()
     {
-        if (_disposed)
+        if (!_disposed)
         {
-            return _exitCode;
+            await _process.WaitForExitAsync();
         }
 
-        await _process.WaitForExitAsync();
+        return _exitCode;
     }
 
     public void WaitForExit() => _process.WaitForExit();
