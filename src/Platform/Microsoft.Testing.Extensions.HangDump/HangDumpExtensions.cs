@@ -21,7 +21,6 @@ public static class HangDumpExtensions
 
         builder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider
             => new HangDumpProcessLifetimeHandler(
-                hangDumpConfiguration,
                 pipeNameDescription,
                 serviceProvider.GetMessageBus(),
                 serviceProvider.GetOutputDevice(),
