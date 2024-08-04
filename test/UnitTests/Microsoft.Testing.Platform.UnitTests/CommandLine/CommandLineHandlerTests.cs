@@ -340,7 +340,7 @@ public class CommandLineHandlerTests : TestBase
 
     private sealed class ExtensionCommandLineProviderMockInvalidConfiguration : ICommandLineOptionsProvider
     {
-        private readonly string _option = "option";
+        private readonly string _option;
 
         public ExtensionCommandLineProviderMockInvalidConfiguration(string optionName = "option")
         {
