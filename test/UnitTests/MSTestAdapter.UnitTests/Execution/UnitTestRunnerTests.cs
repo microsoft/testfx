@@ -74,9 +74,6 @@ public class UnitTestRunnerTests : TestContainer
                 }
             });
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
-        var assemblyEnumerator = new UnitTestRunner(adapterSettings, Array.Empty<UnitTestElement>(), null);
-
         Verify(MSTestSettings.CurrentSettings.ForcedLegacyMode);
         Verify(MSTestSettings.CurrentSettings.TestSettingsFile == "DummyPath\\TestSettings1.testsettings");
     }
