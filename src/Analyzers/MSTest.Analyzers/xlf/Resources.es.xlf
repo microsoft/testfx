@@ -19,22 +19,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Los métodos marcados con '[AssemblyCleanup]' deben seguir el siguiente diseño para ser válidos:
+-no se puede declarar en una clase genérica
+- debería ser 'público' 
+- debería estar 'estático'
+- no debería ser 'async void'
+-no debe ser un método especial (finalizador, operador...).
+-no debe ser genérico
+-no debe tomar ningún parámetro
+- El tipo de valor devuelto debe ser 'void', 'Task' o 'ValueTask'
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+El tipo que declara estos métodos también debe respetar las reglas siguientes:
+-El tipo debe ser una clase
+-La clase debe ser 'public' o 'internal' (si el proyecto de prueba usa el atributo '[DiscoverInternals]')
+-La clase no debe ser 'statico'
+-La clase debe marcarse con '[TestClass]' (o un atributo derivado)
+-la clase no debe ser genérica.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -64,22 +64,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Los métodos marcados con [AssemblyInitialize] deberían seguir el siguiente diseño para ser válidos:
+-no se puede declarar en una clase genérica
+- debería ser 'público' 
+- debería estar 'estático'
+- no debería ser 'async void'
+-no debe ser un método especial (finalizador, operador...).
+-no debe ser genérico
+-debe tomar un parámetro de tipo 'TestContext'
+- El tipo de valor devuelto debe ser 'void', 'Task' o 'ValueTask'
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+El tipo que declara estos métodos también debe respetar las reglas siguientes:
+-El tipo debe ser una clase
+-La clase debe ser 'public' o 'internal' (si el proyecto de prueba usa el atributo '[DiscoverInternals]')
+-La clase no debe ser 'statico'
+-La clase debe marcarse con '[TestClass]' (o un atributo derivado)
+-la clase no debe ser genérica.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -151,24 +151,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">Los métodos marcados con '[ClassCleanup]' deben seguir el siguiente diseño para ser válidos:
+-no se puede declarar en una clase genérica sin el modo 'InheritanceBehavior' establecido
+- debería ser 'público' 
+- debería estar 'estático'
+- no debería ser 'async void'
+-no debe ser un método especial (finalizador, operador...).
+-no debe ser genérico
+-no debe tomar ningún parámetro
+- El tipo de valor devuelto debe ser 'void', 'Task' o 'ValueTask'
+Se debe especificar el parámetro de atributo -'InheritanceBehavior.BeforeEachDerivedClass' si la clase es 'abstract'
+- No se debe especificar el parámetro del atributo 'InheritanceBehavior.BeforeEachDerivedClass' si la clase es 'sellada'
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+El tipo que declara estos métodos también debe respetar las reglas siguientes:
+-El tipo debe ser una clase
+-La clase debe ser 'public' o 'internal' (si el proyecto de prueba usa el atributo '[DiscoverInternals]')
+-La clase no debe ser 'static'
+-Si la clase es 'sealed', debe marcarse con '[TestClass]' (o un atributo derivado)
+-la clase no debe ser genérica.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -200,24 +200,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">Los métodos marcados con '[ClassInitialize]' deben seguir el siguiente diseño para ser válidos:
+-no se puede declarar en una clase genérica sin el modo 'InheritanceBehavior' establecido
+- debería ser 'público' 
+- debería estar 'estático'
+- no debería ser 'async void'
+-no debe ser un método especial (finalizador, operador...).
+-no debe ser genérico
+-debe tomar un parámetro de tipo 'TestContext'
+- El tipo de valor devuelto debe ser 'void', 'Task' o 'ValueTask'
+Se debe especificar el parámetro de atributo -'InheritanceBehavior.BeforeEachDerivedClass' si la clase es 'abstract'
+- No se debe especificar el parámetro del atributo 'InheritanceBehavior.BeforeEachDerivedClass' si la clase es 'sellada'
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+El tipo que declara estos métodos también debe respetar las reglas siguientes:
+-El tipo debe ser una clase
+-La clase debe ser 'public' o 'internal' (si el proyecto de prueba usa el atributo '[DiscoverInternals]')
+-La clase no debe ser 'static'
+-Si la clase es 'sealed', debe marcarse con '[TestClass]' (o un atributo derivado)
+-la clase no debe ser genérica.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -524,21 +524,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestCleanup]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Los métodos marcados con '[TestCleanup]' deben seguir el siguiente diseño para ser válidos:
+- debería ser 'público' 
+-no debe ser 'abstracta'
+- no debería ser 'async void'
+-no debe ser 'statico'
+-no debe ser un método especial (finalizador, operador...).
+-no debe ser genérico
+-no debe tomar ningún parámetro
+- El tipo de valor devuelto debe ser 'void', 'Task' o 'ValueTask'
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+El tipo que declara estos métodos también debe respetar las reglas siguientes:
+-El tipo debe ser una clase
+-La clase debe ser 'public' o 'internal' (si el proyecto de prueba usa el atributo '[DiscoverInternals]')
+-La clase no debe ser 'statico'
+-Si la clase es 'sealed', debe marcarse con '[TestClass]' (o un atributo derivado).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -610,21 +610,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestInitialize]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Los métodos marcados con '[TestInitialize]' deben seguir el siguiente diseño para ser válidos:
+- debería ser 'público' 
+-no debe ser 'abstracta'
+- no debería ser 'async void'
+-no debe ser 'statico'
+-no debe ser un método especial (finalizador, operador...).
+-no debe ser genérico
+-no debe tomar ningún parámetro
+- El tipo de valor devuelto debe ser 'void', 'Task' o 'ValueTask'
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+El tipo que declara estos métodos también debe respetar las reglas siguientes:
+-El tipo debe ser una clase
+-La clase debe ser 'public' o 'internal' (si el proyecto de prueba usa el atributo '[DiscoverInternals]')
+-La clase no debe ser 'statico'
+-Si la clase es 'sealed', debe marcarse con '[TestClass]' (o un atributo derivado).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
@@ -753,12 +753,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
+        <target state="translated">'[DeploymentItem]' solo se puede especificar en la clase de prueba o el método de prueba</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
+        <target state="translated">'[DeploymentItem]' solo se puede especificar en la clase de prueba o el método de prueba</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
