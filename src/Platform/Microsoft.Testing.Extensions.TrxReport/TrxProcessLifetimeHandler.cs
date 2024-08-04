@@ -133,6 +133,8 @@ internal sealed class TrxProcessLifetimeHandler :
         return Task.CompletedTask;
     }
 
+    private static readonly SessionUid EmptyGuidUid = new(Guid.Empty.ToString());
+
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
     {
         if (cancellation.IsCancellationRequested)
@@ -148,7 +150,7 @@ internal sealed class TrxProcessLifetimeHandler :
             var extensionInfo = new ExtensionInfo(prodArtifacts.Key.Uid, prodArtifacts.Key.Version, prodArtifacts.Key.DisplayName, prodArtifacts.Key.Description);
             foreach (FileArtifact fileArtifact in prodArtifacts.Value)
             {
-                perProducerArtifact.Add(new SessionFileArtifact(new SessionUid(Guid.Empty.ToString()), fileArtifact.FileInfo, fileArtifact.DisplayName, fileArtifact.Description));
+                perProducerArtifact.Add(new SessionFileArtifact(EmptyGuidUid, fileArtifact.FileInfo, fileArtifact.DisplayName, fileArtifact.Description));
             }
 
             artifacts.Add(extensionInfo, perProducerArtifact);
