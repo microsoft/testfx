@@ -30,7 +30,7 @@ public class DebuggerUtility
                 return false;
             }
 
-            var process = Process.GetProcessById(pid.Value);
+            using var process = Process.GetProcessById(pid.Value);
             Trace($"Starting with pid '{pid}({process.ProcessName})', and vsPid '{vsPid}'", enabled: enableLog);
             Trace($"Using pid: {pid} to get parent VS.", enabled: enableLog);
             Process? vs = GetVsFromPid(Process.GetProcessById(vsPid ?? process.Id));
@@ -43,27 +43,12 @@ public class DebuggerUtility
             }
 
             Trace($"Parent VS not found, finding the first VS that started.", enabled: enableLog);
-            var firstVs = Process.GetProcesses()
-                .Where(p => p.ProcessName == "devenv")
-                .Select(p =>
-                {
-                    try
-                    {
-                        return new { Process = p, p.StartTime, p.HasExited };
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-                })
-                .Where(p => p != null && !p.HasExited)
-                .OrderBy(p => p!.StartTime)
-                .FirstOrDefault();
+            Process? firstVsProcess = GetFirstVsProcess();
 
-            if (firstVs != null)
+            if (firstVsProcess != null)
             {
-                Trace($"Found VS {firstVs.Process.Id}", enabled: enableLog);
-                AttachTo(process, firstVs.Process);
+                Trace($"Found VS {firstVsProcess.Id}", enabled: enableLog);
+                AttachTo(process, firstVsProcess);
                 return true;
             }
 
@@ -75,6 +60,44 @@ public class DebuggerUtility
         }
 
         return false;
+    }
+
+    private static Process? GetFirstVsProcess()
+    {
+        Process[] processes = Process.GetProcesses();
+        Process? result = null;
+        foreach (Process process in processes
+                     .OrderBy(_ => _.StartTime))
+        {
+            if (process.ProcessName != "devenv")
+            {
+                continue;
+            }
+
+            try
+            {
+                if (process.HasExited)
+                {
+                    continue;
+                }
+            }
+            catch
+            {
+                continue;
+            }
+
+            result = process;
+        }
+
+        foreach (Process process in processes)
+        {
+            if (process != result)
+            {
+                process.Dispose();
+            }
+        }
+
+        return result;
     }
 
     private static void AttachTo(Process process, Process vs, bool enableLog = false)

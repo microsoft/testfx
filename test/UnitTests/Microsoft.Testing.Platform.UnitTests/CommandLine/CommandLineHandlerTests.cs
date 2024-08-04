@@ -18,7 +18,7 @@ public class CommandLineHandlerTests : TestBase
     private readonly Mock<IPlatformOutputDevice> _outputDisplayMock = new();
     private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
     private readonly Mock<IRuntimeFeature> _runtimeFeatureMock = new();
-    private readonly Mock<IProcessHandler> _processHandlerMock = new();
+    private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders =
     [
         new PlatformCommandLineProvider()
@@ -194,8 +194,7 @@ public class CommandLineHandlerTests : TestBase
         string[] args = ["--help"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         CommandLineHandler commandLineHandler = new(parseResult, _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders,
-            _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object,
-            _processHandlerMock.Object);
+            _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object);
 
         // Act
         bool result = commandLineHandler.IsHelpInvoked();
@@ -212,8 +211,7 @@ public class CommandLineHandlerTests : TestBase
         string[] args = ["--info"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         CommandLineHandler commandLineHandler = new(parseResult, _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders,
-            _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object,
-            _processHandlerMock.Object);
+            _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object);
 
         // Act
         bool result = commandLineHandler.IsInfoInvoked();
@@ -230,8 +228,7 @@ public class CommandLineHandlerTests : TestBase
         string[] args = ["--version"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         CommandLineHandler commandLineHandler = new(parseResult, _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders,
-            _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object,
-            _processHandlerMock.Object);
+            _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object);
 
         // Act
         bool result = commandLineHandler.IsOptionSet("version");
@@ -248,7 +245,8 @@ public class CommandLineHandlerTests : TestBase
         OptionRecord optionRecord = new("name", ["value1", "value2"]);
         CommandLineHandler commandLineHandler = new(
             new CommandLineParseResult(string.Empty, [optionRecord], [], []), _extensionCommandLineOptionsProviders,
-            _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _processHandlerMock.Object);
+            _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object,
+            _environmentMock.Object);
 
         // Act
         bool result = commandLineHandler.TryGetOptionArgumentList("name", out string[]? optionValue);
@@ -275,8 +273,7 @@ public class CommandLineHandlerTests : TestBase
             });
 
         CommandLineHandler commandLineHandler = new(parseResult, _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders,
-            _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object,
-            _processHandlerMock.Object);
+            _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object);
 
         // Act
         bool result = commandLineHandler.TryGetOptionArgumentList("name", out string[]? optionValue);

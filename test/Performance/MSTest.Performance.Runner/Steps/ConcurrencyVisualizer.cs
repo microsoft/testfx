@@ -99,11 +99,11 @@ internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
         };
 
         Console.WriteLine($"CVCollectionCmd command: '{startCollection.FileName} {startCollection.Arguments}'");
-        Process process = Process.Start(startCollection)!;
-        process.EnableRaisingEvents = true;
-        process.BeginOutputReadLine();
-        process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
-        await process.WaitForExitAsync();
+        using Process startProcess = Process.Start(startCollection)!;
+        startProcess.EnableRaisingEvents = true;
+        startProcess.BeginOutputReadLine();
+        startProcess.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
+        await startProcess.WaitForExitAsync();
 
         // Wait for process exit
         profiledProcessExited.Wait();
@@ -117,11 +117,11 @@ internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
              RedirectStandardInput = true,
          };
         Console.WriteLine($"VSDiagnostics stop command: '{stopCollection.FileName} {stopCollection.Arguments}'");
-        process = Process.Start(stopCollection)!;
-        process.EnableRaisingEvents = true;
-        process.BeginOutputReadLine();
-        process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
-        await process.WaitForExitAsync();
+        using Process stopProcess = Process.Start(stopCollection)!;
+        stopProcess.EnableRaisingEvents = true;
+        stopProcess.BeginOutputReadLine();
+        stopProcess.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
+        await stopProcess.WaitForExitAsync();
 
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);
