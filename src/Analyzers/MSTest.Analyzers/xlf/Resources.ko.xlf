@@ -19,22 +19,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">'[AssemblyCleanup]'으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
+-제네릭 클래스에서 선언할 수 없습니다.
+- 'public'이어야 합니다. 
+- 'static'이어야 합니다.
+- 'async void'가 아니어야 합니다.
+- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.
+- 제네릭이 아니어야 합니다.
+- 매개 변수를 사용하지 않아야 합니다.
+- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+이러한 메서드를 선언하는 형식은 다음 규칙도 준수해야 합니다.
+-형식은 클래스여야 합니다.
+-클래스는 'public' 또는 'internal'이어야 합니다(테스트 프로젝트에서 '[DiscoverInternals]' 특성을 사용하는 경우).
+-클래스는 'static'이 되어서는 안 됩니다.
+-클래스는 '[TestClass]'(또는 파생 특성)로 표시되어야 합니다.
+-클래스는 제네릭이 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -64,22 +64,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">'[AssemblyInitialize]'로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
+-제네릭 클래스에서 선언할 수 없습니다.
+- 'public'이어야 합니다. 
+- 'static'이어야 합니다.
+- 'async void'가 아니어야 합니다.
+- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.
+- 제네릭이 아니어야 합니다.
+- 'TestContext' 형식의 매개 변수를 하나 사용해야 합니다.
+- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+이러한 메서드를 선언하는 형식은 다음 규칙도 준수해야 합니다.
+-형식은 클래스여야 합니다.
+-클래스는 'public' 또는 'internal'이어야 합니다(테스트 프로젝트에서 '[DiscoverInternals]' 특성을 사용하는 경우).
+-클래스는 'static'이 되어서는 안 됩니다.
+-클래스는 '[TestClass]'(또는 파생 특성)로 표시되어야 합니다.
+-클래스는 제네릭이 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -151,24 +151,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">'[ClassCleanup]'으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
+-'InheritanceBehavior' 모드가 설정되지 않은 제네릭 클래스에서 선언할 수 없습니다.
+- 'public'이어야 합니다. 
+- 'static'이어야 합니다.
+- 'async void'가 아니어야 합니다.
+- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.
+- 제네릭이 아니어야 합니다.
+- 매개 변수를 사용하지 않아야 합니다.
+- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
+- 클래스가 'abstract'인 경우 'InheritanceBehavior.BeforeEachDerivedClass' 특성 매개 변수를 지정해야 합니다.
+- 클래스가 'sealed'인 경우 'InheritanceBehavior.BeforeEachDerivedClass' 특성 매개 변수를 지정하면 안 됩니다.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+이러한 메서드를 선언하는 형식은 다음 규칙도 준수해야 합니다.
+-형식은 클래스여야 합니다.
+-클래스는 'public' 또는 'internal'이어야 합니다(테스트 프로젝트에서 '[DiscoverInternals]' 특성을 사용하는 경우).
+-클래스는 'static'이 되어서는 안 됩니다.
+-클래스가 'sealed'인 경우 '[TestClass]'(또는 파생 특성)로 표시되어야 합니다.
+-클래스는 제네릭이 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -200,24 +200,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">'[ClassInitialize]'로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
+-'InheritanceBehavior' 모드가 설정되지 않은 제네릭 클래스에서 선언할 수 없습니다.
+- 'public'이어야 합니다. 
+- 'static'이어야 합니다.
+- 'async void'가 아니어야 합니다.
+- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.
+- 제네릭이 아니어야 합니다.
+- 'TestContext' 형식의 매개 변수를 하나 사용해야 합니다.
+- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
+- 클래스가 'abstract'인 경우 'InheritanceBehavior.BeforeEachDerivedClass' 특성 매개 변수를 지정해야 합니다.
+- 클래스가 'sealed'인 경우 'InheritanceBehavior.BeforeEachDerivedClass' 특성 매개 변수를 지정하면 안 됩니다.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+이러한 메서드를 선언하는 형식은 다음 규칙도 준수해야 합니다.
+-형식은 클래스여야 합니다.
+-클래스는 'public' 또는 'internal'이어야 합니다(테스트 프로젝트에서 '[DiscoverInternals]' 특성을 사용하는 경우).
+-클래스는 'static'이 되어서는 안 됩니다.
+-클래스가 'sealed'인 경우 '[TestClass]'(또는 파생 특성)로 표시되어야 합니다.
+-클래스는 제네릭이 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -524,21 +524,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestCleanup]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">'[TestCleanup]'으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
+- 'public'이어야 합니다. 
+- 'abstract'가 아니어야 합니다.
+- 'async void'가 아니어야 합니다.
+- 'static'이 아니어야 합니다.
+- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.
+- 제네릭이 아니어야 합니다.
+- 매개 변수를 사용하지 않아야 합니다.
+- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+이러한 메서드를 선언하는 형식은 다음 규칙도 준수해야 합니다.
+-형식은 클래스여야 합니다.
+-클래스는 'public' 또는 'internal'이어야 합니다(테스트 프로젝트에서 '[DiscoverInternals]' 특성을 사용하는 경우).
+-클래스는 'static'이 되어서는 안 됩니다.
+-클래스가 'sealed'인 경우 '[TestClass]'(또는 파생 특성)로 표시되어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -611,21 +611,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestInitialize]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">'[TestInitialize]'로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
+- 'public'이어야 합니다. 
+- 'abstract'가 아니어야 합니다.
+- 'async void'가 아니어야 합니다.
+- 'static'이 아니어야 합니다.
+- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.
+- 제네릭이 아니어야 합니다.
+- 매개 변수를 사용하지 않아야 합니다.
+- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+이러한 메서드를 선언하는 형식은 다음 규칙도 준수해야 합니다.
+-형식은 클래스여야 합니다.
+-클래스는 'public' 또는 'internal'이어야 합니다(테스트 프로젝트에서 '[DiscoverInternals]' 특성을 사용하는 경우).
+-클래스는 'static'이 되어서는 안 됩니다.
+-클래스가 'sealed'인 경우 '[TestClass]'(또는 파생 특성)로 표시되어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
@@ -754,12 +754,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
+        <target state="translated">'[DeploymentItem]'은(는) 테스트 클래스 또는 테스트 메서드에만 지정할 수 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
+        <target state="translated">'[DeploymentItem]'은(는) 테스트 클래스 또는 테스트 메서드에만 지정할 수 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
