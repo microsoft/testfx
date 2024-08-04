@@ -181,7 +181,7 @@ internal class UnitTestRunner : MarshalByRefObject
 
             if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true)
             {
-                testMethodInfo?.Parent.RunClassCleanup(testContext, _classCleanupManager, testMethodInfo, testMethod, result);
+                testMethodInfo.Parent.RunClassCleanup(testContext, _classCleanupManager, testMethodInfo, testMethod, result);
                 RunAssemblyCleanupIfNeeded(testContext, _classCleanupManager, _typeCache, result);
             }
 

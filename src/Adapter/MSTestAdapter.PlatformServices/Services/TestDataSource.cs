@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 public class TestDataSource : ITestDataSource
 {
 #if NETFRAMEWORK
-    public IEnumerable<object>? GetData(ITestMethod testMethodInfo, ITestContext testContext)
+    public IEnumerable<object>? GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
 #else
     IEnumerable<object>? ITestDataSource.GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
 #endif
@@ -42,25 +42,12 @@ public class TestDataSource : ITestDataSource
             Path.GetDirectoryName(new Uri(testMethodInfo.MethodInfo.Module.Assembly.CodeBase).LocalPath),
         ];
 
-        List<TestResult> dataRowResults = [];
+        List<UTF.TestResult> dataRowResults = [];
 
         // Connect to data source.
         TestDataConnectionFactory factory = new();
 
-        string providerNameInvariant;
-        string? connectionString;
-        string? tableName;
-        DataAccessMethod dataAccessMethod;
-
-        try
-        {
-            GetConnectionProperties(testMethodInfo.GetAttributes<DataSourceAttribute>(false)[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
-        }
-        catch
-        {
-            // REVIEW ME: @Haplois, was there any good reason to mess up stack trace?
-            throw;
-        }
+        GetConnectionProperties(testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false)[0], out string providerNameInvariant, out string? connectionString, out string? tableName, out UTF.DataAccessMethod dataAccessMethod);
 
         try
         {
@@ -90,11 +77,11 @@ public class TestDataSource : ITestDataSource
         }
         catch (Exception ex)
         {
-            string message = ExceptionExtensions.GetExceptionMessage(ex);
+            string message = ex.GetExceptionMessage();
 
             // TODO: Change exception type to more specific one.
 #pragma warning disable CA2201 // Do not raise reserved exception types
-            throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorDataConnectionFailed, ex.Message), ex);
+            throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorDataConnectionFailed, message), ex);
 #pragma warning restore CA2201 // Do not raise reserved exception types
         }
 #else
@@ -109,7 +96,7 @@ public class TestDataSource : ITestDataSource
     /// <param name="dataAccessMethod">The data access method.</param>
     /// <param name="length">Number of permutations.</param>
     /// <returns>Permutations.</returns>
-    private static IEnumerable<int> GetPermutation(DataAccessMethod dataAccessMethod, int length)
+    private static IEnumerable<int> GetPermutation(UTF.DataAccessMethod dataAccessMethod, int length)
     {
         switch (dataAccessMethod)
         {
@@ -133,8 +120,8 @@ public class TestDataSource : ITestDataSource
     /// <param name="connectionString">The connection string.</param>
     /// <param name="tableName">The table name.</param>
     /// <param name="dataAccessMethod">The data access method.</param>
-    private static void GetConnectionProperties(DataSourceAttribute dataSourceAttribute, out string providerNameInvariant,
-        out string? connectionString, out string? tableName, out DataAccessMethod dataAccessMethod)
+    private static void GetConnectionProperties(UTF.DataSourceAttribute dataSourceAttribute, out string providerNameInvariant,
+        out string? connectionString, out string? tableName, out UTF.DataAccessMethod dataAccessMethod)
     {
         if (StringEx.IsNullOrEmpty(dataSourceAttribute.DataSourceSettingName))
         {
@@ -145,14 +132,14 @@ public class TestDataSource : ITestDataSource
             return;
         }
 
-        DataSourceElement element = TestConfiguration.ConfigurationSection.DataSources[dataSourceAttribute.DataSourceSettingName]
+        UTF.DataSourceElement element = TestConfiguration.ConfigurationSection.DataSources[dataSourceAttribute.DataSourceSettingName]
 #pragma warning disable CA2201 // Do not raise reserved exception types
             ?? throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_DataSourceConfigurationSectionMissing, dataSourceAttribute.DataSourceSettingName));
 #pragma warning restore CA2201 // Do not raise reserved exception types
         providerNameInvariant = ConfigurationManager.ConnectionStrings[element.ConnectionString].ProviderName;
         connectionString = ConfigurationManager.ConnectionStrings[element.ConnectionString].ConnectionString;
         tableName = element.DataTableName;
-        dataAccessMethod = (DataAccessMethod)Enum.Parse(typeof(DataAccessMethod), element.DataAccessMethod);
+        dataAccessMethod = EnumPolyfill.Parse<DataAccessMethod>(element.DataAccessMethod);
     }
 #endif
 }

@@ -156,15 +156,8 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         return null;
     }
 
-    private bool IsCurrentProcessArchitectureCompatible()
-    {
-#if NET
-        Architecture targetArchitecture = Enum.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
-#else
-        var targetArchitecture = (Architecture)Enum.Parse(typeof(Architecture), TestArchitecture.ItemSpec, ignoreCase: true);
-#endif
-        return _currentProcessArchitecture == targetArchitecture;
-    }
+    private bool IsCurrentProcessArchitectureCompatible() =>
+        _currentProcessArchitecture == EnumPolyfill.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
 
     protected override string GenerateCommandLineCommands()
     {

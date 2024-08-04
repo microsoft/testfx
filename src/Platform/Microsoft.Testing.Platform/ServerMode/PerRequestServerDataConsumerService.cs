@@ -28,7 +28,6 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
     private readonly SemaphoreSlim _nodeUpdateSemaphore = new(1);
     private readonly ITestSessionContext _testSessionContext = serviceProvider.GetTestSessionContext();
     private readonly TaskCompletionSource<bool> _testSessionEnd = new();
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
     private readonly IServerTestHost _serverTestHost = serverTestHost;
     private readonly ITask _task = task;
     private Task? _idleUpdateTask;

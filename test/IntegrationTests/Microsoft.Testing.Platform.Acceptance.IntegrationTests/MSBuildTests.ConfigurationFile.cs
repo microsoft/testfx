@@ -43,7 +43,7 @@ public class MSBuildTests : AcceptanceTestBase
 \s*GenerateTestingPlatformConfigurationFile:
 \s*Skipping target "GenerateTestingPlatformConfigurationFile" because all output files are up\-to\-date with respect to the input files\.
 """));
-        compilationResult = await DotnetCli.RunAsync($"clean -c {compilationMode} -v:normal {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"clean -c {compilationMode} -v:normal {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         // dotnet clean doesn't clean the publish output folder
         if (verb == Verb.build)
