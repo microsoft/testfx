@@ -30,7 +30,7 @@ public class DebuggerUtility
                 return false;
             }
 
-            var process = Process.GetProcessById(pid.Value);
+            using var process = Process.GetProcessById(pid.Value);
             Trace($"Starting with pid '{pid}({process.ProcessName})', and vsPid '{vsPid}'", enabled: enableLog);
             Trace($"Using pid: {pid} to get parent VS.", enabled: enableLog);
             Process? vs = GetVsFromPid(Process.GetProcessById(vsPid ?? process.Id));
