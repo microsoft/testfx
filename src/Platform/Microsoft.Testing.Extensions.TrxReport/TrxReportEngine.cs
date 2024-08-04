@@ -194,14 +194,8 @@ internal sealed partial class TrxReportEngine
             Stream stream = _fileSystem.NewFileStream(finalFileName, FileMode.CreateNew).Stream;
             try
             {
-#if NETCOREAPP
                 await document.SaveAsync(stream, SaveOptions.None, _cancellationToken);
                 return finalFileName;
-#else
-                _cancellationToken.ThrowIfCancellationRequested();
-                document.Save(stream);
-                return await Task.FromResult(finalFileName);
-#endif
             }
             finally
             {
@@ -278,14 +272,8 @@ internal sealed partial class TrxReportEngine
             }
         }
 
-#if NETCOREAPP
         using FileStream fs = File.OpenWrite(trxFile.FullName);
         await document.SaveAsync(fs, SaveOptions.None, _cancellationToken);
-#else
-        _cancellationToken.ThrowIfCancellationRequested();
-        document.Save(trxFile.FullName);
-        await Task.CompletedTask;
-#endif
     }
 
     private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, bool isTestHostCrashed = false)
