@@ -29,8 +29,6 @@ internal class ReflectHelper : MarshalByRefObject
     {
     }
 
-    private readonly AttributeComparer _attributeComparer = new();
-
     public static ReflectHelper Instance => InstanceValue.Value;
 
     /// <summary>
