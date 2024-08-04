@@ -139,7 +139,7 @@ public class TestDataSource : ITestDataSource
         providerNameInvariant = ConfigurationManager.ConnectionStrings[element.ConnectionString].ProviderName;
         connectionString = ConfigurationManager.ConnectionStrings[element.ConnectionString].ConnectionString;
         tableName = element.DataTableName;
-        dataAccessMethod = (UTF.DataAccessMethod)Enum.Parse(typeof(UTF.DataAccessMethod), element.DataAccessMethod);
+        dataAccessMethod = EnumPolyfill.Parse<DataAccessMethod>(element.DataAccessMethod);
     }
 #endif
 }
