@@ -238,6 +238,7 @@ public class DebuggerUtility
         Process? parent = process;
         while (!IsVsOrNull(parent))
         {
+            using Process toDispose = parent;
             parent = GetParentProcess(parent);
         }
 
