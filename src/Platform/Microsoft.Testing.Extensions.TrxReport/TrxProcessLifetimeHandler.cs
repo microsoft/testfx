@@ -207,12 +207,12 @@ internal sealed class TrxProcessLifetimeHandler :
         if (request is ReportFileNameRequest report)
         {
             _fileNameRequest = report;
-            return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+            return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
         }
         else if (request is TestAdapterInformationRequest testAdapterInformationRequest)
         {
             _testAdapterInformationRequest = testAdapterInformationRequest;
-            return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+            return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
         }
         else
         {
