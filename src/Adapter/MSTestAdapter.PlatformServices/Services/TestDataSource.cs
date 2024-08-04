@@ -47,20 +47,7 @@ public class TestDataSource : ITestDataSource
         // Connect to data source.
         TestDataConnectionFactory factory = new();
 
-        string providerNameInvariant;
-        string? connectionString;
-        string? tableName;
-        UTF.DataAccessMethod dataAccessMethod;
-
-        try
-        {
-            GetConnectionProperties(testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false)[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
-        }
-        catch
-        {
-            // REVIEW ME: @Haplois, was there any good reason to mess up stack trace?
-            throw;
-        }
+        GetConnectionProperties(testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false)[0], out string providerNameInvariant, out string? connectionString, out string? tableName, out UTF.DataAccessMethod dataAccessMethod);
 
         try
         {
@@ -152,7 +139,7 @@ public class TestDataSource : ITestDataSource
         providerNameInvariant = ConfigurationManager.ConnectionStrings[element.ConnectionString].ProviderName;
         connectionString = ConfigurationManager.ConnectionStrings[element.ConnectionString].ConnectionString;
         tableName = element.DataTableName;
-        dataAccessMethod = (UTF.DataAccessMethod)Enum.Parse(typeof(UTF.DataAccessMethod), element.DataAccessMethod);
+        dataAccessMethod = EnumPolyfill.Parse<DataAccessMethod>(element.DataAccessMethod);
     }
 #endif
 }

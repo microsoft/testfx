@@ -25,20 +25,18 @@ public sealed class VSTestRunTestExecutionRequestFactory : ITestExecutionRequest
     private readonly ITestFrameworkCapabilities _testFrameworkCapabilities;
     private readonly ITestFramework _testFrameworkAdapter;
     private readonly ICommandLineOptions _commandLineService;
-    private readonly ILogger<VSTestRunTestExecutionRequestFactory> _logger;
     private readonly string[] _assemblyPaths;
     private readonly VSTestTestExecutionFilter _testExecutionFilter;
     private readonly IRunContext _runContext;
     private readonly IFrameworkHandle _frameworkHandle;
 
     internal VSTestRunTestExecutionRequestFactory(ITestFrameworkCapabilities testFrameworkCapabilities, ITestFramework testFrameworkAdapter,
-        ICommandLineOptions commandLineService, ILoggerFactory loggerFactory, string[] assemblyPaths, VSTestTestExecutionFilter testExecutionFilter,
+        ICommandLineOptions commandLineService, string[] assemblyPaths, VSTestTestExecutionFilter testExecutionFilter,
         IRunContext runContext, IFrameworkHandle frameworkHandle)
     {
         _testFrameworkCapabilities = testFrameworkCapabilities;
         _testFrameworkAdapter = testFrameworkAdapter;
         _commandLineService = commandLineService;
-        _logger = loggerFactory.CreateLogger<VSTestRunTestExecutionRequestFactory>();
         _assemblyPaths = assemblyPaths;
         _testExecutionFilter = testExecutionFilter;
         _runContext = runContext;
