@@ -38,7 +38,6 @@ internal sealed class TrxReportGenerator :
     private readonly IOutputDevice _outputDisplay;
     private readonly ITestFramework _testFramework;
     private readonly ITestFrameworkCapabilities _testFrameworkCapabilities;
-    private readonly TrxReportGeneratorCommandLine _trxReportGeneratorCommandLine;
     private readonly TrxTestApplicationLifecycleCallbacks? _trxTestApplicationLifecycleCallbacks;
     private readonly ILogger<TrxReportGenerator> _logger;
     private readonly List<TestNodeUpdateMessage> _tests = [];
@@ -61,7 +60,6 @@ internal sealed class TrxReportGenerator :
         IOutputDevice outputDisplay,
         ITestFramework testFramework,
         ITestFrameworkCapabilities testFrameworkCapabilities,
-        TrxReportGeneratorCommandLine trxReportGeneratorCommandLine,
         // Can be null in case of server mode
         TrxTestApplicationLifecycleCallbacks? trxTestApplicationLifecycleCallbacks,
         ILogger<TrxReportGenerator> logger)
@@ -75,7 +73,6 @@ internal sealed class TrxReportGenerator :
         _outputDisplay = outputDisplay;
         _testFramework = testFramework;
         _testFrameworkCapabilities = testFrameworkCapabilities;
-        _trxReportGeneratorCommandLine = trxReportGeneratorCommandLine;
         _trxTestApplicationLifecycleCallbacks = trxTestApplicationLifecycleCallbacks;
         _logger = logger;
         _isEnabled = commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName);
