@@ -33,7 +33,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     IDisposable
 #endif
 {
-    private readonly HangDumpConfiguration _hangDumpConfiguration;
     private readonly IMessageBus _messageBus;
     private readonly IOutputDevice _outputDisplay;
     private readonly ICommandLineOptions _commandLineOptions;
@@ -41,7 +40,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private readonly IEnvironment _environment;
     private readonly IConfiguration _configuration;
     private readonly IProcessHandler _processHandler;
-    private readonly IServiceProvider _serviceProvider;
     private readonly IClock _clock;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly PipeNameDescription _pipeNameDescription;
@@ -64,7 +62,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private NamedPipeClient? _namedPipeClient;
 
     public HangDumpProcessLifetimeHandler(
-        HangDumpConfiguration hangDumpConfiguration,
         PipeNameDescription pipeNameDescription,
         IMessageBus messageBus,
         IOutputDevice outputDisplay,
@@ -80,7 +77,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     {
         _logger = loggerFactory.CreateLogger<HangDumpProcessLifetimeHandler>();
         _traceEnabled = _logger.IsEnabled(LogLevel.Trace);
-        _hangDumpConfiguration = hangDumpConfiguration;
         _pipeNameDescription = pipeNameDescription;
         _messageBus = messageBus;
         _outputDisplay = outputDisplay;
@@ -89,7 +85,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         _environment = environment;
         _configuration = configuration;
         _processHandler = processHandler;
-        _serviceProvider = serviceProvider;
         _clock = clock;
         _testApplicationCancellationTokenSource = serviceProvider.GetTestApplicationCancellationTokenSource();
         _dumpFileNamePattern = $"{Path.GetFileNameWithoutExtension(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_%p_hang.dmp";
@@ -136,7 +131,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             _singleConnectionNamedPipeServer.RegisterSerializer(new SessionEndSerializerRequestSerializer(), typeof(SessionEndSerializerRequest));
             _singleConnectionNamedPipeServer.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
             await _logger.LogDebugAsync($"Waiting for connection to {_singleConnectionNamedPipeServer.PipeName.Name}");
-            await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
         }, cancellationToken);
     }
 

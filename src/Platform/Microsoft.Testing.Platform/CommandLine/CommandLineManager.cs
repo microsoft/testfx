@@ -10,12 +10,10 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ICommandLineManager
+internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, ITestApplicationModuleInfo testApplicationModuleInfo) : ICommandLineManager
 {
     private readonly List<Func<ICommandLineOptionsProvider>> _commandLineProviderFactory = [];
     private readonly IRuntimeFeature _runtimeFeature = runtimeFeature;
-    private readonly IEnvironment _environment = environment;
-    private readonly IProcessHandler _processHandler = processHandler;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
 
     public void AddProvider(Func<ICommandLineOptionsProvider> commandLineProviderFactory)
@@ -49,6 +47,6 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, IEnviro
         ];
 
         return new CommandLineHandler(parseResult, commandLineOptionsProviders.ToArray(),
-            systemCommandLineOptionsProviders, _testApplicationModuleInfo, _runtimeFeature, platformOutputDisplay, _environment, _processHandler);
+            systemCommandLineOptionsProviders, _testApplicationModuleInfo, _runtimeFeature, platformOutputDisplay);
     }
 }

@@ -224,11 +224,8 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 // System.InvalidOperationException: No process is associated with this object.
             }
 
-            testHostProcess.Exited += (sender, e) =>
-            {
-                var processExited = sender as Process;
+            testHostProcess.Exited += (_, _) =>
                 _logger.LogDebug($"Test host process exited, PID: '{testHostProcessId}'");
-            };
 
             await _logger.LogDebugAsync($"Started test host process '{testHostProcessId}' HasExited: {testHostProcess.HasExited}");
 
@@ -367,12 +364,12 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 case TestHostProcessExitRequest testHostProcessExitRequest:
                     _testHostExitCode = testHostProcessExitRequest.ExitCode;
                     _testHostGracefullyClosed = true;
-                    return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+                    return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
 
                 case TestHostProcessPIDRequest testHostProcessPIDRequest:
                     _testHostPID = testHostProcessPIDRequest.PID;
                     _waitForPid.Set();
-                    return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+                    return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
 
                 default:
                     throw new NotSupportedException($"Request '{request}' not supported");

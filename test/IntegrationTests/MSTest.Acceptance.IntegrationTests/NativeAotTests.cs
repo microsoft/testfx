@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Runtime.InteropServices;
-
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -102,16 +100,14 @@ public class UnitTest1
            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
            addPublicFeeds: true);
 
-        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        compilationResult = await DotnetCli.RunAsync(
+        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         compilationResult.AssertOutputContains("Generating native code");
         string publishFolder = compilationResult.StandardOutputLines.Last().Split(" -> ")[1];
         var commandLine = new TestInfrastructure.CommandLine();
 
-        string exe = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "NativeAotTests.exe" : "NativeAotTests";
         int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(Path.Combine(publishFolder, "NativeAotTests.exe"));
         Assert.AreEqual(0, exitCode);
     }
