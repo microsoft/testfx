@@ -209,23 +209,24 @@ internal class TrxCompareTool : ITool, IOutputDeviceDataProducer
                 continue;
             }
 
-            IEnumerable<XElement> matchingUnitTestDefinitions = trxTestRun
+            XElement[] matchingUnitTestDefinitions = trxTestRun
                 .Elements(ns + "TestDefinitions")
                 .Elements(ns + "UnitTest")
-                .Where(x => x.Attribute("id")?.Value == testId);
-            if (matchingUnitTestDefinitions.Skip(1).Any())
+                .Where(x => x.Attribute("id")?.Value == testId)
+                .ToArray();
+            if (matchingUnitTestDefinitions.Length > 1)
             {
                 issues.Add($"Found more than one entry in 'TestDefinitions.UnitTest' matching the test ID '{testId}'.");
                 continue;
             }
 
-            if (!matchingUnitTestDefinitions.Any())
+            if (matchingUnitTestDefinitions.Length == 0)
             {
                 issues.Add($"Cannot find any 'TestDefinitions.UnitTest' matching the test ID '{testId}'.");
                 continue;
             }
 
-            XElement matchingUnitTestDefinition = matchingUnitTestDefinitions.First();
+            XElement matchingUnitTestDefinition = matchingUnitTestDefinitions[0];
             string testDefinitionId = matchingUnitTestDefinition.Attribute("id")!.Value;
 
             string? testDefinitionStorage = matchingUnitTestDefinition.Attribute("storage")?.Value;

@@ -14,17 +14,19 @@ internal static class TaskExtensions
     {
         if (observeException)
         {
-            _ = task.ContinueWith(async task =>
-            {
-                try
+            _ = task.ContinueWith(
+                async task =>
                 {
-                    await task;
-                }
-                catch (Exception)
-                {
-                    // Observe the exception
-                }
-            });
+                    try
+                    {
+                        await task;
+                    }
+                    catch (Exception)
+                    {
+                        // Observe the exception
+                    }
+                },
+                cancellationToken);
         }
 
         // Don't create a timer if the task is already completed
@@ -51,17 +53,19 @@ internal static class TaskExtensions
     {
         if (observeException)
         {
-            _ = task.ContinueWith(async task =>
-            {
-                try
+            _ = task.ContinueWith(
+                async task =>
                 {
-                    await task;
-                }
-                catch (Exception)
-                {
-                    // Observe the exception
-                }
-            });
+                    try
+                    {
+                        await task;
+                    }
+                    catch (Exception)
+                    {
+                        // Observe the exception
+                    }
+                },
+                cancellationToken);
         }
 
         // Don't create a timer if the task is already completed
@@ -118,17 +122,19 @@ internal static class TaskExtensions
     {
         if (observeException)
         {
-            _ = task.ContinueWith(async task =>
-            {
-                try
+            _ = task.ContinueWith(
+                async task =>
                 {
-                    await task;
-                }
-                catch (Exception)
-                {
-                    // Observe the exception
-                }
-            });
+                    try
+                    {
+                        await task;
+                    }
+                    catch (Exception)
+                    {
+                        // Observe the exception
+                    }
+                },
+                token);
         }
 
         // Don't create a timer if the task is already completed
