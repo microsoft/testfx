@@ -19,7 +19,6 @@ using TestFramework.ForTestingMSTest;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
@@ -295,7 +294,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
         mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<UTF.AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize"), It.IsAny<bool>()))
+            rh => rh.IsNonDerivedAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize"), It.IsAny<bool>()))
             .Returns(true);
 
         int validator = 1;
@@ -342,9 +341,9 @@ public class UnitTestRunnerTests : TestContainer
     [DummyTestClass]
     private class DummyTestClass
     {
-        public UTFExtension.TestContext TestContext { get; set; }
+        public TestContext TestContext { get; set; }
 
-        [UTF.TestMethod]
+        [TestMethod]
         public void TestMethodToTestInProgress() => Assert.AreEqual(UTF.UnitTestOutcome.InProgress, TestContext.CurrentTestOutcome);
     }
 
@@ -357,12 +356,12 @@ public class UnitTestRunnerTests : TestContainer
 
         // The reflectHelper instance would set the AssemblyInitialize attribute here before running any tests.
         // Setting an attribute causes conflicts with other tests.
-        public static void AssemblyInitialize(UTFExtension.TestContext tc) => AssemblyInitializeMethodBody.Invoke();
+        public static void AssemblyInitialize(TestContext tc) => AssemblyInitializeMethodBody.Invoke();
 
-        [UTF.ClassInitialize]
-        public static void ClassInitialize(UTFExtension.TestContext tc) => ClassInitializeMethodBody.Invoke();
+        [ClassInitialize]
+        public static void ClassInitialize(TestContext tc) => ClassInitializeMethodBody.Invoke();
 
-        [UTF.TestMethod]
+        [TestMethod]
         public void TestMethod()
         {
         }
@@ -375,21 +374,21 @@ public class UnitTestRunnerTests : TestContainer
 
         public static Action ClassCleanupMethodBody { get; set; }
 
-        public static Action<UTFExtension.TestContext> TestMethodBody { get; set; }
+        public static Action<TestContext> TestMethodBody { get; set; }
 
-        public UTFExtension.TestContext TestContext { get; set; }
+        public TestContext TestContext { get; set; }
 
-        [UTF.AssemblyCleanup]
+        [AssemblyCleanup]
         public static void AssemblyCleanup() => AssemblyCleanupMethodBody?.Invoke();
 
-        [UTF.ClassCleanup]
+        [ClassCleanup]
         public static void ClassCleanup() => ClassCleanupMethodBody?.Invoke();
 
-        [UTF.TestMethod]
+        [TestMethod]
         public void TestMethod() => TestMethodBody?.Invoke(TestContext);
     }
 
-    private class DummyTestClassAttribute : UTF.TestClassAttribute;
+    private class DummyTestClassAttribute : TestClassAttribute;
 
     #endregion
 }

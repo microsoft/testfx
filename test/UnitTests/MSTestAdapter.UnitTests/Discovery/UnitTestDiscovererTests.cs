@@ -406,8 +406,8 @@ internal class TestableUnitTestDiscoverer : UnitTestDiscoverer
         ITestCaseDiscoverySink discoverySink,
         IDiscoveryContext discoveryContext)
     {
-        var testCase1 = new TestCase("A", new System.Uri("executor://testExecutor"), source);
-        var testCase2 = new TestCase("B", new System.Uri("executor://testExecutor"), source);
+        var testCase1 = new TestCase("A", new Uri("executor://testExecutor"), source);
+        var testCase2 = new TestCase("B", new Uri("executor://testExecutor"), source);
         discoverySink.SendTestCase(testCase1);
         discoverySink.SendTestCase(testCase2);
     }
