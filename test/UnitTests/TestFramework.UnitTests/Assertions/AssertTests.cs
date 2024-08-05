@@ -29,8 +29,6 @@ public partial class AssertTests
     public void BuildUserMessageThrowsWhenMessageContainsInvalidStringFormatComposite()
     {
         Exception ex = VerifyThrows(() => Assert.BuildUserMessage("{", "arg"));
-
-        Verify(ex is not null);
         Verify(ex is FormatException);
     }
 
