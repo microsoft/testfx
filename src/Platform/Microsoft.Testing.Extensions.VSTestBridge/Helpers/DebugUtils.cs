@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+
 namespace Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 
 internal static class DebugUtils
@@ -11,7 +13,7 @@ internal static class DebugUtils
     {
         if (Environment.GetEnvironmentVariable(VSTestBridgeAttachDebuggerEnvVar) == "1")
         {
-            System.Diagnostics.Debugger.Launch();
+            Debugger.Launch();
         }
     }
 }

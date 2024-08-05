@@ -24,11 +24,10 @@ internal interface IProcess : IDisposable
     IMainModule MainModule { get; }
 #endif
 
-#if NETCOREAPP
-    /// <inheritdoc cref="System.Diagnostics.Process.WaitForExitAsync(CancellationToken)" />
+    /// <summary>
+    /// Instructs the Process component to wait for the associated process to exit, or for the cancellationToken to be canceled.
+    /// </summary>
     Task WaitForExitAsync();
-
-#endif
 
     /// <inheritdoc cref="System.Diagnostics.Process.WaitForExit()" />
     void WaitForExit();
