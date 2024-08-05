@@ -221,6 +221,7 @@ interface InitializeParams {
 
             // If true, the client can receive a batch of log messages under client/log request.
             batchLoggingSupport: true,
+
             // If true, the client supports the testing/testUpdates/attachments request.
             attachmentsSupport: true,
 
