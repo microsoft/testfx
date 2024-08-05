@@ -46,7 +46,7 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, ITestAp
             new PlatformCommandLineProvider()
         ];
 
-        return new CommandLineHandler(parseResult, commandLineOptionsProviders.ToArray(),
+        return new CommandLineHandler(parseResult, commandLineOptionsProviders,
             systemCommandLineOptionsProviders, _testApplicationModuleInfo, _runtimeFeature, platformOutputDisplay);
     }
 }
