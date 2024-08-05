@@ -12,8 +12,20 @@ namespace Playground;
 [TestClass]
 public class TestClass
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void Test()
+    {
+    }
+
+    [TestMethod]
+    public void Test2()
+    {
+    }
+
+    [TestMethod]
+    public void Test3()
     {
     }
 }

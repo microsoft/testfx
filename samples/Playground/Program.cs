@@ -4,7 +4,10 @@
 using System.Reflection;
 
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using MSTest.Acceptance.IntegrationTests.Messages.V100;
 
 namespace Playground;
 
@@ -15,8 +18,12 @@ public class Program
         // Opt-out telemetry
         Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 
-        ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
-        testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
+        if (Environment.GetEnvironmentVariable("TESTSERVERMODE") != "1")
+        {
+            // To attach to the children
+            // Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
+            ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+            testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
             // Enable Trx
             // testApplicationBuilder.AddTrxReportProvider();
@@ -40,10 +47,7 @@ public class Program
             });
             await discoveryResponse.WaitCompletionAsync();
 
-            ResponseListener runRequest = await client.RunTestsAsync(Guid.NewGuid(), testNodeUpdates.Select(x => x.Node).ToArray(), node =>
-            {
-                return Task.CompletedTask;
-            });
+            ResponseListener runRequest = await client.RunTestsAsync(Guid.NewGuid(), testNodeUpdates.Select(x => x.Node).ToArray(), node => Task.CompletedTask);
             await runRequest.WaitCompletionAsync();
 
             await client.ExitAsync();
