@@ -5,7 +5,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Product dependencies">
-    <AspireHostingTestingVersion>8.0.1</AspireHostingTestingVersion>
+    <AspireHostingTestingVersion>8.0.2</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.10.0-preview-24127-03</MicrosoftBuildVersion>
     <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.24318.1</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
