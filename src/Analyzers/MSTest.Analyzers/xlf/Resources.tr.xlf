@@ -19,22 +19,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">'[AssemblyCleanup]' ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gerekir:
+-genel bir sınıfta tanımlanamaz
+-'public' olmalıdır
+-'static' olmalıdır
+-'async void' olmamalıdır
+-özel bir yöntem (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+- herhangi bir parametre almamalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir sınıf olmalıdır
+-Sınıf 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
+-Sınıf 'static' olmamalıdır
+-Sınıf '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir
+-sınıf genel olmamalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -64,22 +64,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">'[AssemblyInitialize]' ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni izlemesi gerekir:
+-genel bir sınıfta tanımlanamaz
+-'public' olmalıdır
+-'static' olmalıdır
+-'async void' olmamalıdır
+-özel bir yöntem (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+- 'TestContext' türünden bir parametre almalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir sınıf olmalıdır
+-Sınıf 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
+-Sınıf 'static' olmamalıdır
+-Sınıf '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir
+-sınıf genel olmamalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -151,24 +151,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">'[ClassCleanup]' ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gereklidir:
+-'InheritanceBehavior' modu ayarlanmadan genel bir sınıfta tanımlanamaz
+-'public' olmalıdır
+-'static' olmalıdır
+-'async void' olmamalıdır
+-özel bir yöntem (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+- herhangi bir parametre almamalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
+-Sınıf 'abstract' ise 'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir.
+-'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi, sınıf 'sealed' ise belirtilmemelidir
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir sınıf olmalıdır
+-Sınıf 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
+-Sınıf 'static' olmamalıdır
+-Sınıf 'sealed' ise '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir.
+-sınıf genel olmamalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -200,24 +200,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">'[ClassInitialize]' ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gereklidir:
+-'InheritanceBehavior' modu ayarlanmadan genel bir sınıfta tanımlanamaz
+-'public' olmalıdır
+-'static' olmalıdır
+-'async void' olmamalıdır
+-özel bir yöntem (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+- 'TestContext' türünden bir parametre almalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
+-Sınıf 'abstract' ise 'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir.
+-'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi, sınıf 'sealed' ise belirtilmemelidir
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir sınıf olmalıdır
+-Sınıf 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
+-Sınıf 'static' olmamalıdır
+-Sınıf 'sealed' ise '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir.
+-sınıf genel olmamalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -525,21 +525,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestCleanup]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">'[TestCleanup]' ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gerekir:
+-'public' olmalıdır 
+- 'abstract' olmamalıdır
+-'async void' olmamalıdır
+-'static' olmamalıdır
+-özel bir yöntem (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+- herhangi bir parametre almamalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir sınıf olmalıdır
+--Sınıf 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
+-Sınıf 'static' olmamalıdır
+-Sınıf 'sealed' ise '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -611,21 +611,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestInitialize]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">'[TestInitialize]' ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni izlemesi gerekir:
+-'public' olmalıdır 
+- 'abstract' olmamalıdır
+-'async void' olmamalıdır
+-'static' olmamalıdır
+-özel bir yöntem (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+- herhangi bir parametre almamalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir sınıf olmalıdır
+--Sınıf 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
+-Sınıf 'static' olmamalıdır
+-Sınıf 'sealed' ise '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">

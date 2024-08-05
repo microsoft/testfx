@@ -110,7 +110,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
                         // Observe possible exceptions
                         try
                         {
-                            await _idleUpdateTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                            await _idleUpdateTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
                         }
                         catch (OperationCanceledException)
                         {
