@@ -3,6 +3,7 @@
 
 #if NETFRAMEWORK
 
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 using System.Xml;
@@ -118,7 +119,7 @@ internal class XmlUtilities
             for (int i = 0; i < publicKeyToken.GetLength(0); i++)
             {
                 publicKeyTokenString.AppendFormat(
-                    System.Globalization.CultureInfo.InvariantCulture,
+                    CultureInfo.InvariantCulture,
                     "{0:x2}",
                     [publicKeyToken[i]]);
             }

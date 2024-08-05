@@ -22,7 +22,7 @@ public class DataRowAttributeTests : TestContainer
     {
         var dataRow = new DataRowAttribute();
 
-        Verify(System.Array.Empty<object>().SequenceEqual(dataRow.Data));
+        Verify(Array.Empty<object>().SequenceEqual(dataRow.Data));
     }
 
     public void ConstructorShouldSetDataPassed()
