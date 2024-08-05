@@ -152,7 +152,6 @@ public sealed class TestApplication : ITestApplication
 #endif
         await logger.LogInformationAsync($"Runtime information: {runtimeInformation}");
 
-        SystemProcessHandler systemProcessHandler = new();
 #if NETCOREAPP
         if (RuntimeFeature.IsDynamicCodeSupported)
         {

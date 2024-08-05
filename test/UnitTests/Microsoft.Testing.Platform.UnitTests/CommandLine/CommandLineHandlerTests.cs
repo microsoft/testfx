@@ -18,7 +18,6 @@ public class CommandLineHandlerTests : TestBase
     private readonly Mock<IPlatformOutputDevice> _outputDisplayMock = new();
     private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
     private readonly Mock<IRuntimeFeature> _runtimeFeatureMock = new();
-    private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders =
     [
         new PlatformCommandLineProvider()
@@ -340,7 +339,7 @@ public class CommandLineHandlerTests : TestBase
 
     private sealed class ExtensionCommandLineProviderMockInvalidConfiguration : ICommandLineOptionsProvider
     {
-        private readonly string _option = "option";
+        private readonly string _option;
 
         public ExtensionCommandLineProviderMockInvalidConfiguration(string optionName = "option")
         {
