@@ -12,8 +12,6 @@ public partial class AssertTests
     public void ThrowAssertFailedDoesNotThrowIfMessageContainsInvalidStringFormatComposite()
     {
         Exception ex = VerifyThrows(() => Assert.ThrowAssertFailed("name", "{"));
-
-        Verify(ex is not null);
         Verify(typeof(AssertFailedException) == ex.GetType());
         Verify(ex.Message.Contains("name failed. {"));
     }
@@ -23,8 +21,6 @@ public partial class AssertTests
     public void ThrowsExceptionWithLambdaExpressionsShouldThrowAssertionOnNoException()
     {
         Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => { }));
-
-        Verify(ex is not null);
         Verify(typeof(AssertFailedException) == ex.GetType());
         Verify(ex.Message.Equals("Assert.ThrowsException failed. Expected exception type:<System.ArgumentException> but no exception was thrown. ", StringComparison.Ordinal));
     }
@@ -32,8 +28,6 @@ public partial class AssertTests
     public void ThrowsExceptionWithLambdaExpressionsShouldThrowAssertionOnWrongException()
     {
         Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => throw new FormatException()));
-
-        Verify(ex is not null);
         Verify(typeof(AssertFailedException) == ex.GetType());
         Verify(ex.Message.Equals("Assert.ThrowsException failed. Expected exception type:<System.ArgumentException>. Actual exception type:<System.FormatException>. ", StringComparison.Ordinal));
     }
@@ -41,8 +35,6 @@ public partial class AssertTests
     public void ThrowsException_FuncArgument_AllowsToReturnNull()
     {
         Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null));
-
-        Verify(ex is not null);
         Verify(typeof(AssertFailedException) == ex.GetType());
         Verify(ex.Message.Equals("Assert.ThrowsException failed. Expected exception type:<System.ArgumentException> but no exception was thrown. ", StringComparison.Ordinal));
     }
@@ -50,8 +42,6 @@ public partial class AssertTests
     public void ThrowsException_FuncArgumentOverloadWithMessage_AllowsToReturnNull()
     {
         Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null, "message"));
-
-        Verify(ex is not null);
         Verify(typeof(AssertFailedException) == ex.GetType());
         Verify(ex.Message.Equals("Assert.ThrowsException failed. Expected exception type:<System.ArgumentException> but no exception was thrown. message", StringComparison.Ordinal));
     }
@@ -59,8 +49,6 @@ public partial class AssertTests
     public void ThrowsException_FuncArgumentOverloadWithMessagesAndParameters_AllowsToReturnNull()
     {
         Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null, "message {0}", 1));
-
-        Verify(ex is not null);
         Verify(typeof(AssertFailedException) == ex.GetType());
         Verify(ex.Message.Equals("Assert.ThrowsException failed. Expected exception type:<System.ArgumentException> but no exception was thrown. message 1", StringComparison.Ordinal));
     }
@@ -86,8 +74,6 @@ public partial class AssertTests
             async () => await Task.Delay(5).ConfigureAwait(false));
         Exception ex = VerifyThrows(t.Wait);
 
-        Verify(ex is not null);
-
         Exception innerException = ex.InnerException;
 
         Verify(innerException is not null);
@@ -105,8 +91,6 @@ public partial class AssertTests
             });
         Exception ex = VerifyThrows(t.Wait);
 
-        Verify(ex is not null);
-
         Exception innerException = ex.InnerException;
 
         Verify(innerException is not null);
@@ -120,8 +104,6 @@ public partial class AssertTests
             async () => await Task.Delay(5).ConfigureAwait(false),
             "The world is not on fire.");
         Exception ex = VerifyThrows(t.Wait);
-
-        Verify(ex is not null);
 
         Exception innerException = ex.InnerException;
 
@@ -141,8 +123,6 @@ public partial class AssertTests
             "Happily ever after.");
         Exception ex = VerifyThrows(t.Wait);
 
-        Verify(ex is not null);
-
         Exception innerException = ex.InnerException;
 
         Verify(innerException is not null);
@@ -160,8 +140,6 @@ public partial class AssertTests
 
         Exception ex = VerifyThrows(A);
 
-        Verify(ex is not null);
-
         Exception innerException = ex.InnerException;
 
         Verify(innerException is not null);
@@ -178,8 +156,6 @@ public partial class AssertTests
 
         Exception ex = VerifyThrows(A);
 
-        Verify(ex is not null);
-
         Exception innerException = ex.InnerException;
 
         Verify(innerException is not null);
@@ -195,8 +171,6 @@ public partial class AssertTests
             "da",
             123);
         Exception ex = VerifyThrows(t.Wait);
-
-        Verify(ex is not null);
 
         Exception innerException = ex.InnerException;
 
@@ -217,8 +191,6 @@ public partial class AssertTests
             "The",
             "End");
         Exception ex = VerifyThrows(t.Wait);
-
-        Verify(ex is not null);
 
         Exception innerException = ex.InnerException;
 
