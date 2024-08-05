@@ -125,7 +125,7 @@ public sealed class IPCTests : TestBase
             (IRequest request) =>
             {
                 receivedMessages.Enqueue((BaseMessage)request);
-                return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+                return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
             },
             new SystemEnvironment(),
             new Mock<ILogger>().Object,

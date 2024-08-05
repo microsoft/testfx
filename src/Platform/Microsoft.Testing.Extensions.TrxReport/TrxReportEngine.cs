@@ -194,8 +194,14 @@ internal sealed partial class TrxReportEngine
             Stream stream = _fileSystem.NewFileStream(finalFileName, FileMode.CreateNew).Stream;
             try
             {
+#if NETCOREAPP
                 await document.SaveAsync(stream, SaveOptions.None, _cancellationToken);
                 return finalFileName;
+#else
+                _cancellationToken.ThrowIfCancellationRequested();
+                document.Save(stream);
+                return await Task.FromResult(finalFileName);
+#endif
             }
             finally
             {
@@ -240,11 +246,13 @@ internal sealed partial class TrxReportEngine
     public async Task AddArtifactsAsync(FileInfo trxFile, Dictionary<IExtension, List<SessionFileArtifact>> artifacts)
     {
         var document = XDocument.Load(trxFile.FullName);
-        XElement deployment = document.Element(_namespaceUri + "TestRun")?.Element(_namespaceUri + "TestSettings")?.Element(_namespaceUri + "Deployment")
+        XElement? testRun = document.Element(_namespaceUri + "TestRun")
+            ?? throw new InvalidOperationException("TestRun element not found");
+        XElement deployment = testRun.Element(_namespaceUri + "TestSettings")?.Element(_namespaceUri + "Deployment")
             ?? throw new InvalidOperationException("Deployment element not found");
         string runDeploymentRoot = deployment.Attribute("runDeploymentRoot")?.Value
             ?? throw new InvalidOperationException("Unexpected null 'runDeploymentRoot'");
-        XElement resultSummary = document.Element(_namespaceUri + "TestRun")?.Element(_namespaceUri + "ResultSummary")
+        XElement resultSummary = testRun.Element(_namespaceUri + "ResultSummary")
             ?? throw new InvalidOperationException("ResultSummary element not found");
         XElement? collectorDataEntries = resultSummary.Element(_namespaceUri + "CollectorDataEntries");
         if (collectorDataEntries is null)
@@ -253,6 +261,20 @@ internal sealed partial class TrxReportEngine
             resultSummary.Add(collectorDataEntries);
         }
 
+        await AddArtifactsToCollectionAsync(artifacts, collectorDataEntries, runDeploymentRoot);
+
+#if NETCOREAPP
+        using FileStream fs = File.OpenWrite(trxFile.FullName);
+        await document.SaveAsync(fs, SaveOptions.None, _cancellationToken);
+#else
+        _cancellationToken.ThrowIfCancellationRequested();
+        document.Save(trxFile.FullName);
+        await Task.CompletedTask;
+#endif
+    }
+
+    private async Task AddArtifactsToCollectionAsync(Dictionary<IExtension, List<SessionFileArtifact>> artifacts, XElement collectorDataEntries, string runDeploymentRoot)
+    {
         foreach (KeyValuePair<IExtension, List<SessionFileArtifact>> extensionArtifacts in artifacts)
         {
             var collector = new XElement(
@@ -271,9 +293,6 @@ internal sealed partial class TrxReportEngine
                 uriAttachments.Add(new XElement(_namespaceUri + "UriAttachment", new XElement(_namespaceUri + "A", new XAttribute("href", href))));
             }
         }
-
-        using FileStream fs = File.OpenWrite(trxFile.FullName);
-        await document.SaveAsync(fs, SaveOptions.None, _cancellationToken);
     }
 
     private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, bool isTestHostCrashed = false)
@@ -325,24 +344,7 @@ internal sealed partial class TrxReportEngine
         var collectorDataEntries = new XElement(_namespaceUri + "CollectorDataEntries");
         resultSummary.Add(collectorDataEntries);
 
-        foreach (KeyValuePair<IExtension, List<SessionFileArtifact>> tuple in _artifactsByExtension)
-        {
-            var collector = new XElement(
-                _namespaceUri + "Collector",
-                new XAttribute("agentName", _environment.MachineName),
-                new XAttribute("uri", $"datacollector://{tuple.Key.Uid}/{tuple.Key.Version}"),
-                new XAttribute("collectorDisplayName", tuple.Key.DisplayName));
-            collectorDataEntries.Add(collector);
-
-            var uriAttachments = new XElement(_namespaceUri + "UriAttachments");
-            collector.Add(uriAttachments);
-
-            foreach (SessionFileArtifact artifact in tuple.Value)
-            {
-                string href = await CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(artifact.FileInfo, runDeploymentRoot);
-                uriAttachments.Add(new XElement(_namespaceUri + "UriAttachment", new XElement(_namespaceUri + "A", new XAttribute("href", href))));
-            }
-        }
+        await AddArtifactsToCollectionAsync(_artifactsByExtension, collectorDataEntries, runDeploymentRoot);
     }
 
     private async Task<string> CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(FileInfo artifact, string runDeploymentRoot)
