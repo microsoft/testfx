@@ -376,6 +376,9 @@ public partial class AssertTests : TestContainer
         VerifyThrows(() => Assert.AreEqual(instanceOfB, instanceOfA));
     }
 
+#pragma warning disable IDE0004
+
+    // IDE0004: at least on param needs to be cast to dynamic so it is more readable if both are cast to dynamic
     public void AreEqualUsingDynamicsDoesNotFail()
     {
         Assert.AreEqual<dynamic>((dynamic?)null, (dynamic?)null);
@@ -383,6 +386,8 @@ public partial class AssertTests : TestContainer
         Assert.AreEqual<dynamic>((dynamic)"a", (dynamic)"a");
         Assert.AreEqual<dynamic>((dynamic)'a', (dynamic)'a');
     }
+
+#pragma warning restore IDE0004
 
     private CultureInfo? GetCultureInfo() => CultureInfo.CurrentCulture;
 
