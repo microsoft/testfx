@@ -54,11 +54,6 @@ public class TestMethodRunnerTests : TestContainer
         _testClassInfo = new TestClassInfo(typeof(DummyTestClass), constructorInfo, true, testContextProperty, classAttribute, testAssemblyInfo);
 
         _globalTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(3600 * 1000), null, _testContextImplementation, false, _testMethodAttribute);
-        var globalTestMethodInfo = new TestMethodInfo(
-            _methodInfo,
-            _testClassInfo,
-            _globalTestMethodOptions);
-        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, null);
 
         _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), null, _testContextImplementation, false, _testMethodAttribute);
 
