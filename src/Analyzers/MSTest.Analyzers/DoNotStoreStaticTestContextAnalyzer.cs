@@ -13,6 +13,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0024: <inheritdoc cref="Resources.DoNotStoreStaticTestContextAnalyzerTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class DoNotStoreStaticTestContextAnalyzer : DiagnosticAnalyzer
 {

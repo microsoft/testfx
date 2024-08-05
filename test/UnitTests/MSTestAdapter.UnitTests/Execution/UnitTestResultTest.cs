@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -6,6 +6,9 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -15,6 +18,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class UnitTestResultTest : TestContainer
 {
+    private readonly Mock<IMessageLogger> _mockMessageLogger = new();
+
     public void UnitTestResultConstructorWithOutcomeAndErrorMessageShouldSetRequiredFields()
     {
         UnitTestResult result = new(UnitTestOutcome.Error, "DummyMessage");
@@ -61,7 +66,7 @@ public class UnitTestResultTest : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         // Act
         var testResult = result.ToTestResult(testCase, startTime, endTime, "MachineName", adapterSettings);
@@ -92,7 +97,7 @@ public class UnitTestResultTest : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
         Verify(testResult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs", StringComparison.Ordinal)));
@@ -113,7 +118,7 @@ public class UnitTestResultTest : TestContainer
             </RunSettings>
             """;
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
         var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
         Verify(testResult.Messages.All(m => m.Text.Contains("\r\n\r\nDebug Trace:\r\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs", StringComparison.Ordinal)));
     }

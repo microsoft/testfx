@@ -13,6 +13,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0023: <inheritdoc cref="Resources.DoNotNegateBooleanAssertionTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
 {

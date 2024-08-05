@@ -96,6 +96,7 @@ internal static class SerializerUtilities
         {
             Dictionary<string, object?> values = new()
             {
+                [JsonRpcStrings.ProcessId] = res.ProcessId,
                 [JsonRpcStrings.ServerInfo] = Serialize(res.ServerInfo),
                 [JsonRpcStrings.Capabilities] = Serialize(res.Capabilities),
             };
@@ -135,9 +136,9 @@ internal static class SerializerUtilities
             [JsonRpcStrings.Description] = res.Description,
         });
 
-        Serializers[typeof(DiscoverResponseArgs)] = new ObjectSerializer<DiscoverResponseArgs>(res => new Dictionary<string, object?>() { });
+        Serializers[typeof(DiscoverResponseArgs)] = new ObjectSerializer<DiscoverResponseArgs>(res => new Dictionary<string, object?> { });
 
-        Serializers[typeof(RunResponseArgs)] = new ObjectSerializer<RunResponseArgs>(res => new Dictionary<string, object?>()
+        Serializers[typeof(RunResponseArgs)] = new ObjectSerializer<RunResponseArgs>(res => new Dictionary<string, object?>
         {
             [JsonRpcStrings.Attachments] = res.Artifacts.Select(f => Serialize(f)).ToList<object>(),
         });
@@ -316,13 +317,13 @@ internal static class SerializerUtilities
                                     break;
                                 }
 
-                            case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
+                            case CancelledTestNodeStateProperty canceledTestNodeStateProperty:
                                 {
-                                    properties["execution-state"] = "cancelled";
-                                    properties["error.message"] = cancelledTestNodeStateProperty.Explanation ?? cancelledTestNodeStateProperty.Exception?.Message;
-                                    if (cancelledTestNodeStateProperty.Exception != null)
+                                    properties["execution-state"] = "canceled";
+                                    properties["error.message"] = canceledTestNodeStateProperty.Explanation ?? canceledTestNodeStateProperty.Exception?.Message;
+                                    if (canceledTestNodeStateProperty.Exception != null)
                                     {
-                                        properties["error.stacktrace"] = cancelledTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
+                                        properties["error.stacktrace"] = canceledTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
                                     }
 
                                     break;
@@ -436,7 +437,7 @@ internal static class SerializerUtilities
 
                 object? idObj = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Id);
 
-                IDictionary<string, object?>? paramsObj = method != JsonRpcMethods.Exit
+                IDictionary<string, object?> paramsObj = method != JsonRpcMethods.Exit
                     ? GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Params)
                     : new Dictionary<string, object?>();
 
@@ -515,10 +516,11 @@ internal static class SerializerUtilities
 
         Deserializers[typeof(InitializeResponseArgs)] = new ObjectDeserializer<InitializeResponseArgs>(properties =>
         {
+            int processId = GetRequiredPropertyFromJson<int>(properties, JsonRpcStrings.ProcessId);
             ServerInfo serverInfo = Deserialize<ServerInfo>(GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.ServerInfo));
             ServerCapabilities capabilities = Deserialize<ServerCapabilities>(GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Capabilities));
 
-            return new InitializeResponseArgs(serverInfo, capabilities);
+            return new InitializeResponseArgs(processId, serverInfo, capabilities);
         });
 
         Deserializers[typeof(ServerInfo)] = new ObjectDeserializer<ServerInfo>(properties =>
@@ -625,7 +627,7 @@ internal static class SerializerUtilities
         Deserializers[typeof(ErrorMessage)] = new ObjectDeserializer<ErrorMessage>(properties =>
         {
             ValidateJsonRpcHeader(properties);
-            object? idObj = GetRequiredPropertyFromJson<object>(properties, JsonRpcStrings.Id);
+            object idObj = GetRequiredPropertyFromJson<object>(properties, JsonRpcStrings.Id);
             IDictionary<string, object> errorObj = GetRequiredPropertyFromJson<IDictionary<string, object>>(properties, JsonRpcStrings.Error);
 
 #if !NETCOREAPP

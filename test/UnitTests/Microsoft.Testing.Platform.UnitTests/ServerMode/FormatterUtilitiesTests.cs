@@ -224,7 +224,7 @@ public class FormatterUtilitiesTests : TestBase
 
         if (type == typeof(InitializeResponseArgs))
         {
-            Assert.AreEqual("""{"serverInfo":{"name":"ServerInfoName","version":"Version"},"capabilities":{"testing":{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true}}}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"processId":1,"serverInfo":{"name":"ServerInfoName","version":"Version"},"capabilities":{"testing":{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true}}}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
@@ -287,7 +287,7 @@ public class FormatterUtilitiesTests : TestBase
 
         if (type == typeof(ProcessInfoArgs))
         {
-            return new ProcessInfoArgs("program", "arts", "workingDir", new Dictionary<string, string?>() { { "key", "value" } });
+            return new ProcessInfoArgs("program", "arts", "workingDir", new Dictionary<string, string?> { { "key", "value" } });
         }
 
         if (type == typeof(KeyValuePair<string, string>))
@@ -297,7 +297,7 @@ public class FormatterUtilitiesTests : TestBase
 
         if (type == typeof(TelemetryEventArgs))
         {
-            return new TelemetryEventArgs("eventName", new Dictionary<string, object>() { { "key", 1 } });
+            return new TelemetryEventArgs("eventName", new Dictionary<string, object> { { "key", 1 } });
         }
 
         if (type == typeof(CancelRequestArgs))
@@ -325,7 +325,7 @@ public class FormatterUtilitiesTests : TestBase
             return new TestNodeUpdateMessage(
                 default,
                 GetSampleTestNode(),
-                new Extensions.Messages.TestNodeUid("parent-uid"));
+                new TestNodeUid("parent-uid"));
         }
 
         if (type == typeof(RunResponseArgs))
@@ -360,7 +360,7 @@ public class FormatterUtilitiesTests : TestBase
 
         if (type == typeof(InitializeResponseArgs))
         {
-            return new InitializeResponseArgs(new ServerInfo("ServerInfoName", "Version"), new ServerCapabilities(new ServerTestingCapabilities(true, true, true)));
+            return new InitializeResponseArgs(1, new ServerInfo("ServerInfoName", "Version"), new ServerCapabilities(new ServerTestingCapabilities(true, true, true)));
         }
 
         if (type == typeof(ErrorMessage))
@@ -424,7 +424,7 @@ public class FormatterUtilitiesTests : TestBase
             TestNode testNode = new()
             {
                 DisplayName = "DisplayName",
-                Uid = new Extensions.Messages.TestNodeUid("uid"),
+                Uid = new TestNodeUid("uid"),
             };
 
             testNode.Properties.Add(new SerializableKeyValuePairStringProperty("key", "value"));

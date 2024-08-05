@@ -55,7 +55,7 @@ internal sealed class FileLogger : IDisposable
         if (!_options.SyncFlush)
         {
 #if NETCOREAPP
-            _channel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions()
+            _channel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions
             {
                 // We process only 1 data at a time
                 SingleReader = true,

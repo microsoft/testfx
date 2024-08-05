@@ -462,4 +462,73 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestInitialize"),
             fixedCode);
     }
+
+    public async Task WhenTestInitializeIsNotOnClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public struct MyTestClass
+            {
+                [TestInitialize]
+                public void [|TestInitialize|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestInitializeIsOnSealedClassNotMarkedWithTestClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class MyTestClass
+            {
+                [TestInitialize]
+                public void [|TestInitialize|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestInitializeIsOnNonSealedClassNotMarkedWithTestClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void TestInitialize()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestInitializeIsOnGenericClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass<T>
+            {
+                [TestInitialize]
+                public void TestInitialize()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

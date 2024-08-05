@@ -118,14 +118,22 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AssemblyCleanupShouldBeValidDescription" xml:space="preserve">
-    <value>Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</value>
+    <value>Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</value>
   </data>
   <data name="AssemblyCleanupShouldBeValidMessageFormat" xml:space="preserve">
     <value>AssemblyCleanup method '{0}' signature is invalid</value>
@@ -134,14 +142,22 @@
     <value>AssemblyCleanup methods should have valid layout</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidDescription" xml:space="preserve">
-    <value>Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</value>
+    <value>Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat" xml:space="preserve">
     <value>AssemblyInitialize method '{0}' signature is invalid</value>
@@ -174,14 +190,24 @@
     <value>Avoid '[ExpectedException]'</value>
   </data>
   <data name="ClassCleanupShouldBeValidDescription" xml:space="preserve">
-    <value>Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</value>
+    <value>Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</value>
   </data>
   <data name="ClassCleanupShouldBeValidMessageFormat" xml:space="preserve">
     <value>ClassCleanup method '{0}' signature is invalid</value>
@@ -190,14 +216,24 @@
     <value>ClassCleanup methods should have valid layout</value>
   </data>
   <data name="ClassInitializeShouldBeValidDescription" xml:space="preserve">
-    <value>Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</value>
+    <value>Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</value>
   </data>
   <data name="ClassInitializeShouldBeValidMessageFormat" xml:space="preserve">
     <value>ClassInitialize method '{0}' signature is invalid</value>
@@ -311,15 +347,21 @@
     <value>Test class should have test method</value>
   </data>
   <data name="TestCleanupShouldBeValidDescription" xml:space="preserve">
-    <value>Methods marked with [TestCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic or be defined on a generic class
-- not be 'abstract'
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</value>
+    <value>Methods marked with '[TestCleanup]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</value>
   </data>
   <data name="TestCleanupShouldBeValidMessageFormat" xml:space="preserve">
     <value>TestCleanup method '{0}' signature is invalid</value>
@@ -353,15 +395,21 @@
     <value>Test context property should have valid layout</value>
   </data>
   <data name="TestInitializeShouldBeValidDescription" xml:space="preserve">
-    <value>Methods marked with [TestInitialize] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not be 'abstract'
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</value>
+    <value>Methods marked with '[TestInitialize]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</value>
   </data>
   <data name="TestInitializeShouldBeValidMessageFormat" xml:space="preserve">
     <value>TestInitialize method '{0}' signature is invalid</value>
@@ -453,5 +501,62 @@
   </data>
   <data name="DoNotUseSystemDescriptionAttributeDescription" xml:space="preserve">
     <value>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</value>
+  </data>
+  <data name="ReviewAlwaysTrueAssertConditionAnalyzerTitle" xml:space="preserve">
+    <value>Assertion condition is always true</value>
+  </data>
+  <data name="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat" xml:space="preserve">
+    <value>Review or remove the assertion as its condition is known to be always true</value>
+  </data>
+  <data name="UseClassCleanupBehaviorEndOfClassTitle" xml:space="preserve">
+    <value>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</value>
+  </data>
+  <data name="UseClassCleanupBehaviorEndOfClassDescription" xml:space="preserve">
+    <value>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</value>
+  </data>
+  <data name="UseClassCleanupBehaviorEndOfClassMessageFormat" xml:space="preserve">
+    <value>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</value>
+  </data>
+  <data name="DynamicDataShouldBeValidTitle" xml:space="preserve">
+    <value>DynamicData should be valid</value>
+  </data>
+  <data name="DynamicDataShouldBeValidDescription" xml:space="preserve">
+    <value>'DynamicData' entry should have the following layout to be valid:
+- should only be set on a test method;
+- member should be defined on the type specified;
+- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_OnTestMethod" xml:space="preserve">
+    <value>'[DynamicData]' should only be set on a test method</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_MemberNotFound" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' cannot be found</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_TooManyMembers" xml:space="preserve">
+    <value>'[DynamicDta]' member '{0}.{1}' is found more than once</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_MemberMethod" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' should be a method</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_MemberType" xml:space="preserve">
+    <value>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature" xml:space="preserve">
+    <value>'[DynamicData]' display name method '{0}.{1}' signature is invalid</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_DataMemberSignature" xml:space="preserve">
+    <value>'[DynamicData]' data member '{0}.{1}' signature is invalid</value>
+  </data>
+  <data name="UseDeploymentItemWithTestMethodOrTestClassTitle" xml:space="preserve">
+    <value>'[DeploymentItem]' can be specified only on test class or test method</value>
+  </data>
+  <data name="UseDeploymentItemWithTestMethodOrTestClassMessageFormat" xml:space="preserve">
+    <value>'[DeploymentItem]' can be specified only on test class or test method</value>
   </data>
 </root>

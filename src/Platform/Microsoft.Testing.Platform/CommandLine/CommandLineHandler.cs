@@ -23,19 +23,10 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly IPlatformOutputDevice _platformOutputDevice;
     private readonly IRuntimeFeature _runtimeFeature;
-#if !NETCOREAPP
-    [SuppressMessage("CodeQuality", "IDE0052:RemoveVariable unread private members", Justification = "Used in netcoreapp")]
-#endif
-    private readonly IEnvironment _environment;
-
-#if NETCOREAPP
-    [SuppressMessage("CodeQuality", "IDE0052:RemoveVariable unread private members", Justification = "Used in netstandard")]
-#endif
-    private readonly IProcessHandler _process;
 
     public CommandLineHandler(CommandLineParseResult parseResult, IReadOnlyCollection<ICommandLineOptionsProvider> extensionsCommandLineOptionsProviders,
         IReadOnlyCollection<ICommandLineOptionsProvider> systemCommandLineOptionsProviders, ITestApplicationModuleInfo testApplicationModuleInfo,
-        IRuntimeFeature runtimeFeature, IPlatformOutputDevice platformOutputDevice, IEnvironment environment, IProcessHandler process)
+        IRuntimeFeature runtimeFeature, IPlatformOutputDevice platformOutputDevice)
     {
         ParseResult = parseResult;
         ExtensionsCommandLineOptionsProviders = extensionsCommandLineOptionsProviders;
@@ -44,8 +35,6 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _runtimeFeature = runtimeFeature;
         _platformOutputDevice = platformOutputDevice;
-        _environment = environment;
-        _process = process;
     }
 
     public IEnumerable<ICommandLineOptionsProvider> CommandLineOptionsProviders { get; }
@@ -64,7 +53,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
     internal CommandLineParseResult ParseResult { get; }
 
-    public async Task PrintInfoAsync(ITool[]? availableTools = null)
+    public async Task PrintInfoAsync(IReadOnlyList<ITool>? availableTools = null)
     {
         // /!\ Info should not be localized as it serves debugging purposes.
         await DisplayPlatformInfoAsync();
@@ -120,14 +109,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Runtime location: {runtimeLocation}"));
 #endif
 
-            string? moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
-            moduleName = RoslynString.IsNullOrEmpty(moduleName)
-#if NETCOREAPP
-                ? _environment.ProcessPath
-#else
-                ? _process.GetCurrentProcess().MainModule.FileName
-#endif
-                : moduleName;
+            string moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Test module: {moduleName}"));
         }
 
@@ -203,10 +185,10 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
             }
         }
 
-        async Task DisplayRegisteredToolsInfoAsync(ITool[]? availableTools, List<IToolCommandLineOptionsProvider> toolExtensions)
+        async Task DisplayRegisteredToolsInfoAsync(IReadOnlyList<ITool>? availableTools, List<IToolCommandLineOptionsProvider> toolExtensions)
         {
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Registered tools:"));
-            if (availableTools is null || availableTools.Length == 0)
+            if (availableTools is null || availableTools.Count == 0)
             {
                 await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("  There are no registered tools."));
             }
@@ -252,7 +234,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
     public bool IsDotNetTestPipeInvoked() => IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey);
 
 #pragma warning disable IDE0060 // Remove unused parameter, temporary we don't use it.
-    public async Task PrintHelpAsync(ITool[]? availableTools = null)
+    public async Task PrintHelpAsync(IReadOnlyList<ITool>? availableTools = null)
 #pragma warning restore IDE0060 // Remove unused parameter
     {
         string applicationName = GetApplicationName(_testApplicationModuleInfo);

@@ -13,8 +13,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using FrameworkITestDataSource = Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 
@@ -88,9 +87,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
         TestIdGenerationStrategy testIdGenerationStrategy = assembly.GetCustomAttribute<TestIdGenerationStrategyAttribute>()?.Strategy
             ?? TestIdGenerationStrategy.FullyQualified;
 
-        // Set the test ID generation strategy for the data row attribute so we can improve display name without causing
-        // a breaking change.
+        // Set the test ID generation strategy for DataRowAttribute and DynamicDataAttribute so we can improve display name without
+        // causing a breaking change.
         DataRowAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
+        DynamicDataAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
 
         TestDataSourceDiscoveryOption testDataSourceDiscovery = assembly.GetCustomAttribute<TestDataSourceDiscoveryAttribute>()?.DiscoveryOption
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -372,9 +372,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy)
         {
-            var method = new TestMethod(classFullName, methodName,
-                hierarchy, methodName, classFullName, assemblyLocation, false,
-                TestIdGenerationStrategy.FullyQualified);
+            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, false, null, TestIdGenerationStrategy.FullyQualified);
             return new UnitTestElement(method)
             {
                 DisplayName = $"[{fixtureType}] {methodName}",
@@ -386,16 +384,14 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
     private static bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
     {
-        MethodInfo methodInfo = testMethodInfo.MethodInfo;
-
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
         // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
-        IEnumerable<FrameworkITestDataSource>? testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(methodInfo, inherit: false).OfType<FrameworkITestDataSource>();
+        IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(testMethodInfo.MethodInfo, inherit: false).OfType<ITestDataSource>();
 
         try
         {
-            return ProcessTestDataSourceTests(test, methodInfo, testDataSources, tests);
+            return ProcessTestDataSourceTests(test, new(testMethodInfo.MethodInfo, test.DisplayName), testDataSources, tests);
         }
         catch (Exception ex)
         {
@@ -405,10 +401,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, IEnumerable<FrameworkITestDataSource> testDataSources,
+    private static bool ProcessTestDataSourceTests(UnitTestElement test, ReflectionTestMethodInfo methodInfo, IEnumerable<ITestDataSource> testDataSources,
         List<UnitTestElement> tests)
     {
-        foreach (FrameworkITestDataSource dataSource in testDataSources)
+        foreach (ITestDataSource dataSource in testDataSources)
         {
             IEnumerable<object?[]>? data;
 
@@ -429,6 +425,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 // Make the test not data driven, because it had no data.
                 discoveredTest.TestMethod.DataType = DynamicDataType.None;
                 discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
+
                 tests.Add(discoveredTest);
                 continue;
             }

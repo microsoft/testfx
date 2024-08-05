@@ -30,6 +30,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
     private readonly TestHostControllerConfiguration _testHostsInformation;
     private readonly IEnvironment _environment;
     private readonly IClock _clock;
+    private readonly NamedPipeClient? _dotnetTestPipeClient;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<TestHostControllersTestHost> _logger;
     private readonly ManualResetEventSlim _waitForPid = new(false);
@@ -39,12 +40,13 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
     private int? _testHostPID;
 
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, IEnvironment environment,
-        ILoggerFactory loggerFactory, IClock clock)
+        ILoggerFactory loggerFactory, IClock clock, NamedPipeClient? dotnetTestPipeClient = null)
         : base(serviceProvider)
     {
         _testHostsInformation = testHostsInformation;
         _environment = environment;
         _clock = clock;
+        _dotnetTestPipeClient = dotnetTestPipeClient;
         _loggerFactory = loggerFactory;
         _logger = _loggerFactory.CreateLogger<TestHostControllersTestHost>();
     }
@@ -129,6 +131,12 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 dataConsumersBuilder.Add(dataConsumerDisplay);
             }
 
+            // We register the DotnetTestDataConsumer as last to ensure that it will be the last one to consume the data.
+            if (_dotnetTestPipeClient is not null)
+            {
+                dataConsumersBuilder.Add(new DotnetTestDataConsumer(_dotnetTestPipeClient));
+            }
+
             AsynchronousMessageBus concreteMessageBusService = new(
                 dataConsumersBuilder.ToArray(),
                 ServiceProvider.GetTestApplicationCancellationTokenSource(),
@@ -205,13 +213,21 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             await _logger.LogDebugAsync($"Starting test host process");
             using IProcess testHostProcess = process.Start(processStartInfo);
 
-            testHostProcess.Exited += (sender, e) =>
+            int? testHostProcessId = null;
+            try
             {
-                var processExited = sender as Process;
-                _logger.LogDebug($"Test host process exited, PID: '{processExited?.Id}'");
-            };
+                testHostProcessId = testHostProcess.Id;
+            }
+            catch (InvalidOperationException) when (testHostProcess.HasExited)
+            {
+                // Access PID can throw InvalidOperationException if the process has already exited:
+                // System.InvalidOperationException: No process is associated with this object.
+            }
 
-            await _logger.LogDebugAsync($"Started test host process '{testHostProcess.Id}' HasExited: {testHostProcess.HasExited}");
+            testHostProcess.Exited += (_, _) =>
+                _logger.LogDebug($"Test host process exited, PID: '{testHostProcessId}'");
+
+            await _logger.LogDebugAsync($"Started test host process '{testHostProcessId}' HasExited: {testHostProcess.HasExited}");
 
             string? seconds = configuration[PlatformConfigurationConstants.PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds];
             int timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : int.Parse(seconds, CultureInfo.InvariantCulture);
@@ -251,11 +267,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             }
 
             await _logger.LogDebugAsync($"Wait for test host process exit");
-#if !NETCOREAPP
-            testHostProcess.WaitForExit();
-#else
             await testHostProcess.WaitForExitAsync();
-#endif
 
             if (_testHostsInformation.LifetimeHandlers.Length > 0)
             {
@@ -323,14 +335,18 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
     private async Task DisposeServicesAsync()
     {
-        List<object> alreadyDisposed = [];
-        foreach (ITestHostProcessLifetimeHandler service in _testHostsInformation.LifetimeHandlers)
+        ITestHostEnvironmentVariableProvider[] variableProviders = _testHostsInformation.EnvironmentVariableProviders;
+        ITestHostProcessLifetimeHandler[] lifetimeHandlers = _testHostsInformation.LifetimeHandlers;
+
+        List<object> alreadyDisposed = new(lifetimeHandlers.Length + variableProviders.Length);
+
+        foreach (ITestHostProcessLifetimeHandler service in lifetimeHandlers)
         {
             await DisposeHelper.DisposeAsync(service);
             alreadyDisposed.Add(service);
         }
 
-        foreach (ITestHostEnvironmentVariableProvider service in _testHostsInformation.EnvironmentVariableProviders)
+        foreach (ITestHostEnvironmentVariableProvider service in variableProviders)
         {
             await DisposeHelper.DisposeAsync(service);
             alreadyDisposed.Add(service);
@@ -348,12 +364,12 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 case TestHostProcessExitRequest testHostProcessExitRequest:
                     _testHostExitCode = testHostProcessExitRequest.ExitCode;
                     _testHostGracefullyClosed = true;
-                    return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+                    return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
 
                 case TestHostProcessPIDRequest testHostProcessPIDRequest:
                     _testHostPID = testHostProcessPIDRequest.PID;
                     _waitForPid.Set();
-                    return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+                    return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
 
                 default:
                     throw new NotSupportedException($"Request '{request}' not supported");

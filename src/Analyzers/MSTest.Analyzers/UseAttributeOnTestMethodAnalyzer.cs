@@ -12,6 +12,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0007: <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
 {

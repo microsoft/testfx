@@ -89,7 +89,7 @@ internal class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
                     case ErrorTestNodeStateProperty errorState:
                         await HandleFailuresAsync(
                             testNodeStateChanged.TestNode.DisplayName,
-                            isCancelled: false,
+                            isCanceled: false,
                             duration: duration,
                             errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
                             errorStackTrace: errorState.Exception?.StackTrace,
@@ -103,7 +103,7 @@ internal class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
                     case FailedTestNodeStateProperty failedState:
                         await HandleFailuresAsync(
                             testNodeStateChanged.TestNode.DisplayName,
-                            isCancelled: false,
+                            isCanceled: false,
                             duration: duration,
                             errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
                             errorStackTrace: failedState.Exception?.StackTrace,
@@ -117,7 +117,7 @@ internal class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
                     case TimeoutTestNodeStateProperty timeoutState:
                         await HandleFailuresAsync(
                             testNodeStateChanged.TestNode.DisplayName,
-                            isCancelled: true,
+                            isCanceled: true,
                             duration: duration,
                             errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
                             errorStackTrace: timeoutState.Exception?.StackTrace,
@@ -128,13 +128,13 @@ internal class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
                             cancellationToken);
                         break;
 
-                    case CancelledTestNodeStateProperty cancelledState:
+                    case CancelledTestNodeStateProperty canceledState:
                         await HandleFailuresAsync(
                             testNodeStateChanged.TestNode.DisplayName,
-                            isCancelled: true,
+                            isCanceled: true,
                             duration: duration,
-                            errorMessage: cancelledState.Exception?.Message ?? cancelledState.Explanation,
-                            errorStackTrace: cancelledState.Exception?.StackTrace,
+                            errorMessage: canceledState.Exception?.Message ?? canceledState.Explanation,
+                            errorStackTrace: canceledState.Exception?.StackTrace,
                             expected: null,
                             actual: null,
                             testFileLocationProperty?.FilePath,
@@ -162,13 +162,13 @@ internal class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
         }
     }
 
-    private async Task HandleFailuresAsync(string testDisplayName, bool isCancelled, string? duration, string? errorMessage, string? errorStackTrace, string? expected, string? actual, string? codeFilePath, int lineNumber, CancellationToken cancellationToken)
+    private async Task HandleFailuresAsync(string testDisplayName, bool isCanceled, string? duration, string? errorMessage, string? errorStackTrace, string? expected, string? actual, string? codeFilePath, int lineNumber, CancellationToken cancellationToken)
     {
         _totalTests++;
         _totalFailedTests++;
         ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks != null);
         ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient != null);
-        var failedTestInfoRequest = new FailedTestInfoRequest(testDisplayName, isCancelled, duration, errorMessage, errorStackTrace, expected, actual, codeFilePath, lineNumber);
+        var failedTestInfoRequest = new FailedTestInfoRequest(testDisplayName, isCanceled, duration, errorMessage, errorStackTrace, expected, actual, codeFilePath, lineNumber);
         await _msBuildTestApplicationLifecycleCallbacks.PipeClient.RequestReplyAsync<FailedTestInfoRequest, VoidResponse>(failedTestInfoRequest, cancellationToken);
     }
 

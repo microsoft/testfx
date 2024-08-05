@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
@@ -24,6 +25,7 @@ public class TypeEnumeratorTests : TestContainer
     private readonly Mock<TestMethodValidator> _mockTestMethodValidator;
     private readonly Mock<TypeValidator> _mockTypeValidator;
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly Mock<IMessageLogger> _mockMessageLogger;
 
     private ICollection<string> _warnings;
 
@@ -33,6 +35,7 @@ public class TypeEnumeratorTests : TestContainer
         _mockTypeValidator = new Mock<TypeValidator>(MockBehavior.Default, _mockReflectHelper.Object);
         _mockTestMethodValidator = new Mock<TestMethodValidator>(MockBehavior.Default, _mockReflectHelper.Object);
         _warnings = new List<string>();
+        _mockMessageLogger = new Mock<IMessageLogger>();
 
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
@@ -114,7 +117,7 @@ public class TypeEnumeratorTests : TestContainer
         mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        MSTestSettings.PopulateSettings(mockRunContext.Object);
+        MSTestSettings.PopulateSettings(mockRunContext.Object, _mockMessageLogger.Object);
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: false);
 
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
@@ -145,7 +148,7 @@ public class TypeEnumeratorTests : TestContainer
         mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        MSTestSettings.PopulateSettings(mockRunContext.Object);
+        MSTestSettings.PopulateSettings(mockRunContext.Object, _mockMessageLogger.Object);
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
 
@@ -176,7 +179,7 @@ public class TypeEnumeratorTests : TestContainer
         mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        MSTestSettings.PopulateSettings(mockRunContext.Object);
+        MSTestSettings.PopulateSettings(mockRunContext.Object, _mockMessageLogger.Object);
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: false);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
 

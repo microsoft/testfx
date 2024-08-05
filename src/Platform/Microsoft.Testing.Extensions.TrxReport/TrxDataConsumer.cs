@@ -38,7 +38,6 @@ internal sealed class TrxReportGenerator :
     private readonly IOutputDevice _outputDisplay;
     private readonly ITestFramework _testFramework;
     private readonly ITestFrameworkCapabilities _testFrameworkCapabilities;
-    private readonly TrxReportGeneratorCommandLine _trxReportGeneratorCommandLine;
     private readonly TrxTestApplicationLifecycleCallbacks? _trxTestApplicationLifecycleCallbacks;
     private readonly ILogger<TrxReportGenerator> _logger;
     private readonly List<TestNodeUpdateMessage> _tests = [];
@@ -61,7 +60,6 @@ internal sealed class TrxReportGenerator :
         IOutputDevice outputDisplay,
         ITestFramework testFramework,
         ITestFrameworkCapabilities testFrameworkCapabilities,
-        TrxReportGeneratorCommandLine trxReportGeneratorCommandLine,
         // Can be null in case of server mode
         TrxTestApplicationLifecycleCallbacks? trxTestApplicationLifecycleCallbacks,
         ILogger<TrxReportGenerator> logger)
@@ -75,7 +73,6 @@ internal sealed class TrxReportGenerator :
         _outputDisplay = outputDisplay;
         _testFramework = testFramework;
         _testFrameworkCapabilities = testFrameworkCapabilities;
-        _trxReportGeneratorCommandLine = trxReportGeneratorCommandLine;
         _trxTestApplicationLifecycleCallbacks = trxTestApplicationLifecycleCallbacks;
         _logger = logger;
         _isEnabled = commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName);
@@ -193,7 +190,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
             try
             {
                 await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<TestAdapterInformationRequest, VoidResponse>(new TestAdapterInformationRequest(_testFramework.Uid, _testFramework.Version), cancellationToken)
-                    .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                    .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
             }
             catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
             {
@@ -202,7 +199,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
         }
 
         ITrxReportCapability? trxCapability = _testFrameworkCapabilities.GetCapability<ITrxReportCapability>();
-        if (_isEnabled && trxCapability is not null && trxCapability?.IsSupported == true)
+        if (_isEnabled && trxCapability is not null && trxCapability.IsSupported)
         {
             _adapterSupportTrxCapability = true;
             trxCapability.Enable();

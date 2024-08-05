@@ -43,7 +43,7 @@ internal class DotnetTrace : IStep<BuildArtifact, Files>
 
         Console.WriteLine($"dotnet-trace command: '{processStartInfo.FileName} {processStartInfo.Arguments}'");
 
-        Process process = Process.Start(processStartInfo)!;
+        using Process process = Process.Start(processStartInfo)!;
         process.EnableRaisingEvents = true;
         process.BeginOutputReadLine();
         process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);

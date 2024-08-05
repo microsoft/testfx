@@ -153,6 +153,7 @@ internal static class MethodInfoExtensions
         object? invokeResult;
 
         if (arguments is not null
+            && (arguments.Length != 1 || arguments[0] is not null)
             && methodParameters.Length == 1
             && methodParameters[0].ParameterType == typeof(object[]))
         {
@@ -162,10 +163,18 @@ internal static class MethodInfoExtensions
         {
             int methodParametersLengthOrZero = methodParameters?.Length ?? 0;
             int argumentsLengthOrZero = arguments?.Length ?? 0;
-            if (methodParametersLengthOrZero != argumentsLengthOrZero)
+
+#if WINDOWS_UWP
+            // There is a bug with UWP in release mode where the arguments are wrapped in an object[], so we need to unwrap it.
+            // See https://github.com/microsoft/testfx/issues/3071
+            if (argumentsLengthOrZero == 1
+                && argumentsLengthOrZero < methodParametersLengthOrZero
+                && arguments![0] is object[] args)
             {
-                throw GetParameterCountMismatchException(methodInfo, arguments, methodParameters, methodParametersLengthOrZero, argumentsLengthOrZero, innerException: null);
+                arguments = args;
+                argumentsLengthOrZero = args.Length;
             }
+#endif
 
             try
             {
@@ -173,7 +182,17 @@ internal static class MethodInfoExtensions
             }
             catch (Exception ex) when (ex is TargetParameterCountException or ArgumentException)
             {
-                throw GetParameterCountMismatchException(methodInfo, arguments, methodParameters, methodParametersLengthOrZero, argumentsLengthOrZero, ex);
+                throw new TestFailedException(
+                    ObjectModel.UnitTestOutcome.Error,
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        Resource.CannotRunTestArgumentsMismatchError,
+                        methodInfo.DeclaringType!.FullName,
+                        methodInfo.Name,
+                        methodParametersLengthOrZero,
+                        string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? Array.Empty<string>()),
+                        argumentsLengthOrZero,
+                        string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>())), ex);
             }
         }
 
@@ -189,17 +208,4 @@ internal static class MethodInfoExtensions
         }
 #endif
     }
-
-    private static TestFailedException GetParameterCountMismatchException(MethodInfo methodInfo, object?[]? arguments, ParameterInfo[]? methodParameters, int methodParametersLengthOrZero, int argumentsLengthOrZero, Exception? innerException) =>
-        new(
-            ObjectModel.UnitTestOutcome.Error,
-            string.Format(
-                CultureInfo.InvariantCulture,
-                Resource.CannotRunTestArgumentsMismatchError,
-                methodInfo.DeclaringType!.FullName,
-                methodInfo.Name,
-                methodParametersLengthOrZero,
-                string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? Array.Empty<string>()),
-                argumentsLengthOrZero,
-                string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>())), innerException);
 }

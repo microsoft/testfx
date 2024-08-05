@@ -17,6 +17,6 @@ internal sealed class VSTestProperty(TestProperty property, TestCase testCase) :
     public override string ToString()
     {
         object? value = TestCase.GetPropertyValue(Property);
-        return $"VSTestProperty [Id: {Property.Id}] [Description: {Property.Description}] [ValueType: {Property.ValueType}] [Value: {(value is null ? "null" : value)}]";
+        return $"VSTestProperty [Id: {Property.Id}] [Description: {Property.Description}] [ValueType: {Property.ValueType}] [Value: {value ?? "null"}]";
     }
 }

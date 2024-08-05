@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the MIT license.  See License.txt in the project root for license information.
 
+using System.Collections;
 using System.Collections.Immutable;
 using System.Diagnostics;
 
@@ -310,7 +311,7 @@ namespace Analyzer.Utilities.PooledObjects
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         internal Dictionary<K, ImmutableArray<T>> ToDictionary<K>(Func<T, K> keySelector, IEqualityComparer<K>? comparer = null)
             where K : notnull
@@ -333,7 +334,7 @@ namespace Analyzer.Utilities.PooledObjects
             var accumulator = new Dictionary<K, ArrayBuilder<T>>(Count, comparer);
             for (int i = 0; i < Count; i++)
             {
-                T? item = this[i];
+                T item = this[i];
                 K key = keySelector(item);
                 if (!accumulator.TryGetValue(key, out ArrayBuilder<T>? bucket))
                 {

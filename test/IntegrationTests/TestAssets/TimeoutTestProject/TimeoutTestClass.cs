@@ -15,7 +15,7 @@ public class TimeoutTestClass
     public void TimeoutTest_WhenUserCancelsTestContextToken_AbortTest()
     {
         TestContext.CancellationTokenSource.Cancel();
-        Assert.Fail("Test should have been cancelled");
+        Assert.Fail("Test should have been canceled");
     }
 
 #if NETFRAMEWORK
@@ -24,7 +24,7 @@ public class TimeoutTestClass
     public void TimeoutTest_WhenUserCallsThreadAbort_AbortTest()
     {
         Thread.CurrentThread.Abort();
-        Assert.Fail("Test should have been cancelled");
+        Assert.Fail("Test should have been canceled");
     }
 #endif
 
@@ -32,7 +32,7 @@ public class TimeoutTestClass
     public void RegularTest_WhenUserCancelsTestContextToken_TestContinues()
     {
         TestContext.CancellationTokenSource.Cancel();
-        Assert.Fail("Expected failure: test should not be cancelled");
+        Assert.Fail("Expected failure: test should not be canceled");
     }
 
     [TestMethod]

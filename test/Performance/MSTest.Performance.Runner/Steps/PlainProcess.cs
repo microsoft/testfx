@@ -40,7 +40,7 @@ internal class PlainProcess : IStep<BuildArtifact, Files>
         List<object> results = new();
         for (int i = 0; i < _numberOfRun; i++)
         {
-            Process process = Process.Start(processStartInfo)!;
+            using Process process = Process.Start(processStartInfo)!;
             await process.WaitForExitAsync();
             var result = new
             {

@@ -5,6 +5,8 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Reflection;
 
+using Microsoft.TestPlatform.AdapterUtilities;
+using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -89,7 +91,8 @@ internal class TypeEnumerator
 
             if (_testMethodValidator.IsValidTestMethod(method, _type, warnings))
             {
-                foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.Name);
+                // ToString() outputs method name and its signature. This is necessary for overloaded methods to be recognized as distinct tests.
+                foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.ToString() ?? method.Name);
                 UnitTestElement testMethod = GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings);
 
                 tests.Add(testMethod);
@@ -137,7 +140,9 @@ internal class TypeEnumerator
         // This allows void returning async test method to be valid test method. Though they will be executed similar to non-async test method.
         bool isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));
 
-        var testMethod = new TestMethod(method, method.Name, _type.FullName!, _assemblyFilePath, isAsync, _testIdGenerationStrategy);
+        ManagedNameHelper.GetManagedName(method, out string managedType, out string managedMethod, out string?[]? hierarchyValues);
+        hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.
+        var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, isAsync, null, _testIdGenerationStrategy);
 
         if (!string.Equals(method.DeclaringType!.FullName, _type.FullName, StringComparison.Ordinal))
         {

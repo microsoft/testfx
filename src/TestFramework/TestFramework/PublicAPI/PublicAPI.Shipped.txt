@@ -358,6 +358,9 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(Sy
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent<T>(System.Collections.Generic.IEnumerable<T?>? expected, System.Collections.Generic.IEnumerable<T?>? actual, System.Collections.Generic.IEqualityComparer<T>? comparer) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent<T>(System.Collections.Generic.IEnumerable<T?>? expected, System.Collections.Generic.IEnumerable<T?>? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent<T>(System.Collections.Generic.IEnumerable<T?>? expected, System.Collections.Generic.IEnumerable<T?>? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, string? message, params object?[]? parameters) -> void
@@ -367,6 +370,9 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent<T>(System.Collections.Generic.IEnumerable<T?>? expected, System.Collections.Generic.IEnumerable<T?>? actual, System.Collections.Generic.IEqualityComparer<T>? comparer) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent<T>(System.Collections.Generic.IEnumerable<T?>? expected, System.Collections.Generic.IEnumerable<T?>? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent<T>(System.Collections.Generic.IEnumerable<T?>? expected, System.Collections.Generic.IEnumerable<T?>? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains(System.Collections.ICollection? collection, object? element) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains(System.Collections.ICollection? collection, object? element, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains(System.Collections.ICollection? collection, object? element, string? message, params object?[]? parameters) -> void
@@ -380,6 +386,7 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf(
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.That.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
+static Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.TestIdGenerationStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
 static Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage(string! format, params object?[]! args) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.OnLogMessage -> Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessageHandler?
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring) -> void

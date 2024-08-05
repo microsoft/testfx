@@ -159,7 +159,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
                     if (_platformInformation.BuildDate is { } buildDate)
                     {
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime})");
+                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime.ToShortDateString()})");
                     }
 
                     if (_runtimeFeature.IsDynamicCodeSupported)
@@ -227,19 +227,8 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 #endif
             }
 
-            string? moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
-#if !NETCOREAPP
-            moduleName = RoslynString.IsNullOrEmpty(moduleName)
-                ? _process.GetCurrentProcess().MainModule.FileName
-                : moduleName;
-#else
-            moduleName = RoslynString.IsNullOrEmpty(moduleName)
-                ? _environment.ProcessPath
-                : moduleName;
-#endif
-            string moduleOutput = moduleName is not null
-                ? $" for {moduleName}"
-                : string.Empty;
+            string moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+            string moduleOutput = $" for {moduleName}";
 
             if (!_firstCallTo_OnSessionStartingAsync)
             {
@@ -247,7 +236,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                 {
                     (true, _, _) => (false, PlatformResources.Aborted),
                     (false, _, _) when _totalTests < _minimumExpectedTest => (false, string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, _totalTests, _minimumExpectedTest)),
-                    (false, 0, _) => (false, PlatformResources.ZeroTestsRan),
+                    (false, _, _) when _totalTests == 0 || _totalTests == _totalSkippedTests => (false, PlatformResources.ZeroTestsRan),
                     (false, _, > 0) => (false, string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Failed)),
                     _ => (true, string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Passed)),
                 };
@@ -410,7 +399,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                     case ErrorTestNodeStateProperty errorState:
                         await HandleFailuresAsync(
                             testNodeStateChanged.TestNode.DisplayName,
-                            isCancelled: false,
+                            isCanceled: false,
                             duration: duration,
                             errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
                             errorStackTrace: errorState.Exception?.StackTrace,
@@ -421,7 +410,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                     case FailedTestNodeStateProperty failedState:
                         await HandleFailuresAsync(
                             testNodeStateChanged.TestNode.DisplayName,
-                            isCancelled: false,
+                            isCanceled: false,
                             duration: duration,
                             errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
                             errorStackTrace: failedState.Exception?.StackTrace,
@@ -432,7 +421,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                     case TimeoutTestNodeStateProperty timeoutState:
                         await HandleFailuresAsync(
                             testNodeStateChanged.TestNode.DisplayName,
-                            isCancelled: true,
+                            isCanceled: true,
                             duration: duration,
                             errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
                             errorStackTrace: timeoutState.Exception?.StackTrace,
@@ -440,13 +429,13 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                             actual: null);
                         break;
 
-                    case CancelledTestNodeStateProperty cancelledState:
+                    case CancelledTestNodeStateProperty canceledState:
                         await HandleFailuresAsync(
                             testNodeStateChanged.TestNode.DisplayName,
-                            isCancelled: true,
+                            isCanceled: true,
                             duration: duration,
-                            errorMessage: cancelledState.Exception?.Message ?? cancelledState.Explanation,
-                            errorStackTrace: cancelledState.Exception?.StackTrace,
+                            errorMessage: canceledState.Exception?.Message ?? canceledState.Explanation,
+                            errorStackTrace: canceledState.Exception?.StackTrace,
                             expected: null,
                             actual: null);
                         break;
@@ -488,11 +477,11 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
         }
     }
 
-    protected virtual async Task HandleFailuresAsync(string testDisplayName, bool isCancelled, string? duration, string? errorMessage,
+    protected virtual async Task HandleFailuresAsync(string testDisplayName, bool isCanceled, string? duration, string? errorMessage,
         string? errorStackTrace, string? expected, string? actual)
     {
         await ConsoleWriteAsync(PlatformResources.FailedLowercase, ConsoleColor.DarkRed);
-        if (isCancelled)
+        if (isCanceled)
         {
             await ConsoleWriteAsync($"({PlatformResources.CancelledLowercase})", ConsoleColor.DarkRed);
         }

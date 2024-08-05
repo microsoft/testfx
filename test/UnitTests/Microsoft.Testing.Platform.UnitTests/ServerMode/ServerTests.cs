@@ -97,14 +97,15 @@ public class ServerTests : TestBase
         // Wait for initialize response
         RpcMessage? msg = null;
         using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromSeconds(30));
+        CancellationToken cancellationToken = cancellationTokenSource.Token;
         try
         {
-            msg = await WaitForMessage(messageHandler, (RpcMessage? rpcMessage) => rpcMessage is ResponseMessage, "Wait initialize", cancellationTokenSource.Token);
+            msg = await WaitForMessage(messageHandler, (RpcMessage? rpcMessage) => rpcMessage is ResponseMessage, "Wait initialize", cancellationToken);
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationTokenSource.Token)
+        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
         {
             // Try to observe if we had some exceptions
-            await serverTask.TimeoutAfterAsync(TimeSpan.FromSeconds(30));
+            await serverTask.TimeoutAfterAsync(TimeSpan.FromSeconds(30), cancellationToken);
         }
 
         Assert.IsNotNull(msg);
@@ -112,6 +113,7 @@ public class ServerTests : TestBase
         InitializeResponseArgs resultJson = SerializerUtilities.Deserialize<InitializeResponseArgs>((IDictionary<string, object?>)((ResponseMessage)msg).Result!);
 
         InitializeResponseArgs expectedResponse = new(
+                   1,
                    new ServerInfo("test-anywhere", "this is dynamic"),
                    new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false)));
 
@@ -210,7 +212,7 @@ public class ServerTests : TestBase
         msg = await WaitForMessage(messageHandler, (RpcMessage? rpcMessage) => rpcMessage is ErrorMessage, "Wait cancelRequest", cancellationTokenSource.Token);
 
         var error = (ErrorMessage)msg!;
-        Assert.AreEqual(ErrorCodes.RequestCancelled, error.ErrorCode);
+        Assert.AreEqual(ErrorCodes.RequestCanceled, error.ErrorCode);
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
 
@@ -291,9 +293,9 @@ public class ServerTests : TestBase
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context) => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+        public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context) => Task.FromResult(new CreateTestSessionResult { IsSuccess = true });
 
-        public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+        public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
 
         public Task ExecuteRequestAsync(ExecuteRequestContext context) => DiscoveryAction is not null ? DiscoveryAction(context) : Task.CompletedTask;
     }

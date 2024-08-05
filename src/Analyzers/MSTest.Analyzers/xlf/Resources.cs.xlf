@@ -3,22 +3,38 @@
   <file datatype="xml" source-language="en" target-language="cs" original="../Resources.resx">
     <body>
       <trans-unit id="AssemblyCleanupShouldBeValidDescription">
-        <source>Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
+        <source>Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
         <target state="translated">Aby byly metody s označením [AssemblyCleanup] platné, musí se řídit následujícím rozložením: 
-– být „public“
-– být „static“
-– nesmí být obecné ani definované pro obecnou třídu
-– nesmí přijímat žádné parametry
-– návratový typ musí být void, Task nebo ValueTask,
-– nesmí být „async void“
-– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
+– Nesmí být deklarované pro obecnou třídu.
+– Musí být public.
+– Musí být static.
+– Nesmí být async void.
+– Nesmí být speciální metodou (finalizační metoda, operátor...).
+– Nesmí být obecné.
+– Nesmí přijímat žádný parametr.
+– Návratový typ musí být void, Task nebo ValueTask.
+
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být třída.
+– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
+– Třída by neměla být static.
+– Třída by měla být označena atributem [TestClass] (nebo odvozeným atributem).
+– Třída by neměla být obecná.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -32,23 +48,38 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
-        <source>Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
+        <source>Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
         <target state="translated">Aby byly metody s označením [AssemblyInitialize] platné, musí se řídit následujícím rozložením: 
-.
-– být „public“
-– být „static“
-– nesmí být obecné ani definované pro obecnou třídu
-– převzít jeden parametr typu TestContext
-– návratový typ musí být void, Task nebo ValueTask,
-– nesmí být „async void“
-– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
+– Nesmí být deklarované pro obecnou třídu.
+– Musí být public.
+– Musí být static.
+– Nesmí být async void.
+– Nesmí být speciální metodou (finalizační metoda, operátor...).
+– Nesmí být obecné.
+– Musí mít jeden parametr typu TestContext.
+– Návratový typ musí být void, Task nebo ValueTask.
+
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být třída.
+– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
+– Třída by neměla být static.
+– Třída by měla být označena atributem [TestClass] (nebo odvozeným atributem).
+– Třída by neměla být obecná.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -102,23 +133,42 @@
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
-        <source>Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
+        <source>Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
         <target state="translated">Aby byly metody s označením [ClassCleanup] platné, musí se řídit následujícím rozložením: 
-.
-– být „public“
-– nesmí být „static“
-– nesmí být obecné ani definované pro obecnou třídu
-– nesmí přijímat žádné parametry
-– návratový typ musí být void, Task nebo ValueTask,
-– nesmí být „async void“
-– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
+– Nesmí být deklarované pro obecnou třídu bez nastavení režimu InheritanceBehavior.
+– Musí být public.
+– Musí být static.
+– Nesmí být async void.
+– Nesmí být speciální metodou (finalizační metoda, operátor...).
+– Nesmí být obecné.
+– Nesmí přijímat žádný parametr.
+– Návratový typ musí být void, Task nebo ValueTask.
+– V případě třídy abstract by měl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
+– V případě třídy sealed by neměl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
+
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být třída.
+– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
+– Třída by neměla být static.
+– Pokud je třída sealed, měla by být označena atributem [TestClass] (nebo odvozeným atributem).
+– Třída by neměla být obecná.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -132,22 +182,42 @@
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidDescription">
-        <source>Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
+        <source>Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
         <target state="translated">Aby byly metody s označením [ClassInitialize] platné, musí se řídit následujícím rozložením: 
-– být „public“
-– být „static“
-– nesmí být obecné ani definované pro obecnou třídu
-– převzít jeden parametr typu TestContext
-– návratový typ musí být void, Task nebo ValueTask,
-– nesmí být „async void“
-– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
+– Nesmí být deklarované pro obecnou třídu bez nastavení režimu InheritanceBehavior.
+– Musí být public.
+– Musí být static.
+– Nesmí být async void.
+– Nesmí být speciální metodou (finalizační metoda, operátor...).
+– Nesmí být obecné.
+– Musí mít jeden parametr typu TestContext.
+– Návratový typ musí být void, Task nebo ValueTask.
+– V případě třídy abstract by měl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
+– V případě třídy sealed by neměl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
+
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být třída.
+– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
+– Třída by neměla být static.
+– Pokud je třída sealed, měla by být označena atributem [TestClass] (nebo odvozeným atributem).
+– Třída by neměla být obecná.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -213,17 +283,78 @@
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
-        <target state="new">'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</target>
+        <target state="translated">System.ComponentModel.DescriptionAttribute nemá v kontextu testů žádný účinek a pravděpodobně jste místo toho chtěli použít Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeMessageFormat">
         <source>Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</source>
-        <target state="new">Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</target>
+        <target state="translated">Nechtěli jste použít Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute?</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeTitle">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</source>
-        <target state="new">'System.ComponentModel.DescriptionAttribute' has no effect on test methods</target>
+        <target state="translated">System.ComponentModel.DescriptionAttribute nemá žádný vliv na testovací metody</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidDescription">
+        <source>'DynamicData' entry should have the following layout to be valid:
+- should only be set on a test method;
+- member should be defined on the type specified;
+- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</source>
+        <target state="translated">Aby byla položka DynamicData platná, musí se řídit následujícím rozložením:
+– měla by být nastavena jenom pro testovací metodu;
+– člen by měl být definovaný pro zadaný typ;
+– pokud je zadáno DynamicDataSourceType.Method, měl by být člen metoda, jinak vlastnost.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_DataMemberSignature">
+        <source>'[DynamicData]' data member '{0}.{1}' signature is invalid</source>
+        <target state="translated">Signatura datového členu [DynamicData] {0}.{1} je neplatná.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature">
+        <source>'[DynamicData]' display name method '{0}.{1}' signature is invalid</source>
+        <target state="translated">Signatura metody zobrazovaného názvu [DynamicData] {0}.{1} je neplatná.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberMethod">
+        <source>'[DynamicData]' member '{0}.{1}' should be a method</source>
+        <target state="translated">Člen [DynamicData] {0}.{1} by měla být metoda.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberNotFound">
+        <source>'[DynamicData]' member '{0}.{1}' cannot be found</source>
+        <target state="translated">Člen [DynamicData] {0}.{1} nelze najít.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
+        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
+        <target state="translated">Odkazovaný člen [DynamicData] {0}.{1} by měl vracet IEnumerable&lt;object[]&gt;, IEnumerable&lt;Tuple&gt; nebo IEnumerable&lt;ValueTuple&gt;.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_OnTestMethod">
+        <source>'[DynamicData]' should only be set on a test method</source>
+        <target state="translated">Položka [DynamicData] by měla být nastavená jenom u testovací metody.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
+        <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
+        <target state="translated">Člen [DynamicData] {0}.{1} je metoda, takže byste měli nastavit DynamicDataSourceType.Method.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
+        <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
+        <target state="translated">Člen [DynamicData] {0}.{1} je vlastnost, takže byste měli nastavit DynamicDataSourceType.Property.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
+        <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
+        <target state="translated">Člen [DynamicDta] {0}.{1} byl nalezen více než jednou.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidTitle">
+        <source>DynamicData should be valid</source>
+        <target state="translated">Položka DynamicData by měla být platná.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -234,6 +365,16 @@
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsTitle">
         <source>Use 'Assert.Fail' instead of an always-failing assert</source>
         <target state="translated">Místo trvalého neúspěšného vyhodnocovacího výrazu použijte „Assert.Fail“.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
+        <source>Review or remove the assertion as its condition is known to be always true</source>
+        <target state="translated">Zkontrolujte nebo odeberte kontrolní výraz, protože jeho podmínka je vždy true.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerTitle">
+        <source>Assertion condition is always true</source>
+        <target state="translated">Podmínka kontrolního výrazu je vždy true.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
@@ -306,6 +447,21 @@
         <target state="translated">Veřejné typy by měly být testovací třídy.</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
+        <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
+        <target state="translated">Když nepoužijete ClassCleanupBehavior.EndOfClass, [ClassCleanup] se ve výchozím nastavení spustí na konci sestavení, nikoli na konci třídy.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
+        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
+        <target state="translated">S [ClassCleanup] použijte ClassCleanupBehavior.EndOfClass.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseClassCleanupBehaviorEndOfClassTitle">
+        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
+        <target state="translated">S [ClassCleanup] použijte ClassCleanupBehavior.EndOfClass.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
         <source>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
@@ -353,25 +509,36 @@
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
-        <source>Methods marked with [TestCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic or be defined on a generic class
-- not be 'abstract'
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
+        <source>Methods marked with '[TestCleanup]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
         <target state="translated">Aby byly metody s označením [TestCleanup] platné, musí se řídit následujícím rozložením: 
-.
-– být „public“
-– nesmí být „static“
-– nesmí být obecné nebo definované pro obecnou třídu
-– nesmí být „abstract“
-– nesmí přijímat žádné parametry
-– návratový typ musí být „void“, „Task“ nebo „ValueTask“
-– nesmí být „async void“
-– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
+– Musí být public.
+– Nesmí být abstract.
+– Nesmí být async void.
+– Nesmí být static.
+– Nesmí být speciální metodou (finalizační metoda, operátor...).
+– Nesmí být obecné.
+– Nesmí přijímat žádný parametr.
+– Návratový typ musí být void, Task nebo ValueTask.
+
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být třída.
+– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
+– Třída by neměla být static.
+– Pokud je třída sealed, měla by být označena atributem [TestClass] (nebo odvozeným atributem).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -428,25 +595,36 @@
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidDescription">
-        <source>Methods marked with [TestInitialize] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not be 'abstract'
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
+        <source>Methods marked with '[TestInitialize]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
         <target state="translated">Aby byly metody s označením [TestInitialize] platné, musí se řídit následujícím rozložením: 
-.
-– být „public“
-– nesmí být „static“
-– nesmí být obecné ani definované pro obecnou třídu
-– nesmí být „abstract“
-– nesmí přijímat žádné parametry
-– návratový typ musí být „void“, „Task“ nebo „ValueTask“
-– nesmí být „async void“
-– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
+– Musí být public.
+– Nesmí být abstract.
+– Nesmí být async void.
+– Nesmí být static.
+– Nesmí být speciální metodou (finalizační metoda, operátor...).
+– Nesmí být obecné.
+– Nesmí přijímat žádný parametr.
+– Návratový typ musí být void, Task nebo ValueTask.
+
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být třída.
+– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
+– Třída by neměla být static.
+– Pokud je třída sealed, měla by být označena atributem [TestClass] (nebo odvozeným atributem).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
@@ -540,17 +718,17 @@
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="new">Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
+        <target state="translated">Typ obsahující [TestMethod] by měl mít označení [TestClass], jinak bude testovací metoda bez jakéhokoli upozornění ignorována.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Class '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="new">Class '{0}' contains test methods and should be marked with '[TestClass]'</target>
+        <target state="translated">Třída {0} obsahuje testovací metody a měla by mít označení [TestClass].</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]'</source>
-        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]'</target>
+        <target state="translated">Typ obsahující [TestMethod] by měl mít označení [TestClass]</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
@@ -571,6 +749,16 @@
       <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
         <target state="translated">[{0}] lze nastavit pouze u metod označených pomocí metody [TestMethod].</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
+        <source>'[DeploymentItem]' can be specified only on test class or test method</source>
+        <target state="translated">[DeploymentItem] se dá zadat jenom pro testovací třídu nebo testovací metodu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
+        <source>'[DeploymentItem]' can be specified only on test class or test method</source>
+        <target state="translated">[DeploymentItem] se dá zadat jenom pro testovací třídu nebo testovací metodu.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

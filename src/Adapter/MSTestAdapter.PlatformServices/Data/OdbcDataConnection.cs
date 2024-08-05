@@ -78,7 +78,7 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
         OdbcConnectionStringBuilder builder = new(connectionString);
 
         // only fix this for excel
-        if (!string.Equals(builder.Dsn, "Excel Files", System.StringComparison.Ordinal))
+        if (!string.Equals(builder.Dsn, "Excel Files", StringComparison.Ordinal))
         {
             return connectionString;
         }

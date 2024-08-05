@@ -114,7 +114,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     {
         try
         {
-            await _logger.LogInformationAsync("Starting server mode");
+            await _logger.LogDebugAsync("Starting server mode");
             _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(_testApplicationCancellationTokenSource.CancellationToken);
 
             // Initialize the ServerLoggerForwarderProvider, it can be null if diagnostic is disabled.
@@ -179,7 +179,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                     // Signal only one time
                     if (!_serverClosingTokenSource.IsCancellationRequested)
                     {
-                        await _logger.LogInformationAsync("Server requested to shutdown");
+                        await _logger.LogDebugAsync("Server requested to shutdown");
                         await _serverClosingTokenSource.CancelAsync();
                     }
 
@@ -314,11 +314,11 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             }
             catch (OperationCanceledException e)
             {
-                // We don't return the stack of the exception if we're cancelling the single request because it's expected and it's not an exception.
+                // We don't return the stack of the exception if we're canceling the single request because it's expected and it's not an exception.
                 (string errorMessage, int errorCode) =
                     rpcState.CancellationToken.IsCancellationRequested
-                    ? (string.Empty, ErrorCodes.RequestCancelled)
-                    : (e.ToString(), ErrorCodes.RequestCancelled);
+                    ? (string.Empty, ErrorCodes.RequestCanceled)
+                    : (e.ToString(), ErrorCodes.RequestCanceled);
 
                 await SendErrorAsync(reqId: request.Id, errorCode: errorCode, message: errorMessage, data: null, _testApplicationCancellationTokenSource.CancellationToken);
                 CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetCanceled());
@@ -371,17 +371,18 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         AssertInitialized();
 
-        await _logger.LogInformationAsync($"Received {message.Method} request");
+        await _logger.LogDebugAsync($"Received {message.Method} request");
 
         switch (message.Method, message.Params)
         {
             case (JsonRpcMethods.Initialize, InitializeRequestArgs args):
                 {
                     _client = new(args.ClientInfo.Name, args.ClientInfo.Version);
-                    await _logger.LogInformationAsync($"Connection established with '{_client.Id}', protocol version {_client.Version}");
+                    await _logger.LogDebugAsync($"Connection established with '{_client.Id}', protocol version {_client.Version}");
 
                     INamedFeatureCapability? namedFeatureCapability = ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();
                     return new InitializeResponseArgs(
+                        ProcessId: ServiceProvider.GetProcessHandler().GetCurrentProcess().Id,
                         ServerInfo: new ServerInfo("test-anywhere", Version: ProtocolVersion),
                         Capabilities: new ServerCapabilities(
                             new ServerTestingCapabilities(
@@ -541,7 +542,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             { TelemetryProperties.RequestProperties.AdapterLoadStop, adapterLoadStop },
             { TelemetryProperties.RequestProperties.RequestExecuteStart, requestExecuteStart },
             { TelemetryProperties.RequestProperties.RequestExecuteStop, requestExecuteStop },
-            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args.TestNodes is not null || args?.GraphFilter is not null).AsTelemetryBool() },
+            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args.TestNodes is not null || args.GraphFilter is not null).AsTelemetryBool() },
         };
 
     internal static Dictionary<string, object> GetRunMetrics(
@@ -561,7 +562,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             { TelemetryProperties.RequestProperties.AdapterLoadStop, adapterLoadStop },
             { TelemetryProperties.RequestProperties.RequestExecuteStart, requestExecuteStart },
             { TelemetryProperties.RequestProperties.RequestExecuteStop, requestExecuteStop },
-            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args.TestNodes is not null || args?.GraphFilter is not null).AsTelemetryBool() },
+            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args.TestNodes is not null || args.GraphFilter is not null).AsTelemetryBool() },
         };
 
     private async Task SendErrorAsync(int reqId, int errorCode, string message, object? data, CancellationToken cancellationToken)
@@ -681,6 +682,9 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                     method: JsonRpcMethods.ClientLog,
                     @params: new LogEventArgs(logMessage),
                     _testApplicationCancellationTokenSource.CancellationToken,
+
+                    // We could receive some log messages after the exit, a real sample is if telemetry provider is too slow and we log a warning.
+                    checkServerExit: true,
                     rethrowException: false);
                 break;
         }

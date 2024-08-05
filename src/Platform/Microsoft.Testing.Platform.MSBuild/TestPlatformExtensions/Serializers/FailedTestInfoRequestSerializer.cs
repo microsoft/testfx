@@ -8,7 +8,7 @@ namespace Microsoft.Testing.Platform.MSBuild.TestPlatformExtensions.Serializers;
 
 internal record FailedTestInfoRequest(
     string DisplayName,
-    bool IsCancelled,
+    bool IsCanceled,
     string? Duration,
     string? ErrorMessage,
     string? ErrorStackTrace,
@@ -37,7 +37,7 @@ internal class FailedTestInfoRequestSerializer : BaseSerializer, INamedPipeSeria
     {
         var failedTestInfoRequest = (FailedTestInfoRequest)objectToSerialize;
         WriteString(stream, failedTestInfoRequest.DisplayName);
-        WriteInt(stream, failedTestInfoRequest.IsCancelled ? 1 : 0);
+        WriteInt(stream, failedTestInfoRequest.IsCanceled ? 1 : 0);
         WriteString(stream, failedTestInfoRequest.Duration ?? string.Empty);
         WriteString(stream, failedTestInfoRequest.ErrorMessage ?? string.Empty);
         WriteString(stream, failedTestInfoRequest.ErrorStackTrace ?? string.Empty);

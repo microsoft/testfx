@@ -83,6 +83,8 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
     public ITaskItem? TestingPlatformCommandLineArguments { get; set; }
 
+    public ITaskItem[]? VSTestCLIRunSettings { get; set; }
+
     private bool IsNetCoreApp => TargetFrameworkIdentifier.ItemSpec == ".NETCoreApp";
 
     protected override string ToolName
@@ -154,15 +156,8 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         return null;
     }
 
-    private bool IsCurrentProcessArchitectureCompatible()
-    {
-#if NET
-        Architecture targetArchitecture = Enum.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
-#else
-        var targetArchitecture = (Architecture)Enum.Parse(typeof(Architecture), TestArchitecture.ItemSpec, ignoreCase: true);
-#endif
-        return _currentProcessArchitecture == targetArchitecture;
-    }
+    private bool IsCurrentProcessArchitectureCompatible() =>
+        _currentProcessArchitecture == EnumPolyfill.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
 
     protected override string GenerateCommandLineCommands()
     {
@@ -206,6 +201,14 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments!.ItemSpec} ");
         }
 
+        if (VSTestCLIRunSettings?.Length > 0)
+        {
+            foreach (ITaskItem taskItem in VSTestCLIRunSettings)
+            {
+                builder.AppendTextUnquoted($" {taskItem.ItemSpec}");
+            }
+        }
+
         return builder.ToString();
     }
 
@@ -238,7 +241,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     }
 
     protected override void ProcessStarted()
-        => _connectionLoopTask = Task.Run(() =>
+        => _connectionLoopTask = Task.Run(async () =>
         {
             try
             {
@@ -249,14 +252,18 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                     pipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
                     pipeServer.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
                     pipeServer.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
-                    pipeServer.WaitConnectionAsync(_waitForConnections.Token).GetAwaiter().GetResult();
+                    await pipeServer.WaitConnectionAsync(_waitForConnections.Token);
                     _connections.Add(pipeServer);
                     Log.LogMessage(MessageImportance.Low, $"Client connected to '{_pipeNameDescription.Name}'");
                 }
             }
             catch (OperationCanceledException) when (_waitForConnections.IsCancellationRequested)
             {
-                // Do nothing we're cancelling
+                // Do nothing we're canceling
+            }
+            catch (Exception ex)
+            {
+                Log.LogError(ex.ToString());
             }
         });
 
@@ -370,7 +377,9 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             string summary = string.Format(
                 CultureInfo.CurrentCulture,
                 Resources.MSBuildResources.Summary,
-                runSummaryInfoRequest.TotalFailed > 0 ? Resources.MSBuildResources.Failed : Resources.MSBuildResources.Passed,
+                runSummaryInfoRequest.TotalFailed > 0 || runSummaryInfoRequest.TotalPassed == 0
+                    ? Resources.MSBuildResources.Failed
+                    : Resources.MSBuildResources.Passed,
                 runSummaryInfoRequest.TotalFailed,
                 runSummaryInfoRequest.TotalPassed,
                 runSummaryInfoRequest.TotalSkipped,

@@ -44,7 +44,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
         _logLevel = logLevel;
         _serverTestHost = serverTestHost;
 #if NETCOREAPP
-        _channel = Channel.CreateUnbounded<ServerLogMessage>(new UnboundedChannelOptions()
+        _channel = Channel.CreateUnbounded<ServerLogMessage>(new UnboundedChannelOptions
         {
             // We process only 1 data at a time
             SingleReader = true,

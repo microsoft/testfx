@@ -10,7 +10,7 @@ namespace MSTest.Analyzers.Test;
 [TestGroup]
 public sealed class PublicClassShouldBeTestClassAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
-    public async Task WhenTypeIsPublicAndNotTestClass_Diagnostic()
+    public async Task WhenClassIsPublicAndNotTestClass_Diagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,12 +18,47 @@ public sealed class PublicClassShouldBeTestClassAnalyzerTests(ITestExecutionCont
             public class [|MyTestClass|]
             {
             }
+            """;
 
-            public struct [|MyTestStruct|]
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassIsPublicAndNotClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public struct MyTestStruct
             {
             }
 
-            public interface [|MyTestInterface|]
+            public interface MyTestInterface
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassIsPublicAndAbstract_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassIsPublicAndStatic_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public static class MyTestClass
             {
             }
             """;

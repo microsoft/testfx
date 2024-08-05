@@ -122,7 +122,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
 
         DummyConsumer.DummyProducer producer = new();
         await Task.WhenAll(Enumerable.Range(1, totalPayloads)
-            .Select(i => Task.Run(async () => await proxy.PublishAsync(producer, new DummyConsumer.DummyData() { Data = i }))).ToArray());
+            .Select(i => Task.Run(async () => await proxy.PublishAsync(producer, new DummyConsumer.DummyData { Data = i }))).ToArray());
 
         await proxy.DrainDataAsync();
 
