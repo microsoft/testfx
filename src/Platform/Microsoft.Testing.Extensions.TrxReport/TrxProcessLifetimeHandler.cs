@@ -105,7 +105,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 _singleConnectionNamedPipeServer.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
                 _singleConnectionNamedPipeServer.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
                 _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-                await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellation).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellation).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellation);
             }, cancellation);
 
         return Task.CompletedTask;
@@ -209,12 +209,12 @@ internal sealed class TrxProcessLifetimeHandler :
         if (request is ReportFileNameRequest report)
         {
             _fileNameRequest = report;
-            return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+            return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
         }
         else if (request is TestAdapterInformationRequest testAdapterInformationRequest)
         {
             _testAdapterInformationRequest = testAdapterInformationRequest;
-            return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+            return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
         }
         else
         {

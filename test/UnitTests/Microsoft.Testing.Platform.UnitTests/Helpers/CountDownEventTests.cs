@@ -40,7 +40,8 @@ public class CountDownEventTests : TestBase
     {
         CountdownEvent countdownEvent = new(1);
         CancellationTokenSource cts = new();
-        var waiter = Task.Run(() => countdownEvent.WaitAsync(cts.Token));
+        CancellationToken cancelToken = cts.Token;
+        var waiter = Task.Run(() => countdownEvent.WaitAsync(cancelToken), cancelToken);
         await cts.CancelAsync();
         await Assert.ThrowsAsync<OperationCanceledException>(async () => await waiter);
     }
