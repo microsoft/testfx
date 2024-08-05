@@ -52,11 +52,12 @@ public static class TrxReportExtensions
         var compositeLifeTimeHandler =
             new CompositeExtensionFactory<TrxProcessLifetimeHandler>(serviceProvider =>
             {
-                serviceProvider.GetLoggerFactory().CreateLogger<TrxProcessLifetimeHandler>().LogTrace($"TRX pipe name: '{pipeNameDescription.Name}");
+                ILoggerFactory loggerFactory = serviceProvider.GetLoggerFactory();
+                loggerFactory.CreateLogger<TrxProcessLifetimeHandler>().LogTrace($"TRX pipe name: '{pipeNameDescription.Name}");
                 return new TrxProcessLifetimeHandler(
                     serviceProvider.GetCommandLineOptions(),
                     serviceProvider.GetEnvironment(),
-                    serviceProvider.GetLoggerFactory(),
+                    loggerFactory,
                     serviceProvider.GetMessageBus(),
                     serviceProvider.GetTestApplicationModuleInfo(),
                     serviceProvider.GetConfiguration(),

@@ -97,14 +97,15 @@ public class ServerTests : TestBase
         // Wait for initialize response
         RpcMessage? msg = null;
         using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromSeconds(30));
+        CancellationToken cancellationToken = cancellationTokenSource.Token;
         try
         {
-            msg = await WaitForMessage(messageHandler, (RpcMessage? rpcMessage) => rpcMessage is ResponseMessage, "Wait initialize", cancellationTokenSource.Token);
+            msg = await WaitForMessage(messageHandler, (RpcMessage? rpcMessage) => rpcMessage is ResponseMessage, "Wait initialize", cancellationToken);
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationTokenSource.Token)
+        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
         {
             // Try to observe if we had some exceptions
-            await serverTask.TimeoutAfterAsync(TimeSpan.FromSeconds(30));
+            await serverTask.TimeoutAfterAsync(TimeSpan.FromSeconds(30), cancellationToken);
         }
 
         Assert.IsNotNull(msg);

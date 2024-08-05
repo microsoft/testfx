@@ -270,8 +270,6 @@ public class ReflectHelperTests : TestContainer
         // if you asked for inherited, or non-inherited attributes. So if that bug is again put in place you would get 2 attributes
         // in both answers.
         var rh = new ReflectHelper();
-        var mockMemberInfo = new Mock<MemberInfo>();
-        var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(It.IsAny<Type>(), /* inherit */ true)).
