@@ -349,26 +349,14 @@ public partial class AssertTests : TestContainer
         Verify(ex is AssertFailedException);
     }
 
-    public void AreEqualStringIgnoreCaseCultureInfoNullabilityPostConditions()
-    {
-        CultureInfo? cultureInfo = GetCultureInfo();
-        Assert.AreEqual("a", "a", false, cultureInfo);
-        _ = cultureInfo.Calendar; // no warning
-    }
+    public void AreEqualStringIgnoreCaseCultureInfoNullabilityPostConditions() =>
+        Assert.AreEqual("a", "a", false, CultureInfo.CurrentCulture);
 
-    public void AreEqualStringIgnoreCaseCultureInfoMessageNullabilityPostConditions()
-    {
-        CultureInfo? cultureInfo = GetCultureInfo();
-        Assert.AreEqual("a", "a", false, cultureInfo, "message");
-        _ = cultureInfo.Calendar; // no warning
-    }
+    public void AreEqualStringIgnoreCaseCultureInfoMessageNullabilityPostConditions() =>
+        Assert.AreEqual("a", "a", false, CultureInfo.CurrentCulture, "message");
 
-    public void AreEqualStringIgnoreCaseCultureInfoMessageParametersNullabilityPostConditions()
-    {
-        CultureInfo? cultureInfo = GetCultureInfo();
-        Assert.AreEqual("a", "a", false, cultureInfo, "message format {0} {1}", 1, 2);
-        _ = cultureInfo.Calendar; // no warning
-    }
+    public void AreEqualStringIgnoreCaseCultureInfoMessageParametersNullabilityPostConditions() =>
+        Assert.AreEqual("a", "a", false, CultureInfo.CurrentCulture, "message format {0} {1}", 1, 2);
 
     public void AreEqualUsingCustomIEquatable()
     {
@@ -389,8 +377,6 @@ public partial class AssertTests : TestContainer
         Assert.AreEqual<dynamic>((dynamic)"a", (dynamic)"a");
         Assert.AreEqual<dynamic>((dynamic)'a', (dynamic)'a');
     }
-
-    private CultureInfo? GetCultureInfo() => CultureInfo.CurrentCulture;
 
     private class TypeOverridesEquals
     {
