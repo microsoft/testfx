@@ -381,7 +381,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         NotifyCrashDumpServiceIfEnabled();
         using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
         process.Kill();
-        process.WaitForExit();
+        await process.WaitForExitAsync();
 #endif
         _dumpFileTaken = finalDumpFileName;
     }
