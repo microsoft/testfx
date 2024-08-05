@@ -16,7 +16,7 @@ internal sealed class ToolsManager : IToolsManager
         _toolsFactories.Add(toolFactory);
     }
 
-    internal async Task<ToolsInformation> BuildAsync(IServiceProvider serviceProvider)
+    internal async Task<IReadOnlyList<ITool>> BuildAsync(IServiceProvider serviceProvider)
     {
         List<ITool> tools = [];
         foreach (Func<IServiceProvider, ITool> toolFactory in _toolsFactories)
@@ -32,6 +32,6 @@ internal sealed class ToolsManager : IToolsManager
             tools.Add(tool);
         }
 
-        return new ToolsInformation(tools.ToArray());
+        return tools;
     }
 }

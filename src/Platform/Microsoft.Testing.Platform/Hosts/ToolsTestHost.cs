@@ -17,12 +17,12 @@ using Microsoft.Testing.Platform.Tools;
 namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed class ToolsTestHost(
-    ToolsInformation toolsInformation,
+    IReadOnlyList<ITool> toolsInformation,
     ServiceProvider serviceProvider,
     CommandLineHandler commandLineHandler,
     IPlatformOutputDevice platformOutputDevice) : ITestHost, IOutputDeviceDataProducer
 {
-    private readonly ToolsInformation _toolsInformation = toolsInformation;
+    private readonly IReadOnlyList<ITool> _toolsInformation = toolsInformation;
     private readonly ServiceProvider _serviceProvider = serviceProvider;
     private readonly CommandLineHandler _commandLineHandler = commandLineHandler;
     private readonly IPlatformOutputDevice _platformOutputDevice = platformOutputDevice;
@@ -55,10 +55,10 @@ internal sealed class ToolsTestHost(
 
         // TODO: Apply the override or do not support it for Tools?
         // TODO: Verify reserved tool names?
-        _toolsInformation.Tools.GroupBy(x => x.Name).Where(x => x.Count() > 1).ToList()
+        _toolsInformation.GroupBy(x => x.Name).Where(x => x.Count() > 1).ToList()
             .ForEach(x => throw new InvalidOperationException($"Tool '{x.Key}' is registered more than once."));
 
-        foreach (ITool tool in _toolsInformation.Tools)
+        foreach (ITool tool in _toolsInformation)
         {
             if (tool.Name == toolNameToRun)
             {
