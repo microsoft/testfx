@@ -259,7 +259,7 @@ internal sealed partial class TrxReportEngine
             resultSummary.Add(collectorDataEntries);
         }
 
-        await AddArtifactsAsync(artifacts, collectorDataEntries, runDeploymentRoot);
+        await AddArtifactsToCollectionAsync(artifacts, collectorDataEntries, runDeploymentRoot);
 
 #if NETCOREAPP
         using FileStream fs = File.OpenWrite(trxFile.FullName);
@@ -271,7 +271,7 @@ internal sealed partial class TrxReportEngine
 #endif
     }
 
-    private async Task AddArtifactsAsync(Dictionary<IExtension, List<SessionFileArtifact>> artifacts, XElement collectorDataEntries, string runDeploymentRoot)
+    private async Task AddArtifactsToCollectionAsync(Dictionary<IExtension, List<SessionFileArtifact>> artifacts, XElement collectorDataEntries, string runDeploymentRoot)
     {
         foreach (KeyValuePair<IExtension, List<SessionFileArtifact>> extensionArtifacts in artifacts)
         {
@@ -342,7 +342,7 @@ internal sealed partial class TrxReportEngine
         var collectorDataEntries = new XElement(_namespaceUri + "CollectorDataEntries");
         resultSummary.Add(collectorDataEntries);
 
-        await AddArtifactsAsync(_artifactsByExtension, collectorDataEntries, runDeploymentRoot);
+        await AddArtifactsToCollectionAsync(_artifactsByExtension, collectorDataEntries, runDeploymentRoot);
     }
 
     private async Task<string> CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(FileInfo artifact, string runDeploymentRoot)
