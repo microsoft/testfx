@@ -34,6 +34,31 @@ public sealed class PublicTypeShouldBeTestClassAnalyzerTests(ITestExecutionConte
             fixedCode);
     }
 
+    public async Task WhenClassIsPublicAndNotTestClassAndHaveAnotherAttribute_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [DeploymentItem("")]
+            public class [|MyTestClass|]
+            {
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [DeploymentItem("")]
+            [TestClass]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            fixedCode);
+    }
+
     public async Task WhenClassIsPublicAndNotClass_NoDiagnostic()
     {
         string code = """
