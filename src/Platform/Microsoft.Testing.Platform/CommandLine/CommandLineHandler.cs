@@ -53,7 +53,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
     internal CommandLineParseResult ParseResult { get; }
 
-    public async Task PrintInfoAsync(ITool[]? availableTools = null)
+    public async Task PrintInfoAsync(IReadOnlyList<ITool>? availableTools = null)
     {
         // /!\ Info should not be localized as it serves debugging purposes.
         await DisplayPlatformInfoAsync();
@@ -185,10 +185,10 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
             }
         }
 
-        async Task DisplayRegisteredToolsInfoAsync(ITool[]? availableTools, List<IToolCommandLineOptionsProvider> toolExtensions)
+        async Task DisplayRegisteredToolsInfoAsync(IReadOnlyList<ITool>? availableTools, List<IToolCommandLineOptionsProvider> toolExtensions)
         {
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Registered tools:"));
-            if (availableTools is null || availableTools.Length == 0)
+            if (availableTools is null || availableTools.Count == 0)
             {
                 await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("  There are no registered tools."));
             }
@@ -234,7 +234,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
     public bool IsDotNetTestPipeInvoked() => IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey);
 
 #pragma warning disable IDE0060 // Remove unused parameter, temporary we don't use it.
-    public async Task PrintHelpAsync(ITool[]? availableTools = null)
+    public async Task PrintHelpAsync(IReadOnlyList<ITool>? availableTools = null)
 #pragma warning restore IDE0060 // Remove unused parameter
     {
         string applicationName = GetApplicationName(_testApplicationModuleInfo);
