@@ -3,12 +3,12 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.PublicTypeShouldBeTestClassAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.PublicTypeShouldBeTestClassFixer>;
 
-namespace MSTest.Analyzers.Test;
+namespace MSTest.Analyzers.UnitTests;
 
 [TestGroup]
-public sealed class PublicClassShouldBeTestClassAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+public sealed class PublicTypeShouldBeTestClassAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
     public async Task WhenClassIsPublicAndNotTestClass_Diagnostic()
     {
@@ -20,7 +20,44 @@ public sealed class PublicClassShouldBeTestClassAnalyzerTests(ITestExecutionCont
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            fixedCode);
+    }
+
+    public async Task WhenClassIsPublicAndNotTestClassAndHaveAnotherAttribute_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [DeploymentItem("")]
+            public class [|MyTestClass|]
+            {
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [DeploymentItem("")]
+            [TestClass]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            fixedCode);
     }
 
     public async Task WhenClassIsPublicAndNotClass_NoDiagnostic()
@@ -37,7 +74,9 @@ public sealed class PublicClassShouldBeTestClassAnalyzerTests(ITestExecutionCont
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(
+           code,
+           code);
     }
 
     public async Task WhenClassIsPublicAndAbstract_NoDiagnostic()
@@ -50,7 +89,9 @@ public sealed class PublicClassShouldBeTestClassAnalyzerTests(ITestExecutionCont
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(
+           code,
+           code);
     }
 
     public async Task WhenClassIsPublicAndStatic_NoDiagnostic()
@@ -63,7 +104,9 @@ public sealed class PublicClassShouldBeTestClassAnalyzerTests(ITestExecutionCont
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(
+           code,
+           code);
     }
 
     public async Task WhenTypeIsNotPublicAndNotTestClass_NoDiagnostic()
@@ -84,6 +127,8 @@ public sealed class PublicClassShouldBeTestClassAnalyzerTests(ITestExecutionCont
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(
+           code,
+           code);
     }
 }
