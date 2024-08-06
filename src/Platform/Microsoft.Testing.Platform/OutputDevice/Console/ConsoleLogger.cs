@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 #if !NET7_0_OR_GREATER
 using System.Reflection;
+
 #endif
 
 using System.Text.RegularExpressions;
@@ -35,7 +36,7 @@ internal partial class ConsoleLogger : IDisposable
     /// The two directory separator characters to be passed to methods like <see cref="string.IndexOfAny(char[])"/>.
     /// </summary>
     private readonly Dictionary<string, TestModule> _assemblies = new();
-    private readonly List<LoggerArtifact> _artifacts = new();
+    private readonly List<TestRunArtifact> _artifacts = new();
 
     private readonly ConsoleLoggerOptions _options;
 
@@ -163,7 +164,7 @@ internal partial class ConsoleLogger : IDisposable
         }
 
         StopwatchAbstraction sw = CreateStopwatch();
-        var progress = new TestWorker(0, 0, 0, Path.GetFileName(assembly), targetFramework, architecture, sw, detail: null);
+        var progress = new TestProgressState(0, 0, 0, Path.GetFileName(assembly), targetFramework, architecture, sw, detail: null);
         int slotIndex = _consoleWithProgress.AddWorker(progress);
 
         var assemblyRun = new TestModule(slotIndex, assembly, targetFramework, architecture, sw);
@@ -190,17 +191,17 @@ internal partial class ConsoleLogger : IDisposable
     {
         terminal.AppendLine();
 
-        IEnumerable<IGrouping<bool, LoggerArtifact>> artifactGroups = _artifacts.GroupBy(a => a.OutOfProcess);
+        IEnumerable<IGrouping<bool, TestRunArtifact>> artifactGroups = _artifacts.GroupBy(a => a.OutOfProcess);
         if (artifactGroups.Any())
         {
             terminal.AppendLine();
         }
 
-        foreach (IGrouping<bool, LoggerArtifact> artifactGroup in artifactGroups)
+        foreach (IGrouping<bool, TestRunArtifact> artifactGroup in artifactGroups)
         {
             terminal.Append(SingleIndentation);
             terminal.AppendLine(artifactGroup.Key ? PlatformResources.OutOfProcessArtifactsProduced : PlatformResources.InProcessArtifactsProduced);
-            foreach (LoggerArtifact artifact in artifactGroup)
+            foreach (TestRunArtifact artifact in artifactGroup)
             {
                 terminal.Append(DoubleIndentation);
                 terminal.Append("- ");
@@ -316,7 +317,7 @@ internal partial class ConsoleLogger : IDisposable
         }
 
         terminal.Append(durationText);
-        AppendDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);
+        AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);
         terminal.AppendLine();
     }
 
@@ -395,7 +396,7 @@ internal partial class ConsoleLogger : IDisposable
                 break;
         }
 
-        var update = new TestWorker(asm.PassedTests, asm.FailedTests, asm.SkippedTests, Path.GetFileName(asm.Assembly), asm.TargetFramework, asm.Architecture, asm.Stopwatch, null);
+        var update = new TestProgressState(asm.PassedTests, asm.FailedTests, asm.SkippedTests, Path.GetFileName(asm.Assembly), asm.TargetFramework, asm.Architecture, asm.Stopwatch, null);
         _consoleWithProgress.UpdateWorker(asm.SlotIndex, update);
         if (outcome != LoggerOutcome.Passed || _options.ShowPassedTests)
         {
@@ -437,7 +438,7 @@ internal partial class ConsoleLogger : IDisposable
             LoggerOutcome.Error or LoggerOutcome.Fail or LoggerOutcome.Cancelled or LoggerOutcome.Timeout => TerminalColor.DarkRed,
             LoggerOutcome.Skipped => TerminalColor.DarkYellow,
             LoggerOutcome.Passed => TerminalColor.DarkGreen,
-            _ => throw new NotImplementedException(),
+            _ => throw new NotSupportedException(),
         };
         string outcomeText = outcome switch
         {
@@ -445,7 +446,7 @@ internal partial class ConsoleLogger : IDisposable
             LoggerOutcome.Skipped => PlatformResources.SkippedLowercase,
             LoggerOutcome.Cancelled or LoggerOutcome.Timeout => $"{PlatformResources.FailedLowercase} ({PlatformResources.CancelledLowercase})",
             LoggerOutcome.Passed => PlatformResources.PassedLowercase,
-            _ => throw new NotImplementedException(),
+            _ => throw new NotSupportedException(),
         };
 
         terminal.SetColor(color);
@@ -455,12 +456,13 @@ internal partial class ConsoleLogger : IDisposable
         terminal.Append(displayName);
         terminal.SetColor(TerminalColor.Gray);
         terminal.Append(' ');
-        terminal.Append($"({duration.TotalSeconds:F1}s)");
+        AppendLongDuration(terminal, duration);
         if (_options.ShowAssembly)
         {
             terminal.AppendLine();
             terminal.Append(SingleIndentation);
-            terminal.Append("from ");
+            terminal.Append(PlatformResources.FromFile);
+            terminal.Append(' ');
             AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly, targetFramework, architecture);
         }
 
@@ -518,12 +520,15 @@ internal partial class ConsoleLogger : IDisposable
         if (match.Success)
         {
             terminal.SetColor(TerminalColor.Gray);
-            terminal.Append("at ");
+            terminal.Append(PlatformResources.StackFrameIn);
+            terminal.Append(' ');
             terminal.ResetColor();
             terminal.SetColor(TerminalColor.Red);
             terminal.Append(match.Groups["code"].Value);
             terminal.SetColor(TerminalColor.Gray);
-            terminal.Append(" in ");
+            terminal.Append(' ');
+            terminal.Append(PlatformResources.StackFrameIn);
+            terminal.Append(' ');
             int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
             terminal.AppendLink(match.Groups["file"].Value, line);
             terminal.AppendLine();
@@ -613,10 +618,13 @@ internal partial class ConsoleLogger : IDisposable
         terminal.Append(' ');
         AppendAssemblyResult(terminal, assemblyRun.FailedTests == 0, failedTests, warnings);
         terminal.Append(' ');
-        AppendDuration(terminal, assemblyRun.Stopwatch.Elapsed);
+        AppendLongDuration(terminal, assemblyRun.Stopwatch.Elapsed);
     }
 
-    private static void AppendDuration(ITerminal terminal, TimeSpan duration, bool wrapInParentheses = true, bool colorize = true)
+    /// <summary>
+    /// Appends a long duration in human readable format such as 1h 23m 500ms.
+    /// </summary>
+    private static void AppendLongDuration(ITerminal terminal, TimeSpan duration, bool wrapInParentheses = true, bool colorize = true)
     {
         if (colorize)
         {
@@ -628,15 +636,35 @@ internal partial class ConsoleLogger : IDisposable
             terminal.Append('(');
         }
 
-        if (duration.TotalMilliseconds < 1000)
+        bool hasParentValue = false;
+
+        if (duration.Days > 0)
         {
-            terminal.Append(duration.TotalMilliseconds.ToString("F0", CultureInfo.CurrentCulture));
-            terminal.Append("ms");
+            terminal.Append($"{duration.Days}d");
+            hasParentValue = true;
         }
-        else
+
+        if (duration.Hours > 0 || hasParentValue)
         {
-            terminal.Append(duration.TotalSeconds.ToString("F1", CultureInfo.CurrentCulture));
-            terminal.Append('s');
+            terminal.Append($"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Hours.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : duration.Hours.ToString(CultureInfo.InvariantCulture))}h");
+            hasParentValue = true;
+        }
+
+        if (duration.Minutes > 0 || hasParentValue)
+        {
+            terminal.Append($"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Minutes.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : duration.Minutes.ToString(CultureInfo.InvariantCulture))}m");
+            hasParentValue = true;
+        }
+
+        if (duration.Seconds > 0 || hasParentValue)
+        {
+            terminal.Append($"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Seconds.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : duration.Seconds.ToString(CultureInfo.InvariantCulture))}s");
+            hasParentValue = true;
+        }
+
+        if (duration.Milliseconds >= 0 || hasParentValue)
+        {
+            terminal.Append($"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Milliseconds.ToString(CultureInfo.InvariantCulture).PadLeft(3, '0') : duration.Milliseconds.ToString(CultureInfo.InvariantCulture))}ms");
         }
 
         if (wrapInParentheses)
@@ -653,7 +681,7 @@ internal partial class ConsoleLogger : IDisposable
     public void Dispose() => _consoleWithProgress.Dispose();
 
     public void ArtifactAdded(bool outOfProcess, string? assembly, string? targetFramework, string? architecture, string? testName, string path)
-        => _artifacts.Add(new LoggerArtifact(outOfProcess, assembly, targetFramework, architecture, testName, path));
+        => _artifacts.Add(new TestRunArtifact(outOfProcess, assembly, targetFramework, architecture, testName, path));
 
     /// <summary>
     /// Let the user know that cancellation was triggered.
@@ -694,8 +722,8 @@ internal partial class ConsoleLogger : IDisposable
         });
     }
 
-    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, Exception exception) =>
-        WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString());
+    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, Exception exception)
+        => WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString());
 
     internal void WriteMessage(string text)
         => _consoleWithProgress.WriteToTerminal(terminal => terminal.Append(text));

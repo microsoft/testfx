@@ -6,13 +6,13 @@ using System.Globalization;
 namespace Microsoft.Testing.Platform.OutputDevice.Console;
 
 /// <summary>
-/// Captures <see cref="TestWorker"/> that was rendered to screen, so we can only partially update the screen on next update.
+/// Captures <see cref="TestProgressState"/> that was rendered to screen, so we can only partially update the screen on next update.
 /// </summary>
-internal sealed class TestWorkerFrame
+internal sealed class TestProgressFrame
 {
     private const int MaxColumn = 120;
 
-    private readonly (TestWorker TestWorkerProgress, int DurationLength)[] _workers;
+    private readonly (TestProgressState TestWorkerProgress, int DurationLength)[] _progressItems;
 
     public int Width { get; }
 
@@ -20,29 +20,29 @@ internal sealed class TestWorkerFrame
 
     public int ProgressCount { get; private set; }
 
-    public TestWorkerFrame(TestWorker?[] nodes, int width, int height)
+    public TestProgressFrame(TestProgressState?[] nodes, int width, int height)
     {
         Width = Math.Min(width, MaxColumn);
         Height = height;
 
-        _workers = new (TestWorker, int)[nodes.Length];
+        _progressItems = new (TestProgressState, int)[nodes.Length];
 
-        foreach (TestWorker? status in nodes)
+        foreach (TestProgressState? status in nodes)
         {
             if (status is not null)
             {
-                _workers[ProgressCount++].TestWorkerProgress = status;
+                _progressItems[ProgressCount++].TestWorkerProgress = status;
             }
         }
     }
 
     public void AppendTestWorkerProgress(int i, AnsiTerminal terminal)
     {
-        TestWorker p = _workers[i].TestWorkerProgress;
+        TestProgressState p = _progressItems[i].TestWorkerProgress;
 
         string durationString = $" ({p.Stopwatch.Elapsed.TotalSeconds:F1}s)";
 
-        _workers[i].DurationLength = durationString.Length;
+        _progressItems[i].DurationLength = durationString.Length;
 
         int passed = p.Passed;
         int failed = p.Failed;
@@ -51,28 +51,28 @@ internal sealed class TestWorkerFrame
         string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
         terminal.Append('[');
         terminal.SetColor(TerminalColor.DarkGreen);
-        terminal.Append("✅");
+        terminal.Append("✓");
         terminal.Append(passed.ToString(CultureInfo.CurrentCulture));
         terminal.ResetColor();
 
         terminal.Append("/");
 
         terminal.SetColor(TerminalColor.DarkRed);
-        terminal.Append("❌");
+        terminal.Append("x");
         terminal.Append(failed.ToString(CultureInfo.CurrentCulture));
         terminal.ResetColor();
 
         terminal.Append("/");
 
         terminal.SetColor(TerminalColor.DarkYellow);
-        terminal.Append("❔");
+        terminal.Append("?");
         terminal.Append(skipped.ToString(CultureInfo.CurrentCulture));
         terminal.ResetColor();
         terminal.Append(']');
 
         terminal.Append(' ');
         terminal.Append(p.AssemblyName);
-        terminal.Append('(');
+        terminal.Append(" (");
         terminal.Append(p.TargetFramework);
         terminal.Append('|');
         terminal.Append(p.Architecture);
@@ -90,7 +90,7 @@ internal sealed class TestWorkerFrame
     /// <summary>
     /// Render VT100 string to update from current to next frame.
     /// </summary>
-    public void Render(TestWorkerFrame previousFrame, AnsiTerminal terminal)
+    public void Render(TestProgressFrame previousFrame, AnsiTerminal terminal)
     {
         // Move cursor back to 1st line of progress.
         terminal.MoveCursorUp(previousFrame.ProgressCount + 1);
@@ -101,10 +101,10 @@ internal sealed class TestWorkerFrame
             // Do we have previous node string to compare with?
             if (previousFrame.ProgressCount > i)
             {
-                if (previousFrame._workers[i] == _workers[i])
+                if (previousFrame._progressItems[i] == _progressItems[i])
                 {
                     // Same everything except time, AND same number of digits in time
-                    string durationString = $" ({_workers[i].TestWorkerProgress.Stopwatch.Elapsed.TotalSeconds:F1}s)";
+                    string durationString = $" ({_progressItems[i].TestWorkerProgress.Stopwatch.Elapsed.TotalSeconds:F1}s)";
 
                     terminal.SetCursorHorizontal(MaxColumn);
                     terminal.Append($"{AnsiCodes.SetCursorHorizontal(MaxColumn)}{AnsiCodes.MoveCursorBackward(durationString.Length)}{durationString}");

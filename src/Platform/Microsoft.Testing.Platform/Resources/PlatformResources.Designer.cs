@@ -485,6 +485,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to from.
+        /// </summary>
+        internal static string FromFile {
+            get {
+                return ResourceManager.GetString("FromFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The following &apos;ITestHostEnvironmentVariableProvider&apos; providers rejected the final environment variables setup:.
         /// </summary>
         internal static string GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage {
@@ -1058,6 +1067,24 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string SkippedLowercase {
             get {
                 return ResourceManager.GetString("SkippedLowercase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to at.
+        /// </summary>
+        internal static string StackFrameAt {
+            get {
+                return ResourceManager.GetString("StackFrameAt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to in.
+        /// </summary>
+        internal static string StackFrameIn {
+            get {
+                return ResourceManager.GetString("StackFrameIn", resourceCulture);
             }
         }
         

@@ -241,6 +241,11 @@
         <target state="translated">테스트용</target>
         <note>is followed by test name</note>
       </trans-unit>
+      <trans-unit id="FromFile">
+        <source>from</source>
+        <target state="new">from</target>
+        <note>from followed by a file name to point to the file from which test is originating</note>
+      </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
         <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
         <target state="translated">다음 'ITestHostEnvironmentVariableProvider' 공급자가 최종 환경 변수 설정을 거부했습니다.</target>
@@ -562,6 +567,16 @@
         <source>skipped</source>
         <target state="translated">건너뜀</target>
         <note />
+      </trans-unit>
+      <trans-unit id="StackFrameAt">
+        <source>at</source>
+        <target state="new">at</target>
+        <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
+      </trans-unit>
+      <trans-unit id="StackFrameIn">
+        <source>in</source>
+        <target state="new">in</target>
+        <note>in that is used in stack frame it is followed by file name</note>
       </trans-unit>
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>

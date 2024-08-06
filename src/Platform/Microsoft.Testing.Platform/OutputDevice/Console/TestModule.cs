@@ -26,7 +26,7 @@ internal sealed class TestModule
 
     public List<string> Attachments { get; } = new();
 
-    public List<IMessage> Messages { get; } = new();
+    public List<IProgressMessage> Messages { get; } = new();
 
     public int FailedTests { get; internal set; }
 

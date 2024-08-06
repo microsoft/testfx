@@ -24,7 +24,7 @@ public sealed class IgnoreTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 1, Total: 2");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
 
         testHostResult.AssertOutputContains("SubClass.Method");
         testHostResult.AssertOutputContains("SubClass.ClassCleanup");

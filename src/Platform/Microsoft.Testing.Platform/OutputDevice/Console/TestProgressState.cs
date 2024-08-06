@@ -3,9 +3,9 @@
 
 namespace Microsoft.Testing.Platform.OutputDevice.Console;
 
-internal class TestWorker
+internal class TestProgressState
 {
-    public TestWorker(int passed, int failed, int skipped, string assemblyName, string? targetFramework, string? architecture, StopwatchAbstraction stopwatch, string? detail)
+    public TestProgressState(int passed, int failed, int skipped, string assemblyName, string? targetFramework, string? architecture, StopwatchAbstraction stopwatch, string? detail)
     {
         Passed = passed;
         Failed = failed;
@@ -17,19 +17,19 @@ internal class TestWorker
         Detail = detail;
     }
 
-    public int Passed { get; internal set; }
+    public int Passed { get; }
 
-    public int Failed { get; internal set; }
+    public int Failed { get; }
 
-    public int Skipped { get; internal set; }
+    public int Skipped { get; }
 
-    public string AssemblyName { get; internal set; }
+    public string AssemblyName { get; }
 
-    public string TargetFramework { get; internal set; }
+    public string TargetFramework { get; }
 
-    public string Architecture { get; internal set; }
+    public string Architecture { get; }
 
-    public StopwatchAbstraction Stopwatch { get; internal set; }
+    public StopwatchAbstraction Stopwatch { get; }
 
-    public string? Detail { get; internal set; }
+    public string? Detail { get; }
 }

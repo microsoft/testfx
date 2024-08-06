@@ -6,4 +6,4 @@ namespace Microsoft.Testing.Platform.OutputDevice.Console;
 /// <summary>
 /// An artifact / attachment that was reported during run.
 /// </summary>
-internal record class LoggerArtifact(bool OutOfProcess, string? Assembly, string? TargetFramework, string? Architecture, string? TestName, string Path);
+internal record class TestRunArtifact(bool OutOfProcess, string? Assembly, string? TargetFramework, string? Architecture, string? TestName, string Path);

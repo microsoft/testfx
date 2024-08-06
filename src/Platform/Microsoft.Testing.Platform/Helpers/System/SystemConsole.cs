@@ -150,6 +150,14 @@ internal sealed class SystemConsole : IConsole
         }
     }
 
+    public void Write(char value)
+    {
+        if (!_suppressOutput)
+        {
+            CaptureConsoleOutWriter.Write(value);
+        }
+    }
+
     public void SetForegroundColor(ConsoleColor color)
     {
 #if NET8_0_OR_GREATER

@@ -21,7 +21,7 @@ internal partial class ConsoleWithProgress : IDisposable
     private readonly ITerminal _terminal;
     private readonly bool _showProgress;
     private readonly int _updateEvery;
-    private TestWorker?[] _workers = Array.Empty<TestWorker>();
+    private TestProgressState?[] _progressItems = Array.Empty<TestProgressState>();
 
     /// <summary>
     /// The thread that performs periodic refresh of the console output.
@@ -39,7 +39,7 @@ internal partial class ConsoleWithProgress : IDisposable
             {
                 lock (_lock)
                 {
-                    _terminal.RenderProgress(_workers);
+                    _terminal.RenderProgress(_progressItems);
                 }
             }
         }
@@ -58,15 +58,15 @@ internal partial class ConsoleWithProgress : IDisposable
         _updateEvery = updateEvery;
     }
 
-    public int AddWorker(TestWorker testWorker)
+    public int AddWorker(TestProgressState testWorker)
     {
         if (_showProgress)
         {
-            for (int i = 0; i < _workers.Length; i++)
+            for (int i = 0; i < _progressItems.Length; i++)
             {
-                if (_workers[i] == null)
+                if (_progressItems[i] == null)
                 {
-                    _workers[i] = testWorker;
+                    _progressItems[i] = testWorker;
                     return i;
                 }
             }
@@ -81,7 +81,7 @@ internal partial class ConsoleWithProgress : IDisposable
     {
         if (_showProgress)
         {
-            _workers = new TestWorker[workerCount];
+            _progressItems = new TestProgressState[workerCount];
             _terminal.StartBusyIndicator();
             // If we crash unexpectedly without completing this thread we don't want it to keep the process running.
             _refresher = new Thread(ThreadProc) { IsBackground = true };
@@ -128,15 +128,15 @@ internal partial class ConsoleWithProgress : IDisposable
     {
         if (_showProgress)
         {
-            _workers[slotIndex] = null;
+            _progressItems[slotIndex] = null;
         }
     }
 
-    internal void UpdateWorker(int slotIndex, TestWorker update)
+    internal void UpdateWorker(int slotIndex, TestProgressState update)
     {
         if (_showProgress)
         {
-            _workers[slotIndex] = update;
+            _progressItems[slotIndex] = update;
         }
     }
 }

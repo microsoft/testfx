@@ -32,7 +32,7 @@ internal class AnsiTerminal : ITerminal
     private readonly bool _useBusyIndicator;
     private readonly StringBuilder _stringBuilder = new();
     private bool _isBatching;
-    private TestWorkerFrame _currentFrame = new(Array.Empty<TestWorker>(), 0, 0);
+    private TestProgressFrame _currentFrame = new(Array.Empty<TestProgressState>(), 0, 0);
 
     public AnsiTerminal(IConsole console, string? baseDirectory)
     {
@@ -58,7 +58,7 @@ internal class AnsiTerminal : ITerminal
         }
         else
         {
-            _console.Write(value.ToString());
+            _console.Write(value);
         }
     }
 
@@ -276,9 +276,9 @@ internal class AnsiTerminal : ITerminal
         _currentFrame.Clear();
     }
 
-    public void RenderProgress(TestWorker?[] progress)
+    public void RenderProgress(TestProgressState?[] progress)
     {
-        TestWorkerFrame newFrame = new(progress, Width, Height);
+        TestProgressFrame newFrame = new(progress, Width, Height);
 
         // Do not render delta but clear everything if Terminal width or height have changed.
         if (newFrame.Width != _currentFrame.Width || newFrame.Height != _currentFrame.Height)

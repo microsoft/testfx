@@ -572,4 +572,16 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="TestRunSummary" xml:space="preserve">
     <value>Test run summary:</value>
   </data>
+  <data name="FromFile" xml:space="preserve">
+    <value>from</value>
+    <comment>from followed by a file name to point to the file from which test is originating</comment>
+  </data>
+  <data name="StackFrameAt" xml:space="preserve">
+    <value>at</value>
+    <comment>at that is used for a stack frame location in a stack trace, is followed by a class and method name</comment>
+  </data>
+  <data name="StackFrameIn" xml:space="preserve">
+    <value>in</value>
+    <comment>in that is used in stack frame it is followed by file name</comment>
+  </data>
 </root>

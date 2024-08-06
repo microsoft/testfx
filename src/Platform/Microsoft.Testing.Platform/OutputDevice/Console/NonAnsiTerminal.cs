@@ -37,7 +37,7 @@ internal class NonAnsiTerminal : ITerminal
         }
         else
         {
-            _console.Write(value.ToString());
+            _console.Write(value);
         }
     }
 
@@ -162,12 +162,12 @@ internal class NonAnsiTerminal : ITerminal
         // nop
     }
 
-    public void RenderProgress(TestWorker?[] progress)
+    public void RenderProgress(TestProgressState?[] progress)
     {
         StartUpdate();
         try
         {
-            foreach (TestWorker? p in progress)
+            foreach (TestProgressState? p in progress)
             {
                 if (p == null)
                 {

@@ -6,4 +6,4 @@ namespace Microsoft.Testing.Platform.OutputDevice.Console;
 /// <summary>
 /// A warning message that was sent during run.
 /// </summary>
-internal record class WarningMessage(string Text) : IMessage;
+internal record class WarningMessage(string Text) : IProgressMessage;

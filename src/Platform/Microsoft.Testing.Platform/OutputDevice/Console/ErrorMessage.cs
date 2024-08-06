@@ -6,4 +6,4 @@ namespace Microsoft.Testing.Platform.OutputDevice.Console;
 /// <summary>
 /// An error message that was sent to output during the build.
 /// </summary>
-internal record class ErrorMessage(string Text) : IMessage;
+internal record class ErrorMessage(string Text) : IProgressMessage;
