@@ -28,19 +28,12 @@ internal static class AcceptanceAssert
                     + Regex.Escape(wildcardLines[i]).Replace("\\*", ".*")
                     + "$";
 
-                try
-                {
-                    Assert.That(
-                        Regex.IsMatch(outputLine, matchingPatternLine, RegexOptions.Singleline),
-                        $"Output on line {i + 1}{Environment.NewLine}{outputLine}{Environment.NewLine}doesn't match pattern{Environment.NewLine}{matchingPatternLine}",
-                        callerMemberName: callerMemberName,
-                        callerFilePath: callerFilePath,
-                        callerLineNumber: callerLineNumber);
-                }
-                catch (Exception ex)
-                {
-                    throw;
-                }
+                Assert.That(
+                    Regex.IsMatch(outputLine, matchingPatternLine, RegexOptions.Singleline),
+                    $"Output on line {i + 1}{Environment.NewLine}{outputLine}{Environment.NewLine}doesn't match pattern{Environment.NewLine}{matchingPatternLine}",
+                    callerMemberName: callerMemberName,
+                    callerFilePath: callerFilePath,
+                    callerLineNumber: callerLineNumber);
             }
             else
             {
