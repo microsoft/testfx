@@ -1,10 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection;
 using System.Security;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
@@ -27,9 +29,9 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
         var testAssemblySettings = new TestAssemblySettings();
 
         // Load the source.
-        System.Reflection.Assembly testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
+        Assembly testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
 
-        TestTools.UnitTesting.ParallelizeAttribute? parallelizeAttribute = ReflectHelper.GetParallelizeAttribute(testAssembly);
+        ParallelizeAttribute? parallelizeAttribute = ReflectHelper.GetParallelizeAttribute(testAssembly);
 
         if (parallelizeAttribute != null)
         {
@@ -44,7 +46,7 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
 
         testAssemblySettings.CanParallelizeAssembly = !ReflectHelper.IsDoNotParallelizeSet(testAssembly);
 
-        TestTools.UnitTesting.ClassCleanupExecutionAttribute? classCleanupSequencingAttribute = ReflectHelper.GetClassCleanupAttribute(testAssembly);
+        ClassCleanupExecutionAttribute? classCleanupSequencingAttribute = ReflectHelper.GetClassCleanupAttribute(testAssembly);
         if (classCleanupSequencingAttribute != null)
         {
             testAssemblySettings.ClassCleanupLifecycle = classCleanupSequencingAttribute.CleanupBehavior;

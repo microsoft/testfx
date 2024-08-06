@@ -111,7 +111,7 @@ public sealed class TestingPlatformClient : IDisposable
         using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromMinutes(3));
         return await CheckedInvoke(async () => await JsonRpcClient.InvokeWithParameterObjectAsync<InitializeResponse>(
             "initialize",
-            new InitializeRequest(Environment.ProcessId, new V100.ClientInfo("test-client"),
+            new InitializeRequest(Environment.ProcessId, new ClientInfo("test-client"),
                 new MSTest.Acceptance.IntegrationTests.Messages.V100.ClientCapabilities(new MSTest.Acceptance.IntegrationTests.Messages.V100.ClientTestingCapabilities(DebuggerProvider: false))), cancellationToken: cancellationTokenSource.Token));
     }
 
@@ -200,7 +200,7 @@ public sealed class TestingPlatformClient : IDisposable
         }
 
         [JsonRpcMethod("telemetry/update", UseSingleObjectParameterDeserialization = true)]
-        public Task TelemetryAsync(Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100.TelemetryPayload telemetry)
+        public Task TelemetryAsync(TelemetryPayload telemetry)
         {
             foreach (TelemetryCollector listener in _telemetryPayloads)
             {
