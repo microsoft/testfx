@@ -240,13 +240,22 @@ internal partial class ConsoleLogger : IDisposable
         {
             terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, _options.MinimumExpectedTests));
         }
-        else if (anyTestFailed)
+        else if (anyTestFailed || allTestsWereSkipped)
         {
-            terminal.Append(string.Format(CultureInfo.CurrentCulture, "{0}! ", PlatformResources.Failed));
+            terminal.Append(string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Failed));
         }
         else
         {
             terminal.Append(string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Passed));
+        }
+
+        if (!_options.ShowAssembly && _assemblies.Count == 1)
+        {
+            TestModule testModule = _assemblies.Values.Single();
+            terminal.SetColor(TerminalColor.Gray);
+            terminal.Append(" - ");
+            terminal.ResetColor();
+            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, testModule.Assembly, testModule.TargetFramework, testModule.Architecture);
         }
 
         terminal.AppendLine();
@@ -726,5 +735,5 @@ internal partial class ConsoleLogger : IDisposable
         => WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString());
 
     internal void WriteMessage(string text)
-        => _consoleWithProgress.WriteToTerminal(terminal => terminal.Append(text));
+        => _consoleWithProgress.WriteToTerminal(terminal => terminal.AppendLine(text));
 }

@@ -74,8 +74,8 @@ public sealed class CommandLine : IDisposable
             {
                 Arguments = arguments,
                 EnvironmentVariables = environmentVariables,
-                OnErrorOutput = (_, o) => _errorOutputLines.Add(o),
-                OnStandardOutput = (_, o) => _standardOutputLines.Add(o),
+                OnErrorOutput = (_, o) => _errorOutputLines.Add(ClearBOM(o)),
+                OnStandardOutput = (_, o) => _standardOutputLines.Add(ClearBOM(o)),
                 WorkingDirectory = workingDirectory,
             };
             _process = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided);
@@ -110,6 +110,18 @@ public sealed class CommandLine : IDisposable
         {
             s_maxOutstandingCommands_semaphore.Release();
         }
+    }
+
+    /// <summary>
+    /// Depending on command line settings, e.g. when using Windows Terminal
+    /// .NET Framework app might have BOM at the beginning of the captured output, which breaks output comparisons
+    /// while no visible difference is seen between the outputs.
+    /// </summary>
+    private string ClearBOM(string outputLine)
+    {
+        int firstChar = outputLine[0];
+        int byteOrderMark = 65279;
+        return firstChar == byteOrderMark ? outputLine.Substring(1) : outputLine;
     }
 
     public void Dispose() => _process?.Kill();

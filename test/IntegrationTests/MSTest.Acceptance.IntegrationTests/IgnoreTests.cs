@@ -36,7 +36,7 @@ public sealed class IgnoreTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIs(8);
-        testHostResult.AssertOutputContains("Zero tests ran - Failed: 0, Passed: 0, Skipped: 1, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
         testHostResult.AssertOutputDoesNotContain("AssemblyInitialize");
         testHostResult.AssertOutputDoesNotContain("AssemblyCleanup");
     }
