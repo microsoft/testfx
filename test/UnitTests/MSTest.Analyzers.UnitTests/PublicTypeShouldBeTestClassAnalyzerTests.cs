@@ -38,6 +38,7 @@ public sealed class PublicTypeShouldBeTestClassAnalyzerTests(ITestExecutionConte
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
+
             [DeploymentItem("")]
             public class [|MyTestClass|]
             {
