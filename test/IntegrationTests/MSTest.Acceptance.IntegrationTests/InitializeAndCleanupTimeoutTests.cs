@@ -34,12 +34,12 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyInit_WhenTestContextCancelled_AssemblyInitializeTaskIsCancelled(string tfm)
-        => await RunAndAssertTestWasCancelledAsync(_testAssetFixture.CodeWithSixtySecTimeoutAssetPath, TestAssetFixture.CodeWithSixtySecTimeout,
+    public async Task AssemblyInit_WhenTestContextCanceled_AssemblyInitializeTaskIsCanceled(string tfm)
+        => await RunAndAssertTestWasCanceledAsync(_testAssetFixture.CodeWithSixtySecTimeoutAssetPath, TestAssetFixture.CodeWithSixtySecTimeout,
             tfm, "TESTCONTEXT_CANCEL_", "assemblyInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyInit_WhenTimeoutExpires_AssemblyInitializeTaskIsCancelled(string tfm)
+    public async Task AssemblyInit_WhenTimeoutExpires_AssemblyInitializeTaskIsCanceled(string tfm)
         => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout,
             tfm, "LONG_WAIT_", "assemblyInit");
 
@@ -49,12 +49,12 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
             "TIMEOUT_", "assemblyInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInit_WhenTestContextCancelled_ClassInitializeTaskIsCancelled(string tfm)
-        => await RunAndAssertTestWasCancelledAsync(_testAssetFixture.CodeWithSixtySecTimeoutAssetPath, TestAssetFixture.CodeWithSixtySecTimeout, tfm,
+    public async Task ClassInit_WhenTestContextCanceled_ClassInitializeTaskIsCanceled(string tfm)
+        => await RunAndAssertTestWasCanceledAsync(_testAssetFixture.CodeWithSixtySecTimeoutAssetPath, TestAssetFixture.CodeWithSixtySecTimeout, tfm,
             "TESTCONTEXT_CANCEL_", "classInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInit_WhenTimeoutExpires_ClassInitializeTaskIsCancelled(string tfm)
+    public async Task ClassInit_WhenTimeoutExpires_ClassInitializeTaskIsCanceled(string tfm)
         => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "LONG_WAIT_", "classInit");
 
@@ -64,12 +64,12 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
             "TIMEOUT_", "classInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInitBase_WhenTestContextCancelled_ClassInitializeTaskIsCancelled(string tfm)
-        => await RunAndAssertTestWasCancelledAsync(_testAssetFixture.CodeWithSixtySecTimeoutAssetPath, TestAssetFixture.CodeWithSixtySecTimeout, tfm,
+    public async Task ClassInitBase_WhenTestContextCanceled_ClassInitializeTaskIsCanceled(string tfm)
+        => await RunAndAssertTestWasCanceledAsync(_testAssetFixture.CodeWithSixtySecTimeoutAssetPath, TestAssetFixture.CodeWithSixtySecTimeout, tfm,
             "TESTCONTEXT_CANCEL_", "baseClassInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInitBase_WhenTimeoutExpires_ClassInitializeTaskIsCancelled(string tfm)
+    public async Task ClassInitBase_WhenTimeoutExpires_ClassInitializeTaskIsCanceled(string tfm)
         => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "LONG_WAIT_", "baseClassInit");
 
@@ -79,99 +79,288 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
             "TIMEOUT_", "baseClassInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyInitialize_WhenTimeoutExpires_FromRunSettings_AssemblyInitializeIsCancelled(string tfm)
+    public async Task AssemblyInitialize_WhenTimeoutExpires_FromRunSettings_AssemblyInitializeIsCanceled(string tfm)
         => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "assemblyInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInitialize_WhenTimeoutExpires_FromRunSettings_ClassInitializeIsCancelled(string tfm)
+    public async Task ClassInitialize_WhenTimeoutExpires_FromRunSettings_ClassInitializeIsCanceled(string tfm)
         => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "classInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task BaseClassInitialize_WhenTimeoutExpires_FromRunSettings_ClassInitializeIsCancelled(string tfm)
+    public async Task BaseClassInitialize_WhenTimeoutExpires_FromRunSettings_ClassInitializeIsCanceled(string tfm)
         => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "baseClassInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyInitialize_WhenTimeoutExpires_AssemblyInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
+    public async Task AssemblyInitialize_WhenTimeoutExpires_AssemblyInitializeIsCanceled_AttributeTakesPrecedence(string tfm)
         => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "assemblyInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInitialize_WhenTimeoutExpires_ClassInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
+    public async Task ClassInitialize_WhenTimeoutExpires_ClassInitializeIsCanceled_AttributeTakesPrecedence(string tfm)
         => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "classInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task BaseClassInitialize_WhenTimeoutExpires_ClassInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
+    public async Task BaseClassInitialize_WhenTimeoutExpires_ClassInitializeIsCanceled_AttributeTakesPrecedence(string tfm)
         => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "baseClassInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassCleanupBase_WhenTimeoutExpires_ClassCleanupTaskIsCancelled(string tfm)
+    public async Task ClassCleanupBase_WhenTimeoutExpires_ClassCleanupTaskIsCanceled(string tfm)
        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
            "LONG_WAIT_", "baseClassCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassCleanup_WhenTimeoutExpires_ClassCleanupTaskIsCancelled(string tfm)
+    public async Task ClassCleanup_WhenTimeoutExpires_ClassCleanupTaskIsCanceled(string tfm)
         => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "LONG_WAIT_", "classCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassCleanup_WhenTimeoutExpires_FromRunSettings_ClassCleanupIsCancelled(string tfm)
+    public async Task ClassCleanup_WhenTimeoutExpires_FromRunSettings_ClassCleanupIsCanceled(string tfm)
        => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "classCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task BaseClassCleanup_WhenTimeoutExpires_FromRunSettings_ClassCleanupIsCancelled(string tfm)
+    public async Task BaseClassCleanup_WhenTimeoutExpires_FromRunSettings_ClassCleanupIsCanceled(string tfm)
         => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "baseClassCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassCleanup_WhenTimeoutExpires_ClassCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
+    public async Task ClassCleanup_WhenTimeoutExpires_ClassCleanupIsCanceled_AttributeTakesPrecedence(string tfm)
        => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "classCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task BaseClassCleanup_WhenTimeoutExpires_ClassCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
+    public async Task BaseClassCleanup_WhenTimeoutExpires_ClassCleanupIsCanceled_AttributeTakesPrecedence(string tfm)
         => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "baseClassCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyCleanup_WhenTimeoutExpires_AssemblyCleanupTaskIsCancelled(string tfm)
+    public async Task AssemblyCleanup_WhenTimeoutExpires_AssemblyCleanupTaskIsCanceled(string tfm)
         => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "LONG_WAIT_", "assemblyCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyCleanup_WhenTimeoutExpires_FromRunSettings_AssemblyCleanupIsCancelled(string tfm)
+    public async Task AssemblyCleanup_WhenTimeoutExpires_FromRunSettings_AssemblyCleanupIsCanceled(string tfm)
        => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "assemblyCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyCleanup_WhenTimeoutExpires_AssemblyCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
+    public async Task AssemblyCleanup_WhenTimeoutExpires_AssemblyCleanupIsCanceled_AttributeTakesPrecedence(string tfm)
        => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "assemblyCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TestInitialize_WhenTimeoutExpires_TestInitializeTaskIsCancelled(string tfm)
+    public async Task TestInitialize_WhenTimeoutExpires_TestInitializeTaskIsCanceled(string tfm)
         => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "LONG_WAIT_", "testInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TestInitialize_WhenTimeoutExpires_FromRunSettings_TestInitializeIsCancelled(string tfm)
+    public async Task TestInitialize_WhenTimeoutExpires_FromRunSettings_TestInitializeIsCanceled(string tfm)
        => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "testInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TestInitialize_WhenTimeoutExpires_TestInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
+    public async Task TestInitialize_WhenTimeoutExpires_TestInitializeIsCanceled_AttributeTakesPrecedence(string tfm)
        => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "testInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TestCleanup_WhenTimeoutExpires_TestCleanupTaskIsCancelled(string tfm)
+    public async Task TestCleanup_WhenTimeoutExpires_TestCleanupTaskIsCanceled(string tfm)
         => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "LONG_WAIT_", "testCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TestCleanup_WhenTimeoutExpires_FromRunSettings_TestCleanupIsCancelled(string tfm)
+    public async Task TestCleanup_WhenTimeoutExpires_FromRunSettings_TestCleanupIsCanceled(string tfm)
        => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "testCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TestCleanup_WhenTimeoutExpires_TestCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
+    public async Task TestCleanup_WhenTimeoutExpires_TestCleanupIsCanceled_AttributeTakesPrecedence(string tfm)
        => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "testCleanup");
 
-    private async Task RunAndAssertTestWasCancelledAsync(string rootFolder, string assetName, string tfm, string envVarPrefix, string entryKind)
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenAssemblyInitTimeoutExpires_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["TASKDELAY_ASSEMBLYINIT"] = "1" });
+
+        testHostResult.AssertOutputContains("AssemblyInit started");
+        testHostResult.AssertOutputContains("Assembly initialize method 'TestClass.AssemblyInit' timed out");
+        testHostResult.AssertOutputDoesNotContain("AssemblyInit Thread.Sleep completed");
+        testHostResult.AssertOutputDoesNotContain("AssemblyInit completed");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenAssemblyCleanupTimeoutExpires_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["TASKDELAY_ASSEMBLYCLEANUP"] = "1" });
+
+        testHostResult.AssertOutputContains("AssemblyCleanup started");
+        testHostResult.AssertOutputContains("Assembly cleanup method 'TestClass.AssemblyCleanup' was canceled");
+        testHostResult.AssertOutputDoesNotContain("AssemblyCleanup Thread.Sleep completed");
+        testHostResult.AssertOutputDoesNotContain("AssemblyCleanup completed");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenClassInitTimeoutExpires_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["TASKDELAY_CLASSINIT"] = "1" });
+
+        testHostResult.AssertOutputContains("ClassInit started");
+        testHostResult.AssertOutputContains("Class initialize method 'TestClass.ClassInit' was canceled");
+        testHostResult.AssertOutputDoesNotContain("ClassInit Thread.Sleep completed");
+        testHostResult.AssertOutputDoesNotContain("ClassInit completed");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenClassCleanupTimeoutExpires_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["TASKDELAY_CLASSCLEANUP"] = "1" });
+
+        testHostResult.AssertOutputContains("ClassCleanup started");
+        testHostResult.AssertOutputContains("Class cleanup method 'TestClass.ClassCleanup' was canceled");
+        testHostResult.AssertOutputDoesNotContain("ClassCleanup Thread.Sleep completed");
+        testHostResult.AssertOutputDoesNotContain("ClassCleanup completed");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenTestInitTimeoutExpires_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["TASKDELAY_TESTINIT"] = "1" });
+
+        testHostResult.AssertOutputContains("TestInit started");
+        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' was canceled");
+        testHostResult.AssertOutputDoesNotContain("TestInit completed");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenTestCleanupTimeoutExpires_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["TASKDELAY_TESTCLEANUP"] = "1" });
+
+        testHostResult.AssertOutputContains("TestCleanup started");
+        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' was canceled");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup completed");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenTestMethodTimeoutExpires_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["TASKDELAY_TESTMETHOD"] = "1" });
+
+        testHostResult.AssertOutputContains("TestMethod started");
+        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted.");
+        testHostResult.AssertOutputDoesNotContain("TestMethod completed");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenAssemblyInitTimeoutExpiresAndUserChecksToken_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["CHECKTOKEN_ASSEMBLYINIT"] = "1" });
+
+        testHostResult.AssertOutputContains("AssemblyInit started");
+        testHostResult.AssertOutputContains("Assembly initialize method 'TestClass.AssemblyInit' timed out");
+        testHostResult.AssertOutputContains("AssemblyInit Thread.Sleep completed");
+        testHostResult.AssertOutputDoesNotContain("AssemblyInit completed");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenAssemblyCleanupTimeoutExpiresAndUserChecksToken_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["CHECKTOKEN_ASSEMBLYCLEANUP"] = "1" });
+
+        testHostResult.AssertOutputContains("AssemblyCleanup started");
+        testHostResult.AssertOutputContains("Assembly cleanup method 'TestClass.AssemblyCleanup' timed out");
+        testHostResult.AssertOutputContains("AssemblyCleanup Thread.Sleep completed");
+        testHostResult.AssertOutputDoesNotContain("AssemblyCleanup completed");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenClassInitTimeoutExpiresAndUserChecksToken_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["CHECKTOKEN_CLASSINIT"] = "1" });
+
+        testHostResult.AssertOutputContains("ClassInit started");
+        testHostResult.AssertOutputContains("Class initialize method 'TestClass.ClassInit' timed out");
+        testHostResult.AssertOutputContains("ClassInit Thread.Sleep completed");
+        testHostResult.AssertOutputDoesNotContain("ClassInit completed");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenClassCleanupTimeoutExpiresAndUserChecksToken_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["CHECKTOKEN_CLASSCLEANUP"] = "1" });
+
+        testHostResult.AssertOutputContains("ClassCleanup started");
+        testHostResult.AssertOutputContains("Class cleanup method 'TestClass.ClassCleanup' timed out ");
+        testHostResult.AssertOutputContains("ClassCleanup Thread.Sleep completed");
+        testHostResult.AssertOutputDoesNotContain("ClassCleanup completed");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenTestInitTimeoutExpiresAndUserChecksToken_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["CHECKTOKEN_TESTINIT"] = "1" });
+
+        testHostResult.AssertOutputContains("TestInit started");
+        testHostResult.AssertOutputDoesNotContain("TestInit completed");
+        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' timed out");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenTestCleanupTimeoutExpiresAndUserChecksToken_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["CHECKTOKEN_TESTCLEANUP"] = "1" });
+
+        testHostResult.AssertOutputContains("TestCleanup started");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup completed");
+        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' timed out");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenTestMethodTimeoutExpiresAndUserChecksToken_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["CHECKTOKEN_TESTMETHOD"] = "1" });
+
+        testHostResult.AssertOutputContains("TestMethod started");
+        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted.");
+    }
+
+    private async Task RunAndAssertTestWasCanceledAsync(string rootFolder, string assetName, string tfm, string envVarPrefix, string entryKind)
     {
         var testHost = TestHost.LocateFrom(rootFolder, assetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new() { { envVarPrefix + InfoByKind[entryKind].EnvVarSuffix, "1" } });
-        testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' was cancelled");
+        testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' was canceled");
     }
 
     private async Task RunAndAssertTestTimedOutAsync(string rootFolder, string assetName, string tfm, string envVarPrefix, string entryKind)
@@ -222,36 +411,115 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
         public const string CodeWithOneSecTimeout = nameof(CodeWithOneSecTimeout);
         public const string CodeWithSixtySecTimeout = nameof(CodeWithSixtySecTimeout);
         public const string CodeWithNoTimeout = nameof(CodeWithNoTimeout);
+        public const string CooperativeTimeout = nameof(CooperativeTimeout);
 
-        public string CodeWithOneSecTimeoutAssetPath => GetAssetPath(CodeWithOneSecTimeout);
+        private const string CooperativeTimeoutSourceCode = """
+#file $ProjectName$.csproj
+<Project Sdk="Microsoft.NET.Sdk">
 
-        public string CodeWithSixtySecTimeoutAssetPath => GetAssetPath(CodeWithSixtySecTimeout);
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+  </PropertyGroup>
 
-        public string CodeWithNoTimeoutAssetPath => GetAssetPath(CodeWithNoTimeout);
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+  <ItemGroup>
+    <None Update="*.runsettings">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
+
+#file my.runsettings
+<RunSettings>
+  <MSTest>
+    <CaptureTraceOutput>false</CaptureTraceOutput>
+  </MSTest>
+</RunSettings>
+
+#file UnitTest1.cs
+using System;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class TestClass
+{
+    private static TestContext _assemblyTestContext;
+    private static TestContext _classTestContext;
+
+    [Timeout(100, CooperativeCancellation = true)]
+    [AssemblyInitialize]
+    public static async Task AssemblyInit(TestContext testContext)
+    {
+        _assemblyTestContext = testContext;
+        await DoWork("ASSEMBLYINIT", "AssemblyInit", testContext);
+    }
+
+    [Timeout(100, CooperativeCancellation = true)]
+    [AssemblyCleanup]
+    public static async Task AssemblyCleanup()
+        => await DoWork("ASSEMBLYCLEANUP", "AssemblyCleanup", _assemblyTestContext);
+
+    [Timeout(100, CooperativeCancellation = true)]
+    [ClassInitialize]
+    public static async Task ClassInit(TestContext testContext)
+    {
+        _classTestContext = testContext;
+        await DoWork("CLASSINIT", "ClassInit", testContext);
+    }
+
+    [Timeout(100, CooperativeCancellation = true)]
+    [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+    public static async Task ClassCleanup()
+        => await DoWork("CLASSCLEANUP", "ClassCleanup", _classTestContext);
+
+    public TestContext TestContext { get; set; }
+
+    [Timeout(100, CooperativeCancellation = true)]
+    [TestInitialize]
+    public async Task TestInit()
+        => await DoWork("TESTINIT", "TestInit", TestContext);
+
+    [Timeout(100, CooperativeCancellation = true)]
+    [TestCleanup]
+    public async Task TestCleanup()
+        => await DoWork("TESTCLEANUP", "TestCleanup", TestContext);
+
+    [Timeout(100, CooperativeCancellation = true)]
+    [TestMethod]
+    public async Task TestMethod()
+        => await DoWork("TESTMETHOD", "TestMethod", TestContext);
+
+    private static async Task DoWork(string envVarSuffix, string stepName, TestContext testContext)
+    {
+        Console.WriteLine($"{stepName} started");
+
+        if (Environment.GetEnvironmentVariable($"TASKDELAY_{envVarSuffix}") == "1")
         {
-            yield return (CodeWithNoTimeout, CodeWithNoTimeout,
-                SourceCode
-                .PatchCodeWithReplace("$TimeoutAttribute$", string.Empty)
-                .PatchCodeWithReplace("$ProjectName$", CodeWithNoTimeout)
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-
-            yield return (CodeWithOneSecTimeout, CodeWithOneSecTimeout,
-                SourceCode
-                .PatchCodeWithReplace("$TimeoutAttribute$", "[Timeout(1000)]")
-                .PatchCodeWithReplace("$ProjectName$", CodeWithOneSecTimeout)
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-
-            yield return (CodeWithSixtySecTimeout, CodeWithSixtySecTimeout,
-                SourceCode
-                .PatchCodeWithReplace("$TimeoutAttribute$", "[Timeout(60000)]")
-                .PatchCodeWithReplace("$ProjectName$", CodeWithSixtySecTimeout)
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+            await Task.Delay(10_000, testContext.CancellationTokenSource.Token);
         }
+        else
+        {
+            System.Threading.Thread.Sleep(200);
+            Console.WriteLine($"{stepName} Thread.Sleep completed");
+            if (Environment.GetEnvironmentVariable($"CHECKTOKEN_{envVarSuffix}") == "1")
+            {
+                testContext.CancellationTokenSource.Token.ThrowIfCancellationRequested();
+            }
+
+        }
+
+        Console.WriteLine($"{stepName} completed");
+    }
+}
+""";
 
         private const string SourceCode = """
 #file $ProjectName$.csproj
@@ -426,5 +694,43 @@ public class TestClass : TestClassBase
     public Task Test1() => Task.CompletedTask;
 }
 """;
+
+        public string CodeWithOneSecTimeoutAssetPath => GetAssetPath(CodeWithOneSecTimeout);
+
+        public string CodeWithSixtySecTimeoutAssetPath => GetAssetPath(CodeWithSixtySecTimeout);
+
+        public string CodeWithNoTimeoutAssetPath => GetAssetPath(CodeWithNoTimeout);
+
+        public string CooperativeTimeoutAssetPath => GetAssetPath(CooperativeTimeout);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (CodeWithNoTimeout, CodeWithNoTimeout,
+                SourceCode
+                .PatchCodeWithReplace("$TimeoutAttribute$", string.Empty)
+                .PatchCodeWithReplace("$ProjectName$", CodeWithNoTimeout)
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+            yield return (CodeWithOneSecTimeout, CodeWithOneSecTimeout,
+                SourceCode
+                .PatchCodeWithReplace("$TimeoutAttribute$", "[Timeout(1000)]")
+                .PatchCodeWithReplace("$ProjectName$", CodeWithOneSecTimeout)
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+            yield return (CodeWithSixtySecTimeout, CodeWithSixtySecTimeout,
+                SourceCode
+                .PatchCodeWithReplace("$TimeoutAttribute$", "[Timeout(60000)]")
+                .PatchCodeWithReplace("$ProjectName$", CodeWithSixtySecTimeout)
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+            yield return (CooperativeTimeout, CooperativeTimeout,
+                CooperativeTimeoutSourceCode
+                .PatchCodeWithReplace("$ProjectName$", CooperativeTimeout)
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+        }
     }
 }

@@ -90,7 +90,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             }
             catch (OperationCanceledException ex) when (ex.CancellationToken == _cancellationToken)
             {
-                // We are being cancelled, so we don't need to wait anymore
+                // We are being canceled, so we don't need to wait anymore
                 return;
             }
             catch (Exception ex)
@@ -325,7 +325,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             try
             {
                 // To close gracefully we need to ensure that the client closed the stream line 103.
-                await _loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                await _loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, _cancellationToken);
             }
             catch (TimeoutException)
             {

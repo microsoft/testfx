@@ -13,12 +13,12 @@
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
-        <source>cancelled</source>
-        <target state="translated">anulowano</target>
+        <source>canceled</source>
+        <target state="translated">anulowane</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
-        <source>Cancelling the test session...</source>
+        <source>Canceling the test session...</source>
         <target state="translated">Trwa anulowanie sesji testowej...</target>
         <note />
       </trans-unit>
@@ -734,12 +734,12 @@ Więcej informacji o telemetrii platformy testowej firmy Microsoft: https://aka.
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occured during byte conversion</source>
+        <source>An unexpected exception occurred during byte conversion</source>
         <target state="translated">Wystąpił nieoczekiwany wyjątek podczas konwersji bajtów</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
         <target state="translated">Wystąpił nieoczekiwany wyjątek w elemencie „FileLogger.WriteLogToFileAsync”.
 {0}</target>

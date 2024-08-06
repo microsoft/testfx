@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -30,6 +30,8 @@ public class TestExecutionManagerTests : TestContainer
     private readonly TestableFrameworkHandle _frameworkHandle;
     private readonly TestRunCancellationToken _cancellationToken;
     private readonly TestExecutionManager _testExecutionManager;
+    private readonly Mock<IMessageLogger> _mockMessageLogger;
+
     private readonly TestProperty[] _tcmKnownProperties =
     [
         TestAdapterConstants.TestRunIdProperty,
@@ -58,6 +60,7 @@ public class TestExecutionManagerTests : TestContainer
         _runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression((p) => true));
         _frameworkHandle = new TestableFrameworkHandle();
         _cancellationToken = new TestRunCancellationToken();
+        _mockMessageLogger = new Mock<IMessageLogger>();
 
         _testExecutionManager = new TestExecutionManager(
             new EnvironmentWrapper(),
@@ -419,7 +422,7 @@ public class TestExecutionManagerTests : TestContainer
 
     public void SendTestResultsShouldFillInDataRowIndexIfTestIsDataDriven()
     {
-        var testCase = new TestCase("DummyTest", new System.Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
+        var testCase = new TestCase("DummyTest", new Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
         UnitTestResult unitTestResult1 = new() { DatarowIndex = 0, DisplayName = "DummyTest" };
         UnitTestResult unitTestResult2 = new() { DatarowIndex = 1, DisplayName = "DummyTest" };
         _testExecutionManager.SendTestResults(testCase, [unitTestResult1, unitTestResult2], default, default, _frameworkHandle);
@@ -455,7 +458,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(DummyTestClassForParallelize.ThreadIds.Count == 1);
@@ -492,7 +495,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(_enqueuedParallelTestsCount == 2);
@@ -529,7 +532,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(DummyTestClassForParallelize.ThreadIds.Count == 1);
@@ -564,7 +567,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
@@ -610,7 +613,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
@@ -664,7 +667,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(_enqueuedParallelTestsCount == 2);
@@ -698,7 +701,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
@@ -753,7 +756,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(DummyTestClassWithDoNotParallelizeMethods.ThreadApartmentStates.Count == 1);

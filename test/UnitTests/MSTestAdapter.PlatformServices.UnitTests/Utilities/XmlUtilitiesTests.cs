@@ -43,7 +43,7 @@ public class XmlUtilitiesTests : TestContainer
             """;
         var doc = new XmlDocument();
         doc.LoadXml(expectedXml);
-        byte[] expectedConfigBytes = null;
+        byte[] expectedConfigBytes;
 
         using (var ms = new MemoryStream())
         {
@@ -83,7 +83,7 @@ public class XmlUtilitiesTests : TestContainer
             """;
         var doc = new XmlDocument();
         doc.LoadXml(expectedXml);
-        byte[] expectedConfigBytes = null;
+        byte[] expectedConfigBytes;
 
         using (var ms = new MemoryStream())
         {
@@ -127,7 +127,7 @@ public class XmlUtilitiesTests : TestContainer
 #pragma warning disable CA3075 // Insecure DTD processing in XML
         doc.LoadXml(expectedXml);
 #pragma warning restore CA3075 // Insecure DTD processing in XML
-        byte[] expectedConfigBytes = null;
+        byte[] expectedConfigBytes;
 
         using (var ms = new MemoryStream())
         {
@@ -181,7 +181,7 @@ public class XmlUtilitiesTests : TestContainer
             """;
         var doc = new XmlDocument();
         doc.LoadXml(expectedXml);
-        byte[] expectedConfigBytes = null;
+        byte[] expectedConfigBytes;
 
         using (var ms = new MemoryStream())
         {

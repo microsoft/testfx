@@ -541,4 +541,146 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    public async Task WhenClassInitializeIsOnAbstractClassNotMarkedWithTestClass_AndWithInheritanceBehavior_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class MyTestClass
+            {
+                [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
+                public static void ClassInitialize(TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassInitializeIsOnAbstractClassMarkedWithTestClass_AndWithInheritanceBehavior_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public abstract class MyTestClass
+            {
+                [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
+                public static void ClassInitialize(TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassInitializeIsAbstractClassNotMarkedWithTestClass_AndWithoutInheritanceBehavior_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class MyTestClass
+            {
+                [ClassInitialize]
+                public static void [|ClassInitialize|](TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassInitializeIsOnAbstractClassMarkedWithTestClass_AndWithoutInheritanceBehavior_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public abstract class MyTestClass
+            {
+                [ClassInitialize]
+                public static void [|ClassInitialize|](TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassInitializeIsOnAbstractClassMarkedWithTestClass_AndWithInheritanceBehaviorNone_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public abstract class MyTestClass
+            {
+                [ClassInitialize(InheritanceBehavior.None)]
+                public static void [|ClassInitialize|](TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassInitializeIsOnSealedClassMarkedWithTestClass_AndWithInheritanceBehavior_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class MyTestClass
+            {
+                [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
+                public static void [|ClassInitialize|](TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassInitializeIsOnSealedClassMarkedWithTestClass_AndWithInheritanceBehaviorNone_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class MyTestClass
+            {
+                [ClassInitialize(InheritanceBehavior.None)]
+                public static void ClassInitialize(TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassInitializeIsOnSealedClassMarkedWithTestClass_AndDefaultInheritanceBehavior_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class MyTestClass
+            {
+                [ClassInitialize]
+                public static void ClassInitialize(TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

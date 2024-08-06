@@ -70,7 +70,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Assembly cleanup method &apos;{0}.{1}&apos; was cancelled.
+        ///   Looks up a localized string similar to Assembly cleanup method &apos;{0}.{1}&apos; was canceled.
         /// </summary>
         internal static string AssemblyCleanupWasCancelled {
             get {
@@ -88,7 +88,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Assembly initialize method &apos;{0}.{1}&apos; was cancelled.
+        ///   Looks up a localized string similar to Assembly initialize method &apos;{0}.{1}&apos; was canceled.
         /// </summary>
         internal static string AssemblyInitializeWasCancelled {
             get {
@@ -171,7 +171,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Class cleanup method &apos;{0}.{1}&apos; was cancelled.
+        ///   Looks up a localized string similar to Class cleanup method &apos;{0}.{1}&apos; was canceled.
         /// </summary>
         internal static string ClassCleanupWasCancelled {
             get {
@@ -189,7 +189,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Class initialize method &apos;{0}.{1}&apos; was cancelled.
+        ///   Looks up a localized string similar to Class initialize method &apos;{0}.{1}&apos; was canceled.
         /// </summary>
         internal static string ClassInitializeWasCancelled {
             get {
@@ -230,6 +230,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string DiscoveryWarning {
             get {
                 return ResourceManager.GetString("DiscoveryWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; referenced member &apos;{0}.{1}&apos; should return &apos;IEnumerable&lt;object[]&gt;&apos;, &apos;IEnumerable&lt;Tuple&gt;` or &apos;IEnumerable&lt;ValueTuple&gt;&apos;.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_MemberType {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberType", resourceCulture);
             }
         }
         
@@ -342,6 +351,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid value &apos;{0}&apos; for runsettings entry &apos;{1}&apos;, setting will be ignored..
+        /// </summary>
+        internal static string InvalidValue {
+            get {
+                return ResourceManager.GetString("InvalidValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter..
         /// </summary>
         internal static string LegacyScenariosNotSupportedWarning {
@@ -414,7 +432,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test cleanup method &apos;{0}.{1}&apos; was cancelled.
+        ///   Looks up a localized string similar to Test cleanup method &apos;{0}.{1}&apos; was canceled.
         /// </summary>
         internal static string TestCleanupWasCancelled {
             get {
@@ -450,7 +468,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test initialize method &apos;{0}.{1}&apos; was cancelled.
+        ///   Looks up a localized string similar to Test initialize method &apos;{0}.{1}&apos; was canceled.
         /// </summary>
         internal static string TestInitializeWasCancelled {
             get {

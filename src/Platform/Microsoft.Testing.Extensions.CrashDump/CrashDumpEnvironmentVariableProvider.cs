@@ -10,7 +10,6 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
@@ -26,7 +25,6 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
     private readonly string[] _prefixes = ["DOTNET_", "COMPlus_"];
     private readonly IConfiguration _configuration;
-    private readonly IMessageBus _messageBus;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly CrashDumpConfiguration _crashDumpGeneratorConfiguration;
@@ -36,7 +34,6 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
     public CrashDumpEnvironmentVariableProvider(
         IConfiguration configuration,
-        IMessageBus messageBus,
         ICommandLineOptions commandLineOptions,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         CrashDumpConfiguration crashDumpGeneratorConfiguration,
@@ -44,7 +41,6 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     {
         _logger = loggerFactory.CreateLogger<CrashDumpEnvironmentVariableProvider>();
         _configuration = configuration;
-        _messageBus = messageBus;
         _commandLineOptions = commandLineOptions;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _crashDumpGeneratorConfiguration = crashDumpGeneratorConfiguration;

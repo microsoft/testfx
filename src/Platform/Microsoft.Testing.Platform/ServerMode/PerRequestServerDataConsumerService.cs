@@ -28,7 +28,6 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
     private readonly SemaphoreSlim _nodeUpdateSemaphore = new(1);
     private readonly ITestSessionContext _testSessionContext = serviceProvider.GetTestSessionContext();
     private readonly TaskCompletionSource<bool> _testSessionEnd = new();
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
     private readonly IServerTestHost _serverTestHost = serverTestHost;
     private readonly ITask _task = task;
     private Task? _idleUpdateTask;
@@ -111,11 +110,11 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
                         // Observe possible exceptions
                         try
                         {
-                            await _idleUpdateTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                            await _idleUpdateTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
                         }
                         catch (OperationCanceledException)
                         {
-                            // We cannot check the token because it's possible that we're cancelled during the
+                            // We cannot check the token because it's possible that we're canceled during the
                             // send of the information and that the current cancellation token is a combined one.
                         }
                     }
@@ -132,7 +131,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
         {
-            // We do nothing we've been cancelled.
+            // We do nothing we've been canceled.
         }
     }
 
@@ -158,7 +157,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // We do nothing we've been cancelled.
+            // We do nothing we've been canceled.
         }
     }
 
@@ -207,7 +206,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // We do nothing we've been cancelled.
+            // We do nothing we've been canceled.
         }
     }
 

@@ -9,5 +9,5 @@ internal interface ICommandLineHandler
 {
     bool IsHelpInvoked();
 
-    Task PrintHelpAsync(ITool[]? availableTools = null);
+    Task PrintHelpAsync(IReadOnlyList<ITool>? availableTools = null);
 }

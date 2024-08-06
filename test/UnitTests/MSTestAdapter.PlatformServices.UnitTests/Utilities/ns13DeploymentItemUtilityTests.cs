@@ -389,7 +389,7 @@ public class DeploymentItemUtilityTests : TestContainer
     {
         Verify(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, _defaultDeploymentItemOutputDirectory, out string warning));
 
-        Verify(string.Empty.Equals(warning, System.StringComparison.Ordinal));
+        Verify(string.Empty.Equals(warning, StringComparison.Ordinal));
     }
     #endregion
 
@@ -397,7 +397,7 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void HasDeployItemsShouldReturnFalseForNoDeploymentItems()
     {
-        TestCase testCase = new("A.C.M", new System.Uri("executor://testExecutor"), "A");
+        TestCase testCase = new("A.C.M", new Uri("executor://testExecutor"), "A");
         testCase.SetPropertyValue(DeploymentItemsProperty, null);
 
         Verify(!DeploymentItemUtility.HasDeploymentItems(testCase));
@@ -405,7 +405,7 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void HasDeployItemsShouldReturnTrueWhenDeploymentItemsArePresent()
     {
-        TestCase testCase = new("A.C.M", new System.Uri("executor://testExecutor"), "A");
+        TestCase testCase = new("A.C.M", new Uri("executor://testExecutor"), "A");
         KeyValuePair<string, string>[] kvpArray =
         [
             new KeyValuePair<string, string>(

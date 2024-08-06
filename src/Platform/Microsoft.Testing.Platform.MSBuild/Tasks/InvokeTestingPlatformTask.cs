@@ -156,15 +156,8 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         return null;
     }
 
-    private bool IsCurrentProcessArchitectureCompatible()
-    {
-#if NET
-        Architecture targetArchitecture = Enum.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
-#else
-        var targetArchitecture = (Architecture)Enum.Parse(typeof(Architecture), TestArchitecture.ItemSpec, ignoreCase: true);
-#endif
-        return _currentProcessArchitecture == targetArchitecture;
-    }
+    private bool IsCurrentProcessArchitectureCompatible() =>
+        _currentProcessArchitecture == EnumPolyfill.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
 
     protected override string GenerateCommandLineCommands()
     {
@@ -266,7 +259,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             }
             catch (OperationCanceledException) when (_waitForConnections.IsCancellationRequested)
             {
-                // Do nothing we're cancelling
+                // Do nothing we're canceling
             }
             catch (Exception ex)
             {

@@ -57,7 +57,7 @@ public partial class AssertTests : TestContainer
 
     public void AreNotEqualShouldFailWhenNotEqualIntWithMessage()
     {
-        Exception? ex = VerifyThrows(() => Assert.AreNotEqual(1, 1, "A Message"));
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(1, 1, "A Message"));
         Verify(ex.Message.Contains("A Message"));
     }
 
@@ -110,7 +110,7 @@ public partial class AssertTests : TestContainer
 
     public void AreNotEqualShouldFailWhenNotEqualDoubleWithMessage()
     {
-        Exception? ex = VerifyThrows(() => Assert.AreNotEqual(0.1, 0.1, "A Message"));
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(0.1, 0.1, "A Message"));
         Verify(ex.Message.Contains("A Message"));
     }
 
@@ -191,15 +191,13 @@ public partial class AssertTests : TestContainer
         var turkishCulture = new CultureInfo("tr-TR");
 
         // Won't ignore case.
-        Exception? ex = VerifyThrows(() => Assert.AreEqual(expected, actual, false, turkishCulture));
-        Verify(ex is not null);
+        VerifyThrows(() => Assert.AreEqual(expected, actual, false, turkishCulture));
     }
 
     public void AreEqualShouldFailWhenNotEqualStringWithMessage()
     {
         Exception? ex = VerifyThrows(() => Assert.AreEqual("A", "a", "A Message"));
-        Verify(ex is not null);
-        Verify(ex!.Message.Contains("A Message"));
+        Verify(ex.Message.Contains("A Message"));
     }
 
     [SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "Testing the API without the culture")]
@@ -219,9 +217,8 @@ public partial class AssertTests : TestContainer
 
     public void AreEqualShouldFailWhenNotEqualIntWithMessage()
     {
-        Exception? ex = VerifyThrows(() => Assert.AreEqual(1, 2, "A Message"));
-        Verify(ex is not null);
-        Verify(ex!.Message.Contains("A Message"));
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1, 2, "A Message"));
+        Verify(ex.Message.Contains("A Message"));
     }
 
     public void AreEqualShouldFailWhenNotEqualLong()
@@ -233,9 +230,8 @@ public partial class AssertTests : TestContainer
 
     public void AreEqualShouldFailWhenNotEqualLongWithMessage()
     {
-        Exception? ex = VerifyThrows(() => Assert.AreEqual(1L, 2L, "A Message"));
-        Verify(ex is not null);
-        Verify(ex!.Message.Contains("A Message"));
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1L, 2L, "A Message"));
+        Verify(ex.Message.Contains("A Message"));
     }
 
     public void AreEqualShouldFailWhenNotEqualLongWithDelta()
@@ -254,9 +250,8 @@ public partial class AssertTests : TestContainer
 
     public void AreEqualShouldFailWhenNotEqualDoubleWithMessage()
     {
-        Exception? ex = VerifyThrows(() => Assert.AreEqual(0.1, 0.2, "A Message"));
-        Verify(ex is not null);
-        Verify(ex!.Message.Contains("A Message"));
+        Exception ex = VerifyThrows(() => Assert.AreEqual(0.1, 0.2, "A Message"));
+        Verify(ex.Message.Contains("A Message"));
     }
 
     public void AreEqualShouldFailWhenNotEqualDoubleWithDelta()
@@ -275,9 +270,8 @@ public partial class AssertTests : TestContainer
 
     public void AreEqualShouldFailWhenNotEqualDecimalWithMessage()
     {
-        Exception? ex = VerifyThrows(() => Assert.AreEqual(0.1M, 0.2M, "A Message"));
-        Verify(ex is not null);
-        Verify(ex!.Message.Contains("A Message"));
+        Exception ex = VerifyThrows(() => Assert.AreEqual(0.1M, 0.2M, "A Message"));
+        Verify(ex.Message.Contains("A Message"));
     }
 
     public void AreEqualShouldFailWhenNotEqualDecimalWithDelta()
@@ -382,6 +376,9 @@ public partial class AssertTests : TestContainer
         VerifyThrows(() => Assert.AreEqual(instanceOfB, instanceOfA));
     }
 
+#pragma warning disable IDE0004
+
+    // IDE0004: at least on param needs to be cast to dynamic so it is more readable if both are cast to dynamic
     public void AreEqualUsingDynamicsDoesNotFail()
     {
         Assert.AreEqual<dynamic>((dynamic?)null, (dynamic?)null);
@@ -390,13 +387,15 @@ public partial class AssertTests : TestContainer
         Assert.AreEqual<dynamic>((dynamic)'a', (dynamic)'a');
     }
 
+#pragma warning restore IDE0004
+
     private CultureInfo? GetCultureInfo() => CultureInfo.CurrentCulture;
 
     private class TypeOverridesEquals
     {
         public override bool Equals(object? obj) => true;
 
-        public override int GetHashCode() => throw new System.NotImplementedException();
+        public override int GetHashCode() => throw new NotImplementedException();
     }
 
     private sealed class EquatableType : IEquatable<EquatableType>

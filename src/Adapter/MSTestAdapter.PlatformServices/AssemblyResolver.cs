@@ -596,7 +596,7 @@ class AssemblyResolver :
             catch (Exception ex)
             {
                 SafeLog(
-                    args?.Name,
+                    args.Name,
                     () =>
                     {
                         if (EqtTrace.IsInfoEnabled)

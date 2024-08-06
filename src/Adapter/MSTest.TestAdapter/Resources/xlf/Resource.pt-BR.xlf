@@ -8,8 +8,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
-        <source>Assembly cleanup method '{0}.{1}' was cancelled</source>
-        <target state="translated">O método de inicialização do assembly '{0}.{1}' foi cancelado</target>
+        <source>Assembly cleanup method '{0}.{1}' was canceled</source>
+        <target state="translated">O método de limpeza do assembly "{0}.{1}" foi cancelado</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
@@ -18,8 +18,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
-        <source>Assembly initialize method '{0}.{1}' was cancelled</source>
-        <target state="translated">Método de inicialização de montagem “{0}.{1}” foi cancelado</target>
+        <source>Assembly initialize method '{0}.{1}' was canceled</source>
+        <target state="translated">O método de inicialização do assembly "{0}.{1}" foi cancelado</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRunTestArgumentsMismatchError">
@@ -42,8 +42,8 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
-        <source>Class cleanup method '{0}.{1}' was cancelled</source>
-        <target state="translated">O método de limpeza de classe '{0}.{1}' foi cancelado</target>
+        <source>Class cleanup method '{0}.{1}' was canceled</source>
+        <target state="translated">O método de limpeza de classe "{0}.{1}" foi cancelado</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
@@ -52,14 +52,24 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
-        <source>Class initialize method '{0}.{1}' was cancelled</source>
-        <target state="translated">Método de inicialização da classe “{0}.{1}” foi cancelado</target>
+        <source>Class initialize method '{0}.{1}' was canceled</source>
+        <target state="translated">O método de inicialização de classe "{0}.{1}" foi cancelado</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
+        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
+        <target state="translated">O membro referenciado "{0}.{1}" de "[DynamicData]" deve retornar "IEnumerable&lt;object[]&gt;", "IEnumerable&lt;Tuple&gt;" ou "IEnumerable&lt;ValueTuple&gt;"</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">Teste '{0}' ultrapassou o período de tempo limite de execução.</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidValue">
+        <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
+        <target state="translated">Valor inválido "{0}" para a entrada runsettings "{1}", a configuração será ignorada.</target>
+        <note />
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
@@ -77,8 +87,8 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
-        <source>Test cleanup method '{0}.{1}' was cancelled</source>
-        <target state="translated">Testar o método de limpeza '{0}.{1}' foi cancelado</target>
+        <source>Test cleanup method '{0}.{1}' was canceled</source>
+        <target state="translated">O método de limpeza de teste "{0}.{1}" foi cancelado</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeTimedOut">
@@ -87,8 +97,8 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
-        <source>Test initialize method '{0}.{1}' was cancelled</source>
-        <target state="translated">Testar método de inicialização '{0}.{1}' foi cancelado</target>
+        <source>Test initialize method '{0}.{1}' was canceled</source>
+        <target state="translated">O método de inicialização de teste "{0}.{1}" foi cancelado</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">

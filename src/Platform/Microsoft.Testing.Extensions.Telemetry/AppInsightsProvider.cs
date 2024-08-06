@@ -220,7 +220,7 @@ internal sealed partial class AppInsightsProvider :
                 {
                     // If we have a lot of issues with the network we could have a lot of logs here.
                     // We log one error every 3 seconds.
-                    // We could do better backpressure.
+                    // We could do better back-pressure.
                     if (_logger.IsEnabled(LogLevel.Error) && (!lastLoggedError.HasValue || (lastLoggedError.Value - _clock.UtcNow).TotalSeconds > 3))
                     {
                         await _logger.LogErrorAsync($"Error during telemetry report.", ex);
@@ -261,7 +261,7 @@ internal sealed partial class AppInsightsProvider :
             return;
         }
 
-        RoslynDebug.Assert(false, $"Telemetry entry '{key}' contains an unhashed string value '{value}'. Strings need to be hashed using {nameof(Sha256Hasher)}.{nameof(Sha256Hasher.HashWithNormalizedCasing)}(), or whitelisted.");
+        RoslynDebug.Assert(false, $"Telemetry entry '{key}' contains an unhashed string value '{value}'. Strings need to be hashed using {nameof(Sha256Hasher)}.{nameof(Sha256Hasher.HashWithNormalizedCasing)}(), or white-listed.");
     }
 
 #if NET7_0_OR_GREATER

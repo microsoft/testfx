@@ -314,11 +314,11 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             }
             catch (OperationCanceledException e)
             {
-                // We don't return the stack of the exception if we're cancelling the single request because it's expected and it's not an exception.
+                // We don't return the stack of the exception if we're canceling the single request because it's expected and it's not an exception.
                 (string errorMessage, int errorCode) =
                     rpcState.CancellationToken.IsCancellationRequested
-                    ? (string.Empty, ErrorCodes.RequestCancelled)
-                    : (e.ToString(), ErrorCodes.RequestCancelled);
+                    ? (string.Empty, ErrorCodes.RequestCanceled)
+                    : (e.ToString(), ErrorCodes.RequestCanceled);
 
                 await SendErrorAsync(reqId: request.Id, errorCode: errorCode, message: errorMessage, data: null, _testApplicationCancellationTokenSource.CancellationToken);
                 CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetCanceled());
@@ -542,7 +542,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             { TelemetryProperties.RequestProperties.AdapterLoadStop, adapterLoadStop },
             { TelemetryProperties.RequestProperties.RequestExecuteStart, requestExecuteStart },
             { TelemetryProperties.RequestProperties.RequestExecuteStop, requestExecuteStop },
-            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args.TestNodes is not null || args?.GraphFilter is not null).AsTelemetryBool() },
+            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args.TestNodes is not null || args.GraphFilter is not null).AsTelemetryBool() },
         };
 
     internal static Dictionary<string, object> GetRunMetrics(
@@ -562,7 +562,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             { TelemetryProperties.RequestProperties.AdapterLoadStop, adapterLoadStop },
             { TelemetryProperties.RequestProperties.RequestExecuteStart, requestExecuteStart },
             { TelemetryProperties.RequestProperties.RequestExecuteStop, requestExecuteStop },
-            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args.TestNodes is not null || args?.GraphFilter is not null).AsTelemetryBool() },
+            { TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName, (args.TestNodes is not null || args.GraphFilter is not null).AsTelemetryBool() },
         };
 
     private async Task SendErrorAsync(int reqId, int errorCode, string message, object? data, CancellationToken cancellationToken)

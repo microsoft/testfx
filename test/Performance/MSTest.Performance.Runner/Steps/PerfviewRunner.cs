@@ -53,7 +53,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
 
         bool succeded = false;
         ManualResetEvent killTheProcess = new(false);
-        Process process = Process.Start(processStartInfo)!;
+        using Process process = Process.Start(processStartInfo)!;
         process.EnableRaisingEvents = true;
         process.BeginOutputReadLine();
         process.OutputDataReceived += (sender, args) =>

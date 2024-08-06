@@ -50,7 +50,7 @@ internal abstract class ContextAdapterBase
         {
             string validPropertiesString = supportedProperties == null
                 ? string.Empty
-                : string.Join(", ", supportedProperties.ToArray());
+                : string.Join(", ", supportedProperties);
             string errorMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 "No tests matched the filter because it contains one or more properties that are not valid ({0}). Specify filter expression containing valid properties ({1}).",

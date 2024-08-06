@@ -20,14 +20,25 @@ public sealed class IgnoreTests : AcceptanceTestBase
     public async Task ClassCleanup_Inheritance_WhenClassIsSkipped()
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter ClassName!~TestClassWithAssemblyInitialize");
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
 
         testHostResult.AssertOutputContains("SubClass.Method");
-        testHostResult.AssertOutputContains("SubClass.ClassCleanup");
+    }
+
+    public async Task WhenAllTestsAreIgnored_AssemblyInitializeAndCleanupAreSkipped()
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithAssemblyInitialize");
+
+        // Assert
+        testHostResult.AssertExitCodeIs(8);
+        testHostResult.AssertOutputContains("Zero tests ran - Failed: 0, Passed: 0, Skipped: 1, Total: 1");
+        testHostResult.AssertOutputDoesNotContain("AssemblyInitialize");
+        testHostResult.AssertOutputDoesNotContain("AssemblyCleanup");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -120,6 +131,27 @@ public class SubClass : IntermediateClass
     [TestMethod]
     public void Method()
         => Console.WriteLine("SubClass.Method");
+}
+
+[TestClass]
+public class TestClassWithAssemblyInitialize
+{
+    [AssemblyInitialize]
+    public static void AssemblyInitialize(TestContext context)
+    {
+        Console.WriteLine("AssemblyInitialize");
+    }
+
+    [ClassCleanup]
+    public static void AssemblyCleanup()
+    {
+        Console.WriteLine("AssemblyCleanup");
+    }
+
+    [TestMethod, Ignore]
+    public void TestMethod1()
+    {
+    }
 }
 """;
     }

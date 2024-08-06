@@ -48,7 +48,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         }
         catch (OperationCanceledException) when (testApplicationCancellationToken.IsCancellationRequested)
         {
-            // We do nothing we're cancelling
+            // We do nothing we're canceling
             exitCode = ExitCodes.TestSessionAborted;
         }
         finally
@@ -78,11 +78,11 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         }
         catch (OperationCanceledException) when (testSessionCancellationToken.IsCancellationRequested)
         {
-            // Do nothing we're cancelled
+            // Do nothing we're canceled
         }
 
         // We keep the display after session out of the OperationCanceledException catch because we want to notify the IPlatformOutputDevice
-        // also in case of cancellation. Most likely it needs to notify users that the session was cancelled.
+        // also in case of cancellation. Most likely it needs to notify users that the session was canceled.
         await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo, testSessionCancellationToken);
     }
 

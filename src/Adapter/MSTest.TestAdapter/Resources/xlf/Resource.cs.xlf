@@ -8,8 +8,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
-        <source>Assembly cleanup method '{0}.{1}' was cancelled</source>
-        <target state="translated">Metoda čištění sestavení {0}.{1} bylo zrušeno.</target>
+        <source>Assembly cleanup method '{0}.{1}' was canceled</source>
+        <target state="translated">Metoda čištění sestavení {0}.{1} byla zrušena.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
@@ -18,7 +18,7 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
-        <source>Assembly initialize method '{0}.{1}' was cancelled</source>
+        <source>Assembly initialize method '{0}.{1}' was canceled</source>
         <target state="translated">Metoda inicializace sestavení {0}.{1} byla zrušena.</target>
         <note />
       </trans-unit>
@@ -42,8 +42,8 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
-        <source>Class cleanup method '{0}.{1}' was cancelled</source>
-        <target state="translated">Metoda čištění třídy {0}.{1} bylo zrušeno.</target>
+        <source>Class cleanup method '{0}.{1}' was canceled</source>
+        <target state="translated">Metoda čištění třídy {0}.{1} byla zrušena.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
@@ -52,14 +52,24 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
-        <source>Class initialize method '{0}.{1}' was cancelled</source>
+        <source>Class initialize method '{0}.{1}' was canceled</source>
         <target state="translated">Metoda inicializace třídy {0}.{1} byla zrušena.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
+        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
+        <target state="translated">Odkazovaný člen [DynamicData] {0}.{1} by měl vracet IEnumerable&lt;object[]&gt;, IEnumerable&lt;Tuple&gt; nebo IEnumerable&lt;ValueTuple&gt;.</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">Test {0} překročil časový limit spuštění.</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidValue">
+        <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
+        <target state="translated">Neplatná hodnota {0} pro položku runsettings {1}. Nastavení bude ignorováno.</target>
+        <note />
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
@@ -77,8 +87,8 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
-        <source>Test cleanup method '{0}.{1}' was cancelled</source>
-        <target state="translated">Metoda čištění testu {0}.{1} bylo zrušeno.</target>
+        <source>Test cleanup method '{0}.{1}' was canceled</source>
+        <target state="translated">Metoda čištění testu {0}.{1} byla zrušena.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeTimedOut">
@@ -87,7 +97,7 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
-        <source>Test initialize method '{0}.{1}' was cancelled</source>
+        <source>Test initialize method '{0}.{1}' was canceled</source>
         <target state="translated">Metoda inicializace testu {0}.{1} byla zrušena.</target>
         <note />
       </trans-unit>

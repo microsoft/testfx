@@ -4,3 +4,5 @@ Microsoft.VisualStudio.TestTools.UnitTesting.STATestClassAttribute.STATestClassA
 Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute.STATestMethodAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute.STATestMethodAttribute(string? displayName) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.CooperativeCancellation.get -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.CooperativeCancellation.set -> void

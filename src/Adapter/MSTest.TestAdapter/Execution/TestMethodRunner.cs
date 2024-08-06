@@ -12,6 +12,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -211,7 +212,7 @@ internal class TestMethodRunner
         {
             // In legacy scenario
 #pragma warning disable CS0618 // Type or member is obsolete
-            if (_test.TestIdGenerationStrategy == UTF.TestIdGenerationStrategy.Legacy)
+            if (_test.TestIdGenerationStrategy == TestIdGenerationStrategy.Legacy)
             {
                 parentStopwatch.Stop();
                 var parentResult = new TestResult
@@ -369,7 +370,7 @@ internal class TestMethodRunner
             string? displayName = _test.Name;
             if (testDataSource != null)
             {
-                displayName = testDataSource.GetDisplayName(_testMethodInfo.MethodInfo, data);
+                displayName = testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data);
             }
             else if (hasDisplayName)
             {
@@ -424,7 +425,7 @@ internal class TestMethodRunner
                 {
                     // TODO: We need to change the exception type to more specific one.
 #pragma warning disable CA2201 // Do not raise reserved exception types
-                    TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex?.Message, ex?.StackTrace), ex),
+                    TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message, ex.StackTrace), ex),
 #pragma warning restore CA2201 // Do not raise reserved exception types
                 },
             ];

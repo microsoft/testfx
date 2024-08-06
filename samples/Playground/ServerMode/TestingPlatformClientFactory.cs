@@ -258,7 +258,10 @@ public static class ProcessFactory
         ProcessHandleInfo processHandleInfo = new();
         ProcessHandle processHandle = new(process, processHandleInfo);
 
-        process.Exited += (s, e) => config.OnExit?.Invoke(processHandle, process.ExitCode);
+        if (config.OnExit != null)
+        {
+            process.Exited += (s, e) => config.OnExit.Invoke(processHandle, process.ExitCode);
+        }
 
         if (config.OnStandardOutput != null)
         {
@@ -345,16 +348,12 @@ public sealed class ProcessHandle : IProcessHandle, IDisposable
 
     public async Task<int> WaitForExitAsync()
     {
-        if (_disposed)
+        if (!_disposed)
         {
-            return _exitCode;
+            await _process.WaitForExitAsync();
         }
-#if NETCOREAPP
-        await _process.WaitForExitAsync();
-#else
-        _process.WaitForExit();
-#endif
-        return await Task.FromResult(_process.ExitCode);
+
+        return _exitCode;
     }
 
     public void WaitForExit() => _process.WaitForExit();
@@ -413,11 +412,7 @@ public sealed class ProcessHandle : IProcessHandle, IDisposable
     {
         try
         {
-#if NETCOREAPP
             process.Kill(true);
-#else
-            process.Kill();
-#endif
         }
         catch (InvalidOperationException)
         {

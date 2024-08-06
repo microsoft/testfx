@@ -5,7 +5,6 @@ using System.Globalization;
 
 using Microsoft.Testing.Extensions.TestReports.Resources;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers;
-using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
@@ -106,7 +105,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 _singleConnectionNamedPipeServer.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
                 _singleConnectionNamedPipeServer.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
                 _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-                await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellation).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellation).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellation);
             }, cancellation);
 
         return Task.CompletedTask;
@@ -208,12 +207,12 @@ internal sealed class TrxProcessLifetimeHandler :
         if (request is ReportFileNameRequest report)
         {
             _fileNameRequest = report;
-            return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+            return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
         }
         else if (request is TestAdapterInformationRequest testAdapterInformationRequest)
         {
             _testAdapterInformationRequest = testAdapterInformationRequest;
-            return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+            return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
         }
         else
         {
@@ -275,8 +274,6 @@ internal sealed class TrxProcessLifetimeHandler :
         public string DisplayName => throw new NotImplementedException();
 
         public string Description => throw new NotImplementedException();
-
-        public ICapability[] Capabilities => throw new NotImplementedException();
 
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
 

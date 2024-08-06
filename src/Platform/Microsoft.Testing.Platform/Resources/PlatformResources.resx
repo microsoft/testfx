@@ -264,7 +264,7 @@
     <value>Failed to flush logs before the timeout of '{0}' seconds</value>
   </data>
   <data name="UnexpectedExceptionInFileLoggerErrorMessage" xml:space="preserve">
-    <value>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+    <value>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</value>
     <comment>{0} exception ToString</comment>
   </data>
@@ -472,7 +472,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>No serializer registered with type '{0}'</value>
   </data>
   <data name="UnexpectedExceptionDuringByteConversionErrorMessage" xml:space="preserve">
-    <value>An unexpected exception occured during byte conversion</value>
+    <value>An unexpected exception occurred during byte conversion</value>
   </data>
   <data name="PlatformCommandLineIgnoreExitCodeOptionDescription" xml:space="preserve">
     <value>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</value>
@@ -494,10 +494,10 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>Actual</value>
   </data>
   <data name="CancelledLowercase" xml:space="preserve">
-    <value>cancelled</value>
+    <value>canceled</value>
   </data>
   <data name="CancellingTestSession" xml:space="preserve">
-    <value>Cancelling the test session...</value>
+    <value>Canceling the test session...</value>
   </data>
   <data name="DiagnosticFileLevelWithAsyncFlush" xml:space="preserve">
     <value>Diagnostic file (level '{0}' with async flush): {1}"</value>

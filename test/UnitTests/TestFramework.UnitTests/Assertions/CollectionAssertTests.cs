@@ -226,8 +226,8 @@ public class CollectionAssertTests : TestContainer
 
     public void CollectionAssertAreEqual_EqualDeeplyNestedLists_Passes()
     {
-        ICollection? collection1 = GenerateDeeplyNestedCollection(5);
-        ICollection? collection2 = GenerateDeeplyNestedCollection(5);
+        ICollection collection1 = GenerateDeeplyNestedCollection(5);
+        ICollection collection2 = GenerateDeeplyNestedCollection(5);
 
         CollectionAssert.AreEqual(collection1, collection2);
     }
@@ -290,8 +290,8 @@ public class CollectionAssertTests : TestContainer
 
     public void CollectionAssertAreNotEqual_NotEqualDeeplyNestedLists_Passes()
     {
-        ICollection? collection1 = GenerateDeeplyNestedCollection(5);
-        ICollection? collection2 = GenerateDeeplyNestedCollection(4);
+        ICollection collection1 = GenerateDeeplyNestedCollection(5);
+        ICollection collection2 = GenerateDeeplyNestedCollection(4);
 
         CollectionAssert.AreNotEqual(collection1, collection2);
     }
@@ -332,9 +332,9 @@ public class CollectionAssertTests : TestContainer
 
     public void CollectionAssertAreEquivalent_WithMatchingNullableSets_DoesNotThrow()
     {
-        ICollection? retSetWithNulls = new[] { "item", null };
+        ICollection retSetWithNulls = new[] { "item", null };
 
-        ICollection? getMatchingSetWithNulls = new[] { "item", null };
+        ICollection getMatchingSetWithNulls = new[] { "item", null };
 
         CollectionAssert.AreEquivalent(retSetWithNulls, getMatchingSetWithNulls);
     }
