@@ -39,10 +39,8 @@ internal sealed class SystemProcess : IProcess, IDisposable
     public void WaitForExit()
         => _process.WaitForExit();
 
-#if NETCOREAPP
     public Task WaitForExitAsync()
         => _process.WaitForExitAsync();
-#endif
 
 #if NETCOREAPP
     public void Kill()

@@ -138,7 +138,7 @@ public class DesktopTestDeploymentTests : TestContainer
 
     private TestCase GetTestCase(string source)
     {
-        var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), source);
+        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), source);
         KeyValuePair<string, string>[] kvpArray =
         [
             new KeyValuePair<string, string>(
@@ -161,7 +161,7 @@ public class DesktopTestDeploymentTests : TestContainer
         var mockAssemblyUtility = new Mock<AssemblyUtility>();
         mockAssemblyUtility.Setup(
             au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
-            .Returns(System.Array.Empty<string>());
+            .Returns(Array.Empty<string>());
         mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns([]);

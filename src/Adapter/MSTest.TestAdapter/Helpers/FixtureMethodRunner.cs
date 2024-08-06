@@ -172,9 +172,7 @@ internal static class FixtureMethodRunner
         }
     }
 
-#if NET6_0_OR_GREATER
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
-#endif
     private static TestFailedException? RunWithTimeoutAndCancellationWithSTAThread(
         Action action, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
         IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)

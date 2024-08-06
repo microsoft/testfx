@@ -29,8 +29,6 @@ internal class ReflectHelper : MarshalByRefObject
     {
     }
 
-    private readonly AttributeComparer _attributeComparer = new();
-
     public static ReflectHelper Instance => InstanceValue.Value;
 
     /// <summary>
@@ -437,9 +435,7 @@ internal class ReflectHelper : MarshalByRefObject
             try
             {
                 object[]? attributes = NotCachedReflectionAccessor.GetCustomAttributesNotCached(attributeProvider, inherit);
-                return attributes is Attribute[] arr
-                    ? arr
-                    : attributes?.Cast<Attribute>().ToArray() ?? Array.Empty<Attribute>();
+                return attributes is null ? [] : attributes as Attribute[] ?? attributes.Cast<Attribute>().ToArray();
             }
             catch (Exception ex)
             {
@@ -458,20 +454,6 @@ internal class ReflectHelper : MarshalByRefObject
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.FailedToGetCustomAttribute, attributeProvider.GetType().FullName!, description);
 
                 return [];
-            }
-        }
-    }
-
-    internal IEnumerable<TAttribute>? GetNonDerivedAttributes<TAttribute>(MethodInfo methodInfo, bool inherit)
-        where TAttribute : Attribute
-    {
-        Attribute[] cachedAttributes = GetCustomAttributesCached(methodInfo, inherit);
-
-        foreach (Attribute cachedAttribute in cachedAttributes)
-        {
-            if (AttributeComparer.IsNonDerived<TAttribute>(cachedAttribute))
-            {
-                yield return (TAttribute)cachedAttribute;
             }
         }
     }

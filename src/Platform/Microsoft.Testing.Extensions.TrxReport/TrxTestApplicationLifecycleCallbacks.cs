@@ -74,7 +74,7 @@ internal class TrxTestApplicationLifecycleCallbacks : ITestApplicationLifecycleC
                 NamedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
 
                 // Connect to the named pipe server
-                await NamedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                await NamedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
             }
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)

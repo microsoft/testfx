@@ -34,12 +34,9 @@ public sealed class ProcessHandle : IProcessHandle, IDisposable
         {
             return _exitCode;
         }
-#if NETCOREAPP
+
         await _process.WaitForExitAsync();
-#else
-        _process.WaitForExit();
-#endif
-        return await Task.FromResult(_process.ExitCode);
+        return _process.ExitCode;
     }
 
     public async Task<int> StopAsync()

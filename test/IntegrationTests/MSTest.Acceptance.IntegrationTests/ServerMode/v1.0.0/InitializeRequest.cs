@@ -12,7 +12,7 @@ public sealed record InitializeRequest(
     int ProcessId,
 
     [property:JsonProperty("clientInfo")]
-    Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100.ClientInfo ClientInfo,
+    ClientInfo ClientInfo,
 
     [property:JsonProperty("capabilities")]
     MSTest.Acceptance.IntegrationTests.Messages.V100.ClientCapabilities Capabilities);

@@ -63,9 +63,9 @@ public static class VerifyE2E
         {
             // Test Discovery run was expecting to discover \"{test}\", but it has not discovered.
             discoveredTests.Should().Contain(
-                p => test.Equals(p.FullyQualifiedName, System.StringComparison.Ordinal)
-                     || test.Equals(p.DisplayName, System.StringComparison.Ordinal)
-                     || test.Equals(p.DisplayName, System.StringComparison.Ordinal));
+                p => test.Equals(p.FullyQualifiedName, StringComparison.Ordinal)
+                     || test.Equals(p.DisplayName, StringComparison.Ordinal)
+                     || test.Equals(p.DisplayName, StringComparison.Ordinal));
         }
     }
 
@@ -81,9 +81,9 @@ public static class VerifyE2E
         foreach (string test in expectedTests)
         {
             tests.Should().Contain(
-                p => test.Equals(p.TestCase.FullyQualifiedName, System.StringComparison.Ordinal)
-                     || test.Equals(p.DisplayName, System.StringComparison.Ordinal)
-                     || test.Equals(p.TestCase.DisplayName, System.StringComparison.Ordinal));
+                p => test.Equals(p.TestCase.FullyQualifiedName, StringComparison.Ordinal)
+                     || test.Equals(p.DisplayName, StringComparison.Ordinal)
+                     || test.Equals(p.TestCase.DisplayName, StringComparison.Ordinal));
         }
     }
 
