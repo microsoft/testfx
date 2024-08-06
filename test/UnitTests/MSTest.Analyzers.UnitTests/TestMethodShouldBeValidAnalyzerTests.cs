@@ -41,17 +41,13 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             public class MyTestClass
             {
                 [TestMethod]
-                {{accessibility}} void {|#0:MyTestMethod|}()
+                {{accessibility}} void [|MyTestMethod|]()
                 {
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.PublicRule)
-                .WithLocation(0)
-                .WithArguments("MyTestMethod"));
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     public async Task WhenMethodIsNotPublicAndNotTestMethod_NoDiagnostic()
@@ -92,17 +88,13 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             public class MyTestClass
             {
                 [TestMethod]
-                public static void {|#0:MyTestMethod|}()
+                public static void [|MyTestMethod|]()
                 {
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.NotStaticRule)
-                .WithLocation(0)
-                .WithArguments("MyTestMethod"));
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     public async Task WhenTestMethodIsAbstract_Diagnostic()
@@ -114,15 +106,11 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             public abstract class MyTestClass
             {
                 [TestMethod]
-                public abstract void {|#0:MyTestMethod|}();
+                public abstract void [|MyTestMethod|]();
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.NotAbstractRule)
-                .WithLocation(0)
-                .WithArguments("MyTestMethod"));
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     public async Task WhenTestMethodIsGeneric_Diagnostic()
@@ -134,17 +122,13 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             public class MyTestClass
             {
                 [TestMethod]
-                public void {|#0:MyTestMethod|}<T>()
+                public void [|MyTestMethod|]<T>()
                 {
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.NotGenericRule)
-                .WithLocation(0)
-                .WithArguments("MyTestMethod"));
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     public async Task WhenTestMethodIsNotOrdinary_Diagnostic()
@@ -156,17 +140,13 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             public class MyTestClass
             {
                 [TestMethod]
-                ~{|#0:MyTestClass|}()
+                ~[|MyTestClass|]()
                 {
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.OrdinaryRule)
-                .WithLocation(0)
-                .WithArguments("Finalize"));
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     public async Task WhenTestMethodReturnTypeIsNotValid_Diagnostic()
@@ -179,45 +159,32 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             public class MyTestClass
             {
                 [TestMethod]
-                public int {|#0:MyTestMethod0|}()
+                public int [|MyTestMethod0|]()
                 {
                     return 42;
                 }
 
                 [TestMethod]
-                public string {|#1:MyTestMethod1|}()
+                public string [|MyTestMethod1|]()
                 {
                     return "42";
                 }
 
                 [TestMethod]
-                public Task<int> {|#2:MyTestMethod2|}()
+                public Task<int> [|MyTestMethod2|]()
                 {
                     return Task.FromResult(42);
                 }
 
                 [TestMethod]
-                public ValueTask<int> {|#3:MyTestMethod3|}()
+                public ValueTask<int> [|MyTestMethod3|]()
                 {
                     return ValueTask.FromResult(42);
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.ReturnTypeRule)
-                .WithLocation(0)
-                .WithArguments("MyTestMethod0"),
-            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.ReturnTypeRule)
-                .WithLocation(1)
-                .WithArguments("MyTestMethod1"),
-            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.ReturnTypeRule)
-                .WithLocation(2)
-                .WithArguments("MyTestMethod2"),
-            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.ReturnTypeRule)
-                .WithLocation(3)
-                .WithArguments("MyTestMethod3"));
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     public async Task WhenTestMethodReturnTypeIsValid_NoDiagnostic()
@@ -261,18 +228,14 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             public class MyTestClass
             {
                 [TestMethod]
-                public async void {|#0:MyTestMethod|}()
+                public async void [|MyTestMethod|]()
                 {
                     await Task.Delay(0);
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.NotAsyncVoidRule)
-                .WithLocation(0)
-                .WithArguments("MyTestMethod"));
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     public async Task WhenTestMethodIsInternalAndDiscoverInternals_NoDiagnostic()
@@ -326,7 +289,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             public class MyTestClass
             {
                 [TestMethod]
-                private void {|#0:MyTestMethod|}()
+                private void [|MyTestMethod|]()
                 {
                 }
             }
@@ -337,7 +300,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
                 private class MyTestClass2
                 {
                     [TestMethod]
-                    public void {|#1:MyTestMethod|}()
+                    public void [|MyTestMethod|]()
                     {
                     }
                 }
@@ -346,23 +309,13 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
                 private class MyTestClass3
                 {
                     [TestMethod]
-                    private void {|#2:MyTestMethod|}()
+                    private void [|MyTestMethod|]()
                     {
                     }
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.PublicOrInternalRule)
-                .WithLocation(0)
-                .WithArguments("MyTestMethod"),
-            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.PublicOrInternalRule)
-                .WithLocation(1)
-                .WithArguments("MyTestMethod"),
-            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.PublicOrInternalRule)
-                .WithLocation(2)
-                .WithArguments("MyTestMethod"));
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 }

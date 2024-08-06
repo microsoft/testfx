@@ -447,6 +447,11 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="translated">Os tipos públicos devem ser classes de teste</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat">
+        <source>Test method '{0}' signature is invalid</source>
+        <target state="new">Test method '{0}' signature is invalid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
         <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
         <target state="translated">Sem usar o "ClassCleanupBehavior.EndOfClass", o "[ClassCleanup]" será executado, por padrão, no final do assembly e não no final da classe.</target>
@@ -654,46 +659,6 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
 - o tipo de retorno que será 'void', 'Task' ou 'ValueTask'
 - não pode ser ''nulo assíncrono''
 - não deve ser um método especial (finalizador, operador...).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
-        <source>Test method '{0}' should not be 'abstract'</source>
-        <target state="translated">O método de teste ''{0}'' não deve ser ''abstrato''</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>Test method '{0}' should not be 'async void'</source>
-        <target state="translated">O método de teste ''{0}'' não deve ser ''nulo assíncrono''</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotGeneric">
-        <source>Test method '{0}' should not be generic</source>
-        <target state="translated">O método de teste ''{0}'' não deve ser genérico</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotStatic">
-        <source>Test method '{0}' should not be 'static'</source>
-        <target state="translated">O método de teste ''{0}'' não deve ser ''estático''</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_Ordinary">
-        <source>Test method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">O método de teste ''{0}'' deve ser um método ''comum''</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_Public">
-        <source>Test method '{0}' should be 'public'</source>
-        <target state="translated">O método de teste ''{0}'' deve ser ''público''</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Test method '{0}' should be 'public' or 'internal'</source>
-        <target state="translated">O método ''{0}'' deve ser ''público'' ou ''interno''</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
-        <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">O método de teste "{0}" deve retornar "void", "Task" ou "ValueTask".</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
