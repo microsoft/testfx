@@ -110,7 +110,7 @@ internal partial class ConsoleLogger : IDisposable
     {
         _options = options;
 
-        bool showProgress = _options.ShowProgress;
+        Func<bool?> showProgress = _options.ShowProgress;
         ConsoleWithProgress consoleWithProgress;
 
         // When not writing to ANSI we write the progress to screen and leave it there so we don't want to write it more often than every few seconds.

@@ -19,9 +19,10 @@ internal partial class ConsoleWithProgress : IDisposable
     private readonly object _lock = new();
 
     private readonly ITerminal _terminal;
-    private readonly bool _showProgress;
+    private readonly Func<bool?> _showProgress;
     private readonly int _updateEvery;
     private TestProgressState?[] _progressItems = Array.Empty<TestProgressState>();
+    private bool? _showProgressCached;
 
     /// <summary>
     /// The thread that performs periodic refresh of the console output.
@@ -51,7 +52,7 @@ internal partial class ConsoleWithProgress : IDisposable
         _terminal.EraseProgress();
     }
 
-    public ConsoleWithProgress(ITerminal terminal, bool showProgress, int updateEvery)
+    public ConsoleWithProgress(ITerminal terminal, Func<bool?> showProgress, int updateEvery)
     {
         _terminal = terminal;
         _showProgress = showProgress;
@@ -60,7 +61,7 @@ internal partial class ConsoleWithProgress : IDisposable
 
     public int AddWorker(TestProgressState testWorker)
     {
-        if (_showProgress)
+        if (GetShowProgress())
         {
             for (int i = 0; i < _progressItems.Length; i++)
             {
@@ -79,7 +80,7 @@ internal partial class ConsoleWithProgress : IDisposable
 
     public void StartShowingProgress(int workerCount)
     {
-        if (_showProgress)
+        if (GetShowProgress())
         {
             _progressItems = new TestProgressState[workerCount];
             _terminal.StartBusyIndicator();
@@ -91,7 +92,7 @@ internal partial class ConsoleWithProgress : IDisposable
 
     internal void StopShowingProgress()
     {
-        if (_showProgress)
+        if (GetShowProgress())
         {
             _cts.Cancel();
             _refresher?.Join();
@@ -106,7 +107,7 @@ internal partial class ConsoleWithProgress : IDisposable
 
     internal void WriteToTerminal(Action<ITerminal> write)
     {
-        if (_showProgress)
+        if (GetShowProgress())
         {
             lock (_lock)
             {
@@ -126,7 +127,7 @@ internal partial class ConsoleWithProgress : IDisposable
 
     internal void RemoveWorker(int slotIndex)
     {
-        if (_showProgress)
+        if (GetShowProgress())
         {
             _progressItems[slotIndex] = null;
         }
@@ -134,9 +135,26 @@ internal partial class ConsoleWithProgress : IDisposable
 
     internal void UpdateWorker(int slotIndex, TestProgressState update)
     {
-        if (_showProgress)
+        if (GetShowProgress())
         {
             _progressItems[slotIndex] = update;
         }
+    }
+
+    private bool GetShowProgress()
+    {
+        if (_showProgressCached != null)
+        {
+            return _showProgressCached.Value;
+        }
+
+        // Get the value from the func until we get the first non-null value.
+        bool? showProgress = _showProgress();
+        if (showProgress != null)
+        {
+            _showProgressCached = showProgress;
+        }
+
+        return showProgress == true;
     }
 }

@@ -13,7 +13,7 @@ internal sealed class TestHostControllerInfo(CommandLineParseResult parseResult)
 
     public bool HasTestHostController => _parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey);
 
-    public bool CurrentProcessIsTestHostController { get; set; }
+    public bool? CurrentProcessIsTestHostController { get; set; }
 
     public int? GetTestHostControllerPID(bool throwIfMissing = true) => _parseResult.TryGetOptionArgumentList(PlatformCommandLineProvider.TestHostControllerPIDOptionKey, out string[]? pid)
                 ? int.Parse(pid[0], CultureInfo.InvariantCulture)
