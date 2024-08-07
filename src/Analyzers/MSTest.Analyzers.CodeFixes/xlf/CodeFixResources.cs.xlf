@@ -17,9 +17,9 @@
         <target state="translated">Opravit podpis</target>
         <note />
       </trans-unit>
-      <trans-unit id="FixTestMethodSignatureCodeFix">
-        <source>Add '[TestMethod]'</source>
-        <target state="new">Add '[TestMethod]'</target>
+      <trans-unit id="PublicTypeShouldBeTestClassFix">
+        <source>Add '[TestClass]'</source>
+        <target state="new">Add '[TestClass]'</target>
         <note />
       </trans-unit>
     </body>

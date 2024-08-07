@@ -47,7 +47,7 @@ public sealed class PublicTypeShouldBeTestClassFixer : CodeFixProvider
         // Register a code action that will invoke the fix.
         context.RegisterCodeFix(
             CodeAction.Create(
-                title: CodeFixResources.FixTestMethodSignatureCodeFix,
+                title: CodeFixResources.PublicTypeShouldBeTestClassFix,
                 createChangedDocument: c => AddTestClassAttributeAsync(context.Document, declaration, c),
                 equivalenceKey: nameof(PublicTypeShouldBeTestClassFixer)),
             diagnostic);

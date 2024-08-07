@@ -88,11 +88,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add &apos;[TestMethod]&apos;.
+        ///   Looks up a localized string similar to Add &apos;[TestClass]&apos;.
         /// </summary>
-        internal static string FixTestMethodSignatureCodeFix {
+        internal static string PublicTypeShouldBeTestClassFix {
             get {
-                return ResourceManager.GetString("FixTestMethodSignatureCodeFix", resourceCulture);
+                return ResourceManager.GetString("PublicTypeShouldBeTestClassFix", resourceCulture);
             }
         }
     }
