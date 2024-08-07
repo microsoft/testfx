@@ -240,7 +240,11 @@ internal partial class ConsoleLogger : IDisposable
         {
             terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, _options.MinimumExpectedTests));
         }
-        else if (anyTestFailed || allTestsWereSkipped)
+        else if (allTestsWereSkipped)
+        {
+            terminal.Append(PlatformResources.ZeroTestsRan);
+        }
+        else if (anyTestFailed)
         {
             terminal.Append(string.Format(CultureInfo.CurrentCulture, "{0}!", PlatformResources.Failed));
         }
@@ -586,21 +590,20 @@ internal partial class ConsoleLogger : IDisposable
         if (!message.Contains('\n'))
         {
             terminal.Append(indent);
-            terminal.Append(message.TrimStart(' '));
+            terminal.Append(message);
             return;
         }
 
         string[] lines = message.Split(NewLineStrings, StringSplitOptions.None);
         foreach (string line in lines)
         {
-            string trimmedLine = line.TrimStart(' ');
             // Here we could check if the messages are longer than then line, and reflow them so a long line is split into multiple
             // and prepended by the respective indentation.
             // But this does not play nicely with ANSI escape codes. And if you
             // run in narrow terminal and then widen it the text does not reflow correctly. And you also have harder time copying
             // values when the assertion message is longer.
             terminal.Append(indent);
-            terminal.Append(trimmedLine);
+            terminal.Append(line);
             terminal.AppendLine();
         }
     }

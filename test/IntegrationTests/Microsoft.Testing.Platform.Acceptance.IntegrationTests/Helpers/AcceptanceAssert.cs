@@ -76,7 +76,11 @@ internal static class AcceptanceAssert
             ? $"Minimum expected tests policy violation, tests ran {totalTests}, minimum expected {minimumNumberOfTests}"
             : aborted is not null and true
                 ? "Aborted"
-                : failed > 0 ? "Failed!" : "Passed!";
+                : failed > 0
+                    ? "Failed!"
+                    : totalTests == 0 || totalTests == skipped
+                        ? "Zero tests ran"
+                        : "Passed!";
 
         string summaryResult = $"Test run summary: {result}";
         string summaryCounts = $"""

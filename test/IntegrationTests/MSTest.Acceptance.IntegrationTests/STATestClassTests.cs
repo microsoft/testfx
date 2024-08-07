@@ -37,7 +37,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
 
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
         testHostResult.AssertOutputContains("LifeCycleTestClass.ClassInitialize");
         testHostResult.AssertOutputContains("LifeCycleTestClass.Constructor");
@@ -62,7 +62,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClassWithLastTestSkipped");
 
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 1, Total: 2");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
         testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.ClassInitialize");
         testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.Constructor");
@@ -87,7 +87,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
 
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
         testHostResult.AssertOutputContains("LifeCycleTestClass.ClassInitialize");
         testHostResult.AssertOutputContains("LifeCycleTestClass.Constructor");
@@ -112,7 +112,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClassWithLastTestSkipped");
 
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 1, Total: 2");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
         testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.ClassInitialize");
         testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.Constructor");
@@ -137,7 +137,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
 
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
         testHostResult.AssertOutputContains("LifeCycleTestClass.ClassInitialize");
         testHostResult.AssertOutputContains("LifeCycleTestClass.Constructor");
@@ -162,7 +162,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClassWithLastTestSkipped");
 
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 1, Total: 2");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
         testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.ClassInitialize");
         testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.Constructor");
@@ -187,7 +187,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithClassCleanupEndOfAssembly");
 
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
         testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.ClassInitialize");
         testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.Constructor");

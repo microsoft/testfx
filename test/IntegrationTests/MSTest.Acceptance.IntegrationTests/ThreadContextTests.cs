@@ -22,7 +22,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.InitToTestProjectPath, TestAssetFixture.InitToTestProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
-        testHostResult.AssertOutputContains("Failed: 1, Passed: 0, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -42,7 +42,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase
         var testHost = TestHost.LocateFrom(_testAssetFixture.InitToTestProjectPath, TestAssetFixture.InitToTestProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new() { [envVarKey] = "true" });
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -51,7 +51,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase
         var testHost = TestHost.LocateFrom(_testAssetFixture.CultureFlowsProjectPath, TestAssetFixture.CultureFlowsProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -61,7 +61,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -74,7 +74,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase
             ["MSTEST_TEST_FLOW_CONTEXT"] = "true",
         });
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -87,7 +87,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase
             ["MSTEST_TEST_FLOW_CONTEXT"] = "true",
         });
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -96,7 +96,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase
         var testHost = TestHost.LocateFrom(_testAssetFixture.CultureFlowsInheritanceProjectPath, TestAssetFixture.CultureFlowsInheritanceProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Failed: 0, Passed: 8, Skipped: 0, Total: 8");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -106,7 +106,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Failed: 0, Passed: 8, Skipped: 0, Total: 8");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -119,7 +119,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase
             ["MSTEST_TEST_FLOW_CONTEXT"] = "true",
         });
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Failed: 0, Passed: 8, Skipped: 0, Total: 8");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -132,7 +132,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase
             ["MSTEST_TEST_FLOW_CONTEXT"] = "true",
         });
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Failed: 0, Passed: 8, Skipped: 0, Total: 8");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
