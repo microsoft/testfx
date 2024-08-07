@@ -17,6 +17,11 @@
         <target state="translated">서명 수정</target>
         <note />
       </trans-unit>
+      <trans-unit id="PublicTypeShouldBeTestClassFix">
+        <source>Add '[TestClass]'</source>
+        <target state="new">Add '[TestClass]'</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
