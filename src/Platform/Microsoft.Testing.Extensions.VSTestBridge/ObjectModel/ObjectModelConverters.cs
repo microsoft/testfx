@@ -159,6 +159,19 @@ internal static class ObjectModelConverters
 
         testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
 
+        foreach (TestResultMessage testResultMessage in testResult.Messages)
+        {
+            if (testResultMessage.Category == TestResultMessage.StandardErrorCategory)
+            {
+                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", testResultMessage.Text ?? string.Empty));
+            }
+
+            if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
+            {
+                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", testResultMessage.Text ?? string.Empty));
+            }
+        }
+
         return testNode;
     }
 
