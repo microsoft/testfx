@@ -17,6 +17,11 @@
         <target state="translated">Popraw podpis</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidFix">
+        <source>Fix Test Method Signature</source>
+        <target state="new">Fix Test Method Signature</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

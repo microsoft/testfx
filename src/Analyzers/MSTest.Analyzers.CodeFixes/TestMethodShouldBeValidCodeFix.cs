@@ -4,12 +4,17 @@
 using System.Collections.Immutable;
 using System.Composition;
 
+using Analyzer.Utilities;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.Text;
+
+using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
@@ -18,30 +23,33 @@ namespace MSTest.Analyzers;
 public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
 {
     public override ImmutableArray<string> FixableDiagnosticIds
-        => ImmutableArray.Create(TestMethodShouldBeValidAnalyzer.ValidTestMethodSignatureRule.Id);
+        => ImmutableArray.Create(DiagnosticIds.TestMethodShouldBeValidRuleId);
 
     public override FixAllProvider GetFixAllProvider()
-    {
-        return WellKnownFixAllProviders.BatchFixer;
-    }
+         // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
+         => WellKnownFixAllProviders.BatchFixer;
 
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
-        var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-        if (root is null)
-            return;
+        SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
-        var diagnostic = context.Diagnostics[0];
-        var diagnosticSpan = diagnostic.Location.SourceSpan;
+        Diagnostic diagnostic = context.Diagnostics[0];
+        TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
+
+        SyntaxToken syntaxToken = root.FindToken(diagnosticSpan.Start);
+        if (syntaxToken.Parent is null)
+        {
+            return;
+        }
 
         // Find the method declaration identified by the diagnostic.
-        var methodDeclaration = root.FindToken(diagnosticSpan.Start).Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().First();
+        MethodDeclarationSyntax methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().First();
 
         context.RegisterCodeFix(
             CodeAction.Create(
-                title: "Fix Test Method Signature",
+                title: CodeFixResources.TestMethodShouldBeValidFix,
                 createChangedSolution: c => FixTestMethodAsync(context.Document, methodDeclaration, c),
-                equivalenceKey: "Fix Test Method Signature"),
+                equivalenceKey: nameof(TestMethodShouldBeValidCodeFixProvider)),
             diagnostic);
     }
 

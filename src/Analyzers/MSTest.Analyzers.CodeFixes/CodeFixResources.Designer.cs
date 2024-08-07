@@ -86,5 +86,14 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("FixSignatureCodeFix", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fix Test Method Signature.
+        /// </summary>
+        internal static string TestMethodShouldBeValidFix {
+            get {
+                return ResourceManager.GetString("TestMethodShouldBeValidFix", resourceCulture);
+            }
+        }
     }
 }
