@@ -17,6 +17,11 @@
         <target state="translated">서명 수정</target>
         <note />
       </trans-unit>
+      <trans-unit id="FixTestMethodSignatureCodeFix">
+        <source>Add '[TestMethod]'</source>
+        <target state="new">Add '[TestMethod]'</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

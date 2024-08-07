@@ -47,13 +47,13 @@ public sealed class PublicTypeShouldBeTestClassFixer : CodeFixProvider
         // Register a code action that will invoke the fix.
         context.RegisterCodeFix(
             CodeAction.Create(
-                title: "Add [TestClass]",
+                title: CodeFixResources.FixTestMethodSignatureCodeFix,
                 createChangedDocument: c => AddTestClassAttributeAsync(context.Document, declaration, c),
                 equivalenceKey: nameof(PublicTypeShouldBeTestClassFixer)),
             diagnostic);
     }
 
-    private static async Task<Document> AddTestClassAttributeAsync(Document document, TypeDeclarationSyntax typeDecl, CancellationToken cancellationToken)
+    private static async Task<Document> AddTestClassAttributeAsync(Document document, TypeDeclarationSyntax typeDeclaration, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
@@ -61,8 +61,8 @@ public sealed class PublicTypeShouldBeTestClassFixer : CodeFixProvider
         AttributeSyntax testClassAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("TestClass"));
         AttributeListSyntax attributeList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(testClassAttribute));
 
-        TypeDeclarationSyntax newTypeDecl = typeDecl.AddAttributeLists(attributeList);
-        editor.ReplaceNode(typeDecl, newTypeDecl);
+        TypeDeclarationSyntax newTypeDeclaration = typeDeclaration.AddAttributeLists(attributeList);
+        editor.ReplaceNode(typeDeclaration, newTypeDeclaration);
 
         SyntaxNode newRoot = editor.GetChangedRoot();
         return document.WithSyntaxRoot(newRoot);
