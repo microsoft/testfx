@@ -53,3 +53,84 @@ public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
             diagnostic);
     }
 
+    private static async Task<Solution> FixTestMethodAsync(Document document, MethodDeclarationSyntax methodDeclaration, CancellationToken cancellationToken)
+    {
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+
+        // Fix MethodKind, it should be an ordinary method.
+        MethodDeclarationSyntax newMethodDeclaration = methodDeclaration;
+
+        // Remove static modifier if present.
+        SyntaxToken staticModifier = newMethodDeclaration.Modifiers.FirstOrDefault(m => m.IsKind(SyntaxKind.StaticKeyword));
+        if (staticModifier != default)
+        {
+            newMethodDeclaration = newMethodDeclaration.WithModifiers(newMethodDeclaration.Modifiers.Remove(staticModifier));
+        }
+
+        // Remove abstract modifier if present and ensure the method has a body.
+        SyntaxToken abstractModifier = newMethodDeclaration.Modifiers.FirstOrDefault(m => m.IsKind(SyntaxKind.AbstractKeyword));
+        if (abstractModifier != default)
+        {
+            newMethodDeclaration = newMethodDeclaration.WithModifiers(newMethodDeclaration.Modifiers.Remove(abstractModifier));
+            if (newMethodDeclaration.Body == null)
+            {
+                newMethodDeclaration = newMethodDeclaration.WithBody(SyntaxFactory.Block()).WithSemicolonToken(default);
+            }
+        }
+
+        // Remove type parameters to make the method non-generic.
+        if (newMethodDeclaration.TypeParameterList != null)
+        {
+            newMethodDeclaration = newMethodDeclaration.WithTypeParameterList(null);
+        }
+
+        // Ensure the method has public visibility.
+        SyntaxToken publicModifier = newMethodDeclaration.Modifiers.FirstOrDefault(m => m.IsKind(SyntaxKind.PublicKeyword));
+        if (publicModifier == default)
+        {
+            newMethodDeclaration = newMethodDeclaration.WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
+        }
+
+        // Ensure the method returns void or Task/ValueTask.
+        SemanticModel? semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+        if (semanticModel is not null)
+        {
+            Compilation compilation = semanticModel.Compilation;
+            INamedTypeSymbol? taskSymbol = compilation.GetTypeByMetadataName("System.Threading.Tasks.Task");
+            INamedTypeSymbol? valueTaskSymbol = compilation.GetTypeByMetadataName("System.Threading.Tasks.ValueTask");
+
+            if (newMethodDeclaration.ReturnType != null &&
+                !newMethodDeclaration.ReturnType.IsVoid() &&
+                (taskSymbol == null || !semanticModel.ClassifyConversion(newMethodDeclaration.ReturnType, taskSymbol).IsImplicit) &&
+                (valueTaskSymbol == null || !semanticModel.ClassifyConversion(newMethodDeclaration.ReturnType, valueTaskSymbol).IsImplicit))
+            {
+                newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)));
+
+                // Remove any return statements in the method body.
+                if (newMethodDeclaration.Body != null)
+                {
+                    SyntaxList<StatementSyntax> statements = newMethodDeclaration.Body.Statements;
+                    IEnumerable<StatementSyntax> newStatements = statements.Where(s => s is not ReturnStatementSyntax);
+                    newMethodDeclaration = newMethodDeclaration.WithBody(newMethodDeclaration.Body.WithStatements(SyntaxFactory.List(newStatements)));
+                }
+            }
+        }
+
+        // Ensure async methods do not return void.
+        if (newMethodDeclaration.Modifiers.Any(SyntaxKind.AsyncKeyword) && newMethodDeclaration.ReturnType is not null && newMethodDeclaration.ReturnType.IsVoid())
+        {
+            SyntaxToken asyncModifier = newMethodDeclaration.Modifiers.First(m => m.IsKind(SyntaxKind.AsyncKeyword));
+            newMethodDeclaration = newMethodDeclaration.WithModifiers(newMethodDeclaration.Modifiers.Remove(asyncModifier));
+        }
+
+        // Apply changes.
+        editor.ReplaceNode(methodDeclaration, newMethodDeclaration);
+        Document newDocument = editor.GetChangedDocument();
+        return newDocument.Project.Solution;
+    }
+}
+
+internal static class TypeSyntaxExtensions
+{
+    public static bool IsVoid(this TypeSyntax typeSyntax) => typeSyntax is PredefinedTypeSyntax predefined && predefined.Keyword.IsKind(SyntaxKind.VoidKeyword);
+}

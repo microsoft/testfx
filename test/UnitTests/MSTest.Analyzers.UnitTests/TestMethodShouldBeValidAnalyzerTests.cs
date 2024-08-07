@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.TestMethodShouldBeValidAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.TestMethodShouldBeValidCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -25,7 +25,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [Arguments("protected")]
@@ -47,7 +47,20 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string codeFix = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, codeFix);
     }
 
     public async Task WhenMethodIsNotPublicAndNotTestMethod_NoDiagnostic()
@@ -76,7 +89,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     public async Task WhenTestMethodIsStatic_Diagnostic()
@@ -94,7 +107,20 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string codeFix = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, codeFix);
     }
 
     public async Task WhenTestMethodIsAbstract_Diagnostic()
@@ -110,7 +136,20 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string codeFix = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public abstract class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, codeFix);
     }
 
     public async Task WhenTestMethodIsGeneric_Diagnostic()
@@ -128,7 +167,20 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string codeFix = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, codeFix);
     }
 
     public async Task WhenTestMethodIsNotOrdinary_Diagnostic()
@@ -146,7 +198,20 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string codeFix = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestClass()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, codeFix);
     }
 
     public async Task WhenTestMethodReturnTypeIsNotValid_Diagnostic()
@@ -184,7 +249,36 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string codeFix = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod0()
+                {
+                }
+
+                [TestMethod]
+                public void MyTestMethod1()
+                {
+                }
+
+                [TestMethod]
+                public void MyTestMethod2()
+                {
+                }
+
+                [TestMethod]
+                public void MyTestMethod3()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, codeFix);
     }
 
     public async Task WhenTestMethodReturnTypeIsValid_NoDiagnostic()
@@ -215,7 +309,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     public async Task WhenTestMethodIsAsyncVoid_Diagnostic()
@@ -235,7 +329,22 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string codeFix = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    await Task.Delay(0);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, codeFix);
     }
 
     public async Task WhenTestMethodIsInternalAndDiscoverInternals_NoDiagnostic()
@@ -274,7 +383,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     public async Task WhenTestMethodIsPrivateAndDiscoverInternals_Diagnostic()
@@ -316,6 +425,43 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string codeFix = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                private void MyTestMethod()
+                {
+                }
+            }
+            
+            public class Outer
+            {
+                [TestClass]
+                private class MyTestClass2
+                {
+                    [TestMethod]
+                    public void MyTestMethod()
+                    {
+                    }
+                }
+
+                [TestClass]
+                private class MyTestClass3
+                {
+                    [TestMethod]
+                    private void MyTestMethod()
+                    {
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, codeFix);
     }
 }
