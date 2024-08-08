@@ -64,7 +64,7 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         if (methodSymbol.MethodKind != MethodKind.Ordinary)
         {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ValidTestMethodSignatureRule, methodSymbol.Name));
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ValidTestMethodSignatureRule, DiagnosticDescriptorHelper.CannotFixProperties, methodSymbol.Name));
 
             // Do not check the other criteria, users should fix the method kind first.
             return;
