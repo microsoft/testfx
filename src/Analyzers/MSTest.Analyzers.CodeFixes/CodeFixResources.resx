@@ -126,7 +126,7 @@
   <data name="FixAssertionArgsOrder" xml:space="preserve">
     <value>Fix actual/expected arguments order</value>
   </data>
-  <data name="TestMethodShouldBeValidFix" xml:space="preserve">
-    <value>Fix Test Method Signature</value>
+  <data name="PublicTypeShouldBeTestClassFix" xml:space="preserve">
+    <value>Add '[TestClass]'</value>
   </data>
 </root>

@@ -17,9 +17,9 @@
         <target state="translated">Исправить подпись</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidFix">
-        <source>Fix Test Method Signature</source>
-        <target state="new">Fix Test Method Signature</target>
+      <trans-unit id="PublicTypeShouldBeTestClassFix">
+        <source>Add '[TestClass]'</source>
+        <target state="new">Add '[TestClass]'</target>
         <note />
       </trans-unit>
     </body>
