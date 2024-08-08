@@ -26,8 +26,8 @@ public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
         => ImmutableArray.Create(DiagnosticIds.TestMethodShouldBeValidRuleId);
 
     public override FixAllProvider GetFixAllProvider()
-         // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
-         => WellKnownFixAllProviders.BatchFixer;
+        // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
+        => WellKnownFixAllProviders.BatchFixer;
 
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
