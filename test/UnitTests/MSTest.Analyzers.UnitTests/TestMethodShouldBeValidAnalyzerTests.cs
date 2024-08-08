@@ -422,7 +422,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             public class MyTestClass
             {
                 [TestMethod]
-                private void MyTestMethod()
+                public void MyTestMethod()
                 {
                 }
             }
@@ -442,7 +442,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
                 private class MyTestClass3
                 {
                     [TestMethod]
-                    private void MyTestMethod()
+                public void MyTestMethod()
                     {
                     }
                 }
