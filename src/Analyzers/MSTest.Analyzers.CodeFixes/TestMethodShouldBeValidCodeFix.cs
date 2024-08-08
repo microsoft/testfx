@@ -57,7 +57,6 @@ public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
-        // Fix MethodKind, it should be an ordinary method.
         MethodDeclarationSyntax newMethodDeclaration = methodDeclaration;
 
         // Remove static modifier if present.
