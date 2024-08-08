@@ -198,20 +198,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             }
             """;
 
-        string codeFix = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void MyTestClass()
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(code, codeFix);
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     public async Task WhenTestMethodReturnTypeIsNotValid_Diagnostic()
