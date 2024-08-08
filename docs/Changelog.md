@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.5.1" />[3.5.1] - 2024-08-05
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.5.0...v3.5.1)
+
+### Fixed
+
+* Fix XmlDataConnection by @Evangelink in [#3346](https://github.com/microsoft/testfx/pull/3346)
+* Fix timeout message to reflect that 0 is not allowed by @Evangelink in [#3279](https://github.com/microsoft/testfx/pull/3279)
+* Fix Fix TestInitialize and TestCleanup analyzers to allow generic classes by @Evangelink in [#3280](https://github.com/microsoft/testfx/pull/3280)
+
+### Artifacts
+
+* MSTest: [3.5.1](https://www.nuget.org/packages/MSTest/3.5.1)
+* MSTest.TestFramework: [3.5.1](https://www.nuget.org/packages/MSTest.TestFramework/3.5.1)
+* MSTest.TestAdapter: [3.5.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.5.1)
+* MSTest.Analyzers: [3.5.1](https://www.nuget.org/packages/MSTest.Analyzers/3.5.1)
+* MSTest.Sdk: [3.5.1](https://www.nuget.org/packages/MSTest.Sdk/3.5.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.3.2)
+* Microsoft.Testing.Extensions.HangDump: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.3.2)
+* Microsoft.Testing.Extensions.HotReload: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.3.2)
+* Microsoft.Testing.Extensions.Retry: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.3.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.3.2)
+
 ## <a name="3.5.0" />[3.5.0] - 2024-07-15
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.4.3...v3.5.0)
