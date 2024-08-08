@@ -117,7 +117,7 @@ public sealed class CommandLine : IDisposable
     /// .NET Framework app might have BOM at the beginning of the captured output, which breaks output comparisons
     /// while no visible difference is seen between the outputs.
     /// </summary>
-    private string ClearBOM(string outputLine)
+    private static string ClearBOM(string outputLine)
     {
         int firstChar = outputLine[0];
         int byteOrderMark = 65279;
