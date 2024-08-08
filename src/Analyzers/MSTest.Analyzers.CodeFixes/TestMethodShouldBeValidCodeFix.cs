@@ -103,9 +103,9 @@ public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
                 (taskSymbol == null || !semanticModel.ClassifyConversion(newMethodDeclaration.ReturnType, taskSymbol).IsImplicit) &&
                 (valueTaskSymbol == null || !semanticModel.ClassifyConversion(newMethodDeclaration.ReturnType, valueTaskSymbol).IsImplicit))
             {
+                // Change return type to void and remove return statements
                 newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)));
 
-                // Remove any return statements in the method body.
                 if (newMethodDeclaration.Body != null)
                 {
                     SyntaxList<StatementSyntax> statements = newMethodDeclaration.Body.Statements;
@@ -116,10 +116,11 @@ public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
         }
 
         // Ensure async methods do not return void.
-        if (newMethodDeclaration.Modifiers.Any(SyntaxKind.AsyncKeyword) && newMethodDeclaration.ReturnType is not null && newMethodDeclaration.ReturnType.IsVoid())
+        bool asyncModifier = newMethodDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.AsyncKeyword));
+        if (asyncModifier && newMethodDeclaration.ReturnType != null && newMethodDeclaration.ReturnType.IsVoid())
         {
-            SyntaxToken asyncModifier = newMethodDeclaration.Modifiers.First(m => m.IsKind(SyntaxKind.AsyncKeyword));
-            newMethodDeclaration = newMethodDeclaration.WithModifiers(newMethodDeclaration.Modifiers.Remove(asyncModifier));
+            // Change the return type to Task
+            newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.ParseTypeName("Task "));
         }
 
         // Apply changes.
