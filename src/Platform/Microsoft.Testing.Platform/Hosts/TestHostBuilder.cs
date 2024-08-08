@@ -344,7 +344,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             TestHostControllerConfiguration testHostControllers = await ((TestHostControllersManager)TestHostControllers).BuildAsync(testHostControllersServiceProvider);
             if (testHostControllers.RequireProcessRestart)
             {
-                testHostControllerInfo.CurrentProcessIsTestHostController = true;
+                testHostControllerInfo.IsCurrentProcessTestHostController = true;
                 TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, systemEnvironment, loggerFactory, systemClock, dotnetTestPipeClient);
 
                 await LogTestHostCreatedAsync(
@@ -365,7 +365,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         ApplicationStateGuard.Ensure(currentWorkingDirectory is not null);
         configuration.SetTestHostWorkingDirectory(currentWorkingDirectory);
 
-        testHostControllerInfo.CurrentProcessIsTestHostController = false;
+        testHostControllerInfo.IsCurrentProcessTestHostController = false;
 
         // If we're under test controllers and currently we're inside the started test host we connect to the out of process
         // test controller manager.

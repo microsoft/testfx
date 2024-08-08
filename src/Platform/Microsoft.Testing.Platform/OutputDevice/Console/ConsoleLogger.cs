@@ -22,6 +22,9 @@ namespace Microsoft.Testing.Platform.OutputDevice.Console;
 /// </summary>
 internal partial class ConsoleLogger : IDisposable
 {
+    /// <summary>
+    /// The two directory separator characters to be passed to methods like <see cref="string.IndexOfAny(char[])"/>.
+    /// </summary>
     private static readonly string[] NewLineStrings = { "\r\n", "\n" };
 
     internal const string SingleIndentation = "  ";
@@ -32,10 +35,8 @@ internal partial class ConsoleLogger : IDisposable
 
     internal Func<StopwatchAbstraction> CreateStopwatch { get; set; } = SystemStopwatch.StartNew;
 
-    /// <summary>
-    /// The two directory separator characters to be passed to methods like <see cref="string.IndexOfAny(char[])"/>.
-    /// </summary>
     private readonly Dictionary<string, TestModule> _assemblies = new();
+
     private readonly List<TestRunArtifact> _artifacts = new();
 
     private readonly ConsoleLoggerOptions _options;
@@ -489,12 +490,20 @@ internal partial class ConsoleLogger : IDisposable
     private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture)
     {
         terminal.AppendLink(assembly, lineNumber: null);
-        if (!RoslynString.IsNullOrWhiteSpace(architecture) && !RoslynString.IsNullOrWhiteSpace(targetFramework))
+        if (targetFramework != null || architecture != null)
         {
             terminal.Append(" (");
-            terminal.Append(targetFramework);
-            terminal.Append('|');
-            terminal.Append(architecture);
+            if (targetFramework != null)
+            {
+                terminal.Append(targetFramework);
+                terminal.Append('|');
+            }
+
+            if (architecture != null)
+            {
+                terminal.Append(architecture);
+            }
+
             terminal.Append(')');
         }
     }

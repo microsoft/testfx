@@ -65,18 +65,16 @@ internal sealed class TestProgressFrame
         terminal.Append("/");
 
         terminal.SetColor(TerminalColor.DarkYellow);
-        terminal.Append("?");
+        terminal.Append('?');
         terminal.Append(skipped.ToString(CultureInfo.CurrentCulture));
         terminal.ResetColor();
         terminal.Append(']');
 
         terminal.Append(' ');
         terminal.Append(p.AssemblyName);
-        terminal.Append(" (");
-        terminal.Append(p.TargetFramework);
-        terminal.Append('|');
-        terminal.Append(p.Architecture);
-        terminal.Append(')');
+
+        AppendTargetFrameworkAndArchitecture(terminal, p);
+
         if (!RoslynString.IsNullOrWhiteSpace(detail))
         {
             terminal.Append(" - ");
@@ -85,6 +83,26 @@ internal sealed class TestProgressFrame
 
         terminal.SetCursorHorizontal(Width - durationString.Length);
         terminal.Append(durationString);
+    }
+
+    private static void AppendTargetFrameworkAndArchitecture(AnsiTerminal terminal, TestProgressState p)
+    {
+        if (p.TargetFramework != null || p.Architecture != null)
+        {
+            terminal.Append(" (");
+            if (p.TargetFramework != null)
+            {
+                terminal.Append(p.TargetFramework);
+                terminal.Append('|');
+            }
+
+            if (p.Architecture != null)
+            {
+                terminal.Append(p.Architecture);
+            }
+
+            terminal.Append(')');
+        }
     }
 
     /// <summary>

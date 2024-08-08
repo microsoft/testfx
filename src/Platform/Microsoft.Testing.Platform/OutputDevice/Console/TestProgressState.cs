@@ -10,10 +10,10 @@ internal class TestProgressState
         Passed = passed;
         Failed = failed;
         Skipped = skipped;
-        AssemblyName = assemblyName ?? throw new ArgumentNullException(nameof(assemblyName));
-        TargetFramework = targetFramework ?? throw new ArgumentNullException(nameof(targetFramework));
-        Architecture = architecture ?? throw new ArgumentNullException(nameof(architecture));
-        Stopwatch = stopwatch ?? throw new ArgumentNullException(nameof(stopwatch));
+        AssemblyName = assemblyName;
+        TargetFramework = targetFramework;
+        Architecture = architecture;
+        Stopwatch = stopwatch;
         Detail = detail;
     }
 
@@ -25,9 +25,9 @@ internal class TestProgressState
 
     public string AssemblyName { get; }
 
-    public string TargetFramework { get; }
+    public string? TargetFramework { get; }
 
-    public string Architecture { get; }
+    public string? Architecture { get; }
 
     public StopwatchAbstraction Stopwatch { get; }
 

@@ -197,18 +197,28 @@ internal class NonAnsiTerminal : ITerminal
                 Append("/");
 
                 SetColor(TerminalColor.DarkYellow);
-                Append("?");
+                Append('?');
                 Append(skipped.ToString(CultureInfo.CurrentCulture));
                 ResetColor();
                 Append(']');
 
-                Append(' ');
-                Append(p.AssemblyName);
-                Append('(');
-                Append(p.TargetFramework);
-                Append('|');
-                Append(p.Architecture);
-                Append(')');
+                if (p.TargetFramework != null || p.Architecture != null)
+                {
+                    Append(" (");
+                    if (p.TargetFramework != null)
+                    {
+                        Append(p.TargetFramework);
+                        Append('|');
+                    }
+
+                    if (p.Architecture != null)
+                    {
+                        Append(p.Architecture);
+                    }
+
+                    Append(')');
+                }
+
                 if (!RoslynString.IsNullOrWhiteSpace(detail))
                 {
                     Append(" - ");

@@ -109,7 +109,7 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
             // The test host controller info is not setup and populated until after this constructor, because it writes banner and then after it figures out if
             // the runner is a testHost controller, so we would always have it as null if we capture it directly. Instead we need to check it via
             // func.
-            ShowProgress = () => testHostControllerInfo.CurrentProcessIsTestHostController == null ? null : !testHostControllerInfo.CurrentProcessIsTestHostController,
+            ShowProgress = () => testHostControllerInfo.IsCurrentProcessTestHostController == null ? null : !testHostControllerInfo.IsCurrentProcessTestHostController,
         });
 
         _testApplicationCancellationTokenSource.CancellationToken.Register(() => _consoleLogger.StartCancelling());
@@ -255,7 +255,7 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
     public async Task DisplayBeforeSessionStartAsync()
     {
         // Start test execution here, rather than in ShowBanner, because then we know
-        // if we are a testhost controller or not, and if we should show progress bar.
+        // if we are a testHost controller or not, and if we should show progress bar.
         _consoleLogger.TestExecutionStarted(_clock.UtcNow, workerCount: 1);
         _consoleLogger.AssemblyRunStarted(_assemblyName, _targetFramework, _architecture);
         if (_logger is not null && _logger.IsEnabled(LogLevel.Trace))
