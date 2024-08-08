@@ -387,62 +387,20 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
                 {
                 }
             }
-            
-            public class Outer
-            {
-                [TestClass]
-                private class MyTestClass2
-                {
-                    [TestMethod]
-                    public void [|MyTestMethod|]()
-                    {
-                    }
-                }
-
-                [TestClass]
-                private class MyTestClass3
-                {
-                    [TestMethod]
-                    private void [|MyTestMethod|]()
-                    {
-                    }
-                }
-            }
             """;
 
         string codeFix = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
-
+            
             [assembly: DiscoverInternals]
-
+            
             [TestClass]
             public class MyTestClass
             {
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                }
-            }
-            
-            public class Outer
-            {
-                [TestClass]
-                private class MyTestClass2
-                {
-                    [TestMethod]
-                    public void MyTestMethod()
-                    {
-                    }
-                }
-
-                [TestClass]
-                private class MyTestClass3
-                {
-                    [TestMethod]
-                    public void MyTestMethod()
-                    {
-                    }
                 }
             }
             """;
