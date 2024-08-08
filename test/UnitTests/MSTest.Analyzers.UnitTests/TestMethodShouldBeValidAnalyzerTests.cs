@@ -323,9 +323,8 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             public class MyTestClass
             {
                 [TestMethod]
-                public void MyTestMethod()
+                public async Task MyTestMethod()
                 {
-                    await Task.Delay(0);
                 }
             }
             """;
