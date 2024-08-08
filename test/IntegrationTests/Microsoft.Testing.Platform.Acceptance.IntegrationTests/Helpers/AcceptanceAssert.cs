@@ -74,7 +74,7 @@ internal static class AcceptanceAssert
         int totalTests = failed + passed + skipped;
         string result = minimumNumberOfTests != null && totalTests < minimumNumberOfTests
             ? $"Minimum expected tests policy violation, tests ran {totalTests}, minimum expected {minimumNumberOfTests}"
-            : aborted is not null and true
+            : aborted is true
                 ? "Aborted"
                 : failed > 0
                     ? "Failed!"
