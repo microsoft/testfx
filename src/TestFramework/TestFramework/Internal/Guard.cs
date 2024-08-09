@@ -8,26 +8,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 internal static class Guard
 {
-    internal static void IsNotNull(object? param, string parameterName, string? message)
+    internal static void IsNotNull(object? param, string parameterName)
     {
         if (param is not null)
         {
             return;
         }
 
-        if (message is null)
-        {
-            throw new ArgumentNullException(parameterName);
-        }
-
-        throw new ArgumentNullException(parameterName, message);
-    }
-
-    internal static void IsNotNullOrEmpty(string? argument, string parameterName, string message)
-    {
-        if (StringEx.IsNullOrEmpty(argument))
-        {
-            throw new ArgumentException(message, parameterName);
-        }
+        throw new ArgumentNullException(parameterName);
     }
 }

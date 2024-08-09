@@ -92,7 +92,7 @@ public class PrivateObject
     public PrivateObject(Type type, params object?[]? args)
         : this(type, null, args)
     {
-        Guard.IsNotNull(type, "type", string.Empty);
+        Guard.IsNotNull(type, "type");
     }
 
     /// <summary>
@@ -104,7 +104,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the constructor.</param>
     public PrivateObject(Type type, Type[]? parameterTypes, object?[]? args)
     {
-        Guard.IsNotNull(type, "type", string.Empty);
+        Guard.IsNotNull(type, "type");
         object? o;
         if (parameterTypes != null)
         {
