@@ -48,7 +48,7 @@ internal class DeploymentItemUtility
         if (!_classLevelDeploymentItems.TryGetValue(type, out IList<DeploymentItem>? value))
         {
             IReadOnlyList<object> deploymentItemAttributes = _reflectionUtility.GetCustomAttributes(
-                type.GetTypeInfo(),
+                type,
                 typeof(DeploymentItemAttribute));
             value = GetDeploymentItems(deploymentItemAttributes, warnings);
             _classLevelDeploymentItems[type] = value;

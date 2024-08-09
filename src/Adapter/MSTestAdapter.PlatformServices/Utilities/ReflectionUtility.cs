@@ -254,16 +254,17 @@ internal class ReflectionUtility
                 continue;
             }
 
+            Type attributeType = attributeInstance.GetType();
             IReadOnlyList<object> attributeUsageAttributes = GetCustomAttributes(
-                attributeInstance.GetType().GetTypeInfo(),
+                attributeType,
                 typeof(AttributeUsageAttribute),
                 true);
             if (attributeUsageAttributes.Count > 0
                 && attributeUsageAttributes[0] is AttributeUsageAttribute { AllowMultiple: false })
             {
-                if (!uniqueAttributes.ContainsKey(attributeInstance.GetType().FullName))
+                if (!uniqueAttributes.ContainsKey(attributeType.FullName))
                 {
-                    uniqueAttributes.Add(attributeInstance.GetType().FullName, attributeInstance);
+                    uniqueAttributes.Add(attributeType.FullName, attributeInstance);
                 }
             }
             else

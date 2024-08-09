@@ -341,7 +341,7 @@ internal class UnitTestRunner : MarshalByRefObject
 
         if (isIgnoreAttributeOnClass)
         {
-            ignoreMessage = _reflectHelper.GetIgnoreMessage(testMethodInfo.Parent.ClassType.GetTypeInfo());
+            ignoreMessage = _reflectHelper.GetIgnoreMessage(testMethodInfo.Parent.ClassType);
         }
 
         if (StringEx.IsNullOrEmpty(ignoreMessage) && isIgnoreAttributeOnMethod)

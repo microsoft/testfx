@@ -81,9 +81,9 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributes()
     {
-        TypeInfo typeInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetTypeInfo();
+        Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(typeInfo, false);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, false);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -94,9 +94,9 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        TypeInfo typeInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
+        Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(typeInfo, false);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, false);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -107,9 +107,9 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
-        TypeInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
+        Type method = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, true);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(method, true);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -199,9 +199,9 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributes()
     {
-        TypeInfo typeInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetTypeInfo();
+        Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(typeInfo, typeof(TestCategoryAttribute), false);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, typeof(TestCategoryAttribute), false);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -212,9 +212,9 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        TypeInfo typeInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
+        Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(typeInfo, typeof(TestCategoryAttribute), false);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, typeof(TestCategoryAttribute), false);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -225,9 +225,9 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
-        TypeInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
+        Type method = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), true);
+        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(method, typeof(TestCategoryAttribute), true);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
