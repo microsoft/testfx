@@ -37,9 +37,9 @@ public class DesktopReflectionOperationsTests : TestContainer
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributes()
     {
-        TypeInfo typeInfo = typeof(ReflectionUtilityTests.DummyBaseTestClass).GetTypeInfo();
+        Type type = typeof(ReflectionUtilityTests.DummyBaseTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(typeInfo, false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type, false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);

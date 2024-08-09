@@ -49,20 +49,18 @@ internal class TypeValidator
     /// <returns>Return true if it is a valid test class.</returns>
     internal virtual bool IsValidTestClass(Type type, ICollection<string> warnings)
     {
-        TypeInfo typeInfo = type.GetTypeInfo();
-
         // PERF: We are doing caching reflection here, meaning we will cache every class info in the
         // assembly, this is because when we discover and run we will repeatedly inspect all the types in the assembly, and this
         // gives us a better performance.
         // It would be possible to use non-caching reflection here if we knew that we are only doing discovery that won't be followed by run,
         // but the difference is quite small, and we don't expect a huge amount of non-test classes in the assembly.
-        if (!typeInfo.IsClass || !_reflectHelper.IsDerivedAttributeDefined<TestClassAttribute>(typeInfo, inherit: false))
+        if (!type.IsClass || !_reflectHelper.IsDerivedAttributeDefined<TestClassAttribute>(type, inherit: false))
         {
             return false;
         }
 
         // inaccessible class
-        if (!TypeHasValidAccessibility(typeInfo, _discoverInternals))
+        if (!TypeHasValidAccessibility(type, _discoverInternals))
         {
             string warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
             warnings.Add(warning);
@@ -70,7 +68,7 @@ internal class TypeValidator
         }
 
         // Generic class
-        if (typeInfo is { IsGenericTypeDefinition: true, IsAbstract: false })
+        if (type is { IsGenericTypeDefinition: true, IsAbstract: false })
         {
             // In IDE generic classes that are not abstract are treated as not runnable. Keep consistence.
             string warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorTestClassIsGenericNonAbstract, type.FullName);
@@ -94,7 +92,7 @@ internal class TypeValidator
         // What we do is:
         //   - report the class as "not valid" test class. This will cause to skip enumerating tests from it.
         //   - Do not generate warnings/do not create NOT RUNNABLE tests.
-        return !typeInfo.IsAbstract;
+        return !type.IsAbstract;
     }
 
     /// <summary>
@@ -141,7 +139,7 @@ internal class TypeValidator
         return true;
     }
 
-    internal static bool TypeHasValidAccessibility(TypeInfo type, bool discoverInternals)
+    internal static bool TypeHasValidAccessibility(Type type, bool discoverInternals)
     {
         if (type.IsVisible)
         {
@@ -195,7 +193,7 @@ internal class TypeValidator
 
                 // Or the type is nested internal, or nested public type, but not any other
                 // like nested protected internal type, or nested private type.
-                || declaringType.IsNestedAssembly || declaringType.GetTypeInfo().IsNestedPublic;
+                || declaringType.IsNestedAssembly || declaringType.IsNestedPublic;
 
             if (!declaringTypeIsPublicOrInternal)
             {

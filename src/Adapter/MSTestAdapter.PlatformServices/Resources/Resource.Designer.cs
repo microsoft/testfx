@@ -11,8 +11,8 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
     using System;
     using System.Reflection;
-    
-    
+
+
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -24,15 +24,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resource {
-        
+
         private static global::System.Resources.ResourceManager resourceMan;
-        
+
         private static global::System.Globalization.CultureInfo resourceCulture;
-        
+
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Resource() {
         }
-        
+
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
@@ -41,13 +41,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Reso" +
-                            "urce", typeof(Resource).GetTypeInfo().Assembly);
+                            "urce", typeof(Resource).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
             }
         }
-        
+
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
@@ -61,7 +61,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 resourceCulture = value;
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Could not find file &apos;{0}&apos;..
         /// </summary>
@@ -70,7 +70,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("CannotFindFile", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to The parameter should not be null or empty..
         /// </summary>
@@ -79,7 +79,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("Common_CannotBeNullOrEmpty", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Test Run deployment issue: Bad deployment item: &apos;{0}&apos;: output directory &apos;{1}&apos; specifies the item to be deployed outside deployment root directory which is not allowed..
         /// </summary>
@@ -88,7 +88,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("DeploymentErrorBadDeploymentItem", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Test Run deployment issue: Failed to access output directory &apos;{1}&apos; specified by deployment item &apos;{0}&apos;, the item will not be deployed: {2}: {3}.
         /// </summary>
@@ -97,7 +97,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("DeploymentErrorFailedToAccesOutputDirectory", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Test Run deployment issue: Failed to access the file &apos;{0}&apos;: {1}: {2}.
         /// </summary>
@@ -106,7 +106,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("DeploymentErrorFailedToAccessFile", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Test Run deployment issue: Failed to copy file &apos;{0}&apos; to &apos;{1}&apos;: {2}: {3}.
         /// </summary>
@@ -115,7 +115,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("DeploymentErrorFailedToCopyWithOverwrite", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Test Run deployment issue: Failed to deploy dependencies for test storage &apos;{0}&apos;: {1}.
         /// </summary>
@@ -124,7 +124,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("DeploymentErrorFailedToDeployDependencies", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Test Run deployment issue: Failed to get the file for {0}: {1}: {2}.
         /// </summary>
@@ -133,7 +133,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("DeploymentErrorFailedToGetFileForDeploymentItem", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Test Run deployment issue: an error occurred while getting satellite assemblies for {0}: {1}: {2}.
         /// </summary>
@@ -142,7 +142,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("DeploymentErrorGettingSatellite", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to deployment item &apos;{0}&apos;.
         /// </summary>
@@ -151,7 +151,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("DeploymentItem", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Invalid deployment item: the specified path &apos;{0}&apos; or output directory &apos;{1}&apos; contains illegal characters..
         /// </summary>
@@ -160,7 +160,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("DeploymentItemContainsInvalidCharacters", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Invalid deployment item: the output directory cannot be null..
         /// </summary>
@@ -169,7 +169,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("DeploymentItemOutputDirectoryCannotBeNull", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Invalid deployment item: the specified output directory &apos;{0}&apos; is not relative..
         /// </summary>
@@ -178,7 +178,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("DeploymentItemOutputDirectoryMustBeRelative", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Invalid deployment item: the path must contain at least one character..
         /// </summary>
@@ -187,7 +187,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("DeploymentItemPathCannotBeNullOrEmpty", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to deployment item &apos;{0}&apos; (output directory &apos;{1}&apos;).
         /// </summary>
@@ -196,7 +196,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("DeploymentItemWithOutputDirectory", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to MSTestAdapter encountered an unexpected element &apos;{0}&apos; in its settings &apos;{1}&apos;. Remove this element and try again..
         /// </summary>
@@ -205,7 +205,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("InvalidSettingsXmlElement", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Test Run deployment issue: The assembly or module &apos;{0}&apos; was not found. Reason: {1}.
         /// </summary>
@@ -214,7 +214,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("MissingDeploymentDependency", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Test Run deployment issue: The assembly or module &apos;{0}&apos; was not found..
         /// </summary>
@@ -223,7 +223,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("MissingDeploymentDependencyWithoutReason", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to {0}_{1} {2}.
         /// </summary>
@@ -232,7 +232,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("TestRunName", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Data source &apos;{0}&apos; cannot be found in the test configuration settings.
         /// </summary>
@@ -241,7 +241,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("UTA_DataSourceConfigurationSectionMissing", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to The unit test adapter failed to connect to the data source or to read the data. For more information on troubleshooting this error, see &quot;Troubleshooting Data-Driven Unit Tests&quot; (http://go.microsoft.com/fwlink/?LinkId=62412) in the MSDN Library. Error details: {0}.
         /// </summary>
@@ -250,7 +250,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
                 return ResourceManager.GetString("UTA_ErrorDataConnectionFailed", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Wrong number of objects for permutation. Should be greater than zero..
         /// </summary>
