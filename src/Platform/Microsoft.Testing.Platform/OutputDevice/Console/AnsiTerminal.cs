@@ -175,11 +175,7 @@ internal class AnsiTerminal : ITerminal
         // For non code files, point to the directory, so we don't end up running the
         // exe by clicking at the link.
         string? extension = Path.GetExtension(path);
-        bool linkToFile = false;
-        if (!RoslynString.IsNullOrWhiteSpace(extension) && KnownFileExtensions.Contains(extension))
-        {
-            linkToFile = true;
-        }
+        bool linkToFile = !RoslynString.IsNullOrWhiteSpace(extension) && KnownFileExtensions.Contains(extension);
 
         bool knownNonExistingFile = path.StartsWith("/_/", ignoreCase: false, CultureInfo.CurrentCulture);
 

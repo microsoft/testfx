@@ -196,7 +196,7 @@ public partial class AssertTests : TestContainer
 
     public void AreEqualShouldFailWhenNotEqualStringWithMessage()
     {
-        Exception? ex = VerifyThrows(() => Assert.AreEqual("A", "a", "A Message"));
+        Exception ex = VerifyThrows(() => Assert.AreEqual("A", "a", "A Message"));
         Verify(ex.Message.Contains("A Message"));
     }
 
