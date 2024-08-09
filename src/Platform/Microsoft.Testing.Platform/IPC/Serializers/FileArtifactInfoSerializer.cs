@@ -43,13 +43,13 @@ internal sealed class FileArtifactInfoSerializer : BaseSerializer, INamedPipeSer
 
     public object Deserialize(Stream stream)
     {
-        string fullPath = string.Empty;
-        string displayName = string.Empty;
-        string description = string.Empty;
-        string testUid = string.Empty;
-        string testDisplayName = string.Empty;
-        string sessionUid = string.Empty;
-        string modulePath = string.Empty;
+        string? fullPath = null;
+        string? displayName = null;
+        string? description = null;
+        string? testUid = null;
+        string? testDisplayName = null;
+        string? sessionUid = null;
+        string? modulePath = null;
 
         ushort fieldCount = ReadShort(stream);
 
@@ -116,11 +116,11 @@ internal sealed class FileArtifactInfoSerializer : BaseSerializer, INamedPipeSer
     }
 
     private static ushort GetFieldCount(FileArtifactInfo fileArtifactInfo) =>
-        (ushort)((IsNull(fileArtifactInfo.FullPath) ? 0 : 1) +
-        (IsNull(fileArtifactInfo.DisplayName) ? 0 : 1) +
-        (IsNull(fileArtifactInfo.Description) ? 0 : 1) +
-        (IsNull(fileArtifactInfo.TestUid) ? 0 : 1) +
-        (IsNull(fileArtifactInfo.TestDisplayName) ? 0 : 1) +
-        (IsNull(fileArtifactInfo.SessionUid) ? 0 : 1) +
-        (IsNull(fileArtifactInfo.ModulePath) ? 0 : 1));
+        (ushort)((fileArtifactInfo.FullPath is null ? 0 : 1) +
+        (fileArtifactInfo.DisplayName is null ? 0 : 1) +
+        (fileArtifactInfo.Description is null ? 0 : 1) +
+        (fileArtifactInfo.TestUid is null ? 0 : 1) +
+        (fileArtifactInfo.TestDisplayName is null ? 0 : 1) +
+        (fileArtifactInfo.SessionUid is null ? 0 : 1) +
+        (fileArtifactInfo.ModulePath is null ? 0 : 1));
 }

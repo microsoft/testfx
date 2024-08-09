@@ -96,13 +96,13 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPip
             { HandshakeInfoPropertyNames.Framework, RuntimeInformation.FrameworkDescription },
             { HandshakeInfoPropertyNames.OS, RuntimeInformation.OSDescription },
             { HandshakeInfoPropertyNames.ProtocolVersion, ProtocolConstants.Version },
-            { HandshakeInfoPropertyNames.HostType, this.GetType().Name },
+            { HandshakeInfoPropertyNames.HostType, GetType().Name },
             { HandshakeInfoPropertyNames.ModulePath, testApplicationModuleInfo?.GetCurrentTestApplicationFullPath() ?? string.Empty },
         });
 
         HandshakeInfo response = await dotnetTestPipeClient.RequestReplyAsync<HandshakeInfo, HandshakeInfo>(handshakeInfo, testApplicationCancellationToken);
 
-        return response.Properties.TryGetValue(HandshakeInfoPropertyNames.ProtocolVersion, out string? protocolVersion) &&
+        return response.Properties?.TryGetValue(HandshakeInfoPropertyNames.ProtocolVersion, out string? protocolVersion) == true &&
             protocolVersion.Equals(ProtocolConstants.Version, StringComparison.Ordinal);
     }
 

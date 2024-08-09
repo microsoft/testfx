@@ -35,7 +35,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
 {
-    private const string ServerOptionValue = "dotnettestcli";
+    private const string DotnetTestCliProtocol = "dotnettestcli";
 
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
@@ -380,7 +380,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AddServices(testApplicationLifecycleCallback);
 
         // ServerMode and Console mode uses different host
-        if (commandLineHandler.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && !TestHostBuilder.HasDotnetTestServerOption(commandLineHandler))
+        if (commandLineHandler.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && !HasDotnetTestServerOption(commandLineHandler))
         {
             // Build the server mode with the user preferences
             IMessageHandlerFactory messageHandlerFactory = ((ServerModeManager)ServerMode).Build(serviceProvider);
@@ -496,7 +496,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
     private static bool HasDotnetTestServerOption(CommandLineHandler commandLineHandler) =>
         commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
         serverArgs.Length == 1 &&
-        serverArgs[0].Equals(ServerOptionValue, StringComparison.Ordinal);
+        serverArgs[0].Equals(DotnetTestCliProtocol, StringComparison.Ordinal);
 
     private static async Task<NamedPipeClient?> ConnectToTestHostProcessMonitorIfAvailableAsync(
         IProcessHandler processHandler,

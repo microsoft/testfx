@@ -39,12 +39,12 @@ internal sealed class SuccessfulTestResultMessageSerializer : BaseSerializer, IN
 
     public object Deserialize(Stream stream)
     {
-        string uid = string.Empty;
-        string displayName = string.Empty;
-        string state = string.Empty;
-        string reason = string.Empty;
-        string sessionUid = string.Empty;
-        string modulePath = string.Empty;
+        string? uid = null;
+        string? displayName = null;
+        string? state = null;
+        string? reason = null;
+        string? sessionUid = null;
+        string? modulePath = null;
 
         ushort fieldCount = ReadShort(stream);
 
@@ -106,12 +106,12 @@ internal sealed class SuccessfulTestResultMessageSerializer : BaseSerializer, IN
     }
 
     private static ushort GetFieldCount(SuccessfulTestResultMessage testResultMessage) =>
-        (ushort)((IsNull(testResultMessage.Uid) ? 0 : 1) +
-        (IsNull(testResultMessage.DisplayName) ? 0 : 1) +
-        (IsNull(testResultMessage.State) ? 0 : 1) +
-        (IsNull(testResultMessage.Reason) ? 0 : 1) +
-        (IsNull(testResultMessage.SessionUid) ? 0 : 1) +
-        (IsNull(testResultMessage.ModulePath) ? 0 : 1));
+        (ushort)((testResultMessage.Uid is null ? 0 : 1) +
+        (testResultMessage.DisplayName is null ? 0 : 1) +
+        (testResultMessage.State is null ? 0 : 1) +
+        (testResultMessage.Reason is null ? 0 : 1) +
+        (testResultMessage.SessionUid is null ? 0 : 1) +
+        (testResultMessage.ModulePath is null ? 0 : 1));
 }
 
 /*
@@ -156,14 +156,14 @@ internal sealed class FailedTestResultMessageSerializer : BaseSerializer, INamed
 
     public object Deserialize(Stream stream)
     {
-        string uid = string.Empty;
-        string displayName = string.Empty;
-        string state = string.Empty;
-        string reason = string.Empty;
-        string errorMessage = string.Empty;
-        string errorStackTrace = string.Empty;
-        string sessionUid = string.Empty;
-        string modulePath = string.Empty;
+        string? uid = null;
+        string? displayName = null;
+        string? state = null;
+        string? reason = null;
+        string? errorMessage = null;
+        string? errorStackTrace = null;
+        string? sessionUid = null;
+        string? modulePath = null;
 
         ushort fieldCount = ReadShort(stream);
 
@@ -235,12 +235,12 @@ internal sealed class FailedTestResultMessageSerializer : BaseSerializer, INamed
     }
 
     private static ushort GetFieldCount(FailedTestResultMessage testResultMessage) =>
-        (ushort)((IsNull(testResultMessage.Uid) ? 0 : 1) +
-        (IsNull(testResultMessage.DisplayName) ? 0 : 1) +
-        (IsNull(testResultMessage.State) ? 0 : 1) +
-        (IsNull(testResultMessage.Reason) ? 0 : 1) +
-        (IsNull(testResultMessage.ErrorMessage) ? 0 : 1) +
-        (IsNull(testResultMessage.ErrorStackTrace) ? 0 : 1) +
-        (IsNull(testResultMessage.SessionUid) ? 0 : 1) +
-        (IsNull(testResultMessage.ModulePath) ? 0 : 1));
+        (ushort)((testResultMessage.Uid is null ? 0 : 1) +
+        (testResultMessage.DisplayName is null ? 0 : 1) +
+        (testResultMessage.State is null ? 0 : 1) +
+        (testResultMessage.Reason is null ? 0 : 1) +
+        (testResultMessage.ErrorMessage is null ? 0 : 1) +
+        (testResultMessage.ErrorStackTrace is null ? 0 : 1) +
+        (testResultMessage.SessionUid is null ? 0 : 1) +
+        (testResultMessage.ModulePath is null ? 0 : 1));
 }

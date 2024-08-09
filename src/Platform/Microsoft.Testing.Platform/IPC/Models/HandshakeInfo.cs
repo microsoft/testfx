@@ -3,4 +3,4 @@
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
-internal sealed record HandshakeInfo(Dictionary<string, string> Properties) : IRequest, IResponse;
+internal sealed record HandshakeInfo(Dictionary<string, string>? Properties) : IRequest, IResponse;

@@ -27,9 +27,9 @@ internal sealed class TestSessionEventSerializer : BaseSerializer, INamedPipeSer
 
     public object Deserialize(Stream stream)
     {
-        string type = string.Empty;
-        string sessionUid = string.Empty;
-        string modulePath = string.Empty;
+        string? type = null;
+        string? sessionUid = null;
+        string? modulePath = null;
 
         ushort fieldCount = ReadShort(stream);
 
@@ -76,7 +76,7 @@ internal sealed class TestSessionEventSerializer : BaseSerializer, INamedPipeSer
     }
 
     private static ushort GetFieldCount(TestSessionEvent testSessionEvent) =>
-        (ushort)((IsNull(testSessionEvent.SessionType) ? 0 : 1) +
-        (IsNull(testSessionEvent.SessionUid) ? 0 : 1) +
-        (IsNull(testSessionEvent.ModulePath) ? 0 : 1));
+        (ushort)((testSessionEvent.SessionType is null ? 0 : 1) +
+        (testSessionEvent.SessionUid is null ? 0 : 1) +
+        (testSessionEvent.ModulePath is null ? 0 : 1));
 }
