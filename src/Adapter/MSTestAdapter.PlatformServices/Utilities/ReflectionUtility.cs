@@ -22,8 +22,7 @@ internal class ReflectionUtility
     /// <param name="attributeProvider"> The member to reflect on. </param>
     /// <param name="type"> The attribute type. </param>
     /// <returns> The vale of the custom attribute. </returns>
-    [return: NotNullIfNotNull(nameof(attributeProvider))]
-    internal virtual IReadOnlyList<object>? GetCustomAttributes(MemberInfo attributeProvider, Type type)
+    internal virtual IReadOnlyList<object> GetCustomAttributes(MemberInfo attributeProvider, Type type)
         => GetCustomAttributes(attributeProvider, type, true);
 
     /// <summary>
@@ -32,8 +31,7 @@ internal class ReflectionUtility
     /// <param name="memberInfo"> The member. </param>
     /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-    [return: NotNullIfNotNull(nameof(memberInfo))]
-    internal static IReadOnlyList<object>? GetCustomAttributes(MemberInfo memberInfo, bool inherit)
+    internal static IReadOnlyList<object> GetCustomAttributes(MemberInfo memberInfo, bool inherit)
         => GetCustomAttributes(memberInfo, type: null, inherit: inherit);
 
     /// <summary>
@@ -43,14 +41,8 @@ internal class ReflectionUtility
     /// <param name="type">Type of attribute to retrieve.</param>
     /// <param name="inherit">If inherited type of attribute.</param>
     /// <returns>All attributes of give type on member.</returns>
-    [return: NotNullIfNotNull(nameof(memberInfo))]
-    internal static IReadOnlyList<object>? GetCustomAttributes(MemberInfo? memberInfo, Type? type, bool inherit)
+    internal static IReadOnlyList<object> GetCustomAttributes(MemberInfo memberInfo, Type? type, bool inherit)
     {
-        if (memberInfo == null)
-        {
-            return null;
-        }
-
 #if NETFRAMEWORK
         bool shouldGetAllAttributes = type == null;
 
