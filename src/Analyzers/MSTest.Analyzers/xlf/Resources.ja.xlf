@@ -3,22 +3,38 @@
   <file datatype="xml" source-language="en" target-language="ja" original="../Resources.resx">
     <body>
       <trans-unit id="AssemblyCleanupShouldBeValidDescription">
-        <source>Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">[AssemblyCleanup] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
-- 'public' である 
-- 'static' である
-- ジェネリックではなく、ジェネリック クラスでも定義されていない
-- パラメーターを受け取りません
+        <source>Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
+        <target state="translated">'[AssemblyCleanup]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
+- ジェネリック クラスで宣言することはできません
+- 'public' である必要があります
+- 'static' である必要があります
+- 'async void' にすることはできません
+- 特殊なメソッド (ファイナライザー、演算子...) にすることはできません。
+- ジェネリックにすることはできません
+- パラメーターを受け取ることができません
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
-- 'async void' ではありません
-- 特殊なメソッド (ファイナライザー、演算子...) ではありません。</target>
+
+これらのメソッドを宣言する型も、次の規則に従う必要があります:
+- 型はクラスである必要があります
+- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- クラスを 'static' にすることはできません
+- クラスは '[TestClass]' (または派生属性) でマークする必要があります
+- クラスをジェネリックにすることはできません。</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -32,22 +48,38 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
-        <source>Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">[AssemblyInitialize] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
-- 'public' である 
-- 'static' である
-- ジェネリックではなく、ジェネリック クラスでも定義されていない
-- 'TestContext' 型のパラメーターを 1 つ受け取ります
+        <source>Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
+        <target state="translated">'[AssemblyInitialize]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
+- ジェネリック クラスで宣言することはできません
+- 'public' である必要があります
+- 'static' である必要があります
+- 'async void' にすることはできません
+- 特殊なメソッド (ファイナライザー、演算子...) にすることはできません。
+- ジェネリックにすることはできません
+- 'TestContext' 型のパラメーターを 1 つ受け取る必要があります
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
-- 'async void' ではありません
-- 特殊なメソッド (ファイナライザー、演算子...) ではありません。</target>
+
+これらのメソッドを宣言する型も、次の規則に従う必要があります:
+- 型はクラスである必要があります
+- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- クラスを 'static' にすることはできません
+- クラスは '[TestClass]' (または派生属性) でマークする必要があります
+- クラスをジェネリックにすることはできません。</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -101,26 +133,42 @@
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
-        <source>Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...)
+        <source>Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
-        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
+        <target state="translated">'[ClassCleanup]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
+- 'InheritanceBehavior' モードが設定されていないと、ジェネリック クラスで宣言できません
+- 'public' である必要があります
+- 'static' である必要があります
+- 'async void' にすることはできません
+- 特殊なメソッド (ファイナライザー、演算子...) にすることはできません。
+- ジェネリックにすることはできません
+- パラメーターを受け取ることができません
+- 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
+- クラスが 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターーを指定する必要があります
+- クラスが 'sealed' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターーを指定しない必要があります
+
+これらのメソッドを宣言する型も、次の規則に従う必要があります:
+- 型はクラスである必要があります
+- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- クラスを 'static' にすることはできません
+- クラスが 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります
+- クラスをジェネリックにすることはできません。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -134,26 +182,42 @@
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidDescription">
-        <source>Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...)
+        <source>Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</source>
-        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...)
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'.</target>
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
+        <target state="translated">'[ClassInitialize]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
+- 'InheritanceBehavior' モードが設定されていないと、ジェネリック クラスで宣言できません
+- 'public' である必要があります
+- 'static' である必要があります
+- 'async void' にすることはできません
+- 特殊なメソッド (ファイナライザー、演算子...) にすることはできません。
+- ジェネリックにすることはできません
+- 'TestContext' 型のパラメーターを 1 つ受け取る必要があります
+- 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
+- クラスが 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターーを指定する必要があります
+- クラスが 'sealed' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターーを指定しない必要があります
+
+これらのメソッドを宣言する型も、次の規則に従う必要があります:
+- 型はクラスである必要があります
+- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- クラスを 'static' にすることはできません
+- クラスが 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります
+- クラスをジェネリックにすることはできません。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -237,60 +301,60 @@
 - should only be set on a test method;
 - member should be defined on the type specified;
 - member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</source>
-        <target state="new">'DynamicData' entry should have the following layout to be valid:
-- should only be set on a test method;
-- member should be defined on the type specified;
-- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</target>
+        <target state="translated">'DynamicData' エントリを有効にするには、次のレイアウトが必要です。
+- テスト メソッドにのみ設定する必要があります。
+- メンバーは、指定された型で定義する必要があります。
+- DynamicDataSourceType.Method が指定されている場合はメンバーはメソッド、それ以外の場合はプロパティである必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DataMemberSignature">
         <source>'[DynamicData]' data member '{0}.{1}' signature is invalid</source>
-        <target state="new">'[DynamicData]' data member '{0}.{1}' signature is invalid</target>
+        <target state="translated">'[DynamicData]' データ メンバー '{0}.{1}' の署名が無効です</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature">
         <source>'[DynamicData]' display name method '{0}.{1}' signature is invalid</source>
-        <target state="new">'[DynamicData]' display name method '{0}.{1}' signature is invalid</target>
+        <target state="translated">'[DynamicData]' 表示名メソッド '{0}.{1}' の署名が無効です</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberMethod">
         <source>'[DynamicData]' member '{0}.{1}' should be a method</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' should be a method</target>
+        <target state="translated">'[DynamicData]' メンバー '{0}.{1}' はメソッドである必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberNotFound">
         <source>'[DynamicData]' member '{0}.{1}' cannot be found</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' cannot be found</target>
+        <target state="translated">'[DynamicData]' メンバー '{0}.{1}' が見つかりません</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="new">'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</target>
+        <target state="translated">'[DynamicData]' の参照されるメンバー '{0}.{1}' は、'IEnumerable&lt;object[]&gt;'、'IEnumerable&lt;Tuple&gt;`、'IEnumerable&lt;ValueTuple&gt;' のいずれかを返す必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_OnTestMethod">
         <source>'[DynamicData]' should only be set on a test method</source>
-        <target state="new">'[DynamicData]' should only be set on a test method</target>
+        <target state="translated">'[DynamicData]' はテスト メソッドでのみ設定する必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</target>
+        <target state="translated">'[DynamicData]' メンバー '{0}.{1}' はメソッドであるため、'DynamicDataSourceType.Method' を設定する必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
         <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</target>
+        <target state="translated">'[DynamicData]' メンバー '{0}.{1}' はプロパティであるため、'DynamicDataSourceType.Property' を設定する必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
         <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
-        <target state="new">'[DynamicDta]' member '{0}.{1}' is found more than once</target>
+        <target state="translated">'[DynamicDta]' メンバー '{0}.{1}' が複数回見つかりました</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
         <source>DynamicData should be valid</source>
-        <target state="new">DynamicData should be valid</target>
+        <target state="translated">DynamicData は有効である必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -445,24 +509,36 @@
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
-        <source>Methods marked with [TestCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic or be defined on a generic class
-- not be 'abstract'
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">[TestCleanup] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
-- 'public' である 
-- 'static' ではありません
-- ジェネリックではないか、ジェネリック クラスで定義されている
-- 'abstract' ではありません
-- パラメーターを受け取りません
+        <source>Methods marked with '[TestCleanup]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
+        <target state="translated">'[TestCleanup]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
+- 'public' である必要があります
+- 'abstract' にすることはできません
+- 'async void' にすることはできません
+- 'static' にすることはできません
+- 特殊なメソッド (ファイナライザー、演算子...) にすることはできません。
+- ジェネリックにすることはできません
+- パラメーターを受け取ることができません
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
-- 'async void' ではありません
-- 特殊なメソッド (ファイナライザー、演算子...) ではありません。</target>
+
+これらのメソッドを宣言する型も、次の規則に従う必要があります:
+- 型はクラスである必要があります
+- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- クラスを 'static' にすることはできません
+-クラスが 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -520,24 +596,36 @@
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidDescription">
-        <source>Methods marked with [TestInitialize] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not be 'abstract'
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">[TestInitialize] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
-- 'public' である 
-- 'static' ではありません
-- ジェネリックではなく、ジェネリック クラスでも定義されていない
-- 'abstract' ではありません
-- パラメーターを受け取りません
+        <source>Methods marked with '[TestInitialize]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
+        <target state="translated">'[TestInitialize]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
+- 'public' である必要があります
+- 'abstract' にすることはできません
+- 'async void' にすることはできません
+- 'static' にすることはできません
+- 特殊なメソッド (ファイナライザー、演算子...) にすることはできません。
+- ジェネリックにすることはできません
+- パラメーターを受け取ることができません
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
-- 'async void' ではありません
-- 特殊なメソッド (ファイナライザー、演算子...) ではありません。</target>
+
+これらのメソッドを宣言する型も、次の規則に従う必要があります:
+- 型はクラスである必要があります
+- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- クラスを 'static' にすることはできません
+-クラスが 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
@@ -666,12 +754,12 @@
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
+        <target state="translated">'[DeploymentItem]' は、テスト クラスまたはテスト メソッドでのみ指定できます</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
+        <target state="translated">'[DeploymentItem]' は、テスト クラスまたはテスト メソッドでのみ指定できます</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

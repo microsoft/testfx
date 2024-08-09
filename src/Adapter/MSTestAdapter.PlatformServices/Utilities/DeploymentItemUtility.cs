@@ -78,7 +78,7 @@ internal class DeploymentItemUtility
     /// <param name="relativeOutputDirectory"> The relative Output Directory. </param>
     /// <param name="warning"> The warning message if it is an invalid deployment item. </param>
     /// <returns> Returns true if it is a valid deployment item. </returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#", Justification = "Internal method.")]
+    [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#", Justification = "Internal method.")]
     internal static bool IsValidDeploymentItem([NotNullWhen(true)] string? sourcePath, [NotNullWhen(true)] string? relativeOutputDirectory, out string warning)
     {
         if (StringEx.IsNullOrEmpty(sourcePath))

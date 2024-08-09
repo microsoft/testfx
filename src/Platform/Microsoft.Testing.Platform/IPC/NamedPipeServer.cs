@@ -325,7 +325,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             try
             {
                 // To close gracefully we need to ensure that the client closed the stream line 103.
-                await _loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                await _loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, _cancellationToken);
             }
             catch (TimeoutException)
             {

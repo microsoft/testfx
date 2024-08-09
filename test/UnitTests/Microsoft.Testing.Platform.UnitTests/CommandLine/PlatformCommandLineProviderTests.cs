@@ -191,7 +191,7 @@ public class PlatformCommandLineProviderTests : TestBase
         var provider = new PlatformCommandLineProvider();
         var options = new Dictionary<string, string[]>();
         string pid = "-32";
-        string[]? args = [pid];
+        string[] args = [pid];
         options.Add(PlatformCommandLineProvider.ExitOnProcessExitOptionKey, args);
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);

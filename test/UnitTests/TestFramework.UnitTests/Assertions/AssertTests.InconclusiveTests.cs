@@ -13,8 +13,6 @@ public partial class AssertTests
     public void InconclusiveDoesNotThrowWhenMessageContainsInvalidStringFormatCompositeAndNoArgumentsPassed()
     {
         Exception ex = VerifyThrows(() => Assert.Inconclusive("{"));
-
-        Verify(ex is not null);
         Verify(typeof(AssertInconclusiveException) == ex.GetType());
         Verify(ex.Message.Contains("Assert.Inconclusive failed. {"));
     }
@@ -24,8 +22,6 @@ public partial class AssertTests
     public void InconclusiveThrowsWhenMessageContainsInvalidStringFormatComposite()
     {
         Exception ex = VerifyThrows(() => Assert.Inconclusive("{", "arg"));
-
-        Verify(ex is not null);
         Verify(ex is FormatException);
     }
 }

@@ -177,7 +177,7 @@ public class TestDeploymentTests : TestContainer
 
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseButHasDeploymentItems()
     {
-        var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
+        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "A");
         KeyValuePair<string, string>[] kvpArray =
         [
             new KeyValuePair<string, string>(
@@ -207,7 +207,7 @@ public class TestDeploymentTests : TestContainer
 
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseAndHasNoDeploymentItems()
     {
-        var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
+        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "A");
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionUtility.Object),
@@ -230,7 +230,7 @@ public class TestDeploymentTests : TestContainer
 
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToTrueButHasNoDeploymentItems()
     {
-        var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
+        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "A");
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionUtility.Object),
@@ -254,7 +254,7 @@ public class TestDeploymentTests : TestContainer
     // TODO: This test has to have mocks. It actually deploys stuff and we cannot assume that all the dependencies get copied over to bin\debug.
     internal void DeployShouldReturnTrueWhenDeploymentEnabledSetToTrueAndHasDeploymentItems()
     {
-        var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), typeof(TestDeploymentTests).Assembly.Location);
+        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), typeof(TestDeploymentTests).Assembly.Location);
         KeyValuePair<string, string>[] kvpArray =
         [
             new KeyValuePair<string, string>(
@@ -400,7 +400,7 @@ public class TestDeploymentTests : TestContainer
 
     private static TestCase GetTestCase(string source)
     {
-        var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), source);
+        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), source);
         KeyValuePair<string, string>[] kvpArray =
         [
             new KeyValuePair<string, string>(
@@ -424,7 +424,7 @@ public class TestDeploymentTests : TestContainer
 #if NET462
         mockAssemblyUtility.Setup(
            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
-           .Returns(System.Array.Empty<string>());
+           .Returns(Array.Empty<string>());
         mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns([]);

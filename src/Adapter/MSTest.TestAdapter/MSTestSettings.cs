@@ -429,7 +429,7 @@ public class MSTestSettings
                         {
                             string value = reader.ReadInnerXml();
                             settings.ClassCleanupLifecycle = TryParseEnum(value, out ClassCleanupBehavior lifecycle)
-                                ? (ClassCleanupBehavior?)lifecycle
+                                ? lifecycle
                                 : throw new AdapterSettingsException(
                                     string.Format(
                                         CultureInfo.CurrentCulture,
@@ -741,7 +741,7 @@ public class MSTestSettings
                         {
                             string value = reader.ReadInnerXml();
                             settings.ParallelizationScope = TryParseEnum(value, out ExecutionScope scope)
-                                ? (ExecutionScope?)scope
+                                ? scope
                                 : throw new AdapterSettingsException(
                                     string.Format(
                                         CultureInfo.CurrentCulture,

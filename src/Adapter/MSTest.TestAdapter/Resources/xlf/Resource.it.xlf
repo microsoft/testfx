@@ -58,7 +58,7 @@ ma ha ricevuto {4} argomenti, con tipi "{5}".</target>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="new">'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</target>
+        <target state="translated">'[DynamicData]' membro di riferimento '{0}.{1}' deve restituire 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;' o 'IEnumerable&lt;ValueTuple&gt;'</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
@@ -68,7 +68,7 @@ ma ha ricevuto {4} argomenti, con tipi "{5}".</target>
       </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
-        <target state="new">Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</target>
+        <target state="translated">Valore non valido '{0}' per la voce runsettings '{1}'. L'impostazione verrà ignorata.</target>
         <note />
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">

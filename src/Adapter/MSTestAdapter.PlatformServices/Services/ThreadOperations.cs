@@ -52,9 +52,7 @@ public class ThreadOperations : IThreadOperations
     }
 #endif
 
-#if NET6_0_OR_GREATER
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
-#endif
     private static bool ExecuteWithCustomThread(Action action, int timeout, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)

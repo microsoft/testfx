@@ -45,7 +45,7 @@ public class AbortionTests : AcceptanceTestBase
                     testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
                 }
 
-                testHostResult.AssertOutputMatchesRegex("Aborted - Failed: 0, Passed: 0, Skipped: 0, Total: 0 -.*");
+                testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 0, aborted: true);
             }, 3, TimeSpan.FromSeconds(10));
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]

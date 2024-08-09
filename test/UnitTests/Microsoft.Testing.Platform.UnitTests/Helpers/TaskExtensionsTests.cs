@@ -29,29 +29,32 @@ public sealed class TaskExtensionsTests : TestBase
     public async Task CancellationAsync_Cancellation_Succeeds()
     {
         CancellationTokenSource cancellationTokenSource = new();
-        var task = Task.Run(async () => await Task.Delay(-1).WithCancellationAsync(cancellationTokenSource.Token));
+        CancellationToken cancelToken = cancellationTokenSource.Token;
+        var task = Task.Run(async () => await Task.Delay(-1, cancelToken).WithCancellationAsync(cancelToken), cancelToken);
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
         cancellationTokenSource.Cancel();
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
         OperationCanceledException exception = await Assert.ThrowsAsync<OperationCanceledException>(async () => await task);
-        Assert.AreEqual(cancellationTokenSource.Token, exception.CancellationToken);
+        Assert.AreEqual(cancelToken, exception.CancellationToken);
     }
 
     public async Task CancellationAsync_CancellationWithArgument_Succeeds()
     {
         CancellationTokenSource cancellationTokenSource = new();
-        var task = Task.Run(async () => await DoSomething().WithCancellationAsync(cancellationTokenSource.Token));
+        CancellationToken cancelToken = cancellationTokenSource.Token;
+        var task = Task.Run(async () => await DoSomething().WithCancellationAsync(cancelToken), cancelToken);
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
         cancellationTokenSource.Cancel();
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
         OperationCanceledException exception = await Assert.ThrowsAsync<OperationCanceledException>(async () => await task);
-        Assert.AreEqual(cancellationTokenSource.Token, exception.CancellationToken);
+        Assert.AreEqual(cancelToken, exception.CancellationToken);
     }
 
     public async Task CancellationAsync_NonCanceled_Succeeds()
     {
         CancellationTokenSource cancellationTokenSource = new();
-        await Task.Delay(TimeSpan.FromSeconds(1)).WithCancellationAsync(cancellationTokenSource.Token);
+        CancellationToken cancelToken = cancellationTokenSource.Token;
+        await Task.Delay(TimeSpan.FromSeconds(1), cancelToken).WithCancellationAsync(cancelToken);
     }
 
     public async Task CancellationAsync_NonCanceledWithArgument_Succeeds()

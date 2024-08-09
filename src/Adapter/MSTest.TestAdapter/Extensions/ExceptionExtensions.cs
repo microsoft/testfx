@@ -72,9 +72,9 @@ internal static class ExceptionExtensions
     internal static bool TryGetUnitTestAssertException(this Exception exception, out UTF.UnitTestOutcome outcome,
         [NotNullWhen(true)] out string? exceptionMessage, out StackTraceInformation? exceptionStackTrace)
     {
-        if (exception is UTF.UnitTestAssertException)
+        if (exception is UnitTestAssertException)
         {
-            outcome = exception is UTF.AssertInconclusiveException
+            outcome = exception is AssertInconclusiveException
                 ? UTF.UnitTestOutcome.Inconclusive
                 : UTF.UnitTestOutcome.Failed;
 

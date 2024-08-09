@@ -437,7 +437,7 @@ internal static class SerializerUtilities
 
                 object? idObj = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Id);
 
-                IDictionary<string, object?>? paramsObj = method != JsonRpcMethods.Exit
+                IDictionary<string, object?> paramsObj = method != JsonRpcMethods.Exit
                     ? GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Params)
                     : new Dictionary<string, object?>();
 
@@ -627,7 +627,7 @@ internal static class SerializerUtilities
         Deserializers[typeof(ErrorMessage)] = new ObjectDeserializer<ErrorMessage>(properties =>
         {
             ValidateJsonRpcHeader(properties);
-            object? idObj = GetRequiredPropertyFromJson<object>(properties, JsonRpcStrings.Id);
+            object idObj = GetRequiredPropertyFromJson<object>(properties, JsonRpcStrings.Id);
             IDictionary<string, object> errorObj = GetRequiredPropertyFromJson<IDictionary<string, object>>(properties, JsonRpcStrings.Error);
 
 #if !NETCOREAPP

@@ -18,7 +18,7 @@ using System.Diagnostics.CodeAnalysis;
 
 #if DETECT_LEAKS
 using System.Runtime.CompilerServices;
- 
+
 #endif
 namespace Microsoft.Testing.Platform.Helpers;
 
@@ -108,8 +108,8 @@ internal sealed class ObjectPool<T>
             {
                 var trace = GetTrace();
 
-                // If you are seeing this message it means that object has been allocated from the pool 
-                // and has not been returned back. This is not critical, but turns pool into rather 
+                // If you are seeing this message it means that object has been allocated from the pool
+                // and has not been returned back. This is not critical, but turns pool into rather
                 // inefficient kind of "new".
                 Debug.WriteLine($"TRACEOBJECTPOOLLEAKS_BEGIN\nPool detected potential leaking of {typeof(T)}. \n Location of the leak: \n {GetTrace()} TRACEOBJECTPOOLLEAKS_END");
             }
@@ -175,7 +175,7 @@ internal sealed class ObjectPool<T>
 
     private T AllocateSlow()
     {
-        ObjectPool<T>.Element[] items = _items;
+        Element[] items = _items;
 
         for (int i = 0; i < items.Length; i++)
         {
@@ -228,7 +228,7 @@ internal sealed class ObjectPool<T>
 
     private void FreeSlow(T obj)
     {
-        ObjectPool<T>.Element[] items = _items;
+        Element[] items = _items;
         for (int i = 0; i < items.Length; i++)
         {
             if (items[i].Value == null)
@@ -288,7 +288,7 @@ internal sealed class ObjectPool<T>
     {
         RoslynDebug.Assert(_firstItem != obj, "freeing twice?");
 
-        ObjectPool<T>.Element[] items = _items;
+        Element[] items = _items;
         for (int i = 0; i < items.Length; i++)
         {
             T? value = items[i].Value;

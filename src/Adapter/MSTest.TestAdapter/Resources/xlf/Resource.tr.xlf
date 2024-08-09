@@ -58,7 +58,7 @@ ancak, '{5}' türüyle {4} argüman aldı.</target>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="new">'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</target>
+        <target state="translated">'[DynamicData]' başvurulan üyesi '{0}.{1}' şu değerleri döndürmelidir: 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` veya 'IEnumerable&lt;ValueTuple&gt;'</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
@@ -68,7 +68,7 @@ ancak, '{5}' türüyle {4} argüman aldı.</target>
       </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
-        <target state="new">Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</target>
+        <target state="translated">'{1}' çalıştırma ayarları girişi için '{0}' değeri geçersiz, ayar yoksayılacak.</target>
         <note />
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">

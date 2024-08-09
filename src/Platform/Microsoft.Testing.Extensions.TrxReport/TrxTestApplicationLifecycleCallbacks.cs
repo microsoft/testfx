@@ -66,7 +66,7 @@ internal class TrxTestApplicationLifecycleCallbacks : ITestApplicationLifecycleC
         {
             if (_isEnabled)
             {
-                string? namedPipeName = _environment.GetEnvironmentVariable(TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME)
+                string namedPipeName = _environment.GetEnvironmentVariable(TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME)
                     ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable, TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME));
                 NamedPipeClient = new NamedPipeClient(namedPipeName);
                 NamedPipeClient.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
@@ -74,7 +74,7 @@ internal class TrxTestApplicationLifecycleCallbacks : ITestApplicationLifecycleC
                 NamedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
 
                 // Connect to the named pipe server
-                await NamedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                await NamedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
             }
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)

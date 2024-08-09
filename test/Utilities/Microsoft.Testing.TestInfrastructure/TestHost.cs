@@ -120,7 +120,7 @@ public sealed class TestHost
         BuildConfiguration buildConfiguration = BuildConfiguration.Release)
     {
         string moduleName = $"{testHostModuleNameWithoutExtension}{(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty)}";
-        string? expectedRootPath = Path.Combine(rootFolder, "bin", buildConfiguration.ToString(), tfm);
+        string expectedRootPath = Path.Combine(rootFolder, "bin", buildConfiguration.ToString(), tfm);
         string[] executables = Directory.GetFiles(expectedRootPath, moduleName, SearchOption.AllDirectories);
         string? expectedPath = executables.SingleOrDefault(p => p.Contains(rid) && p.Contains(verb == Verb.publish ? "publish" : string.Empty));
 
