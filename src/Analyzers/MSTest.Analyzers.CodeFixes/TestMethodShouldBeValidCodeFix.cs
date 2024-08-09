@@ -95,8 +95,9 @@ public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
         if (semanticModel is not null)
         {
             Compilation compilation = semanticModel.Compilation;
-            INamedTypeSymbol? taskSymbol = compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
-            INamedTypeSymbol? valueTaskSymbol = compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
+            var wellKnownTypeProvider = WellKnownTypeProvider.GetOrCreate(semanticModel.Compilation);
+            INamedTypeSymbol? taskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
+            INamedTypeSymbol? valueTaskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
 
             if (newMethodDeclaration.ReturnType != null &&
                 !newMethodDeclaration.ReturnType.IsVoid() &&
