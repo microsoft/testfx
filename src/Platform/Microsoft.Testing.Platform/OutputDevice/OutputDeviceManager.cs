@@ -45,6 +45,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
             loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey),
             PlatformCommandLineProvider.GetMinimumExpectedTests(loggingState.CommandLineParseResult),
-            loggingState.FileLoggerProvider);
+            loggingState.FileLoggerProvider,
+            serviceProvider.GetClock());
     }
 }

@@ -24,7 +24,7 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
         // Assert
         testHostResult.AssertExitCodeIs(2);
         testHostResult.AssertOutputContains($"System.IO.FileNotFoundException: Could not load file or assembly '{TestAssetFixture.ProjectName}");
-        testHostResult.AssertOutputContains("Failed! - Failed: 1, Passed: 0, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
     }
 
     public async Task AssemblyResolution_WhenSpecified_TestSucceeds()
@@ -49,7 +49,7 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
         testHostResult.AssertOutputDoesNotContain("System.IO.FileNotFoundException: Could not load file or assembly 'MSTest.Extensibility.Samples");
     }
 

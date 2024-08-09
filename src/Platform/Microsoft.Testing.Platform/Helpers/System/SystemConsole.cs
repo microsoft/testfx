@@ -11,6 +11,22 @@ internal sealed class SystemConsole : IConsole
 {
     private const int WriteBufferSize = 256;
     private static readonly StreamWriter CaptureConsoleOutWriter;
+
+    /// <summary>
+    /// Gets the height of the buffer area.
+    /// </summary>
+    public int BufferHeight => Console.BufferHeight;
+
+    /// <summary>
+    /// Gets the width of the buffer area.
+    /// </summary>
+    public int BufferWidth => Console.BufferWidth;
+
+    /// <summary>
+    /// Gets a value indicating whether output has been redirected from the standard output stream.
+    /// </summary>
+    public bool IsOutputRedirected => Console.IsOutputRedirected;
+
     private bool _suppressOutput;
 
     static SystemConsole()
@@ -127,6 +143,14 @@ internal sealed class SystemConsole : IConsole
     }
 
     public void Write(string? value)
+    {
+        if (!_suppressOutput)
+        {
+            CaptureConsoleOutWriter.Write(value);
+        }
+    }
+
+    public void Write(char value)
     {
         if (!_suppressOutput)
         {
