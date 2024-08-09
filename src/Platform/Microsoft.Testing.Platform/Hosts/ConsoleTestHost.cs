@@ -24,7 +24,7 @@ internal sealed class ConsoleTestHost(
     TestFrameworkManager testFrameworkManager,
     TestHostManager testHostManager,
     NamedPipeClient? dotnetTestPipeClient = null)
-    : CommonTestHost(serviceProvider)
+    : CommonTestHost(serviceProvider, dotnetTestPipeClient)
 {
     private static readonly ClientInfo Client = new("testingplatform-console", AppVersion.DefaultSemVer);
 
