@@ -34,10 +34,7 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
     public ExpectedExceptionAttribute(Type exceptionType, string noExceptionMessage)
         : base(noExceptionMessage)
     {
-        if (exceptionType == null)
-        {
-            throw new ArgumentNullException(nameof(exceptionType));
-        }
+        Guard.NotNull(exceptionType);
 
         if (!typeof(Exception).IsAssignableFrom(exceptionType.GetTypeInfo()))
         {

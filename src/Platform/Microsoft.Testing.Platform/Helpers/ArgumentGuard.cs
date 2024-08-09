@@ -8,12 +8,6 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal static class ArgumentGuard
 {
-    public static void IsNotNullOrWhiteSpace([NotNull] string? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
-    {
-        Guard.NotNull(argument, paramName);
-        Ensure(!RoslynString.IsNullOrWhiteSpace(argument), paramName!, $"{paramName} should not be empty or whitespace");
-    }
-
     public static void Ensure([DoesNotReturnIf(false)] bool condition, string paramName, string errorMessage)
     {
         if (!condition)

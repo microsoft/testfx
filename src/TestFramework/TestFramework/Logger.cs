@@ -37,15 +37,8 @@ public class Logger
             return;
         }
 
-        if (format == null)
-        {
-            throw new ArgumentNullException(nameof(format));
-        }
-
-        if (args is null)
-        {
-            throw new ArgumentNullException(nameof(args));
-        }
+        Guard.NotNull(format);
+        Guard.NotNull(args);
 
         string message = args.Length == 0
             ? format

@@ -46,7 +46,7 @@
     <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.11.19-preview" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
-    <PackageVersion Include="Polyfill" Version="6.2.1" />
+    <PackageVersion Include="Polyfill" Version="6.2.2" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
     <!-- CVE-2019-0820 -->
     <PackageVersion Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />

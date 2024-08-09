@@ -27,8 +27,8 @@ public class PrivateType
     /// <param name="typeName">fully qualified name of the. </param>
     public PrivateType(string assemblyName, string typeName)
     {
-        _ = assemblyName ?? throw new ArgumentNullException(nameof(assemblyName));
-        _ = typeName ?? throw new ArgumentNullException(nameof(typeName));
+        Guard.NotNull(typeName);
+        Guard.NotNull(assemblyName);
         var asm = Assembly.Load(assemblyName);
 
         ReferencedType = asm.GetType(typeName, true);
@@ -39,10 +39,8 @@ public class PrivateType
     /// the private type from the type object.
     /// </summary>
     /// <param name="type">The wrapped Type to create.</param>
-    public PrivateType(Type type)
-    {
-        ReferencedType = type ?? throw new ArgumentNullException(nameof(type));
-    }
+    public PrivateType(Type type) =>
+        ReferencedType = Guard.NotNull(type);
 
     /// <summary>
     /// Gets the referenced type.
@@ -147,7 +145,7 @@ public class PrivateType
     /// <returns>Result of invocation.</returns>
     public object InvokeStatic(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args, CultureInfo? culture, Type[]? typeArguments)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         if (parameterTypes == null)
         {
             return InvokeHelperStatic(name, bindingFlags | BindingFlags.InvokeMethod, args, culture);
@@ -189,7 +187,7 @@ public class PrivateType
     /// <returns>element at the specified location.</returns>
     public object GetStaticArrayElement(string name, params int[] indices)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         return GetStaticArrayElement(name, BindToEveryThing, indices);
     }
 
@@ -204,7 +202,7 @@ public class PrivateType
     /// </param>
     public void SetStaticArrayElement(string name, object value, params int[] indices)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         SetStaticArrayElement(name, BindToEveryThing, value, indices);
     }
 
@@ -220,7 +218,7 @@ public class PrivateType
     /// <returns>element at the specified location.</returns>
     public object GetStaticArrayElement(string name, BindingFlags bindingFlags, params int[] indices)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         var arr = (Array)InvokeHelperStatic(name, BindingFlags.GetField | BindingFlags.GetProperty | bindingFlags, null, CultureInfo.InvariantCulture);
         return arr.GetValue(indices);
     }

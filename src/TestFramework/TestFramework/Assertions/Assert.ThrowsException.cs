@@ -164,15 +164,8 @@ public sealed partial class Assert
     public static T ThrowsException<T>(Action action, string message, params object?[]? parameters)
         where T : Exception
     {
-        if (action == null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
-
-        if (message == null)
-        {
-            throw new ArgumentNullException(nameof(message));
-        }
+        Guard.NotNull(action);
+        Guard.NotNull(message);
 
         string userMessage, finalMessage;
         try
@@ -275,15 +268,8 @@ public sealed partial class Assert
     public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message, params object?[]? parameters)
         where T : Exception
     {
-        if (action == null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
-
-        if (message == null)
-        {
-            throw new ArgumentNullException(nameof(message));
-        }
+        Guard.NotNull(action);
+        Guard.NotNull(message);
 
         string userMessage, finalMessage;
         try
