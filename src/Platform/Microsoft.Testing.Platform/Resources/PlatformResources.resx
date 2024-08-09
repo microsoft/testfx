@@ -553,4 +553,35 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="ZeroTestsRan" xml:space="preserve">
     <value>Zero tests ran</value>
   </data>
+  <data name="ConsoleIsAlreadyInBatchingMode" xml:space="preserve">
+    <value>Console is already in batching mode.</value>
+    <comment>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</comment>
+  </data>
+  <data name="FailedWithErrors" xml:space="preserve">
+    <value>failed with {0} errors(s)</value>
+  </data>
+  <data name="FailedWithErrorsAndWarnings" xml:space="preserve">
+    <value>failed with {0} error(s) and {1} warning(s)</value>
+  </data>
+  <data name="FailedWithWarnings" xml:space="preserve">
+    <value>failed with {0} warning(s)</value>
+  </data>
+  <data name="RunningTestsFrom" xml:space="preserve">
+    <value>Running tests from</value>
+  </data>
+  <data name="TestRunSummary" xml:space="preserve">
+    <value>Test run summary:</value>
+  </data>
+  <data name="FromFile" xml:space="preserve">
+    <value>from</value>
+    <comment>from followed by a file name to point to the file from which test is originating</comment>
+  </data>
+  <data name="StackFrameAt" xml:space="preserve">
+    <value>at</value>
+    <comment>at that is used for a stack frame location in a stack trace, is followed by a class and method name</comment>
+  </data>
+  <data name="StackFrameIn" xml:space="preserve">
+    <value>in</value>
+    <comment>in that is used in stack frame it is followed by file name</comment>
+  </data>
 </root>

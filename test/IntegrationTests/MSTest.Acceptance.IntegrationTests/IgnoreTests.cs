@@ -24,7 +24,8 @@ public sealed class IgnoreTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 1, Total: 2");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
+
         testHostResult.AssertOutputContains("SubClass.Method");
     }
 
@@ -35,7 +36,7 @@ public sealed class IgnoreTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIs(8);
-        testHostResult.AssertOutputContains("Zero tests ran - Failed: 0, Passed: 0, Skipped: 1, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
         testHostResult.AssertOutputDoesNotContain("AssemblyInitialize");
         testHostResult.AssertOutputDoesNotContain("AssemblyCleanup");
     }

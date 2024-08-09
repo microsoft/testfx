@@ -108,7 +108,8 @@ public class PrivateObject
         object? o;
         if (parameterTypes != null)
         {
-            ConstructorInfo? ci = type.GetConstructor(BindToEveryThing, null, parameterTypes, null) ?? throw new ArgumentException(FrameworkMessages.PrivateAccessorConstructorNotFound);
+            ConstructorInfo ci = type.GetConstructor(BindToEveryThing, null, parameterTypes, null)
+                                 ?? throw new ArgumentException(FrameworkMessages.PrivateAccessorConstructorNotFound);
             try
             {
                 o = ci.Invoke(args);
@@ -588,8 +589,8 @@ public class PrivateObject
             return InvokeHelper(name, bindingFlags | BindingFlags.GetProperty, args, null);
         }
 
-        PropertyInfo? pi = RealType.GetProperty(name, bindingFlags, null, null, parameterTypes, null) ?? throw new ArgumentException(
-                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
+        PropertyInfo pi = RealType.GetProperty(name, bindingFlags, null, null, parameterTypes, null)
+                          ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
         return pi.GetValue(_target, args);
     }
 
@@ -623,7 +624,7 @@ public class PrivateObject
             return;
         }
 
-        PropertyInfo? pi = RealType.GetProperty(name, bindingFlags, null, null, parameterTypes, null)
+        PropertyInfo pi = RealType.GetProperty(name, bindingFlags, null, null, parameterTypes, null)
             ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
 
         pi.SetValue(_target, value, args);

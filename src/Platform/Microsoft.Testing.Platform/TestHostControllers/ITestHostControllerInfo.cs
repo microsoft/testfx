@@ -7,5 +7,11 @@ internal interface ITestHostControllerInfo
 {
     bool HasTestHostController { get; }
 
+    /// <summary>
+    /// Gets information whether the current process is a test controller or not.
+    /// When null the value has not been set yet, it is figured out while we are building the test application.
+    /// </summary>
+    bool? IsCurrentProcessTestHostController { get; }
+
     int? GetTestHostControllerPID(bool throwIfMissing = true);
 }

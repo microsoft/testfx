@@ -331,6 +331,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Console is already in batching mode..
+        /// </summary>
+        internal static string ConsoleIsAlreadyInBatchingMode {
+            get {
+                return ResourceManager.GetString("ConsoleIsAlreadyInBatchingMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Creates the right test execution filter for console mode.
         /// </summary>
         internal static string ConsoleTestExecutionFilterFactoryDescription {
@@ -440,11 +449,47 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to failed with {0} errors(s).
+        /// </summary>
+        internal static string FailedWithErrors {
+            get {
+                return ResourceManager.GetString("FailedWithErrors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to failed with {0} error(s) and {1} warning(s).
+        /// </summary>
+        internal static string FailedWithErrorsAndWarnings {
+            get {
+                return ResourceManager.GetString("FailedWithErrorsAndWarnings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to failed with {0} warning(s).
+        /// </summary>
+        internal static string FailedWithWarnings {
+            get {
+                return ResourceManager.GetString("FailedWithWarnings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to For test.
         /// </summary>
         internal static string ForTest {
             get {
                 return ResourceManager.GetString("ForTest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to from.
+        /// </summary>
+        internal static string FromFile {
+            get {
+                return ResourceManager.GetString("FromFile", resourceCulture);
             }
         }
         
@@ -936,6 +981,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Running tests from.
+        /// </summary>
+        internal static string RunningTestsFrom {
+            get {
+                return ResourceManager.GetString("RunningTestsFrom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This data represents a server log message.
         /// </summary>
         internal static string ServerLogMessageDescription {
@@ -1013,6 +1067,24 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string SkippedLowercase {
             get {
                 return ResourceManager.GetString("SkippedLowercase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to at.
+        /// </summary>
+        internal static string StackFrameAt {
+            get {
+                return ResourceManager.GetString("StackFrameAt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to in.
+        /// </summary>
+        internal static string StackFrameIn {
+            get {
+                return ResourceManager.GetString("StackFrameIn", resourceCulture);
             }
         }
         
@@ -1162,6 +1234,15 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string TestProcessDidNotExitGracefullyErrorMessage {
             get {
                 return ResourceManager.GetString("TestProcessDidNotExitGracefullyErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test run summary:.
+        /// </summary>
+        internal static string TestRunSummary {
+            get {
+                return ResourceManager.GetString("TestRunSummary", resourceCulture);
             }
         }
         

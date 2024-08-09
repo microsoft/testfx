@@ -24,7 +24,7 @@ public sealed class TestContextTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]

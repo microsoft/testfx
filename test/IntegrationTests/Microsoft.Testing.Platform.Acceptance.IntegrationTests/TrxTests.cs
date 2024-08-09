@@ -170,8 +170,8 @@ Out of process file artifacts produced:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string outputPattern = $"""
-In process file artifacts produced:
-- {trxPathPattern}
+  In process file artifacts produced:
+    - {trxPathPattern}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);
 

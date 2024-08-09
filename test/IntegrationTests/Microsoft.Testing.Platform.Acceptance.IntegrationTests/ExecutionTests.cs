@@ -48,10 +48,8 @@ FilteredOutTest$
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
-        const string OutputPattern = $"""
-Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName}.+$
-""";
-        testHostResult.AssertOutputMatchesRegex(OutputPattern);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
+        testHostResult.AssertOutputContains($"! - {_testAssetFixture.TargetAssetPath}");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -79,10 +77,8 @@ TestMethod3$
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
-        const string OutputPattern = $"""
-Passed! - Failed: 0, Passed: 3, Skipped: 0, Total: 3, Duration: .+s - {AssetName}.+$
-""";
-        testHostResult.AssertOutputMatchesRegex(OutputPattern);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 3, skipped: 0);
+        testHostResult.AssertOutputContains($"! - {_testAssetFixture.TargetAssetPath}");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -93,10 +89,8 @@ Passed! - Failed: 0, Passed: 3, Skipped: 0, Total: 3, Duration: .+s - {AssetName
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
-        const string OutputPattern = $"""
-Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName}.+$
-""";
-        testHostResult.AssertOutputMatchesRegex(OutputPattern);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
+        testHostResult.AssertOutputContains($"! - {_testAssetFixture.TargetAssetPath}");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -107,10 +101,8 @@ Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName
 
         testHostResult.AssertExitCodeIs(ExitCodes.MinimumExpectedTestsPolicyViolation);
 
-        const string OutputPattern = $"""
-Minimum expected tests policy violation, tests ran 4, minimum expected 5 - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName}.+$
-""";
-        testHostResult.AssertOutputMatchesRegex(OutputPattern);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0, minimumNumberOfTests: 5);
+        testHostResult.AssertOutputContains($" - {_testAssetFixture.TargetAssetPath}");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
