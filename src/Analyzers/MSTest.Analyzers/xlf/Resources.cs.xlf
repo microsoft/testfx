@@ -447,6 +447,11 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Veřejné typy by měly být testovací třídy.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat">
+        <source>Test method '{0}' signature is invalid</source>
+        <target state="new">Test method '{0}' signature is invalid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
         <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
         <target state="translated">Když nepoužijete ClassCleanupBehavior.EndOfClass, [ClassCleanup] se ve výchozím nastavení spustí na konci sestavení, nikoli na konci třídy.</target>
@@ -654,46 +659,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 – návratový typ by měl být void, Task nebo ValueTask,
 – nesmí být async void,
 – nesmí být speciální metodou (finalizační metoda, operátor...).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
-        <source>Test method '{0}' should not be 'abstract'</source>
-        <target state="translated">Testovací metoda {0} by neměla být abstract.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>Test method '{0}' should not be 'async void'</source>
-        <target state="translated">Testovací metoda {0} by neměla být async void.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotGeneric">
-        <source>Test method '{0}' should not be generic</source>
-        <target state="translated">Testovací metoda {0} by neměla být obecná.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotStatic">
-        <source>Test method '{0}' should not be 'static'</source>
-        <target state="translated">Testovací metoda {0} by neměla být static.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_Ordinary">
-        <source>Test method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">Testovací metoda {0} by měla být metoda ordinary.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_Public">
-        <source>Test method '{0}' should be 'public'</source>
-        <target state="translated">Testovací metoda {0} by měla být public.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Test method '{0}' should be 'public' or 'internal'</source>
-        <target state="translated">Testovací metoda {0} by měla být public nebo internal.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
-        <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Testovací metoda {0} by měla vrátit void, Task nebo ValueTask.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
