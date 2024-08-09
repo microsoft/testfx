@@ -36,7 +36,6 @@ internal static class DiaSessionOperations
         // Create instance only when DiaSession is found in Object Model.
         if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
-            string messageFormatOnException = string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
             return SafeInvoke(() => Activator.CreateInstance(s_typeDiaSession, source));
         }
 
@@ -60,7 +59,6 @@ internal static class DiaSessionOperations
         // Get navigation data only when DiaSession is found in Object Model.
         if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
-            string messageFormatOnException = string.Join("MSTestDiscoverer:DiaSession: Could not get navigation data for class:", className, ". Reason:{0}");
             object? data = SafeInvoke(() => s_methodGetNavigationData!.Invoke(navigationSession, [className, methodName]));
 
             if (data != null)
