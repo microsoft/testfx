@@ -49,8 +49,8 @@ internal sealed partial class FilterExpression
 
     private FilterExpression(FilterExpression left, FilterExpression right, bool areJoinedByAnd)
     {
-        ArgumentGuard.IsNotNull(left);
-        ArgumentGuard.IsNotNull(right);
+        Guard.NotNull(left);
+        Guard.NotNull(right);
         _left = left;
         _right = right;
         _areJoinedByAnd = areJoinedByAnd;
@@ -58,7 +58,7 @@ internal sealed partial class FilterExpression
 
     private FilterExpression(Condition condition)
     {
-        ArgumentGuard.IsNotNull(condition);
+        Guard.NotNull(condition);
         _condition = condition;
     }
 

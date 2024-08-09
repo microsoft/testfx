@@ -27,7 +27,7 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 
     public NamedPipeClient(string name)
     {
-        ArgumentGuard.IsNotNull(name);
+        Guard.NotNull(name);
         _namedPipeClientStream = new(".", name, PipeDirection.InOut);
         PipeName = name;
     }

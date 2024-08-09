@@ -5,7 +5,6 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.MSBuild;
 
@@ -17,7 +16,7 @@ public sealed class ConfigurationFileTask : Build.Utilities.Task
 
     internal ConfigurationFileTask(IFileSystem? fileSystem)
     {
-        ArgumentGuard.IsNotNull(fileSystem);
+        Guard.NotNull(fileSystem);
         _fileSystem = fileSystem;
     }
 

@@ -3,8 +3,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 public sealed partial class PropertyBag
@@ -29,7 +27,7 @@ public sealed partial class PropertyBag
 
     public PropertyBag(params IProperty[] properties)
     {
-        ArgumentGuard.IsNotNull(properties);
+        Guard.NotNull(properties);
 
         if (properties.Length == 0)
         {
@@ -68,7 +66,7 @@ public sealed partial class PropertyBag
 
     public PropertyBag(IEnumerable<IProperty> properties)
     {
-        ArgumentGuard.IsNotNull(properties);
+        Guard.NotNull(properties);
 
         foreach (IProperty property in properties)
         {
@@ -106,7 +104,7 @@ public sealed partial class PropertyBag
 
     public void Add(IProperty property)
     {
-        ArgumentGuard.IsNotNull(property);
+        Guard.NotNull(property);
 
         // Optimized access to the TestNodeStateProperty, it's one of the most used property.
         if (property is TestNodeStateProperty testNodeStateProperty)

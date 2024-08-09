@@ -28,7 +28,7 @@ internal sealed class TestCaseFilterExpression : ITestCaseFilterExpression
     /// </summary>
     public TestCaseFilterExpression(FilterExpressionWrapper filterWrapper)
     {
-        ArgumentGuard.IsNotNull(filterWrapper);
+        Guard.NotNull(filterWrapper);
         _filterWrapper = filterWrapper;
         _validForMatch = RoslynString.IsNullOrEmpty(filterWrapper.ParseError);
     }

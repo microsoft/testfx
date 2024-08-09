@@ -49,23 +49,14 @@ internal sealed class AggregatedConfiguration(IConfigurationProvider[] configura
         }
     }
 
-    public /* for testing */ void SetResultDirectory(string resultDirectory)
-    {
-        ArgumentGuard.IsNotNull(resultDirectory);
-        _resultDirectory = resultDirectory;
-    }
+    public /* for testing */ void SetResultDirectory(string resultDirectory) =>
+        _resultDirectory = Guard.NotNull(resultDirectory);
 
-    public /* for testing */ void SetCurrentWorkingDirectory(string workingDirectory)
-    {
-        ArgumentGuard.IsNotNull(workingDirectory);
-        _currentWorkingDirectory = workingDirectory;
-    }
+    public /* for testing */ void SetCurrentWorkingDirectory(string workingDirectory) =>
+        _currentWorkingDirectory = Guard.NotNull(workingDirectory);
 
-    public void SetTestHostWorkingDirectory(string workingDirectory)
-    {
-        ArgumentGuard.IsNotNull(workingDirectory);
-        _testHostWorkingDirectory = workingDirectory;
-    }
+    public void SetTestHostWorkingDirectory(string workingDirectory) =>
+        _testHostWorkingDirectory = Guard.NotNull(workingDirectory);
 
     public void CreateDefaultTestResultDirectory()
     {

@@ -30,7 +30,7 @@ internal sealed class TestHostManager : ITestHostManager
 
     public void AddTestFrameworkInvoker(Func<IServiceProvider, ITestFrameworkInvoker> testFrameworkInvokerFactory)
     {
-        ArgumentGuard.IsNotNull(testFrameworkInvokerFactory);
+        Guard.NotNull(testFrameworkInvokerFactory);
         if (_testFrameworkInvokerFactory is not null)
         {
             throw new InvalidOperationException(PlatformResources.TestAdapterInvokerFactoryAlreadySetErrorMessage);
@@ -61,7 +61,7 @@ internal sealed class TestHostManager : ITestHostManager
 
     public void AddTestExecutionFilterFactory(Func<IServiceProvider, ITestExecutionFilterFactory> testExecutionFilterFactory)
     {
-        ArgumentGuard.IsNotNull(testExecutionFilterFactory);
+        Guard.NotNull(testExecutionFilterFactory);
         if (_testExecutionFilterFactory is not null)
         {
             throw new InvalidOperationException(PlatformResources.TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage);
@@ -92,7 +92,7 @@ internal sealed class TestHostManager : ITestHostManager
 
     public void AddTestApplicationLifecycleCallbacks(Func<IServiceProvider, ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacks)
     {
-        ArgumentGuard.IsNotNull(testApplicationLifecycleCallbacks);
+        Guard.NotNull(testApplicationLifecycleCallbacks);
         _testApplicationLifecycleCallbacksFactories.Add(testApplicationLifecycleCallbacks);
     }
 
@@ -125,7 +125,7 @@ internal sealed class TestHostManager : ITestHostManager
 
     public void AddDataConsumer(Func<IServiceProvider, IDataConsumer> dataConsumerFactory)
     {
-        ArgumentGuard.IsNotNull(dataConsumerFactory);
+        Guard.NotNull(dataConsumerFactory);
         _dataConsumerFactories.Add(dataConsumerFactory);
         _factoryOrdering.Add(dataConsumerFactory);
     }
@@ -133,7 +133,7 @@ internal sealed class TestHostManager : ITestHostManager
     public void AddDataConsumer<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, IDataConsumer
     {
-        ArgumentGuard.IsNotNull(compositeServiceFactory);
+        Guard.NotNull(compositeServiceFactory);
         if (_dataConsumersCompositeServiceFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -219,7 +219,7 @@ internal sealed class TestHostManager : ITestHostManager
 
     public void AddTestSessionLifetimeHandle(Func<IServiceProvider, ITestSessionLifetimeHandler> testSessionLifetimeHandleFactory)
     {
-        ArgumentGuard.IsNotNull(testSessionLifetimeHandleFactory);
+        Guard.NotNull(testSessionLifetimeHandleFactory);
         _testSessionLifetimeHandlerFactories.Add(testSessionLifetimeHandleFactory);
         _factoryOrdering.Add(testSessionLifetimeHandleFactory);
     }
@@ -227,7 +227,7 @@ internal sealed class TestHostManager : ITestHostManager
     public void AddTestSessionLifetimeHandle<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestSessionLifetimeHandler
     {
-        ArgumentGuard.IsNotNull(compositeServiceFactory);
+        Guard.NotNull(compositeServiceFactory);
         if (_testSessionLifetimeHandlerCompositeFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);

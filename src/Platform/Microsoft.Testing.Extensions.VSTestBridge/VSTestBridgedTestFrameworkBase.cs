@@ -8,7 +8,6 @@ using Microsoft.Testing.Extensions.VSTestBridge.Requests;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -21,7 +20,7 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
 {
     protected VSTestBridgedTestFrameworkBase(IServiceProvider serviceProvider, ITestFrameworkCapabilities capabilities)
     {
-        ArgumentGuard.IsNotNull(serviceProvider);
+        Guard.NotNull(serviceProvider);
         ServiceProvider = serviceProvider;
         IsTrxEnabled = capabilities.GetCapability<ITrxReportCapability>()?.IsSupported == true;
     }
