@@ -3,7 +3,10 @@
 
 #if NETCOREAPP
 using System.Buffers;
+
+using Microsoft.Testing.Platform.Helpers;
 #endif
+
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
 
