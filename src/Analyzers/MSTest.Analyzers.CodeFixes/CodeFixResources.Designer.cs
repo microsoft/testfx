@@ -97,7 +97,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Fix Test Method Signature.
+        ///   Looks up a localized string similar to Fix test method signature.
         /// </summary>
         internal static string TestMethodShouldBeValidFix {
             get {

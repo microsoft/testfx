@@ -130,6 +130,6 @@
     <value>Add '[TestClass]'</value>
   </data>
   <data name="TestMethodShouldBeValidFix" xml:space="preserve">
-    <value>Fix Test Method Signature</value>
+    <value>Fix test method signature</value>
   </data>
 </root>
