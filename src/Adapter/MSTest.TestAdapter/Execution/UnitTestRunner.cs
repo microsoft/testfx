@@ -4,7 +4,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
 using System.Security;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
