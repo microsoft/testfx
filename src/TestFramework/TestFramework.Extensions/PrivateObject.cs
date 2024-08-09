@@ -90,10 +90,8 @@ public class PrivateObject
     /// <param name="type">type of the object to create.</param>
     /// <param name="args">Arguments to pass to the constructor.</param>
     public PrivateObject(Type type, params object?[]? args)
-        : this(type, null, args)
-    {
-        Guard.IsNotNull(type, "type");
-    }
+        : this(type, null, args) =>
+        Guard.NotNull(type);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PrivateObject"/> class that wraps the
@@ -104,7 +102,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the constructor.</param>
     public PrivateObject(Type type, Type[]? parameterTypes, object?[]? args)
     {
-        Guard.IsNotNull(type, "type");
+        Guard.NotNull(type);
         object? o;
         if (parameterTypes != null)
         {
