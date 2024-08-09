@@ -126,10 +126,7 @@ internal class UnitTestRunner : MarshalByRefObject
     /// <returns> The <see cref="UnitTestResult"/>. </returns>
     internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties)
     {
-        if (testMethod == null)
-        {
-            throw new ArgumentNullException(nameof(testMethod));
-        }
+        Guard.NotNull(testMethod);
 
         try
         {

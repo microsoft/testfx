@@ -4,8 +4,6 @@
 using System.Collections;
 using System.Diagnostics;
 
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 public sealed partial class PropertyBag
@@ -144,7 +142,7 @@ public sealed partial class PropertyBag
 
         public PropertyDebugView(Property property)
         {
-            ArgumentGuard.IsNotNull(property);
+            Guard.NotNull(property);
             _property = property;
         }
 

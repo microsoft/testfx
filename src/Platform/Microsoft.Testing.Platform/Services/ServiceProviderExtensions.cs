@@ -34,7 +34,7 @@ public static class ServiceProviderExtensions
     public static TService GetRequiredService<TService>(this IServiceProvider provider)
         where TService : notnull
     {
-        ArgumentGuard.IsNotNull(provider);
+        Guard.NotNull(provider);
 
         object? service = ((ServiceProvider)provider).GetService(typeof(TService));
         ApplicationStateGuard.Ensure(service is not null, string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService)));
@@ -52,7 +52,7 @@ public static class ServiceProviderExtensions
     public static TService? GetService<TService>(this IServiceProvider provider)
         where TService : class
     {
-        ArgumentGuard.IsNotNull(provider);
+        Guard.NotNull(provider);
 
         return ((ServiceProvider)provider).GetService(typeof(TService)) as TService;
     }
@@ -101,7 +101,7 @@ public static class ServiceProviderExtensions
     internal static TService GetRequiredServiceInternal<TService>(this IServiceProvider provider)
         where TService : notnull
     {
-        ArgumentGuard.IsNotNull(provider);
+        Guard.NotNull(provider);
 
         object? service = ((ServiceProvider)provider).GetServiceInternal(typeof(TService));
         ApplicationStateGuard.Ensure(service is not null, string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService)));
@@ -112,7 +112,7 @@ public static class ServiceProviderExtensions
     internal static TService? GetServiceInternal<TService>(this IServiceProvider provider)
         where TService : class
     {
-        ArgumentGuard.IsNotNull(provider);
+        Guard.NotNull(provider);
 
         return ((ServiceProvider)provider).GetServiceInternal(typeof(TService)) as TService;
     }
@@ -120,7 +120,7 @@ public static class ServiceProviderExtensions
     internal static IEnumerable<TService> GetServicesInternal<TService>(this IServiceProvider provider)
         where TService : notnull
     {
-        ArgumentGuard.IsNotNull(provider);
+        Guard.NotNull(provider);
 
         return ((ServiceProvider)provider).GetServicesInternal(typeof(TService)).Cast<TService>();
     }

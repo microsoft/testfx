@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Extensions;
 
@@ -37,7 +36,7 @@ TestHost: IDataConsumer, ITestApplicationLifetime
     /// <param name="factory">The factory function that creates the extension with a service provider.</param>
     public CompositeExtensionFactory(Func<IServiceProvider, TExtension> factory)
     {
-        ArgumentGuard.IsNotNull(factory);
+        Guard.NotNull(factory);
         _factoryWithServiceProvider = factory;
     }
 
@@ -47,7 +46,7 @@ TestHost: IDataConsumer, ITestApplicationLifetime
     /// <param name="factory">The factory function that creates the extension.</param>
     public CompositeExtensionFactory(Func<TExtension> factory)
     {
-        ArgumentGuard.IsNotNull(factory);
+        Guard.NotNull(factory);
         _factory = factory;
     }
 

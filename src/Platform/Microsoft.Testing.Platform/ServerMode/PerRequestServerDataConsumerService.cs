@@ -145,7 +145,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
             using CancellationTokenRegistration registration = cancellationToken.Register(_testSessionEnd.SetCanceled);
 
             // When batch timer expire or we're at the end of the session we can unblock the message drain
-            ArgumentGuard.IsNotNull(_task);
+            Guard.NotNull(_task);
             await Task.WhenAny(_task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task);
 
             if (cancellationToken.IsCancellationRequested)

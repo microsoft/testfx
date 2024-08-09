@@ -41,10 +41,7 @@ internal class ReflectHelper : MarshalByRefObject
     public virtual bool IsNonDerivedAttributeDefined<TAttribute>(MemberInfo memberInfo, bool inherit)
         where TAttribute : Attribute
     {
-        if (memberInfo == null)
-        {
-            throw new ArgumentNullException(nameof(memberInfo));
-        }
+        Guard.NotNull(memberInfo);
 
         // Get attributes defined on the member from the cache.
         Attribute[] attributes = GetCustomAttributesCached(memberInfo, inherit);
@@ -92,10 +89,7 @@ internal class ReflectHelper : MarshalByRefObject
     public virtual /* for testing */ bool IsDerivedAttributeDefined<TAttribute>(MemberInfo memberInfo, bool inherit)
         where TAttribute : Attribute
     {
-        if (memberInfo == null)
-        {
-            throw new ArgumentNullException(nameof(memberInfo));
-        }
+        Guard.NotNull(memberInfo);
 
         // Get all attributes on the member.
         Attribute[] attributes = GetCustomAttributesCached(memberInfo, inherit);
@@ -219,12 +213,12 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="method">The method to inspect.</param>
     /// <param name="returnType">The return type to match.</param>
     /// <returns>True if there is a match.</returns>
-    internal static bool MatchReturnType(MethodInfo method, Type returnType) =>
-        method == null
-            ? throw new ArgumentNullException(nameof(method))
-            : returnType == null
-                ? throw new ArgumentNullException(nameof(returnType))
-                : method.ReturnType.Equals(returnType);
+    internal static bool MatchReturnType(MethodInfo method, Type returnType)
+    {
+        Guard.NotNull(method);
+        Guard.NotNull(returnType);
+        return method.ReturnType.Equals(returnType);
+    }
 
     /// <summary>
     /// Returns true when the method is declared in the assembly where the type is declared.

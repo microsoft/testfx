@@ -98,15 +98,8 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestMethodInfo"/>. </returns>
     public TestMethodInfo? GetTestMethodInfo(TestMethod testMethod, ITestContext testContext, bool captureDebugTraces)
     {
-        if (testMethod == null)
-        {
-            throw new ArgumentNullException(nameof(testMethod));
-        }
-
-        if (testContext == null)
-        {
-            throw new ArgumentNullException(nameof(testContext));
-        }
+        Guard.NotNull(testMethod);
+        Guard.NotNull(testContext);
 
         // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
         TestClassInfo? testClassInfo = GetClassInfo(testMethod);

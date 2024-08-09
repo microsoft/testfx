@@ -52,4 +52,8 @@ This package provides a bridge integration for test adapters wanting to target b
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="Polyfills" />
+  </ItemGroup>
+
 </Project>

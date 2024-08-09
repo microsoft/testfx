@@ -56,6 +56,11 @@
     <StrongNameKeyId>Microsoft</StrongNameKeyId>
   </PropertyGroup>
 
+  <!-- Polyfill config -->
+  <PropertyGroup>
+    <PolyGuard>true</PolyGuard>
+  </PropertyGroup>
+
   <!-- Test config -->
   <PropertyGroup>
     <TestRunnerName>TestingPlatformRunner</TestRunnerName>

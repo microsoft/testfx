@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Tools;
 
@@ -12,7 +11,7 @@ internal sealed class ToolsManager : IToolsManager
 
     public void AddTool(Func<IServiceProvider, ITool> toolFactory)
     {
-        ArgumentGuard.IsNotNull(toolFactory);
+        Guard.NotNull(toolFactory);
         _toolsFactories.Add(toolFactory);
     }
 

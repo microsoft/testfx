@@ -43,10 +43,7 @@ public sealed class TestMethod : ITestMethod
         string fullClassName, string assemblyName, bool isAsync, string? displayName,
         TestIdGenerationStrategy testIdGenerationStrategy)
     {
-        if (StringEx.IsNullOrEmpty(assemblyName))
-        {
-            throw new ArgumentNullException(nameof(assemblyName));
-        }
+        Guard.NotNullOrWhiteSpace(assemblyName);
 
         Name = name;
         DisplayName = displayName ?? name;

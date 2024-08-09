@@ -3,7 +3,6 @@
 
 using System.Globalization;
 
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
@@ -15,7 +14,7 @@ internal class TestHostOrchestratorManager : ITestHostOrchestratorManager
 
     public void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostOrchestrator> factory)
     {
-        ArgumentGuard.IsNotNull(factory);
+        Guard.NotNull(factory);
         _factories ??= [];
         _factories.Add(factory);
     }

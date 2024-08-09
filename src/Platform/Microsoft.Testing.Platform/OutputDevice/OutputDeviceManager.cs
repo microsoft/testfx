@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
@@ -15,7 +14,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
 
     public void SetPlatformOutputDevice(Func<IServiceProvider, IPlatformOutputDevice> platformOutputDeviceFactory)
     {
-        ArgumentGuard.IsNotNull(platformOutputDeviceFactory);
+        Guard.NotNull(platformOutputDeviceFactory);
         _platformOutputDeviceFactory = platformOutputDeviceFactory;
     }
 
