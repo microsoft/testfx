@@ -235,7 +235,7 @@ public class PrivateType
     /// </param>
     public void SetStaticArrayElement(string name, BindingFlags bindingFlags, object value, params int[] indices)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         var arr = (Array)InvokeHelperStatic(name, BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.Static | bindingFlags, null, CultureInfo.InvariantCulture);
         arr.SetValue(value, indices);
     }
@@ -247,7 +247,7 @@ public class PrivateType
     /// <returns>The static field.</returns>
     public object GetStaticField(string name)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         return GetStaticField(name, BindToEveryThing);
     }
 
@@ -258,7 +258,7 @@ public class PrivateType
     /// <param name="value">Argument to the invocation.</param>
     public void SetStaticField(string name, object value)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         SetStaticField(name, BindToEveryThing, value);
     }
 
@@ -270,7 +270,7 @@ public class PrivateType
     /// <returns>The static field.</returns>
     public object GetStaticField(string name, BindingFlags bindingFlags)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         return InvokeHelperStatic(name, BindingFlags.GetField | BindingFlags.Static | bindingFlags, null, CultureInfo.InvariantCulture);
     }
 
@@ -282,7 +282,7 @@ public class PrivateType
     /// <param name="value">Argument to the invocation.</param>
     public void SetStaticField(string name, BindingFlags bindingFlags, object value)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         InvokeHelperStatic(name, BindingFlags.SetField | bindingFlags | BindingFlags.Static, [value], CultureInfo.InvariantCulture);
     }
 
@@ -293,7 +293,7 @@ public class PrivateType
     /// <returns>The static field or property.</returns>
     public object GetStaticFieldOrProperty(string name)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         return GetStaticFieldOrProperty(name, BindToEveryThing);
     }
 
@@ -304,7 +304,7 @@ public class PrivateType
     /// <param name="value">Value to be set to field or property.</param>
     public void SetStaticFieldOrProperty(string name, object value)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         SetStaticFieldOrProperty(name, BindToEveryThing, value);
     }
 
@@ -316,7 +316,7 @@ public class PrivateType
     /// <returns>The static field or property.</returns>
     public object GetStaticFieldOrProperty(string name, BindingFlags bindingFlags)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         return InvokeHelperStatic(name, BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.Static | bindingFlags, null, CultureInfo.InvariantCulture);
     }
 
@@ -328,7 +328,7 @@ public class PrivateType
     /// <param name="value">Value to be set to field or property.</param>
     public void SetStaticFieldOrProperty(string name, BindingFlags bindingFlags, object value)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         InvokeHelperStatic(name, BindingFlags.SetField | BindingFlags.SetProperty | bindingFlags | BindingFlags.Static, [value], CultureInfo.InvariantCulture);
     }
 
@@ -376,7 +376,7 @@ public class PrivateType
     /// <returns>The static property.</returns>
     public object GetStaticProperty(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         if (parameterTypes == null)
         {
             return InvokeHelperStatic(name, bindingFlags | BindingFlags.GetProperty, args, null);
@@ -432,7 +432,7 @@ public class PrivateType
     /// <returns>Result of invocation.</returns>
     private object InvokeHelperStatic(string name, BindingFlags bindingFlags, object?[]? args, CultureInfo? culture)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         try
         {
             return ReferencedType.InvokeMember(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, null, args, culture);

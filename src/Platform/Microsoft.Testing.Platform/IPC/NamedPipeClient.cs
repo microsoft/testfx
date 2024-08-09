@@ -7,7 +7,6 @@ using System.Buffers;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
 
-using Microsoft.Testing.Platform.Helpers;
 #if NET
 using Microsoft.Testing.Platform.Resources;
 #endif

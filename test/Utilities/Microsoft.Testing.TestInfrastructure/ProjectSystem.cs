@@ -42,8 +42,6 @@ EndGlobal
     public VSSolution(string? solutionFolder, string? solutionName)
         : base(solutionFolder)
     {
-        Guard.NotNull(solutionFolder);
-        Guard.NotNull(solutionName);
         if (string.IsNullOrEmpty(solutionFolder))
         {
             throw new ArgumentNullException(nameof(solutionFolder));
