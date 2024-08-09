@@ -63,4 +63,8 @@ This package provides telemetry for the platform.]]>
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="Polyfills" />
+  </ItemGroup>
+
 </Project>

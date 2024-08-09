@@ -3,7 +3,6 @@
 
 // NOTE: This file is copied as-is from VSTest source code.
 using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 

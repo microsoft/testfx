@@ -9,7 +9,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
