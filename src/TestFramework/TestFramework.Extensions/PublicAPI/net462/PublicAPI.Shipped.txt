@@ -25,47 +25,6 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.DeploymentI
 Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.DeploymentItemAttribute(string? path, string? outputDirectory) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.OutputDirectory.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.Path.get -> string?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetArrayElement(string! name, params int[]! indices) -> object!
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetArrayElement(string! name, System.Reflection.BindingFlags bindingFlags, params int[]! indices) -> object!
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetField(string! name) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetField(string! name, System.Reflection.BindingFlags bindingFlags) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetFieldOrProperty(string! name) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetFieldOrProperty(string! name, System.Reflection.BindingFlags bindingFlags) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(string! name, params object?[]? args) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(string! name, System.Reflection.BindingFlags bindingFlags, params object?[]? args) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(string! name, System.Reflection.BindingFlags bindingFlags, System.Type![]? parameterTypes, object?[]? args) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(string! name, System.Type![]? parameterTypes, object?[]? args) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(string! name, object?[]? args, System.Globalization.CultureInfo! culture) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(string! name, params object?[]? args) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(string! name, System.Reflection.BindingFlags bindingFlags, object?[]? args, System.Globalization.CultureInfo! culture) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(string! name, System.Reflection.BindingFlags bindingFlags, params object?[]? args) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(string! name, System.Reflection.BindingFlags bindingFlags, System.Type![]! parameterTypes, object?[]? args) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(string! name, System.Reflection.BindingFlags bindingFlags, System.Type![]? parameterTypes, object?[]? args, System.Globalization.CultureInfo! culture) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(string! name, System.Reflection.BindingFlags bindingFlags, System.Type![]? parameterTypes, object?[]? args, System.Globalization.CultureInfo? culture, System.Type![]? typeArguments) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(string! name, System.Type![]! parameterTypes, object?[]? args) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(string! name, System.Type![]! parameterTypes, object?[]? args, System.Type![]! typeArguments) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(string! name, System.Type![]? parameterTypes, object?[]? args, System.Globalization.CultureInfo! culture) -> object?
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.PrivateObject(object! obj) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.PrivateObject(object! obj, Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType! type) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.PrivateObject(object! obj, string! memberToAccess) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.PrivateObject(string! assemblyName, string! typeName, params object?[]? args) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.PrivateObject(string! assemblyName, string! typeName, System.Type![]? parameterTypes, object?[]? args) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.PrivateObject(System.Type! type, params object?[]? args) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.PrivateObject(System.Type! type, System.Type![]? parameterTypes, object?[]? args) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.RealType.get -> System.Type!
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetArrayElement(string! name, object! value, params int[]! indices) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetArrayElement(string! name, System.Reflection.BindingFlags bindingFlags, object! value, params int[]! indices) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetField(string! name, object! value) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetField(string! name, System.Reflection.BindingFlags bindingFlags, object? value) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetFieldOrProperty(string! name, object! value) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetFieldOrProperty(string! name, System.Reflection.BindingFlags bindingFlags, object? value) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(string! name, object? value, params object?[]? args) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(string! name, System.Reflection.BindingFlags bindingFlags, object! value, params object?[]? args) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(string! name, System.Reflection.BindingFlags bindingFlags, object? value, System.Type![]? parameterTypes, object?[]? args) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(string! name, System.Type![]? parameterTypes, object? value, object?[]? args) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Target.get -> object!
-Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Target.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType
 Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticArrayElement(string! name, params int[]! indices) -> object!
 Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticArrayElement(string! name, System.Reflection.BindingFlags bindingFlags, params int[]! indices) -> object!
@@ -103,8 +62,6 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TestConfiguration
 Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection
 Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection.DataSources.get -> Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection!
 Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection.TestConfigurationSection() -> void
-override Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Equals(object? obj) -> bool
-override Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetHashCode() -> int
 static Microsoft.VisualStudio.TestTools.UnitTesting.TestConfiguration.ConfigurationSection.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection!
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectory.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory.get -> string?
