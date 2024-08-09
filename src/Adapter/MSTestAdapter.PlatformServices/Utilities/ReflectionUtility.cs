@@ -3,7 +3,6 @@
 
 #if !WINDOWS_UWP
 
-using System.Diagnostics.CodeAnalysis;
 #if NETFRAMEWORK
 using System.Collections;
 #endif
