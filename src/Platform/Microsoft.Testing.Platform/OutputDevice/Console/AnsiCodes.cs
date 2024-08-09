@@ -11,12 +11,12 @@ internal static class AnsiCodes
     /// <summary>
     ///  Escape character.
     /// </summary>
-    public const string Esc = "\x1b";
+    public const string Esc = "\e";
 
     /// <summary>
     /// The control sequence introducer.
     /// </summary>
-    public const string CSI = "\x1b[";
+    public const string CSI = "\e[";
 
     /// <summary>
     /// Select graphic rendition.
@@ -55,7 +55,7 @@ internal static class AnsiCodes
     /// <summary>
     /// <see cref="LinkPrefix"/>.
     /// </summary>
-    public const string LinkSuffix = "\x1b]8;;\x1b\\";
+    public const string LinkSuffix = "\e]8;;\x1b\\";
 
     /// <summary>
     /// Moves up the specified number of lines and puts cursor at the beginning of the line.
@@ -100,12 +100,12 @@ internal static class AnsiCodes
     /// <summary>
     /// Hides the cursor.
     /// </summary>
-    public const string HideCursor = "\x1b[?25l";
+    public const string HideCursor = "\e[?25l";
 
     /// <summary>
     /// Shows/restores the cursor.
     /// </summary>
-    public const string ShowCursor = "\x1b[?25h";
+    public const string ShowCursor = "\e[?25h";
 
     /// <summary>
     /// Set progress state to a busy spinner. <br/>
@@ -115,7 +115,7 @@ internal static class AnsiCodes
     /// <see href="https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC">ConEmu specific OSC codes.</see><br/>
     /// <see href="https://iterm2.com/documentation-escape-codes.html">iTerm2 proprietary escape codes.</see>
     /// </remarks>
-    public const string SetBusySpinner = "\x1b]9;4;3;\x1b\\";
+    public const string SetBusySpinner = "\e]9;4;3;\x1b\\";
 
     /// <summary>
     /// Remove progress state, restoring taskbar status to normal. <br/>
@@ -125,7 +125,7 @@ internal static class AnsiCodes
     /// <see href="https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC">ConEmu specific OSC codes.</see><br/>
     /// <see href="https://iterm2.com/documentation-escape-codes.html">iTerm2 proprietary escape codes.</see>
     /// </remarks>
-    public const string RemoveBusySpinner = "\x1b]9;4;0;\x1b\\";
+    public const string RemoveBusySpinner = "\e]9;4;0;\x1b\\";
 
     public static string Colorize(string? s, TerminalColor color)
         => RoslynString.IsNullOrWhiteSpace(s) ? s ?? string.Empty : $"{CSI}{(int)color}{SetColor}{s}{SetDefaultColor}";
