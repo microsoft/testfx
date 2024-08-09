@@ -92,7 +92,7 @@ internal class TypeValidator
         // What we do is:
         //   - report the class as "not valid" test class. This will cause to skip enumerating tests from it.
         //   - Do not generate warnings/do not create NOT RUNNABLE tests.
-        return !typeInfo.IsAbstract;
+        return !type.IsAbstract;
     }
 
     /// <summary>
