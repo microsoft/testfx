@@ -66,26 +66,17 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ValidTestMethodSignatureRule, DiagnosticDescriptorHelper.CannotFixProperties, methodSymbol.Name));
 
-            // Do not check the other criteria, users should fix the method kind first.
             return;
         }
 
-        if (methodSymbol.IsAbstract)
+        if (methodSymbol.IsGenericMethod || methodSymbol.IsStatic || methodSymbol.IsAbstract || methodSymbol is { ReturnsVoid: true, IsAsync: true }
+            || (!methodSymbol.ReturnsVoid
+            && (taskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, taskSymbol))
+            && (valueTaskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, valueTaskSymbol))))
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ValidTestMethodSignatureRule, methodSymbol.Name));
         }
-
-        if (methodSymbol.IsStatic)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ValidTestMethodSignatureRule, methodSymbol.Name));
-        }
-
-        if (methodSymbol.IsGenericMethod)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ValidTestMethodSignatureRule, methodSymbol.Name));
-        }
-
-        if (methodSymbol.GetResultantVisibility() is { } resultantVisibility)
+        else if (methodSymbol.GetResultantVisibility() is { } resultantVisibility)
         {
             if (!canDiscoverInternals && (resultantVisibility != SymbolVisibility.Public || methodSymbol.DeclaredAccessibility != Accessibility.Public))
             {
@@ -95,18 +86,6 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
             {
                 context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ValidTestMethodSignatureRule, methodSymbol.Name));
             }
-        }
-
-        if (methodSymbol is { ReturnsVoid: true, IsAsync: true })
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ValidTestMethodSignatureRule, methodSymbol.Name));
-        }
-
-        if (!methodSymbol.ReturnsVoid
-            && (taskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, taskSymbol))
-            && (valueTaskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, valueTaskSymbol)))
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ValidTestMethodSignatureRule, methodSymbol.Name));
         }
     }
 }
