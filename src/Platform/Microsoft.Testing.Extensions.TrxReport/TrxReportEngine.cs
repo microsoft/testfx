@@ -240,7 +240,7 @@ internal sealed partial class TrxReportEngine
     public async Task AddArtifactsAsync(FileInfo trxFile, Dictionary<IExtension, List<SessionFileArtifact>> artifacts)
     {
         var document = XDocument.Load(trxFile.FullName);
-        XElement? testRun = document.Element(_namespaceUri + "TestRun")
+        XElement testRun = document.Element(_namespaceUri + "TestRun")
             ?? throw new InvalidOperationException("TestRun element not found");
         XElement deployment = testRun.Element(_namespaceUri + "TestSettings")?.Element(_namespaceUri + "Deployment")
             ?? throw new InvalidOperationException("Deployment element not found");
