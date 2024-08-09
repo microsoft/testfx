@@ -153,7 +153,8 @@ public class PrivateType
             return InvokeHelperStatic(name, bindingFlags | BindingFlags.InvokeMethod, args, culture);
         }
 
-        MethodInfo member = ReferencedType.GetMethod(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, parameterTypes, null) ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
+        MethodInfo member = ReferencedType.GetMethod(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, parameterTypes, null)
+                            ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
         try
         {
             if (member.IsGenericMethodDefinition)
@@ -384,7 +385,8 @@ public class PrivateType
             return InvokeHelperStatic(name, bindingFlags | BindingFlags.GetProperty, args, null);
         }
 
-        PropertyInfo? pi = ReferencedType.GetProperty(name, bindingFlags | BindingFlags.Static, null, null, parameterTypes, null) ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
+        PropertyInfo pi = ReferencedType.GetProperty(name, bindingFlags | BindingFlags.Static, null, null, parameterTypes, null)
+                          ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
         return pi.GetValue(null, args);
     }
 
