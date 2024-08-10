@@ -447,6 +447,11 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">공용 형식은 테스트 클래스여야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat">
+        <source>Test method '{0}' signature is invalid</source>
+        <target state="new">Test method '{0}' signature is invalid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
         <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
         <target state="translated">'ClassCleanupBehavior.EndOfClass'를 사용하지 않으면 '[ClassCleanup]'은 기본적으로 클래스의 끝이 아니라 어셈블리의 끝에서 실행됩니다.</target>
@@ -655,46 +660,6 @@ The type declaring these methods should also respect the following rules:
 - 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
 - 'async void'가 아니어야 합니다.
 - 특수 메서드(종료자, 연산자...)가 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
-        <source>Test method '{0}' should not be 'abstract'</source>
-        <target state="translated">테스트 메서드 '{0}'은(는) 'abstract'가 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>Test method '{0}' should not be 'async void'</source>
-        <target state="translated">테스트 메서드 '{0}'은(는) 'async void'가 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotGeneric">
-        <source>Test method '{0}' should not be generic</source>
-        <target state="translated">테스트 메서드 '{0}'은(는) 제네릭이 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotStatic">
-        <source>Test method '{0}' should not be 'static'</source>
-        <target state="translated">테스트 메서드 '{0}'은(는) 'static'이 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_Ordinary">
-        <source>Test method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">테스트 메서드 '{0}'은(는) 'ordinary' 메서드여야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_Public">
-        <source>Test method '{0}' should be 'public'</source>
-        <target state="translated">테스트 메서드 '{0}'은(는) 'public'이어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Test method '{0}' should be 'public' or 'internal'</source>
-        <target state="translated">테스트 메서드 '{0}'은(는) 'public' 또는 'internal'이어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
-        <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">테스트 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">

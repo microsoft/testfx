@@ -893,74 +893,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be &apos;abstract&apos;.
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; signature is invalid.
         /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_NotAbstract {
+        internal static string TestMethodShouldBeValidMessageFormat {
             get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_NotAbstract", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be &apos;async void&apos;.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_NotAsyncVoid {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be generic.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_NotGeneric {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_NotGeneric", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be &apos;static&apos;.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_NotStatic {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_NotStatic", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_Ordinary {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_Ordinary", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should be &apos;public&apos;.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_Public {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_Public", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should be &apos;public&apos; or &apos;internal&apos;.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_PublicOrInternal {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_PublicOrInternal", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_ReturnType {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_ReturnType", resourceCulture);
+                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat", resourceCulture);
             }
         }
         

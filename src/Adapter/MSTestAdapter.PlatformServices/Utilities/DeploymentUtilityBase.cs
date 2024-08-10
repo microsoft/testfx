@@ -385,11 +385,6 @@ internal abstract class DeploymentUtilityBase
     /// <param name="warnings">Warnings.</param>
     private static void LogWarnings(ITestExecutionRecorder testExecutionRecorder, IEnumerable<string> warnings)
     {
-        if (warnings == null)
-        {
-            return;
-        }
-
         DebugEx.Assert(testExecutionRecorder != null, "Logger should not be null");
 
         // log the warnings
