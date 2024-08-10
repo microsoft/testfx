@@ -7,9 +7,14 @@
     <Nullable>enable</Nullable>
     <GenerateProgramFile>false</GenerateProgramFile>
     <NoWarn>$(NoWarn);NETSDK1023</NoWarn>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <MicrosoftTestingPlatformMSBuildTaskFolder>C:\git\testfx\artifacts\bin\Microsoft.Testing.Platform.MSBuild\Debug\netstandard2.0\</MicrosoftTestingPlatformMSBuildTaskFolder>
   </PropertyGroup>
 
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.props"/>
+
   <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj"
@@ -28,6 +33,8 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" VersionOverride="$(MicrosoftNETTestSdkVersion)" />
   </ItemGroup>
 
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets"/>
+
   <ItemGroup>
     <None Update="config.runsettings">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -38,6 +45,13 @@
     <ProjectCapability Include="DiagnoseCapabilities" />
     <ProjectCapability Include="TestingPlatformServer" />
     <ProjectCapability Include="TestContainer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TestingPlatformBuilderHook Include="8E680F4D-E423-415A-9566-855439363BC0" >
+      <DisplayName>MyBuilderHook</DisplayName>
+      <TypeFullName>Playground.Contoso.BuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
   </ItemGroup>
 
 </Project>

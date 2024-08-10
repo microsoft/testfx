@@ -5,6 +5,7 @@
   <PropertyGroup Condition=" $(IsTestingPlatformApplication) == 'True' ">
     <GenerateTestingPlatformConfigurationFile Condition=" '$(GenerateTestingPlatformConfigurationFile)' == '' " >True</GenerateTestingPlatformConfigurationFile>
     <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' " >True</GenerateTestingPlatformEntryPoint>
+    <GenerateAutoRegisteredExtensions Condition=" '$(GenerateAddAutoRegisteredExtensions)' == '' ">True</GenerateAutoRegisteredExtensions>
   </PropertyGroup>
 
   <!-- Declare our capability to Visual Studio/Visual Studio Code -->
@@ -23,8 +24,9 @@
   <!-- Setup the task folder -->
   <PropertyGroup>
     <!-- Constants -->
-    <TasksFolder>$(MSBuildThisFileDirectory)..\_MSBuildTasks\netstandard2.0\</TasksFolder>
+    <MicrosoftTestingPlatformMSBuildTaskFolder Condition=" $(MicrosoftTestingPlatformMSBuildTaskFolder) == '' ">$(MSBuildThisFileDirectory)..\_MSBuildTasks\netstandard2.0\</MicrosoftTestingPlatformMSBuildTaskFolder>
   </PropertyGroup>
+
 
   <!--
     Configuration file generation
@@ -36,8 +38,9 @@
     The file is copied to the output directory before the CopyFilesToOutputDirectory target is executed.
   -->
 
+  <!-- Import task -->
   <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.ConfigurationFileTask"
-           AssemblyFile="$(TasksFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
+         AssemblyFile="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
 
   <PropertyGroup>
     <_TestingPlatformConfigurationFileSourceFileName>testingplatformconfig.json</_TestingPlatformConfigurationFileSourceFileName>
@@ -70,19 +73,11 @@
   <!--
     Inject application entry point a.k.a. Program.* file
     ===========================
-
-    Expected extensions items shape
-
-  <ItemGroup>
-    <TestingPlatformBuilderHook Include="8E680F4D-E423-415A-9566-855439363BC0" >
-      <DisplayName>MyBuilderHook</DisplayName>
-      <TypeFullName>Contoso.BuilderHook</TypeFullName>
-    </TestingPlatformBuilderHook>
-  </ItemGroup>
   -->
 
+  <!-- Import task -->
   <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask"
-           AssemblyFile="$(TasksFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
+         AssemblyFile="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
 
   <Target Name="_GenerateTestingPlatformEntryPointFileInputCache" BeforeTargets="_GenerateTestingPlatformEntryPoint" Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
     <PropertyGroup>
@@ -123,9 +118,7 @@
           Inputs="@(GenerateTestingPlatformEntryPointInputsCacheFilePath)" Outputs="$(_TestingPlatformEntryPointSourcePath)"
           Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
     <TestingPlatformEntryPointTask TestingPlatformEntryPointSourcePath="$(_TestingPlatformEntryPointSourcePath)"
-                                  Language="$(Language)"
-                                  TestingPlatformBuilderHooks="@(TestingPlatformBuilderHook)"
-                               >
+                                  Language="$(Language)" >
       <Output TaskParameter="TestingPlatformEntryPointGeneratedFilePath" PropertyName ="TestingPlatformEntryPointGeneratedFilePath" />
     </TestingPlatformEntryPointTask>
     <ItemGroup>
@@ -144,6 +137,82 @@
     </ItemGroup>
   </Target>
 
+  <!--
+    Inject AutoRegisteredExtensions
+    ===========================
+
+    Expected extensions items shape
+
+  <ItemGroup>
+    <TestingPlatformBuilderHook Include="8E680F4D-E423-415A-9566-855439363BC0" >
+      <DisplayName>MyBuilderHook</DisplayName>
+      <TypeFullName>Contoso.BuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+  -->
+
+  <!-- Import task -->
+  <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.TestingPlatformAutoRegisteredExtensions"
+         AssemblyFile="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
+
+  <Target Name="_GenerateAutoRegisteredExtensionsFileInputCache" BeforeTargets="_GenerateAutoRegisteredExtensions" Condition=" '$(GenerateAutoRegisteredExtensions)' == 'True' " >
+    <PropertyGroup>
+      <!-- Cache file to check -->
+      <_GenerateAutoRegisteredExtensionsInputsCachFilePath>$(IntermediateOutputPath)$(MSBuildProjectName).genautoregisteredextensionsinputcache.cache</_GenerateAutoRegisteredExtensionsInputsCachFilePath>
+      <_GenerateAutoRegisteredExtensionsInputsCachFilePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_GenerateAutoRegisteredExtensionsInputsCachFilePath)))</_GenerateAutoRegisteredExtensionsInputsCachFilePath>
+    </PropertyGroup>
+    <ItemGroup>
+      <!-- Items to hash-->
+      <_GenerateAutoRegisteredExtensionsInputsCacheToHash Include="@(TestingPlatformBuilderHook)"/>
+      <!-- Export the items name for the _GenerateTestingPlatformInjectEntryPoint task-->
+      <GenerateAutoRegisteredExtensionsInputsCacheFilePath Include="$(_GenerateAutoRegisteredExtensionsInputsCachFilePath)" />
+    </ItemGroup>
+    <!-- Hash the extensions information -->
+    <Hash ItemsToHash="@(_GenerateAutoRegisteredExtensionsInputsCacheToHash)">
+      <Output TaskParameter="HashResult" PropertyName="_GenerateAutoRegisteredExtensionsInputsCache" />
+    </Hash>
+    <!-- Write the hash value to the cache file -->
+    <WriteLinesToFile Lines="$(_GenerateAutoRegisteredExtensionsInputsCache)"
+                  File="$(_GenerateAutoRegisteredExtensionsInputsCachFilePath)"
+                  Overwrite="True"
+                  WriteOnlyWhenDifferent="True" />
+    <ItemGroup>
+      <FileWrites Include="$(_GenerateAutoRegisteredExtensionsInputsCachFilePath)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Generate the entry point source using the user extensions informations -->
+  <PropertyGroup>
+    <_AutoRegisteredExtensionsSourceNameWithoutExtension>AutoRegisteredExtensions</_AutoRegisteredExtensionsSourceNameWithoutExtension>
+    <_AutoRegisteredExtensionsSourceName Condition=" $(Language) == 'C#' " >$(_AutoRegisteredExtensionsSourceNameWithoutExtension).cs</_AutoRegisteredExtensionsSourceName>
+    <_AutoRegisteredExtensionsSourceName Condition=" $(Language) == 'VB' " >$(_AutoRegisteredExtensionsSourceNameWithoutExtension).vb</_AutoRegisteredExtensionsSourceName>
+    <_AutoRegisteredExtensionsSourceName Condition=" $(Language) == 'F#' " >$(_AutoRegisteredExtensionsSourceNameWithoutExtension).fs</_AutoRegisteredExtensionsSourceName>
+    <_AutoRegisteredExtensionsSourcePath>$([System.IO.Path]::Combine($(IntermediateOutputPath),$(_AutoRegisteredExtensionsSourceName)))</_AutoRegisteredExtensionsSourcePath>
+    <_AutoRegisteredExtensionsSourcePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_AutoRegisteredExtensionsSourcePath)))</_AutoRegisteredExtensionsSourcePath>
+  </PropertyGroup>
+  <Target Name="_GenerateAutoRegisteredExtensions" BeforeTargets="IncludeGenerateAutoRegisteredExtensionsIntoCompilation"
+          Inputs="@(GenerateAutoRegisteredExtensionsInputsCacheFilePath)" Outputs="$(_AutoRegisteredExtensionsSourcePath)"
+          Condition=" '$(GenerateAutoRegisteredExtensions)' == 'True' " >
+    <TestingPlatformAutoRegisteredExtensions AutoRegisteredExtensionsSourcePath="$(_AutoRegisteredExtensionsSourcePath)"
+                                             AutoRegisteredExtensionsBuilderHook="@(TestingPlatformBuilderHook)"
+                                             Language="$(Language)" >
+      <Output TaskParameter="AutoRegisteredExtensionsGeneratedFilePath" PropertyName ="AutoRegisteredExtensionsGeneratedFilePath" />
+    </TestingPlatformAutoRegisteredExtensions>
+    <ItemGroup>
+      <FileWrites Include="$(_AutoRegisteredExtensionsSourcePath)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- We always include the entry point also if the task _GenerateTestingPlatformInjectEntryPoint is skipped for caching reason -->
+  <Target Name="IncludeGenerateAutoRegisteredExtensionsIntoCompilation" BeforeTargets="CoreCompile" Condition=" '$(GenerateAutoRegisteredExtensions)' == 'True' " >
+    <ItemGroup>
+      <Compile Include="$(_AutoRegisteredExtensionsSourcePath)" />
+    </ItemGroup>
+    <!-- We need to report to the FileWrites here because is possible that we skip _GenerateTestingPlatformInjectEntryPoint and we want to correctly handle the "dotnet clean" target -->
+    <ItemGroup>
+      <FileWrites Include="$(_AutoRegisteredExtensionsSourcePath)" />
+    </ItemGroup>
+  </Target>
 
   <!--
       Hook the testing platform
@@ -153,9 +222,11 @@
         * VSTest: Overrides the SDK VSTest target for single tfm, we use the built-in multitfm workflow https://github.com/dotnet/sdk/blob/main/src/Layout/redist/MSBuildImports/Current/Microsoft.Common.CrossTargeting.targets/ImportAfter/Microsoft.TestPlatform.CrossTargeting.targets#L79
         * Test: We plug ourself to the available VSTest target for multitfm and we go directly to our target for single tfm
   -->
-  <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask"
-         AssemblyFile="$(TasksFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
 
+  <!-- Import task -->
+  <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask"
+         AssemblyFile="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
+  
   <PropertyGroup>
     <!-- Disable custom -t:Test target -->
     <TestingPlatformDisableCustomTestTarget Condition=" '$(TestingPlatformDisableCustomTestTarget)' == '' ">False</TestingPlatformDisableCustomTestTarget>
