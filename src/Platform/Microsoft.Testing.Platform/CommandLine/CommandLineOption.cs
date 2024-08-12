@@ -31,7 +31,7 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
 
         for (int i = 0; i < name.Length; i++)
         {
-            ArgumentGuard.Ensure(char.IsLetter(name[i]) || name[i] == '-', nameof(name), string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidOptionName, name));
+            ArgumentGuard.Ensure(char.IsLetter(name[i]) || name[i] == '-' || name[i] == '?', nameof(name), string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidOptionName, name));
         }
 
         Name = name;
