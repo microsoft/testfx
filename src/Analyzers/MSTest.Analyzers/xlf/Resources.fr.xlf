@@ -449,7 +449,7 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
-        <target state="new">Test method '{0}' signature is invalid</target>
+        <target state="translated">La signature « {0} » de la méthode de test n’est pas valide</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">

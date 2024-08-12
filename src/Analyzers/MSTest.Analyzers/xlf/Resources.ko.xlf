@@ -449,7 +449,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
-        <target state="new">Test method '{0}' signature is invalid</target>
+        <target state="translated">테스트 메서드 '{0}' 시그니처가 잘못되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">

@@ -19,12 +19,12 @@
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassFix">
         <source>Add '[TestClass]'</source>
-        <target state="new">Add '[TestClass]'</target>
+        <target state="translated">Ajouter « [TestClass] »</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidFix">
         <source>Fix test method signature</source>
-        <target state="new">Fix test method signature</target>
+        <target state="translated">Corriger la signature de la méthode de test</target>
         <note />
       </trans-unit>
     </body>
