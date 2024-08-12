@@ -50,10 +50,10 @@ Extension options:
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task HelpShortName1_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)
+    public async Task HelpShortName_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--h");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--?");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -283,10 +283,10 @@ Extension options:
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task HelpShortName2_WithAllExtensionsRegistered_OutputFullHelpContent(string tfm)
+    public async Task HelpShortName_WithAllExtensionsRegistered_OutputFullHelpContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--?");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("-?");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
