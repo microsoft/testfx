@@ -84,7 +84,7 @@
   <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask"
            AssemblyFile="$(TasksFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
 
-  <Target Name="_GenerateTestingPlatformEntryPointFileInputCache" BeforeTargets="_GenerateTestingPlatformEntryPoint" Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
+  <Target Name="_GenerateTestingPlatformEntryPointFileInputCache" BeforeTargets="_GenerateTestingPlatformEntryPoint" >
     <PropertyGroup>
       <!-- Cache file to check -->
       <_GenerateTestingPlatformEntryPointInputsCachFilePath>$(IntermediateOutputPath)$(MSBuildProjectName).gentestingplatformentrypointinputcache.cache</_GenerateTestingPlatformEntryPointInputsCachFilePath>
@@ -120,8 +120,7 @@
     <_TestingPlatformEntryPointSourcePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_TestingPlatformEntryPointSourcePath)))</_TestingPlatformEntryPointSourcePath>
   </PropertyGroup>
   <Target Name="_GenerateTestingPlatformEntryPoint" BeforeTargets="IncludeGenerateTestingPlatformEntryPointIntoCompilation"
-          Inputs="@(GenerateTestingPlatformEntryPointInputsCacheFilePath)" Outputs="$(_TestingPlatformEntryPointSourcePath)"
-          Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
+          Inputs="@(GenerateTestingPlatformEntryPointInputsCacheFilePath)" Outputs="$(_TestingPlatformEntryPointSourcePath)" >
     <TestingPlatformEntryPointTask TestingPlatformEntryPointSourcePath="$(_TestingPlatformEntryPointSourcePath)"
                                   Language="$(Language)"
                                   TestingPlatformBuilderHooks="@(TestingPlatformBuilderHook)"
@@ -134,7 +133,7 @@
   </Target>
 
   <!-- We always include the entry point also if the task _GenerateTestingPlatformInjectEntryPoint is skipped for caching reason -->
-  <Target Name="IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="CoreCompile" Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
+  <Target Name="IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="CoreCompile" >
     <ItemGroup>
       <Compile Include="$(_TestingPlatformEntryPointSourcePath)" />
     </ItemGroup>
