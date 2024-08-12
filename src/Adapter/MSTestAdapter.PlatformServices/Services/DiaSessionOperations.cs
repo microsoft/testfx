@@ -32,15 +32,10 @@ internal static class DiaSessionOperations
     /// <param name="source"> The source file. </param>
     /// <returns> A Navigation session instance for the current platform. </returns>
     internal static object? CreateNavigationSession(string source)
-    {
         // Create instance only when DiaSession is found in Object Model.
-        if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
-        {
-            return SafeInvoke(() => Activator.CreateInstance(s_typeDiaSession, source));
-        }
-
-        return null;
-    }
+        => s_typeDiaSession != null && s_typeDiaNavigationData != null
+            ? SafeInvoke(() => Activator.CreateInstance(s_typeDiaSession, source))
+            : null;
 
     /// <summary>
     /// Gets the navigation data for a navigation session.
