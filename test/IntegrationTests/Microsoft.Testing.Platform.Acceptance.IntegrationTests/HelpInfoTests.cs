@@ -137,10 +137,10 @@ Built-in command line providers:
     Version: .+
     Description: Microsoft Testing Platform command line provider
     Options:
-      --?
+      --\?
         Arity: 0
         Hidden: True
-        Description: Show the command line help.
+        Description: Show the command line help\.
       --client-host
         Arity: 1
         Hidden: True
