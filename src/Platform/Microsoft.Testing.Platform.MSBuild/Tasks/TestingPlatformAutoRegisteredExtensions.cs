@@ -3,6 +3,7 @@
 
 #pragma warning disable CS8618 // Properties below are set by MSBuild.
 
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
@@ -27,6 +28,11 @@ public sealed class TestingPlatformAutoRegisteredExtensions : Build.Utilities.Ta
 
     internal TestingPlatformAutoRegisteredExtensions(IFileSystem fileSystem)
     {
+        if (Environment.GetEnvironmentVariable("TESTINGPLATFORM_MSBUILD_LAUNCH_ATTACH_DEBUGGER") == "1")
+        {
+            Debugger.Launch();
+        }
+
         _fileSystem = fileSystem;
     }
 
@@ -101,7 +107,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
             }
             else
             {
-                GenerateEntryPoint(Language.ItemSpec, taskItems, AutoRegisteredExtensionsSourcePath, _fileSystem, Log);
+                GenerateCode(Language.ItemSpec, taskItems, AutoRegisteredExtensionsSourcePath, _fileSystem, Log);
                 AutoRegisteredExtensionsGeneratedFilePath = AutoRegisteredExtensionsSourcePath;
             }
         }
@@ -132,7 +138,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
         return result.ToArray();
     }
 
-    private static void GenerateEntryPoint(string language, ITaskItem[] taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
+    private static void GenerateCode(string language, ITaskItem[] taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
     {
         StringBuilder builder = new();
 
@@ -151,12 +157,12 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
             }
         }
 
-        string entryPointSource = GetEntryPointSourceCode(language, builder.ToString());
-        taskLoggingHelper.LogMessage(MessageImportance.Normal, $"Entrypoint source:\n'{entryPointSource}'");
+        string entryPointSource = GetSourceCode(language, builder.ToString());
+        taskLoggingHelper.LogMessage(MessageImportance.Normal, $"AutoRegisteredExtensions source:\n'{entryPointSource}'");
         fileSystem.WriteAllText(testingPlatformEntryPointSourcePath.ItemSpec, entryPointSource);
     }
 
-    private static string GetEntryPointSourceCode(string language, string extensionsFragments)
+    private static string GetSourceCode(string language, string extensionsFragments)
     {
         if (language == CSharpLanguageSymbol)
         {
@@ -167,16 +173,12 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Microsoft.Testing.Platform
+[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+public static class AutoRegisteredExtensions
 {
-
-    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-    public static class AutoRegisteredExtensions
+    public static void AddAutoRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
     {
-        public static void AddAutoRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
-        {
-            {{extensionsFragments}}
-        }
+        {{extensionsFragments}}
     }
 }
 """;
@@ -191,19 +193,12 @@ namespace Microsoft.Testing.Platform
 '------------------------------------------------------------------------------
 
 <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
-Module TestingPlatformEntryPoint
+Public Module AutoRegisteredExtensions
 
-    Function Main(args As Global.System.String()) As Global.System.Int32
-        Return MainAsync(args).Result
-    End Function
-
-    Public Async Function MainAsync(ByVal args() As Global.System.String) As Global.System.Threading.Tasks.Task(Of Integer)
-        Dim builder = Await Global.Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args)
+    <System.Runtime.CompilerServices.Extension>
+    Public Sub AddAutoRegisteredExtensions(ByVal builder As Global.Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, ByVal args As Global.System.String())
         {{extensionsFragments}}
-        Using testApplication = Await builder.BuildAsync()
-            Return Await testApplication.RunAsync()
-        End Using
-    End Function
+    End Sub
 
 End Module
 """;
@@ -217,17 +212,17 @@ End Module
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+namespace Microsoft.TestingPlatform.Extensions
+
+open System.Runtime.CompilerServices
+
 [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
-[<EntryPoint>]
-let main args =
-    task {
-        let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
+[<Extension>]
+type AutoRegisteredExtensions() =
+
+    [<Extension>]
+    static member AddAutoRegisteredExtensions (builder: Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args: string[])=
         {{extensionsFragments}}
-        use! app = builder.BuildAsync()
-        return! app.RunAsync()
-    }
-    |> Async.AwaitTask
-    |> Async.RunSynchronously
 """;
         }
 

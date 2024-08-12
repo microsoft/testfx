@@ -3,6 +3,8 @@
 
 #pragma warning disable CS8618 // Properties below are set by MSBuild.
 
+using System.Diagnostics;
+
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -21,6 +23,11 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
 
     internal TestingPlatformEntryPointTask(IFileSystem fileSystem)
     {
+        if (Environment.GetEnvironmentVariable("TESTINGPLATFORM_MSBUILD_LAUNCH_ATTACH_DEBUGGER") == "1")
+        {
+            Debugger.Launch();
+        }
+
         _fileSystem = fileSystem;
     }
 
@@ -80,6 +87,7 @@ internal sealed class TestingPlatformEntryPoint
     public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
     {
         global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
+        AutoRegisteredExtensions.AddAutoRegisteredExtensions(builder, args);
         using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
         {
             return await app.RunAsync();
@@ -106,6 +114,7 @@ Module TestingPlatformEntryPoint
 
     Public Async Function MainAsync(ByVal args() As Global.System.String) As Global.System.Threading.Tasks.Task(Of Integer)
         Dim builder = Await Global.Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args)
+        AutoRegisteredExtensions.AddAutoRegisteredExtensions(builder, args)
         Using testApplication = Await builder.BuildAsync()
             Return Await testApplication.RunAsync()
         End Using
@@ -128,6 +137,7 @@ End Module
 let main args =
     task {
         let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
+        Microsoft.TestingPlatform.Extensions.AutoRegisteredExtensions.AddAutoRegisteredExtensions(builder, args)
         use! app = builder.BuildAsync()
         return! app.RunAsync()
     }

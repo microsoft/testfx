@@ -42,21 +42,6 @@ public class MSBuildTests : TestBase
             BuildEngine = _buildEngine.Object,
             TestingPlatformEntryPointSourcePath = new CustomTaskItem("obj/entryPointFile"),
             Language = new CustomTaskItem("C#"),
-            TestingPlatformBuilderHooks = new List<CustomTaskItem>
-            {
-                new CustomTaskItem("95914C54-6C6E-4AF7-9327-4905E1CE9DB7")
-                .Add("DisplayName", "DisplayName")
-                .Add("TypeFullName", "TypeFullName"),
-
-                // Microsoft.Testing.Extensions.TrxReport
-                new CustomTaskItem("2006B3F7-93D2-4D9C-9C69-F41A1F21C9C7")
-                .Add("DisplayName", "DisplayName")
-                .Add("TypeFullName", "Microsoft.Testing.Extensions.TrxReport"),
-
-                new CustomTaskItem("95914C54-6C6E-4AF7-9327-4905E1CE9DB9")
-                .Add("DisplayName", "DisplayName")
-                .Add("TypeFullName", "TypeFullName"),
-            }.ToArray(),
         };
 
         testingPlatformEntryPoint.Execute();
@@ -74,9 +59,7 @@ internal sealed class TestingPlatformEntryPoint
     public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
     {
         global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
-        TypeFullName.AddExtensions(builder, args);
-        TypeFullName.AddExtensions(builder, args);
-        Microsoft.Testing.Extensions.TrxReport.AddExtensions(builder, args);
+        global::Microsoft.Testing.Platform.AutoRegisteredExtensions.AddAutoRegisteredExtensions(builder, args);
         using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
         {
             return await app.RunAsync();
