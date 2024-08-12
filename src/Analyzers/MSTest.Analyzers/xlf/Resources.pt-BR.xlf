@@ -449,7 +449,7 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
-        <target state="new">Test method '{0}' signature is invalid</target>
+        <target state="translated">A assinatura "{0}" do método de teste é inválida</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">

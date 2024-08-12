@@ -154,7 +154,7 @@
       </trans-unit>
       <trans-unit id="ConsoleIsAlreadyInBatchingMode">
         <source>Console is already in batching mode.</source>
-        <target state="new">Console is already in batching mode.</target>
+        <target state="translated">控制台已处于批处理模式。</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
@@ -223,17 +223,17 @@
       </trans-unit>
       <trans-unit id="FailedWithErrors">
         <source>failed with {0} errors(s)</source>
-        <target state="new">failed with {0} errors(s)</target>
+        <target state="translated">失败，出现 {0} 个错误</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">
         <source>failed with {0} error(s) and {1} warning(s)</source>
-        <target state="new">failed with {0} error(s) and {1} warning(s)</target>
+        <target state="translated">失败，出现 {0} 错误和 {1} 警告</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithWarnings">
         <source>failed with {0} warning(s)</source>
-        <target state="new">failed with {0} warning(s)</target>
+        <target state="translated">失败，出现 {0} 警告</target>
         <note />
       </trans-unit>
       <trans-unit id="ForTest">
@@ -243,7 +243,7 @@
       </trans-unit>
       <trans-unit id="FromFile">
         <source>from</source>
-        <target state="new">from</target>
+        <target state="translated">从</target>
         <note>from followed by a file name to point to the file from which test is originating</note>
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
@@ -520,7 +520,7 @@
       </trans-unit>
       <trans-unit id="RunningTestsFrom">
         <source>Running tests from</source>
-        <target state="new">Running tests from</target>
+        <target state="translated">正在从以下位置运行测试</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerLogMessageDescription">
@@ -570,12 +570,12 @@
       </trans-unit>
       <trans-unit id="StackFrameAt">
         <source>at</source>
-        <target state="new">at</target>
+        <target state="translated">在</target>
         <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
       </trans-unit>
       <trans-unit id="StackFrameIn">
         <source>in</source>
-        <target state="new">in</target>
+        <target state="translated">位于</target>
         <note>in that is used in stack frame it is followed by file name</note>
       </trans-unit>
       <trans-unit id="StackTrace">
@@ -670,7 +670,7 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
       </trans-unit>
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>
-        <target state="new">Test run summary:</target>
+        <target state="translated">测试运行摘要:</target>
         <note />
       </trans-unit>
       <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">

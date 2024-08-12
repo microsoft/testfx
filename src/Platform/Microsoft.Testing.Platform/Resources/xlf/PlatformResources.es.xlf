@@ -228,12 +228,12 @@
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">
         <source>failed with {0} error(s) and {1} warning(s)</source>
-        <target state="new">failed with {0} error(s) and {1} warning(s)</target>
+        <target state="translated">error con {0} errores y {1} advertencias</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithWarnings">
         <source>failed with {0} warning(s)</source>
-        <target state="new">failed with {0} warning(s)</target>
+        <target state="translated">error con {0} advertencias</target>
         <note />
       </trans-unit>
       <trans-unit id="ForTest">
