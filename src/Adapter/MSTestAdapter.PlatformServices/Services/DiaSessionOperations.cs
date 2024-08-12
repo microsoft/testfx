@@ -32,16 +32,10 @@ internal static class DiaSessionOperations
     /// <param name="source"> The source file. </param>
     /// <returns> A Navigation session instance for the current platform. </returns>
     internal static object? CreateNavigationSession(string source)
-    {
         // Create instance only when DiaSession is found in Object Model.
-        if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
-        {
-            string messageFormatOnException = string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
-            return SafeInvoke(() => Activator.CreateInstance(s_typeDiaSession, source));
-        }
-
-        return null;
-    }
+        => s_typeDiaSession != null && s_typeDiaNavigationData != null
+            ? SafeInvoke(() => Activator.CreateInstance(s_typeDiaSession, source))
+            : null;
 
     /// <summary>
     /// Gets the navigation data for a navigation session.
@@ -60,7 +54,6 @@ internal static class DiaSessionOperations
         // Get navigation data only when DiaSession is found in Object Model.
         if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
-            string messageFormatOnException = string.Join("MSTestDiscoverer:DiaSession: Could not get navigation data for class:", className, ". Reason:{0}");
             object? data = SafeInvoke(() => s_methodGetNavigationData!.Invoke(navigationSession, [className, methodName]));
 
             if (data != null)
