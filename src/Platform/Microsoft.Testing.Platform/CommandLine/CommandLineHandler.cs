@@ -227,7 +227,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);
 
-    public bool IsHelpInvoked() => IsOptionSet(PlatformCommandLineProvider.HelpOptionKey);
+    public bool IsHelpInvoked() => IsOptionSet(PlatformCommandLineProvider.HelpOptionKey) || IsOptionSet(PlatformCommandLineProvider.HelpOptionQuestionMark);
 
     public bool IsInfoInvoked() => IsOptionSet(PlatformCommandLineProvider.InfoOptionKey);
 

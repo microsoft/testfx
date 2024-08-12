@@ -50,6 +50,38 @@ Extension options:
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task HelpShortName_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--?");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        const string wildcardMatchPattern = $"""
+.NET Testing Platform v*
+Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
+Execute a .NET Test Application.
+Options:
+  --diagnostic                             Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag
+  --diagnostic-filelogger-synchronouswrite Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.
+  --diagnostic-output-directory            Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.
+  --diagnostic-output-fileprefix           Prefix for the log file name that will replace '[log]_.'
+  --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
+  --exit-on-process-exit                   Exit the test process if dependent process exits. PID must be provided.
+  --help                                   Show the command line help.
+  --ignore-exit-code                       Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)
+  --info                                   Display .NET test application information.
+  --list-tests                             List available tests.
+  --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run.
+  --results-directory                      The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.
+Extension options:
+  --treenode-filter Use a tree filter to filter down the tests to execute
+""";
+
+        testHostResult.AssertOutputMatches(wildcardMatchPattern);
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Help_WhenNoExtensionRegisteredAndUnknownOptionIsSpecified_OutputDefaultHelpContentAndUnknownOption(string tfm)
     {
         const string UnknownOption = "aaa";
@@ -105,6 +137,10 @@ Built-in command line providers:
     Version: .+
     Description: Microsoft Testing Platform command line provider
     Options:
+      --\?
+        Arity: 0
+        Hidden: True
+        Description: Show the command line help\.
       --client-host
         Arity: 1
         Hidden: True
@@ -251,6 +287,50 @@ Extension options:
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task HelpShortName_WithAllExtensionsRegistered_OutputFullHelpContent(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("-?");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        string wildcardPattern = $"""
+.NET Testing Platform v*
+Usage {TestAssetFixture.AllExtensionsAssetName}* [option providers] [extension option providers]
+Execute a .NET Test Application.
+Options:
+  --diagnostic                             Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag
+  --diagnostic-filelogger-synchronouswrite Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.
+  --diagnostic-output-directory            Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.
+  --diagnostic-output-fileprefix           Prefix for the log file name that will replace '[log]_.'
+  --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
+  --exit-on-process-exit                   Exit the test process if dependent process exits. PID must be provided.
+  --help                                   Show the command line help.
+  --ignore-exit-code                       Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)
+  --info                                   Display .NET test application information.
+  --list-tests                             List available tests.
+  --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run.
+  --results-directory                      The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.
+  --retry-failed-tests                     Enable retry failed tests
+  --retry-failed-tests-max-percentage      Disable retry mechanism if the percentage of failed tests is greater than the specified value
+  --retry-failed-tests-max-tests           Disable retry mechanism if the number of failed tests is greater than the specified value
+Extension options:
+  --crashdump           [net6.0+ only] Generate a dump file if the test process crashes
+  --crashdump-filename  Specify the name of the dump file
+  --crashdump-type      Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps
+  --hangdump            Generate a dump file if the test process hangs
+  --hangdump-filename   Specify the name of the dump file
+  --hangdump-timeout    Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.
+  --hangdump-type       Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'
+  --report-trx          Enable generating TRX report
+  --report-trx-filename The name of the generated TRX report
+  --treenode-filter     Use a tree filter to filter down the tests to execute
+""";
+
+        testHostResult.AssertOutputMatches(wildcardPattern);
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Info_WithAllExtensionsRegistered_OutputFullInfoContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
@@ -271,6 +351,10 @@ Built-in command line providers:
     Version: *
     Description: Microsoft Testing Platform command line provider
     Options:
+      --?
+        Arity: 0
+        Hidden: True
+        Description: Show the command line help.
       --client-host
         Arity: 1
         Hidden: True
