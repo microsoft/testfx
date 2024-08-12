@@ -27,7 +27,7 @@ internal class TestHostControlledHost(NamedPipeClient testHostControllerPipeClie
         }
         catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
         {
-            // We do nothing we're cancelling
+            // We do nothing we're canceling
         }
         finally
         {

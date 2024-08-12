@@ -28,7 +28,6 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
     private readonly SemaphoreSlim _nodeUpdateSemaphore = new(1);
     private readonly ITestSessionContext _testSessionContext = serviceProvider.GetTestSessionContext();
     private readonly TaskCompletionSource<bool> _testSessionEnd = new();
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
     private readonly IServerTestHost _serverTestHost = serverTestHost;
     private readonly ITask _task = task;
     private Task? _idleUpdateTask;
@@ -84,7 +83,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         return nodeStatistics;
     }
 
-    internal /* for testing */ Task GetIdleUpdateTaskAsync() => _idleUpdateTask is not null ? _idleUpdateTask : Task.CompletedTask;
+    internal /* for testing */ Task GetIdleUpdateTaskAsync() => _idleUpdateTask ?? Task.CompletedTask;
 
     private async Task ProcessTestNodeUpdateAsync(TestNodeUpdateMessage update, CancellationToken cancellationToken)
     {
@@ -111,11 +110,11 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
                         // Observe possible exceptions
                         try
                         {
-                            await _idleUpdateTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                            await _idleUpdateTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
                         }
                         catch (OperationCanceledException)
                         {
-                            // We cannot check the token because it's possible that we're cancelled during the
+                            // We cannot check the token because it's possible that we're canceled during the
                             // send of the information and that the current cancellation token is a combined one.
                         }
                     }
@@ -132,7 +131,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
         {
-            // We do nothing we've been cancelled.
+            // We do nothing we've been canceled.
         }
     }
 
@@ -146,7 +145,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
             using CancellationTokenRegistration registration = cancellationToken.Register(_testSessionEnd.SetCanceled);
 
             // When batch timer expire or we're at the end of the session we can unblock the message drain
-            ArgumentGuard.IsNotNull(_task);
+            Guard.NotNull(_task);
             await Task.WhenAny(_task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task);
 
             if (cancellationToken.IsCancellationRequested)
@@ -158,7 +157,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // We do nothing we've been cancelled.
+            // We do nothing we've been canceled.
         }
     }
 
@@ -207,7 +206,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // We do nothing we've been cancelled.
+            // We do nothing we've been canceled.
         }
     }
 

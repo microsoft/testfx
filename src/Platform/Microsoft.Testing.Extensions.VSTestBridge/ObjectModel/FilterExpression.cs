@@ -9,7 +9,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
@@ -49,8 +48,8 @@ internal sealed partial class FilterExpression
 
     private FilterExpression(FilterExpression left, FilterExpression right, bool areJoinedByAnd)
     {
-        ArgumentGuard.IsNotNull(left);
-        ArgumentGuard.IsNotNull(right);
+        Guard.NotNull(left);
+        Guard.NotNull(right);
         _left = left;
         _right = right;
         _areJoinedByAnd = areJoinedByAnd;
@@ -58,7 +57,7 @@ internal sealed partial class FilterExpression
 
     private FilterExpression(Condition condition)
     {
-        ArgumentGuard.IsNotNull(condition);
+        Guard.NotNull(condition);
         _condition = condition;
     }
 
@@ -274,7 +273,7 @@ internal sealed partial class FilterExpression
         // Will have the nodes.
         Stack<FilterExpression> filterStack = new();
 
-        // Will contain the nodes results to use them in thier parent result's calculation
+        // Will contain the nodes results to use them in their parent result's calculation
         // and at the end will have the root result.
         Stack<T> result = new();
 

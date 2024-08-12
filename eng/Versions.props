@@ -7,10 +7,10 @@
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
   </PropertyGroup>
   <PropertyGroup Label="MSTest prod dependencies - darc updated">
-    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24352.1</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <MicrosoftTestingExtensionsCodeCoverageVersion>17.12.0-preview.24281.3</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24376.1</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
+    <MicrosoftTestingExtensionsCodeCoverageVersion>17.12.0-preview.24412.2</MicrosoftTestingExtensionsCodeCoverageVersion>
     <!-- comment to facilitate merge conflicts -->
-    <MicrosoftTestingInternalFrameworkVersion>1.3.0-preview.24352.2</MicrosoftTestingInternalFrameworkVersion>
-    <MSTestEngineVersion>1.0.0-alpha.24352.2</MSTestEngineVersion>
+    <MicrosoftTestingInternalFrameworkVersion>1.3.0-preview.24412.1</MicrosoftTestingInternalFrameworkVersion>
+    <MSTestEngineVersion>1.0.0-alpha.24412.1</MSTestEngineVersion>
   </PropertyGroup>
 </Project>

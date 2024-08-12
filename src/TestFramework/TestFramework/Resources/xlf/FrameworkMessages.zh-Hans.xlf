@@ -229,18 +229,14 @@
         <note></note>
       </trans-unit>
       <trans-unit id="NoExceptionThrown">
-        <source>No exception thrown. {1} exception was expected. {0}</source>
-        <target state="translated">未引发异常。原来预计会引发异常 {1}。{0}</target>
-        <note></note>
+        <source>Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</source>
+        <target state="translated">预期异常类型:&lt;{1}&gt;，但未引发异常。{0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="WrongExceptionThrown">
-        <source>Threw exception {2}, but exception {1} was expected. {0}
-Exception Message: {3}
-Stack Trace: {4}</source>
-        <target state="translated">原来预计会引发异常 {1}，但引发了异常 {2}。{0}
-异常消息: {3}
-堆栈跟踪: {4}</target>
-        <note></note>
+        <source>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</source>
+        <target state="translated">预期异常类型:&lt;{1}&gt;。实际异常类型:&lt;{2}&gt;。{0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
         <source>{0} ({1})</source>

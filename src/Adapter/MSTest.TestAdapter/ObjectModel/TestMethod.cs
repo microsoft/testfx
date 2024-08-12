@@ -1,12 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 
 using Microsoft.TestPlatform.AdapterUtilities;
-using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -31,63 +29,41 @@ public sealed class TestMethod : ITestMethod
     private string? _declaringAssemblyName;
 
     public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
+        : this(null, null, null, name, fullClassName, assemblyName, isAsync, null, TestIdGenerationStrategy.FullyQualified)
     {
-        if (StringEx.IsNullOrEmpty(assemblyName))
-        {
-            throw new ArgumentNullException(nameof(assemblyName));
-        }
+    }
 
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(name), "TestName cannot be empty");
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(fullClassName), "Full className cannot be empty");
+    internal TestMethod(string name, string fullClassName, string assemblyName, bool isAsync, string? displayName,
+        TestIdGenerationStrategy testIdGenerationStrategy)
+        : this(null, null, null, name, fullClassName, assemblyName, isAsync, displayName, testIdGenerationStrategy)
+    {
+    }
+
+    internal TestMethod(string? managedTypeName, string? managedMethodName, string?[]? hierarchyValues, string name,
+        string fullClassName, string assemblyName, bool isAsync, string? displayName,
+        TestIdGenerationStrategy testIdGenerationStrategy)
+    {
+        Guard.NotNullOrWhiteSpace(assemblyName);
 
         Name = name;
+        DisplayName = displayName ?? name;
         FullClassName = fullClassName;
         AssemblyName = assemblyName;
         IsAsync = isAsync;
 
-        string?[] hierarchy = new string?[HierarchyConstants.Levels.TotalLevelCount];
-        hierarchy[HierarchyConstants.Levels.ContainerIndex] = null;
-        hierarchy[HierarchyConstants.Levels.NamespaceIndex] = fullClassName;
-        hierarchy[HierarchyConstants.Levels.ClassIndex] = name;
-        hierarchy[HierarchyConstants.Levels.TestGroupIndex] = name;
-
-        _hierarchy = new ReadOnlyCollection<string?>(hierarchy);
-        TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
-    }
-
-    internal TestMethod(string name, string fullClassName, string assemblyName, bool isAsync,
-        TestIdGenerationStrategy testIdGenerationStrategy)
-        : this(name, fullClassName, assemblyName, isAsync)
-    {
-        TestIdGenerationStrategy = testIdGenerationStrategy;
-    }
-
-    internal TestMethod(MethodBase method, string name, string fullClassName, string assemblyName, bool isAsync,
-        TestIdGenerationStrategy testIdGenerationStrategy)
-        : this(name, fullClassName, assemblyName, isAsync)
-    {
-        if (method == null)
+        if (hierarchyValues is null)
         {
-            throw new ArgumentNullException(nameof(method));
+            hierarchyValues = new string?[HierarchyConstants.Levels.TotalLevelCount];
+            hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null;
+            hierarchyValues[HierarchyConstants.Levels.NamespaceIndex] = fullClassName;
+            hierarchyValues[HierarchyConstants.Levels.ClassIndex] = name;
+            hierarchyValues[HierarchyConstants.Levels.TestGroupIndex] = name;
         }
 
-        ManagedNameHelper.GetManagedName(method, out string managedType, out string managedMethod, out string?[]? hierarchyValues);
-        hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.
-
-        ManagedTypeName = managedType;
-        ManagedMethodName = managedMethod;
-        TestIdGenerationStrategy = testIdGenerationStrategy;
         _hierarchy = new ReadOnlyCollection<string?>(hierarchyValues);
-    }
-
-    internal TestMethod(string? managedTypeName, string? managedMethodName, string[] hierarchyValues, string name,
-        string fullClassName, string assemblyName, bool isAsync, TestIdGenerationStrategy testIdGenerationStrategy)
-        : this(name, fullClassName, assemblyName, isAsync)
-    {
         ManagedTypeName = managedTypeName;
         ManagedMethodName = managedMethodName;
         TestIdGenerationStrategy = testIdGenerationStrategy;
-        _hierarchy = new ReadOnlyCollection<string?>(hierarchyValues);
     }
 
     /// <inheritdoc />
@@ -167,9 +143,9 @@ public sealed class TestMethod : ITestMethod
     internal string? TestGroup { get; set; }
 
     /// <summary>
-    /// Gets or sets the display name set during discovery.
+    /// Gets the display name set during discovery.
     /// </summary>
-    internal string? DisplayName { get; set; }
+    internal string DisplayName { get; }
 
     internal string UniqueName
         => HasManagedMethodAndTypeProperties

@@ -180,6 +180,25 @@ public sealed class ThreadingTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Passed!");
     }
 
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task LifecycleAttributesTaskThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA_With_ParallelAttribute(string tfm)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        var testHost = TestHost.LocateFrom(_testAssetFixture.LifecycleAttributesTaskProjectPath, TestAssetFixture.LifecycleWithParallelAttributesTaskProjectName, tfm);
+        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
+        {
+            ["MSTEST_THREAD_STATE_IS_STA"] = "1",
+        });
+
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContains("Passed!");
+    }
+
     [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
     public async Task LifecycleAttributesValueTaskThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA(string tfm)
     {
@@ -207,6 +226,7 @@ public sealed class ThreadingTests : AcceptanceTestBase
         public const string STAThreadProjectName = "STATestThreading";
         public const string LifecycleAttributesVoidProjectName = "LifecycleAttributesVoid";
         public const string LifecycleAttributesTaskProjectName = "LifecycleAttributesTask";
+        public const string LifecycleWithParallelAttributesTaskProjectName = "LifecycleAttributesTask";
         public const string LifecycleAttributesValueTaskProjectName = "LifecycleAttributesValueTask";
 
         public string ProjectPath => GetAssetPath(ProjectName);
@@ -217,6 +237,8 @@ public sealed class ThreadingTests : AcceptanceTestBase
 
         public string LifecycleAttributesTaskProjectPath => GetAssetPath(LifecycleAttributesTaskProjectName);
 
+        public string LifecycleWithParallelAttributesTaskProjectNamePath => GetAssetPath(LifecycleWithParallelAttributesTaskProjectName);
+
         public string LifecycleAttributesValueTaskProjectPath => GetAssetPath(LifecycleAttributesValueTaskProjectName);
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
@@ -226,7 +248,6 @@ public sealed class ThreadingTests : AcceptanceTestBase
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", ProjectName)
                 .PatchCodeWithReplace("$GenerateEntryPoint$", "true")
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (STAThreadProjectName, STAThreadProjectName,
@@ -234,25 +255,28 @@ public sealed class ThreadingTests : AcceptanceTestBase
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", STAThreadProjectName)
                 .PatchCodeWithReplace("$GenerateEntryPoint$", "false")
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (LifecycleAttributesVoidProjectName, LifecycleAttributesVoidProjectName,
                 LifecycleAttributesVoidSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (LifecycleAttributesTaskProjectName, LifecycleAttributesTaskProjectName,
                 LifecycleAttributesTaskSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$ParallelAttribute$", string.Empty)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+            yield return (LifecycleWithParallelAttributesTaskProjectName, LifecycleWithParallelAttributesTaskProjectName,
+                LifecycleAttributesTaskSource
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$ParallelAttribute$", "[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]")
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
             yield return (LifecycleAttributesValueTaskProjectName, LifecycleAttributesValueTaskProjectName,
                 LifecycleAttributesValueTaskSource
                 .PatchTargetFrameworks(TargetFrameworks.Net)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
@@ -540,6 +564,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+$ParallelAttribute$
 [TestClass]
 public class LifecycleAttributesTask
 {

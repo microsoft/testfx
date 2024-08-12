@@ -25,7 +25,7 @@ public sealed class TestRunParametersTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -36,7 +36,7 @@ public sealed class TestRunParametersTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -51,7 +51,6 @@ public sealed class TestRunParametersTests : AcceptanceTestBase
             yield return (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 

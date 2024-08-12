@@ -17,6 +17,16 @@
         <target state="translated">İmzayı düzelt</target>
         <note />
       </trans-unit>
+      <trans-unit id="PublicTypeShouldBeTestClassFix">
+        <source>Add '[TestClass]'</source>
+        <target state="translated">'[TestClass]' Ekle</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidFix">
+        <source>Fix test method signature</source>
+        <target state="translated">Test yöntemi imzasını düzeltin</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -114,7 +114,7 @@ public class UnitTestDiscovererTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
 
         // Act
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
 
@@ -196,7 +196,7 @@ public class UnitTestDiscovererTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
 
         // Act
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
         _unitTestDiscoverer.SendTestCases(Source, _testElements, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         // Assert
@@ -406,8 +406,8 @@ internal class TestableUnitTestDiscoverer : UnitTestDiscoverer
         ITestCaseDiscoverySink discoverySink,
         IDiscoveryContext discoveryContext)
     {
-        var testCase1 = new TestCase("A", new System.Uri("executor://testExecutor"), source);
-        var testCase2 = new TestCase("B", new System.Uri("executor://testExecutor"), source);
+        var testCase1 = new TestCase("A", new Uri("executor://testExecutor"), source);
+        var testCase2 = new TestCase("B", new Uri("executor://testExecutor"), source);
         discoverySink.SendTestCase(testCase1);
         discoverySink.SendTestCase(testCase2);
     }

@@ -36,16 +36,17 @@ public class CountDownEventTests : TestBase
         Assert.IsTrue(await waiter1);
     }
 
-    public async Task CountDownEvent_WaitAsyncCancelled_Succeeded()
+    public async Task CountDownEvent_WaitAsyncCanceled_Succeeded()
     {
         CountdownEvent countdownEvent = new(1);
         CancellationTokenSource cts = new();
-        var waiter = Task.Run(() => countdownEvent.WaitAsync(cts.Token));
+        CancellationToken cancelToken = cts.Token;
+        var waiter = Task.Run(() => countdownEvent.WaitAsync(cancelToken), cancelToken);
         await cts.CancelAsync();
         await Assert.ThrowsAsync<OperationCanceledException>(async () => await waiter);
     }
 
-    public async Task CountDownEvent_WaitAsyncCancelledByTimeout_Succeeded()
+    public async Task CountDownEvent_WaitAsyncCanceledByTimeout_Succeeded()
     {
         CountdownEvent countdownEvent = new(1);
         var waiter = Task.Run(() => countdownEvent.WaitAsync(TimeSpan.FromMilliseconds(500), CancellationToken.None));

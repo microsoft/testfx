@@ -1,11 +1,9 @@
 ﻿; Unshipped analyzer release
 ; https://github.com/dotnet/roslyn-analyzers/blob/main/src/Microsoft.CodeAnalysis.Analyzers/ReleaseTrackingAnalyzers.Help.md
-
 ### New Rules
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MSTEST0026 | Usage | Info | AssertionArgsShouldAvoidConditionalAccessRuleId, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0026)
-MSTEST0029 | Design | Disabled | PublicMethodShouldBeTestMethodAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0029)
-MSTEST0030 | Usage | Info | TypeContainingTestMethodShouldBeATestClassAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0030)
-MSTEST0031 | Usage | Info | DoNotUseSystemDescriptionAttributeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0031)
+MSTEST0018 | Usage | Warning | DynamicDataShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0018)
+MSTEST0034 | Usage | Info | UseClassCleanupBehaviorEndOfClassAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0034)
+MSTEST0035 | Usage | Info | UseDeploymentItemWithTestMethodOrTestClassAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0035)

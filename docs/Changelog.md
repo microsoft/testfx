@@ -4,7 +4,134 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="3.4.3"></a>[3.4.3] - 2024-05-30
+## <a name="3.5.1" />[3.5.1] - 2024-08-05
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.5.0...v3.5.1)
+
+### Fixed
+
+* Fix XmlDataConnection by @Evangelink in [#3346](https://github.com/microsoft/testfx/pull/3346)
+* Fix timeout message to reflect that 0 is not allowed by @Evangelink in [#3279](https://github.com/microsoft/testfx/pull/3279)
+* Fix Fix TestInitialize and TestCleanup analyzers to allow generic classes by @Evangelink in [#3280](https://github.com/microsoft/testfx/pull/3280)
+
+### Artifacts
+
+* MSTest: [3.5.1](https://www.nuget.org/packages/MSTest/3.5.1)
+* MSTest.TestFramework: [3.5.1](https://www.nuget.org/packages/MSTest.TestFramework/3.5.1)
+* MSTest.TestAdapter: [3.5.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.5.1)
+* MSTest.Analyzers: [3.5.1](https://www.nuget.org/packages/MSTest.Analyzers/3.5.1)
+* MSTest.Sdk: [3.5.1](https://www.nuget.org/packages/MSTest.Sdk/3.5.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.3.2)
+* Microsoft.Testing.Extensions.HangDump: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.3.2)
+* Microsoft.Testing.Extensions.HotReload: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.3.2)
+* Microsoft.Testing.Extensions.Retry: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.3.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.3.2)
+
+## <a name="3.5.0" />[3.5.0] - 2024-07-15
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.4.3...v3.5.0)
+
+### Added
+
+* Add overloads to `CollectionAssert.AreEquivalent`/`AreNotEquivalent` with `IEqualityComparer<T>` by @engyebrahim in [#3130](https://github.com/microsoft/testfx/pull/3130)
+* Add code fix for MSTEST0017 by @engyebrahim in [#3091](https://github.com/microsoft/testfx/pull/3091)
+* Add SDK samples from rel/3.4 by @nohwnd in [#3074](https://github.com/microsoft/testfx/pull/3074)
+* Add suppressors for VSTHRD200 by @Evangelink in [#2926](https://github.com/microsoft/testfx/pull/2926)
+* Add code fix for TestInitializeShouldBeValidAnalyzer by @Evangelink in [#2890](https://github.com/microsoft/testfx/pull/2890)
+* Add code fix for ClassCleanupShouldBeValidAnalyzer by @Evangelink in [#2883](https://github.com/microsoft/testfx/pull/2883)
+* Add code fix for AssemblyInitializeShouldBeValidAnalyzer by @Evangelink in [#2882](https://github.com/microsoft/testfx/pull/2882)
+* Add code fix for ClassInitializeShouldBeValidAnalyzer by @Evangelink in [#2884](https://github.com/microsoft/testfx/pull/2884)
+* Add code fixes for AssemblyCleanupShouldBeValidAnalyzer by @Evangelink in [#2866](https://github.com/microsoft/testfx/pull/2866)
+* Add sample of MSTest runner for WinUI by @Evangelink in [#2834](https://github.com/microsoft/testfx/pull/2834)
+* MSTEST0032: Always pass assertions by @engyebrahim in [#3238](https://github.com/microsoft/testfx/pull/3238)
+* MSTEST0025: add support for Assert.IsNull by @engyebrahim in [#3233](https://github.com/microsoft/testfx/pull/3233)
+* Update fixture analyzers to report on missing [TestClass] by @Evangelink in [#3252](https://github.com/microsoft/testfx/pull/3252)
+* Customize MSTest runner banner by @Evangelink in [#3235](https://github.com/microsoft/testfx/pull/3235)
+* Analyzer: Ensure to use Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute and not System.ComponentModel.DescriptionAttribute by @engyebrahim in [#3202](https://github.com/microsoft/testfx/pull/3202)
+* MSTEST0030: Type containing [TestMethod] must be a [TestClass] by @engyebrahim in [#3199](https://github.com/microsoft/testfx/pull/3199)
+* leverage DoesNotReturnIfAttribute for better assertion by @SimonCropp in [#3168](https://github.com/microsoft/testfx/pull/3168)
+* Assertions: add support for [StringSyntax(CompositeFormat)] by @Evangelink in [#3185](https://github.com/microsoft/testfx/pull/3185)
+* Display fixture (Assembly/Class Initialize/Cleanup) methods as "test" entries by @fhnaseer in [#2904](https://github.com/microsoft/testfx/pull/2904)
+* Improve display name for string and char by @MichelZ in [#3082](https://github.com/microsoft/testfx/pull/3082)
+* Improve display name when DataRow contains arrays by @MichelZ in [#3053](https://github.com/microsoft/testfx/pull/3053)
+* TestCaseFilter with custom properties by @engyebrahim in [#3015](https://github.com/microsoft/testfx/pull/3015)
+* MSTEST0029: Public methods should be test methods by @engyebrahim in [#3065](https://github.com/microsoft/testfx/pull/3065)
+* Avoid conditionals inside assertions analyzer by @fhnaseer in [#2848](https://github.com/microsoft/testfx/pull/2848)
+* Localize console service by @nohwnd in [#2900](https://github.com/microsoft/testfx/pull/2900)
+* Code fix for TestCleanupShouldBeValidAnalyzer by @Evangelink in [#2887](https://github.com/microsoft/testfx/pull/2887)
+* Run and fail tests when ITestDataSource.GetData returns empty IEnumerable by @fhnaseer in [#2865](https://github.com/microsoft/testfx/pull/2865)
+* Include timeout duration in timeout message by @engyebrahim in [#2877](https://github.com/microsoft/testfx/pull/2877)
+* Flow execution context across fixture methods when using timeout by @Evangelink in [#2843](https://github.com/microsoft/testfx/pull/2843)
+* MSTest runner: allow overriding TestRunParameters by @Evangelink in [#3106](https://github.com/microsoft/testfx/pull/3106)
+
+### Housekeeping
+
+* Fix some IDEXXX warnings by @Evangelink in [#2844](https://github.com/microsoft/testfx/pull/2844)
+* fix install-windows-sdk path by @SimonCropp in [#2930](https://github.com/microsoft/testfx/pull/2930)
+* Fix release years in changelog by @Evangelink in [#3001](https://github.com/microsoft/testfx/pull/3001)
+* Fix some diagnostics happening only in VS by @Evangelink in [#3016](https://github.com/microsoft/testfx/pull/3016)
+* Add acceptance tests for info with all extensions by @Evangelink in [#3119](https://github.com/microsoft/testfx/pull/3119)
+* Refactor STA pool code by @MarcoRossignoli in [#3231](https://github.com/microsoft/testfx/pull/3231)
+* Make IProcess disposable by @Evangekunj in [#3120](https://github.com/microsoft/testfx/pull/3120)
+* Use GetTypes() instead of DefinedTypes by @SimonCropp in [#3112](https://github.com/microsoft/testfx/pull/3112)
+* Use ConcurrentDictionary for attribute cache, and avoid func by @nohwnd in [#3062](https://github.com/microsoft/testfx/pull/3062)
+* Lower reflection overhead by @nohwnd in [#2839](https://github.com/microsoft/testfx/pull/2839)
+* avoid array alloc in CommandLineParseResult by using IReadOnlyList by @SimonCropp in [#3027](https://github.com/microsoft/testfx/pull/3027)
+* remove set for toolname on CommandLineParseResult by @SimonCropp in [#3028](https://github.com/microsoft/testfx/pull/3028)
+* remove redundant array alloc in CommandLineOptionsProviderCache by @SimonCropp in [#3026](https://github.com/microsoft/testfx/pull/3026)
+* use some StringSyntax Xml by @SimonCropp in [#2974](https://github.com/microsoft/testfx/pull/2974)
+* Use polyfill package by @Evangelink in [#3014](https://github.com/microsoft/testfx/pull/3014)
+* Use concurrent dictionary for attribute cache by @nohwnd in [#3061](https://github.com/microsoft/testfx/pull/3061)
+* MSTest.Sdk: do not use IsImplictlyDefined by @Evangelink in [#2880](https://github.com/microsoft/testfx/pull/2880)
+
+### Fixed
+
+* Fix ResultFiles placement in TRX report by @nohwnd in [#3264](https://github.com/microsoft/testfx/pull/3264)
+* Use short date for platform build date on banner by @Evangelink in [#3249](https://github.com/microsoft/testfx/pull/3249)
+* Skipped tests count as not run by @Evangelink in [#3243](https://github.com/microsoft/testfx/pull/3243)
+* Fix running parallelized tests in STA thread by @eengyebrahim in [#3213](https://github.com/microsoft/testfx/pull/3213)
+* Fix `Assert.AreEqual` using null dynamic by @Evangelink in [#3181](https://github.com/microsoft/testfx/pull/3181)
+* Fix test run footer color to be red when not successful by @Evangelink in [#3180](https://github.com/microsoft/testfx/pull/3180)
+* Fix --info and --help when tools are registered by @Evangelink in [#3123](https://github.com/microsoft/testfx/pull/3123)
+* Fix --info when tools are present by @Evangelink in [#3118](https://github.com/microsoft/testfx/pull/3118)
+* Fix MSTEST0029 by @engyebrahim in [#3090](https://github.com/microsoft/testfx/pull/3090)
+* Fix assembly resolution with DeploymentItem (#3034) by @XXX in [#3036](https://github.com/microsoft/testfx/pull/3036)
+* Fix assembly resolution error by @XXX in [#2948](https://github.com/microsoft/testfx/pull/2948)
+* Fix property name for enabling aspire in MSTest.Sdk by @XXX in [#2888](https://github.com/microsoft/testfx/pull/2888)
+* Fix MSTEST0014 FP with arrays by @XXX in [#2857](https://github.com/microsoft/testfx/pull/2857)
+* Workaround the UWP release mode issue with DataRow data by @XXX in [#3240](https://github.com/microsoft/testfx/pull/3240)
+* Handle InvalidOperationException when accessing process ID by @XXX in [#3250](https://github.com/microsoft/testfx/pull/3250)
+* MSTEST0004: Report only on non-abstract, non-static, classes by @XXX in [#3230](https://github.com/microsoft/testfx/pull/3230)
+* Downgrade some log levels from info to debug by @Evangelink in [#3206](https://github.com/microsoft/testfx/pull/3206)
+* Retrieve PID inside try/catch by @Evangelink in [#3193](https://github.com/microsoft/testfx/pull/3193)
+* Shorten pipe names by @Evangelink in [#3183](https://github.com/microsoft/testfx/pull/3183)
+* dispose of IProcess by @SimonCropp in [#3141](https://github.com/microsoft/testfx/pull/3141)
+* ClassCleanup are not executed if testclass is ignored by @Evangelink in [#3142](https://github.com/microsoft/testfx/pull/3142)
+* Ensure ValueTask test methods are awaited by @Evangelink in [#3137](https://github.com/microsoft/testfx/pull/3137)
+* Print exceptions occurring during Task.WaitAll by @Evangelink in [#3128](https://github.com/microsoft/testfx/pull/3128)
+* Discriminate MissingMethodException from hot reload by @Evangelink in [#3098](https://github.com/microsoft/testfx/pull/3098)
+* Check that Reflect Helper caches inherited and non-inherited attributes separately by @nohwnd in [#3117](https://github.com/microsoft/testfx/pull/3117)
+* Fixes displaying arity for many (N instead of int.Max) by @engyebrahim in [#3115](https://github.com/microsoft/testfx/pull/3115)
+
+### New Contributors
+
+* @Mertsch made their first contribution in [#3045](https://github.com/microsoft/testfx/pull/3045)
+* @MichelZ made their first contribution in [#3053](https://github.com/microsoft/testfx/pull/3053)
+
+### Artifacts
+
+* MSTest: [3.5.0](https://www.nuget.org/packages/MSTest/3.5.0)
+* MSTest.TestFramework: [3.5.0](https://www.nuget.org/packages/MSTest.TestFramework/3.5.0)
+* MSTest.TestAdapter: [3.5.0](https://www.nuget.org/packages/MSTest.TestAdapter/3.5.0)
+* MSTest.Analyzers: [3.5.0](https://www.nuget.org/packages/MSTest.Analyzers/3.5.0)
+* MSTest.Sdk: [3.5.0](https://www.nuget.org/packages/MSTest.Sdk/3.5.0)
+* Microsoft.Testing.Extensions.CrashDump: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.3.1)
+* Microsoft.Testing.Extensions.HangDump: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.3.1)
+* Microsoft.Testing.Extensions.HotReload: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.3.0)
+* Microsoft.Testing.Extensions.Retry: [1.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.3.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.3.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.3.1)
+
+## <a name="3.4.3" />[3.4.3] - 2024-05-30
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.4.2...v3.4.3)
 
@@ -25,7 +152,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.4.2...v3.4.3)
 * Microsoft.Testing.Extensions.Retry: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.2.1)
 * Microsoft.Testing.Extensions.TrxReport: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.2.1)
 
-## <a name="3.4.2"></a>[3.4.2] - 2024-05-30
+## <a name="3.4.2" />[3.4.2] - 2024-05-30
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.4.1...v3.4.2)
 
@@ -48,7 +175,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.4.1...v3.4.2)
 * Microsoft.Testing.Extensions.Retry: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.2.1)
 * Microsoft.Testing.Extensions.TrxReport: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.2.1)
 
-## <a name="3.4.1"></a>[3.4.1] - 2024-05-27
+## <a name="3.4.1" />[3.4.1] - 2024-05-27
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.4.0...v3.4.1)
 
@@ -69,7 +196,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.4.0...v3.4.1)
 * Microsoft.Testing.Extensions.Retry: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.2.1)
 * Microsoft.Testing.Extensions.TrxReport: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.2.1)
 
-## <a name="3.4.0"></a>[3.4.0] - 2024-05-23
+## <a name="3.4.0" />[3.4.0] - 2024-05-23
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...v3.4.0)
 
@@ -164,7 +291,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...v3.4.0)
 * Microsoft.Testing.Extensions.Retry: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.2.1)
 * Microsoft.Testing.Extensions.TrxReport: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.2.1)
 
-## <a name="3.3.1"></a>[3.3.1] - 2024-04-04
+## <a name="3.3.1" />[3.3.1] - 2024-04-04
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.3.0...v3.3.1)
 
@@ -185,7 +312,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.0...v3.3.1)
 * Microsoft.Testing.Extensions.Retry: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.1.0)
 * Microsoft.Testing.Extensions.TrxReport: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.1.0)
 
-## <a name="3.3.0"></a>[3.3.0] - 2024-04-03
+## <a name="3.3.0" />[3.3.0] - 2024-04-03
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.2.2...v3.3.0)
 
@@ -258,7 +385,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.2.2...v3.3.0)
 * Microsoft.Testing.Extensions.Retry: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.1.0)
 * Microsoft.Testing.Extensions.TrxReport: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.1.0)
 
-## <a name="3.2.2"></a>[3.2.2] - 2024-02-22
+## <a name="3.2.2" />[3.2.2] - 2024-02-22
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.2.1...v3.2.2)
 
@@ -282,7 +409,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.2.1...v3.2.2)
 * Microsoft.Testing.Extensions.Retry: [1.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.0.2)
 * Microsoft.Testing.Extensions.TrxReport: [1.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.0.2)
 
-## <a name="3.2.1"></a>[3.2.1] - 2024-02-13
+## <a name="3.2.1" />[3.2.1] - 2024-02-13
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0...v.3.2.1)
 
@@ -312,7 +439,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0...v.3.2.1
 * Microsoft.Testing.Extensions.Retry: [1.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.0.1)
 * Microsoft.Testing.Extensions.TrxReport: [1.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.0.1)
 
-## <a name="3.2.0"></a>[3.2.0] - 2024-01-24
+## <a name="3.2.0" />[3.2.0] - 2024-01-24
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.1.1...v.3.2.0)
 
@@ -393,7 +520,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.1.1...v.3.2.0
 * Microsoft.Testing.Extensions.Retry: [1.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.0.0)
 * Microsoft.Testing.Extensions.TrxReport: [1.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.0.0)
 
-## <a name="3.2.0-preview.24069.3"></a>[3.2.0-preview.24069.3] - 2024-01-19
+## <a name="3.2.0-preview.24069.3" />[3.2.0-preview.24069.3] - 2024-01-19
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0-preview.23623.1...v3.2.0-preview.24069.3)
 
@@ -446,7 +573,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0-preview.2
 * Microsoft.Testing.Extensions.Retry: [1.0.0-preview.24068.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.0.0-preview.24068.6)
 * Microsoft.Testing.Extensions.TrxReport: [1.0.0-preview.24068.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.0.0-preview.24068.6)
 
-## <a name="3.2.0-preview.23623.1"></a>[3.2.0-preview.23623.1] - 2023-12-23
+## <a name="3.2.0-preview.23623.1" />[3.2.0-preview.23623.1] - 2023-12-23
 
 See full log [here](https://github.com/Microsoft/testfx/compare/v3.2.0-preview.23622.1...3.2.0-preview.23623.1)
 
@@ -461,7 +588,7 @@ See full log [here](https://github.com/Microsoft/testfx/compare/v3.2.0-preview.2
 * MSTest.TestAdapter: [3.2.0-preview.23623.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.2.0-preview.23623.1)
 * MSTest.Analyzers: [3.2.0-preview.23623.1](https://www.nuget.org/packages/MSTest.Analyzers/3.2.0-preview.23623.1)
 
-## <a name="3.2.0-preview.23622.1"></a>[3.2.0-preview.23622.1] - 2023-12-22
+## <a name="3.2.0-preview.23622.1" />[3.2.0-preview.23622.1] - 2023-12-22
 
 See full log [here](https://github.com/Microsoft/testfx/compare/v3.1.1...v3.2.0-preview.23622.1)
 
@@ -509,7 +636,7 @@ See full log [here](https://github.com/Microsoft/testfx/compare/v3.1.1...v3.2.0-
 * MSTest.TestAdapter: [3.2.0-preview.23622.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.2.0-preview.23622.1)
 * MSTest.Analyzers: [3.2.0-preview.23622.1](https://www.nuget.org/packages/MSTest.Analyzers/3.2.0-preview.23622.1)
 
-## <a name="3.1.1"></a>[3.1.1] - 2023-07-14
+## <a name="3.1.1" />[3.1.1] - 2023-07-14
 
 ### Fixed
 
@@ -523,7 +650,7 @@ See full log [here](https://github.com/Microsoft/testfx/compare/v3.1.0...v3.1.1)
 * MSTest.TestFramework: [3.1.1](https://www.nuget.org/packages/MSTest.TestFramework/3.1.1)
 * MSTest.TestAdapter: [3.1.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.1.1)
 
-## <a name="3.1.0"></a>[3.1.0] - 2023-07-14
+## <a name="3.1.0" />[3.1.0] - 2023-07-14
 
 See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.4...v3.1.0)
 
@@ -569,7 +696,7 @@ See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.4...v3.1.0)
 * MSTest.TestFramework: [3.1.0](https://www.nuget.org/packages/MSTest.TestFramework/3.1.0)
 * MSTest.TestAdapter: [3.1.0](https://www.nuget.org/packages/MSTest.TestAdapter/3.1.0)
 
-## <a name="3.0.4"></a>[3.0.4] - 2023-06-01
+## <a name="3.0.4" />[3.0.4] - 2023-06-01
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.0.3...v3.0.4)
 
@@ -584,7 +711,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.3...v3.0.4)
 * MSTest.TestFramework: [3.0.4](https://www.nuget.org/packages/MSTest.TestFramework/3.0.4)
 * MSTest.TestAdapter: [3.0.4](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.4)
 
-## <a name="3.0.3"></a>[3.0.3] - 2023-05-24
+## <a name="3.0.3" />[3.0.3] - 2023-05-24
 
 See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.2...v3.0.3)
 
@@ -605,7 +732,7 @@ See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.2...v3.0.3)
 * MSTest.TestFramework: [3.0.3](https://www.nuget.org/packages/MSTest.TestFramework/3.0.3)
 * MSTest.TestAdapter: [3.0.3](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.3)
 
-## <a name="3.0.2"></a>[3.0.2] - 2022-12-27
+## <a name="3.0.2" />[3.0.2] - 2022-12-27
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.0.1...v3.0.2)
 
@@ -619,7 +746,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.1...v3.0.2)
 * MSTest.TestFramework: [3.0.2](https://www.nuget.org/packages/MSTest.TestFramework/3.0.2)
 * MSTest.TestAdapter: [3.0.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.2)
 
-## <a name="3.0.1"></a>[3.0.1] - 2022-12-20
+## <a name="3.0.1" />[3.0.1] - 2022-12-20
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0...v3.0.1)
 
@@ -642,7 +769,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0...v3.0.1)
 * MSTest.TestFramework: [3.0.1](https://www.nuget.org/packages/MSTest.TestFramework/3.0.1)
 * MSTest.TestAdapter: [3.0.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.1)
 
-## <a name="3.0.0"></a>[3.0.0] - 2022-12-06
+## <a name="3.0.0" />[3.0.0] - 2022-12-06
 
 See full log [here](https://github.com/microsoft/testfx/compare/v2.2.10...v3.0.0)
 
@@ -699,7 +826,7 @@ Breaking changes announcements [#1274](https://github.com/microsoft/testfx/issue
 * MSTest.TestFramework: [3.0.0](https://www.nuget.org/packages/MSTest.TestFramework/3.0.0)
 * MSTest.TestAdapter: [3.0.0](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.0)
 
-## <a name="3.0.0-preview-20221122-01"></a>[3.0.0-preview-20221122-01] - 2022-11-23
+## <a name="3.0.0-preview-20221122-01" />[3.0.0-preview-20221122-01] - 2022-11-23
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0-preview-20221110-04...v3.0.0-preview-20221122-01)
 
@@ -743,7 +870,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0-preview-2
 * MSTest.TestFramework: [3.0.0-preview-20221122-01](https://www.nuget.org/packages/MSTest.TestFramework/3.0.0-preview-20221122-01)
 * MSTest.TestAdapter: [3.0.0-preview-20221122-01](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.0-preview-20221122-01)
 
-## <a name="3.0.0-preview-20221110-04"></a>[3.0.0-preview-20221110-04] - 2022-11-11
+## <a name="3.0.0-preview-20221110-04" />[3.0.0-preview-20221110-04] - 2022-11-11
 
 See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-20220810-02...v3.0.0-preview-20221110-04)
 
@@ -876,7 +1003,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-2
 * MSTest.TestFramework: [3.0.0-preview-20221110-04](https://www.nuget.org/packages/MSTest.TestFramework/3.0.0-preview-20221110-04)
 * MSTest.TestAdapter: [3.0.0-preview-20221110-04](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.0-preview-20221110-04)
 
-## <a name="2.3.0-preview-20220810-02"></a>[2.3.0-preview-20220810-02] 2022-08-10
+## <a name="2.3.0-preview-20220810-02" />[2.3.0-preview-20220810-02] 2022-08-10
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.10...v2.3.0-preview-20220810-02)
 
@@ -909,7 +1036,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.3.0-preview-20220810-02](https://www.nuget.org/packages/MSTest.TestFramework/2.3.0-preview-20220810-02)
 * MSTest.TestAdapter: [2.3.0-preview-20220810-02](https://www.nuget.org/packages/MSTest.TestAdapter/2.3.0-preview-20220810-02)
 
-## <a name="2.2.10"></a>[2.2.10] - 2022-04-26
+## <a name="2.2.10" />[2.2.10] - 2022-04-26
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.10-preview-20220414-01...v2.2.10)
 
@@ -936,7 +1063,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.10](https://www.nuget.org/packages/MSTest.TestFramework/2.2.10)
 * MSTest.TestAdapter: [2.2.10](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.10)
 
-## <a name="2.2.10-preview-20220414-01"></a>[2.2.10-preview-20220414-01] - 2022-04-14
+## <a name="2.2.10-preview-20220414-01" />[2.2.10-preview-20220414-01] - 2022-04-14
 
 ### Fixed
 
@@ -949,7 +1076,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.10-preview-20220414-01](https://www.nuget.org/packages/MSTest.TestFramework/2.2.10-preview-20220414-01)
 * MSTest.TestAdapter: [2.2.10-preview-20220414-01](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.10-preview-20220414-01)
 
-## <a name="2.2.9"></a>[2.2.9] 2022-04-08
+## <a name="2.2.9" />[2.2.9] 2022-04-08
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.8...v2.2.9)
 
@@ -983,7 +1110,7 @@ Due to the way that class and assembly initialize, and cleanup are invoked, thei
 * MSTest.TestFramework: [2.2.9](https://www.nuget.org/packages/MSTest.TestFramework/2.2.9)
 * MSTest.TestAdapter: [2.2.9](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.9)
 
-## <a name="2.2.8"></a>[2.2.8] - 2021-11-23
+## <a name="2.2.8" />[2.2.8] - 2021-11-23
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.7...v2.2.8)
 
@@ -1015,7 +1142,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.8](https://www.nuget.org/packages/MSTest.TestFramework/2.2.8)
 * MSTest.TestAdapter: [2.2.8](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.8)
 
-## <a name="2.2.7"></a>[2.2.7] - 2021-09-03
+## <a name="2.2.7" />[2.2.7] - 2021-09-03
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.6...v2.2.7)
 
@@ -1032,7 +1159,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.7](https://www.nuget.org/packages/MSTest.TestFramework/2.2.7)
 * MSTest.TestAdapter: [2.2.7](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.7)
 
-## <a name="2.2.6"></a>[2.2.6] - 2021-08-25
+## <a name="2.2.6" />[2.2.6] - 2021-08-25
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.5...v2.2.6)
 
@@ -1050,7 +1177,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.6](https://www.nuget.org/packages/MSTest.TestFramework/2.2.6)
 * MSTest.TestAdapter: [2.2.6](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.6)
 
-## <a name="2.2.5"></a>[2.2.5] - 2021-06-28
+## <a name="2.2.5" />[2.2.5] - 2021-06-28
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.4...v2.2.5)
 
@@ -1075,7 +1202,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.5](https://www.nuget.org/packages/MSTest.TestFramework/2.2.5)
 * MSTest.TestAdapter: [2.2.5](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.5)
 
-## <a name="2.2.4"></a>[2.2.4] - 2021-05-25
+## <a name="2.2.4" />[2.2.4] - 2021-05-25
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/0b95a26282eae17f896d732381e5c77b9a603382...v2.2.4)
 
@@ -1084,7 +1211,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.4](https://www.nuget.org/packages/MSTest.TestFramework/2.2.4)
 * MSTest.TestAdapter: [2.2.4](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.4)
 
-## <a name="2.2.4-preview-20210331-02"></a>[2.2.4-preview-20210331-02] - 2021-04-02
+## <a name="2.2.4-preview-20210331-02" />[2.2.4-preview-20210331-02] - 2021-04-02
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.3...v2.2.4-preview-20210331-02)
 
@@ -1106,7 +1233,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.4-preview-20210331-02](https://www.nuget.org/packages/MSTest.TestFramework/2.2.4-preview-20210331-02)
 * MSTest.TestAdapter: [2.2.4-preview-20210331-02](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.4-preview-20210331-02)
 
-## <a name="2.2.3"></a>[2.2.3] - 2021-03-16
+## <a name="2.2.3" />[2.2.3] - 2021-03-16
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.2...v2.2.3)
 
@@ -1119,7 +1246,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.3](https://www.nuget.org/packages/MSTest.TestFramework/2.2.3)
 * MSTest.TestAdapter: [2.2.3](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.3)
 
-## <a name="2.2.2"></a>[2.2.2] - 2021-03-15
+## <a name="2.2.2" />[2.2.2] - 2021-03-15
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.1...v2.2.2)
 
@@ -1138,7 +1265,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.2](https://www.nuget.org/packages/MSTest.TestFramework/2.2.2)
 * MSTest.TestAdapter: [2.2.2](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.2)
 
-## <a name="2.2.1"></a>[2.2.1] - 2021-03-01
+## <a name="2.2.1" />[2.2.1] - 2021-03-01
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.0-preview-20210115-03...v2.2.1)
 
@@ -1167,7 +1294,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.1](https://www.nuget.org/packages/MSTest.TestFramework/2.2.1)
 * MSTest.TestAdapter: [2.2.1](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.1)
 
-## <a name="2.2.0-preview-20210115-03"></a>[2.2.0-preview-20210115-03] - 2021-01-20
+## <a name="2.2.0-preview-20210115-03" />[2.2.0-preview-20210115-03] - 2021-01-20
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.0-preview-20201126-03...v2.2.0-preview-20210115-03)
 
@@ -1194,7 +1321,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.0-preview-20210115-03](https://www.nuget.org/packages/MSTest.TestFramework/2.2.0-preview-20210115-03)
 * MSTest.TestAdapter: [2.2.0-preview-20210115-03](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.0-preview-20210115-03)
 
-## <a name="2.2.0-preview-20201126-03"></a>[2.2.0-preview-20201126-03] - 2020-11-26
+## <a name="2.2.0-preview-20201126-03" />[2.2.0-preview-20201126-03] - 2020-11-26
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.1.2...v2.2.0-preview-20201126-03)
 
@@ -1224,7 +1351,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.0-preview-20201126-03](https://www.nuget.org/packages/MSTest.TestFramework/2.2.0-preview-20201126-03)
 * MSTest.TestAdapter: [2.2.0-preview-20201126-03](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.0-preview-20201126-03)
 
-## <a name="2.1.2"></a>[2.1.2] - 2020-06-08
+## <a name="2.1.2" />[2.1.2] - 2020-06-08
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.1.1...v2.1.2)
 
@@ -1245,7 +1372,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.1.2](https://www.nuget.org/packages/MSTest.TestFramework/2.1.2)
 * MSTest.TestAdapter: [2.1.2](https://www.nuget.org/packages/MSTest.TestAdapter/2.1.2)
 
-## <a name="2.1.1"></a>[2.1.1] - 2020-04-01
+## <a name="2.1.1" />[2.1.1] - 2020-04-01
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.1.0...v2.1.1)
 
@@ -1272,7 +1399,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.1.1](https://www.nuget.org/packages/MSTest.TestFramework/2.1.1)
 * MSTest.TestAdapter: [2.1.1](https://www.nuget.org/packages/MSTest.TestAdapter/2.1.1)
 
-## <a name="2.1.0"></a>[2.1.0] - 2020-02-03
+## <a name="2.1.0" />[2.1.0] - 2020-02-03
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.1.0-beta2...v2.1.0)
 
@@ -1290,7 +1417,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.1.0](https://www.nuget.org/packages/MSTest.TestFramework/2.1.0)
 * MSTest.TestAdapter: [2.1.0](https://www.nuget.org/packages/MSTest.TestAdapter/2.1.0)
 
-## <a name="2.1.0-beta2"></a>[2.1.0-beta2] - 2019-12-18
+## <a name="2.1.0-beta2" />[2.1.0-beta2] - 2019-12-18
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v2.1.0-beta...v2.1.0-beta2)
 
@@ -1303,7 +1430,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [2.1.0-beta2](https://www.nuget.org/packages/MSTest.TestFramework/2.1.0-beta2)
 * MSTest.TestAdapter: [2.1.0-beta2](https://www.nuget.org/packages/MSTest.TestAdapter/2.1.0-beta2)
 
-## <a name="2.1.0-beta"></a>[2.1.0-beta] - 2019-11-28
+## <a name="2.1.0-beta" />[2.1.0-beta] - 2019-11-28
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v2.0.0...v2.1.0-beta)
 
@@ -1317,7 +1444,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [2.1.0-beta](https://www.nuget.org/packages/MSTest.TestFramework/2.1.0-beta)
 * MSTest.TestAdapter: [2.1.0-beta](https://www.nuget.org/packages/MSTest.TestAdapter/2.1.0-beta)
 
-## <a name="2.0.0"></a>[2.0.0] 2019-09-03
+## <a name="2.0.0" />[2.0.0] 2019-09-03
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v2.0.0-beta4...v2.0.0)
 
@@ -1341,7 +1468,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [2.0.0](https://www.nuget.org/packages/MSTest.TestFramework/2.0.0)
 * MSTest.TestAdapter: [2.0.0](https://www.nuget.org/packages/MSTest.TestAdapter/2.0.0)
 
-## <a name="2.0.0-beta4"></a>[2.0.0-beta4] - 2019-04-10
+## <a name="2.0.0-beta4" />[2.0.0-beta4] - 2019-04-10
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/2.0.0-beta2...v2.0.0-beta4)
 
@@ -1356,7 +1483,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [2.0.0-beta4](https://www.nuget.org/packages/MSTest.TestFramework/2.0.0-beta4)
 * MSTest.TestAdapter: [2.0.0-beta4](https://www.nuget.org/packages/MSTest.TestAdapter/2.0.0-beta4)
 
-## <a name="2.0.0-beta2"></a>[2.0.0-beta2] - 2019-02-15
+## <a name="2.0.0-beta2" />[2.0.0-beta2] - 2019-02-15
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/1.4.0...2.0.0-beta2)
 
@@ -1371,7 +1498,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [2.0.0-beta2](https://www.nuget.org/packages/MSTest.TestFramework/2.0.0-beta2)
 * MSTest.TestAdapter: [2.0.0-beta2](https://www.nuget.org/packages/MSTest.TestAdapter/2.0.0-beta2)
 
-## <a name="1.4.0"></a>[1.4.0] - 2018-11-26
+## <a name="1.4.0" />[1.4.0] - 2018-11-26
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/1.4.0-beta...1.4.0)
 
@@ -1393,7 +1520,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.4.0](https://www.nuget.org/packages/MSTest.TestFramework/1.4.0)
 * MSTest.TestAdapter: [1.4.0](https://www.nuget.org/packages/MSTest.TestAdapter/1.4.0)
 
-## <a name="1.4.0-beta"></a>[1.4.0-beta] 2018-10-17
+## <a name="1.4.0-beta" />[1.4.0-beta] 2018-10-17
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/1.3.2...1.4.0-beta)
 
@@ -1411,7 +1538,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.4.0-beta](https://www.nuget.org/packages/MSTest.TestFramework/1.4.0-beta)
 * MSTest.TestAdapter: [1.4.0-beta](https://www.nuget.org/packages/MSTest.TestAdapter/1.4.0-beta)
 
-## <a name="1.3.2"></a>[1.3.2] - 2018-06-06
+## <a name="1.3.2" />[1.3.2] - 2018-06-06
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.3.1...v1.3.2)
 
@@ -1424,7 +1551,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.3.2](https://www.nuget.org/packages/MSTest.TestFramework/1.3.2)
 * MSTest.TestAdapter: [1.3.2](https://www.nuget.org/packages/MSTest.TestAdapter/1.3.2)
 
-## <a name="1.3.1"></a>[1.3.1] - 2018-05-25
+## <a name="1.3.1" />[1.3.1] - 2018-05-25
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.3.0...v1.3.1)
 
@@ -1438,7 +1565,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.3.1](https://www.nuget.org/packages/MSTest.TestFramework/1.3.1)
 * MSTest.TestAdapter: [1.3.1](https://www.nuget.org/packages/MSTest.TestAdapter/1.3.1)
 
-## <a name="1.3.0"></a>[1.3.0] - 2018-05-11
+## <a name="1.3.0" />[1.3.0] - 2018-05-11
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.2.1...v1.3.0)
 
@@ -1460,7 +1587,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.3.0](https://www.nuget.org/packages/MSTest.TestFramework/1.3.0)
 * MSTest.TestAdapter: [1.3.0](https://www.nuget.org/packages/MSTest.TestAdapter/1.3.0)
 
-## <a name="1.3.0-beta2"></a>[1.3.0-beta2] - 2018-01-15
+## <a name="1.3.0-beta2" />[1.3.0-beta2] - 2018-01-15
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.2.0...v1.3.0-beta2)
 
@@ -1486,7 +1613,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.3.0-beta2](https://www.nuget.org/packages/MSTest.TestFramework/1.3.0-beta2)
 * MSTest.TestAdapter: [1.3.0-beta2](https://www.nuget.org/packages/MSTest.TestAdapter/1.3.0-beta2)
 
-## <a name="1.2.1"></a>[1.2.1] - 2018-04-05
+## <a name="1.2.1" />[1.2.1] - 2018-04-05
 
 ### Changed
 
@@ -1503,7 +1630,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.2.1](https://www.nuget.org/packages/MSTest.TestFramework/1.2.1)
 * MSTest.TestAdapter: [1.2.1](https://www.nuget.org/packages/MSTest.TestAdapter/1.2.1)
 
-## <a name="1.2.0"></a>[1.2.0] - 2017-10-11
+## <a name="1.2.0" />[1.2.0] - 2017-10-11
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.2.0-beta3...v1.2.0)
 
@@ -1523,7 +1650,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.2.0](https://www.nuget.org/packages/MSTest.TestFramework/1.2.0)
 * MSTest.TestAdapter: [1.2.0](https://www.nuget.org/packages/MSTest.TestAdapter/1.2.0)
 
-## <a name="1.2.0-beta3"></a>[1.2.0-beta3] - 2017-08-09
+## <a name="1.2.0-beta3" />[1.2.0-beta3] - 2017-08-09
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.2.0-beta...v1.2.0-beta3)
 
@@ -1543,7 +1670,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.2.0-beta3](https://www.nuget.org/packages/MSTest.TestFramework/1.2.0-beta3)
 * MSTest.TestAdapter: [1.2.0-beta3](https://www.nuget.org/packages/MSTest.TestAdapter/1.2.0-beta3)
 
-## <a name="1.2.0-beta"></a>[1.2.0-beta] - 2017-06-29
+## <a name="1.2.0-beta" />[1.2.0-beta] - 2017-06-29
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.1.18...v1.2.0-beta)
 
@@ -1558,7 +1685,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.2.0-beta](https://www.nuget.org/packages/MSTest.TestFramework/1.2.0-beta)
 * MSTest.TestAdapter: [1.2.0-beta](https://www.nuget.org/packages/MSTest.TestAdapter/1.2.0-beta)
 
-## <a name="1.1.18"></a>[1.1.18] - 2017-06-01
+## <a name="1.1.18" />[1.1.18] - 2017-06-01
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.1.17...v1.1.18)
 
@@ -1576,7 +1703,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.1.18](https://www.nuget.org/packages/MSTest.TestFramework/1.1.18)
 * MSTest.TestAdapter: [1.1.18](https://www.nuget.org/packages/MSTest.TestAdapter/1.1.18)
 
-## <a name="1.1.17"></a>[1.1.17] - 2017-04-21
+## <a name="1.1.17" />[1.1.17] - 2017-04-21
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.1.14...v1.1.17)
 
@@ -1594,7 +1721,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.1.17](https://www.nuget.org/packages/MSTest.TestFramework/1.1.17)
 * MSTest.TestAdapter: [1.1.17](https://www.nuget.org/packages/MSTest.TestAdapter/1.1.17)
 
-## <a name="1.1.14"></a>[1.1.14] - 2017-03-31
+## <a name="1.1.14" />[1.1.14] - 2017-03-31
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.1.13...v1.1.14)
 
@@ -1611,7 +1738,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.1.14](https://www.nuget.org/packages/MSTest.TestFramework/1.1.14)
 * MSTest.TestAdapter: [1.1.14](https://www.nuget.org/packages/MSTest.TestAdapter/1.1.14)
 
-## <a name="1.1.13"></a>[1.1.13] - 2017-03-10
+## <a name="1.1.13" />[1.1.13] - 2017-03-10
 
 This is also the first release from GitHub and with source code building against Dev15 tooling.
 
@@ -1626,7 +1753,7 @@ This is also the first release from GitHub and with source code building against
 * MSTest.TestFramework: [1.1.13](https://www.nuget.org/packages/MSTest.TestFramework/1.1.13)
 * MSTest.TestAdapter: [1.1.13](https://www.nuget.org/packages/MSTest.TestAdapter/1.1.13)
 
-## <a name="1.1.11"></a>[1.1.11] - 2017-02-17
+## <a name="1.1.11" />[1.1.11] - 2017-02-17
 
 Initial release.
 

@@ -34,7 +34,7 @@ public class CustomBannerTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string>()
+            new Dictionary<string, string>
             {
                 { "TESTINGPLATFORM_NOBANNER", "true" },
             });
@@ -49,7 +49,7 @@ public class CustomBannerTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string>()
+            new Dictionary<string, string>
             {
                 { "DOTNET_NOLOGO", "true" },
             });

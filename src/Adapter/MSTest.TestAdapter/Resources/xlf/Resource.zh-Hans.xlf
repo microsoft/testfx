@@ -8,7 +8,7 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
-        <source>Assembly cleanup method '{0}.{1}' was cancelled</source>
+        <source>Assembly cleanup method '{0}.{1}' was canceled</source>
         <target state="translated">已取消程序集清理方法“{0}.{1}”</target>
         <note />
       </trans-unit>
@@ -18,8 +18,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
-        <source>Assembly initialize method '{0}.{1}' was cancelled</source>
-        <target state="translated">程序集初始化方法“{0}.{1}”已取消</target>
+        <source>Assembly initialize method '{0}.{1}' was canceled</source>
+        <target state="translated">已取消程序集初始化方法“{0}.{1}”</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRunTestArgumentsMismatchError">
@@ -42,7 +42,7 @@ but received {4} argument(s), with types '{5}'.</source>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
-        <source>Class cleanup method '{0}.{1}' was cancelled</source>
+        <source>Class cleanup method '{0}.{1}' was canceled</source>
         <target state="translated">已取消类清理方法“{0}.{1}”</target>
         <note />
       </trans-unit>
@@ -52,14 +52,24 @@ but received {4} argument(s), with types '{5}'.</source>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
-        <source>Class initialize method '{0}.{1}' was cancelled</source>
-        <target state="translated">类初始化方法 “{0}.{1}”已取消</target>
+        <source>Class initialize method '{0}.{1}' was canceled</source>
+        <target state="translated">已取消类初始化方法“{0}.{1}”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
+        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
+        <target state="translated">“[DynamicData]”引用的成员“{0}.{1}”应返回“IEnumerable&lt;object[]&gt;”、“IEnumerable&lt;Tuple&gt;”或“IEnumerable&lt;ValueTuple&gt;”</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">测试“{0}”的执行超时。</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidValue">
+        <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
+        <target state="translated">runsettings 项“{0}”的值“{1}”无效，将忽略设置。</target>
+        <note />
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
@@ -77,7 +87,7 @@ but received {4} argument(s), with types '{5}'.</source>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
-        <source>Test cleanup method '{0}.{1}' was cancelled</source>
+        <source>Test cleanup method '{0}.{1}' was canceled</source>
         <target state="translated">已取消测试清理方法“{0}.{1}”</target>
         <note />
       </trans-unit>
@@ -87,7 +97,7 @@ but received {4} argument(s), with types '{5}'.</source>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
-        <source>Test initialize method '{0}.{1}' was cancelled</source>
+        <source>Test initialize method '{0}.{1}' was canceled</source>
         <target state="translated">已取消测试初始化方法“{0}.{1}”</target>
         <note />
       </trans-unit>
@@ -145,6 +155,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <source>Unable to create instance of class {0}. Error: {1}.</source>
         <target state="translated">无法创建类 {0} 的实例。错误: {1}。</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_NoValidConstructor">
+        <source>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
+        <target state="translated">找不到测试类“{0}”的有效构造函数。有效的构造函数为 “public”，但该构造函数无参数或具有一个类型为 “TestContext” 的参数。</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_TestContextSetError">
         <source>Unable to set TestContext property for the class {0}. Error: {1}.</source>
@@ -244,9 +259,9 @@ Error: {1}</source>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
-        <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be a valid integer value and cannot be less than 0.</source>
-        <target state="translated">UTA054: {0}.{1} 具有无效的 Timeout 特性。超时值必须是有效的整数值而且不能小于 0。</target>
-        <note></note>
+        <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</source>
+        <target state="translated">UTA054: {0}。{1} 的超时属性无效。“超时”必须是大于零的整数值。</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorPredefinedTestProperty">
         <source>UTA023: {0}: Cannot define predefined property {2} on method {1}.</source>
@@ -261,11 +276,6 @@ Error: {1}</source>
       <trans-unit id="UTA_MethodDoesNotExists">
         <source>Method {0}.{1} does not exist.</source>
         <target state="translated">方法 {0}.{1} 不存在。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_NoDefaultConstructor">
-        <source>Unable to get default constructor for class {0}.</source>
-        <target state="translated">无法获取类 {0} 的默认构造函数。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestContextLoadError">

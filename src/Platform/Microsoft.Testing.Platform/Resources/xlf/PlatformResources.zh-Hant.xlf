@@ -13,12 +13,12 @@
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
-        <source>cancelled</source>
+        <source>canceled</source>
         <target state="translated">已取消</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
-        <source>Cancelling the test session...</source>
+        <source>Canceling the test session...</source>
         <target state="translated">正在取消測試工作階段...</target>
         <note />
       </trans-unit>
@@ -152,6 +152,11 @@
         <target state="translated">正在連接到用戶端主機 '{0}' 連接埠 '{1}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="ConsoleIsAlreadyInBatchingMode">
+        <source>Console is already in batching mode.</source>
+        <target state="translated">主控台已處於批次處理模式。</target>
+        <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
+      </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
         <source>Creates the right test execution filter for console mode</source>
         <target state="translated">為主機模式建立正確的測試執行篩選條件</target>
@@ -216,10 +221,30 @@
 {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="FailedWithErrors">
+        <source>failed with {0} errors(s)</source>
+        <target state="translated">失敗，發生 {0} 個錯誤</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedWithErrorsAndWarnings">
+        <source>failed with {0} error(s) and {1} warning(s)</source>
+        <target state="translated">失敗，有 {0} 個錯誤和 {1} 個警告</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedWithWarnings">
+        <source>failed with {0} warning(s)</source>
+        <target state="translated">失敗，有 {0} 個警告</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
         <target state="translated">用於測試</target>
         <note>is followed by test name</note>
+      </trans-unit>
+      <trans-unit id="FromFile">
+        <source>from</source>
+        <target state="translated">來自</target>
+        <note>from followed by a file name to point to the file from which test is originating</note>
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
         <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
@@ -493,6 +518,11 @@
         <target state="translated">在 {0} 次重試之後失敗</target>
         <note />
       </trans-unit>
+      <trans-unit id="RunningTestsFrom">
+        <source>Running tests from</source>
+        <target state="translated">正從下列位置執行測試</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ServerLogMessageDescription">
         <source>This data represents a server log message</source>
         <target state="translated">此資料代表伺服器記錄訊息</target>
@@ -537,6 +567,16 @@
         <source>skipped</source>
         <target state="translated">已跳過</target>
         <note />
+      </trans-unit>
+      <trans-unit id="StackFrameAt">
+        <source>at</source>
+        <target state="translated">於</target>
+        <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
+      </trans-unit>
+      <trans-unit id="StackFrameIn">
+        <source>in</source>
+        <target state="translated">在</target>
+        <note>in that is used in stack frame it is followed by file name</note>
       </trans-unit>
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
@@ -628,6 +668,11 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
         <target state="translated">測試應用程式流程未正常結束，結束代碼為 '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestRunSummary">
+        <source>Test run summary:</source>
+        <target state="translated">測試回合摘要：</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
         <source>Failed to acquire semaphore before timeout of '{0}' seconds</source>
         <target state="translated">無法在 '{0}' 秒逾時前取得旗號</target>
@@ -689,14 +734,14 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occured during byte conversion</source>
-        <target state="translated">位元組轉換期間發生非預期的例外狀況</target>
+        <source>An unexpected exception occurred during byte conversion</source>
+        <target state="translated">位元組轉換期間發生未預期的例外狀況</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="translated">'FileLogger.WriteLogToFileAsync' 中發生未預期的例外狀況。
+        <target state="translated">'FileLogger.WriteLogToFileAsync' 發生未預期的例外狀況。
 {0}</target>
         <note>{0} exception ToString</note>
       </trans-unit>

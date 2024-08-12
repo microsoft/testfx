@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
-using System.Globalization;
 using System.Reflection;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -66,58 +66,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
 
     /// <inheritdoc />
     public virtual string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
-    {
-        if (!string.IsNullOrWhiteSpace(DisplayName))
-        {
-            return DisplayName;
-        }
-
-        if (data == null)
-        {
-            return null;
-        }
-
-        ParameterInfo[] parameters = methodInfo.GetParameters();
-
-        // We want to force call to `data.AsEnumerable()` to ensure that objects are casted to strings (using ToString())
-        // so that null do appear as "null". If you remove the call, and do string.Join(",", new object[] { null, "a" }),
-        // you will get empty string while with the call you will get "null,a".
-        IEnumerable<object?> displayData = parameters.Length == 1 && parameters[0].ParameterType == typeof(object[])
-            ? [data.AsEnumerable()]
-            : data.AsEnumerable();
-
-        return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name,
-            string.Join(",", displayData.Select(GetObjectString)));
-    }
-
-    /// <summary>
-    /// Recursively resolve collections of objects to a proper string representation.
-    /// </summary>
-    private static string? GetObjectString(object? obj)
-    {
-        if (TestIdGenerationStrategy != TestIdGenerationStrategy.FullyQualified)
-        {
-            return obj?.ToString();
-        }
-
-        if (obj == null)
-        {
-            return "null";
-        }
-
-        if (!obj.GetType().IsArray)
-        {
-            return obj switch
-            {
-                string s => $"\"{s}\"",
-                char c => $"'{c}'",
-                _ => obj.ToString(),
-            };
-        }
-
-        // We need to box the object here so that we can support value types
-        IEnumerable<object> boxedObjectEnumerable = ((IEnumerable)obj).Cast<object>();
-        IEnumerable<string?> elementStrings = boxedObjectEnumerable.Select(GetObjectString);
-        return $"[{string.Join(",", elementStrings)}]";
-    }
+        => !string.IsNullOrWhiteSpace(DisplayName)
+            ? DisplayName
+            : TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, TestIdGenerationStrategy);
 }

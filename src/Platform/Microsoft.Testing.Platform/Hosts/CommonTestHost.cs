@@ -1,9 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+using System.Runtime.InteropServices;
+
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
+using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -13,9 +18,11 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestHost
+internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPipeClient? dotnetTestPipeClient = null) : ITestHost
 {
-    public ServiceProvider ServiceProvider { get; } = serviceProvider;
+    public ServiceProvider ServiceProvider => serviceProvider;
+
+    protected NamedPipeClient? DotnetTestPipeClient => dotnetTestPipeClient;
 
     protected abstract bool RunTestApplicationLifeCycleCallbacks { get; }
 
@@ -26,38 +33,77 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         int exitCode;
         try
         {
-            if (RunTestApplicationLifeCycleCallbacks)
+            if (dotnetTestPipeClient is null)
             {
-                // Get the test application lifecycle callbacks to be able to call the before run
-                foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
-                {
-                    await testApplicationLifecycleCallbacks.BeforeRunAsync(testApplicationCancellationToken);
-                }
+                exitCode = await RunTestAppAsync(testApplicationCancellationToken);
+                return exitCode;
             }
 
-            exitCode = await InternalRunAsync();
+            ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
+            bool isDotnetTestHandshakeSuccessful = await DoHandshakeAsync(dotnetTestPipeClient, testApplicationModuleInfo, testApplicationCancellationToken);
 
-            if (RunTestApplicationLifeCycleCallbacks)
-            {
-                foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
-                {
-                    await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken);
-                    await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks);
-                }
-            }
+            exitCode = isDotnetTestHandshakeSuccessful
+                ? await RunTestAppAsync(testApplicationCancellationToken)
+                : ExitCodes.IncompatibleProtocolVersion;
         }
         catch (OperationCanceledException) when (testApplicationCancellationToken.IsCancellationRequested)
         {
-            // We do nothing we're cancelling
+            // We do nothing we're canceling
             exitCode = ExitCodes.TestSessionAborted;
         }
         finally
         {
             await DisposeServiceProviderAsync(ServiceProvider, isProcessShutdown: true);
             await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>());
+            await DisposeHelper.DisposeAsync(ServiceProvider.GetTestApplicationCancellationTokenSource());
+            await DisposeHelper.DisposeAsync(dotnetTestPipeClient);
         }
 
         return exitCode;
+    }
+
+    private async Task<int> RunTestAppAsync(CancellationToken testApplicationCancellationToken)
+    {
+        if (RunTestApplicationLifeCycleCallbacks)
+        {
+            // Get the test application lifecycle callbacks to be able to call the before run
+            foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
+            {
+                await testApplicationLifecycleCallbacks.BeforeRunAsync(testApplicationCancellationToken);
+            }
+        }
+
+        int exitCode = await InternalRunAsync();
+
+        if (RunTestApplicationLifeCycleCallbacks)
+        {
+            foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
+            {
+                await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken);
+                await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks);
+            }
+        }
+
+        return exitCode;
+    }
+
+    private async Task<bool> DoHandshakeAsync(NamedPipeClient dotnetTestPipeClient, ITestApplicationModuleInfo? testApplicationModuleInfo, CancellationToken testApplicationCancellationToken)
+    {
+        HandshakeInfo handshakeInfo = new(new Dictionary<string, string>()
+        {
+            { HandshakeInfoPropertyNames.PID, ServiceProvider.GetProcessHandler().GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) },
+            { HandshakeInfoPropertyNames.Architecture, RuntimeInformation.OSArchitecture.ToString() },
+            { HandshakeInfoPropertyNames.Framework, RuntimeInformation.FrameworkDescription },
+            { HandshakeInfoPropertyNames.OS, RuntimeInformation.OSDescription },
+            { HandshakeInfoPropertyNames.ProtocolVersion, ProtocolConstants.Version },
+            { HandshakeInfoPropertyNames.HostType, GetType().Name },
+            { HandshakeInfoPropertyNames.ModulePath, testApplicationModuleInfo?.GetCurrentTestApplicationFullPath() ?? string.Empty },
+        });
+
+        HandshakeInfo response = await dotnetTestPipeClient.RequestReplyAsync<HandshakeInfo, HandshakeInfo>(handshakeInfo, testApplicationCancellationToken);
+
+        return response.Properties?.TryGetValue(HandshakeInfoPropertyNames.ProtocolVersion, out string? protocolVersion) == true &&
+            protocolVersion.Equals(ProtocolConstants.Version, StringComparison.Ordinal);
     }
 
     protected abstract Task<int> InternalRunAsync();
@@ -77,11 +123,11 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         }
         catch (OperationCanceledException) when (testSessionCancellationToken.IsCancellationRequested)
         {
-            // Do nothing we're cancelled
+            // Do nothing we're canceled
         }
 
         // We keep the display after session out of the OperationCanceledException catch because we want to notify the IPlatformOutputDevice
-        // also in case of cancellation. Most likely it needs to notify users that the session was cancelled.
+        // also in case of cancellation. Most likely it needs to notify users that the session was canceled.
         await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo, testSessionCancellationToken);
     }
 
@@ -165,6 +211,13 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
                 continue;
             }
 
+            // The ITestApplicationCancellationTokenSource contains the cancellation token and can be used by other services during the shutdown
+            // we will collect manually in the correct moment.
+            if (service is ITestApplicationCancellationTokenSource)
+            {
+                continue;
+            }
+
             if (filter is not null && !filter(service))
             {
                 continue;
@@ -173,7 +226,6 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
             // We need to ensure that we won't dispose special services till the shutdown
             if (!isProcessShutdown &&
                 service is ITelemetryCollector or
-                 ITestApplicationCancellationTokenSource or
                  ITestApplicationLifecycleCallbacks)
             {
                 continue;

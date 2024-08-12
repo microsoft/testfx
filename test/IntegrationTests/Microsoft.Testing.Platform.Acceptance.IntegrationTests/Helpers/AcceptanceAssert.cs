@@ -69,6 +69,30 @@ internal static class AcceptanceAssert
     public static void AssertOutputDoesNotContain(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.That(!testHostResult.StandardOutput.Contains(value, StringComparison.Ordinal), GenerateFailedAssertionMessage(testHostResult), callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber);
 
+    public static void AssertOutputContainsSummary(this TestHostResult testHostResult, int failed, int passed, int skipped, bool? aborted = false, int? minimumNumberOfTests = null, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    {
+        int totalTests = failed + passed + skipped;
+        string result = minimumNumberOfTests != null && totalTests < minimumNumberOfTests
+            ? $"Minimum expected tests policy violation, tests ran {totalTests}, minimum expected {minimumNumberOfTests}"
+            : aborted is true
+                ? "Aborted"
+                : failed > 0
+                    ? "Failed!"
+                    : totalTests == 0 || totalTests == skipped
+                        ? "Zero tests ran"
+                        : "Passed!";
+
+        string summaryResult = $"Test run summary: {result}";
+        string summaryCounts = $"""
+          total: {totalTests}
+          failed: {failed}
+          succeeded: {passed}
+          skipped: {skipped}
+        """;
+        Assert.That(testHostResult.StandardOutput.Contains(summaryResult, StringComparison.Ordinal), GenerateFailedAssertionMessage(testHostResult), callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber);
+        Assert.That(testHostResult.StandardOutput.Contains(summaryCounts, StringComparison.Ordinal), GenerateFailedAssertionMessage(testHostResult), callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber);
+    }
+
     private static string GenerateFailedAssertionMessage(TestHostResult testHostResult)
         => $"Output of the test host is:\n{testHostResult}";
 

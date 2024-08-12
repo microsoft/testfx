@@ -13,6 +13,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0026: <inheritdoc cref="Resources.AssertionArgsShouldAvoidConditionalAccessTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : DiagnosticAnalyzer
 {

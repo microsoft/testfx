@@ -22,25 +22,25 @@ public sealed class TestApplicationResultTests : TestBase
     {
     }
 
-    public async Task GetProcessExitCodeAsync_If_All_Skipped_Returns_Zero()
+    public async Task GetProcessExitCodeAsync_If_All_Skipped_Returns_ZeroTestsRan()
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
                 Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
             }), CancellationToken.None);
 
-        Assert.AreEqual(ExitCodes.Success, await _testApplicationResult.GetProcessExitCodeAsync());
+        Assert.AreEqual(ExitCodes.ZeroTests, await _testApplicationResult.GetProcessExitCodeAsync());
     }
 
     public async Task GetProcessExitCodeAsync_If_No_Tests_Ran_Returns_ZeroTestsRan()
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -55,7 +55,7 @@ public sealed class TestApplicationResultTests : TestBase
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -65,7 +65,7 @@ public sealed class TestApplicationResultTests : TestBase
         Assert.AreEqual(ExitCodes.AtLeastOneTestFailed, await _testApplicationResult.GetProcessExitCodeAsync());
     }
 
-    public async Task GetProcessExitCodeAsync_If_Cancelled_Returns_TestSessionAborted()
+    public async Task GetProcessExitCodeAsync_If_Canceled_Returns_TestSessionAborted()
     {
         Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
         testApplicationCancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(() =>
@@ -80,7 +80,7 @@ public sealed class TestApplicationResultTests : TestBase
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -95,7 +95,7 @@ public sealed class TestApplicationResultTests : TestBase
         await _testApplicationResult.SetTestAdapterTestSessionFailureAsync("Adapter error");
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -114,7 +114,7 @@ public sealed class TestApplicationResultTests : TestBase
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -123,7 +123,7 @@ public sealed class TestApplicationResultTests : TestBase
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -142,7 +142,7 @@ public sealed class TestApplicationResultTests : TestBase
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",
@@ -160,7 +160,7 @@ public sealed class TestApplicationResultTests : TestBase
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode()
+            new Extensions.Messages.TestNode
             {
                 Uid = new Extensions.Messages.TestNodeUid("id"),
                 DisplayName = "DisplayName",

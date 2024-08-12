@@ -29,8 +29,6 @@ internal class ReflectHelper : MarshalByRefObject
     {
     }
 
-    private readonly AttributeComparer _attributeComparer = new();
-
     public static ReflectHelper Instance => InstanceValue.Value;
 
     /// <summary>
@@ -43,10 +41,7 @@ internal class ReflectHelper : MarshalByRefObject
     public virtual bool IsNonDerivedAttributeDefined<TAttribute>(MemberInfo memberInfo, bool inherit)
         where TAttribute : Attribute
     {
-        if (memberInfo == null)
-        {
-            throw new ArgumentNullException(nameof(memberInfo));
-        }
+        Guard.NotNull(memberInfo);
 
         // Get attributes defined on the member from the cache.
         Attribute[] attributes = GetCustomAttributesCached(memberInfo, inherit);
@@ -94,10 +89,7 @@ internal class ReflectHelper : MarshalByRefObject
     public virtual /* for testing */ bool IsDerivedAttributeDefined<TAttribute>(MemberInfo memberInfo, bool inherit)
         where TAttribute : Attribute
     {
-        if (memberInfo == null)
-        {
-            throw new ArgumentNullException(nameof(memberInfo));
-        }
+        Guard.NotNull(memberInfo);
 
         // Get all attributes on the member.
         Attribute[] attributes = GetCustomAttributesCached(memberInfo, inherit);
@@ -221,12 +213,12 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="method">The method to inspect.</param>
     /// <param name="returnType">The return type to match.</param>
     /// <returns>True if there is a match.</returns>
-    internal static bool MatchReturnType(MethodInfo method, Type returnType) =>
-        method == null
-            ? throw new ArgumentNullException(nameof(method))
-            : returnType == null
-                ? throw new ArgumentNullException(nameof(returnType))
-                : method.ReturnType.Equals(returnType);
+    internal static bool MatchReturnType(MethodInfo method, Type returnType)
+    {
+        Guard.NotNull(method);
+        Guard.NotNull(returnType);
+        return method.ReturnType.Equals(returnType);
+    }
 
     /// <summary>
     /// Returns true when the method is declared in the assembly where the type is declared.
@@ -245,9 +237,9 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>Categories defined.</returns>
     internal virtual /* for tests, we are mocking this */ string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
     {
-        IEnumerable<TestCategoryBaseAttribute>? methodCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(categoryAttributeProvider, inherit: true);
-        IEnumerable<TestCategoryBaseAttribute>? typeCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(owningType, inherit: true);
-        IEnumerable<TestCategoryBaseAttribute>? assemblyCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(owningType.Assembly, inherit: true);
+        IEnumerable<TestCategoryBaseAttribute> methodCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(categoryAttributeProvider, inherit: true);
+        IEnumerable<TestCategoryBaseAttribute> typeCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(owningType, inherit: true);
+        IEnumerable<TestCategoryBaseAttribute> assemblyCategories = GetDerivedAttributes<TestCategoryBaseAttribute>(owningType.Assembly, inherit: true);
 
         return methodCategories.Concat(typeCategories).Concat(assemblyCategories).SelectMany(c => c.TestCategories).ToArray();
     }
@@ -374,7 +366,7 @@ internal class ReflectHelper : MarshalByRefObject
 
         var cleanupBehaviors =
             new HashSet<ClassCleanupBehavior?>(
-                classInfo.BaseClassCleanupMethodsStack
+                classInfo.BaseClassCleanupMethods
                 .Select(x => GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(x, inherit: true)?.CleanupBehavior))
             {
                 classInfo.ClassCleanupMethod == null ? null : GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(classInfo.ClassCleanupMethod, inherit: true)?.CleanupBehavior,
@@ -464,9 +456,7 @@ internal class ReflectHelper : MarshalByRefObject
             try
             {
                 object[]? attributes = NotCachedReflectionAccessor.GetCustomAttributesNotCached(attributeProvider, inherit);
-                return attributes is Attribute[] arr
-                    ? arr
-                    : attributes?.Cast<Attribute>().ToArray() ?? Array.Empty<Attribute>();
+                return attributes is null ? [] : attributes as Attribute[] ?? attributes.Cast<Attribute>().ToArray();
             }
             catch (Exception ex)
             {
@@ -485,20 +475,6 @@ internal class ReflectHelper : MarshalByRefObject
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.FailedToGetCustomAttribute, attributeProvider.GetType().FullName!, description);
 
                 return [];
-            }
-        }
-    }
-
-    internal IEnumerable<TAttribute>? GetNonDerivedAttributes<TAttribute>(MethodInfo methodInfo, bool inherit)
-        where TAttribute : Attribute
-    {
-        Attribute[] cachedAttributes = GetCustomAttributesCached(methodInfo, inherit);
-
-        foreach (Attribute cachedAttribute in cachedAttributes)
-        {
-            if (AttributeComparer.IsNonDerived<TAttribute>(cachedAttribute))
-            {
-                yield return (TAttribute)cachedAttribute;
             }
         }
     }

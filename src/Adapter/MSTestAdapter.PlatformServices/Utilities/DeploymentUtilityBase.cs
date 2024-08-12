@@ -280,7 +280,7 @@ internal abstract class DeploymentUtilityBase
     /// <param name="warnings">Warnings.</param>
     /// <param name="isDirectory">Is this a directory.</param>
     /// <returns>Paths to items to deploy.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     protected List<string>? GetFullPathToFilesCorrespondingToDeploymentItem(DeploymentItem deploymentItem, string testSource, string resultsDirectory, IList<string> warnings, out bool isDirectory)
     {
         DebugEx.Assert(deploymentItem != null, "deploymentItem should not be null.");
@@ -332,7 +332,7 @@ internal abstract class DeploymentUtilityBase
     /// <param name="deploymentDirectory">The deployment directory.</param>
     /// <param name="warnings">Warnings.</param>
     /// <returns>True if valid.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     protected static bool IsOutputDirectoryValid(DeploymentItem deploymentItem, string deploymentDirectory, IList<string> warnings)
     {
         DebugEx.Assert(deploymentItem != null, "deploymentItem should not be null.");
@@ -397,11 +397,6 @@ internal abstract class DeploymentUtilityBase
     /// <param name="warnings">Warnings.</param>
     private static void LogWarnings(ITestExecutionRecorder testExecutionRecorder, IEnumerable<string> warnings)
     {
-        if (warnings == null)
-        {
-            return;
-        }
-
         DebugEx.Assert(testExecutionRecorder != null, "Logger should not be null");
 
         // log the warnings

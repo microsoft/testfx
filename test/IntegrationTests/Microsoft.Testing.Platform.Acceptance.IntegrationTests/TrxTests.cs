@@ -71,7 +71,7 @@ Out of process file artifacts produced:
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPathWithSkippedTest, TestAssetFixture.AssetNameUsingMSTest, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx");
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
 
@@ -107,7 +107,7 @@ Out of process file artifacts produced:
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPathWithSkippedTest, TestAssetFixture.AssetNameUsingMSTest, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx");
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
 
@@ -170,8 +170,8 @@ Out of process file artifacts produced:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string outputPattern = $"""
-In process file artifacts produced:
-- {trxPathPattern}
+  In process file artifacts produced:
+    - {trxPathPattern}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);
 

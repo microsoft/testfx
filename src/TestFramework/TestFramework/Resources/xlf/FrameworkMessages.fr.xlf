@@ -229,18 +229,14 @@
         <note></note>
       </trans-unit>
       <trans-unit id="NoExceptionThrown">
-        <source>No exception thrown. {1} exception was expected. {0}</source>
-        <target state="translated">Aucune exception levée. Exception {1} attendue. {0}</target>
-        <note></note>
+        <source>Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</source>
+        <target state="translated">Type d’exception attendu :&lt;{1}&gt; mais aucune exception n’a été levée. {0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="WrongExceptionThrown">
-        <source>Threw exception {2}, but exception {1} was expected. {0}
-Exception Message: {3}
-Stack Trace: {4}</source>
-        <target state="translated">L'exception {2} a été levée, mais l'exception {1} était attendue. {0}
-Message d'exception : {3}
-Trace de la pile : {4}</target>
-        <note></note>
+        <source>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</source>
+        <target state="translated">Type d’exception attendu :&lt;{1}&gt;. Type d’exception réel :&lt;{2}&gt;. {0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
         <source>{0} ({1})</source>

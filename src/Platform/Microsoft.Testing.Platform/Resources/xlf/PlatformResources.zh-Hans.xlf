@@ -13,12 +13,12 @@
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
-        <source>cancelled</source>
+        <source>canceled</source>
         <target state="translated">已取消</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
-        <source>Cancelling the test session...</source>
+        <source>Canceling the test session...</source>
         <target state="translated">正在取消测试会话...</target>
         <note />
       </trans-unit>
@@ -152,6 +152,11 @@
         <target state="translated">正在连接到客户端主机“{0}”的端口“{1}”</target>
         <note />
       </trans-unit>
+      <trans-unit id="ConsoleIsAlreadyInBatchingMode">
+        <source>Console is already in batching mode.</source>
+        <target state="translated">控制台已处于批处理模式。</target>
+        <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
+      </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
         <source>Creates the right test execution filter for console mode</source>
         <target state="translated">为主机模式创建正确的测试执行筛选</target>
@@ -216,10 +221,30 @@
 {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="FailedWithErrors">
+        <source>failed with {0} errors(s)</source>
+        <target state="translated">失败，出现 {0} 个错误</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedWithErrorsAndWarnings">
+        <source>failed with {0} error(s) and {1} warning(s)</source>
+        <target state="translated">失败，出现 {0} 错误和 {1} 警告</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedWithWarnings">
+        <source>failed with {0} warning(s)</source>
+        <target state="translated">失败，出现 {0} 警告</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
         <target state="translated">用于测试</target>
         <note>is followed by test name</note>
+      </trans-unit>
+      <trans-unit id="FromFile">
+        <source>from</source>
+        <target state="translated">从</target>
+        <note>from followed by a file name to point to the file from which test is originating</note>
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
         <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
@@ -493,6 +518,11 @@
         <target state="translated">{0} 次之后重试失败</target>
         <note />
       </trans-unit>
+      <trans-unit id="RunningTestsFrom">
+        <source>Running tests from</source>
+        <target state="translated">正在从以下位置运行测试</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ServerLogMessageDescription">
         <source>This data represents a server log message</source>
         <target state="translated">此数据表示服务器日志消息</target>
@@ -537,6 +567,16 @@
         <source>skipped</source>
         <target state="translated">已跳过</target>
         <note />
+      </trans-unit>
+      <trans-unit id="StackFrameAt">
+        <source>at</source>
+        <target state="translated">在</target>
+        <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
+      </trans-unit>
+      <trans-unit id="StackFrameIn">
+        <source>in</source>
+        <target state="translated">位于</target>
+        <note>in that is used in stack frame it is followed by file name</note>
       </trans-unit>
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
@@ -628,6 +668,11 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
         <target state="translated">测试应用程序流程未正常退出，退出代码为“{0}”</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestRunSummary">
+        <source>Test run summary:</source>
+        <target state="translated">测试运行摘要:</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
         <source>Failed to acquire semaphore before timeout of '{0}' seconds</source>
         <target state="translated">在“{0}”秒超时之前获取信号灯失败</target>
@@ -689,14 +734,14 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occured during byte conversion</source>
+        <source>An unexpected exception occurred during byte conversion</source>
         <target state="translated">字节转换期间出现意外异常</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="translated">“FileLogger.WriteLogToFileAsync”出现意外异常。
+        <target state="translated">"FileLogger.WriteLogToFileAsync" 出现意外异常。
 {0}</target>
         <note>{0} exception ToString</note>
       </trans-unit>

@@ -17,6 +17,16 @@
         <target state="translated">Corregir firma</target>
         <note />
       </trans-unit>
+      <trans-unit id="PublicTypeShouldBeTestClassFix">
+        <source>Add '[TestClass]'</source>
+        <target state="translated">Agregar '[TestClass]'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidFix">
+        <source>Fix test method signature</source>
+        <target state="translated">Corregir firma del método de prueba</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -102,7 +102,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         {
             // Connect to the named pipe server
             await _logger.LogTraceAsync($"Connecting to the process lifetime handler {_namedPipeClient.PipeName}");
-            await _namedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            await _namedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
             await _logger.LogTraceAsync("Connected to the process lifetime handler");
             _activityIndicatorMutex = new Mutex(true);
             _mutexName = $"{HangDumpConfiguration.MutexName}_{Guid.NewGuid():N}";
@@ -113,7 +113,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             _mutexCreated.Wait(cancellationToken);
             await _logger.LogTraceAsync($"Mutex '{_mutexName}' created");
             await _namedPipeClient.RequestReplyAsync<ActivityIndicatorMutexNameRequest, VoidResponse>(new ActivityIndicatorMutexNameRequest(_mutexName), cancellationToken)
-                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
             await _logger.LogTraceAsync($"Mutex '{_mutexName}' sent to the process lifetime handler");
 
             // Setup the server channel with the testhost controller
@@ -126,10 +126,10 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             await _logger.LogTraceAsync($"Send consumer pipe name to the test controller '{_pipeNameDescription.Name}'");
             await _namedPipeClient.RequestReplyAsync<ConsumerPipeNameRequest, VoidResponse>(new ConsumerPipeNameRequest(_pipeNameDescription.Name), cancellationToken)
-                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
 
             // Wait the connection from the testhost controller
-            await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
             await _logger.LogTraceAsync($"Test host controller connected");
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
@@ -243,7 +243,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         }
 
         await _namedPipeClient.RequestReplyAsync<SessionEndSerializerRequest, VoidResponse>(new SessionEndSerializerRequest(), cancellationToken)
-                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
 
         await _logger.LogDebugAsync($"Signal for test session end'");
         await ExitSignalActivityIndicatorTaskAsync();

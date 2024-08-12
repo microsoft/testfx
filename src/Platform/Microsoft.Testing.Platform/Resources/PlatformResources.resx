@@ -264,7 +264,7 @@
     <value>Failed to flush logs before the timeout of '{0}' seconds</value>
   </data>
   <data name="UnexpectedExceptionInFileLoggerErrorMessage" xml:space="preserve">
-    <value>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+    <value>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</value>
     <comment>{0} exception ToString</comment>
   </data>
@@ -472,7 +472,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>No serializer registered with type '{0}'</value>
   </data>
   <data name="UnexpectedExceptionDuringByteConversionErrorMessage" xml:space="preserve">
-    <value>An unexpected exception occured during byte conversion</value>
+    <value>An unexpected exception occurred during byte conversion</value>
   </data>
   <data name="PlatformCommandLineIgnoreExitCodeOptionDescription" xml:space="preserve">
     <value>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</value>
@@ -494,10 +494,10 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>Actual</value>
   </data>
   <data name="CancelledLowercase" xml:space="preserve">
-    <value>cancelled</value>
+    <value>canceled</value>
   </data>
   <data name="CancellingTestSession" xml:space="preserve">
-    <value>Cancelling the test session...</value>
+    <value>Canceling the test session...</value>
   </data>
   <data name="DiagnosticFileLevelWithAsyncFlush" xml:space="preserve">
     <value>Diagnostic file (level '{0}' with async flush): {1}"</value>
@@ -552,5 +552,36 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   </data>
   <data name="ZeroTestsRan" xml:space="preserve">
     <value>Zero tests ran</value>
+  </data>
+  <data name="ConsoleIsAlreadyInBatchingMode" xml:space="preserve">
+    <value>Console is already in batching mode.</value>
+    <comment>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</comment>
+  </data>
+  <data name="FailedWithErrors" xml:space="preserve">
+    <value>failed with {0} errors(s)</value>
+  </data>
+  <data name="FailedWithErrorsAndWarnings" xml:space="preserve">
+    <value>failed with {0} error(s) and {1} warning(s)</value>
+  </data>
+  <data name="FailedWithWarnings" xml:space="preserve">
+    <value>failed with {0} warning(s)</value>
+  </data>
+  <data name="RunningTestsFrom" xml:space="preserve">
+    <value>Running tests from</value>
+  </data>
+  <data name="TestRunSummary" xml:space="preserve">
+    <value>Test run summary:</value>
+  </data>
+  <data name="FromFile" xml:space="preserve">
+    <value>from</value>
+    <comment>from followed by a file name to point to the file from which test is originating</comment>
+  </data>
+  <data name="StackFrameAt" xml:space="preserve">
+    <value>at</value>
+    <comment>at that is used for a stack frame location in a stack trace, is followed by a class and method name</comment>
+  </data>
+  <data name="StackFrameIn" xml:space="preserve">
+    <value>in</value>
+    <comment>in that is used in stack frame it is followed by file name</comment>
   </data>
 </root>

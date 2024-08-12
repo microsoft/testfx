@@ -119,7 +119,7 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE, environmentVariable },
             });
-        hostResult.AssertOutputContains("Failed! - Failed: 1, Passed: 0, Skipped: 0, Total: 1");
+        hostResult.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
         Assert.AreEqual(0, hostResult.ExitCode);
     }
 }

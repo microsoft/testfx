@@ -488,4 +488,197 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("ClassCleanup"),
             fixedCode);
     }
+
+    public async Task WhenClassCleanupIsNotOnClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public struct MyTestClass
+            {
+                [ClassCleanup]
+                public static void [|ClassCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassCleanupIsOnSealedClassNotMarkedWithTestClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class MyTestClass
+            {
+                [ClassCleanup]
+                public static void [|ClassCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassCleanupIsOnNonSealedClassNotMarkedWithTestClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                [ClassCleanup]
+                public static void ClassCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassCleanupIsOnAbstractClassNotMarkedWithTestClass_AndWithInheritanceBehavior_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class MyTestClass
+            {
+                [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
+                public static void ClassCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassCleanupIsOnAbstractClassMarkedWithTestClass_AndWithInheritanceBehavior_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public abstract class MyTestClass
+            {
+                [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
+                public static void ClassCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassCleanupIsAbstractClassNotMarkedWithTestClass_AndWithoutInheritanceBehavior_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class MyTestClass
+            {
+                [ClassCleanup]
+                public static void [|ClassCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassCleanupIsOnAbstractClassMarkedWithTestClass_AndWithoutInheritanceBehavior_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public abstract class MyTestClass
+            {
+                [ClassCleanup]
+                public static void [|ClassCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassCleanupIsOnAbstractClassMarkedWithTestClass_AndWithInheritanceBehaviorNone_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public abstract class MyTestClass
+            {
+                [ClassCleanup(InheritanceBehavior.None)]
+                public static void [|ClassCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassCleanupIsOnSealedClassMarkedWithTestClass_AndWithInheritanceBehavior_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class MyTestClass
+            {
+                [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
+                public static void [|ClassCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassCleanupIsOnSealedClassMarkedWithTestClass_AndWithInheritanceBehaviorNone_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class MyTestClass
+            {
+                [ClassCleanup(InheritanceBehavior.None)]
+                public static void ClassCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassCleanupIsOnSealedClassMarkedWithTestClass_WithDefaultInheritanceBehavior_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class MyTestClass
+            {
+                [ClassCleanup]
+                public static void ClassCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

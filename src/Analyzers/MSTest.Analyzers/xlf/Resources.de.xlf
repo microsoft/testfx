@@ -3,22 +3,38 @@
   <file datatype="xml" source-language="en" target-language="de" original="../Resources.resx">
     <body>
       <trans-unit id="AssemblyCleanupShouldBeValidDescription">
-        <source>Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Methoden, die mit [AssemblyCleanup] gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
-– "öffentlich" sein 
-– "statisch" sein
-– nicht generisch oder für eine generische Klasse definiert sein
-– keinen Parameter annehmen
-– der Rückgabetyp muss "void", "Task" oder "ValueTask" sein
-– nicht "async void" sein
-– keine spezielle Methode sein (Finalizer, Operator...)</target>
+        <source>Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
+        <target state="translated">Methoden, die mit „[AssemblyCleanup]“ gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
+– kann nicht für eine generische Klasse deklariert werden.
+– muss „public“ sein
+– muss „static“ sein
+– darf nicht „async void“ sein
+– darf keine spezielle Methode sein (Finalizer, Operator...)
+– darf nicht „generic“ sein
+– darf keinen Parameter annehmen
+– der Rückgabetyp muss „void“, „Task“ oder „ValueTask“ sein
+
+Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachten:
+– Der Typ sollte eine Klasse sein.
+– Die Klasse muss „public“ oder „internal“ sein (wenn das Testprojekt das Attribut „[DiscoverInternals]“ verwendet)
+– Die Klasse darf nicht „static“ sein.
+– Die Klasse muss mit „[TestClass]“ (oder einem abgeleiteten Attribut) markiert werden.
+- die Klasse darf nicht generisch sein.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -32,22 +48,38 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
-        <source>Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Methoden, die mit [AssemblyInitialize] gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
-– "öffentlich" sein 
-– "statisch" sein
-– nicht generisch oder für eine generische Klasse definiert sein
-– einen einfachen Parameter vom Typ „TestContext“ annehmen
-– der Rückgabetyp muss "void", "Task" oder "ValueTask" sein
-– nicht "async void" sein
-– keine spezielle Methode sein (Finalizer, Operator...)</target>
+        <source>Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
+        <target state="translated">Methoden, die mit „[AssemblyInitialize]“ gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
+– kann nicht für eine generische Klasse deklariert werden.
+– muss „public“ sein
+– muss „static“ sein
+– darf nicht „async void“ sein
+– darf keine spezielle Methode sein (Finalizer, Operator...)
+– darf nicht „generic“ sein
+– muss einen Parameter vom Typ „TestContext“ annehmen
+– der Rückgabetyp muss „void“, „Task“ oder „ValueTask“ sein
+
+Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachten:
+– Der Typ sollte eine Klasse sein.
+– Die Klasse muss „public“ oder „internal“ sein (wenn das Testprojekt das Attribut „[DiscoverInternals]“ verwendet)
+– Die Klasse darf nicht „static“ sein.
+– Die Klasse muss mit „[TestClass]“ (oder einem abgeleiteten Attribut) markiert werden.
+- die Klasse darf nicht generisch sein.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -101,22 +133,43 @@
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
-        <source>Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Methoden, die mit [ClassCleanup] gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
-– "öffentlich" sein 
-– nicht "statisch" sein
-– nicht generisch oder für eine generische Klasse definiert sein
-– keinen Parameter annehmen
-– der Rückgabetyp muss "void", "Task" oder "ValueTask" sein
-– nicht "async void" sein
-– keine spezielle Methode sein (Finalizer, Operator...)</target>
+        <source>Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
+        <target state="translated">Methoden, die mit „[ClassCleanup]“ gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
+– kann nicht für eine generische Klasse deklariert werden, ohne dass der Modus „InheritanceBehavior“ auf 
+ festgelegt ist.
+– muss „public“ sein
+– muss „static“ sein
+– darf nicht „async void“ sein
+– darf keine spezielle Methode sein (Finalizer, Operator...)
+– darf nicht „generic“ sein
+– darf keinen Parameter annehmen
+– der Rückgabetyp muss „void“, „Task“ oder „ValueTask“ sein
+– der Attributparameter „InheritanceBehavior.BeforeEachDerivedClass“ sollte angegeben werden, wenn die Klasse „abstract“ ist
+– der Attributparameter „InheritanceBehavior.BeforeEachDerivedClass“ sollte angegeben werden, wenn die Klasse „sealed“ ist.
+
+Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachten:
+– Der Typ sollte eine Klasse sein.
+– Die Klasse muss „public“ oder „internal“ sein (wenn das Testprojekt das Attribut „[DiscoverInternals]“ verwendet)
+– Die Klasse darf nicht „static“ sein.
+– Wenn die Klasse „sealed“ ist, sollte sie mit „[TestClass]“ (oder einem abgeleiteten Attribut) markiert werden.
+- die Klasse darf nicht generisch sein.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -130,22 +183,43 @@
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidDescription">
-        <source>Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Methoden, die mit [ClassInitialize] gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
-– "öffentlich" sein 
-– "statisch" sein
-– nicht generisch oder für eine generische Klasse definiert sein
-– einen einfachen Parameter vom Typ „TestContext“ annehmen
-– der Rückgabetyp muss "void", "Task" oder "ValueTask" sein
-– nicht "async void" sein
-– keine spezielle Methode sein (Finalizer, Operator...)</target>
+        <source>Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
+        <target state="translated">Methoden, die mit „[ClassInitialize]“ gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
+– kann nicht für eine generische Klasse deklariert werden, ohne dass der Modus „InheritanceBehavior“ auf 
+ festgelegt ist.
+– muss „public“ sein
+– muss „static“ sein
+– darf nicht „async void“ sein
+– darf keine spezielle Methode sein (Finalizer, Operator...)
+– darf nicht „generic“ sein
+– muss einen Parameter vom Typ „TestContext“ annehmen
+– der Rückgabetyp muss „void“, „Task“ oder „ValueTask“ sein
+– der Attributparameter „InheritanceBehavior.BeforeEachDerivedClass“ sollte angegeben werden, wenn die Klasse „abstract“ ist
+– der Attributparameter „InheritanceBehavior.BeforeEachDerivedClass“ sollte angegeben werden, wenn die Klasse „sealed“ ist.
+
+Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachten:
+– Der Typ sollte eine Klasse sein.
+– Die Klasse muss „public“ oder „internal“ sein (wenn das Testprojekt das Attribut „[DiscoverInternals]“ verwendet)
+– Die Klasse darf nicht „static“ sein.
+– Wenn die Klasse „sealed“ ist, sollte sie mit „[TestClass]“ (oder einem abgeleiteten Attribut) markiert werden.
+- die Klasse darf nicht generisch sein.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -211,17 +285,78 @@
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
-        <target state="new">'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</target>
+        <target state="translated">"System.ComponentModel.DescriptionAttribute" hat im Kontext von Tests keine Auswirkungen, und Sie wollten wahrscheinlich stattdessen "Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute" verwenden.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeMessageFormat">
         <source>Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</source>
-        <target state="new">Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</target>
+        <target state="translated">Wollten Sie "Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute" verwenden?</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeTitle">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</source>
-        <target state="new">'System.ComponentModel.DescriptionAttribute' has no effect on test methods</target>
+        <target state="translated">"System.ComponentModel.DescriptionAttribute" hat keine Auswirkungen auf Testmethoden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidDescription">
+        <source>'DynamicData' entry should have the following layout to be valid:
+- should only be set on a test method;
+- member should be defined on the type specified;
+- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</source>
+        <target state="translated">Der "DynamicData"-Eintrag muss das folgende Layout aufweisen, um gültig zu sein:
+– Er sollte nur für eine Testmethode festgelegt werden.
+– Das Element muss für den angegebenen Typ definiert werden;
+– Das Element sollte eine Methode sein, wenn DynamicDataSourceType.Method angegeben ist, oder andernfalls eine Eigenschaft.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_DataMemberSignature">
+        <source>'[DynamicData]' data member '{0}.{1}' signature is invalid</source>
+        <target state="translated">"[DynamicData]"-Datenmember "{0}.{1}" ist ungültig.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature">
+        <source>'[DynamicData]' display name method '{0}.{1}' signature is invalid</source>
+        <target state="translated">Die "[DynamicData]"-Signatur der Anzeigenamenmethode "{0}.{1}" ist ungültig.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberMethod">
+        <source>'[DynamicData]' member '{0}.{1}' should be a method</source>
+        <target state="translated">Das "[DynamicData]"-Element "{0}.{1}" muss eine Methode sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberNotFound">
+        <source>'[DynamicData]' member '{0}.{1}' cannot be found</source>
+        <target state="translated">"[DynamicData]"-Element "{0}.{1}" wurde nicht gefunden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
+        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
+        <target state="translated">"[DynamicData]"-Element "{0}.{1}" muss "IEnumerable"&lt;"object[]&gt;", "IEnumerable&lt;Tuple&gt;" oder "IEnumerable&lt;ValueTuple&gt;" zurückgeben.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_OnTestMethod">
+        <source>'[DynamicData]' should only be set on a test method</source>
+        <target state="translated">"[DynamicData]" sollte nur für eine Testmethode festgelegt werden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
+        <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
+        <target state="translated">"[DynamicData]"-Element "{0}.{1}" ist eine Methode, daher sollten Sie "DynamicDataSourceType.Method" festlegen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
+        <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
+        <target state="translated">"[DynamicData]"-Element "{0}.{1}" ist eine Eigenschaft, daher sollten Sie "DynamicDataSourceType.Property" festlegen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
+        <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
+        <target state="translated">"[DynamicDta]"-Element "{0}.{1}" wurde mehrmals gefunden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidTitle">
+        <source>DynamicData should be valid</source>
+        <target state="translated">DynamicData muss gültig sein.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -232,6 +367,16 @@
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsTitle">
         <source>Use 'Assert.Fail' instead of an always-failing assert</source>
         <target state="translated">Verwenden Sie „Assert.Fail“ anstelle einer Assert-Anweisung, bei der immer ein Fehler auftritt.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
+        <source>Review or remove the assertion as its condition is known to be always true</source>
+        <target state="translated">Überprüfen oder entfernen Sie die Assertion, weil ihre Bedingung bekanntermaßen immer TRUE ist.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerTitle">
+        <source>Assertion condition is always true</source>
+        <target state="translated">Bedingung der Assertion ist immer TRUE</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
@@ -304,6 +449,26 @@
         <target state="translated">Öffentliche Typen sollten Testklassen sein.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat">
+        <source>Test method '{0}' signature is invalid</source>
+        <target state="translated">Signatur der Testmethode "{0}" ist ungültig</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
+        <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
+        <target state="translated">Ohne Verwendung von „ClassCleanupBehavior.EndOfClass“ wird „[ClassCleanup]“ standardmäßig am Ende der Assembly und nicht am Ende der Klasse ausgeführt.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
+        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
+        <target state="translated">Verwenden von „ClassCleanupBehavior.EndOfClass“ mit „[ClassCleanup]“</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseClassCleanupBehaviorEndOfClassTitle">
+        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
+        <target state="translated">Verwenden von „ClassCleanupBehavior.EndOfClass“ mit „[ClassCleanup]“</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
         <source>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
@@ -351,24 +516,36 @@
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
-        <source>Methods marked with [TestCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic or be defined on a generic class
-- not be 'abstract'
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Methoden, die mit [TestCleanup] gekennzeichnet sind, sollten dem folgenden Layout folgen, um gültig zu sein:
-– "öffentlich" sein 
-– nicht "statisch" sein
-– nicht generisch oder für eine generische Klasse definiert sein
-– nicht "abstrakt" sein
-– keinen Parameter annehmen
-– der Rückgabetyp muss "void", "Task" oder "ValueTask" sein
-– nicht "async void" sein
-– keine spezielle Methode sein (Finalizer, Operator...)</target>
+        <source>Methods marked with '[TestCleanup]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
+        <target state="translated">Methoden, die mit „[TestCleanup]“ gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
+– muss „public“ sein
+– darf nicht „abstract“ sein
+– darf nicht „async void“ sein
+– darf nicht „static“ sein
+– darf keine spezielle Methode sein (Finalizer, Operator...)
+– darf nicht „generic“ sein
+– darf keinen Parameter annehmen
+– der Rückgabetyp muss „void“, „Task“ oder „ValueTask“ sein
+
+Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachten:
+– Der Typ sollte eine Klasse sein.
+– Die Klasse muss „public“ oder „internal“ sein (wenn das Testprojekt das Attribut „[DiscoverInternals]“ verwendet)
+– Die Klasse darf nicht „static“ sein.
+– Wenn die Klasse „sealed“ ist, sollte sie mit „[TestClass]“ (oder einem abgeleiteten Attribut) markiert werden.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -425,24 +602,36 @@
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidDescription">
-        <source>Methods marked with [TestInitialize] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not be 'abstract'
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</source>
-        <target state="translated">Methoden, die mit [TestInitialize] gekennzeichnet sind, sollten dem folgenden Layout folgen, um gültig zu sein:
-– "öffentlich" sein 
-– nicht "statisch" sein
-– nicht generisch oder für eine generische Klasse definiert sein
-– nicht "abstrakt" sein
-– keinen Parameter annehmen
-– der Rückgabetyp muss "void", "Task" oder "ValueTask" sein
-– nicht "async void" sein
-– keine spezielle Methode sein (Finalizer, Operator...)</target>
+        <source>Methods marked with '[TestInitialize]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
+        <target state="translated">Methoden, die mit „[TestInitialize]“ gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
+– muss „public“ sein
+– darf nicht „abstract“ sein
+– darf nicht „async void“ sein
+– darf nicht „static“ sein
+– darf keine spezielle Methode sein (Finalizer, Operator...)
+– darf nicht „generic“ sein
+– darf keinen Parameter annehmen
+– der Rückgabetyp muss „void“, „Task“ oder „ValueTask“ sein
+
+Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachten:
+– Der Typ sollte eine Klasse sein.
+– Die Klasse muss „public“ oder „internal“ sein (wenn das Testprojekt das Attribut „[DiscoverInternals]“ verwendet)
+– Die Klasse darf nicht „static“ sein.
+– Wenn die Klasse „sealed“ ist, sollte sie mit „[TestClass]“ (oder einem abgeleiteten Attribut) markiert werden.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
@@ -474,46 +663,6 @@
 – es darf keine spezielle Methode (Finalizer, Operator...) sein.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
-        <source>Test method '{0}' should not be 'abstract'</source>
-        <target state="translated">Die Testmethode "{0}" darf nicht "abstract" sein.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>Test method '{0}' should not be 'async void'</source>
-        <target state="translated">Die Testmethode "{0}" darf nicht "async void" sein.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotGeneric">
-        <source>Test method '{0}' should not be generic</source>
-        <target state="translated">Die Testmethode "{0}" darf nicht generisch sein.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotStatic">
-        <source>Test method '{0}' should not be 'static'</source>
-        <target state="translated">Die Testmethode "{0}" darf nicht "static" sein.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_Ordinary">
-        <source>Test method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">Die Testmethode "{0}" darf eine "ordinary" Methode sein.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_Public">
-        <source>Test method '{0}' should be 'public'</source>
-        <target state="translated">Die Testmethode "{0}" muss "public" sein.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Test method '{0}' should be 'public' or 'internal'</source>
-        <target state="translated">Die Testmethode "{0}" muss "public" oder "internal" sein.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
-        <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Die Testmethode "{0}" sollte "void", "Task" oder "ValueTask" zurückgeben.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
         <target state="translated">Testmethoden müssen über ein gültiges Layout verfügen.</target>
@@ -536,17 +685,17 @@
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="new">Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</target>
+        <target state="translated">Der Typ, der "[TestMethod]" enthält, sollte mit "[TestClass]" gekennzeichnet werden, andernfalls wird die Testmethode im Hintergrund ignoriert.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Class '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="new">Class '{0}' contains test methods and should be marked with '[TestClass]'</target>
+        <target state="translated">Die Klasse "{0}" enthält Testmethoden und muss mit "[TestClass]" gekennzeichnet werden.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]'</source>
-        <target state="new">Type containing '[TestMethod]' should be marked with '[TestClass]'</target>
+        <target state="translated">Der Typ, der "[TestMethod]" enthält, muss mit "[TestClass]" gekennzeichnet werden.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
@@ -567,6 +716,16 @@
       <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
         <target state="translated">[{0}] kann nur für Methoden festgelegt werden, die mit [TestMethod] markiert sind.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
+        <source>'[DeploymentItem]' can be specified only on test class or test method</source>
+        <target state="translated">„[DeploymentItem]“ kann nur für die Testklasse oder Testmethode angegeben werden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
+        <source>'[DeploymentItem]' can be specified only on test class or test method</source>
+        <target state="translated">„[DeploymentItem]“ kann nur für die Testklasse oder Testmethode angegeben werden.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

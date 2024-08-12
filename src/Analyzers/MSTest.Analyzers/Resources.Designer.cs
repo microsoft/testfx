@@ -61,14 +61,19 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-        ///- be &apos;public&apos; 
-        ///- be &apos;static&apos;
-        ///- not be generic nor defined on a generic class
-        ///- not take any parameter
-        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)..
+        ///   Looks up a localized string similar to Methods marked with &apos;[AssemblyCleanup]&apos; should follow the following layout to be valid:
+        ///-it can&apos;t be declared on a generic class
+        ///-it should be &apos;public&apos;
+        ///-it should be &apos;static&apos;
+        ///-it should not be &apos;async void&apos;
+        ///-it should not be a special method (finalizer, operator...).
+        ///-it should not be generic
+        ///-it should not take any parameter
+        ///-return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
+        ///
+        ///The type declaring these methods should also respect the following rules:
+        ///-The type should be a class
+        ///-The class should [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string AssemblyCleanupShouldBeValidDescription {
             get {
@@ -95,14 +100,18 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-        ///- be &apos;public&apos; 
-        ///- be &apos;static&apos;
-        ///- not be generic nor be defined on a generic class
-        ///- take a single parameter of type &apos;TestContext&apos;
-        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)..
+        ///   Looks up a localized string similar to Methods marked with &apos;[AssemblyInitialize]&apos; should follow the following layout to be valid:
+        ///-it can&apos;t be declared on a generic class
+        ///-it should be &apos;public&apos;
+        ///-it should be &apos;static&apos;
+        ///-it should not be &apos;async void&apos;
+        ///-it should not be a special method (finalizer, operator...).
+        ///-it should not be generic
+        ///-it should take one parameter of type &apos;TestContext&apos;
+        ///-return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
+        ///
+        ///The type declaring these methods should also respect the following rules:
+        ///-The type should be a cla [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidDescription {
             get {
@@ -201,14 +210,16 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Methods marked with [ClassCleanup] should follow the following layout to be valid:
-        ///- be &apos;public&apos; 
-        ///- not be &apos;static&apos;
-        ///- not be generic nor defined on a generic class
-        ///- not take any parameter
-        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)..
+        ///   Looks up a localized string similar to Methods marked with &apos;[ClassCleanup]&apos; should follow the following layout to be valid:
+        ///-it can&apos;t be declared on a generic class without the &apos;InheritanceBehavior&apos; mode is set
+        ///-it should be &apos;public&apos;
+        ///-it should be &apos;static&apos;
+        ///-it should not be &apos;async void&apos;
+        ///-it should not be a special method (finalizer, operator...).
+        ///-it should not be generic
+        ///-it should not take any parameter
+        ///-return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
+        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should be spec [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ClassCleanupShouldBeValidDescription {
             get {
@@ -235,14 +246,16 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Methods marked with [ClassInitialize] should follow the following layout to be valid:
-        ///- be &apos;public&apos; 
-        ///- be &apos;static&apos;
-        ///- not be generic nor be defined on a generic class
-        ///- take a single parameter of type &apos;TestContext&apos;
-        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)..
+        ///   Looks up a localized string similar to Methods marked with &apos;[ClassInitialize]&apos; should follow the following layout to be valid:
+        ///-it can&apos;t be declared on a generic class without the &apos;InheritanceBehavior&apos; mode is set
+        ///-it should be &apos;public&apos;
+        ///-it should be &apos;static&apos;
+        ///-it should not be &apos;async void&apos;
+        ///-it should not be a special method (finalizer, operator...).
+        ///-it should not be generic
+        ///-it should take one parameter of type &apos;TestContext&apos;
+        ///-return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
+        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute par [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ClassInitializeShouldBeValidDescription {
             get {
@@ -376,6 +389,108 @@ namespace MSTest.Analyzers {
         internal static string DoNotUseSystemDescriptionAttributeTitle {
             get {
                 return ResourceManager.GetString("DoNotUseSystemDescriptionAttributeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;DynamicData&apos; entry should have the following layout to be valid:
+        ///- should only be set on a test method;
+        ///- member should be defined on the type specified;
+        ///- member should be a method if DynamicDataSourceType.Method is specified or a property otherwise..
+        /// </summary>
+        internal static string DynamicDataShouldBeValidDescription {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; data member &apos;{0}.{1}&apos; signature is invalid.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_DataMemberSignature {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_DataMemberSignature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; display name method &apos;{0}.{1}&apos; signature is invalid.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; should be a method.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_MemberMethod {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; cannot be found.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_MemberNotFound {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; referenced member &apos;{0}.{1}&apos; should return &apos;IEnumerable&lt;object[]&gt;&apos;, &apos;IEnumerable&lt;Tuple&gt;` or &apos;IEnumerable&lt;ValueTuple&gt;&apos;.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_MemberType {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; should only be set on a test method.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_OnTestMethod {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_OnTestMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a method so you should set &apos;DynamicDataSourceType.Method&apos;.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeMethod {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a property so you should set &apos;DynamicDataSourceType.Property&apos;.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeProperty {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicDta]&apos; member &apos;{0}.{1}&apos; is found more than once.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_TooManyMembers {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_TooManyMembers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DynamicData should be valid.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidTitle {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidTitle", resourceCulture);
             }
         }
         
@@ -524,6 +639,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Review or remove the assertion as its condition is known to be always true.
+        /// </summary>
+        internal static string ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat {
+            get {
+                return ResourceManager.GetString("ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assertion condition is always true.
+        /// </summary>
+        internal static string ReviewAlwaysTrueAssertConditionAnalyzerTitle {
+            get {
+                return ResourceManager.GetString("ReviewAlwaysTrueAssertConditionAnalyzerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test classes, classes marked with the &apos;[TestClass]&apos; attribute, should respect the following layout to be considered valid by MSTest:
         ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
         ///- it should not be &apos;static&apos; (except if it contains only &apos;AssemblyInitialize&apos; and/or &apos;AssemblyCleanup&apos; methods)
@@ -599,15 +732,19 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Methods marked with [TestCleanup] should follow the following layout to be valid:
-        ///- be &apos;public&apos; 
-        ///- not be &apos;static&apos;
-        ///- not be generic or be defined on a generic class
-        ///- not be &apos;abstract&apos;
-        ///- not take any parameter
-        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)..
+        ///   Looks up a localized string similar to Methods marked with &apos;[TestCleanup]&apos; should follow the following layout to be valid:
+        ///-it should be &apos;public&apos;
+        ///-it should not be &apos;abstract&apos;
+        ///-it should not be &apos;async void&apos;
+        ///-it should not be &apos;static&apos;
+        ///-it should not be a special method (finalizer, operator...).
+        ///-it should not be generic
+        ///-it should not take any parameter
+        ///-return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
+        ///
+        ///The type declaring these methods should also respect the following rules:
+        ///-The type should be a class
+        ///-The class should be &apos;public&apos; [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string TestCleanupShouldBeValidDescription {
             get {
@@ -701,15 +838,19 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Methods marked with [TestInitialize] should follow the following layout to be valid:
-        ///- be &apos;public&apos; 
-        ///- not be &apos;static&apos;
-        ///- not be generic nor defined on a generic class
-        ///- not be &apos;abstract&apos;
-        ///- not take any parameter
-        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- not be &apos;async void&apos;
-        ///- not be a special method (finalizer, operator...)..
+        ///   Looks up a localized string similar to Methods marked with &apos;[TestInitialize]&apos; should follow the following layout to be valid:
+        ///-it should be &apos;public&apos;
+        ///-it should not be &apos;abstract&apos;
+        ///-it should not be &apos;async void&apos;
+        ///-it should not be &apos;static&apos;
+        ///-it should not be a special method (finalizer, operator...).
+        ///-it should not be generic
+        ///-it should not take any parameter
+        ///-return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
+        ///
+        ///The type declaring these methods should also respect the following rules:
+        ///-The type should be a class
+        ///-The class should be &apos;publ [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string TestInitializeShouldBeValidDescription {
             get {
@@ -752,74 +893,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be &apos;abstract&apos;.
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; signature is invalid.
         /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_NotAbstract {
+        internal static string TestMethodShouldBeValidMessageFormat {
             get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_NotAbstract", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be &apos;async void&apos;.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_NotAsyncVoid {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be generic.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_NotGeneric {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_NotGeneric", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be &apos;static&apos;.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_NotStatic {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_NotStatic", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_Ordinary {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_Ordinary", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should be &apos;public&apos;.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_Public {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_Public", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should be &apos;public&apos; or &apos;internal&apos;.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_PublicOrInternal {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_PublicOrInternal", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
-        /// </summary>
-        internal static string TestMethodShouldBeValidMessageFormat_ReturnType {
-            get {
-                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_ReturnType", resourceCulture);
+                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat", resourceCulture);
             }
         }
         
@@ -919,6 +997,51 @@ namespace MSTest.Analyzers {
         internal static string UseAttributeOnTestMethodAnalyzerTitle {
             get {
                 return ResourceManager.GetString("UseAttributeOnTestMethodAnalyzerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Without using  &apos;ClassCleanupBehavior.EndOfClass&apos;, the &apos;[ClassCleanup]&apos; will by default be run at the end of the assembly and not at the end of the class..
+        /// </summary>
+        internal static string UseClassCleanupBehaviorEndOfClassDescription {
+            get {
+                return ResourceManager.GetString("UseClassCleanupBehaviorEndOfClassDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;ClassCleanupBehavior.EndOfClass&apos; with the &apos;[ClassCleanup]&apos;.
+        /// </summary>
+        internal static string UseClassCleanupBehaviorEndOfClassMessageFormat {
+            get {
+                return ResourceManager.GetString("UseClassCleanupBehaviorEndOfClassMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;ClassCleanupBehavior.EndOfClass&apos; with the &apos;[ClassCleanup]&apos;.
+        /// </summary>
+        internal static string UseClassCleanupBehaviorEndOfClassTitle {
+            get {
+                return ResourceManager.GetString("UseClassCleanupBehaviorEndOfClassTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DeploymentItem]&apos; can be specified only on test class or test method.
+        /// </summary>
+        internal static string UseDeploymentItemWithTestMethodOrTestClassMessageFormat {
+            get {
+                return ResourceManager.GetString("UseDeploymentItemWithTestMethodOrTestClassMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DeploymentItem]&apos; can be specified only on test class or test method.
+        /// </summary>
+        internal static string UseDeploymentItemWithTestMethodOrTestClassTitle {
+            get {
+                return ResourceManager.GetString("UseDeploymentItemWithTestMethodOrTestClassTitle", resourceCulture);
             }
         }
         

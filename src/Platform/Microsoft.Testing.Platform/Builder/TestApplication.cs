@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 #if NETCOREAPP
@@ -152,7 +153,6 @@ public sealed class TestApplication : ITestApplication
 #endif
         await logger.LogInformationAsync($"Runtime information: {runtimeInformation}");
 
-        SystemProcessHandler systemProcessHandler = new();
 #if NETCOREAPP
         if (RuntimeFeature.IsDynamicCodeSupported)
         {
@@ -188,14 +188,7 @@ public sealed class TestApplication : ITestApplication
 #endif
         await logger.LogInformationAsync($"IsDynamicCodeSupported: {isDynamicCodeSupported}");
 
-        string? moduleName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
-        moduleName = RoslynString.IsNullOrEmpty(moduleName)
-#if !NETCOREAPP
-            ? systemProcessHandler.GetCurrentProcess().MainModule.FileName
-#else
-            ? environment.ProcessPath
-#endif
-            : moduleName;
+        string moduleName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
         await logger.LogInformationAsync($"Test module: {moduleName}");
         await logger.LogInformationAsync($"Command line arguments: '{(args.Length == 0 ? string.Empty : args.Aggregate((a, b) => $"{a} {b}"))}'");
 
@@ -255,7 +248,7 @@ public sealed class TestApplication : ITestApplication
     {
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER) == "1")
         {
-            System.Diagnostics.Debugger.Launch();
+            Debugger.Launch();
         }
     }
 

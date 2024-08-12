@@ -1,2 +1,1 @@
 #nullable enable
-static Microsoft.Testing.Extensions.VSTestBridge.Helpers.TestApplicationBuilderExtensions.AddTestRunParametersService(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void

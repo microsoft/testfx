@@ -16,10 +16,6 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 /// </summary>
 internal static class ObjectModelConverters
 {
-    public static readonly TestProperty TestNodeUidProperty = TestProperty.Register(
-        VSTestTestNodeProperties.TestNode.UidPropertyName,
-        VSTestTestNodeProperties.TestNode.UidPropertyName, typeof(string), typeof(TestNode));
-
     private static readonly TestProperty OriginalExecutorUriProperty = TestProperty.Register(
         VSTestTestNodeProperties.OriginalExecutorUriPropertyName, VSTestTestNodeProperties.OriginalExecutorUriPropertyName,
         typeof(Uri), typeof(TestNode));
@@ -29,8 +25,7 @@ internal static class ObjectModelConverters
     /// </summary>
     public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, ClientInfo client)
     {
-        string testNodeUid = testCase.GetPropertyValue<string>(TestNodeUidProperty, null)
-            ?? testCase.FullyQualifiedName;
+        string testNodeUid = testCase.Id.ToString();
 
         TestNode testNode = new()
         {
@@ -163,6 +158,19 @@ internal static class ObjectModelConverters
         }
 
         testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
+
+        foreach (TestResultMessage testResultMessage in testResult.Messages)
+        {
+            if (testResultMessage.Category == TestResultMessage.StandardErrorCategory)
+            {
+                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", testResultMessage.Text ?? string.Empty));
+            }
+
+            if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
+            {
+                testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", testResultMessage.Text ?? string.Empty));
+            }
+        }
 
         return testNode;
     }

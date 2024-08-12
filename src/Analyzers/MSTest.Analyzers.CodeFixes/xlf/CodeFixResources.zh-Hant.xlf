@@ -17,6 +17,16 @@
         <target state="translated">修正簽章</target>
         <note />
       </trans-unit>
+      <trans-unit id="PublicTypeShouldBeTestClassFix">
+        <source>Add '[TestClass]'</source>
+        <target state="translated">新增 '[TestClass]'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidFix">
+        <source>Fix test method signature</source>
+        <target state="translated">修正測試方法簽章</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

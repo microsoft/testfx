@@ -28,7 +28,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
     public void AddEnvironmentVariableProvider(Func<IServiceProvider, ITestHostEnvironmentVariableProvider> environmentVariableProviderFactory)
     {
-        ArgumentGuard.IsNotNull(environmentVariableProviderFactory);
+        Guard.NotNull(environmentVariableProviderFactory);
         _environmentVariableProviderFactories.Add(environmentVariableProviderFactory);
         _factoryOrdering.Add(environmentVariableProviderFactory);
     }
@@ -36,7 +36,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     public void AddEnvironmentVariableProvider<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestHostEnvironmentVariableProvider
     {
-        ArgumentGuard.IsNotNull(compositeServiceFactory);
+        Guard.NotNull(compositeServiceFactory);
         if (_environmentVariableProviderCompositeFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -48,7 +48,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
     public void AddProcessLifetimeHandler(Func<IServiceProvider, ITestHostProcessLifetimeHandler> lifetimeHandler)
     {
-        ArgumentGuard.IsNotNull(lifetimeHandler);
+        Guard.NotNull(lifetimeHandler);
         _lifetimeHandlerFactories.Add(lifetimeHandler);
         _factoryOrdering.Add(lifetimeHandler);
     }
@@ -56,7 +56,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     public void AddProcessLifetimeHandler<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestHostProcessLifetimeHandler
     {
-        ArgumentGuard.IsNotNull(compositeServiceFactory);
+        Guard.NotNull(compositeServiceFactory);
         if (_lifetimeHandlerCompositeFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -68,7 +68,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
     public void AddDataConsumer(Func<IServiceProvider, IDataConsumer> dataConsumerFactory)
     {
-        ArgumentGuard.IsNotNull(dataConsumerFactory);
+        Guard.NotNull(dataConsumerFactory);
         _dataConsumerFactories.Add(dataConsumerFactory);
         _factoryOrdering.Add(dataConsumerFactory);
     }
@@ -76,7 +76,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     public void AddDataConsumer<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, IDataConsumer
     {
-        ArgumentGuard.IsNotNull(compositeServiceFactory);
+        Guard.NotNull(compositeServiceFactory);
         if (_dataConsumersCompositeServiceFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -121,34 +121,32 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
         foreach (ICompositeExtensionFactory compositeServiceFactory in _environmentVariableProviderCompositeFactories)
         {
+            // Get the singleton
+            var extension = (IExtension)compositeServiceFactory.GetInstance(serviceProvider);
+            bool isEnabledAsync = await extension.IsEnabledAsync();
+
             // Check if we have already built the singleton for this composite factory
             if (!_alreadyBuiltServices.Contains(compositeServiceFactory))
             {
-                // Get the singleton for init
-                var instance = (IExtension)compositeServiceFactory.GetInstance(serviceProvider);
-
                 // Check if we have already extensions of the same type with same id registered
-                if (environmentVariableProviders.Any(x => x.TestHostEnvironmentVariableProvider.Uid == instance.Uid))
+                if (environmentVariableProviders.Any(x => x.TestHostEnvironmentVariableProvider.Uid == extension.Uid))
                 {
-                    (ITestHostEnvironmentVariableProvider testHostEnvironmentVariableProvider, int _) = environmentVariableProviders.Single(x => x.TestHostEnvironmentVariableProvider.Uid == instance.Uid);
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, testHostEnvironmentVariableProvider.GetType()));
+                    (ITestHostEnvironmentVariableProvider testHostEnvironmentVariableProvider, int _) = environmentVariableProviders.Single(x => x.TestHostEnvironmentVariableProvider.Uid == extension.Uid);
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, extension.Uid, testHostEnvironmentVariableProvider.GetType()));
                 }
 
                 // We initialize only if enabled
-                if (await instance.IsEnabledAsync())
+                if (isEnabledAsync)
                 {
-                    await instance.TryInitializeAsync();
+                    await extension.TryInitializeAsync();
                 }
 
                 // Add to the list of shared singletons
                 _alreadyBuiltServices.Add(compositeServiceFactory);
             }
 
-            // Get the singleton
-            var extension = (IExtension)compositeServiceFactory.GetInstance(serviceProvider);
-
             // We register the extension only if enabled
-            if (await extension.IsEnabledAsync())
+            if (isEnabledAsync)
             {
                 if (extension is ITestHostEnvironmentVariableProvider testHostEnvironmentVariableProvider)
                 {
@@ -188,33 +186,31 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
         foreach (ICompositeExtensionFactory compositeServiceFactory in _lifetimeHandlerCompositeFactories)
         {
+            // Get the singleton
+            var extension = (IExtension)compositeServiceFactory.GetInstance(serviceProvider);
+            bool isEnabledAsync = await extension.IsEnabledAsync();
+
             // Check if we have already built the singleton for this composite factory
             if (!_alreadyBuiltServices.Contains(compositeServiceFactory))
             {
-                // Get the singleton for init
-                var instance = (IExtension)compositeServiceFactory.GetInstance(serviceProvider);
-
-                if (lifetimeHandlers.Any(x => x.TestHostProcessLifetimeHandler.Uid == instance.Uid))
+                if (lifetimeHandlers.Any(x => x.TestHostProcessLifetimeHandler.Uid == extension.Uid))
                 {
-                    (ITestHostProcessLifetimeHandler testHostProcessLifetimeHandler, int _) = lifetimeHandlers.Single(x => x.TestHostProcessLifetimeHandler.Uid == instance.Uid);
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, testHostProcessLifetimeHandler.GetType()));
+                    (ITestHostProcessLifetimeHandler testHostProcessLifetimeHandler, int _) = lifetimeHandlers.Single(x => x.TestHostProcessLifetimeHandler.Uid == extension.Uid);
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, extension.Uid, testHostProcessLifetimeHandler.GetType()));
                 }
 
                 // We initialize only if enabled
-                if (await instance.IsEnabledAsync())
+                if (isEnabledAsync)
                 {
-                    await instance.TryInitializeAsync();
+                    await extension.TryInitializeAsync();
                 }
 
                 // Add to the list of shared singletons
                 _alreadyBuiltServices.Add(compositeServiceFactory);
             }
 
-            // Get the singleton
-            var extension = (IExtension)compositeServiceFactory.GetInstance(serviceProvider);
-
             // We register the extension only if enabled
-            if (await extension.IsEnabledAsync())
+            if (isEnabledAsync)
             {
                 if (extension is ITestHostProcessLifetimeHandler testHostProcessLifetimeHandler)
                 {

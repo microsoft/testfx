@@ -13,13 +13,13 @@
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
-        <source>cancelled</source>
-        <target state="translated">abgebrochen</target>
+        <source>canceled</source>
+        <target state="translated">Abgebrochen</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
-        <source>Cancelling the test session...</source>
-        <target state="translated">Testsitzung wird abgebrochen...</target>
+        <source>Canceling the test session...</source>
+        <target state="translated">Die Testsitzung wird abgebrochen...</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -152,6 +152,11 @@
         <target state="translated">Verbindung mit Clienthost "{0}" Port "{1}" wird hergestellt</target>
         <note />
       </trans-unit>
+      <trans-unit id="ConsoleIsAlreadyInBatchingMode">
+        <source>Console is already in batching mode.</source>
+        <target state="translated">Die Konsole befindet sich bereits im Batchmodus.</target>
+        <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
+      </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
         <source>Creates the right test execution filter for console mode</source>
         <target state="translated">Erstellt den richtigen Testausführungsfilter für den Konsolenmodus.</target>
@@ -216,10 +221,30 @@
 {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="FailedWithErrors">
+        <source>failed with {0} errors(s)</source>
+        <target state="translated">Fehlgeschlagen mit {0} Fehler(n)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedWithErrorsAndWarnings">
+        <source>failed with {0} error(s) and {1} warning(s)</source>
+        <target state="translated">fehlerhaft mit {0} Fehler(n) und {1} Warnung(en)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedWithWarnings">
+        <source>failed with {0} warning(s)</source>
+        <target state="translated">fehlerhaft mit {0} Warnung(en)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
         <target state="translated">Für Test</target>
         <note>is followed by test name</note>
+      </trans-unit>
+      <trans-unit id="FromFile">
+        <source>from</source>
+        <target state="translated">von</target>
+        <note>from followed by a file name to point to the file from which test is originating</note>
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
         <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
@@ -493,6 +518,11 @@
         <target state="translated">Wiederholungsfehler nach {0} Mal</target>
         <note />
       </trans-unit>
+      <trans-unit id="RunningTestsFrom">
+        <source>Running tests from</source>
+        <target state="translated">Ausführen von Tests von</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ServerLogMessageDescription">
         <source>This data represents a server log message</source>
         <target state="translated">Diese Daten stellen eine Serverprotokollmeldung dar.</target>
@@ -537,6 +567,16 @@
         <source>skipped</source>
         <target state="translated">übersprungen</target>
         <note />
+      </trans-unit>
+      <trans-unit id="StackFrameAt">
+        <source>at</source>
+        <target state="translated">um</target>
+        <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
+      </trans-unit>
+      <trans-unit id="StackFrameIn">
+        <source>in</source>
+        <target state="translated">in</target>
+        <note>in that is used in stack frame it is followed by file name</note>
       </trans-unit>
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
@@ -628,6 +668,11 @@ Weitere Informationen zu Microsoft Testing Platform-Telemetriedaten: https://aka
         <target state="translated">Der Testanwendungsprozess wurde nicht ordnungsgemäß beendet. Exitcode: "{0}"</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestRunSummary">
+        <source>Test run summary:</source>
+        <target state="translated">Testlaufzusammenfassung:</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
         <source>Failed to acquire semaphore before timeout of '{0}' seconds</source>
         <target state="translated">Fehler beim Abrufen des Semaphors vor einem Timeout von "{0}" Sekunden.</target>
@@ -689,12 +734,12 @@ Weitere Informationen zu Microsoft Testing Platform-Telemetriedaten: https://aka
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occured during byte conversion</source>
+        <source>An unexpected exception occurred during byte conversion</source>
         <target state="translated">Unerwartete Ausnahme während der Bytekonvertierung.</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
         <target state="translated">Unerwartete Ausnahme in "FileLogger.WriteLogToFileAsync".
 {0}</target>

@@ -3,13 +3,16 @@
 
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -37,11 +40,6 @@ internal class TestMethodRunner
     private readonly TestMethodInfo _testMethodInfo;
 
     /// <summary>
-    /// Specifies whether debug traces should be captured or not.
-    /// </summary>
-    private readonly bool _captureDebugTraces;
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodRunner"/> class.
     /// </summary>
     /// <param name="testMethodInfo">
@@ -53,10 +51,7 @@ internal class TestMethodRunner
     /// <param name="testContext">
     /// The test context.
     /// </param>
-    /// <param name="captureDebugTraces">
-    /// The capture debug traces.
-    /// </param>
-    public TestMethodRunner(TestMethodInfo testMethodInfo, TestMethod testMethod, ITestContext testContext, bool captureDebugTraces)
+    public TestMethodRunner(TestMethodInfo testMethodInfo, TestMethod testMethod, ITestContext testContext)
     {
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo should not be null");
         DebugEx.Assert(testMethod != null, "testMethod should not be null");
@@ -65,79 +60,99 @@ internal class TestMethodRunner
         _testMethodInfo = testMethodInfo;
         _test = testMethod;
         _testContext = testContext;
-        _captureDebugTraces = captureDebugTraces;
     }
 
     /// <summary>
     /// Executes a test.
     /// </summary>
     /// <returns>The test results.</returns>
-    internal UnitTestResult[] Execute()
+    internal UnitTestResult[] Execute(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
-        string? initializationLogs = string.Empty;
-        string? initializationTrace = string.Empty;
-        string? initializationErrorLogs = string.Empty;
-        string? initializationTestContextMessages = string.Empty;
-
-        UnitTestResult[]? result = null;
-
-        try
+        bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(_testMethodInfo.Parent.ClassAttribute);
+        bool isSTATestMethod = _testMethodInfo.TestMethodOptions.Executor is not null && AttributeComparer.IsDerived<STATestMethodAttribute>(_testMethodInfo.TestMethodOptions.Executor);
+        bool isSTARequested = isSTATestClass || isSTATestMethod;
+        bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        if (isSTARequested && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
-            using (LogMessageListener logListener = new(_captureDebugTraces))
+            UnitTestResult[] results = Array.Empty<UnitTestResult>();
+            Thread entryPointThread = new(() => results = SafeRunTestMethod(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages))
             {
-                try
+                Name = (isSTATestClass, isSTATestMethod) switch
                 {
-                    // Run the assembly and class Initialize methods if required.
-                    // Assembly or class initialize can throw exceptions in which case we need to ensure that we fail the test.
-                    _testMethodInfo.Parent.Parent.RunAssemblyInitialize(_testContext.Context);
-                    _testMethodInfo.Parent.RunClassInitialize(_testContext.Context);
-                }
-                finally
-                {
-                    initializationLogs = logListener.GetAndClearStandardOutput();
-                    initializationTrace = logListener.GetAndClearDebugTrace();
-                    initializationErrorLogs = logListener.GetAndClearStandardError();
-                    initializationTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
-                }
+                    (true, _) => "MSTest STATestClass",
+                    (_, true) => "MSTest STATestMethod",
+                    _ => throw ApplicationStateGuard.Unreachable(),
+                },
+            };
+
+            entryPointThread.SetApartmentState(ApartmentState.STA);
+            entryPointThread.Start();
+
+            try
+            {
+                entryPointThread.Join();
+            }
+            catch (Exception ex)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
             }
 
-            // Listening to log messages when running the test method with its Test Initialize and cleanup later on in the stack.
-            // This allows us to differentiate logging when data driven methods are used.
-            result = RunTestMethod();
+            return results;
         }
-        catch (TestFailedException ex)
+        else
         {
-            result = [new UnitTestResult(ex)];
-        }
-        catch (Exception ex)
-        {
-            if (result == null || result.Length == 0)
+            // If the requested apartment state is STA and the OS is not Windows, then warn the user.
+            if (!isWindowsOS && isSTARequested)
             {
-                result = [new UnitTestResult()];
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
             }
+
+            return SafeRunTestMethod(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages);
+        }
+
+        // Local functions
+        UnitTestResult[] SafeRunTestMethod(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
+        {
+            UnitTestResult[]? result = null;
+
+            try
+            {
+                result = RunTestMethod();
+            }
+            catch (TestFailedException ex)
+            {
+                result = [new UnitTestResult(ex)];
+            }
+            catch (Exception ex)
+            {
+                if (result == null || result.Length == 0)
+                {
+                    result = [new()];
+                }
 
 #pragma warning disable IDE0056 // Use index operator
-            var newResult = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
-            {
-                StandardOut = result[result.Length - 1].StandardOut,
-                StandardError = result[result.Length - 1].StandardError,
-                DebugTrace = result[result.Length - 1].DebugTrace,
-                TestContextMessages = result[result.Length - 1].TestContextMessages,
-                Duration = result[result.Length - 1].Duration,
-            };
-            result[result.Length - 1] = newResult;
+                result[result.Length - 1] = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
+                {
+                    StandardOut = result[result.Length - 1].StandardOut,
+                    StandardError = result[result.Length - 1].StandardError,
+                    DebugTrace = result[result.Length - 1].DebugTrace,
+                    TestContextMessages = result[result.Length - 1].TestContextMessages,
+                    Duration = result[result.Length - 1].Duration,
+                };
 #pragma warning restore IDE0056 // Use index operator
-        }
-        finally
-        {
-            UnitTestResult firstResult = result![0];
-            firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
-            firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
-            firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
-            firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
-        }
+            }
+            finally
+            {
+                // Assembly initialize and class initialize logs are pre-pended to the first result.
+                UnitTestResult firstResult = result![0];
+                firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
+                firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
+                firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
+                firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
+            }
 
-        return result;
+            return result;
+        }
     }
 
     /// <summary>
@@ -197,7 +212,7 @@ internal class TestMethodRunner
         {
             // In legacy scenario
 #pragma warning disable CS0618 // Type or member is obsolete
-            if (_test.TestIdGenerationStrategy == UTF.TestIdGenerationStrategy.Legacy)
+            if (_test.TestIdGenerationStrategy == TestIdGenerationStrategy.Legacy)
             {
                 parentStopwatch.Stop();
                 var parentResult = new TestResult
@@ -355,7 +370,7 @@ internal class TestMethodRunner
             string? displayName = _test.Name;
             if (testDataSource != null)
             {
-                displayName = testDataSource.GetDisplayName(_testMethodInfo.MethodInfo, data);
+                displayName = testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data);
             }
             else if (hasDisplayName)
             {
@@ -410,7 +425,7 @@ internal class TestMethodRunner
                 {
                     // TODO: We need to change the exception type to more specific one.
 #pragma warning disable CA2201 // Do not raise reserved exception types
-                    TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex?.Message, ex?.StackTrace), ex),
+                    TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message, ex.StackTrace), ex),
 #pragma warning restore CA2201 // Do not raise reserved exception types
                 },
             ];

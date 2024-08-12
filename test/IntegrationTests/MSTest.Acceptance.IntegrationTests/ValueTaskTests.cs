@@ -24,7 +24,7 @@ public sealed class ValueTaskTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIs(2);
-        testHostResult.AssertOutputContains("Failed! - Failed: 1, Passed: 2, Skipped: 1, Total: 4");
+        testHostResult.AssertOutputContainsSummary(failed: 1, passed: 2, skipped: 1);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -39,7 +39,6 @@ public sealed class ValueTaskTests : AcceptanceTestBase
             yield return (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 

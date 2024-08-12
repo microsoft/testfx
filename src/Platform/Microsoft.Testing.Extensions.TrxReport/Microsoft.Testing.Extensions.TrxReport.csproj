@@ -70,4 +70,8 @@ This package extends Microsoft Testing Platform to provide TRX test reports.]]>
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="Polyfills" />
+  </ItemGroup>
+
 </Project>

@@ -8,8 +8,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
-        <source>Assembly cleanup method '{0}.{1}' was cancelled</source>
-        <target state="translated">'{0}.{1}' birleştirilmiş kod temizleme yöntemi iptal edildi</target>
+        <source>Assembly cleanup method '{0}.{1}' was canceled</source>
+        <target state="translated">'{0}.{1}' bütünleştirilmiş kod temizleme yöntemi iptal edildi</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
@@ -18,7 +18,7 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
-        <source>Assembly initialize method '{0}.{1}' was cancelled</source>
+        <source>Assembly initialize method '{0}.{1}' was canceled</source>
         <target state="translated">'{0}.{1}' derleme başlatma yöntemi iptal edildi</target>
         <note />
       </trans-unit>
@@ -42,7 +42,7 @@ ancak, '{5}' türüyle {4} argüman aldı.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
-        <source>Class cleanup method '{0}.{1}' was cancelled</source>
+        <source>Class cleanup method '{0}.{1}' was canceled</source>
         <target state="translated">'{0}.{1}' sınıf temizleme yöntemi iptal edildi</target>
         <note />
       </trans-unit>
@@ -52,14 +52,24 @@ ancak, '{5}' türüyle {4} argüman aldı.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
-        <source>Class initialize method '{0}.{1}' was cancelled</source>
+        <source>Class initialize method '{0}.{1}' was canceled</source>
         <target state="translated">'{0}.{1}' sınıf başlatma yöntemi iptal edildi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
+        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
+        <target state="translated">'[DynamicData]' başvurulan üyesi '{0}.{1}' şu değerleri döndürmelidir: 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` veya 'IEnumerable&lt;ValueTuple&gt;'</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">'{0}' testi yürütme zaman aşımı süresini aştı.</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidValue">
+        <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
+        <target state="translated">'{1}' çalıştırma ayarları girişi için '{0}' değeri geçersiz, ayar yoksayılacak.</target>
+        <note />
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
@@ -77,7 +87,7 @@ ancak, '{5}' türüyle {4} argüman aldı.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
-        <source>Test cleanup method '{0}.{1}' was cancelled</source>
+        <source>Test cleanup method '{0}.{1}' was canceled</source>
         <target state="translated">'{0}.{1}' test temizleme yöntemi iptal edildi</target>
         <note />
       </trans-unit>
@@ -87,7 +97,7 @@ ancak, '{5}' türüyle {4} argüman aldı.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
-        <source>Test initialize method '{0}.{1}' was cancelled</source>
+        <source>Test initialize method '{0}.{1}' was canceled</source>
         <target state="translated">'{0}.{1}' test başlatma yöntemi iptal edildi</target>
         <note />
       </trans-unit>
@@ -145,6 +155,11 @@ ancak, '{5}' türüyle {4} argüman aldı.</target>
         <source>Unable to create instance of class {0}. Error: {1}.</source>
         <target state="translated">{0} sınıfının örneği oluşturulamıyor. Hata: {1}.</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_NoValidConstructor">
+        <source>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
+        <target state="translated">'{0}' test sınıfı için geçerli bir oluşturucu bulunamıyor. Geçerli oluşturucular 'public' ve parametresiz veya 'TestContext' türünde tek bir parametre içeriyor.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_TestContextSetError">
         <source>Unable to set TestContext property for the class {0}. Error: {1}.</source>
@@ -244,9 +259,9 @@ Hata: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
-        <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be a valid integer value and cannot be less than 0.</source>
-        <target state="translated">UTA054: {0}.{1} geçersiz Timeout özniteliğine sahip. Zaman aşımı geçerli bir tamsayı değer olmalıdır ve 0'dan küçük olamaz.</target>
-        <note></note>
+        <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</source>
+        <target state="translated">UTA054: {0}.{1} Timeout özniteliği geçersiz. Zaman aşımı değeri 0'dan büyük bir tamsayı olmalıdır.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorPredefinedTestProperty">
         <source>UTA023: {0}: Cannot define predefined property {2} on method {1}.</source>
@@ -261,11 +276,6 @@ Hata: {1}</target>
       <trans-unit id="UTA_MethodDoesNotExists">
         <source>Method {0}.{1} does not exist.</source>
         <target state="translated">{0}.{1} metodu yok.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_NoDefaultConstructor">
-        <source>Unable to get default constructor for class {0}.</source>
-        <target state="translated">{0} sınıfı için varsayılan oluşturucu alınamıyor.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestContextLoadError">

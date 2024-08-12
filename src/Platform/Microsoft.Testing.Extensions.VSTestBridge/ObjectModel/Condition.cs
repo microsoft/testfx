@@ -7,7 +7,6 @@ using System.Globalization;
 using System.Text;
 
 using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
@@ -62,17 +61,17 @@ internal sealed class Condition
     /// <summary>
     /// Gets toolName of the property used in condition.
     /// </summary>
-    internal string Name { get; private set; }
+    internal string Name { get; }
 
     /// <summary>
     /// Gets value for the property.
     /// </summary>
-    internal string Value { get; private set; }
+    internal string Value { get; }
 
     /// <summary>
     /// Gets operation to be performed.
     /// </summary>
-    internal Operation Operation { get; private set; }
+    internal Operation Operation { get; }
 
     /// <summary>
     /// Evaluate this condition for testObject.
@@ -174,7 +173,7 @@ internal sealed class Condition
         {
             // If only parameter values is passed, create condition with default property name,
             // default operation and given condition string as parameter value.
-            return new Condition(DefaultPropertyName, DefaultOperation, FilterHelper.Unescape(conditionString!.Trim()));
+            return new Condition(DefaultPropertyName, DefaultOperation, FilterHelper.Unescape(conditionString.Trim()));
         }
 
         if (parts.Length != 3)
@@ -278,8 +277,7 @@ internal sealed class Condition
 
     internal static IEnumerable<string> TokenizeFilterConditionString(string str)
     {
-        ArgumentGuard.IsNotNull(str);
-        return TokenizeFilterConditionStringWorker(str);
+        return TokenizeFilterConditionStringWorker(Guard.NotNull(str));
 
         static IEnumerable<string> TokenizeFilterConditionStringWorker(string s)
         {

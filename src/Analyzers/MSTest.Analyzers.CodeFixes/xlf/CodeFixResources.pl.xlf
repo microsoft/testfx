@@ -17,6 +17,16 @@
         <target state="translated">Popraw podpis</target>
         <note />
       </trans-unit>
+      <trans-unit id="PublicTypeShouldBeTestClassFix">
+        <source>Add '[TestClass]'</source>
+        <target state="translated">Dodaj element „[TestClass]”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidFix">
+        <source>Fix test method signature</source>
+        <target state="translated">Napraw podpis metody testowej</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

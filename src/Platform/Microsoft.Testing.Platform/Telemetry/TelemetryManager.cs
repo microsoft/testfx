@@ -26,7 +26,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
     public void AddTelemetryCollectorProvider(Func<IServiceProvider, ITelemetryCollector> telemetryFactory)
     {
-        ArgumentGuard.IsNotNull(telemetryFactory);
+        Guard.NotNull(telemetryFactory);
         _telemetryFactory = telemetryFactory;
     }
 
@@ -35,16 +35,16 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         bool isTelemetryOptedOut = !testApplicationOptions.EnableTelemetry;
 
         ILogger<TelemetryManager> logger = loggerFactory.CreateLogger<TelemetryManager>();
-        await logger.LogInformationAsync($"TestApplicationOptions.EnableTelemetry: {testApplicationOptions.EnableTelemetry}");
+        await logger.LogDebugAsync($"TestApplicationOptions.EnableTelemetry: {testApplicationOptions.EnableTelemetry}");
 
         // If the environment variable is not set or is set to 0, telemetry is opted in.
         IEnvironment environment = serviceProvider.GetEnvironment();
         string? telemetryOptOut = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT);
-        await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT} environment variable: '{telemetryOptOut}'");
+        await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT} environment variable: '{telemetryOptOut}'");
         isTelemetryOptedOut = (telemetryOptOut is "1" or "true") || isTelemetryOptedOut;
 
         string? cli_telemetryOptOut = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT);
-        await logger.LogInformationAsync($"{EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT} environment variable: '{cli_telemetryOptOut}'");
+        await logger.LogDebugAsync($"{EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT} environment variable: '{cli_telemetryOptOut}'");
         isTelemetryOptedOut = (cli_telemetryOptOut is "1" or "true") || isTelemetryOptedOut;
 
         // NO_LOGO
@@ -54,14 +54,14 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         bool doNotShowLogo = commandLineOptions.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
 
         string? noBannerEnvVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
-        await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER} environment variable: '{noBannerEnvVar}'");
+        await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER} environment variable: '{noBannerEnvVar}'");
         doNotShowLogo = (noBannerEnvVar is "1" or "true") || doNotShowLogo;
 
         string? dotnetNoLogoEnvVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);
-        await logger.LogInformationAsync($"{EnvironmentVariableConstants.DOTNET_NOLOGO} environment variable: '{dotnetNoLogoEnvVar}'");
+        await logger.LogDebugAsync($"{EnvironmentVariableConstants.DOTNET_NOLOGO} environment variable: '{dotnetNoLogoEnvVar}'");
         doNotShowLogo = (dotnetNoLogoEnvVar is "1" or "true") || doNotShowLogo;
 
-        await logger.LogInformationAsync($"Telemetry is '{(!isTelemetryOptedOut ? "ENABLED" : "DISABLED")}'");
+        await logger.LogDebugAsync($"Telemetry is '{(!isTelemetryOptedOut ? "ENABLED" : "DISABLED")}'");
 
         if (!isTelemetryOptedOut && !doNotShowLogo)
         {
@@ -115,7 +115,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
         if (!isTelemetryOptedOut)
         {
-            await logger.LogInformationAsync($"Telemetry collector provider: '{telemetryCollector.GetType()}'");
+            await logger.LogDebugAsync($"Telemetry collector provider: '{telemetryCollector.GetType()}'");
         }
 
         return telemetryCollector;

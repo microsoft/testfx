@@ -29,7 +29,7 @@ public class TestFilterTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter tree=one");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContains("Passed: 1, Skipped: 0, Total: 1,");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -54,12 +54,12 @@ Test2
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter tree!~one");
 
         testHostResult.AssertOutputContains("""
-failed PriorityTest 0ms
-UTA023: TestClass: Cannot define predefined property Priority on method PriorityTest.
-failed OwnerTest 0ms
-UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
-failed TestCategoryTest 0ms
-UTA023: TestClass: Cannot define predefined property TestCategory on method TestCategoryTest.
+failed PriorityTest (0ms)
+  UTA023: TestClass: Cannot define predefined property Priority on method PriorityTest.
+failed OwnerTest (0ms)
+  UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
+failed TestCategoryTest (0ms)
+  UTA023: TestClass: Cannot define predefined property TestCategory on method TestCategoryTest.
 """);
     }
 
@@ -71,8 +71,8 @@ UTA023: TestClass: Cannot define predefined property TestCategory on method Test
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter owner=testOwner");
 
         testHostResult.AssertOutputContains("""
-failed OwnerTest 0ms
-UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
+failed OwnerTest (0ms)
+  UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
 """);
     }
 
@@ -97,7 +97,6 @@ UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
             yield return (AssetName, AssetName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 

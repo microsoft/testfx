@@ -12,6 +12,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0028: <inheritdoc cref="Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class UseAsyncSuffixTestFixtureMethodSuppressor : DiagnosticSuppressor
 {

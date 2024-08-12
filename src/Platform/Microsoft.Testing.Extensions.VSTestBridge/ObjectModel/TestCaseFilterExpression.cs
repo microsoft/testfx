@@ -3,7 +3,6 @@
 
 // NOTE: This file is copied as-is from VSTest source code.
 using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
@@ -28,7 +27,7 @@ internal sealed class TestCaseFilterExpression : ITestCaseFilterExpression
     /// </summary>
     public TestCaseFilterExpression(FilterExpressionWrapper filterWrapper)
     {
-        ArgumentGuard.IsNotNull(filterWrapper);
+        Guard.NotNull(filterWrapper);
         _filterWrapper = filterWrapper;
         _validForMatch = RoslynString.IsNullOrEmpty(filterWrapper.ParseError);
     }
@@ -44,7 +43,7 @@ internal sealed class TestCaseFilterExpression : ITestCaseFilterExpression
     public string[]? ValidForProperties(IEnumerable<string>? supportedProperties, Func<string, TestProperty?> propertyProvider)
     {
         string[]? invalidProperties = null;
-        if (_filterWrapper != null && _validForMatch)
+        if (_validForMatch)
         {
             invalidProperties = _filterWrapper.ValidForProperties(supportedProperties, propertyProvider);
         }
@@ -60,17 +59,6 @@ internal sealed class TestCaseFilterExpression : ITestCaseFilterExpression
         ValidateArg.NotNull(testCase, nameof(testCase));
         ValidateArg.NotNull(propertyValueProvider, nameof(propertyValueProvider));
 
-        if (!_validForMatch)
-        {
-            return false;
-        }
-
-        if (_filterWrapper == null)
-        {
-            // can be null when parsing error occurs. Invalid filter results in no match.
-            return false;
-        }
-
-        return _filterWrapper.Evaluate(propertyValueProvider);
+        return _validForMatch && _filterWrapper.Evaluate(propertyValueProvider);
     }
 }

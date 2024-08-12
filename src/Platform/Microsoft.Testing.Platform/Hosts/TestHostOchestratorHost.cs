@@ -31,7 +31,7 @@ internal class TestHostOrchestratorHost(TestHostOrchestratorConfiguration testHo
         }
         catch (OperationCanceledException) when (applicationCancellationToken.CancellationToken.IsCancellationRequested)
         {
-            // We do nothing we're cancelling
+            // We do nothing we're canceling
             exitCode = ExitCodes.TestSessionAborted;
         }
 

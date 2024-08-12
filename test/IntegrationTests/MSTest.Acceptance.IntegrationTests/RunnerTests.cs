@@ -39,14 +39,14 @@ public class RunnerTests : AcceptanceTestBase
             $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
-        SL.Build binLog = SL.Serialization.Read(binlogFile);
+        SL.Build binLog = Serialization.Read(binlogFile);
         Assert.IsNotEmpty(binLog.FindChildrenRecursive<AddItem>()
             .Where(x => x.Title.Contains("ProjectCapability"))
             .Where(x => x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
@@ -81,7 +81,7 @@ return await app.RunAsync();
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
@@ -97,10 +97,10 @@ return await app.RunAsync();
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
         string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         try
         {
-            compilationResult = await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
             var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
             TestHostResult testHostResult = await testHost.ExecuteAsync();
             Assert.AreEqual(string.Empty, testHostResult.StandardOutput);
@@ -131,10 +131,10 @@ return await app.RunAsync();
                 .PatchCodeWithReplace("$Extra$", string.Empty));
 
         string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        compilationResult = await DotnetCli.RunAsync($"{verb} -bl:{binlogFile} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"{verb} -bl:{binlogFile} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
-        SL.Build binLog = SL.Serialization.Read(binlogFile);
+        SL.Build binLog = Serialization.Read(binlogFile);
         Assert.IsEmpty(binLog.FindChildrenRecursive<AddItem>()
             .Where(x => x.Title.Contains("ProjectCapability"))
             .Where(x => x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));

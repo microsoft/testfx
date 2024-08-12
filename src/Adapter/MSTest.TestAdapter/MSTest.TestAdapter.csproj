@@ -101,9 +101,6 @@
       <Compile Include="$(Compile);$(IntermediateOutputPath)/MSTestVersion.cs" />
     </ItemGroup>
   </Target>
-  <ItemGroup>
-    <Compile Remove="Discovery\FixturesVisibility.cs" />
-  </ItemGroup>
 
   <!-- Version templating -->
   <ItemGroup>
@@ -127,6 +124,10 @@
       <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
     </GenerateFileFromTemplate>
   </Target>
+
+  <ItemGroup>
+    <Using Include="Polyfills" />
+  </ItemGroup>
 
   <!-- SDK bottom import -->
   <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />

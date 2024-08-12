@@ -793,7 +793,7 @@ namespace Jsonite
                 this.indentChar = settings.IndentChar;
                 this.indentCount = settings.IndentCount;
                 this.indentLevel = 0;
-                writers = new Dictionary<Type, Action<object>>()
+                writers = new Dictionary<Type, Action<object>>
                 {
                     // These converters have to match to the one declared in JsonReflectorDefault.Converters
                     {typeof (string), value => WriteString((string) value)},
@@ -1157,10 +1157,10 @@ namespace Jsonite
     }
 
     /// <summary>
-    /// Instance exception used when a parsing exception occured.
+    /// Instance exception used when a parsing exception occurred.
     /// </summary>
     /// <remarks>
-    /// This exception can be overriden by overriding the method <see cref="IJsonReflector.OnDeserializeRaiseParsingError"/>.
+    /// This exception can be overridden by overriding the method <see cref="IJsonReflector.OnDeserializeRaiseParsingError"/>.
     /// </remarks>
 #if JSONITE_PUBLIC
     public
@@ -1182,12 +1182,12 @@ namespace Jsonite
         public readonly int Offset;
 
         /// <summary>
-        /// Line position (zero-based) where the error occured from the beginning of the text being parsed.
+        /// Line position (zero-based) where the error occurred from the beginning of the text being parsed.
         /// </summary>
         public readonly int Line;
 
         /// <summary>
-        /// Column position (zero-based) where the error occured.
+        /// Column position (zero-based) where the error occurred.
         /// </summary>
         public readonly int Column;
 
@@ -1341,9 +1341,9 @@ namespace Jsonite
         object OnDeserializeExitArray(object arrayContext, object obj);
 
         /// <summary>
-        /// Called when an error occured when deserializing. A default implementation should throw a <see cref="JsonException"/>.
+        /// Called when an error occurred when deserializing. A default implementation should throw a <see cref="JsonException"/>.
         /// </summary>
-        /// <param name="offset">The character position from the begining of the buffer being deserialized.</param>
+        /// <param name="offset">The character position from the beginning of the buffer being deserialized.</param>
         /// <param name="line">The line position (zero-based)</param>
         /// <param name="column">The column position (zero-based)</param>
         /// <param name="message">The error message.</param>

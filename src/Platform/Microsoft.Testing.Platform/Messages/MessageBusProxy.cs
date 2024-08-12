@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Messages;
 
@@ -19,12 +18,12 @@ internal sealed class MessageBusProxy : BaseMessageBus, IMessageBus
     public override async Task InitAsync()
     {
         EnsureMessageBusAvailable();
-        await InitAsync();
+        await _messageBus.InitAsync();
     }
 
     public void SetBuiltMessageBus(BaseMessageBus messageBus)
     {
-        ArgumentGuard.IsNotNull(messageBus);
+        Guard.NotNull(messageBus);
         _messageBus = messageBus;
     }
 

@@ -10,7 +10,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
     using System;
-    using System.Reflection;
     
     
     /// <summary>
@@ -40,7 +39,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.Resource", typeof(Resource).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.Resource", typeof(Resource).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -71,7 +70,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Assembly cleanup method &apos;{0}.{1}&apos; was cancelled.
+        ///   Looks up a localized string similar to Assembly cleanup method &apos;{0}.{1}&apos; was canceled.
         /// </summary>
         internal static string AssemblyCleanupWasCancelled {
             get {
@@ -89,7 +88,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Assembly initialize method &apos;{0}.{1}&apos; was cancelled.
+        ///   Looks up a localized string similar to Assembly initialize method &apos;{0}.{1}&apos; was canceled.
         /// </summary>
         internal static string AssemblyInitializeWasCancelled {
             get {
@@ -172,7 +171,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Class cleanup method &apos;{0}.{1}&apos; was cancelled.
+        ///   Looks up a localized string similar to Class cleanup method &apos;{0}.{1}&apos; was canceled.
         /// </summary>
         internal static string ClassCleanupWasCancelled {
             get {
@@ -190,7 +189,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Class initialize method &apos;{0}.{1}&apos; was cancelled.
+        ///   Looks up a localized string similar to Class initialize method &apos;{0}.{1}&apos; was canceled.
         /// </summary>
         internal static string ClassInitializeWasCancelled {
             get {
@@ -231,6 +230,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string DiscoveryWarning {
             get {
                 return ResourceManager.GetString("DiscoveryWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; referenced member &apos;{0}.{1}&apos; should return &apos;IEnumerable&lt;object[]&gt;&apos;, &apos;IEnumerable&lt;Tuple&gt;` or &apos;IEnumerable&lt;ValueTuple&gt;&apos;.
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_MemberType {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberType", resourceCulture);
             }
         }
         
@@ -343,6 +351,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid value &apos;{0}&apos; for runsettings entry &apos;{1}&apos;, setting will be ignored..
+        /// </summary>
+        internal static string InvalidValue {
+            get {
+                return ResourceManager.GetString("InvalidValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter..
         /// </summary>
         internal static string LegacyScenariosNotSupportedWarning {
@@ -415,7 +432,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test cleanup method &apos;{0}.{1}&apos; was cancelled.
+        ///   Looks up a localized string similar to Test cleanup method &apos;{0}.{1}&apos; was canceled.
         /// </summary>
         internal static string TestCleanupWasCancelled {
             get {
@@ -451,7 +468,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test initialize method &apos;{0}.{1}&apos; was cancelled.
+        ///   Looks up a localized string similar to Test initialize method &apos;{0}.{1}&apos; was canceled.
         /// </summary>
         internal static string TestInitializeWasCancelled {
             get {
@@ -605,7 +622,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be a valid integer value and cannot be less than 0..
+        ///   Looks up a localized string similar to UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0..
         /// </summary>
         internal static string UTA_ErrorInvalidTimeout {
             get {
@@ -768,20 +785,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to get default constructor for class {0}..
-        /// </summary>
-        internal static string UTA_NoDefaultConstructor {
-            get {
-                return ResourceManager.GetString("UTA_NoDefaultConstructor", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor..
         /// </summary>
         internal static string UTA_NoTestResult {
             get {
                 return ResourceManager.GetString("UTA_NoTestResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find a valid constructor for test class &apos;{0}&apos;. Valid constructors are &apos;public&apos; and either parameterless or with one parameter of type &apos;TestContext&apos;..
+        /// </summary>
+        internal static string UTA_NoValidConstructor {
+            get {
+                return ResourceManager.GetString("UTA_NoValidConstructor", resourceCulture);
             }
         }
         

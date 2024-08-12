@@ -98,15 +98,8 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestMethodInfo"/>. </returns>
     public TestMethodInfo? GetTestMethodInfo(TestMethod testMethod, ITestContext testContext, bool captureDebugTraces)
     {
-        if (testMethod == null)
-        {
-            throw new ArgumentNullException(nameof(testMethod));
-        }
-
-        if (testContext == null)
-        {
-            throw new ArgumentNullException(nameof(testContext));
-        }
+        Guard.NotNull(testMethod);
+        Guard.NotNull(testContext);
 
         // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
         TestClassInfo? testClassInfo = GetClassInfo(testMethod);
@@ -271,11 +264,21 @@ internal class TypeCache : MarshalByRefObject
     {
         IEnumerable<ConstructorInfo> constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
         ConstructorInfo? constructor = constructors.FirstOrDefault(ctor => ctor.GetParameters().Length == 0 && ctor.IsPublic);
+        bool isParameterLessConstructor;
 
-        if (constructor == null)
+        if (classType.GetConstructor([typeof(TestContext)]) is { } testContextCtor)
         {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_NoDefaultConstructor, testMethod.FullClassName);
-            throw new TypeInspectionException(message);
+            constructor = testContextCtor;
+            isParameterLessConstructor = false;
+        }
+        else if (classType.GetConstructor([]) is { } parameterLessCtor)
+        {
+            constructor = parameterLessCtor;
+            isParameterLessConstructor = true;
+        }
+        else
+        {
+            throw new TypeInspectionException(string.Format(CultureInfo.CurrentCulture, Resource.UTA_NoValidConstructor, testMethod.FullClassName));
         }
 
         PropertyInfo? testContextProperty = ResolveTestContext(classType);
@@ -284,11 +287,11 @@ internal class TypeCache : MarshalByRefObject
 
         TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetFirstDerivedAttributeOrDefault<TestClassAttribute>(classType, inherit: false);
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
-        var classInfo = new TestClassInfo(classType, constructor, testContextProperty, testClassAttribute, assemblyInfo);
+        var classInfo = new TestClassInfo(classType, constructor, isParameterLessConstructor, testContextProperty, testClassAttribute, assemblyInfo);
 
         // List holding the instance of the initialize/cleanup methods
         // to be passed into the tuples' queue  when updating the class info.
-        var initAndCleanupMethods = new MethodInfo[2];
+        var initAndCleanupMethods = new MethodInfo?[2];
 
         // List of instance methods present in the type as well its base type
         // which is used to decide whether TestInitialize/TestCleanup methods
@@ -425,11 +428,11 @@ internal class TypeCache : MarshalByRefObject
                             throw new TypeInspectionException(message);
                         }
 
-                        assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = timeoutAttribute.Timeout;
+                        assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = TimeoutInfo.FromTimeoutAttribute(timeoutAttribute);
                     }
                     else if (MSTestSettings.CurrentSettings.AssemblyInitializeTimeout > 0)
                     {
-                        assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = MSTestSettings.CurrentSettings.AssemblyInitializeTimeout;
+                        assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = TimeoutInfo.FromFixtureSettings(FixtureKind.AssemblyInitialize);
                     }
                 }
                 else if (IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
@@ -444,11 +447,11 @@ internal class TypeCache : MarshalByRefObject
                             throw new TypeInspectionException(message);
                         }
 
-                        assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = timeoutAttribute.Timeout;
+                        assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = TimeoutInfo.FromTimeoutAttribute(timeoutAttribute);
                     }
                     else if (MSTestSettings.CurrentSettings.AssemblyCleanupTimeout > 0)
                     {
-                        assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = MSTestSettings.CurrentSettings.AssemblyCleanupTimeout;
+                        assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = TimeoutInfo.FromFixtureSettings(FixtureKind.AssemblyCleanup);
                     }
                 }
             }
@@ -524,14 +527,35 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="initAndCleanupMethods"> An array with the Initialize and Cleanup Methods Info. </param>
     private static void UpdateInfoWithInitializeAndCleanupMethods(
         TestClassInfo classInfo,
-        ref MethodInfo[] initAndCleanupMethods)
+        ref MethodInfo?[] initAndCleanupMethods)
     {
-        if (initAndCleanupMethods.Any(x => x != null))
+        DebugEx.Assert(initAndCleanupMethods.Length == 2, "initAndCleanupMethods.Length == 2");
+
+        MethodInfo? initMethod = initAndCleanupMethods[0];
+        MethodInfo? cleanupMethod = initAndCleanupMethods[1];
+
+        if (initMethod is not null)
         {
+            classInfo.BaseClassInitMethods.Add(initMethod);
+        }
+
+        if (cleanupMethod is not null)
+        {
+            classInfo.BaseClassCleanupMethods.Add(cleanupMethod);
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            classInfo.BaseClassCleanupMethodsStack.Push(cleanupMethod);
+#pragma warning restore CS0618 // Type or member is obsolete
+        }
+
+        if (initMethod is not null || cleanupMethod is not null)
+        {
+#pragma warning disable CS0618 // Type or member is obsolete - kept in case someone is using it
             classInfo.BaseClassInitAndCleanupMethods.Enqueue(
-                    new Tuple<MethodInfo?, MethodInfo?>(
-                        initAndCleanupMethods.FirstOrDefault(),
-                        initAndCleanupMethods.LastOrDefault()));
+                new Tuple<MethodInfo?, MethodInfo?>(
+                    initMethod,
+                    initAndCleanupMethods.LastOrDefault()));
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         initAndCleanupMethods = new MethodInfo[2];
@@ -548,7 +572,7 @@ internal class TypeCache : MarshalByRefObject
         TestClassInfo classInfo,
         MethodInfo methodInfo,
         bool isBase,
-        ref MethodInfo[] initAndCleanupMethods)
+        ref MethodInfo?[] initAndCleanupMethods)
     {
         bool isInitializeMethod = IsAssemblyOrClassInitializeMethod<ClassInitializeAttribute>(methodInfo);
         bool isCleanupMethod = IsAssemblyOrClassCleanupMethod<ClassCleanupAttribute>(methodInfo);
@@ -564,11 +588,11 @@ internal class TypeCache : MarshalByRefObject
                     throw new TypeInspectionException(message);
                 }
 
-                classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+                classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromTimeoutAttribute(timeoutAttribute));
             }
             else if (MSTestSettings.CurrentSettings.ClassInitializeTimeout > 0)
             {
-                classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.ClassInitializeTimeout);
+                classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromFixtureSettings(FixtureKind.ClassInitialize));
             }
 
             if (isBase)
@@ -597,11 +621,11 @@ internal class TypeCache : MarshalByRefObject
                     throw new TypeInspectionException(message);
                 }
 
-                classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+                classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromTimeoutAttribute(timeoutAttribute));
             }
             else if (MSTestSettings.CurrentSettings.ClassCleanupTimeout > 0)
             {
-                classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.ClassCleanupTimeout);
+                classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromFixtureSettings(FixtureKind.ClassCleanup));
             }
 
             if (isBase)
@@ -663,11 +687,11 @@ internal class TypeCache : MarshalByRefObject
                     throw new TypeInspectionException(message);
                 }
 
-                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromTimeoutAttribute(timeoutAttribute));
             }
             else if (MSTestSettings.CurrentSettings.TestInitializeTimeout > 0)
             {
-                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.TestInitializeTimeout);
+                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromFixtureSettings(FixtureKind.TestInitialize));
             }
 
             if (!isBase)
@@ -694,11 +718,11 @@ internal class TypeCache : MarshalByRefObject
                     throw new TypeInspectionException(message);
                 }
 
-                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromTimeoutAttribute(timeoutAttribute));
             }
             else if (MSTestSettings.CurrentSettings.TestCleanupTimeout > 0)
             {
-                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.TestCleanupTimeout);
+                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromFixtureSettings(FixtureKind.TestCleanup));
             }
 
             if (!isBase)
@@ -738,16 +762,9 @@ internal class TypeCache : MarshalByRefObject
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
 
         ExpectedExceptionBaseAttribute? expectedExceptionAttribute = _reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod);
-        int timeout = GetTestTimeout(methodInfo, testMethod);
+        TimeoutInfo timeout = GetTestTimeout(methodInfo, testMethod);
 
-        var testMethodOptions = new TestMethodOptions
-        {
-            Timeout = timeout,
-            Executor = GetTestMethodAttribute(methodInfo, testClassInfo),
-            ExpectedException = expectedExceptionAttribute,
-            TestContext = testContext,
-            CaptureDebugTraces = captureDebugTraces,
-        };
+        var testMethodOptions = new TestMethodOptions(timeout, expectedExceptionAttribute, testContext, captureDebugTraces, GetTestMethodAttribute(methodInfo, testClassInfo));
         var testMethodInfo = new TestMethodInfo(methodInfo, testClassInfo, testMethodOptions);
 
         SetCustomProperties(testMethodInfo, testContext);
@@ -855,11 +872,10 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="methodInfo"> The method Info. </param>
     /// <param name="testMethod"> The test Method. </param>
     /// <returns> The timeout value if defined in milliseconds. 0 if not defined. </returns>
-    private int GetTestTimeout(MethodInfo methodInfo, TestMethod testMethod)
+    private TimeoutInfo GetTestTimeout(MethodInfo methodInfo, TestMethod testMethod)
     {
         DebugEx.Assert(methodInfo != null, "TestMethod should be non-null");
         TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
-        int globalTimeout = MSTestSettings.CurrentSettings.TestTimeout;
 
         if (timeoutAttribute != null)
         {
@@ -869,14 +885,10 @@ internal class TypeCache : MarshalByRefObject
                 throw new TypeInspectionException(message);
             }
 
-            return timeoutAttribute.Timeout;
-        }
-        else if (globalTimeout > 0)
-        {
-            return globalTimeout;
+            return TimeoutInfo.FromTimeoutAttribute(timeoutAttribute);
         }
 
-        return TestMethodInfo.TimeoutWhenNotSet;
+        return TimeoutInfo.FromTestTimeoutSettings();
     }
 
     /// <summary>

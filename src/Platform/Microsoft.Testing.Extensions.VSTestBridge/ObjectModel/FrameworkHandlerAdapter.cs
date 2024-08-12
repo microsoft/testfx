@@ -71,7 +71,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         get => _frameworkHandle?.EnableShutdownAfterTestRun ?? false;
         set
         {
-            _logger.LogTraceAsync($"{nameof(FrameworkHandlerAdapter)}.EnableShutdownAfterTestRun: set to {value}").Await();
+            _logger.LogTrace($"{nameof(FrameworkHandlerAdapter)}.EnableShutdownAfterTestRun: set to {value}");
             if (_frameworkHandle is not null)
             {
                 _frameworkHandle.EnableShutdownAfterTestRun = value;
@@ -83,7 +83,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     public int LaunchProcessWithDebuggerAttached(string filePath, string? workingDirectory, string? arguments,
         IDictionary<string, string?>? environmentVariables)
     {
-        _logger.LogTraceAsync($"{nameof(FrameworkHandlerAdapter)}.LaunchProcessWithDebuggerAttached").Await();
+        _logger.LogTrace($"{nameof(FrameworkHandlerAdapter)}.LaunchProcessWithDebuggerAttached");
         return _frameworkHandle?.LaunchProcessWithDebuggerAttached(filePath, workingDirectory, arguments, environmentVariables)
             ?? -1;
     }
@@ -91,7 +91,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     /// <inheritdoc/>
     public void RecordAttachments(IList<AttachmentSet> attachmentSets)
     {
-        _logger.LogTraceAsync($"{nameof(FrameworkHandlerAdapter)}.RecordAttachments").Await();
+        _logger.LogTrace($"{nameof(FrameworkHandlerAdapter)}.RecordAttachments");
         _frameworkHandle?.RecordAttachments(attachmentSets);
         PublishAttachmentsAsync(attachmentSets).Await();
     }
@@ -99,7 +99,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     /// <inheritdoc/>
     public void RecordEnd(TestCase testCase, TestOutcome outcome)
     {
-        _logger.LogTraceAsync($"{nameof(FrameworkHandlerAdapter)}.RecordEnd").Await();
+        _logger.LogTrace($"{nameof(FrameworkHandlerAdapter)}.RecordEnd");
 
         _cancellationToken.ThrowIfCancellationRequested();
 
@@ -112,7 +112,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     /// <inheritdoc/>
     public void RecordResult(TestResult testResult)
     {
-        _logger.LogTraceAsync($"{nameof(FrameworkHandlerAdapter)}.RecordResult").Await();
+        _logger.LogTrace($"{nameof(FrameworkHandlerAdapter)}.RecordResult");
 
         _cancellationToken.ThrowIfCancellationRequested();
 
@@ -133,7 +133,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     /// <inheritdoc/>
     public void RecordStart(TestCase testCase)
     {
-        _logger.LogTraceAsync($"{nameof(FrameworkHandlerAdapter)}.RecordStart").Await();
+        _logger.LogTrace($"{nameof(FrameworkHandlerAdapter)}.RecordStart");
 
         _cancellationToken.ThrowIfCancellationRequested();
 

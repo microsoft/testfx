@@ -30,7 +30,7 @@ internal static class MSTestDiscovererHelpers
         // Populate the runsettings.
         try
         {
-            MSTestSettings.PopulateSettings(discoveryContext);
+            MSTestSettings.PopulateSettings(discoveryContext, messageLogger);
         }
         catch (AdapterSettingsException ex)
         {

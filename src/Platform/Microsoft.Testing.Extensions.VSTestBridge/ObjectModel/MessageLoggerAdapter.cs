@@ -48,14 +48,14 @@ internal sealed class MessageLoggerAdapter : IMessageLogger, IOutputDeviceDataPr
         switch (testMessageLevel)
         {
             case TestMessageLevel.Informational:
-                _logger.LogInformationAsync(message).Await();
+                _logger.LogInformation(message);
                 break;
             case TestMessageLevel.Warning:
-                _logger.LogWarningAsync(message).Await();
+                _logger.LogWarning(message);
                 _outputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateYellowConsoleColorText(message)).Await();
                 break;
             case TestMessageLevel.Error:
-                _logger.LogErrorAsync(message).Await();
+                _logger.LogError(message);
                 _outputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(message)).Await();
                 break;
             default:
