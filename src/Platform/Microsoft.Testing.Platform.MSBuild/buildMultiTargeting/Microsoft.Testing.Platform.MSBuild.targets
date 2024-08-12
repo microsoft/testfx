@@ -134,7 +134,7 @@
   </Target>
 
   <!-- We always include the entry point also if the task _GenerateTestingPlatformInjectEntryPoint is skipped for caching reason -->
-  <Target Name="IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="CoreCompile" >
+  <Target Name="IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="CoreCompile" Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
     <ItemGroup>
       <Compile Include="$(_TestingPlatformEntryPointSourcePath)" />
     </ItemGroup>
