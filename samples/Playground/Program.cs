@@ -3,7 +3,6 @@
 
 using System.Reflection;
 
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,16 +10,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MSTest.Acceptance.IntegrationTests.Messages.V100;
 
 namespace Playground;
-
-public class Contoso
-{
-    public class BuilderHook
-    {
-#pragma warning disable IDE0060 // Remove unused parameter
-        public static void AddExtensions(ITestApplicationBuilder builder, string[] args) { }
-#pragma warning restore IDE0060 // Remove unused parameter
-    }
-}
 
 public class Program
 {
@@ -35,7 +24,6 @@ public class Program
             // Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
-            testApplicationBuilder.AddAutoRegisteredExtensions(args);
 
             // Enable Trx
             // testApplicationBuilder.AddTrxReportProvider();

@@ -17,13 +17,11 @@ public class TestClass
     [TestMethod]
     public void Test()
     {
-        // Thread.Sleep(10_000);
     }
 
     [TestMethod]
     public void Test2()
     {
-        // throw new Exception();
     }
 
     [TestMethod]
