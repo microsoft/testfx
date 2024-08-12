@@ -221,7 +221,7 @@ open System.Runtime.CompilerServices
 type AutoRegisteredExtensions() =
 
     [<Extension>]
-    static member AddAutoRegisteredExtensions (builder: Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args: string[])=
+    static member AddAutoRegisteredExtensions (builder: Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args: string[]) =
         {{extensionsFragments}}
 """;
         }
