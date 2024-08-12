@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project>
   <ItemGroup>
-    <TestingPlatformBuilderHook Include="8E989246-4E23-4AEF-9590-9B45485D3B7D" Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
+    <TestingPlatformBuilderHook Include="8E989246-4E23-4AEF-9590-9B45485D3B7D" >
       <DisplayName>Microsoft.Testing.Extensions.HangDump</DisplayName>
       <TypeFullName>Microsoft.Testing.Extensions.HangDump.TestingPlatformBuilderHook</TypeFullName>
     </TestingPlatformBuilderHook>
