@@ -84,7 +84,7 @@
   <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask"
            AssemblyFile="$(TasksFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
 
-  <Target Name="_GenerateTestingPlatformEntryPointFileInputCache" BeforeTargets="_GenerateTestingPlatformEntryPoint" >
+  <Target Name="_GenerateTestingPlatformEntryPointFileInputCache" BeforeTargets="_GenerateTestingPlatformEntryPoint" Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
     <PropertyGroup>
       <!-- Cache file to check -->
       <_GenerateTestingPlatformEntryPointInputsCachFilePath>$(IntermediateOutputPath)$(MSBuildProjectName).gentestingplatformentrypointinputcache.cache</_GenerateTestingPlatformEntryPointInputsCachFilePath>
@@ -120,7 +120,8 @@
     <_TestingPlatformEntryPointSourcePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_TestingPlatformEntryPointSourcePath)))</_TestingPlatformEntryPointSourcePath>
   </PropertyGroup>
   <Target Name="_GenerateTestingPlatformEntryPoint" BeforeTargets="IncludeGenerateTestingPlatformEntryPointIntoCompilation"
-          Inputs="@(GenerateTestingPlatformEntryPointInputsCacheFilePath)" Outputs="$(_TestingPlatformEntryPointSourcePath)" >
+          Inputs="@(GenerateTestingPlatformEntryPointInputsCacheFilePath)" Outputs="$(_TestingPlatformEntryPointSourcePath)"
+          Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'True' " >
     <TestingPlatformEntryPointTask TestingPlatformEntryPointSourcePath="$(_TestingPlatformEntryPointSourcePath)"
                                   Language="$(Language)"
                                   TestingPlatformBuilderHooks="@(TestingPlatformBuilderHook)"
