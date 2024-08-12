@@ -3,8 +3,6 @@
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
-using Polly.Simmy.Fault;
-
 using SL = Microsoft.Build.Logging.StructuredLogger;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;

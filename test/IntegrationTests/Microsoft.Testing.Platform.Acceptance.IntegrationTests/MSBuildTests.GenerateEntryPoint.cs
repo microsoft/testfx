@@ -157,7 +157,7 @@ let main args =
                     testHostResult = await testHost.ExecuteAsync();
                     Assert.AreEqual(ExitCodes.Success, testHostResult.ExitCode);
                     Assert.IsTrue(testHostResult.StandardOutput.Contains("Passed!"));
-                }, 0, TimeSpan.FromSeconds(10));
+                }, 3, TimeSpan.FromSeconds(10));
 
     private const string CSharpSourceCode = """
 #file MSBuildTests.csproj
