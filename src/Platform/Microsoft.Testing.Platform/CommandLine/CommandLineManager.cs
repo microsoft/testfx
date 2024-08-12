@@ -18,7 +18,7 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, ITestAp
 
     public void AddProvider(Func<ICommandLineOptionsProvider> commandLineProviderFactory)
     {
-        ArgumentGuard.IsNotNull(commandLineProviderFactory);
+        Guard.NotNull(commandLineProviderFactory);
         _commandLineProviderFactory.Add(commandLineProviderFactory);
     }
 

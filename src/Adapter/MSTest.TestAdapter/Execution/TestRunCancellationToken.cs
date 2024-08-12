@@ -60,11 +60,9 @@ public class TestRunCancellationToken
     /// <param name="callback">Callback delegate for handling cancellation.</param>
     public void Register(Action callback)
     {
-        _ = callback ?? throw new ArgumentNullException(nameof(callback));
-
         DebugEx.Assert(_registeredCallback == null, "Callback delegate is already registered, use a new cancellationToken");
 
-        _registeredCallback = callback;
+        _registeredCallback = Guard.NotNull(callback);
     }
 
     /// <summary>

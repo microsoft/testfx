@@ -5,11 +5,7 @@ namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 public sealed class TestNodeUid(string value) : IEquatable<TestNodeUid>
 {
-    public string Value { get; init; } = !RoslynString.IsNullOrWhiteSpace(value)
-        ? value
-#pragma warning disable RS0030 // Do not use banned APIs
-        : throw new ArgumentNullException(nameof(value));
-#pragma warning restore RS0030 // Do not use banned APIs
+    public string Value { get; init; } = Guard.NotNullOrWhiteSpace(value);
 
     public static implicit operator string(TestNodeUid testNode)
         => testNode.Value;
