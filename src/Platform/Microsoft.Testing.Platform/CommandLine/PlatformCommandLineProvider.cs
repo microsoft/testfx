@@ -14,7 +14,7 @@ namespace Microsoft.Testing.Platform.CommandLine;
 internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
 {
     public const string HelpOptionKey = "help";
-    public const string HelpOptionShortName = "?";
+    public const string HelpOptionQuestionMark = "?";
     public const string InfoOptionKey = "info";
     public const string DiagnosticOptionKey = "diagnostic";
     public const string DiagnosticOutputFilePrefixOptionKey = "diagnostic-output-fileprefix";
@@ -58,7 +58,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         new(ExitOnProcessExitOptionKey, PlatformResources.PlatformCommandLineExitOnProcessExitOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
 
         // Hidden options
-        new(HelpOptionShortName, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
+        new(HelpOptionQuestionMark, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
         new(ServerOptionKey, PlatformResources.PlatformCommandLineServerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
         new(PortOptionKey, PlatformResources.PlatformCommandLinePortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(ClientPortOptionKey, PlatformResources.PlatformCommandLineClientPortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
