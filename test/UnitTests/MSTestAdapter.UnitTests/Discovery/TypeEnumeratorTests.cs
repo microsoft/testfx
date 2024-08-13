@@ -285,9 +285,7 @@ public class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        string expectedAsyncTaskName =
-            (methodInfo.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) as AsyncStateMachineAttribute)
-                .StateMachineType.FullName;
+        string expectedAsyncTaskName = methodInfo.GetCustomAttribute<AsyncStateMachineAttribute>().StateMachineType.FullName;
 
         Verify(testElement is not null);
         Verify(expectedAsyncTaskName == testElement.AsyncTypeName);

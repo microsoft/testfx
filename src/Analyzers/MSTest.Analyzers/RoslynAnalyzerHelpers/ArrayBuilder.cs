@@ -173,15 +173,7 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
     /// <summary>
     /// Realizes the array.
     /// </summary>
-    public ImmutableArray<T> ToImmutableOrNull()
-    {
-        if (Count == 0)
-        {
-            return default;
-        }
-
-        return ToImmutable();
-    }
+    public ImmutableArray<T> ToImmutableOrNull() => Count == 0 ? default : ToImmutable();
 
     /// <summary>
     /// Realizes the array, downcasting each element to a derived type.
@@ -208,16 +200,9 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
     /// </summary>
     public ImmutableArray<T> ToImmutableAndFree()
     {
-        ImmutableArray<T> result;
-        if (_builder.Capacity == Count)
-        {
-            result = _builder.MoveToImmutable();
-        }
-        else
-        {
-            result = ToImmutable();
-        }
-
+        ImmutableArray<T> result = _builder.Capacity == Count
+            ? _builder.MoveToImmutable()
+            : ToImmutable();
         Free();
         return result;
     }

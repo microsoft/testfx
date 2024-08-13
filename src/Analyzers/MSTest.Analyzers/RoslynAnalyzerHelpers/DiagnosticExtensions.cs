@@ -121,12 +121,9 @@ internal static class FixtureUtils
         params object[] args)
     {
         IEnumerable<Location> inSource = locations.Where(l => l.IsInSource);
-        if (!inSource.Any())
-        {
-            return Diagnostic.Create(rule, null, args);
-        }
-
-        return Diagnostic.Create(rule,
+        return !inSource.Any()
+            ? Diagnostic.Create(rule, null, args)
+            : Diagnostic.Create(rule,
                  location: inSource.First(),
                  additionalLocations: inSource.Skip(1),
                  properties: properties,
@@ -204,16 +201,9 @@ internal static class FixtureUtils
                     {
                         // public abstract bool TryGetDiagnosticValue(SyntaxTree tree, string diagnosticId, out ReportDiagnostic severity);
                         // public abstract bool TryGetDiagnosticValue(SyntaxTree tree, string diagnosticId, CancellationToken cancellationToken, out ReportDiagnostic severity);
-                        object?[] parameters;
-                        if (syntaxTreeOptionsProviderTryGetDiagnosticValueMethod.GetParameters().Length == 3)
-                        {
-                            parameters = [tree, rule.Id, null];
-                        }
-                        else
-                        {
-                            parameters = [tree, rule.Id, CancellationToken.None, null];
-                        }
-
+                        object?[] parameters = syntaxTreeOptionsProviderTryGetDiagnosticValueMethod.GetParameters().Length == 3
+                            ? [tree, rule.Id, null]
+                            : [tree, rule.Id, CancellationToken.None, null];
                         if (syntaxTreeOptionsProviderTryGetDiagnosticValueMethod.Invoke(syntaxTreeOptionsProvider, parameters) is true &&
                             parameters.Last() is ReportDiagnostic value)
                         {

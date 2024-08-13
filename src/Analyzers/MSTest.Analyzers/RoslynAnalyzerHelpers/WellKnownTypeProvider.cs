@@ -84,14 +84,9 @@ public class WellKnownTypeProvider
     public bool TryGetOrCreateTypeByMetadataName(
         string fullTypeName,
         [NotNullWhen(returnValue: true)] out INamedTypeSymbol? namedTypeSymbol)
-    {
-        if (_fullNameToTypeMap.TryGetValue(fullTypeName, out namedTypeSymbol))
-        {
-            return namedTypeSymbol is not null;
-        }
-
-        return TryGetOrCreateTypeByMetadataNameSlow(fullTypeName, out namedTypeSymbol);
-    }
+        => _fullNameToTypeMap.TryGetValue(fullTypeName, out namedTypeSymbol)
+            ? namedTypeSymbol is not null
+            : TryGetOrCreateTypeByMetadataNameSlow(fullTypeName, out namedTypeSymbol);
 
     private bool TryGetOrCreateTypeByMetadataNameSlow(
         string fullTypeName,
@@ -109,18 +104,12 @@ public class WellKnownTypeProvider
 
                 INamedTypeSymbol? type = null;
 
-                ImmutableArray<string> namespaceNames;
-                // Assuming we're on .NET Standard 2.0 or later, cache the type names that are probably compile time constants.
-                if (string.IsInterned(fullTypeName) != null)
-                {
-                    namespaceNames = _fullTypeNameToNamespaceNames.GetOrAdd(
+                ImmutableArray<string> namespaceNames = string.IsInterned(fullTypeName) != null
+                    ? _fullTypeNameToNamespaceNames.GetOrAdd(
                         fullTypeName,
-                        GetNamespaceNamesFromFullTypeName);
-                }
-                else
-                {
-                    namespaceNames = GetNamespaceNamesFromFullTypeName(fullTypeName);
-                }
+                        GetNamespaceNamesFromFullTypeName)
+                    : GetNamespaceNamesFromFullTypeName(fullTypeName);
+                // Assuming we're on .NET Standard 2.0 or later, cache the type names that are probably compile time constants.
 
                 if (IsSubsetOfCollection(namespaceNames, Compilation.Assembly.NamespaceNames))
                 {

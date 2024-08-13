@@ -199,7 +199,7 @@ internal class AnsiTerminal : ITerminal
                 && (path[_baseDirectory.Length] == Path.DirectorySeparatorChar
                     || path[_baseDirectory.Length] == Path.AltDirectorySeparatorChar))
             {
-                path = path.Substring(_baseDirectory.Length + 1);
+                path = path[(_baseDirectory.Length + 1)..];
             }
         }
 
