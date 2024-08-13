@@ -7,7 +7,6 @@ using System.Reflection;
 #endif
 
 using System.Globalization;
-using System.Text;
 using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform.Helpers;
