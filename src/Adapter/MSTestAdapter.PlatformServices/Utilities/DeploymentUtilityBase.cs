@@ -5,7 +5,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
@@ -186,7 +185,7 @@ internal abstract class DeploymentUtilityBase
 
                     // Ignore the test platform files.
                     string tempFile = Path.GetFileName(fileToDeploy);
-                    string assemblyName = Path.GetFileName(GetType().GetTypeInfo().Assembly.Location);
+                    string assemblyName = Path.GetFileName(GetType().Assembly.Location);
                     if (tempFile.Equals(assemblyName, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;

@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
-using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -36,7 +35,7 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
     {
         Guard.NotNull(exceptionType);
 
-        if (!typeof(Exception).IsAssignableFrom(exceptionType.GetTypeInfo()))
+        if (!typeof(Exception).IsAssignableFrom(exceptionType))
         {
             throw new ArgumentException(
                     FrameworkMessages.UTF_ExpectedExceptionTypeMustDeriveFromException,
@@ -85,7 +84,7 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
         Type thrownExceptionType = exception.GetType();
         if (AllowDerivedTypes)
         {
-            if (!ExceptionType.IsAssignableFrom(thrownExceptionType.GetTypeInfo()))
+            if (!ExceptionType.IsAssignableFrom(thrownExceptionType))
             {
                 // If the exception is an AssertFailedException or an AssertInconclusiveException, then re-throw it to
                 // preserve the test outcome and error message

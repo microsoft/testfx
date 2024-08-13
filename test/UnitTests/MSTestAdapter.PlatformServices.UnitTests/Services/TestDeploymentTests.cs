@@ -75,7 +75,7 @@ public class TestDeploymentTests : TestContainer
             typeof(TestDeploymentTests).GetMethod(
                 "GetDeploymentItemsReturnsDeploymentItems");
         SetupDeploymentItems(memberInfo, methodLevelDeploymentItems);
-        SetupDeploymentItems(typeof(TestDeploymentTests).GetTypeInfo(), classLevelDeploymentItems);
+        SetupDeploymentItems(typeof(TestDeploymentTests), classLevelDeploymentItems);
 
         // Act.
         KeyValuePair<string, string>[] deploymentItems = testDeployment.GetDeploymentItems(memberInfo, typeof(TestDeploymentTests), _warnings);

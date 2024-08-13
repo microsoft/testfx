@@ -3,7 +3,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -125,9 +124,8 @@ public sealed partial class Assert
             ThrowAssertFailed("Assert.IsInstanceOfType", BuildUserMessage(message, parameters));
         }
 
-        TypeInfo elementTypeInfo = value.GetType().GetTypeInfo();
-        TypeInfo expectedTypeInfo = expectedType.GetTypeInfo();
-        if (!expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
+        Type elementType = value.GetType();
+        if (!expectedType.IsAssignableFrom(elementType))
         {
             string userMessage = BuildUserMessage(message, parameters);
             string finalMessage = string.Format(
@@ -262,9 +260,8 @@ public sealed partial class Assert
             return;
         }
 
-        TypeInfo elementTypeInfo = value.GetType().GetTypeInfo();
-        TypeInfo expectedTypeInfo = wrongType.GetTypeInfo();
-        if (expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
+        Type elementType = value.GetType();
+        if (wrongType.IsAssignableFrom(elementType))
         {
             string userMessage = BuildUserMessage(message, parameters);
             string finalMessage = string.Format(

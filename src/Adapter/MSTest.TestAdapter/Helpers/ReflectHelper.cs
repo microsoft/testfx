@@ -227,7 +227,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="type">The type declared in the assembly to check.</param>
     /// <returns>True if the method is declared in the assembly where the type is declared.</returns>
     internal virtual bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
-        => method.DeclaringType!.Assembly.Equals(type.GetTypeInfo().Assembly); // TODO: Investigate if we rely on NRE
+        => method.DeclaringType!.Assembly.Equals(type.Assembly); // TODO: Investigate if we rely on NRE
 
     /// <summary>
     /// Get categories applied to the test method.

@@ -394,8 +394,7 @@ internal class TypeCache : MarshalByRefObject
             try
             {
                 // Only examine classes which are TestClass or derives from TestClass attribute
-                TypeInfo typeInfo = t.GetTypeInfo();
-                if (!_reflectionHelper.IsDerivedAttributeDefined<TestClassAttribute>(typeInfo, inherit: true))
+                if (!_reflectionHelper.IsDerivedAttributeDefined<TestClassAttribute>(t, inherit: true))
                 {
                     continue;
                 }

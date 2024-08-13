@@ -100,7 +100,7 @@ public class DesktopTestDeploymentTests : TestContainer
 
     public void DeployShouldCreateDeploymentDirectories()
     {
-        TestCase testCase = GetTestCase(typeof(DesktopTestDeploymentTests).GetTypeInfo().Assembly.Location);
+        TestCase testCase = GetTestCase(typeof(DesktopTestDeploymentTests).Assembly.Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);

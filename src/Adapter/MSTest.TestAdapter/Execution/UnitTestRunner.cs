@@ -4,7 +4,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
 using System.Security;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -342,7 +341,7 @@ internal class UnitTestRunner : MarshalByRefObject
 
         if (isIgnoreAttributeOnClass)
         {
-            ignoreMessage = _reflectHelper.GetIgnoreMessage(testMethodInfo.Parent.ClassType.GetTypeInfo());
+            ignoreMessage = _reflectHelper.GetIgnoreMessage(testMethodInfo.Parent.ClassType);
         }
 
         if (StringEx.IsNullOrEmpty(ignoreMessage) && isIgnoreAttributeOnMethod)
