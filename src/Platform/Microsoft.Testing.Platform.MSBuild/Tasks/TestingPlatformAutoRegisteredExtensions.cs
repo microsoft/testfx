@@ -222,7 +222,7 @@ type SelfRegisteredExtensions() =
 
     [<Extension>]
     static member AddSelfRegisteredExtensions (builder: Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args: string[]) =
-        {{extensionsFragments}}
+        {{(extensionsFragments.Length > 0 ? extensionsFragments : "()")}}
 """;
         }
 
