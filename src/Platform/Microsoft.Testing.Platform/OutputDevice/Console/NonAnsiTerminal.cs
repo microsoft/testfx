@@ -174,7 +174,7 @@ internal class NonAnsiTerminal : ITerminal
                     continue;
                 }
 
-                string durationString = $" ({p.Stopwatch.Elapsed.TotalSeconds:F1}s)";
+                string durationString = HumanReadableDurationFormatter.Render(p.Stopwatch.Elapsed);
 
                 int passed = p.Passed;
                 int failed = p.Failed;
