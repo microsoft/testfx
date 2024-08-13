@@ -3,11 +3,13 @@
 
 #if NETCOREAPP
 using System.Buffers;
+
+using Microsoft.Testing.Platform.Helpers;
 #endif
+
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
 
-using Microsoft.Testing.Platform.Helpers;
 #if NET
 using Microsoft.Testing.Platform.Resources;
 #endif
@@ -27,7 +29,7 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 
     public NamedPipeClient(string name)
     {
-        ArgumentGuard.IsNotNull(name);
+        Guard.NotNull(name);
         _namedPipeClientStream = new(".", name, PipeDirection.InOut);
         PipeName = name;
     }

@@ -25,13 +25,13 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
     /// <param name="isBuiltIn">Indicates whether the command line option is built-in.</param>
     internal CommandLineOption(string name, string description, ArgumentArity arity, bool isHidden, bool isBuiltIn)
     {
-        ArgumentGuard.IsNotNullOrWhiteSpace(name);
-        ArgumentGuard.IsNotNullOrWhiteSpace(description);
+        Guard.NotNullOrWhiteSpace(name);
+        Guard.NotNullOrWhiteSpace(description);
         ArgumentGuard.Ensure(arity.Max >= arity.Min, nameof(arity), PlatformResources.CommandLineInvalidArityErrorMessage);
 
         for (int i = 0; i < name.Length; i++)
         {
-            ArgumentGuard.Ensure(char.IsLetter(name[i]) || name[i] == '-', nameof(name), string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidOptionName, name));
+            ArgumentGuard.Ensure(char.IsLetter(name[i]) || name[i] == '-' || name[i] == '?', nameof(name), string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidOptionName, name));
         }
 
         Name = name;

@@ -427,29 +427,8 @@ The type declaring these methods should also respect the following rules:
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</value>
   </data>
-  <data name="TestMethodShouldBeValidMessageFormat_NotAbstract" xml:space="preserve">
-    <value>Test method '{0}' should not be 'abstract'</value>
-  </data>
-  <data name="TestMethodShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
-    <value>Test method '{0}' should not be 'async void'</value>
-  </data>
-  <data name="TestMethodShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
-    <value>Test method '{0}' should not be generic</value>
-  </data>
-  <data name="TestMethodShouldBeValidMessageFormat_NotStatic" xml:space="preserve">
-    <value>Test method '{0}' should not be 'static'</value>
-  </data>
-  <data name="TestMethodShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
-    <value>Test method '{0}' should be an 'ordinary' method</value>
-  </data>
-  <data name="TestMethodShouldBeValidMessageFormat_Public" xml:space="preserve">
-    <value>Test method '{0}' should be 'public'</value>
-  </data>
-  <data name="TestMethodShouldBeValidMessageFormat_PublicOrInternal" xml:space="preserve">
-    <value>Test method '{0}' should be 'public' or 'internal'</value>
-  </data>
-  <data name="TestMethodShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
-    <value>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
+  <data name="TestMethodShouldBeValidMessageFormat" xml:space="preserve">
+    <value>Test method '{0}' signature is invalid</value>
   </data>
   <data name="TestMethodShouldBeValidTitle" xml:space="preserve">
     <value>Test methods should have valid layout</value>

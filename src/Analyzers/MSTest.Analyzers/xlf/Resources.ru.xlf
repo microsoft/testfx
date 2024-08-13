@@ -451,6 +451,11 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Общедоступные типы должны быть тестовыми классами</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat">
+        <source>Test method '{0}' signature is invalid</source>
+        <target state="translated">Подпись тестового метода "{0}" недействительна</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
         <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
         <target state="translated">Без использования "ClassCleanupBehavior.EndOfClass" "[ClassCleanup]" по умолчанию будет выполняться в конце сборки, а не в конце класса.</target>
@@ -664,46 +669,6 @@ The type declaring these methods should also respect the following rules:
 - возвращаемый тип должен быть "void", "Task" или "ValueTask"
 – не следует присваивать значение "async void"
 – это должен быть специальный метод (метод завершения, оператор...).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
-        <source>Test method '{0}' should not be 'abstract'</source>
-        <target state="translated">Метод теста "{0}" не должен использовать значение "abstract"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>Test method '{0}' should not be 'async void'</source>
-        <target state="translated">Метод теста "{0}" не должен использовать значение "async void"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotGeneric">
-        <source>Test method '{0}' should not be generic</source>
-        <target state="translated">Метод теста "{0}" не должен быть универсальным</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotStatic">
-        <source>Test method '{0}' should not be 'static'</source>
-        <target state="translated">Метод теста "{0}" не должен использовать значение "static"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_Ordinary">
-        <source>Test method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">Метод теста "{0}" должен быть методом "ordinary"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_Public">
-        <source>Test method '{0}' should be 'public'</source>
-        <target state="translated">Методу теста "{0}" должно быть присвоено значение "public"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Test method '{0}' should be 'public' or 'internal'</source>
-        <target state="translated">Методу теста "{0}" должно быть присвоено значение "public" или "internal"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
-        <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Метод теста "{0}" должен возвращать значение "void", "Task" или "ValueTask"</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">

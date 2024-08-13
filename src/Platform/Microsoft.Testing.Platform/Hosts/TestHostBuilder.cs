@@ -35,7 +35,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
 {
-    private const string ServerOptionValue = "dotnettestcli";
+    private const string DotnetTestCliProtocol = "dotnettestcli";
 
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
@@ -383,7 +383,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AddServices(testApplicationLifecycleCallback);
 
         // ServerMode and Console mode uses different host
-        if (commandLineHandler.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey))
+        if (commandLineHandler.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && !HasDotnetTestServerOption(commandLineHandler))
         {
             // Build the server mode with the user preferences
             IMessageHandlerFactory messageHandlerFactory = ((ServerModeManager)ServerMode).Build(serviceProvider);
@@ -437,7 +437,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 BuildTestFrameworkAsync,
                 (TestFrameworkManager)TestFramework,
                 (TestHostManager)TestHost,
-                dotnetTestPipeClient);
+                dotnetTestPipeClient,
+                _testApplicationModuleInfo);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
             ITestHost actualTestHost = testControllerConnection is not null
@@ -483,9 +484,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // If we are in server mode and the pipe name is provided
         // then, we need to connect to the pipe server.
-        if (commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
-            serverArgs.Length == 1 &&
-            serverArgs[0].Equals(ServerOptionValue, StringComparison.Ordinal) &&
+        if (HasDotnetTestServerOption(commandLineHandler) &&
             commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
         {
             namedPipeClient = new(arguments[0]);
@@ -496,6 +495,11 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         return namedPipeClient;
     }
+
+    private static bool HasDotnetTestServerOption(CommandLineHandler commandLineHandler) =>
+        commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
+        serverArgs.Length == 1 &&
+        serverArgs[0].Equals(DotnetTestCliProtocol, StringComparison.Ordinal);
 
     private static async Task<NamedPipeClient?> ConnectToTestHostProcessMonitorIfAvailableAsync(
         IProcessHandler processHandler,
@@ -607,7 +611,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         DotnetTestDataConsumer? dotnetTestDataConsumer = null;
         if (testFrameworkBuilderData.DotnetTestPipeClient is not null)
         {
-            dotnetTestDataConsumer = new DotnetTestDataConsumer(testFrameworkBuilderData.DotnetTestPipeClient);
+            dotnetTestDataConsumer = new DotnetTestDataConsumer(testFrameworkBuilderData.DotnetTestPipeClient, _testApplicationModuleInfo);
         }
 
         // Build and register "common non special" services - we need special treatment because extensions can start to log during the
@@ -740,7 +744,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
         TestFrameworkManager testFrameworkManager,
         TestHostManager testHostManager,
-        NamedPipeClient? dotnetTestPipeClient)
+        NamedPipeClient? dotnetTestPipeClient,
+        ITestApplicationModuleInfo testApplicationModuleInfo)
         => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager, dotnetTestPipeClient);
 
     protected virtual bool SkipAddingService(object service) => false;

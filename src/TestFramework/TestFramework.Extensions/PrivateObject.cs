@@ -36,7 +36,7 @@ public class PrivateObject
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We don't know anything about the object other than that it's an object, so 'obj' seems reasonable")]
     public PrivateObject(object obj, string memberToAccess)
     {
-        _ = obj ?? throw new ArgumentNullException(nameof(obj));
+        Guard.NotNull(obj);
         ValidateAccessString(memberToAccess);
 
         var temp = obj as PrivateObject;
@@ -79,8 +79,8 @@ public class PrivateObject
     public PrivateObject(string assemblyName, string typeName, Type[]? parameterTypes, object?[]? args)
         : this(Type.GetType(string.Format(CultureInfo.InvariantCulture, "{0}, {1}", typeName, assemblyName), false), parameterTypes, args)
     {
-        _ = assemblyName ?? throw new ArgumentNullException(nameof(assemblyName));
-        _ = typeName ?? throw new ArgumentNullException(nameof(typeName));
+        Guard.NotNull(assemblyName);
+        Guard.NotNull(typeName);
     }
 
     /// <summary>
@@ -90,10 +90,8 @@ public class PrivateObject
     /// <param name="type">type of the object to create.</param>
     /// <param name="args">Arguments to pass to the constructor.</param>
     public PrivateObject(Type type, params object?[]? args)
-        : this(type, null, args)
-    {
-        Guard.IsNotNull(type, "type", string.Empty);
-    }
+        : this(type, null, args) =>
+        Guard.NotNull(type);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PrivateObject"/> class that wraps the
@@ -104,11 +102,12 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the constructor.</param>
     public PrivateObject(Type type, Type[]? parameterTypes, object?[]? args)
     {
-        Guard.IsNotNull(type, "type", string.Empty);
+        Guard.NotNull(type);
         object? o;
         if (parameterTypes != null)
         {
-            ConstructorInfo? ci = type.GetConstructor(BindToEveryThing, null, parameterTypes, null) ?? throw new ArgumentException(FrameworkMessages.PrivateAccessorConstructorNotFound);
+            ConstructorInfo ci = type.GetConstructor(BindToEveryThing, null, parameterTypes, null)
+                                 ?? throw new ArgumentException(FrameworkMessages.PrivateAccessorConstructorNotFound);
             try
             {
                 o = ci.Invoke(args);
@@ -129,10 +128,7 @@ public class PrivateObject
             o = Activator.CreateInstance(type, ConstructorFlags, null, args, null);
         }
 
-        // Kept for compat reasons
-#pragma warning disable CA2208 // Instantiate argument exceptions correctly
-        _ = o ?? throw new ArgumentNullException(nameof(o));
-#pragma warning restore CA2208 // Instantiate argument exceptions correctly
+        Guard.NotNull(o);
         _target = o;
         RealType = o.GetType();
     }
@@ -145,7 +141,7 @@ public class PrivateObject
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We don't know anything about the object other than that it's an object, so 'obj' seems reasonable")]
     public PrivateObject(object obj)
     {
-        _ = obj ?? throw new ArgumentNullException(nameof(obj));
+        Guard.NotNull(obj);
         _target = obj;
         RealType = obj.GetType();
     }
@@ -159,7 +155,7 @@ public class PrivateObject
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We don't know anything about the object other than that it's an object, so 'obj' seems reasonable")]
     public PrivateObject(object obj, PrivateType type)
     {
-        _ = type ?? throw new ArgumentNullException(nameof(type));
+        Guard.NotNull(type);
         _target = obj;
         RealType = type.ReferencedType;
     }
@@ -172,10 +168,9 @@ public class PrivateObject
     public object Target
     {
         get => _target;
-
         set
         {
-            _ = value ?? throw new ArgumentNullException(nameof(Target));
+            Guard.NotNull(value);
             _target = value;
             RealType = value.GetType();
         }
@@ -236,7 +231,7 @@ public class PrivateObject
     /// <returns>Result of method call.</returns>
     public object? Invoke(string name, params object?[]? args)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         return Invoke(name, null, args, CultureInfo.InvariantCulture);
     }
 
@@ -330,7 +325,7 @@ public class PrivateObject
     /// <returns>Result of method call.</returns>
     public object? Invoke(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args, CultureInfo? culture, Type[]? typeArguments)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         if (parameterTypes == null)
         {
             return InvokeHelper(name, bindingFlags | BindingFlags.InvokeMethod, args, culture);
@@ -391,7 +386,7 @@ public class PrivateObject
     /// <returns>An array of elements.</returns>
     public object GetArrayElement(string name, params int[] indices)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         return GetArrayElement(name, BindToEveryThing, indices);
     }
 
@@ -403,7 +398,7 @@ public class PrivateObject
     /// <param name="indices">the indices of array.</param>
     public void SetArrayElement(string name, object value, params int[] indices)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         SetArrayElement(name, BindToEveryThing, value, indices);
     }
 
@@ -416,7 +411,7 @@ public class PrivateObject
     /// <returns>An array of elements.</returns>
     public object GetArrayElement(string name, BindingFlags bindingFlags, params int[] indices)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         var arr = (Array?)InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
         DebugEx.Assert(arr is not null, "arr should not be null");
         return arr.GetValue(indices);
@@ -431,7 +426,7 @@ public class PrivateObject
     /// <param name="indices">the indices of array.</param>
     public void SetArrayElement(string name, BindingFlags bindingFlags, object value, params int[] indices)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         var arr = (Array?)InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
         DebugEx.Assert(arr is not null, "arr should not be null");
         arr.SetValue(value, indices);
@@ -444,7 +439,7 @@ public class PrivateObject
     /// <returns>The field.</returns>
     public object? GetField(string name)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         return GetField(name, BindToEveryThing);
     }
 
@@ -455,7 +450,7 @@ public class PrivateObject
     /// <param name="value">value to set.</param>
     public void SetField(string name, object value)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         SetField(name, BindToEveryThing, value);
     }
 
@@ -467,7 +462,7 @@ public class PrivateObject
     /// <returns>The field.</returns>
     public object? GetField(string name, BindingFlags bindingFlags)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         return InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
     }
 
@@ -479,7 +474,7 @@ public class PrivateObject
     /// <param name="value">value to set.</param>
     public void SetField(string name, BindingFlags bindingFlags, object? value)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         InvokeHelper(name, BindingFlags.SetField | bindingFlags, [value], CultureInfo.InvariantCulture);
     }
 
@@ -490,7 +485,7 @@ public class PrivateObject
     /// <returns>The field or property.</returns>
     public object? GetFieldOrProperty(string name)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         return GetFieldOrProperty(name, BindToEveryThing);
     }
 
@@ -501,7 +496,7 @@ public class PrivateObject
     /// <param name="value">value to set.</param>
     public void SetFieldOrProperty(string name, object value)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         SetFieldOrProperty(name, BindToEveryThing, value);
     }
 
@@ -513,7 +508,7 @@ public class PrivateObject
     /// <returns>The field or property.</returns>
     public object? GetFieldOrProperty(string name, BindingFlags bindingFlags)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         return InvokeHelper(name, BindingFlags.GetField | BindingFlags.GetProperty | bindingFlags, null, CultureInfo.InvariantCulture);
     }
 
@@ -525,7 +520,7 @@ public class PrivateObject
     /// <param name="value">value to set.</param>
     public void SetFieldOrProperty(string name, BindingFlags bindingFlags, object? value)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         InvokeHelper(name, BindingFlags.SetField | BindingFlags.SetProperty | bindingFlags, [value], CultureInfo.InvariantCulture);
     }
 
@@ -582,14 +577,14 @@ public class PrivateObject
     /// <returns>The property.</returns>
     public object? GetProperty(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         if (parameterTypes == null)
         {
             return InvokeHelper(name, bindingFlags | BindingFlags.GetProperty, args, null);
         }
 
-        PropertyInfo? pi = RealType.GetProperty(name, bindingFlags, null, null, parameterTypes, null) ?? throw new ArgumentException(
-                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
+        PropertyInfo pi = RealType.GetProperty(name, bindingFlags, null, null, parameterTypes, null)
+                          ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
         return pi.GetValue(_target, args);
     }
 
@@ -612,7 +607,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetProperty(string name, BindingFlags bindingFlags, object? value, Type[]? parameterTypes, object?[]? args)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
 
         if (parameterTypes == null)
         {
@@ -623,7 +618,7 @@ public class PrivateObject
             return;
         }
 
-        PropertyInfo? pi = RealType.GetProperty(name, bindingFlags, null, null, parameterTypes, null)
+        PropertyInfo pi = RealType.GetProperty(name, bindingFlags, null, null, parameterTypes, null)
             ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
 
         pi.SetValue(_target, value, args);
@@ -637,7 +632,7 @@ public class PrivateObject
     /// <param name="access"> access string.</param>
     private static void ValidateAccessString(string access)
     {
-        _ = access ?? throw new ArgumentNullException(nameof(access));
+        Guard.NotNull(access);
         if (access.Length == 0)
         {
             throw new ArgumentException(FrameworkMessages.AccessStringInvalidSyntax);
@@ -663,7 +658,7 @@ public class PrivateObject
     /// <returns>Result of the invocation.</returns>
     private object? InvokeHelper(string name, BindingFlags bindingFlags, object?[]? args, CultureInfo? culture)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
         DebugEx.Assert(_target != null, "Internal Error: Null reference is returned for internal object");
 
         // Invoke the actual Method

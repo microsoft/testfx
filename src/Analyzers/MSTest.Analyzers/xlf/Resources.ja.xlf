@@ -447,6 +447,11 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">パブリック型はテスト クラスである必要があります</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat">
+        <source>Test method '{0}' signature is invalid</source>
+        <target state="translated">テスト メソッド '{0}' シグネチャが無効です</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
         <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
         <target state="translated">'ClassCleanupBehavior.EndOfClass' を使用しない場合、'[ClassCleanup]' は既定でアセンブリの最後に実行され、クラスの最後には実行されません。</target>
@@ -655,46 +660,6 @@ The type declaring these methods should also respect the following rules:
 - 戻り値の型は 'void'、'Task'、または 'ValueTask' である必要があります
 - 'async void' にすることはできません
 - 特殊なメソッド (ファイナライザー、演算子...) にすることはできません。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
-        <source>Test method '{0}' should not be 'abstract'</source>
-        <target state="translated">テスト メソッド '{0}' を 'abstract' にすることはできません</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>Test method '{0}' should not be 'async void'</source>
-        <target state="translated">テスト メソッド '{0}' を 'async void' にすることはできません</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotGeneric">
-        <source>Test method '{0}' should not be generic</source>
-        <target state="translated">テスト メソッド '{0}' をジェネリックにすることはできません</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotStatic">
-        <source>Test method '{0}' should not be 'static'</source>
-        <target state="translated">テスト メソッド '{0}' を 'static' にすることはできません</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_Ordinary">
-        <source>Test method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">テスト メソッド '{0}' は '通常' メソッドである必要があります</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_Public">
-        <source>Test method '{0}' should be 'public'</source>
-        <target state="translated">テスト メソッド '{0}' は 'public' である必要があります</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Test method '{0}' should be 'public' or 'internal'</source>
-        <target state="translated">テスト メソッド '{0}' は 'public' または 'internal' である必要があります</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
-        <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">テスト メソッド '{0}' は 'void'、'Task'、または 'ValueTask' を返す必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">

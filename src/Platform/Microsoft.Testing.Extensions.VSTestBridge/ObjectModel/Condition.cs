@@ -7,7 +7,6 @@ using System.Globalization;
 using System.Text;
 
 using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
@@ -278,8 +277,7 @@ internal sealed class Condition
 
     internal static IEnumerable<string> TokenizeFilterConditionString(string str)
     {
-        ArgumentGuard.IsNotNull(str);
-        return TokenizeFilterConditionStringWorker(str);
+        return TokenizeFilterConditionStringWorker(Guard.NotNull(str));
 
         static IEnumerable<string> TokenizeFilterConditionStringWorker(string s)
         {
