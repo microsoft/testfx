@@ -146,7 +146,7 @@ public class TestMethodInfo : ITestMethod
             // If this is a params array parameter, create an instance to
             // populate with any extra values provided. Don't increment
             // required parameter count - params arguments are not actually required
-            if (parameter.GetCustomAttribute(typeof(ParamArrayAttribute)) != null)
+            if (parameter.GetCustomAttribute<ParamArrayAttribute>() != null)
             {
                 hasParamsValue = true;
                 break;
@@ -412,7 +412,9 @@ public class TestMethodInfo : ITestMethod
             && RuntimeContext.IsHotReloadEnabled
             && missingMethodException.StackTrace?.IndexOf(Environment.NewLine, StringComparison.Ordinal) is { } lineReturnIndex
             && lineReturnIndex >= 0
+#pragma warning disable IDE0057 // Use range operator
             && missingMethodException.StackTrace.Substring(0, lineReturnIndex).Contains($"{className}.{methodName}"))
+#pragma warning restore IDE0057 // Use range operator
         {
             return new TestFailedException(ObjectModelUnitTestOutcome.NotFound, missingMethodException.Message, missingMethodException);
         }

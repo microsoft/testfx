@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -51,35 +51,35 @@ public class MSTestDiscovererTests : TestContainer
 
     public void MSTestDiscovererHasMSTestAdapterAsExecutorUri()
     {
-        DefaultExecutorUriAttribute attribute = typeof(MSTestDiscoverer).GetCustomAttributes(typeof(DefaultExecutorUriAttribute)).Cast<DefaultExecutorUriAttribute>().First();
+        DefaultExecutorUriAttribute attribute = typeof(MSTestDiscoverer).GetCustomAttributes<DefaultExecutorUriAttribute>().First();
         Verify(attribute is not null);
         Verify(attribute.ExecutorUri == "executor://MSTestAdapter/v2");
     }
 
     public void MSTestDiscovererHasXapAsFileExtension()
     {
-        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
+        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
         Verify(attributes is not null);
         Verify(attributes.Count(attribute => attribute.FileExtension == ".xap") == 1);
     }
 
     public void MSTestDiscovererHasAppxAsFileExtension()
     {
-        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
+        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
         Verify(attributes is not null);
         Verify(attributes.Count(attribute => attribute.FileExtension == ".appx") == 1);
     }
 
     public void MSTestDiscovererHasDllAsFileExtension()
     {
-        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
+        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
         Verify(attributes is not null);
         Verify(attributes.Count(attribute => attribute.FileExtension == ".dll") == 1);
     }
 
     public void MSTestDiscovererHasExeAsFileExtension()
     {
-        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
+        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
         Verify(attributes is not null);
         Verify(attributes.Count(attribute => attribute.FileExtension == ".exe") == 1);
     }

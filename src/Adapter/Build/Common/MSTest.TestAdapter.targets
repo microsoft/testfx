@@ -3,6 +3,7 @@
   <!-- Handle the coexistence between testing platform and Microsoft.NET.Test.Sdk  -->
   <PropertyGroup>
     <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' ">$(EnableMSTestRunner)</GenerateTestingPlatformEntryPoint>
+    <GenerateSelfRegisteredExtensions Condition=" '$(GenerateSelfRegisteredExtensions)' == '' ">$(EnableMSTestRunner)</GenerateSelfRegisteredExtensions>
     <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
     <DisableTestingPlatformServerCapability Condition=" '$(EnableMSTestRunner)' == 'false' or '$(EnableMSTestRunner)' == '' " >true</DisableTestingPlatformServerCapability>
   </PropertyGroup>

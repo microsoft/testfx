@@ -1,9 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -125,9 +124,8 @@ public sealed partial class Assert
             ThrowAssertFailed("Assert.IsInstanceOfType", BuildUserMessage(message, parameters));
         }
 
-        TypeInfo elementTypeInfo = value.GetType().GetTypeInfo();
-        TypeInfo expectedTypeInfo = expectedType.GetTypeInfo();
-        if (!expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
+        Type elementType = value.GetType();
+        if (!expectedType.IsAssignableFrom(elementType))
         {
             string userMessage = BuildUserMessage(message, parameters);
             string finalMessage = string.Format(
@@ -157,7 +155,9 @@ public sealed partial class Assert
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
+#pragma warning disable CA2263 // Prefer generic overload when type is known
         IsInstanceOfType(value, typeof(T), message, parameters);
+#pragma warning restore CA2263 // Prefer generic overload when type is known
         instance = (T)value;
     }
 
@@ -260,9 +260,8 @@ public sealed partial class Assert
             return;
         }
 
-        TypeInfo elementTypeInfo = value.GetType().GetTypeInfo();
-        TypeInfo expectedTypeInfo = wrongType.GetTypeInfo();
-        if (expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
+        Type elementType = value.GetType();
+        if (wrongType.IsAssignableFrom(elementType))
         {
             string userMessage = BuildUserMessage(message, parameters);
             string finalMessage = string.Format(

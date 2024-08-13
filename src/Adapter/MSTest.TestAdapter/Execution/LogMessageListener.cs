@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -118,9 +118,7 @@ public class LogMessageListener : IDisposable
 
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
     public string? GetAndClearDebugTrace()
-    {
-        return s_redirectedDebugTrace?.ToStringAndClear();
-    }
+        => s_redirectedDebugTrace?.ToStringAndClear();
 
     public void Dispose()
     {

@@ -60,9 +60,9 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributes()
     {
-        TypeInfo typeInfo = typeof(DummyBaseTestClass).GetTypeInfo();
+        Type type = typeof(DummyBaseTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(typeInfo, false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type, false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
@@ -73,9 +73,9 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        TypeInfo typeInfo = typeof(DummyTestClass).GetTypeInfo();
+        Type type = typeof(DummyTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(typeInfo, false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type, false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
@@ -86,9 +86,9 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
-        TypeInfo methodInfo = typeof(DummyTestClass).GetTypeInfo();
+        Type method = typeof(DummyTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, true);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(method, true);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 2);
@@ -138,9 +138,9 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributes()
     {
-        TypeInfo typeInfo = typeof(DummyBaseTestClass).GetTypeInfo();
+        Type type = typeof(DummyBaseTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(typeInfo, typeof(DummyAAttribute), false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(DummyAAttribute), false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
@@ -151,9 +151,9 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        TypeInfo typeInfo = typeof(DummyTestClass).GetTypeInfo();
+        Type type = typeof(DummyTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(typeInfo, typeof(DummyAAttribute), false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(DummyAAttribute), false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
@@ -164,9 +164,9 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
-        TypeInfo methodInfo = typeof(DummyTestClass).GetTypeInfo();
+        Type method = typeof(DummyTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), true);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(method, typeof(DummyAAttribute), true);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 2);

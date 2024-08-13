@@ -32,7 +32,7 @@ internal class AnsiTerminal : ITerminal
     private readonly bool _useBusyIndicator;
     private readonly StringBuilder _stringBuilder = new();
     private bool _isBatching;
-    private TestProgressFrame _currentFrame = new(Array.Empty<TestProgressState>(), 0, 0);
+    private AnsiTerminalTestProgressFrame _currentFrame = new(Array.Empty<TestProgressState>(), 0, 0);
 
     public AnsiTerminal(IConsole console, string? baseDirectory)
     {
@@ -199,7 +199,7 @@ internal class AnsiTerminal : ITerminal
                 && (path[_baseDirectory.Length] == Path.DirectorySeparatorChar
                     || path[_baseDirectory.Length] == Path.AltDirectorySeparatorChar))
             {
-                path = path.Substring(_baseDirectory.Length + 1);
+                path = path[(_baseDirectory.Length + 1)..];
             }
         }
 
@@ -274,7 +274,7 @@ internal class AnsiTerminal : ITerminal
 
     public void RenderProgress(TestProgressState?[] progress)
     {
-        TestProgressFrame newFrame = new(progress, Width, Height);
+        AnsiTerminalTestProgressFrame newFrame = new(progress, Width, Height);
 
         // Do not render delta but clear everything if Terminal width or height have changed.
         if (newFrame.Width != _currentFrame.Width || newFrame.Height != _currentFrame.Height)

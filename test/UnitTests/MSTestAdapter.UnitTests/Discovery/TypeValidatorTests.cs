@@ -275,7 +275,7 @@ public class TypeValidatorTests : TestContainer
 
         bool discoverInternal = false;
         string[] actualDiscoveredTypes = allTypes
-            .Where(t => TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
+            .Where(t => TypeValidator.TypeHasValidAccessibility(t, discoverInternal))
             .Select(t => t.Name).ToArray();
 
         Array.Sort(actualDiscoveredTypes);
@@ -318,7 +318,7 @@ public class TypeValidatorTests : TestContainer
 
         bool discoverInternal = false;
         string[] actualDiscoveredTypes = allTypes
-            .Where(t => !TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
+            .Where(t => !TypeValidator.TypeHasValidAccessibility(t, discoverInternal))
             .Select(t => t.Name).ToArray();
 
         Array.Sort(actualDiscoveredTypes);
@@ -353,7 +353,7 @@ public class TypeValidatorTests : TestContainer
 
         bool discoverInternal = true;
         string[] actualDiscoveredTypes = allTypes
-            .Where(t => TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
+            .Where(t => TypeValidator.TypeHasValidAccessibility(t, discoverInternal))
             .Select(t => t.Name).ToArray();
 
         Array.Sort(actualDiscoveredTypes);
@@ -383,7 +383,7 @@ public class TypeValidatorTests : TestContainer
 
         bool discoverInternal = true;
         string[] actualDiscoveredTypes = allTypes
-            .Where(t => !TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
+            .Where(t => !TypeValidator.TypeHasValidAccessibility(t, discoverInternal))
             .Select(t => t.Name).ToArray();
 
         Array.Sort(actualDiscoveredTypes);
