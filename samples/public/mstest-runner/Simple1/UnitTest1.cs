@@ -1,4 +1,4 @@
-namespace Simple1;
+﻿namespace Simple1;
 
 [TestClass]
 public class UnitTest1

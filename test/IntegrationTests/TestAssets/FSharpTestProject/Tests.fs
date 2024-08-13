@@ -1,4 +1,4 @@
-namespace FSharpTestProject
+﻿namespace FSharpTestProject
 
 open System
 open Microsoft.VisualStudio.TestTools.UnitTesting
