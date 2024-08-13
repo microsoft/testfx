@@ -259,7 +259,7 @@ public sealed partial class Assert
         }
 
         Type elementType = value.GetType();
-        if (elementType.IsAssignableFrom(wrongType))
+        if (wrongType.IsAssignableFrom(elementType))
         {
             string userMessage = BuildUserMessage(message, parameters);
             string finalMessage = string.Format(
