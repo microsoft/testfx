@@ -34,8 +34,6 @@ public class TestMethodRunnerTests : TestContainer
 
     private readonly TestMethod _testMethod;
 
-    private readonly TestMethodOptions _globalTestMethodOptions;
-
     private readonly TestMethodOptions _testMethodOptions;
 
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
@@ -52,8 +50,6 @@ public class TestMethodRunnerTests : TestContainer
         _testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
         _testContextImplementation = new TestContextImplementation(_testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>());
         _testClassInfo = new TestClassInfo(typeof(DummyTestClass), constructorInfo, true, testContextProperty, classAttribute, testAssemblyInfo);
-
-        _globalTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(3600 * 1000), null, _testContextImplementation, false, _testMethodAttribute);
 
         _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), null, _testContextImplementation, false, _testMethodAttribute);
 
