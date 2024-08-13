@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -157,7 +157,9 @@ public sealed partial class Assert
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
+#pragma warning disable CA2263 // Prefer generic overload when type is known
         IsInstanceOfType(value, typeof(T), message, parameters);
+#pragma warning restore CA2263 // Prefer generic overload when type is known
         instance = (T)value;
     }
 

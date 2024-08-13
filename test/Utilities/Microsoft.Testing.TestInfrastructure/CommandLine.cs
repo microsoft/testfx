@@ -121,7 +121,7 @@ public sealed class CommandLine : IDisposable
     {
         int firstChar = outputLine[0];
         int byteOrderMark = 65279;
-        return firstChar == byteOrderMark ? outputLine.Substring(1) : outputLine;
+        return firstChar == byteOrderMark ? outputLine[1..] : outputLine;
     }
 
     public void Dispose() => _process?.Kill();
