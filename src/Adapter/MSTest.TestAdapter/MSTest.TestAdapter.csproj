@@ -12,7 +12,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    
     <IsPackable>true</IsPackable>
     <NuspecFile Condition=" '$(OS)' == 'Windows_NT' ">MSTest.TestAdapter.nuspec</NuspecFile>
     <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.TestAdapter.Linux.nuspec</NuspecFile>
