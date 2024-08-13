@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.5.2" />[3.5.2] - 2024-08-13
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.5.1...v3.5.2)
+
+### Fixed
+
+* Update dependencies from devdiv/DevDiv/vs-code-coverage by @dotnet-maestro in [#3533](https://github.com/microsoft/testfx/pull/3533)
+
+### Artifacts
+
+* MSTest: [3.5.2](https://www.nuget.org/packages/MSTest/3.5.2)
+* MSTest.TestFramework: [3.5.2](https://www.nuget.org/packages/MSTest.TestFramework/3.5.2)
+* MSTest.TestAdapter: [3.5.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.5.2)
+* MSTest.Analyzers: [3.5.2](https://www.nuget.org/packages/MSTest.Analyzers/3.5.2)
+* MSTest.Sdk: [3.5.2](https://www.nuget.org/packages/MSTest.Sdk/3.5.2)
+* Microsoft.Testing.Extensions.CrashDump: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.3.2)
+* Microsoft.Testing.Extensions.HangDump: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.3.2)
+* Microsoft.Testing.Extensions.HotReload: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.3.2)
+* Microsoft.Testing.Extensions.Retry: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.3.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.3.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.3.2)
+
 ## <a name="3.5.1" />[3.5.1] - 2024-08-05
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.5.0...v3.5.1)
