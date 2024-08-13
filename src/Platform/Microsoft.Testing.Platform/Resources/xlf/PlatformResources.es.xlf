@@ -154,7 +154,7 @@
       </trans-unit>
       <trans-unit id="ConsoleIsAlreadyInBatchingMode">
         <source>Console is already in batching mode.</source>
-        <target state="new">Console is already in batching mode.</target>
+        <target state="translated">La consola ya está en modo de procesamiento por lotes.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
@@ -223,7 +223,7 @@
       </trans-unit>
       <trans-unit id="FailedWithErrors">
         <source>failed with {0} errors(s)</source>
-        <target state="new">failed with {0} errors(s)</target>
+        <target state="translated">error con {0} errores</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">
@@ -243,7 +243,7 @@
       </trans-unit>
       <trans-unit id="FromFile">
         <source>from</source>
-        <target state="new">from</target>
+        <target state="translated">desde</target>
         <note>from followed by a file name to point to the file from which test is originating</note>
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
@@ -520,7 +520,7 @@
       </trans-unit>
       <trans-unit id="RunningTestsFrom">
         <source>Running tests from</source>
-        <target state="new">Running tests from</target>
+        <target state="translated">Ejecutando pruebas desde</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerLogMessageDescription">
@@ -570,12 +570,12 @@
       </trans-unit>
       <trans-unit id="StackFrameAt">
         <source>at</source>
-        <target state="new">at</target>
+        <target state="translated">a las</target>
         <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
       </trans-unit>
       <trans-unit id="StackFrameIn">
         <source>in</source>
-        <target state="new">in</target>
+        <target state="translated">en</target>
         <note>in that is used in stack frame it is followed by file name</note>
       </trans-unit>
       <trans-unit id="StackTrace">
@@ -670,7 +670,7 @@ Más información sobre la telemetría de la Plataforma de pruebas de Microsoft:
       </trans-unit>
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>
-        <target state="new">Test run summary:</target>
+        <target state="translated">Resumen de la serie de pruebas:</target>
         <note />
       </trans-unit>
       <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
