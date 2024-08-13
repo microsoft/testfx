@@ -188,6 +188,7 @@ public class UnitTestElementTests : TestContainer
     [Obsolete("Remove test case when enum entry is removed")]
     public void ToTestCase_WhenStrategyIsLegacy_UsesDefaultTestCaseId()
     {
+#pragma warning disable CA2263 // Prefer generic overload when type is known
         foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType)))
         {
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, TestIdGenerationStrategy.Legacy) { DataType = dataType }).ToTestCase();
@@ -195,11 +196,13 @@ public class UnitTestElementTests : TestContainer
             Verify(expectedTestCase.Id == testCase.Id);
             Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty).Equals((int)TestIdGenerationStrategy.Legacy));
         }
+#pragma warning restore CA2263 // Prefer generic overload when type is known
     }
 
     [Obsolete("Remove test case when enum entry is removed")]
     public void ToTestCase_WhenStrategyIsDisplayName_DoesNotUseDefaultTestCaseId()
     {
+#pragma warning disable CA2263 // Prefer generic overload when type is known
         foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType)))
         {
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, TestIdGenerationStrategy.DisplayName) { DataType = dataType }).ToTestCase();
@@ -215,10 +218,12 @@ public class UnitTestElementTests : TestContainer
 
             Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty).Equals((int)TestIdGenerationStrategy.DisplayName));
         }
+#pragma warning restore CA2263 // Prefer generic overload when type is known
     }
 
     public void ToTestCase_WhenStrategyIsData_DoesNotUseDefaultTestCaseId()
     {
+#pragma warning disable CA2263 // Prefer generic overload when type is known
         foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType)))
         {
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, null, TestIdGenerationStrategy.FullyQualified) { DataType = dataType }).ToTestCase();
@@ -226,6 +231,7 @@ public class UnitTestElementTests : TestContainer
             Verify(expectedTestCase.Id != testCase.Id);
             Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty).Equals((int)TestIdGenerationStrategy.FullyQualified));
         }
+#pragma warning restore CA2263 // Prefer generic overload when type is known
     }
 
     [Obsolete("Remove test case when enum entry is removed")]

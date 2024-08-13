@@ -21,36 +21,28 @@ internal sealed class Json
         // Overridden default serializers for better performance using .NET runtime serialization APIs
 
         // Serialize response types.
-        _serializers[typeof(RequestMessage)] = new JsonObjectSerializer<RequestMessage>(request =>
-         {
-             return new[]
+        _serializers[typeof(RequestMessage)] = new JsonObjectSerializer<RequestMessage>(request => new[]
              {
                  (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Id, request.Id),
                  (JsonRpcStrings.Method, request.Method),
                  (JsonRpcStrings.Params, request.Params),
-             };
-         });
+             });
 
-        _serializers[typeof(ResponseMessage)] = new JsonObjectSerializer<ResponseMessage>(response =>
-        {
-            return new[]
+        _serializers[typeof(ResponseMessage)] = new JsonObjectSerializer<ResponseMessage>(response => new[]
             {
                  (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Id, response.Id),
                  (JsonRpcStrings.Result, response.Result),
-            };
-        });
+            });
 
         _serializers[typeof(NotificationMessage)] = new JsonObjectSerializer<NotificationMessage>(notification =>
-        {
-            return new[]
+            new[]
             {
                  (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Method, notification.Method),
                  (JsonRpcStrings.Params, notification.Params),
-            };
-        });
+            });
 
         _serializers[typeof(ErrorMessage)] = new JsonObjectSerializer<ErrorMessage>(error =>
         {
@@ -71,81 +63,64 @@ internal sealed class Json
         });
 
         _serializers[typeof(InitializeResponseArgs)] = new JsonObjectSerializer<InitializeResponseArgs>(response =>
-        {
-            return new (string, object?)[]
+            new (string, object?)[]
             {
                 (JsonRpcStrings.ProcessId, response.ProcessId),
                 (JsonRpcStrings.ServerInfo, response.ServerInfo),
                 (JsonRpcStrings.Capabilities, response.Capabilities),
-            };
-        });
+            });
 
-        _serializers[typeof(ServerInfo)] = new JsonObjectSerializer<ServerInfo>(info =>
-        {
-            return new (string, object?)[]
+        _serializers[typeof(ServerInfo)] = new JsonObjectSerializer<ServerInfo>(info => new (string, object?)[]
             {
                 (JsonRpcStrings.Name, info.Name),
                 (JsonRpcStrings.Version, info.Version),
-            };
-        });
+            });
 
         _serializers[typeof(ServerCapabilities)] = new JsonObjectSerializer<ServerCapabilities>(capabilities =>
-        {
-            return new (string, object?)[]
+            new (string, object?)[]
             {
                 (JsonRpcStrings.Testing, capabilities.TestingCapabilities),
-            };
-        });
+            });
 
         _serializers[typeof(ServerTestingCapabilities)] = new JsonObjectSerializer<ServerTestingCapabilities>(capabilities =>
-        {
-            return new (string, object?)[]
+            new (string, object?)[]
             {
                 (JsonRpcStrings.SupportsDiscovery, capabilities.SupportsDiscovery),
                 (JsonRpcStrings.MultiRequestSupport, capabilities.MultiRequestSupport),
                 (JsonRpcStrings.VSTestProviderSupport, capabilities.VSTestProviderSupport),
-            };
-        });
+            });
 
         _serializers[typeof(Artifact)] = new JsonObjectSerializer<Artifact>(artifact =>
-        {
-            return new (string, object?)[]
+            new (string, object?)[]
             {
                 (JsonRpcStrings.Uri, artifact.Uri),
                 (JsonRpcStrings.Producer, artifact.Producer),
                 (JsonRpcStrings.Type, artifact.Type),
                 (JsonRpcStrings.DisplayName, artifact.DisplayName),
                 (JsonRpcStrings.Description, artifact.Description),
-            };
-        });
+            });
 
         _serializers[typeof(DiscoverResponseArgs)] = new JsonObjectSerializer<DiscoverResponseArgs>(response => []);
 
         _serializers[typeof(RunResponseArgs)] = new JsonObjectSerializer<RunResponseArgs>(response =>
-        {
-            return new (string, object?)[]
+            new (string, object?)[]
             {
                 (JsonRpcStrings.Attachments, response.Artifacts),
-            };
-        });
+            });
 
         _serializers[typeof(TestNodeUpdateMessage)] = new JsonObjectSerializer<TestNodeUpdateMessage>(message =>
-        {
-            return new (string, object?)[]
+            new (string, object?)[]
             {
                 (JsonRpcStrings.Node, message.TestNode),
                 (JsonRpcStrings.Parent, message.ParentTestNodeUid?.Value),
-            };
-        });
+            });
 
         _serializers[typeof(TestNodeStateChangedEventArgs)] = new JsonObjectSerializer<TestNodeStateChangedEventArgs>(message =>
-        {
-            return new (string, object?)[]
+            new (string, object?)[]
             {
                 (JsonRpcStrings.RunId, message.RunId),
                 (JsonRpcStrings.Changes, message.Changes),
-            };
-        });
+            });
 
         _serializers[typeof(TestNode)] = new JsonObjectSerializer<TestNode>(message =>
         {
@@ -310,49 +285,39 @@ internal sealed class Json
         });
 
         _serializers[typeof(LogEventArgs)] = new JsonObjectSerializer<LogEventArgs>(message =>
-        {
-            return new (string, object?)[]
+            new (string, object?)[]
             {
                 (JsonRpcStrings.Level, message.LogMessage.Level.ToString()),
                 (JsonRpcStrings.Message, message.LogMessage.Message),
-            };
-        });
+            });
 
         _serializers[typeof(CancelRequestArgs)] = new JsonObjectSerializer<CancelRequestArgs>(request =>
-        {
-            return new (string, object?)[]
+            new (string, object?)[]
             {
                 (JsonRpcStrings.Id, request.CancelRequestId),
-            };
-        });
+            });
 
         _serializers[typeof(TelemetryEventArgs)] = new JsonObjectSerializer<TelemetryEventArgs>(ev =>
-        {
-            return new (string, object?)[]
+            new (string, object?)[]
             {
                 (JsonRpcStrings.EventName, ev.EventName),
                 (JsonRpcStrings.Metrics, ev.Metrics),
-            };
-        });
+            });
 
         _serializers[typeof(ProcessInfoArgs)] = new JsonObjectSerializer<ProcessInfoArgs>(info =>
-        {
-            return new (string, object?)[]
+            new (string, object?)[]
             {
                 (JsonRpcStrings.Program, info.Program),
                 (JsonRpcStrings.Args, info.Args),
                 (JsonRpcStrings.WorkingDirectory, info.WorkingDirectory),
                 (JsonRpcStrings.EnvironmentVariables, info.EnvironmentVariables),
-            };
-        });
+            });
 
         _serializers[typeof(AttachDebuggerInfoArgs)] = new JsonObjectSerializer<AttachDebuggerInfoArgs>(info =>
-        {
-            return new (string, object?)[]
+            new (string, object?)[]
             {
                 (JsonRpcStrings.ProcessId, info.ProcessId),
-            };
-        });
+            });
 
         // Serializers
         _serializers[typeof(string)] = new JsonValueSerializer<string>((w, v) => w.WriteStringValue(v));
