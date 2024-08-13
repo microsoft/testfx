@@ -27,6 +27,11 @@
         <target state="translated">Correggi la firma del metodo di test</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseAttributeOnTestMethodFix">
+        <source>Add '[TestMethod]'</source>
+        <target state="new">Add '[TestMethod]'</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
