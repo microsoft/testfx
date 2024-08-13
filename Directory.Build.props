@@ -41,13 +41,6 @@
     <!-- PDB -->
     <DebugSymbols>true</DebugSymbols>
     <DebugType>embedded</DebugType>
-    <!-- Workaround for AD0001 in analyzers with .NET 9. See https://github.com/dotnet/arcade/issues/14311 -->
-    <BuildWithNetFrameworkHostedCompiler>true</BuildWithNetFrameworkHostedCompiler>
-    <!--
-      Needed to avoid error NU1010: The PackageReference items Microsoft.Net.Compilers.Toolset.Framework do not have corresponding PackageVersion.
-      Related to https://github.com/dotnet/sdk/issues/41791.
-    -->
-    <!-- <BuildWithNetFrameworkHostedCompiler>false</BuildWithNetFrameworkHostedCompiler> -->
   </PropertyGroup>
 
   <!-- Pack config -->
