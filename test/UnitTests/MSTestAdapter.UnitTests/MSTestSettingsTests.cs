@@ -669,6 +669,23 @@ public class MSTestSettingsTests : TestContainer
         Verify(MSTestSettings.CurrentSettings.DisableParallelization);
     }
 
+    public void DisableParallelization_WithInvalidValue_GettingAWarning()
+    {
+        string runSettingxml =
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableParallelization>3</DisableParallelization>
+              </RunConfiguration>
+            </RunSettings>
+            """;
+
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'DisableParallelization', setting will be ignored."), Times.Once);
+    }
+
     #endregion
 
     #region GetSettings Tests
