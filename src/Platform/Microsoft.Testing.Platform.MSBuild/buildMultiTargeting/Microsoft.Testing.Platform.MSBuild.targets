@@ -164,7 +164,7 @@
     <ItemGroup>
       <!-- Items to hash-->
       <_GenerateAutoRegisteredExtensionsInputsCacheToHash Include="@(TestingPlatformBuilderHook)"/>
-      <!-- Export the items name for the _GenerateTestingPlatformInjectEntryPoint task-->
+      <!-- Export the items name for the _GenerateAutoRegisteredExtensions task-->
       <GenerateAutoRegisteredExtensionsInputsCacheFilePath Include="$(_GenerateAutoRegisteredExtensionsInputsCachFilePath)" />
     </ItemGroup>
     <!-- Hash the extensions information -->
@@ -181,7 +181,7 @@
     </ItemGroup>
   </Target>
 
-  <!-- Generate the entry point source using the user extensions informations -->
+  <!-- Generate the extensions source file using the user extensions informations -->
   <PropertyGroup>
     <_AutoRegisteredExtensionsSourceNameWithoutExtension>AutoRegisteredExtensions</_AutoRegisteredExtensionsSourceNameWithoutExtension>
     <_AutoRegisteredExtensionsSourceName Condition=" $(Language) == 'C#' " >$(_AutoRegisteredExtensionsSourceNameWithoutExtension).cs</_AutoRegisteredExtensionsSourceName>
@@ -192,7 +192,7 @@
   </PropertyGroup>
   <Target Name="_GenerateAutoRegisteredExtensions" BeforeTargets="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation;_GenerateTestingPlatformEntryPoint"
           Inputs="@(GenerateAutoRegisteredExtensionsInputsCacheFilePath)" Outputs="$(_AutoRegisteredExtensionsSourcePath)"
-          Condition=" '$(GenerateAutoRegisteredExtensions)' == 'True' " >
+          Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
     <TestingPlatformAutoRegisteredExtensions AutoRegisteredExtensionsSourcePath="$(_AutoRegisteredExtensionsSourcePath)"
                                              AutoRegisteredExtensionsBuilderHook="@(TestingPlatformBuilderHook)"
                                              Language="$(Language)" >
@@ -203,12 +203,12 @@
     </ItemGroup>
   </Target>
 
-  <!-- We always include the entry point also if the task _GenerateTestingPlatformInjectEntryPoint is skipped for caching reason -->
+  <!-- We always include the entry point also if the task _GenerateAutoRegisteredExtensions is skipped for caching reason -->
   <Target Name="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation" BeforeTargets="_IncludeGenerateTestingPlatformEntryPointIntoCompilation;CoreCompile" Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
     <ItemGroup>
       <Compile Include="$(_AutoRegisteredExtensionsSourcePath)" />
     </ItemGroup>
-    <!-- We need to report to the FileWrites here because is possible that we skip _GenerateTestingPlatformInjectEntryPoint and we want to correctly handle the "dotnet clean" target -->
+    <!-- We need to report to the FileWrites here because is possible that we skip _GenerateAutoRegisteredExtensions and we want to correctly handle the "dotnet clean" target -->
     <ItemGroup>
       <FileWrites Include="$(_AutoRegisteredExtensionsSourcePath)" />
     </ItemGroup>
