@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseAttributeOnTestMethodAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.UseAttributeOnTestMethodFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -56,7 +56,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [ArgumentsProvider(nameof(GetAttributeUsageExampleAndRuleTuples))]
@@ -75,7 +75,21 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic(rule).WithLocation(0));
+        string fixedCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{{attributeUsageExample}}]
+                [TestMethod]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic(rule).WithLocation(0), fixedCode);
     }
 
     [ArgumentsProvider(nameof(GetAttributeUsageExampleAndRuleTuplesForTwoAttributes))]
@@ -99,7 +113,22 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic(rule1).WithLocation(0), VerifyCS.Diagnostic(rule2).WithLocation(1));
+        string fixedCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{{attributeUsageExample1}}]
+                [{{attributeUsageExample2}}]
+                [TestMethod]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, new[] { VerifyCS.Diagnostic(rule1).WithLocation(0), VerifyCS.Diagnostic(rule2).WithLocation(1) }, fixedCode);
     }
 
     [ArgumentsProvider(nameof(GetAttributeUsageExamples))]
@@ -125,6 +154,6 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 }
