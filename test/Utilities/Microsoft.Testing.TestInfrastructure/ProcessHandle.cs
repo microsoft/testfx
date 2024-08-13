@@ -3,6 +3,10 @@
 
 using System.Diagnostics;
 
+#if NETSTANDARD
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.TestInfrastructure;
 
 public sealed class ProcessHandle : IProcessHandle, IDisposable
