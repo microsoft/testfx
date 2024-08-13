@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
 
   <!-- SDK top import -->
   <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    
     <IsPackable>true</IsPackable>
     <NuspecFile Condition=" '$(OS)' == 'Windows_NT' ">MSTest.TestAdapter.nuspec</NuspecFile>
     <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.TestAdapter.Linux.nuspec</NuspecFile>
