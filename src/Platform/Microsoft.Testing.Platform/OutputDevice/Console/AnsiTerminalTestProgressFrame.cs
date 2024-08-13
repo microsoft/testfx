@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Console;
 /// </summary>
 internal sealed class AnsiTerminalTestProgressFrame
 {
-    private const int MaxColumn = 120;
+    private const int MaxColumn = 250;
 
     private readonly (TestProgressState TestWorkerProgress, int DurationLength)[] _progressItems;
 
@@ -120,15 +120,16 @@ internal sealed class AnsiTerminalTestProgressFrame
             // rather than deleting whole line and have the line flicker. Most commonly this will rewrite just the time part of the line.
             if (previousFrame.ProgressCount > i)
             {
-                if (previousFrame._progressItems[i] == _progressItems[i])
+                if (previousFrame._progressItems[i].TestWorkerProgress == _progressItems[i].TestWorkerProgress)
                 {
                     // Same everything except time, AND same number of digits in time
                     string durationString = HumanReadableDurationFormatter.Render(_progressItems[i].TestWorkerProgress.Stopwatch.Elapsed);
 
-                    if (_progressItems[i].DurationLength == durationString.Length)
+                    if (previousFrame._progressItems[i].DurationLength == durationString.Length)
                     {
                         terminal.SetCursorHorizontal(MaxColumn);
                         terminal.Append($"{AnsiCodes.SetCursorHorizontal(MaxColumn)}{AnsiCodes.MoveCursorBackward(durationString.Length)}{durationString}");
+                        _progressItems[i].DurationLength = durationString.Length;
                     }
                     else
                     {
