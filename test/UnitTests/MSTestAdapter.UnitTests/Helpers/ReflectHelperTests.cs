@@ -277,8 +277,8 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(It.IsAny<Type>(), /* inherit */ false)).
             Returns([new TestClassAttribute()]);
 
-        var inheritedAttributes = rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: true).ToArray();
-        var nonInheritedAttributes = rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: false).ToArray();
+        TestClassAttribute[] inheritedAttributes = rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: true).ToArray();
+        TestClassAttribute[] nonInheritedAttributes = rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: false).ToArray();
 
         Verify(inheritedAttributes.Length == 2);
         Verify(nonInheritedAttributes.Length == 1);

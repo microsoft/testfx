@@ -5,7 +5,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
@@ -197,7 +196,7 @@ internal abstract class DeploymentUtilityBase
                     string tempFile = Path.GetFileName(fileToDeploy);
                     // We throw when we run in source gen mode.
 #pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
-                    string assemblyName = Path.GetFileName(GetType().GetTypeInfo().Assembly.Location);
+                    string assemblyName = Path.GetFileName(GetType().Assembly.Location);
 #pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
                     if (tempFile.Equals(assemblyName, StringComparison.OrdinalIgnoreCase))
                     {

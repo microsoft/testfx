@@ -35,13 +35,13 @@ public class TestNodeUidTests : TestBase
 
         // Implicit conversion from a null, empty or whitespace string should throw.
         Assert.Throws<ArgumentNullException>(() => { TestNodeUid testNode = (string)null!; });
-        Assert.Throws<ArgumentNullException>(() => { TestNodeUid testNode = string.Empty; });
-        Assert.Throws<ArgumentNullException>(() => { TestNodeUid testNode = " "; });
+        Assert.Throws<ArgumentException>(() => { TestNodeUid testNode = string.Empty; });
+        Assert.Throws<ArgumentException>(() => { TestNodeUid testNode = " "; });
 
         // Providing null, empty, or whitespace id should throw.
         Assert.Throws<ArgumentNullException>(() => { TestNodeUid testNode = new(null!); });
-        Assert.Throws<ArgumentNullException>(() => { TestNodeUid testNode = new(string.Empty); });
-        Assert.Throws<ArgumentNullException>(() => { TestNodeUid testNode = new(" "); });
+        Assert.Throws<ArgumentException>(() => { TestNodeUid testNode = new(string.Empty); });
+        Assert.Throws<ArgumentException>(() => { TestNodeUid testNode = new(" "); });
 #pragma warning restore CS0219 // Variable is assigned but its value is never used
     }
 }

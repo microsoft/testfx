@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
@@ -100,7 +100,7 @@ public class DesktopTestDeploymentTests : TestContainer
 
     public void DeployShouldCreateDeploymentDirectories()
     {
-        TestCase testCase = GetTestCase(typeof(DesktopTestDeploymentTests).GetTypeInfo().Assembly.Location);
+        TestCase testCase = GetTestCase(typeof(DesktopTestDeploymentTests).Assembly.Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);

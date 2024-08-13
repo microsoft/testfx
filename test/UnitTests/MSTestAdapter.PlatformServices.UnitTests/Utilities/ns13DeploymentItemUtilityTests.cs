@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -45,7 +45,7 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void GetClassLevelDeploymentItemsShouldReturnEmptyListWhenNoDeploymentItems()
     {
-        _mockReflectionUtility.Setup(x => x.GetCustomAttributes(typeof(DeploymentItemUtilityTests).GetTypeInfo(), typeof(DeploymentItemAttribute)))
+        _mockReflectionUtility.Setup(x => x.GetCustomAttributes(typeof(DeploymentItemUtilityTests), typeof(DeploymentItemAttribute)))
             .Returns([]);
         IList<DeploymentItem> deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
 
@@ -61,7 +61,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory)
         ];
-        SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), kvpArray);
+        SetupDeploymentItems(typeof(DeploymentItemUtilityTests), kvpArray);
 
         IList<DeploymentItem> deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
         var expectedDeploymentItems = new DeploymentItem[]
@@ -84,7 +84,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemPath + "\\temp2",
                 _defaultDeploymentItemOutputDirectory)
         ];
-        SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
+        SetupDeploymentItems(typeof(DeploymentItemUtilityTests), deploymentItemAttributes);
 
         IList<DeploymentItem> deploymentItems =
             _deploymentItemUtility.GetClassLevelDeploymentItems(
@@ -115,7 +115,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory)
         ];
-        SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
+        SetupDeploymentItems(typeof(DeploymentItemUtilityTests), deploymentItemAttributes);
 
         IList<DeploymentItem> deploymentItems =
             _deploymentItemUtility.GetClassLevelDeploymentItems(
@@ -143,7 +143,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 null,
                 _defaultDeploymentItemOutputDirectory)
         ];
-        SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
+        SetupDeploymentItems(typeof(DeploymentItemUtilityTests), deploymentItemAttributes);
 
         IList<DeploymentItem> deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
 

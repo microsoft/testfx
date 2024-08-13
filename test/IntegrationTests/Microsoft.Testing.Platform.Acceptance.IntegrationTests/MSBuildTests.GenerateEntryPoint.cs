@@ -38,8 +38,8 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase
                 Assert.AreEqual("Target \"_GenerateTestingPlatformEntryPoint\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'True' ) was evaluated as ( 'False' == 'True' ).", ((SL.Message)generateTestingPlatformEntryPoint.Children[0]).Text);
                 SL.Target generateTestingPlatformEntryPointFileInputCache = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPointFileInputCache");
                 Assert.AreEqual("Target \"_GenerateTestingPlatformEntryPointFileInputCache\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'True' ) was evaluated as ( 'False' == 'True' ).", ((SL.Message)generateTestingPlatformEntryPointFileInputCache.Children[0]).Text);
-                SL.Target includeGenerateTestingPlatformEntryPointIntoCompilation = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "IncludeGenerateTestingPlatformEntryPointIntoCompilation");
-                Assert.AreEqual("Target \"IncludeGenerateTestingPlatformEntryPointIntoCompilation\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'True' ) was evaluated as ( 'False' == 'True' ).", ((SL.Message)includeGenerateTestingPlatformEntryPointIntoCompilation.Children[0]).Text);
+                SL.Target includeGenerateTestingPlatformEntryPointIntoCompilation = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_IncludeGenerateTestingPlatformEntryPointIntoCompilation");
+                Assert.AreEqual("Target \"_IncludeGenerateTestingPlatformEntryPointIntoCompilation\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'True' ) was evaluated as ( 'False' == 'True' ).", ((SL.Message)includeGenerateTestingPlatformEntryPointIntoCompilation.Children[0]).Text);
                 Assert.AreNotEqual(0, compilationResult.ExitCode);
             }, 3, TimeSpan.FromSeconds(10));
 
@@ -59,9 +59,7 @@ internal sealed class TestingPlatformEntryPoint
     public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
     {
         global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
-        Microsoft.Testing.Platform.MSBuild.TestingPlatformBuilderHook.AddExtensions(builder, args);
-        MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration.AddExtensions(builder, args);
-        MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration2.AddExtensions(builder, args);
+        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
         using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
         {
             return await app.RunAsync();
@@ -88,9 +86,7 @@ Module TestingPlatformEntryPoint
 
     Public Async Function MainAsync(ByVal args() As Global.System.String) As Global.System.Threading.Tasks.Task(Of Integer)
         Dim builder = Await Global.Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args)
-        Microsoft.Testing.Platform.MSBuild.TestingPlatformBuilderHook.AddExtensions(builder, args)
-        MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration.AddExtensions(builder, args)
-        MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration2.AddExtensions(builder, args)
+        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
         Using testApplication = Await builder.BuildAsync()
             Return Await testApplication.RunAsync()
         End Using
@@ -113,9 +109,7 @@ End Module'", "Vbc");
 let main args =
     task {
         let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
-        Microsoft.Testing.Platform.MSBuild.TestingPlatformBuilderHook.AddExtensions(builder, args)
-        MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration.AddExtensions(builder, args)
-        MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration2.AddExtensions(builder, args)
+        Microsoft.TestingPlatform.Extensions.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
         use! app = builder.BuildAsync()
         return! app.RunAsync()
     }
@@ -127,15 +121,15 @@ let main args =
            => await RetryHelper.RetryAsync(
                 async () =>
                 {
-                    using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
-                        assetName,
-                        sourceCode
+                    string finalSourceCode = sourceCode
                         .PatchCodeWithReplace("$TargetFrameworks$", tfm)
                         .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                        .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+                        // We need to pickup local build packages -dev
+                        .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingPlatformVersion);
+                    using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, finalSourceCode);
                     await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.{languageFileExtension}proj", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
                     string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
-                    await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                    DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
                     SL.Build binLog = SL.Serialization.Read(binlogFile);
                     SL.Target generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPoint");
                     SL.Task testingPlatformEntryPoint = generateTestingPlatformEntryPoint.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformEntryPointTask");
@@ -279,30 +273,36 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="[1.0.0-*,)" />
-        <PackageReference Include="Microsoft.Testing.Platform" Version="[1.0.0-*,)" />
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
 </Project>
 
 #file Program.vb
+Imports Microsoft.Testing.Platform.Builder
+Imports Microsoft.Testing.Platform.Capabilities
 Imports Microsoft.Testing.Platform.Capabilities.TestFramework
+Imports Microsoft.Testing.Platform.Extensions.Messages
+Imports Microsoft.Testing.Platform.Extensions.TestFramework
+Imports Microsoft.Testing.Platform.Requests
 Imports Microsoft.Testing.Platform.Extensions
+Imports Microsoft.Testing.Platform
 
 Namespace MyNamespaceRoot.Level1.Level2
   Public Module DummyAdapterRegistration
-    Public Sub AddExtensions(builder As Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args As String())
+    Public Sub AddExtensions(builder As ITestApplicationBuilder, args As String())
       builder.RegisterTestFramework(Function() New Capabilities(), Function(cap, services) New DummyAdapter())
     End Sub
   End Module
 
   Public Module DummyAdapterRegistration2
-    Public Sub AddExtensions(builder As Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args As String())
+    Public Sub AddExtensions(builder As ITestApplicationBuilder, args As String())
     End Sub
   End Module
 
   Class DummyAdapter
-    Implements TestFramework.ITestFramework
-    Implements Messages.IDataProducer
+    Implements ITestFramework
+    Implements IDataProducer
 
     Public ReadOnly Property Uid As String Implements IExtension.Uid
       Get
@@ -363,9 +363,9 @@ Namespace MyNamespaceRoot.Level1.Level2
   End Class
 
   Class Capabilities
-    Implements Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities
+    Implements ITestFrameworkCapabilities
 
-    Private ReadOnly Property ICapabilities_Capabilities As IReadOnlyCollection(Of ITestFrameworkCapability) Implements Microsoft.Testing.Platform.Capabilities.ICapabilities(Of ITestFrameworkCapability).Capabilities
+    Private ReadOnly Property ICapabilities_Capabilities As IReadOnlyCollection(Of ITestFrameworkCapability) Implements ICapabilities(Of ITestFrameworkCapability).Capabilities
       Get
         Return Array.Empty(Of ITestFrameworkCapability)()
       End Get
@@ -399,8 +399,8 @@ End Namespace
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="[1.0.0-*,)" />
-        <PackageReference Include="Microsoft.Testing.Platform" Version="[1.0.0-*,)" />
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
 
     <ItemGroup>
@@ -412,9 +412,11 @@ End Namespace
 namespace MyNamespaceRoot.Level1.Level2
 
 open Microsoft.Testing.Platform.Builder
+open Microsoft.Testing.Platform.Capabilities
 open Microsoft.Testing.Platform.Capabilities.TestFramework
 open Microsoft.Testing.Platform.Extensions.Messages
 open Microsoft.Testing.Platform.Extensions.TestFramework
+open Microsoft.Testing.Platform.Requests
 open System.Threading.Tasks
 
 type Capabilities () =
@@ -453,7 +455,7 @@ type DummyAdapter() =
 
 module DummyAdapterRegistration =
     let AddExtensions (testApplicationBuilder : ITestApplicationBuilder, args: string[]) =
-        testApplicationBuilder.RegisterTestFramework((fun _ -> Capabilities()), (fun _ _ -> DummyAdapter()))
+        testApplicationBuilder.RegisterTestFramework((fun _ -> Capabilities()), (fun _ _ -> DummyAdapter())) |> ignore
 
 module DummyAdapterRegistration2 =
     let AddExtensions (_, _) = ()

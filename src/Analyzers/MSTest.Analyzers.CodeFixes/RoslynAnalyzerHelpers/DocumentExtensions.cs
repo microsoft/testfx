@@ -4,18 +4,17 @@
 
 using Microsoft.CodeAnalysis;
 
-namespace Analyzer.Utilities
-{
-    internal static class DocumentExtensions
-    {
-        public static async ValueTask<SyntaxNode> GetRequiredSyntaxRootAsync(this Document document, CancellationToken cancellationToken)
-        {
-            if (document.TryGetSyntaxRoot(out var root))
-                return root;
+namespace Analyzer.Utilities;
 
-            root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-            return root ?? throw new InvalidOperationException("SyntaxTree is required to accomplish the task but is not supported by document");
-        }
+internal static class DocumentExtensions
+{
+    public static async ValueTask<SyntaxNode> GetRequiredSyntaxRootAsync(this Document document, CancellationToken cancellationToken)
+    {
+        if (document.TryGetSyntaxRoot(out SyntaxNode? root))
+            return root;
+
+        root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+        return root ?? throw new InvalidOperationException("SyntaxTree is required to accomplish the task but is not supported by document");
     }
 }
 

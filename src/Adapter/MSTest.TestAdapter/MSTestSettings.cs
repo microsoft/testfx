@@ -280,7 +280,7 @@ public class MSTestSettings
             CurrentSettings = settings ?? new MSTestSettings();
         }
 
-        SetGlobalSettings(context.RunSettings.SettingsXml, CurrentSettings);
+        SetGlobalSettings(context.RunSettings.SettingsXml, CurrentSettings, logger);
     }
 
     /// <summary>
@@ -435,7 +435,11 @@ public class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidClassCleanupLifecycleValue,
                                         value,
-                                        string.Join(", ", Enum.GetNames(typeof(ClassCleanupBehavior)))));
+#if NET
+                                        string.Join(", ", Enum.GetNames<ClassCleanupBehavior>())));
+#else
+                                        string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
+#endif
 
                             break;
                         }
@@ -747,7 +751,11 @@ public class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidParallelScopeValue,
                                         value,
-                                        string.Join(", ", Enum.GetNames(typeof(ExecutionScope)))));
+#if NET
+                                        string.Join(", ", Enum.GetNames<ExecutionScope>())));
+#else
+                                        string.Join(", ", EnumPolyfill.GetNames<ExecutionScope>())));
+#endif
 
                             break;
                         }
@@ -772,11 +780,17 @@ public class MSTestSettings
     }
 
     private static bool TryParseEnum<T>(string value, out T result)
-        where T : struct, Enum => Enum.TryParse(value, true, out result) && Enum.IsDefined(typeof(T), result);
+        where T : struct, Enum
+        => Enum.TryParse(value, true, out result)
+#if NET6_0_OR_GREATER
+        && Enum.IsDefined(result);
+#else
+        && Enum.IsDefined(typeof(T), result);
+#endif
 
     private static void SetGlobalSettings(
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
-        MSTestSettings settings)
+        MSTestSettings settings, IMessageLogger? logger)
     {
         XElement? runConfigElement = XDocument.Parse(runsettingsXml).Element("RunSettings")?.Element("RunConfiguration");
 
@@ -789,6 +803,10 @@ public class MSTestSettings
         if (bool.TryParse(disableParallelizationString, out bool disableParallelization))
         {
             settings.DisableParallelization = disableParallelization;
+        }
+        else
+        {
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, disableParallelizationString, "DisableParallelization"));
         }
     }
 }
