@@ -280,7 +280,7 @@ public class MSTestSettings
             CurrentSettings = settings ?? new MSTestSettings();
         }
 
-        SetGlobalSettings(context.RunSettings.SettingsXml, CurrentSettings);
+        SetGlobalSettings(context.RunSettings.SettingsXml, CurrentSettings, logger);
     }
 
     /// <summary>
@@ -776,7 +776,7 @@ public class MSTestSettings
 
     private static void SetGlobalSettings(
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
-        MSTestSettings settings)
+        MSTestSettings settings, IMessageLogger? logger)
     {
         XElement? runConfigElement = XDocument.Parse(runsettingsXml).Element("RunSettings")?.Element("RunConfiguration");
 
@@ -789,6 +789,10 @@ public class MSTestSettings
         if (bool.TryParse(disableParallelizationString, out bool disableParallelization))
         {
             settings.DisableParallelization = disableParallelization;
+        }
+        else
+        {
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, disableParallelizationString, "DisableParallelization"));
         }
     }
 }
