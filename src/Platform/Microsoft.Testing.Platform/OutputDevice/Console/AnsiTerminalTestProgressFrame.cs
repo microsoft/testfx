@@ -8,7 +8,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Console;
 /// <summary>
 /// Captures <see cref="TestProgressState"/> that was rendered to screen, so we can only partially update the screen on next update.
 /// </summary>
-internal sealed class TestProgressFrame
+internal sealed class AnsiTerminalTestProgressFrame
 {
     private const int MaxColumn = 120;
 
@@ -20,7 +20,7 @@ internal sealed class TestProgressFrame
 
     public int ProgressCount { get; private set; }
 
-    public TestProgressFrame(TestProgressState?[] nodes, int width, int height)
+    public AnsiTerminalTestProgressFrame(TestProgressState?[] nodes, int width, int height)
     {
         Width = Math.Min(width, MaxColumn);
         Height = height;
@@ -40,7 +40,7 @@ internal sealed class TestProgressFrame
     {
         TestProgressState p = _progressItems[i].TestWorkerProgress;
 
-        string durationString = $" ({p.Stopwatch.Elapsed.TotalSeconds:F1}s)";
+        string durationString = HumanReadableDurationFormatter.Render(p.Stopwatch.Elapsed);
 
         _progressItems[i].DurationLength = durationString.Length;
 
@@ -108,7 +108,7 @@ internal sealed class TestProgressFrame
     /// <summary>
     /// Render VT100 string to update from current to next frame.
     /// </summary>
-    public void Render(TestProgressFrame previousFrame, AnsiTerminal terminal)
+    public void Render(AnsiTerminalTestProgressFrame previousFrame, AnsiTerminal terminal)
     {
         // Move cursor back to 1st line of progress.
         terminal.MoveCursorUp(previousFrame.ProgressCount + 1);
@@ -116,20 +116,30 @@ internal sealed class TestProgressFrame
         int i = 0;
         for (; i < ProgressCount; i++)
         {
-            // Do we have previous node string to compare with?
+            // Optimize the rendering. When we have previous frame to compare with, we can decide to rewrite only part of the screen,
+            // rather than deleting whole line and have the line flicker. Most commonly this will rewrite just the time part of the line.
             if (previousFrame.ProgressCount > i)
             {
                 if (previousFrame._progressItems[i] == _progressItems[i])
                 {
                     // Same everything except time, AND same number of digits in time
-                    string durationString = $" ({_progressItems[i].TestWorkerProgress.Stopwatch.Elapsed.TotalSeconds:F1}s)";
+                    string durationString = HumanReadableDurationFormatter.Render(_progressItems[i].TestWorkerProgress.Stopwatch.Elapsed);
 
-                    terminal.SetCursorHorizontal(MaxColumn);
-                    terminal.Append($"{AnsiCodes.SetCursorHorizontal(MaxColumn)}{AnsiCodes.MoveCursorBackward(durationString.Length)}{durationString}");
+                    if (_progressItems[i].DurationLength == durationString.Length)
+                    {
+                        terminal.SetCursorHorizontal(MaxColumn);
+                        terminal.Append($"{AnsiCodes.SetCursorHorizontal(MaxColumn)}{AnsiCodes.MoveCursorBackward(durationString.Length)}{durationString}");
+                    }
+                    else
+                    {
+                        // Render full line.
+                        terminal.Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInLine}");
+                        AppendTestWorkerProgress(i, terminal);
+                    }
                 }
                 else
                 {
-                    // TODO: check components to figure out skips and optimize this
+                    // Render full line.
                     terminal.Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInLine}");
                     AppendTestWorkerProgress(i, terminal);
                 }

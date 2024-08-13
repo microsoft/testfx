@@ -3,13 +3,11 @@
 
 #if !NET7_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
-#endif
-using System.Globalization;
-#if !NET7_0_OR_GREATER
 using System.Reflection;
-
 #endif
 
+using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform.Helpers;
@@ -116,8 +114,8 @@ internal partial class ConsoleLogger : IDisposable
 
         // When not writing to ANSI we write the progress to screen and leave it there so we don't want to write it more often than every few seconds.
         int nonAnsiUpdateCadenceInMs = 3_000;
-        // When writing to ANSI we update the progress in place and it should look responsive so we update every few ms, roughly 30 FPS.
-        int ansiUpdateCadenceInMs = 33;
+        // When writing to ANSI we update the progress in place and it should look responsive so we update every half second, because we only show seconds on the screen, so it is good enough.
+        int ansiUpdateCadenceInMs = 500;
         if (!_options.UseAnsi)
         {
             consoleWithProgress = new ConsoleWithProgress(new NonAnsiTerminal(console), showProgress, updateEvery: nonAnsiUpdateCadenceInMs);
@@ -652,46 +650,7 @@ internal partial class ConsoleLogger : IDisposable
             terminal.SetColor(TerminalColor.Gray);
         }
 
-        if (wrapInParentheses)
-        {
-            terminal.Append('(');
-        }
-
-        bool hasParentValue = false;
-
-        if (duration.Days > 0)
-        {
-            terminal.Append($"{duration.Days}d");
-            hasParentValue = true;
-        }
-
-        if (duration.Hours > 0 || hasParentValue)
-        {
-            terminal.Append($"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Hours.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : duration.Hours.ToString(CultureInfo.InvariantCulture))}h");
-            hasParentValue = true;
-        }
-
-        if (duration.Minutes > 0 || hasParentValue)
-        {
-            terminal.Append($"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Minutes.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : duration.Minutes.ToString(CultureInfo.InvariantCulture))}m");
-            hasParentValue = true;
-        }
-
-        if (duration.Seconds > 0 || hasParentValue)
-        {
-            terminal.Append($"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Seconds.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : duration.Seconds.ToString(CultureInfo.InvariantCulture))}s");
-            hasParentValue = true;
-        }
-
-        if (duration.Milliseconds >= 0 || hasParentValue)
-        {
-            terminal.Append($"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Milliseconds.ToString(CultureInfo.InvariantCulture).PadLeft(3, '0') : duration.Milliseconds.ToString(CultureInfo.InvariantCulture))}ms");
-        }
-
-        if (wrapInParentheses)
-        {
-            terminal.Append(')');
-        }
+        HumanReadableDurationFormatter.Append(terminal, duration, wrapInParentheses);
 
         if (colorize)
         {
