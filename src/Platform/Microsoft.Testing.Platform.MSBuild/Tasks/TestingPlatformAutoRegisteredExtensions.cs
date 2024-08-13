@@ -174,9 +174,9 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 //------------------------------------------------------------------------------
 
 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-public static class AutoRegisteredExtensions
+public static class SelfRegisteredExtensions
 {
-    public static void AddAutoRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
+    public static void AddSelfRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
     {
         {{extensionsFragments}}
     }
@@ -193,10 +193,10 @@ public static class AutoRegisteredExtensions
 '------------------------------------------------------------------------------
 
 <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
-Public Module AutoRegisteredExtensions
+Public Module SelfRegisteredExtensions
 
     <System.Runtime.CompilerServices.Extension>
-    Public Sub AddAutoRegisteredExtensions(ByVal builder As Global.Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, ByVal args As Global.System.String())
+    Public Sub AddSelfRegisteredExtensions(ByVal builder As Global.Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, ByVal args As Global.System.String())
         {{extensionsFragments}}
     End Sub
 
@@ -218,10 +218,10 @@ open System.Runtime.CompilerServices
 
 [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
 [<Extension>]
-type AutoRegisteredExtensions() =
+type SelfRegisteredExtensions() =
 
     [<Extension>]
-    static member AddAutoRegisteredExtensions (builder: Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args: string[]) =
+    static member AddSelfRegisteredExtensions (builder: Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args: string[]) =
         {{extensionsFragments}}
 """;
         }

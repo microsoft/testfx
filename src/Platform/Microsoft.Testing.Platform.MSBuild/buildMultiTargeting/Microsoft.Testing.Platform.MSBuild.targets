@@ -5,7 +5,7 @@
   <PropertyGroup Condition=" $(IsTestingPlatformApplication) == 'True' ">
     <GenerateTestingPlatformConfigurationFile Condition=" '$(GenerateTestingPlatformConfigurationFile)' == '' " >True</GenerateTestingPlatformConfigurationFile>
     <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' " >True</GenerateTestingPlatformEntryPoint>
-    <GenerateAutoRegisteredExtensions Condition=" '$(GenerateAddAutoRegisteredExtensions)' == '' ">True</GenerateAutoRegisteredExtensions>
+    <GenerateSelfRegisteredExtensions Condition=" '$(GenerateSelfRegisteredExtensions)' == '' ">True</GenerateSelfRegisteredExtensions>
   </PropertyGroup>
 
   <!-- Declare our capability to Visual Studio/Visual Studio Code -->
@@ -155,7 +155,7 @@
   <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.TestingPlatformAutoRegisteredExtensions"
          AssemblyFile="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
 
-  <Target Name="_GenerateAutoRegisteredExtensionsFileInputCache" BeforeTargets="_GenerateTestingPlatformEntryPoint" Condition=" '$(GenerateAutoRegisteredExtensions)' == 'True' " >
+  <Target Name="_GenerateAutoRegisteredExtensionsFileInputCache" BeforeTargets="_GenerateTestingPlatformEntryPoint" Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
     <PropertyGroup>
       <!-- Cache file to check -->
       <_GenerateAutoRegisteredExtensionsInputsCachFilePath>$(IntermediateOutputPath)$(MSBuildProjectName).genautoregisteredextensionsinputcache.cache</_GenerateAutoRegisteredExtensionsInputsCachFilePath>
@@ -204,7 +204,7 @@
   </Target>
 
   <!-- We always include the entry point also if the task _GenerateTestingPlatformInjectEntryPoint is skipped for caching reason -->
-  <Target Name="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation" BeforeTargets="_IncludeGenerateTestingPlatformEntryPointIntoCompilation;CoreCompile" Condition=" '$(GenerateAutoRegisteredExtensions)' == 'True' " >
+  <Target Name="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation" BeforeTargets="_IncludeGenerateTestingPlatformEntryPointIntoCompilation;CoreCompile" Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
     <ItemGroup>
       <Compile Include="$(_AutoRegisteredExtensionsSourcePath)" />
     </ItemGroup>
