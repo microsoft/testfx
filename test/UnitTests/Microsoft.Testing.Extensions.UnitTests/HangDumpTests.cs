@@ -19,6 +19,7 @@ public class HangDumpTests(ITestExecutionContext testExecutionContext) : TestBas
 {
     private HangDumpCommandLineProvider GetProvider()
     {
+        Thread.Sleep(5000);
         var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
         _ = testApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns("FullPath");
         return new(new HangDumpConfiguration(
