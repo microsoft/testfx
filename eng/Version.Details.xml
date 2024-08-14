@@ -17,13 +17,13 @@
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
       <Sha>3f55a9b2f9096b1c90f24d5d16a6e178c6f92f8d</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Internal.Framework" Version="1.3.0-preview.24412.6">
+    <Dependency Name="Microsoft.Testing.Internal.Framework" Version="1.3.0-preview.24414.1">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>0e124b871750977ae74d331aadb56de38bb86ae0</Sha>
+      <Sha>0734bdceb4107ce9ddb66f6418e960294b5a448d</Sha>
     </Dependency>
-    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24412.6">
+    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24414.1">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>0e124b871750977ae74d331aadb56de38bb86ae0</Sha>
+      <Sha>0734bdceb4107ce9ddb66f6418e960294b5a448d</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
