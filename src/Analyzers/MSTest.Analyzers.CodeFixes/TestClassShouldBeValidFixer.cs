@@ -41,16 +41,63 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
             return;
         }
 
-        // Find the type declaration identified by the diagnostic.
-        TypeDeclarationSyntax declaration = syntaxToken.Parent.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().First();
+        ClassDeclarationSyntax declaration = syntaxToken.Parent.AncestorsAndSelf().OfType<ClassDeclarationSyntax>().FirstOrDefault();
 
         // Register a code action that will invoke the fix.
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.TestClassShouldBeValidFix,
-                createChangedDocument: c => AddTestClassAttributeAsync(context.Document, declaration, c),
+                createChangedDocument: c => FixClassDeclarationAsync(context.Document, root, declaration, c),
                 equivalenceKey: nameof(TestClassShouldBeValidFixer)),
             diagnostic);
     }
 
+    public static async Task<Document> FixClassDeclarationAsync(Document document, SyntaxNode root, ClassDeclarationSyntax classDeclaration, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        bool canDiscoverInternals = IsDiscoverInternalsAttributePresent(root);
+
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+
+        // Remove the static modifier if it exists
+        SyntaxTokenList modifiers = SyntaxFactory.TokenList(
+         classDeclaration.Modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.StaticKeyword)));
+
+        // Determine the visibility modifier
+        SyntaxToken visibilityModifier = canDiscoverInternals
+            ? SyntaxFactory.Token(SyntaxKind.InternalKeyword)
+            : SyntaxFactory.Token(SyntaxKind.PublicKeyword);
+
+        modifiers = SyntaxFactory.TokenList(
+            modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.PrivateKeyword) && !modifier.IsKind(SyntaxKind.InternalKeyword))).Add(visibilityModifier);
+
+        // Create a new class declaration with the updated modifiers.
+        ClassDeclarationSyntax newClassDeclaration = classDeclaration.WithModifiers(modifiers);
+        editor.ReplaceNode(classDeclaration, newClassDeclaration);
+        SyntaxNode newRoot = editor.GetChangedRoot();
+
+        return document.WithSyntaxRoot(newRoot);
+    }
+
+    private static bool IsDiscoverInternalsAttributePresent(SyntaxNode root)
+    {
+        IEnumerable<AttributeListSyntax> attributeLists = root.DescendantNodes().OfType<AttributeListSyntax>();
+
+        foreach (AttributeListSyntax attributeList in attributeLists)
+        {
+            if (attributeList.Target?.Identifier.IsKind(SyntaxKind.AssemblyKeyword) == true)
+            {
+                foreach (AttributeSyntax attribute in attributeList.Attributes)
+                {
+                    if (attribute.Name.ToString().Contains("DiscoverInternals"))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
 }
