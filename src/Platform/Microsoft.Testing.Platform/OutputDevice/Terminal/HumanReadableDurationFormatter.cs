@@ -4,7 +4,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal static class HumanReadableDurationFormatter
 {

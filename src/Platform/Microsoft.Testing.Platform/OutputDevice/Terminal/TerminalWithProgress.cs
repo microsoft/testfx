@@ -1,12 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// Console that updates the progress in place when progress reporting is enabled.
 /// </summary>
-internal partial class ConsoleWithProgress : IDisposable
+internal partial class TerminalWithProgress : IDisposable
 {
     /// <summary>
     /// A cancellation token to signal the rendering thread that it should exit.
@@ -52,7 +52,7 @@ internal partial class ConsoleWithProgress : IDisposable
         _terminal.EraseProgress();
     }
 
-    public ConsoleWithProgress(ITerminal terminal, Func<bool?> showProgress, int updateEvery)
+    public TerminalWithProgress(ITerminal terminal, Func<bool?> showProgress, int updateEvery)
     {
         _terminal = terminal;
         _showProgress = showProgress;

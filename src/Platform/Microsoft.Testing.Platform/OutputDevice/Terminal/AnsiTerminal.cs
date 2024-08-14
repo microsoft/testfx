@@ -8,7 +8,7 @@ using System.Text;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// Console writer that is used when writing ANSI is allowed. It is capable of batching as many updates as possible and writing them at the end,
