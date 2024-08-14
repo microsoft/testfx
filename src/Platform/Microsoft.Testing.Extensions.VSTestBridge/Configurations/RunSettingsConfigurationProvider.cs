@@ -12,10 +12,7 @@ internal sealed class RunSettingsConfigurationProvider : IConfigurationSource, I
 {
     private readonly string _runsettings;
 
-    public RunSettingsConfigurationProvider(string runSettings)
-    {
-        _runsettings = runSettings;
-    }
+    public RunSettingsConfigurationProvider(string runSettings) => _runsettings = runSettings;
 
     /// <inheritdoc />
     public string Uid { get; } = nameof(RunSettingsConfigurationProvider);

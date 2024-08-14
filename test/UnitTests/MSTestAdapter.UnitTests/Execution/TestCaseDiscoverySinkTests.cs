@@ -12,10 +12,7 @@ public class TestCaseDiscoverySinkTests : TestContainer
 {
     private readonly TestCaseDiscoverySink _testCaseDiscoverySink;
 
-    public TestCaseDiscoverySinkTests()
-    {
-        _testCaseDiscoverySink = new TestCaseDiscoverySink();
-    }
+    public TestCaseDiscoverySinkTests() => _testCaseDiscoverySink = new TestCaseDiscoverySink();
 
     public void TestCaseDiscoverySinkConstructorShouldInitializeTests()
     {

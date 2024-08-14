@@ -14,10 +14,7 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
 {
     private TestableExpectedExceptionBaseAttributeClass _sut;
 
-    public ExpectedExceptionBaseAttributeTests()
-    {
-        _sut = new TestableExpectedExceptionBaseAttributeClass();
-    }
+    public ExpectedExceptionBaseAttributeTests() => _sut = new TestableExpectedExceptionBaseAttributeClass();
 
     /// <summary>
     /// RethrowIfAssertException function will throw AssertFailedException if we pass AssertFailedException as parameter in it.

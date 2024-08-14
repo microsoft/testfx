@@ -19,10 +19,7 @@ public class FileArtifact : PropertyBagData
     /// <param name="displayName">The display name.</param>
     /// <param name="description">The description.</param>
     public FileArtifact(FileInfo fileInfo, string displayName, string? description = null)
-        : base(displayName, description)
-    {
-        FileInfo = fileInfo;
-    }
+        : base(displayName, description) => FileInfo = fileInfo;
 
     /// <summary>
     /// Gets the file information.
@@ -79,10 +76,7 @@ public class SessionFileArtifact : DataWithSessionUid
     /// <param name="displayName">The display name.</param>
     /// <param name="description">The description.</param>
     public SessionFileArtifact(SessionUid sessionUid, FileInfo fileInfo, string displayName, string? description = null)
-        : base(displayName, description, sessionUid)
-    {
-        FileInfo = fileInfo;
-    }
+        : base(displayName, description, sessionUid) => FileInfo = fileInfo;
 
     /// <summary>
     /// Gets the file information.
@@ -144,10 +138,7 @@ public class TestNodeFileArtifact : SessionFileArtifact
     /// <param name="displayName">The display name.</param>
     /// <param name="description">The description.</param>
     public TestNodeFileArtifact(SessionUid sessionUid, TestNode testNode, FileInfo fileInfo, string displayName, string? description = null)
-        : base(sessionUid, fileInfo, displayName, description)
-    {
-        TestNode = testNode;
-    }
+        : base(sessionUid, fileInfo, displayName, description) => TestNode = testNode;
 
     /// <summary>
     /// Gets the test node.

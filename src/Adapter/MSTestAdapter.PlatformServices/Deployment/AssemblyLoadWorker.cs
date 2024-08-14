@@ -30,10 +30,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     {
     }
 
-    internal AssemblyLoadWorker(IAssemblyUtility assemblyUtility)
-    {
-        _assemblyUtility = assemblyUtility;
-    }
+    internal AssemblyLoadWorker(IAssemblyUtility assemblyUtility) => _assemblyUtility = assemblyUtility;
 
     /// <summary>
     /// Returns the full path to the dependent assemblies of the parameter managed assembly recursively.

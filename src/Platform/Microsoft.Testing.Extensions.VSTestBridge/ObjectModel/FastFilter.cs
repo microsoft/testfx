@@ -62,7 +62,7 @@ internal sealed class FastFilter
             }
             else
             {
-                IEnumerable<string?>? values = PropertyValueRegex == null ? multiValues : multiValues?.Select(value => ApplyRegex(value));
+                IEnumerable<string?>? values = PropertyValueRegex == null ? multiValues : multiValues?.Select(ApplyRegex);
                 matched = values?.Any(result => result != null && FilterProperties[name].Contains(result)) == true;
             }
 

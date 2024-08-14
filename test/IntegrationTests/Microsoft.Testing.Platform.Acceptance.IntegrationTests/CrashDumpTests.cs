@@ -17,10 +17,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public CrashDumpTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
     public async Task CrashDump_DefaultSetting_CreateDump(string tfm)

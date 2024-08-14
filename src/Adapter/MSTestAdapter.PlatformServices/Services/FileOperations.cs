@@ -25,10 +25,7 @@ public class FileOperations : IFileOperations
 #if WIN_UI
     private readonly bool _isPackaged;
 
-    public FileOperations()
-    {
-        _isPackaged = AppModel.IsPackagedProcess();
-    }
+    public FileOperations() => _isPackaged = AppModel.IsPackagedProcess();
 #endif
 
     /// <summary>

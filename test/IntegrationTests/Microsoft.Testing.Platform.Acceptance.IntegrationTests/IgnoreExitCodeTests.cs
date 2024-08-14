@@ -85,10 +85,7 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
     private readonly AcceptanceFixture _acceptanceFixture;
 
     public IgnoreExitCodeTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext)
-    {
-        _acceptanceFixture = acceptanceFixture;
-    }
+        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
     public static IEnumerable<TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration, string CommandLine, string EnvironmentVariable)>> GetBuildMatrix()
     {

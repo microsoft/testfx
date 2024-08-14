@@ -12,10 +12,7 @@ public class FileOperationsTests : TestContainer
 {
     private readonly FileOperations _fileOperations;
 
-    public FileOperationsTests()
-    {
-        _fileOperations = new FileOperations();
-    }
+    public FileOperationsTests() => _fileOperations = new FileOperations();
 
     public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()
     {

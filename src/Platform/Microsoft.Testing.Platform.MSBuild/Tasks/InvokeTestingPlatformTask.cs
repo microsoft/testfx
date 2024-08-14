@@ -53,10 +53,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
     }
 
-    internal InvokeTestingPlatformTask(IFileSystem fileSystem)
-    {
-        _fileSystem = fileSystem;
-    }
+    internal InvokeTestingPlatformTask(IFileSystem fileSystem) => _fileSystem = fileSystem;
 
     [Required]
     public ITaskItem TargetPath { get; set; }

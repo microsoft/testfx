@@ -286,10 +286,7 @@ public class ReflectHelperTests : TestContainer
 
     internal class AttributeMockingHelper
     {
-        public AttributeMockingHelper(Mock<IReflectionOperations> mockReflectionOperations)
-        {
-            _mockReflectionOperations = mockReflectionOperations;
-        }
+        public AttributeMockingHelper(Mock<IReflectionOperations> mockReflectionOperations) => _mockReflectionOperations = mockReflectionOperations;
 
         /// <summary>
         /// A collection to hold mock custom attributes.

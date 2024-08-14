@@ -87,10 +87,7 @@ public class ExceptionExtensionsTests : TestContainer
     {
         private readonly Func<string> _getStackTrace;
 
-        public DummyExceptionForStackTrace(Func<string> getStackTrace)
-        {
-            _getStackTrace = getStackTrace;
-        }
+        public DummyExceptionForStackTrace(Func<string> getStackTrace) => _getStackTrace = getStackTrace;
 
         public override string StackTrace => _getStackTrace();
     }
@@ -99,10 +96,7 @@ public class ExceptionExtensionsTests : TestContainer
     {
         private readonly Func<string> _getMessage;
 
-        public DummyException(Func<string> message)
-        {
-            _getMessage = message;
-        }
+        public DummyException(Func<string> message) => _getMessage = message;
 
         public override string Message => _getMessage();
     }

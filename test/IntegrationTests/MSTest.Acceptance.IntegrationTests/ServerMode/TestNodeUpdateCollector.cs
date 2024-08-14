@@ -14,10 +14,7 @@ public class TestNodeUpdateCollector
 
     public ConcurrentBag<TestNodeUpdate> TestNodeUpdates { get; } = new();
 
-    public TestNodeUpdateCollector(Func<TestNodeUpdate, bool>? completeCollectorWhen = null)
-    {
-        _completeCollector = completeCollectorWhen;
-    }
+    public TestNodeUpdateCollector(Func<TestNodeUpdate, bool>? completeCollectorWhen = null) => _completeCollector = completeCollectorWhen;
 
     public Task CollectNodeUpdates(TestNodeUpdate[] messages)
     {

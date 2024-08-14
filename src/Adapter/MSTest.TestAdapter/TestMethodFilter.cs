@@ -17,18 +17,15 @@ internal class TestMethodFilter
     /// </summary>
     private readonly Dictionary<string, TestProperty> _supportedProperties;
 
-    internal TestMethodFilter()
+    internal TestMethodFilter() => _supportedProperties = new Dictionary<string, TestProperty>(StringComparer.OrdinalIgnoreCase)
     {
-        _supportedProperties = new Dictionary<string, TestProperty>(StringComparer.OrdinalIgnoreCase)
-        {
-            [Constants.TestCategoryProperty.Label] = Constants.TestCategoryProperty,
-            [Constants.PriorityProperty.Label] = Constants.PriorityProperty,
-            [TestCaseProperties.FullyQualifiedName.Label] = TestCaseProperties.FullyQualifiedName,
-            [TestCaseProperties.DisplayName.Label] = TestCaseProperties.DisplayName,
-            [TestCaseProperties.Id.Label] = TestCaseProperties.Id,
-            [Constants.TestClassNameProperty.Label] = Constants.TestClassNameProperty,
-        };
-    }
+        [Constants.TestCategoryProperty.Label] = Constants.TestCategoryProperty,
+        [Constants.PriorityProperty.Label] = Constants.PriorityProperty,
+        [TestCaseProperties.FullyQualifiedName.Label] = TestCaseProperties.FullyQualifiedName,
+        [TestCaseProperties.DisplayName.Label] = TestCaseProperties.DisplayName,
+        [TestCaseProperties.Id.Label] = TestCaseProperties.Id,
+        [Constants.TestClassNameProperty.Label] = Constants.TestClassNameProperty,
+    };
 
     /// <summary>
     /// Returns ITestCaseFilterExpression for TestProperties supported by adapter.

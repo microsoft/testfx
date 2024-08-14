@@ -12,10 +12,7 @@ public class DotnetTestCliTests : AcceptanceTestBase
     private readonly AcceptanceFixture _acceptanceFixture;
 
     public DotnetTestCliTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext)
-    {
-        _acceptanceFixture = acceptanceFixture;
-    }
+        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
     [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildConfiguration))]
     public async Task DotnetTest_Should_Execute_Tests(string tfm, BuildConfiguration buildConfiguration)

@@ -14,10 +14,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public UnhandledExceptionPolicyTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     public enum Mode
     {

@@ -5,10 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 internal readonly struct AssemblyExecutionContextScope : IExecutionContextScope
 {
-    public AssemblyExecutionContextScope(bool isCleanup)
-    {
-        IsCleanup = isCleanup;
-    }
+    public AssemblyExecutionContextScope(bool isCleanup) => IsCleanup = isCleanup;
 
     public bool IsCleanup { get; }
 }

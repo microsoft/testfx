@@ -6,10 +6,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 internal sealed class VSTestException : Exception
 {
     public VSTestException(string? message, string? stackTrace)
-        : base(message)
-    {
-        StackTrace = stackTrace;
-    }
+        : base(message) => StackTrace = stackTrace;
 
     public override string? StackTrace { get; }
 }

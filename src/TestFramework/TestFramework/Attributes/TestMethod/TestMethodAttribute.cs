@@ -23,10 +23,7 @@ public class TestMethodAttribute : Attribute
     /// <param name="displayName">
     /// Display name for the test.
     /// </param>
-    public TestMethodAttribute(string? displayName)
-    {
-        DisplayName = displayName;
-    }
+    public TestMethodAttribute(string? displayName) => DisplayName = displayName;
 
     /// <summary>
     /// Gets display name for the test.

@@ -79,10 +79,7 @@ public partial class CLITestBase : TestContainer
 
         private class InternalRunSettings : IRunSettings
         {
-            public InternalRunSettings(string runSettings)
-            {
-                SettingsXml = runSettings;
-            }
+            public InternalRunSettings(string runSettings) => SettingsXml = runSettings;
 
             public string SettingsXml { get; }
 

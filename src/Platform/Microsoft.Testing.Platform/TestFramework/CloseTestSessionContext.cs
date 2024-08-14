@@ -11,10 +11,7 @@ namespace Microsoft.Testing.Platform.Extensions.TestFramework;
 public sealed class CloseTestSessionContext : TestSessionContext
 {
     internal CloseTestSessionContext(SessionUid sessionUid, ClientInfo client, CancellationToken cancellationToken)
-        : base(sessionUid, client)
-    {
-        CancellationToken = cancellationToken;
-    }
+        : base(sessionUid, client) => CancellationToken = cancellationToken;
 
     /// <summary>
     /// Gets the cancellation token used to cancel the operation.

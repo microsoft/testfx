@@ -15,10 +15,7 @@ public class TestIdGenerationStrategyAttribute : Attribute
     /// <param name="strategy">
     /// The <see cref="TestIdGenerationStrategy"/> to use when generating the test ID.
     /// </param>
-    public TestIdGenerationStrategyAttribute(TestIdGenerationStrategy strategy)
-    {
-        Strategy = strategy;
-    }
+    public TestIdGenerationStrategyAttribute(TestIdGenerationStrategy strategy) => Strategy = strategy;
 
     /// <summary>
     /// Gets the test ID generation strategy.

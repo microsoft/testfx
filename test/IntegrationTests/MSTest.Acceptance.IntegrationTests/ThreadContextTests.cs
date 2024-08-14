@@ -12,10 +12,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public ThreadContextTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task ThreadingContext_WhenCultureIsNotSet_TestMethodFails(string tfm)

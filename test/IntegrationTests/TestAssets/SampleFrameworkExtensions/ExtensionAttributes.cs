@@ -8,10 +8,7 @@ namespace SampleFrameworkExtensions;
 public sealed class DurationAttribute : TestPropertyAttribute
 {
     public DurationAttribute(string duration)
-        : base("Duration", duration)
-    {
-        Duration = duration;
-    }
+        : base("Duration", duration) => Duration = duration;
 
     public string Duration { get; private set; }
 }
@@ -19,10 +16,7 @@ public sealed class DurationAttribute : TestPropertyAttribute
 [AttributeUsage(AttributeTargets.Method)]
 public sealed class CategoryArrayAttribute : Attribute
 {
-    public CategoryArrayAttribute(params string[] value)
-    {
-        Value = value;
-    }
+    public CategoryArrayAttribute(params string[] value) => Value = value;
 
     public string[] Value { get; private set; }
 }

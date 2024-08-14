@@ -12,10 +12,7 @@ public sealed class TestContextTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public TestContextTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     public async Task TestContextsAreCorrectlySet()
     {

@@ -13,10 +13,7 @@ public sealed class ClassInitializeAttribute : Attribute
     /// Initializes a new instance of the <see cref="ClassInitializeAttribute"/> class.
     /// ClassInitializeAttribute.
     /// </summary>
-    public ClassInitializeAttribute()
-    {
-        InheritanceBehavior = InheritanceBehavior.None;
-    }
+    public ClassInitializeAttribute() => InheritanceBehavior = InheritanceBehavior.None;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ClassInitializeAttribute"/> class.
@@ -25,10 +22,7 @@ public sealed class ClassInitializeAttribute : Attribute
     /// <param name="inheritanceBehavior">
     /// Specifies the ClassInitialize Inheritance Behavior.
     /// </param>
-    public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior)
-    {
-        InheritanceBehavior = inheritanceBehavior;
-    }
+    public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior) => InheritanceBehavior = inheritanceBehavior;
 
     /// <summary>
     /// Gets the Inheritance Behavior.

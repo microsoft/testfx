@@ -160,10 +160,7 @@ public partial /* for codegen regx */ class TestingPlatformClientFactory
 
 public sealed class ProcessConfiguration
 {
-    public ProcessConfiguration(string fileName)
-    {
-        FileName = fileName;
-    }
+    public ProcessConfiguration(string fileName) => FileName = fileName;
 
     public string FileName { get; }
 

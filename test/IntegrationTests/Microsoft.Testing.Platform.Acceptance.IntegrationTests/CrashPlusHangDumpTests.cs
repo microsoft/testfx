@@ -12,10 +12,7 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public CrashPlusHangDumpTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     public async Task CrashPlusHangDump_InCaseOfCrash_CreateCrashDump()
         => await RetryHelper.RetryAsync(

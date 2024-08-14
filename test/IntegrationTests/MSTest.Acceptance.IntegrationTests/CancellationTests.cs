@@ -12,10 +12,7 @@ public sealed class CancellationTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public CancellationTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     public async Task WhenCancelingTestContextTokenInAssemblyInit_MessageIsAsExpected()
     {

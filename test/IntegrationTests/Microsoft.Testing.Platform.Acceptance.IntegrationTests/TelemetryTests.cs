@@ -17,10 +17,7 @@ public class TelemetryTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public TelemetryTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Telemetry_ByDefault_TelemetryIsEnabled(string tfm)

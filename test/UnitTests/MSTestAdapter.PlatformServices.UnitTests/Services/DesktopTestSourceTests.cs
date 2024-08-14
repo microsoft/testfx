@@ -14,10 +14,7 @@ public class DesktopTestSourceTests : TestContainer
 {
     private readonly TestSource _testSource;
 
-    public DesktopTestSourceTests()
-    {
-        _testSource = new TestSource();
-    }
+    public DesktopTestSourceTests() => _testSource = new TestSource();
 
     public void ValidSourceExtensionsShouldContainDllExtensions() => Verify(_testSource.ValidSourceExtensions.Contains(".dll"));
 

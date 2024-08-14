@@ -15,14 +15,12 @@ public class FormatterUtilitiesTests : TestBase
     private readonly IMessageFormatter _formatter = FormatterUtilities.CreateFormatter();
 
     public FormatterUtilitiesTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
+        : base(testExecutionContext) =>
 #if NETCOREAPP
         Assert.AreEqual("System.Text.Json", _formatter.Id);
 #else
         Assert.AreEqual("Jsonite", _formatter.Id);
 #endif
-    }
 
     public void CanDeserializeTaskResponse()
     {

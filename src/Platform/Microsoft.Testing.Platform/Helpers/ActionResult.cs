@@ -34,10 +34,7 @@ internal class ActionResult
 internal sealed class ActionResult<TResult> : ActionResult
 {
     internal ActionResult(bool isSuccess, TResult? result)
-        : base(isSuccess, result)
-    {
-        Result = result;
-    }
+        : base(isSuccess, result) => Result = result;
 
     [MemberNotNullWhen(true, nameof(Result))]
     public new bool IsSuccess => base.IsSuccess;

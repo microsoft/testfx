@@ -17,10 +17,7 @@ public sealed class IPCTests : TestBase
     private readonly ITestExecutionContext _testExecutionContext;
 
     public IPCTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-        _testExecutionContext = testExecutionContext;
-    }
+        : base(testExecutionContext) => _testExecutionContext = testExecutionContext;
 
     public async Task SingleConnectionNamedPipeServer_MultipleConnection_Fails()
     {

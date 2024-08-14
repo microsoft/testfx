@@ -14,10 +14,7 @@ public sealed class TestNodeUidListFilter : ITestExecutionFilter
     /// Initializes a new instance of the <see cref="TestNodeUidListFilter"/> class.
     /// </summary>
     /// <param name="testNodeUids">The test node UIDs to filter.</param>
-    public TestNodeUidListFilter(TestNodeUid[] testNodeUids)
-    {
-        TestNodeUids = testNodeUids;
-    }
+    public TestNodeUidListFilter(TestNodeUid[] testNodeUids) => TestNodeUids = testNodeUids;
 
     /// <summary>
     /// Gets the test node UIDs to filter.

@@ -12,10 +12,7 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public AssemblyResolutionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     public async Task AssemblyResolution_WhenNotSpecified_TestFails()
     {

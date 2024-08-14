@@ -149,15 +149,9 @@ public sealed class AsynchronousMessageBusTests : TestBase
     {
         private readonly Func<DummyData, Task> _action;
 
-        public DummyConsumer()
-        {
-            _action = _ => Task.CompletedTask;
-        }
+        public DummyConsumer() => _action = _ => Task.CompletedTask;
 
-        public DummyConsumer(Func<DummyData, Task> action)
-        {
-            _action = action;
-        }
+        public DummyConsumer(Func<DummyData, Task> action) => _action = action;
 
         public List<DummyData> DummyDataList { get; } = [];
 
@@ -221,10 +215,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
         private readonly IMessageBus _messageBus;
         private bool _stopConsume;
 
-        public LoopConsumerA(IMessageBus messageBus)
-        {
-            _messageBus = messageBus;
-        }
+        public LoopConsumerA(IMessageBus messageBus) => _messageBus = messageBus;
 
         public Type[] DataTypesConsumed => [typeof(LoopDataB)];
 
@@ -275,10 +266,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
         private readonly IMessageBus _messageBus;
         private bool _stopConsume;
 
-        public ConsumerB(IMessageBus messageBus)
-        {
-            _messageBus = messageBus;
-        }
+        public ConsumerB(IMessageBus messageBus) => _messageBus = messageBus;
 
         public Type[] DataTypesConsumed => [typeof(LoopDataA)];
 
@@ -312,10 +300,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
 
     private sealed class Consumer : IDataConsumer, IDataProducer
     {
-        public Consumer(IMessageBus messageBus, string id)
-        {
-            Uid = id;
-        }
+        public Consumer(IMessageBus messageBus, string id) => Uid = id;
 
         public List<IData> ConsumedData { get; } = [];
 
@@ -345,10 +330,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
     {
         private readonly IMessageBus _messageBus;
 
-        public InvalidTypePublished(IMessageBus messageBus)
-        {
-            _messageBus = messageBus;
-        }
+        public InvalidTypePublished(IMessageBus messageBus) => _messageBus = messageBus;
 
         public ManualResetEvent Published { get; set; } = new(false);
 

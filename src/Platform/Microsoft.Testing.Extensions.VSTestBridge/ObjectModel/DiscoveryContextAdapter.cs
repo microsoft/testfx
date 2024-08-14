@@ -12,10 +12,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 internal sealed class DiscoveryContextAdapter : ContextAdapterBase, IDiscoveryContext
 {
     public DiscoveryContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings? runSettings = null)
-        : base(commandLineOptions)
-    {
-        RunSettings = runSettings;
-    }
+        : base(commandLineOptions) => RunSettings = runSettings;
 
     public IRunSettings? RunSettings { get; }
 }

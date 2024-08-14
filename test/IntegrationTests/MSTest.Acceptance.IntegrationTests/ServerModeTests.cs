@@ -12,10 +12,7 @@ public sealed class ServerModeTests : ServerModeTestsBase
     private readonly TestAssetFixture _fixture;
 
     public ServerModeTests(ITestExecutionContext testExecutionContext, TestAssetFixture fixture)
-        : base(testExecutionContext)
-    {
-        _fixture = fixture;
-    }
+        : base(testExecutionContext) => _fixture = fixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task DiscoverAndRun(string tfm)
