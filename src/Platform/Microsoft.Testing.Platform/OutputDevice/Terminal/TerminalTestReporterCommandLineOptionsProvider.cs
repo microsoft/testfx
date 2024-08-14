@@ -9,7 +9,7 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
-internal class TerminalTestReporterCommandLineOptionsProvider : ICommandLineOptionsProvider
+internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandLineOptionsProvider
 {
     public const string NoProgressOption = "no-progress";
     public const string NoAnsiOption = "no-ansi";

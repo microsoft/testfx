@@ -202,9 +202,6 @@ internal sealed class NonAnsiTerminal : ITerminal
                 ResetColor();
                 Append(']');
 
-                Append(' ');
-                Append(p.AssemblyName);
-
                 if (p.TargetFramework != null || p.Architecture != null)
                 {
                     Append(" (");
