@@ -11,7 +11,7 @@ namespace Microsoft.Testing.Platform.MSBuild;
 // Took inspiration from https://github.com/dotnet/sdk/blob/main/src/Tasks/Microsoft.NET.Build.Tasks/GenerateRuntimeConfigurationFiles.cs
 public sealed class ConfigurationFileTask : Build.Utilities.Task
 {
-    private const string ConfigurationFileNameSuffix = "testingplatformconfig.json";
+    private const string ConfigurationFileNameSuffix = "testconfig.json";
     private readonly IFileSystem _fileSystem;
 
     internal ConfigurationFileTask(IFileSystem? fileSystem)

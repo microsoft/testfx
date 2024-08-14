@@ -248,7 +248,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // At this point we start to build extensions so we need to have all the information complete for the usage,
         // here we ensure to override the result directory if user passed the argument --results-directory in command line.
-        // After this check users can get the result directory using IConfiguration["testingPlatform:resultDirectory"] or the
+        // After this check users can get the result directory using IConfiguration["platformOptions:resultDirectory"] or the
         // extension method helper serviceProvider.GetConfiguration()
         await configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(commandLineOptions, loggingState.FileLoggerProvider);
 
