@@ -8,13 +8,13 @@ using System.Text;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
-/// Console writer that is used when writing ANSI is allowed. It is capable of batching as many updates as possible and writing them at the end,
+/// Terminal writer that is used when writing ANSI is allowed. It is capable of batching as many updates as possible and writing them at the end,
 /// because the terminal is responsible for rendering the colors and control codes.
 /// </summary>
-internal class AnsiTerminal : ITerminal
+internal sealed class AnsiTerminal : ITerminal
 {
     private static readonly string[] KnownFileExtensions = new string[]
     {

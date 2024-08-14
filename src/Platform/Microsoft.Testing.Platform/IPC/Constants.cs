@@ -15,7 +15,7 @@ internal static class TestStates
 
     internal const string Timeout = "Timeout";
 
-    internal const string Cancelled = "Cancelled";
+    internal const string Cancelled = "Canceled";
 }
 
 internal static class SessionEventTypes
