@@ -104,5 +104,14 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("TestMethodShouldBeValidFix", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add &apos;[TestMethod]&apos;.
+        /// </summary>
+        internal static string UseAttributeOnTestMethodFix {
+            get {
+                return ResourceManager.GetString("UseAttributeOnTestMethodFix", resourceCulture);
+            }
+        }
     }
 }

@@ -132,4 +132,7 @@
   <data name="TestMethodShouldBeValidFix" xml:space="preserve">
     <value>Fix test method signature</value>
   </data>
+  <data name="UseAttributeOnTestMethodFix" xml:space="preserve">
+    <value>Add '[TestMethod]'</value>
+  </data>
 </root>
