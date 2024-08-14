@@ -97,6 +97,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fix &apos;[TestClass]&apos; signature.
+        /// </summary>
+        internal static string TestClassShouldBeValidFix {
+            get {
+                return ResourceManager.GetString("TestClassShouldBeValidFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fix test method signature.
         /// </summary>
         internal static string TestMethodShouldBeValidFix {

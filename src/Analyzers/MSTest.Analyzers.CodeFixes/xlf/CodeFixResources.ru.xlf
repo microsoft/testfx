@@ -22,6 +22,11 @@
         <target state="translated">Добавить '[TestClass]'</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldBeValidFix">
+        <source>Fix '[TestClass]' signature</source>
+        <target state="new">Fix '[TestClass]' signature</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidFix">
         <source>Fix test method signature</source>
         <target state="translated">Исправить подпись метода теста</target>
