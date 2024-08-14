@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
-internal class TerminalTestReporterOptions
+internal sealed class TerminalTestReporterOptions
 {
     /// <summary>
     /// Gets path to which all other paths in output should be relative.

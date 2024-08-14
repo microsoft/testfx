@@ -6,7 +6,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// <summary>
 /// Outcome of a test.
 /// </summary>
-internal enum LoggerOutcome
+internal enum TestOutcome
 {
     /// <summary>
     /// Error.
@@ -34,7 +34,7 @@ internal enum LoggerOutcome
     Timeout,
 
     /// <summary>
-    /// Cancelled.
+    /// Canceled.
     /// </summary>
-    Cancelled,
+    Canceled,
 }
