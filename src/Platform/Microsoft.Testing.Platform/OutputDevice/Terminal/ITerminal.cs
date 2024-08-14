@@ -4,7 +4,7 @@
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
-/// An ANSI or non-ANSI terminal that is capable of rendering the messages from <see cref="TerminalWithProgress"/>.
+/// An ANSI or non-ANSI terminal that is capable of rendering the messages from <see cref="TestProgressStateAwareTerminal"/>.
 /// </summary>
 internal interface ITerminal
 {

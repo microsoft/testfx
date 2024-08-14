@@ -4,9 +4,9 @@
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
-/// Console that updates the progress in place when progress reporting is enabled.
+/// Terminal that updates the progress in place when progress reporting is enabled.
 /// </summary>
-internal partial class TerminalWithProgress : IDisposable
+internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 {
     /// <summary>
     /// A cancellation token to signal the rendering thread that it should exit.
@@ -52,7 +52,7 @@ internal partial class TerminalWithProgress : IDisposable
         _terminal.EraseProgress();
     }
 
-    public TerminalWithProgress(ITerminal terminal, Func<bool?> showProgress, int updateEvery)
+    public TestProgressStateAwareTerminal(ITerminal terminal, Func<bool?> showProgress, int updateEvery)
     {
         _terminal = terminal;
         _showProgress = showProgress;
