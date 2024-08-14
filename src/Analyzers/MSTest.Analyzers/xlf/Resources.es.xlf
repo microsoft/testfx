@@ -447,6 +447,11 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <target state="translated">Los tipos públicos deben ser clases de prueba</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat">
+        <source>Test class '{0}' should be valid</source>
+        <target state="new">Test class '{0}' should be valid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">La firma del método de prueba '{0}' no es válida</target>
@@ -476,21 +481,6 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
 - debe ser 'public' (o 'internal' si se establece el atributo '[assembly: DiscoverInternals]')
 - no debe ser "static" (excepto si contiene solo los métodos "AssemblyInitialize" o "AssemblyCleanup")
 : no debe ser genérico.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
-        <source>Test class '{0}' should not be 'static'</source>
-        <target state="translated">La clase de prueba '{0}' no debe ser 'static'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_Public">
-        <source>Test class '{0}' should be 'public'</source>
-        <target state="translated">La clase de prueba '{0}' debe ser 'public'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Test class '{0}' should be 'public' or 'internal'</source>
-        <target state="translated">La clase de prueba '{0}' debe ser 'public' o 'internal'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidTitle">

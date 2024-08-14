@@ -37,7 +37,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.PublicRule)
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
                 .WithLocation(0)
                 .WithArguments("MyTestClass"));
     }
@@ -60,7 +60,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.PublicRule)
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
                 .WithLocation(0)
                 .WithArguments("MyTestClass"));
     }
@@ -94,7 +94,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.PublicRule)
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
                 .WithLocation(0)
                 .WithArguments("MyTestClass"));
     }
@@ -147,7 +147,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.PublicOrInternalRule)
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
                 .WithLocation(0)
                 .WithArguments("MyTestClass"));
     }
@@ -219,7 +219,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotStaticRule)
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
                 .WithLocation(0)
                 .WithArguments("MyTestClass"));
     }
@@ -241,7 +241,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotStaticRule)
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
                 .WithLocation(0)
                 .WithArguments("MyTestClass"));
     }
@@ -263,7 +263,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotStaticRule)
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
                 .WithLocation(0)
                 .WithArguments("MyTestClass"));
     }
@@ -285,7 +285,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotStaticRule)
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
                 .WithLocation(0)
                 .WithArguments("MyTestClass"));
     }
@@ -307,7 +307,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotStaticRule)
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
                 .WithLocation(0)
                 .WithArguments("MyTestClass"));
     }
