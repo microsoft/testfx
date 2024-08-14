@@ -12,12 +12,12 @@ using System.Text.RegularExpressions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
-/// Console logger that outputs test progress and is capable of writing ANSI or non-ANSI output via the given terminal.
+/// Terminal test reporter that outputs test progress and is capable of writing ANSI or non-ANSI output via the given terminal.
 /// </summary>
-internal partial class ConsoleLogger : IDisposable
+internal sealed partial class TerminalTestReporter : IDisposable
 {
     /// <summary>
     /// The two directory separator characters to be passed to methods like <see cref="string.IndexOfAny(char[])"/>.
@@ -30,15 +30,15 @@ internal partial class ConsoleLogger : IDisposable
 
     internal const string TripleIndentation = $"{SingleIndentation}{SingleIndentation}{SingleIndentation}";
 
-    internal Func<StopwatchAbstraction> CreateStopwatch { get; set; } = SystemStopwatch.StartNew;
+    internal Func<IStopwatch> CreateStopwatch { get; set; } = SystemStopwatch.StartNew;
 
     private readonly Dictionary<string, TestModule> _assemblies = new();
 
     private readonly List<TestRunArtifact> _artifacts = new();
 
-    private readonly ConsoleLoggerOptions _options;
+    private readonly TerminalTestReporterOptions _options;
 
-    private readonly ConsoleWithProgress _consoleWithProgress;
+    private readonly TestProgressStateAwareTerminal _terminalWithProgress;
 
     private readonly uint? _originalConsoleMode;
 
@@ -102,14 +102,14 @@ internal partial class ConsoleLogger : IDisposable
 #endif
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ConsoleLogger"/> class with custom terminal and manual refresh for testing.
+    /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with custom terminal and manual refresh for testing.
     /// </summary>
-    internal ConsoleLogger(IConsole console, ConsoleLoggerOptions options)
+    internal TerminalTestReporter(IConsole console, TerminalTestReporterOptions options)
     {
         _options = options;
 
         Func<bool?> showProgress = _options.ShowProgress;
-        ConsoleWithProgress consoleWithProgress;
+        TestProgressStateAwareTerminal terminalWithProgress;
 
         // When not writing to ANSI we write the progress to screen and leave it there so we don't want to write it more often than every few seconds.
         int nonAnsiUpdateCadenceInMs = 3_000;
@@ -117,32 +117,32 @@ internal partial class ConsoleLogger : IDisposable
         int ansiUpdateCadenceInMs = 500;
         if (!_options.UseAnsi)
         {
-            consoleWithProgress = new ConsoleWithProgress(new NonAnsiTerminal(console), showProgress, updateEvery: nonAnsiUpdateCadenceInMs);
+            terminalWithProgress = new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, updateEvery: nonAnsiUpdateCadenceInMs);
         }
         else
         {
             // Autodetect.
             (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
             _originalConsoleMode = originalConsoleMode;
-            consoleWithProgress = consoleAcceptsAnsiCodes
-                ? new ConsoleWithProgress(new AnsiTerminal(console, _options.BaseDirectory), showProgress, updateEvery: ansiUpdateCadenceInMs)
-                : new ConsoleWithProgress(new NonAnsiTerminal(console), showProgress, updateEvery: nonAnsiUpdateCadenceInMs);
+            terminalWithProgress = consoleAcceptsAnsiCodes
+                ? new TestProgressStateAwareTerminal(new AnsiTerminal(console, _options.BaseDirectory), showProgress, updateEvery: ansiUpdateCadenceInMs)
+                : new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, updateEvery: nonAnsiUpdateCadenceInMs);
         }
 
-        _consoleWithProgress = consoleWithProgress;
+        _terminalWithProgress = terminalWithProgress;
     }
 
     public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount)
     {
         _testExecutionStartTime = testStartTime;
-        _consoleWithProgress.StartShowingProgress(workerCount);
+        _terminalWithProgress.StartShowingProgress(workerCount);
     }
 
     public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture)
     {
         if (_options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
         {
-            _consoleWithProgress.WriteToTerminal(terminal =>
+            _terminalWithProgress.WriteToTerminal(terminal =>
             {
                 terminal.Append(PlatformResources.RunningTestsFrom);
                 terminal.Append(' ');
@@ -161,9 +161,9 @@ internal partial class ConsoleLogger : IDisposable
             return asm;
         }
 
-        StopwatchAbstraction sw = CreateStopwatch();
+        IStopwatch sw = CreateStopwatch();
         var progress = new TestProgressState(0, 0, 0, Path.GetFileName(assembly), targetFramework, architecture, sw, detail: null);
-        int slotIndex = _consoleWithProgress.AddWorker(progress);
+        int slotIndex = _terminalWithProgress.AddWorker(progress);
 
         var assemblyRun = new TestModule(slotIndex, assembly, targetFramework, architecture, sw);
         _assemblies.Add(key, assemblyRun);
@@ -174,9 +174,9 @@ internal partial class ConsoleLogger : IDisposable
     internal void TestExecutionCompleted(DateTimeOffset endTime)
     {
         _testExecutionEndTime = endTime;
-        _consoleWithProgress.StopShowingProgress();
+        _terminalWithProgress.StopShowingProgress();
 
-        _consoleWithProgress.WriteToTerminal(AppendTestRunSummary);
+        _terminalWithProgress.WriteToTerminal(AppendTestRunSummary);
 
         NativeMethods.RestoreConsoleMode(_originalConsoleMode);
         _assemblies.Clear();
@@ -370,7 +370,7 @@ internal partial class ConsoleLogger : IDisposable
         string? targetFramework,
         string? architecture,
         string displayName,
-        LoggerOutcome outcome,
+        TestOutcome outcome,
         TimeSpan duration,
         string? errorMessage,
         string? errorStackTrace,
@@ -381,37 +381,37 @@ internal partial class ConsoleLogger : IDisposable
 
         switch (outcome)
         {
-            case LoggerOutcome.Error:
+            case TestOutcome.Error:
                 asm.FailedTests++;
                 asm.TotalTests++;
                 break;
-            case LoggerOutcome.Fail:
+            case TestOutcome.Fail:
                 asm.FailedTests++;
                 asm.TotalTests++;
                 break;
-            case LoggerOutcome.Passed:
+            case TestOutcome.Passed:
                 asm.PassedTests++;
                 asm.TotalTests++;
                 break;
-            case LoggerOutcome.Skipped:
+            case TestOutcome.Skipped:
                 asm.SkippedTests++;
                 asm.TotalTests++;
                 break;
-            case LoggerOutcome.Timeout:
+            case TestOutcome.Timeout:
                 asm.TimedOutTests++;
                 asm.TotalTests++;
                 break;
-            case LoggerOutcome.Cancelled:
-                asm.CancelledTests++;
+            case TestOutcome.Canceled:
+                asm.CanceledTests++;
                 asm.TotalTests++;
                 break;
         }
 
         var update = new TestProgressState(asm.PassedTests, asm.FailedTests, asm.SkippedTests, Path.GetFileName(asm.Assembly), asm.TargetFramework, asm.Architecture, asm.Stopwatch, null);
-        _consoleWithProgress.UpdateWorker(asm.SlotIndex, update);
-        if (outcome != LoggerOutcome.Passed || _options.ShowPassedTests)
+        _terminalWithProgress.UpdateWorker(asm.SlotIndex, update);
+        if (outcome != TestOutcome.Passed || _options.ShowPassedTests)
         {
-            _consoleWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
+            _terminalWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
                 terminal,
                 assembly,
                 targetFramework,
@@ -432,31 +432,31 @@ internal partial class ConsoleLogger : IDisposable
         string? targetFramework,
         string? architecture,
         string displayName,
-        LoggerOutcome outcome,
+        TestOutcome outcome,
         TimeSpan duration,
         string? errorMessage,
         string? errorStackTrace,
         string? expected,
         string? actual)
     {
-        if (outcome == LoggerOutcome.Passed && !_options.ShowPassedTests)
+        if (outcome == TestOutcome.Passed && !_options.ShowPassedTests)
         {
             return;
         }
 
         TerminalColor color = outcome switch
         {
-            LoggerOutcome.Error or LoggerOutcome.Fail or LoggerOutcome.Cancelled or LoggerOutcome.Timeout => TerminalColor.DarkRed,
-            LoggerOutcome.Skipped => TerminalColor.DarkYellow,
-            LoggerOutcome.Passed => TerminalColor.DarkGreen,
+            TestOutcome.Error or TestOutcome.Fail or TestOutcome.Canceled or TestOutcome.Timeout => TerminalColor.DarkRed,
+            TestOutcome.Skipped => TerminalColor.DarkYellow,
+            TestOutcome.Passed => TerminalColor.DarkGreen,
             _ => throw new NotSupportedException(),
         };
         string outcomeText = outcome switch
         {
-            LoggerOutcome.Fail or LoggerOutcome.Error => PlatformResources.FailedLowercase,
-            LoggerOutcome.Skipped => PlatformResources.SkippedLowercase,
-            LoggerOutcome.Cancelled or LoggerOutcome.Timeout => $"{PlatformResources.FailedLowercase} ({PlatformResources.CancelledLowercase})",
-            LoggerOutcome.Passed => PlatformResources.PassedLowercase,
+            TestOutcome.Fail or TestOutcome.Error => PlatformResources.FailedLowercase,
+            TestOutcome.Skipped => PlatformResources.SkippedLowercase,
+            TestOutcome.Canceled or TestOutcome.Timeout => $"{PlatformResources.FailedLowercase} ({PlatformResources.CancelledLowercase})",
+            TestOutcome.Passed => PlatformResources.PassedLowercase,
             _ => throw new NotSupportedException(),
         };
 
@@ -619,17 +619,17 @@ internal partial class ConsoleLogger : IDisposable
         TestModule assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         assemblyRun.Stopwatch.Stop();
 
-        _consoleWithProgress.RemoveWorker(assemblyRun.SlotIndex);
+        _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
 
         if (_options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
         {
-            _consoleWithProgress.WriteToTerminal(terminal => AppendAssemblySummary(assemblyRun, terminal));
+            _terminalWithProgress.WriteToTerminal(terminal => AppendAssemblySummary(assemblyRun, terminal));
         }
     }
 
     private static void AppendAssemblySummary(TestModule assemblyRun, ITerminal terminal)
     {
-        int failedTests = assemblyRun.FailedTests + assemblyRun.CancelledTests + assemblyRun.TimedOutTests;
+        int failedTests = assemblyRun.FailedTests + assemblyRun.CanceledTests + assemblyRun.TimedOutTests;
         int warnings = 0;
 
         AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture);
@@ -657,7 +657,7 @@ internal partial class ConsoleLogger : IDisposable
         }
     }
 
-    public void Dispose() => _consoleWithProgress.Dispose();
+    public void Dispose() => _terminalWithProgress.Dispose();
 
     public void ArtifactAdded(bool outOfProcess, string? assembly, string? targetFramework, string? architecture, string? testName, string path)
         => _artifacts.Add(new TestRunArtifact(outOfProcess, assembly, targetFramework, architecture, testName, path));
@@ -668,7 +668,7 @@ internal partial class ConsoleLogger : IDisposable
     internal void StartCancelling()
     {
         _wasCancelled = true;
-        _consoleWithProgress.WriteToTerminal(terminal =>
+        _terminalWithProgress.WriteToTerminal(terminal =>
         {
             terminal.AppendLine();
             terminal.AppendLine(PlatformResources.CancellingTestSession);
@@ -681,7 +681,7 @@ internal partial class ConsoleLogger : IDisposable
         TestModule asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddError(text);
 
-        _consoleWithProgress.WriteToTerminal(terminal =>
+        _terminalWithProgress.WriteToTerminal(terminal =>
         {
             terminal.SetColor(TerminalColor.Red);
             terminal.AppendLine(text);
@@ -693,7 +693,7 @@ internal partial class ConsoleLogger : IDisposable
     {
         TestModule asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddWarning(text);
-        _consoleWithProgress.WriteToTerminal(terminal =>
+        _terminalWithProgress.WriteToTerminal(terminal =>
         {
             terminal.SetColor(TerminalColor.Yellow);
             terminal.AppendLine(text);
@@ -705,5 +705,5 @@ internal partial class ConsoleLogger : IDisposable
         => WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString());
 
     internal void WriteMessage(string text)
-        => _consoleWithProgress.WriteToTerminal(terminal => terminal.AppendLine(text));
+        => _terminalWithProgress.WriteToTerminal(terminal => terminal.AppendLine(text));
 }

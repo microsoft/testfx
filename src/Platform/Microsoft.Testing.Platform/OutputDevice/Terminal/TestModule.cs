@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+using Microsoft.Testing.Platform.Helpers;
+
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal sealed class TestModule
 {
-    public TestModule(int slotIndex, string assembly, string? targetFramework, string? architecture, StopwatchAbstraction stopwatch)
+    public TestModule(int slotIndex, string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch)
     {
         SlotIndex = slotIndex;
         Assembly = assembly;
@@ -22,7 +24,7 @@ internal sealed class TestModule
 
     public string? Architecture { get; }
 
-    public StopwatchAbstraction Stopwatch { get; }
+    public IStopwatch Stopwatch { get; }
 
     public List<string> Attachments { get; } = new();
 
@@ -38,7 +40,7 @@ internal sealed class TestModule
 
     public int TimedOutTests { get; internal set; }
 
-    public int CancelledTests { get; internal set; }
+    public int CanceledTests { get; internal set; }
 
     internal void AddError(string text)
         => Messages.Add(new ErrorMessage(text));

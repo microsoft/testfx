@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+using Microsoft.Testing.Platform.Helpers;
 
-internal class TestProgressState
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
+
+internal sealed class TestProgressState
 {
-    public TestProgressState(int passed, int failed, int skipped, string assemblyName, string? targetFramework, string? architecture, StopwatchAbstraction stopwatch, string? detail)
+    public TestProgressState(int passed, int failed, int skipped, string assemblyName, string? targetFramework, string? architecture, IStopwatch stopwatch, string? detail)
     {
         Passed = passed;
         Failed = failed;
@@ -29,7 +31,7 @@ internal class TestProgressState
 
     public string? Architecture { get; }
 
-    public StopwatchAbstraction Stopwatch { get; }
+    public IStopwatch Stopwatch { get; }
 
     public string? Detail { get; }
 }

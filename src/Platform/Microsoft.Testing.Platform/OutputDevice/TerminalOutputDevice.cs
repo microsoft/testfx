@@ -10,7 +10,7 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.OutputDevice.Console;
+using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
@@ -19,9 +19,9 @@ using Microsoft.Testing.Platform.TestHostControllers;
 namespace Microsoft.Testing.Platform.OutputDevice;
 
 /// <summary>
-/// Implementation of output device that ties testing platform to the console logger.
+/// Implementation of output device that writes to terminal with progress and optionally with ANSI.
 /// </summary>
-internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
+internal partial class TerminalOutputDevice : IPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,
     ITestSessionLifetimeHandler,
@@ -44,7 +44,7 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
     private readonly ILogger? _logger;
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly IClock _clock;
-    private readonly ConsoleLogger _consoleLogger;
+    private readonly TerminalTestReporter _terminalTestReporter;
     private readonly string? _architecture;
     private readonly string? _targetFramework;
     private readonly string _assemblyName;
@@ -54,7 +54,7 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
     private bool _bannerDisplayed;
     private TestRequestExecutionTimeInfo? _testRequestExecutionTimeInfo;
 
-    public ConsoleOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
+    public TerminalOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
         bool isVSTestMode, bool isListTests, bool isServerMode, int minimumExpectedTest, FileLoggerProvider? fileLoggerProvider, IClock clock)
@@ -97,7 +97,7 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
         // This is single exe run, don't show all the details of assemblies and their summaries
         // and don't show passed tests.
         bool verbose = false;
-        _consoleLogger = new ConsoleLogger(console, new()
+        _terminalTestReporter = new TerminalTestReporter(console, new()
         {
             BaseDirectory = null,
             ShowAssembly = verbose,
@@ -112,7 +112,7 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
             ShowProgress = () => testHostControllerInfo.IsCurrentProcessTestHostController == null ? null : !testHostControllerInfo.IsCurrentProcessTestHostController,
         });
 
-        _testApplicationCancellationTokenSource.CancellationToken.Register(() => _consoleLogger.StartCancelling());
+        _testApplicationCancellationTokenSource.CancellationToken.Register(() => _terminalTestReporter.StartCancelling());
     }
 
     private static string? GetShortTargetFramework(string frameworkDescription)
@@ -163,7 +163,7 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
     ];
 
     /// <inheritdoc />
-    public virtual string Uid { get; } = nameof(ConsoleOutputDevice);
+    public virtual string Uid { get; } = nameof(TerminalOutputDevice);
 
     /// <inheritdoc />
     public string Version { get; } = AppVersion.DefaultSemVer;
@@ -203,7 +203,7 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
 
                 if (bannerMessage is not null)
                 {
-                    _consoleLogger.WriteMessage(bannerMessage);
+                    _terminalTestReporter.WriteMessage(bannerMessage);
                 }
                 else
                 {
@@ -234,7 +234,7 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
                     }
 
                     stringBuilder.AppendLine();
-                    _consoleLogger.WriteMessage(stringBuilder.ToString());
+                    _terminalTestReporter.WriteMessage(stringBuilder.ToString());
                 }
             }
 
@@ -242,11 +242,11 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
             {
                 if (_fileLoggerProvider.SyncFlush)
                 {
-                    _consoleLogger.WriteWarningMessage(_assemblyName, _targetFramework, _architecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
+                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _architecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
                 }
                 else
                 {
-                    _consoleLogger.WriteWarningMessage(_assemblyName, _targetFramework, _architecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
+                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _architecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
                 }
             }
         }
@@ -256,8 +256,8 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
     {
         // Start test execution here, rather than in ShowBanner, because then we know
         // if we are a testHost controller or not, and if we should show progress bar.
-        _consoleLogger.TestExecutionStarted(_clock.UtcNow, workerCount: 1);
-        _consoleLogger.AssemblyRunStarted(_assemblyName, _targetFramework, _architecture);
+        _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1);
+        _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _architecture);
         if (_logger is not null && _logger.IsEnabled(LogLevel.Trace))
         {
             await _logger.LogTraceAsync("DisplayBeforeSessionStartAsync");
@@ -275,8 +275,8 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
         {
             if (!_firstCallTo_OnSessionStartingAsync)
             {
-                _consoleLogger.AssemblyRunCompleted(_assemblyName, _targetFramework, _architecture);
-                _consoleLogger.TestExecutionCompleted(_clock.UtcNow);
+                _terminalTestReporter.AssemblyRunCompleted(_assemblyName, _targetFramework, _architecture);
+                _terminalTestReporter.TestExecutionCompleted(_clock.UtcNow);
             }
         }
     }
@@ -323,19 +323,19 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
                         switch (color.ConsoleColor)
                         {
                             case ConsoleColor.Red:
-                                _consoleLogger.WriteErrorMessage(_assemblyName, _targetFramework, _architecture, formattedTextOutputDeviceData.Text);
+                                _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _architecture, formattedTextOutputDeviceData.Text);
                                 break;
                             case ConsoleColor.Yellow:
-                                _consoleLogger.WriteWarningMessage(_assemblyName, _targetFramework, _architecture, formattedTextOutputDeviceData.Text);
+                                _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _architecture, formattedTextOutputDeviceData.Text);
                                 break;
                             default:
-                                _consoleLogger.WriteMessage(formattedTextOutputDeviceData.Text);
+                                _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text);
                                 break;
                         }
                     }
                     else
                     {
-                        _consoleLogger.WriteMessage(formattedTextOutputDeviceData.Text);
+                        _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text);
                     }
 
                     break;
@@ -343,14 +343,14 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
                 case TextOutputDeviceData textOutputDeviceData:
                     {
                         await LogDebugAsync(textOutputDeviceData.Text);
-                        _consoleLogger.WriteMessage(textOutputDeviceData.Text);
+                        _terminalTestReporter.WriteMessage(textOutputDeviceData.Text);
                         break;
                     }
 
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
                     {
                         await LogDebugAsync(exceptionOutputDeviceData.Exception.ToString());
-                        _consoleLogger.WriteErrorMessage(_assemblyName, _targetFramework, _architecture, exceptionOutputDeviceData.Exception);
+                        _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _architecture, exceptionOutputDeviceData.Exception);
 
                         break;
                     }
@@ -378,12 +378,12 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
                         break;
 
                     case ErrorTestNodeStateProperty errorState:
-                        _consoleLogger.TestCompleted(
+                        _terminalTestReporter.TestCompleted(
                             _assemblyName,
                             _targetFramework,
                             _architecture,
                             testNodeStateChanged.TestNode.DisplayName,
-                            LoggerOutcome.Error,
+                            TestOutcome.Error,
                             duration,
                             errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
                             errorState.Exception?.StackTrace,
@@ -392,12 +392,12 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
                         break;
 
                     case FailedTestNodeStateProperty failedState:
-                        _consoleLogger.TestCompleted(
+                        _terminalTestReporter.TestCompleted(
                              _assemblyName,
                              _targetFramework,
                              _architecture,
                              testNodeStateChanged.TestNode.DisplayName,
-                             LoggerOutcome.Fail,
+                             TestOutcome.Fail,
                              duration,
                              errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
                              failedState.Exception?.StackTrace,
@@ -406,12 +406,12 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
-                        _consoleLogger.TestCompleted(
+                        _terminalTestReporter.TestCompleted(
                              _assemblyName,
                              _targetFramework,
                              _architecture,
                              testNodeStateChanged.TestNode.DisplayName,
-                             LoggerOutcome.Timeout,
+                             TestOutcome.Timeout,
                              duration,
                              errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
                              timeoutState.Exception?.StackTrace,
@@ -420,12 +420,12 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
                         break;
 
                     case CancelledTestNodeStateProperty cancelledState:
-                        _consoleLogger.TestCompleted(
+                        _terminalTestReporter.TestCompleted(
                              _assemblyName,
                              _targetFramework,
                              _architecture,
                              testNodeStateChanged.TestNode.DisplayName,
-                             LoggerOutcome.Cancelled,
+                             TestOutcome.Canceled,
                              duration,
                              errorMessage: cancelledState.Exception?.Message ?? cancelledState.Explanation,
                              cancelledState.Exception?.StackTrace,
@@ -434,12 +434,12 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
                         break;
 
                     case PassedTestNodeStateProperty:
-                        _consoleLogger.TestCompleted(
+                        _terminalTestReporter.TestCompleted(
                             _assemblyName,
                             _targetFramework,
                             _architecture,
                             testNodeStateChanged.TestNode.DisplayName,
-                            outcome: LoggerOutcome.Passed,
+                            outcome: TestOutcome.Passed,
                             duration: duration,
                             errorMessage: null,
                             errorStackTrace: null,
@@ -448,12 +448,12 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
                         break;
 
                     case SkippedTestNodeStateProperty:
-                        _consoleLogger.TestCompleted(
+                        _terminalTestReporter.TestCompleted(
                             _assemblyName,
                             _targetFramework,
                             _architecture,
                             testNodeStateChanged.TestNode.DisplayName,
-                            LoggerOutcome.Skipped,
+                            TestOutcome.Skipped,
                             duration,
                             errorMessage: null,
                             errorStackTrace: null,
@@ -467,7 +467,7 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
             case TestNodeFileArtifact artifact:
                 {
                     bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
-                    _consoleLogger.ArtifactAdded(
+                    _terminalTestReporter.ArtifactAdded(
                         isOutOfProcessArtifact,
                         _assemblyName,
                         _targetFramework,
@@ -481,7 +481,7 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
             case SessionFileArtifact artifact:
                 {
                     bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
-                    _consoleLogger.ArtifactAdded(
+                    _terminalTestReporter.ArtifactAdded(
                         isOutOfProcessArtifact,
                         _assemblyName,
                         _targetFramework,
@@ -494,7 +494,7 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
             case FileArtifact artifact:
                 {
                     bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
-                    _consoleLogger.ArtifactAdded(
+                    _terminalTestReporter.ArtifactAdded(
                         isOutOfProcessArtifact,
                         _assemblyName,
                         _targetFramework,
@@ -511,5 +511,5 @@ internal partial class ConsoleOutputDevice : IPlatformOutputDevice,
     }
 
     public void Dispose()
-        => _consoleLogger?.Dispose();
+        => _terminalTestReporter?.Dispose();
 }
