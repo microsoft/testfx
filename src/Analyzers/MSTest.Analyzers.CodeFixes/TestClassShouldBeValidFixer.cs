@@ -64,13 +64,16 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
         SyntaxTokenList modifiers = SyntaxFactory.TokenList(
          classDeclaration.Modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.StaticKeyword)));
 
-        // Determine the visibility modifier
-        SyntaxToken visibilityModifier = canDiscoverInternals
-            ? SyntaxFactory.Token(SyntaxKind.InternalKeyword)
-            : SyntaxFactory.Token(SyntaxKind.PublicKeyword);
+        if (!classDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword))
+        {
+            // Determine the visibility modifier
+            SyntaxToken visibilityModifier = canDiscoverInternals
+                ? SyntaxFactory.Token(SyntaxKind.InternalKeyword)
+                : SyntaxFactory.Token(SyntaxKind.PublicKeyword);
 
-        modifiers = SyntaxFactory.TokenList(
-            modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.PrivateKeyword) && !modifier.IsKind(SyntaxKind.InternalKeyword))).Add(visibilityModifier);
+            modifiers = SyntaxFactory.TokenList(
+                modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.PrivateKeyword) && !modifier.IsKind(SyntaxKind.InternalKeyword))).Add(visibilityModifier);
+        }
 
         // Create a new class declaration with the updated modifiers.
         ClassDeclarationSyntax newClassDeclaration = classDeclaration.WithModifiers(modifiers);
