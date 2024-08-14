@@ -13,10 +13,7 @@ public class DesktopThreadOperationsTests : TestContainer
 {
     private readonly ThreadOperations _asyncOperations;
 
-    public DesktopThreadOperationsTests()
-    {
-        _asyncOperations = new ThreadOperations();
-    }
+    public DesktopThreadOperationsTests() => _asyncOperations = new ThreadOperations();
 
     public void ExecuteShouldRunActionOnANewThread()
     {

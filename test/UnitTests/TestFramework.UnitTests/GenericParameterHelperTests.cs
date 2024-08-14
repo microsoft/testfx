@@ -14,10 +14,7 @@ public class GenericParameterHelperTests : TestContainer
 {
     private GenericParameterHelper _sut;
 
-    public GenericParameterHelperTests()
-    {
-        _sut = new GenericParameterHelper(10);
-    }
+    public GenericParameterHelperTests() => _sut = new GenericParameterHelper(10);
 
     public void EqualsShouldReturnFalseIfEachObjectHasDefaultDataValue()
     {

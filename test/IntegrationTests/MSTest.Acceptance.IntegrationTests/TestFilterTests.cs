@@ -16,10 +16,7 @@ public class TestFilterTests : AcceptanceTestBase
     // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
     public TestFilterTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
         AcceptanceFixture globalFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task RunWithFilter_UsingTestProperty_FilteredTests(string currentTfm)

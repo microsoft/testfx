@@ -17,10 +17,7 @@ public sealed class VSTestTestExecutionFilter : ITestExecutionFilter
     {
     }
 
-    internal VSTestTestExecutionFilter(ImmutableArray<TestCase> testCases)
-    {
-        TestCases = testCases;
-    }
+    internal VSTestTestExecutionFilter(ImmutableArray<TestCase> testCases) => TestCases = testCases;
 
     public ImmutableArray<TestCase>? TestCases { get; }
 }

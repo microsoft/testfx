@@ -157,10 +157,7 @@ public class ConfigurationManagerTests : TestBase
     {
         private readonly MemoryStream _stream;
 
-        public MemoryFileStream(byte[] bytes)
-        {
-            _stream = new MemoryStream(bytes);
-        }
+        public MemoryFileStream(byte[] bytes) => _stream = new MemoryStream(bytes);
 
         Stream IFileStream.Stream => _stream;
 

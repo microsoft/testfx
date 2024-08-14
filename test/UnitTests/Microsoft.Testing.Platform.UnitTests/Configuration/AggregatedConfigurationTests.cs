@@ -138,10 +138,7 @@ internal sealed class FakeConfigurationProvider : IConfigurationProvider
 {
     private readonly string _path;
 
-    public FakeConfigurationProvider(string path)
-    {
-        _path = path;
-    }
+    public FakeConfigurationProvider(string path) => _path = path;
 
     public Task LoadAsync() => throw new NotImplementedException();
 

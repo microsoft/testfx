@@ -15,10 +15,7 @@ public class AbortionTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public AbortionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     // We retry because sometime the Canceling the session message is not showing up.
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]

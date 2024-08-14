@@ -30,10 +30,7 @@ public class ClassCleanupExecutionAttribute : Attribute
     /// To capture output of class clean-up method in logs
     /// <paramref name="cleanupBehavior"/> must be set to <see cref="ClassCleanupBehavior.EndOfClass"/>.
     /// </param>
-    public ClassCleanupExecutionAttribute(ClassCleanupBehavior cleanupBehavior)
-    {
-        CleanupBehavior = cleanupBehavior;
-    }
+    public ClassCleanupExecutionAttribute(ClassCleanupBehavior cleanupBehavior) => CleanupBehavior = cleanupBehavior;
 
     /// <summary>
     /// Gets when to run class cleanup methods.

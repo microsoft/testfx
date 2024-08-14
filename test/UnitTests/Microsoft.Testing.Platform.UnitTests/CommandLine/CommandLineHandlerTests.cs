@@ -341,10 +341,7 @@ public class CommandLineHandlerTests : TestBase
     {
         private readonly string _option;
 
-        public ExtensionCommandLineProviderMockInvalidConfiguration(string optionName = "option")
-        {
-            _option = optionName;
-        }
+        public ExtensionCommandLineProviderMockInvalidConfiguration(string optionName = "option") => _option = optionName;
 
         public string Uid { get; } = nameof(PlatformCommandLineProvider);
 

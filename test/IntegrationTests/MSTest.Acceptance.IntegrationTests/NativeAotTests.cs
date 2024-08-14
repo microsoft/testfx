@@ -11,10 +11,7 @@ public class NativeAotTests : AcceptanceTestBase
     private readonly AcceptanceFixture _acceptanceFixture;
 
     public NativeAotTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext)
-    {
-        _acceptanceFixture = acceptanceFixture;
-    }
+        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
     [NonTest]
     public async Task NativeAotTests_WillRunWithExitCodeZero()

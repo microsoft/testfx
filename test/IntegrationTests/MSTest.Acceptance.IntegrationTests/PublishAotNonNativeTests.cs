@@ -15,10 +15,7 @@ public sealed class PublishAotNonNativeTests : AcceptanceTestBase
     private const string AssetName = "PublishAotNonNative";
 
     public PublishAotNonNativeTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext)
-    {
-        _acceptanceFixture = acceptanceFixture;
-    }
+        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
     public async Task RunTests_ThatEnablePublishAOT_ButDontBuildToNative()
     {

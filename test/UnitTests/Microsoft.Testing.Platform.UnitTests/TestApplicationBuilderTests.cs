@@ -171,10 +171,7 @@ public sealed class TestApplicationBuilderTests : TestBase
     {
         private readonly IServiceProvider? _serviceProvider;
 
-        public InvalidComposition(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-        }
+        public InvalidComposition(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
 
         public InvalidComposition()
         {
@@ -209,10 +206,7 @@ public sealed class TestApplicationBuilderTests : TestBase
         {
         }
 
-        public TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-        }
+        public TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
 
         public string Uid => nameof(TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider);
 
@@ -237,10 +231,7 @@ public sealed class TestApplicationBuilderTests : TestBase
 
     private sealed class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
     {
-        public TestHostProcessLifetimeHandler(string id)
-        {
-            Uid = id;
-        }
+        public TestHostProcessLifetimeHandler(string id) => Uid = id;
 
         public string Uid { get; }
 
@@ -261,10 +252,7 @@ public sealed class TestApplicationBuilderTests : TestBase
 
     private sealed class TestHostEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider
     {
-        public TestHostEnvironmentVariableProvider(string id)
-        {
-            Uid = id;
-        }
+        public TestHostEnvironmentVariableProvider(string id) => Uid = id;
 
         public string Uid { get; }
 
@@ -289,10 +277,7 @@ public sealed class TestApplicationBuilderTests : TestBase
         {
         }
 
-        public TestSessionLifetimeHandlerPlusConsumer(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-        }
+        public TestSessionLifetimeHandlerPlusConsumer(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
 
         public string Uid => nameof(TestSessionLifetimeHandlerPlusConsumer);
 
@@ -315,10 +300,7 @@ public sealed class TestApplicationBuilderTests : TestBase
 
     private sealed class TestSessionLifetimeHandler : ITestSessionLifetimeHandler
     {
-        public TestSessionLifetimeHandler(string id)
-        {
-            Uid = id;
-        }
+        public TestSessionLifetimeHandler(string id) => Uid = id;
 
         public string Uid { get; }
 
@@ -337,10 +319,7 @@ public sealed class TestApplicationBuilderTests : TestBase
 
     private sealed class Consumer : IDataConsumer
     {
-        public Consumer(string id)
-        {
-            Uid = id;
-        }
+        public Consumer(string id) => Uid = id;
 
         public string Uid { get; }
 
@@ -359,10 +338,7 @@ public sealed class TestApplicationBuilderTests : TestBase
 
     private sealed class ApplicationLifecycleCallbacks : ITestApplicationLifecycleCallbacks
     {
-        public ApplicationLifecycleCallbacks(string id)
-        {
-            Uid = id;
-        }
+        public ApplicationLifecycleCallbacks(string id) => Uid = id;
 
         public string Uid { get; }
 

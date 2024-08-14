@@ -56,8 +56,8 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
 
         SeparatedSyntaxList<ArgumentSyntax> arguments = invocationExpr.ArgumentList.Arguments;
 
-        ArgumentSyntax expectedArg = arguments.FirstOrDefault(arg => IsExpectedArgument(arg));
-        ArgumentSyntax actualArg = arguments.FirstOrDefault(arg => IsActualArgument(arg));
+        ArgumentSyntax expectedArg = arguments.FirstOrDefault(IsExpectedArgument);
+        ArgumentSyntax actualArg = arguments.FirstOrDefault(IsActualArgument);
 
         // Handle positional arguments if named arguments are not found
         if (expectedArg == null || actualArg == null)

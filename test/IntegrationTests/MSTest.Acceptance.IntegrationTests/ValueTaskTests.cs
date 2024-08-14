@@ -12,10 +12,7 @@ public sealed class ValueTaskTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public ValueTaskTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     public async Task CanUseValueTaskForAllKnownLocations()
     {

@@ -17,10 +17,7 @@ public class DesktopReflectionOperationsTests : TestContainer
 {
     private readonly ReflectionOperations _reflectionOperations;
 
-    public DesktopReflectionOperationsTests()
-    {
-        _reflectionOperations = new ReflectionOperations();
-    }
+    public DesktopReflectionOperationsTests() => _reflectionOperations = new ReflectionOperations();
 
     public void GetCustomAttributesShouldReturnAllAttributes()
     {

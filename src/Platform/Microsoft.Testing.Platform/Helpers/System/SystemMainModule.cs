@@ -17,10 +17,7 @@ internal sealed class SystemMainModule : IMainModule
 {
     private readonly ProcessModule _processModule;
 
-    public SystemMainModule(ProcessModule processModule)
-    {
-        _processModule = processModule;
-    }
+    public SystemMainModule(ProcessModule processModule) => _processModule = processModule;
 
     public string FileName => _processModule.FileName;
 }

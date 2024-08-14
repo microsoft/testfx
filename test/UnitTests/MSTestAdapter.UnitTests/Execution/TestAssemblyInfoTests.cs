@@ -333,10 +333,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     private static class FailingStaticHelper
     {
-        static FailingStaticHelper()
-        {
-            throw new InvalidOperationException("I fail.");
-        }
+        static FailingStaticHelper() => throw new InvalidOperationException("I fail.");
 
         public static void DoWork()
         {
@@ -345,10 +342,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     private static class FailingInnerStaticHelper
     {
-        static FailingInnerStaticHelper()
-        {
-            throw new InvalidOperationException("I fail.");
-        }
+        static FailingInnerStaticHelper() => throw new InvalidOperationException("I fail.");
 
         public static void Initialize()
         {

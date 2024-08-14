@@ -13,10 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
 
 public class DataRowAttributeTests : TestContainer
 {
-    public DataRowAttributeTests()
-    {
-        DataRowAttribute.TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
-    }
+    public DataRowAttributeTests() => DataRowAttribute.TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
 
     public void DefaultConstructorSetsEmptyArrayPassed()
     {

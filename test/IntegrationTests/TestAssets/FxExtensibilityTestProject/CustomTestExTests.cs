@@ -37,10 +37,7 @@ public class IterativeTestMethodAttribute : TestMethodAttribute
 {
     private readonly int _stabilityThreshold;
 
-    public IterativeTestMethodAttribute(int stabilityThreshold)
-    {
-        _stabilityThreshold = stabilityThreshold;
-    }
+    public IterativeTestMethodAttribute(int stabilityThreshold) => _stabilityThreshold = stabilityThreshold;
 
     public override TestResult[] Execute(ITestMethod testMethod)
     {
@@ -64,10 +61,7 @@ public class IterativeTestClassAttribute : TestClassAttribute
 {
     private readonly int _stabilityThreshold;
 
-    public IterativeTestClassAttribute(int stabilityThreshold)
-    {
-        _stabilityThreshold = stabilityThreshold;
-    }
+    public IterativeTestClassAttribute(int stabilityThreshold) => _stabilityThreshold = stabilityThreshold;
 
     public override TestMethodAttribute GetTestMethodAttribute(TestMethodAttribute testMethodAttribute) => testMethodAttribute is IterativeTestMethodAttribute
             ? testMethodAttribute

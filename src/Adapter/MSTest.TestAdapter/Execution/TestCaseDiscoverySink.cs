@@ -16,10 +16,7 @@ internal class TestCaseDiscoverySink : ITestCaseDiscoverySink
     /// <summary>
     /// Initializes a new instance of the <see cref="TestCaseDiscoverySink"/> class.
     /// </summary>
-    public TestCaseDiscoverySink()
-    {
-        Tests = new Collection<TestCase>();
-    }
+    public TestCaseDiscoverySink() => Tests = new Collection<TestCase>();
 
     /// <summary>
     /// Gets the tests.

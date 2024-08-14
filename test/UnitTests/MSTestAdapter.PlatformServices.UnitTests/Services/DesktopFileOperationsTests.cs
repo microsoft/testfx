@@ -15,10 +15,7 @@ public class DesktopFileOperationsTests : TestContainer
 {
     private readonly FileOperations _fileOperations;
 
-    public DesktopFileOperationsTests()
-    {
-        _fileOperations = new FileOperations();
-    }
+    public DesktopFileOperationsTests() => _fileOperations = new FileOperations();
 
     public void CreateNavigationSessionShouldReturnNullIfSourceIsNull() => Verify(_fileOperations.CreateNavigationSession(null) is null);
 

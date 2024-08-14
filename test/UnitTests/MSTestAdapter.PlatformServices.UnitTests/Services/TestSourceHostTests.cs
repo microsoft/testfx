@@ -13,10 +13,7 @@ public class TestSourceHostTests : TestContainer
 {
     private readonly TestSourceHost _testSourceHost;
 
-    public TestSourceHostTests()
-    {
-        _testSourceHost = new TestSourceHost(null, null, null);
-    }
+    public TestSourceHostTests() => _testSourceHost = new TestSourceHost(null, null, null);
 
     public void CreateInstanceForTypeCreatesAnInstanceOfAGivenTypeThroughDefaultConstructor()
     {
@@ -29,10 +26,7 @@ public class TestSourceHostTests : TestContainer
 
 public class DummyType
 {
-    public DummyType()
-    {
-        IsDefaultConstructorCalled = true;
-    }
+    public DummyType() => IsDefaultConstructorCalled = true;
 
     public bool IsDefaultConstructorCalled { get; set; }
 }

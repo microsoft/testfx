@@ -70,10 +70,7 @@ public sealed class DataSourceAttribute : Attribute
     /// Initializes a new instance of the <see cref="DataSourceAttribute"/> class.  This instance will be initialized with a data provider and connection string associated with the setting name.
     /// </summary>
     /// <param name="dataSourceSettingName">The name of a data source found in the &lt;microsoft.visualstudio.qualitytools&gt; section in the app.config file.</param>
-    public DataSourceAttribute(string dataSourceSettingName)
-    {
-        DataSourceSettingName = dataSourceSettingName;
-    }
+    public DataSourceAttribute(string dataSourceSettingName) => DataSourceSettingName = dataSourceSettingName;
 
     // Different providers use different connection strings and provider itself is a part of connection string.
 

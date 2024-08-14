@@ -16,10 +16,7 @@ public sealed class ServerTelemetryTests : TestBase
     private readonly Mock<IServerTestHost> _serverTestHost = new();
 
     public ServerTelemetryTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-        _serverTelemetry = new(_serverTestHost.Object);
-    }
+        : base(testExecutionContext) => _serverTelemetry = new(_serverTestHost.Object);
 
     public async Task LogEvent_ForDiscovery()
     {

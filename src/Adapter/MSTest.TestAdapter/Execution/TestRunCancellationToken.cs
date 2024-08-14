@@ -25,10 +25,7 @@ public class TestRunCancellationToken
     {
     }
 
-    internal TestRunCancellationToken(CancellationToken cancellationToken)
-    {
-        CancellationToken = cancellationToken;
-    }
+    internal TestRunCancellationToken(CancellationToken cancellationToken) => CancellationToken = cancellationToken;
 
     internal CancellationToken CancellationToken { get; }
 

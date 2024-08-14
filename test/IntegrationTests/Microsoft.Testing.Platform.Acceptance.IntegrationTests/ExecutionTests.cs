@@ -17,10 +17,7 @@ public class ExecutionTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public ExecutionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenListTestsIsSpecified_AllTestsAreFound(string tfm)

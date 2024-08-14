@@ -27,10 +27,7 @@ internal abstract class TestDataConnection : IDisposable
     // List of places to look for files when substituting |DataDirectory|
     private readonly List<string> _dataFolders;
 
-    protected internal TestDataConnection(List<string> dataFolders)
-    {
-        _dataFolders = dataFolders;
-    }
+    protected internal TestDataConnection(List<string> dataFolders) => _dataFolders = dataFolders;
 
     /// <summary>
     /// Gets the connection.

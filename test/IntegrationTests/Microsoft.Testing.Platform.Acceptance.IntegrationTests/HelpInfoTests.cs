@@ -12,10 +12,7 @@ public class HelpInfoTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public HelpInfoTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Help_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)

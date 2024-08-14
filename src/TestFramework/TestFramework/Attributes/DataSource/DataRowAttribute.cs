@@ -26,10 +26,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// </summary>
     /// <param name="data"> The data. </param>
     /// <remarks>This constructor is only kept for CLS compliant tests.</remarks>
-    public DataRowAttribute(object? data)
-    {
-        Data = data is not null ? [data] : [null];
-    }
+    public DataRowAttribute(object? data) => Data = data is not null ? [data] : [null];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class with an array of string arguments.
@@ -44,10 +41,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class with an array of object arguments.
     /// </summary>
     /// <param name="data"> The data. </param>
-    public DataRowAttribute(params object?[]? data)
-    {
-        Data = data ?? [null];
-    }
+    public DataRowAttribute(params object?[]? data) => Data = data ?? [null];
 
     protected internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; internal set; }
 

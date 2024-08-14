@@ -5,10 +5,7 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public sealed class ProcessConfiguration
 {
-    public ProcessConfiguration(string fileName)
-    {
-        FileName = fileName;
-    }
+    public ProcessConfiguration(string fileName) => FileName = fileName;
 
     public string FileName { get; }
 

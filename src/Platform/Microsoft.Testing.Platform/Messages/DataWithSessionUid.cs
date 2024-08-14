@@ -19,10 +19,7 @@ public abstract class DataWithSessionUid : PropertyBagData
     /// <param name="description">The description of the data.</param>
     /// <param name="sessionUid">The session UID.</param>
     protected DataWithSessionUid(string displayName, string? description, SessionUid sessionUid)
-        : base(displayName, description)
-    {
-        SessionUid = sessionUid;
-    }
+        : base(displayName, description) => SessionUid = sessionUid;
 
     /// <summary>
     /// Gets the session UID.

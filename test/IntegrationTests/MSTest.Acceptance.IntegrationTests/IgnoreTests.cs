@@ -12,10 +12,7 @@ public sealed class IgnoreTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public IgnoreTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     public async Task ClassCleanup_Inheritance_WhenClassIsSkipped()
     {

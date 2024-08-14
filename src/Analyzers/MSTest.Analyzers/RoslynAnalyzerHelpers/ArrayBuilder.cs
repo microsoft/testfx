@@ -18,10 +18,7 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
     {
         private readonly ArrayBuilder<T> _builder;
 
-        public DebuggerProxy(ArrayBuilder<T> builder)
-        {
-            _builder = builder;
-        }
+        public DebuggerProxy(ArrayBuilder<T> builder) => _builder = builder;
 
 #pragma warning disable CA1819 // Properties should not return arrays
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
@@ -47,20 +44,14 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
 
     private readonly ObjectPool<ArrayBuilder<T>>? _pool;
 
-    public ArrayBuilder(int size)
-    {
-        _builder = ImmutableArray.CreateBuilder<T>(size);
-    }
+    public ArrayBuilder(int size) => _builder = ImmutableArray.CreateBuilder<T>(size);
 
     public ArrayBuilder()
         : this(8)
     { }
 
     private ArrayBuilder(ObjectPool<ArrayBuilder<T>>? pool)
-        : this()
-    {
-        _pool = pool;
-    }
+        : this() => _pool = pool;
 
     /// <summary>
     /// Realizes the array.

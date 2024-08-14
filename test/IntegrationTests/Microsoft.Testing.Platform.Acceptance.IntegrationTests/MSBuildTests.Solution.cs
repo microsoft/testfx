@@ -22,10 +22,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase
     }
 
     public MSBuildTests_Solution(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext)
-    {
-        _acceptanceFixture = acceptanceFixture;
-    }
+        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
     private void CheckPatch()
     {

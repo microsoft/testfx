@@ -8,10 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 [Serializable]
 internal class TestAssemblySettings
 {
-    public TestAssemblySettings()
-    {
-        Workers = -1;
-    }
+    public TestAssemblySettings() => Workers = -1;
 
     /// <summary>
     /// Gets or sets the parallelization level.

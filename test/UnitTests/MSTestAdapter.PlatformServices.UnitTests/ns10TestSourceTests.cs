@@ -13,10 +13,7 @@ public class TestSourceTests : TestContainer
 {
     private readonly TestSource _testSource;
 
-    public TestSourceTests()
-    {
-        _testSource = new TestSource();
-    }
+    public TestSourceTests() => _testSource = new TestSource();
 
     public void ValidSourceExtensionsShouldContainDllExtensions() => Verify(_testSource.ValidSourceExtensions.ToList().Contains(".dll"));
 

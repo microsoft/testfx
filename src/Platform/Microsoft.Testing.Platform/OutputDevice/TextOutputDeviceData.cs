@@ -12,10 +12,7 @@ public class TextOutputDeviceData : IOutputDeviceData
     /// Initializes a new instance of the <see cref="TextOutputDeviceData"/> class with the specified text.
     /// </summary>
     /// <param name="text">The text for the output device.</param>
-    public TextOutputDeviceData(string text)
-    {
-        Text = text;
-    }
+    public TextOutputDeviceData(string text) => Text = text;
 
     /// <summary>
     /// Gets the text for the output device.

@@ -383,10 +383,7 @@ public class TestMethodRunnerTests : TestContainer
         private readonly Func<UTF.TestResult> _invokeTest;
 
         internal TestableTestMethodInfo(MethodInfo testMethod, TestClassInfo parent, TestMethodOptions testMethodOptions, Func<UTF.TestResult> invoke)
-            : base(testMethod, parent, testMethodOptions)
-        {
-            _invokeTest = invoke;
-        }
+            : base(testMethod, parent, testMethodOptions) => _invokeTest = invoke;
 
         public override UTF.TestResult Invoke(object[] arguments) =>
             // Ignore args for now
@@ -402,10 +399,7 @@ public class TestMethodRunnerTests : TestContainer
 
     public class DummyTestClass : DummyTestClassBase
     {
-        public DummyTestClass()
-        {
-            TestConstructorMethodBody();
-        }
+        public DummyTestClass() => TestConstructorMethodBody();
 
         public static Action TestConstructorMethodBody { get; set; }
 

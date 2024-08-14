@@ -7,8 +7,5 @@ namespace Microsoft.Testing.Platform.ServerMode.Json;
 
 internal sealed class JsonValueSerializer<T> : JsonValueSerializer
 {
-    public JsonValueSerializer(Action<Utf8JsonWriter, T> value)
-    {
-        Serialize = (w, o) => value(w, (T)o);
-    }
+    public JsonValueSerializer(Action<Utf8JsonWriter, T> value) => Serialize = (w, o) => value(w, (T)o);
 }

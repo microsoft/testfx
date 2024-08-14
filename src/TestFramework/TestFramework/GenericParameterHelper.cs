@@ -32,20 +32,14 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// <remarks>
     /// This constructor initializes the Data property to a random value.
     /// </remarks>
-    public GenericParameterHelper()
-    {
-        Data = Randomizer.Next();
-    }
+    public GenericParameterHelper() => Data = Randomizer.Next();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GenericParameterHelper"/> class that
     /// initializes the Data property to a user-supplied value.
     /// </summary>
     /// <param name="data">Any integer value.</param>
-    public GenericParameterHelper(int data)
-    {
-        Data = data;
-    }
+    public GenericParameterHelper(int data) => Data = data;
 
     /// <summary>
     /// Gets or sets the Data.

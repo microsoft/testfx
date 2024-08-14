@@ -12,10 +12,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public ExitOnProcessExitTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public void ExitOnProcessExit_Succeed(string tfm)

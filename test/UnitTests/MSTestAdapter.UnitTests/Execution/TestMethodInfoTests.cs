@@ -1478,15 +1478,9 @@ public class TestMethodInfoTests : TestContainer
     {
         private static UTFExtension.TestContext s_tc;
 
-        public DummyTestClass()
-        {
-            TestConstructorMethodBody();
-        }
+        public DummyTestClass() => TestConstructorMethodBody();
 
-        public DummyTestClass(UTFExtension.TestContext tc)
-        {
-            Verify(tc is not null);
-        }
+        public DummyTestClass(UTFExtension.TestContext tc) => Verify(tc is not null);
 
         public static Action TestConstructorMethodBody { get; set; }
 
@@ -1582,10 +1576,7 @@ public class TestMethodInfoTests : TestContainer
     public class CustomExpectedExceptionAttribute : UTF.ExpectedExceptionBaseAttribute
     {
         public CustomExpectedExceptionAttribute(Type exceptionType, string noExceptionMessage)
-            : base(noExceptionMessage)
-        {
-            ExceptionType = exceptionType;
-        }
+            : base(noExceptionMessage) => ExceptionType = exceptionType;
 
         public bool IsVerifyInvoked { get; set; }
 
@@ -1611,10 +1602,7 @@ public class TestMethodInfoTests : TestContainer
     public class DerivedCustomExpectedExceptionAttribute : CustomExpectedExceptionAttribute
     {
         public DerivedCustomExpectedExceptionAttribute(Type exceptionType, string noExceptionMessage)
-            : base(exceptionType, noExceptionMessage)
-        {
-            ExceptionType = exceptionType;
-        }
+            : base(exceptionType, noExceptionMessage) => ExceptionType = exceptionType;
 
         public new Type ExceptionType { get; private set; }
 

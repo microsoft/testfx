@@ -13,10 +13,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
     private readonly AcceptanceFixture _acceptanceFixture;
 
     public MSBuildTests_Test(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext)
-    {
-        _acceptanceFixture = acceptanceFixture;
-    }
+        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
     internal static TestArgumentsEntry<(string BuildCommand, string TargetFramework, BuildConfiguration BuildConfiguration, bool TestSucceeded)> FormatBuildMatrixEntry(TestArgumentsContext ctx)
     {

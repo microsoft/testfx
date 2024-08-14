@@ -14,10 +14,7 @@ public class DiaSessionOperationsTests : TestContainer
 {
     private readonly FileOperations _fileOperations;
 
-    public DiaSessionOperationsTests()
-    {
-        _fileOperations = new FileOperations();
-    }
+    public DiaSessionOperationsTests() => _fileOperations = new FileOperations();
 
     public void CreateNavigationSessionShouldReturnNullIfSourceIsNull()
     {
