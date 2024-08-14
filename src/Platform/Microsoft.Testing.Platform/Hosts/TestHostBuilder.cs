@@ -465,6 +465,11 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         List<CommandLineOptionMessage> commandLineHelpOptions = new();
         foreach (ICommandLineOptionsProvider commandLineOptionProvider in commandLineHandler.CommandLineOptionsProviders)
         {
+            if (commandLineOptionProvider is IToolCommandLineOptionsProvider)
+            {
+                continue;
+            }
+
             foreach (CommandLineOption commandLineOption in commandLineOptionProvider.GetCommandLineOptions())
             {
                 commandLineHelpOptions.Add(new CommandLineOptionMessage(
