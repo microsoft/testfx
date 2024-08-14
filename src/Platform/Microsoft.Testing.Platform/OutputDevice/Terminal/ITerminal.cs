@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
-/// An ANSI or non-ANSI terminal that is capable of rendering the messages from <see cref="ConsoleWithProgress"/>.
+/// An ANSI or non-ANSI terminal that is capable of rendering the messages from <see cref="TerminalWithProgress"/>.
 /// </summary>
 internal interface ITerminal
 {

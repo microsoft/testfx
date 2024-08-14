@@ -4,7 +4,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal class NativeMethods
 {

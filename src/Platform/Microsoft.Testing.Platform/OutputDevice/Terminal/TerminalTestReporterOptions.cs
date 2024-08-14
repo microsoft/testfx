@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
-internal class ConsoleLoggerOptions
+internal class TerminalTestReporterOptions
 {
     /// <summary>
     /// Gets path to which all other paths in output should be relative.
