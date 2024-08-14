@@ -161,7 +161,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
         // TODO: Discover in parallel?
         foreach (string assemblyName in assemblies)
         {
-            LogMessage(logger, TestMessageLevel.Informational, $"Discovering tests in assembly '{assemblyName}'");
+            EqtTrace.Verbose($"Discovering tests in assembly '{assemblyName}'");
 
             var assembly = Assembly.LoadFrom(assemblyName);
             IEnumerable<TypeInfo> assemblyTestContainerTypes = assembly.DefinedTypes.Where(IsTestContainer);
@@ -169,8 +169,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
             // TODO: Fail if no container?
             foreach (TypeInfo? testContainerType in assemblyTestContainerTypes)
             {
-                LogMessage(logger, TestMessageLevel.Informational,
-                    $"Discovering tests for container '{testContainerType.FullName}'");
+                EqtTrace.Verbose($"Discovering tests for container '{testContainerType.FullName}'");
 
                 IEnumerable<MethodInfo> testContainerPublicMethods = testContainerType.DeclaredMethods.Where(memberInfo =>
                     memberInfo.IsPublic
@@ -180,7 +179,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
                 // TODO: Fail if no public method?
                 foreach (MethodInfo? publicMethod in testContainerPublicMethods)
                 {
-                    LogMessage(logger, TestMessageLevel.Informational, $"Found test '{publicMethod.Name}'");
+                    EqtTrace.Verbose($"Found test '{publicMethod.Name}'");
                     yield return new(MakeFullyQualifiedName(testContainerType, publicMethod), new(Constants.ExecutorUri), assemblyName);
                 }
             }
@@ -195,7 +194,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
     {
         try
         {
-            LogMessage(logger, TestMessageLevel.Informational, $"Trying to find test '{testCase.DisplayName}'");
+            EqtTrace.Verbose($"Trying to find test '{testCase.DisplayName}'");
             var assembly = Assembly.LoadFrom(testCase.Source);
 
             testContainerType = assembly.DefinedTypes.Single(typeInfo =>
@@ -229,8 +228,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
     {
         try
         {
-            LogMessage(logger, TestMessageLevel.Informational,
-                $"Executing test '{testCaseDisplayName}' setup (ctor for '{testContainerTypeFullName}')");
+            EqtTrace.Verbose($"Executing test '{testCaseDisplayName}' setup (ctor for '{testContainerTypeFullName}')");
             testCaseInstance = setupMethod.Invoke(null);
 
             return true;
@@ -253,7 +251,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
     {
         try
         {
-            LogMessage(logger, TestMessageLevel.Informational, $"Executing test '{testDisplayName}'");
+            EqtTrace.Verbose($"Executing test '{testDisplayName}'");
             if (testMethod.Invoke(testClassInstance, null) is Task task)
             {
                 await task;
@@ -280,8 +278,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
         {
             if (testClassInstance is not null)
             {
-                LogMessage(logger, TestMessageLevel.Informational,
-                    $"Executing test '{testCaseDisplayName}' teardown (dispose for '{testContainerTypeFullName}')");
+                EqtTrace.Verbose($"Executing test '{testCaseDisplayName}' teardown (dispose for '{testContainerTypeFullName}')");
                 teardownMethod.Invoke(testClassInstance, null);
             }
 
