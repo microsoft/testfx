@@ -1,5 +1,5 @@
 ﻿{
-  "testingplatform": {
+  "platformOptions": {
     "telemetry": {
       "isDevelopmentRepository": true
     },
