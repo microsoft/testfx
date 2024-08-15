@@ -138,4 +138,7 @@
   <data name="TestClassShouldBeValidFix" xml:space="preserve">
     <value>Fix test class signature</value>
   </data>
+  <data name="TestContextShouldBeValidFix" xml:space="preserve">
+    <value>Fix test context</value>
+  </data>
 </root>
