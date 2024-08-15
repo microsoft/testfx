@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
-        <source>Fix '[TestClass]' signature</source>
-        <target state="new">Fix '[TestClass]' signature</target>
+        <source>Fix test class signature</source>
+        <target state="new">Fix test class signature</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidFix">
