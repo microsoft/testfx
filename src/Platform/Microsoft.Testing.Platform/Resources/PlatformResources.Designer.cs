@@ -1148,6 +1148,24 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Output verbosity when reporting tests. Valid values are &apos;Normal&apos;, &apos;Detailed&apos;. Default is &apos;Normal&apos;..
+        /// </summary>
+        internal static string TerminalOutputOptionDescription {
+            get {
+                return ResourceManager.GetString("TerminalOutputOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to --output expects a single parameter with value &apos;Normal&apos; or &apos;Detailed&apos;..
+        /// </summary>
+        internal static string TerminalOutputOptionInvalidArgument {
+            get {
+                return ResourceManager.GetString("TerminalOutputOptionInvalidArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Writes test results to terminal..
         /// </summary>
         internal static string TerminalTestReporterDescription {

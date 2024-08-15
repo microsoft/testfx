@@ -42,6 +42,7 @@ Options:
 Extension options:
   --no-ansi         Disable outputting ANSI escape characters to screen.
   --no-progress     Disable reporting progress to screen.
+  --output          Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
   --treenode-filter Use a tree filter to filter down the tests to execute
 """;
 
@@ -76,6 +77,7 @@ Options:
 Extension options:
   --no-ansi         Disable outputting ANSI escape characters to screen.
   --no-progress     Disable reporting progress to screen.
+  --output          Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
   --treenode-filter Use a tree filter to filter down the tests to execute
 """;
 
@@ -113,6 +115,7 @@ Options:
 Extension options:
   --no-ansi         Disable outputting ANSI escape characters to screen.
   --no-progress     Disable reporting progress to screen.
+  --output          Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
   --treenode-filter Use a tree filter to filter down the tests to execute
 """;
 
@@ -242,6 +245,10 @@ Registered command line providers:
         Arity: 0
         Hidden: False
         Description: Disable reporting progress to screen.
+      --output
+        Arity: 1
+        Hidden: False
+        Description: Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
   TestingFrameworkExtension
     Name: Microsoft Testing Framework
     Version: .+
@@ -296,6 +303,7 @@ Extension options:
   --hangdump-type       Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'
   --no-ansi             Disable outputting ANSI escape characters to screen.
   --no-progress         Disable reporting progress to screen.
+  --output              Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
   --report-trx          Enable generating TRX report
   --report-trx-filename The name of the generated TRX report
   --treenode-filter     Use a tree filter to filter down the tests to execute
@@ -342,6 +350,7 @@ Extension options:
   --hangdump-type       Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'
   --no-ansi             Disable outputting ANSI escape characters to screen.
   --no-progress         Disable reporting progress to screen.
+  --output              Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
   --report-trx          Enable generating TRX report
   --report-trx-filename The name of the generated TRX report
   --treenode-filter     Use a tree filter to filter down the tests to execute
@@ -532,6 +541,10 @@ Registered command line providers:
         Arity: 0
         Hidden: False
         Description: Disable reporting progress to screen.
+      --output
+        Arity: 1
+        Hidden: False
+        Description: Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
   TestingFrameworkExtension
     Name: Microsoft Testing Framework
     Version: *
