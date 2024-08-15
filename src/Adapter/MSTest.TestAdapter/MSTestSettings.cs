@@ -804,7 +804,7 @@ public class MSTestSettings
         {
             settings.DisableParallelization = disableParallelization;
         }
-        else
+        else if (disableParallelizationString is not null)
         {
             logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, disableParallelizationString, "DisableParallelization"));
         }
