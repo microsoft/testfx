@@ -106,6 +106,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fix test context.
+        /// </summary>
+        internal static string TestContextShouldBeValidFix {
+            get {
+                return ResourceManager.GetString("TestContextShouldBeValidFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fix test method signature.
         /// </summary>
         internal static string TestMethodShouldBeValidFix {

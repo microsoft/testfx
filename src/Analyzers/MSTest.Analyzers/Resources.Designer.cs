@@ -766,47 +766,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Member &apos;TestContext&apos; should be a property and not a field.
+        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should be valid.
         /// </summary>
-        internal static string TestContextShouldBeValidMessageFormat_NotField {
+        internal static string TestContextShouldBeValidMessageFormat {
             get {
-                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_NotField", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should be settable.
-        /// </summary>
-        internal static string TestContextShouldBeValidMessageFormat_NotReadonly {
-            get {
-                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_NotReadonly", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should not be &apos;static&apos;.
-        /// </summary>
-        internal static string TestContextShouldBeValidMessageFormat_NotStatic {
-            get {
-                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_NotStatic", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should be &apos;public&apos;.
-        /// </summary>
-        internal static string TestContextShouldBeValidMessageFormat_Public {
-            get {
-                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_Public", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should be &apos;public&apos; or &apos;internal&apos;.
-        /// </summary>
-        internal static string TestContextShouldBeValidMessageFormat_PublicOrInternal {
-            get {
-                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_PublicOrInternal", resourceCulture);
+                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat", resourceCulture);
             }
         }
         
