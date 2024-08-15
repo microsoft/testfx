@@ -27,6 +27,11 @@
         <target state="new">Fix test class signature</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestContextShouldBeValidFix">
+        <source>Fix test context</source>
+        <target state="new">Fix test context</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidFix">
         <source>Fix test method signature</source>
         <target state="translated">Napraw podpis metody testowej</target>
@@ -34,7 +39,7 @@
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
-        <target state="new">Add '[TestMethod]'</target>
+        <target state="translated">Dodaj „[TestMethod]”</target>
         <note />
       </trans-unit>
     </body>

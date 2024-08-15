@@ -27,6 +27,11 @@
         <target state="new">Fix test class signature</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestContextShouldBeValidFix">
+        <source>Fix test context</source>
+        <target state="new">Fix test context</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidFix">
         <source>Fix test method signature</source>
         <target state="translated">테스트 메서드 시그니처 수정</target>

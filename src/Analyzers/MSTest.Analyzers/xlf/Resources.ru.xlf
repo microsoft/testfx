@@ -456,6 +456,11 @@ The type declaring these methods should also respect the following rules:
         <target state="new">Test class '{0}' should be valid</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat">
+        <source>Property 'TestContext' should be valid</source>
+        <target state="new">Property 'TestContext' should be valid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">Подпись тестового метода "{0}" недействительна</target>
@@ -564,31 +569,6 @@ The type declaring these methods should also respect the following rules:
 – должно быть присвоено значение "public" (или "internal", если задан атрибут "[assembly: DiscoverInternals]");
 – не следует присваивать значение "static";
 – не должно предназначаться только для чтения.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotField">
-        <source>Member 'TestContext' should be a property and not a field</source>
-        <target state="translated">Элемент "TestContext" должен быть свойством, а не полем</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotReadonly">
-        <source>Property 'TestContext' should be settable</source>
-        <target state="translated">Свойство "TestContext" должно поддерживать настройку</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotStatic">
-        <source>Property 'TestContext' should not be 'static'</source>
-        <target state="translated">Свойству "TestContext" не следует присваивать значение "static"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_Public">
-        <source>Property 'TestContext' should be 'public'</source>
-        <target state="translated">Свойство "TestContext" должно иметь значение "public"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Property 'TestContext' should be 'public' or 'internal'</source>
-        <target state="translated">Свойство "TestContext" должно иметь значение "public" или "internal"</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">
