@@ -46,8 +46,8 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                 using TempDirectory clone = new();
                 await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
                 testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, "UnhandledExceptionPolicyTests");
-                string configFileName = Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testingplatformconfig.json");
-                string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testingplatformconfig.json"));
+                string configFileName = Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json");
+                string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json"));
 
                 TestHostResult? testHostResult;
                 switch (mode)
@@ -106,8 +106,8 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                 using TempDirectory clone = new();
                 await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
                 testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, "UnhandledExceptionPolicyTests");
-                string configFileName = Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testingplatformconfig.json");
-                string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testingplatformconfig.json"));
+                string configFileName = Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json");
+                string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json"));
 
                 TestHostResult? testHostResult;
                 switch (mode)
@@ -181,16 +181,16 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
   </ItemGroup>
 
   <ItemGroup>
-   <None Update="*.testingplatformconfig.json">
+   <None Update="*.testconfig.json">
      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
    </None>
   </ItemGroup>
 </Project>
 
-#file UnhandledExceptionPolicyTests.testingplatformconfig.json
+#file UnhandledExceptionPolicyTests.testconfig.json
 
 {
-  "testingplatform": {
+  "platformOptions": {
     "telemetry": {
       "isDevelopmentRepository": true
     },
