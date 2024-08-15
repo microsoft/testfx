@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis;
 
 namespace MSTest.Analyzers.Helpers;
 
-internal static class CompilationExtensions
+internal static class Utils
 {
     public static bool HasDiscoverInternalAttribute(SemanticModel semanticModel)
     {
