@@ -62,7 +62,7 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
 
         // Remove the static modifier if it exists
         SyntaxTokenList modifiers = SyntaxFactory.TokenList(
-         classDeclaration.Modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.StaticKeyword)));
+            classDeclaration.Modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.StaticKeyword)));
 
         if (!classDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword))
         {
