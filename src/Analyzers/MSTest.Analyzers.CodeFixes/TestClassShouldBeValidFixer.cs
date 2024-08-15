@@ -58,7 +58,7 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
 
         // Get the SemanticModel and Compilation
         SemanticModel semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false)
-                  ?? throw new InvalidOperationException("SemanticModel cannot be null.");
+            ?? throw new InvalidOperationException("SemanticModel cannot be null.");
         bool canDiscoverInternals = IsDiscoverInternalsAttributePresent(semanticModel);
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
