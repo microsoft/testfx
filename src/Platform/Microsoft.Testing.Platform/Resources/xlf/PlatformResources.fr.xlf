@@ -623,16 +623,6 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
         <target state="new">Disable reporting progress to screen.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="new">Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalOutputOptionInvalidArgument">
-        <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Normal' or 'Detailed'.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="new">Writes test results to terminal.</target>
