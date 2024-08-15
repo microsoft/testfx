@@ -596,4 +596,10 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="TerminalTestReporterDisplayName" xml:space="preserve">
     <value>Terminal test reporter</value>
   </data>
+  <data name="TerminalOutputOptionDescription" xml:space="preserve">
+    <value>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</value>
+  </data>
+  <data name="TerminalOutputOptionInvalidArgument" xml:space="preserve">
+    <value>--output expects a single parameter with value 'Normal' or 'Detailed'.</value>
+  </data>
 </root>

@@ -98,6 +98,13 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         bool noAnsi = parseResult.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
         bool noProgress = parseResult.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
 
+        bool showPassed = false;
+        OptionRecord? output = parseResult.Options.FirstOrDefault(o => o.Option == TerminalTestReporterCommandLineOptionsProvider.OutputOption);
+        if (output != null && output.Arguments.Length > 0 && TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(output.Arguments[0], StringComparison.OrdinalIgnoreCase))
+        {
+            showPassed = true;
+        }
+
         Func<bool?> shouldShowProgress = noProgress
             // User preference is to not show progress.
             ? () => false
@@ -110,15 +117,13 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             // func.
             : () => testHostControllerInfo.IsCurrentProcessTestHostController == null ? null : !testHostControllerInfo.IsCurrentProcessTestHostController;
 
-        // This is single exe run, don't show all the details of assemblies and their summaries
-        // and don't show passed tests.
-        bool verbose = false;
+        // This is single exe run, don't show all the details of assemblies and their summaries.
         _terminalTestReporter = new TerminalTestReporter(console, new()
         {
             BaseDirectory = null,
-            ShowAssembly = verbose,
-            ShowAssemblyStartAndComplete = verbose,
-            ShowPassedTests = verbose,
+            ShowAssembly = false,
+            ShowAssemblyStartAndComplete = false,
+            ShowPassedTests = showPassed,
             MinimumExpectedTests = minimumExpectedTest,
             UseAnsi = !noAnsi,
             ShowProgress = shouldShowProgress,

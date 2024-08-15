@@ -13,6 +13,9 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
 {
     public const string NoProgressOption = "no-progress";
     public const string NoAnsiOption = "no-ansi";
+    public const string OutputOption = "output";
+    public const string OutputOptionNormalArgument = "normal";
+    public const string OutputOptionDetailedArgument = "detailed";
 
     /// <inheritdoc />
     public string Uid { get; } = nameof(TerminalTestReporterCommandLineOptionsProvider);
@@ -32,12 +35,21 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
         =>
         [
-            new(NoProgressOption, PlatformResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, false),
-            new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, false)
+            new(NoProgressOption, PlatformResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false),
+            new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false),
+            new(OutputOption, PlatformResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
         ];
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-        => ValidationResult.ValidTask;
+        => commandOption.Name switch
+        {
+            NoProgressOption => ValidationResult.ValidTask,
+            NoAnsiOption => ValidationResult.ValidTask,
+            OutputOption => OutputOptionNormalArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase) || OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(PlatformResources.TerminalOutputOptionInvalidArgument),
+            _ => throw ApplicationStateGuard.Unreachable(),
+        };
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => // No problem found
