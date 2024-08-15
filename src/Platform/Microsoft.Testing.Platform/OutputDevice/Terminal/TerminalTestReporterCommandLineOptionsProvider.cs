@@ -14,6 +14,8 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
     public const string NoProgressOption = "no-progress";
     public const string NoAnsiOption = "no-ansi";
     public const string OutputOption = "output";
+    public const string OutputOptionNormalArgument = "normal";
+    public const string OutputOptionDetailedArgument = "detailed"
 
     /// <inheritdoc />
     public string Uid { get; } = nameof(TerminalTestReporterCommandLineOptionsProvider);
@@ -43,10 +45,10 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
         {
             NoProgressOption => ValidationResult.ValidTask,
             NoAnsiOption => ValidationResult.ValidTask,
-            OutputOption => "normal".Equals(arguments[0], StringComparison.OrdinalIgnoreCase) || "detailed".Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
+            OutputOption => OutputOptionNormalArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase) || OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(PlatformResources.TerminalOutputOptionInvalidArgument),
-            _ => throw new NotSupportedException(),
+            _ => throw ApplicationStateGuard.Unreachable(),
         };
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)

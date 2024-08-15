@@ -100,7 +100,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
 
         bool showPassed = false;
         OptionRecord? output = parseResult.Options.FirstOrDefault(o => o.Option == TerminalTestReporterCommandLineOptionsProvider.OutputOption);
-        if (output != null && output.Arguments.Length > 0 && "Detailed".Equals(output.Arguments[0], StringComparison.OrdinalIgnoreCase))
+        if (output != null && output.Arguments.Length > 0 && TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(output.Arguments[0], StringComparison.OrdinalIgnoreCase))
         {
             showPassed = true;
         }
