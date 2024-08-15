@@ -119,7 +119,9 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                 ? false
                 : _isListTests
                     ? false
-                    : testHostControllerInfo.IsCurrentProcessTestHostController == null ? null : !testHostControllerInfo.IsCurrentProcessTestHostController;
+                    : testHostControllerInfo.IsCurrentProcessTestHostController == null
+                        ? null
+                        : !testHostControllerInfo.IsCurrentProcessTestHostController;
 
         // This is single exe run, don't show all the details of assemblies and their summaries.
         _terminalTestReporter = new TerminalTestReporter(console, new()
