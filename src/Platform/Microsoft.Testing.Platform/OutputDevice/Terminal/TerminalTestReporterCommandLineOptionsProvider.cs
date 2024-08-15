@@ -15,7 +15,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
     public const string NoAnsiOption = "no-ansi";
     public const string OutputOption = "output";
     public const string OutputOptionNormalArgument = "normal";
-    public const string OutputOptionDetailedArgument = "detailed"
+    public const string OutputOptionDetailedArgument = "detailed";
 
     /// <inheritdoc />
     public string Uid { get; } = nameof(TerminalTestReporterCommandLineOptionsProvider);
