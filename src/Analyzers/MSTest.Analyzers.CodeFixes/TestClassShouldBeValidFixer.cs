@@ -47,12 +47,12 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.TestClassShouldBeValidFix,
-                createChangedDocument: c => FixClassDeclarationAsync(context.Document, root, declaration, c),
+                createChangedDocument: c => FixClassDeclarationAsync(context.Document, declaration, c),
                 equivalenceKey: nameof(TestClassShouldBeValidFixer)),
             diagnostic);
     }
 
-    public static async Task<Document> FixClassDeclarationAsync(Document document, SyntaxNode _, ClassDeclarationSyntax classDeclaration, CancellationToken cancellationToken)
+    public static async Task<Document> FixClassDeclarationAsync(Document document, ClassDeclarationSyntax classDeclaration, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
