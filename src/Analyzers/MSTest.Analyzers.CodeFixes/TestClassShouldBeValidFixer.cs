@@ -59,7 +59,7 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
         // Get the SemanticModel and Compilation
         SemanticModel semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false)
             ?? throw new InvalidOperationException("SemanticModel cannot be null.");
-        bool canDiscoverInternals = IsDiscoverInternalsAttributePresent(semanticModel);
+        bool canDiscoverInternals = semanticModel.Compilation.CanDiscoverInternals();
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
@@ -84,22 +84,5 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
         SyntaxNode newRoot = editor.GetChangedRoot();
 
         return document.WithSyntaxRoot(newRoot);
-    }
-
-    private static bool IsDiscoverInternalsAttributePresent(SemanticModel semanticModel)
-    {
-        Compilation compilation = semanticModel.Compilation;
-        IAssemblySymbol assemblySymbol = compilation.Assembly;
-        var wellKnownTypeProvider = WellKnownTypeProvider.GetOrCreate(semanticModel.Compilation);
-        INamedTypeSymbol? discoverInternalsAttribute = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDiscoverInternalsAttribute);
-        foreach (AttributeData attribute in assemblySymbol.GetAttributes())
-        {
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, discoverInternalsAttribute))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

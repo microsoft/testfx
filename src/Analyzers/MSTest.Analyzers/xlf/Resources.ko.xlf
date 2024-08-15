@@ -452,6 +452,11 @@ The type declaring these methods should also respect the following rules:
         <target state="new">Test class '{0}' should be valid</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat">
+        <source>Property 'TestContext' should be valid</source>
+        <target state="new">Property 'TestContext' should be valid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">테스트 메서드 '{0}' 시그니처가 잘못되었습니다.</target>
@@ -558,31 +563,6 @@ The type declaring these methods should also respect the following rules:
 - 'public'(혹은 '[assembly: DiscoverInternals]' 특성이 설정된 경우 'internal')이어야 합니다.
 - 'static'이 아니어야 합니다.
 - 읽기 전용이 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotField">
-        <source>Member 'TestContext' should be a property and not a field</source>
-        <target state="translated">'TestContext' 멤버는 필드가 아닌 속성이어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotReadonly">
-        <source>Property 'TestContext' should be settable</source>
-        <target state="translated">'TestContext' 속성을 설정할 수 있어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotStatic">
-        <source>Property 'TestContext' should not be 'static'</source>
-        <target state="translated">'TestContext' 속성은 'static'이 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_Public">
-        <source>Property 'TestContext' should be 'public'</source>
-        <target state="translated">'TestContext' 속성은 'public'이어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Property 'TestContext' should be 'public' or 'internal'</source>
-        <target state="translated">'TestContext' 속성은 'public' 또는 'internal'이어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">
