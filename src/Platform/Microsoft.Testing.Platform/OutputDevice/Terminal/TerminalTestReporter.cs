@@ -117,7 +117,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         int ansiUpdateCadenceInMs = 500;
         if (!_options.UseAnsi)
         {
-            terminalWithProgress = new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, updateEvery: nonAnsiUpdateCadenceInMs);
+            terminalWithProgress = new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
         }
         else
         {
@@ -125,8 +125,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
             (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
             _originalConsoleMode = originalConsoleMode;
             terminalWithProgress = consoleAcceptsAnsiCodes
-                ? new TestProgressStateAwareTerminal(new AnsiTerminal(console, _options.BaseDirectory), showProgress, updateEvery: ansiUpdateCadenceInMs)
-                : new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, updateEvery: nonAnsiUpdateCadenceInMs);
+                ? new TestProgressStateAwareTerminal(new AnsiTerminal(console, _options.BaseDirectory), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs)
+                : new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
         }
 
         _terminalWithProgress = terminalWithProgress;
