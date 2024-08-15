@@ -56,7 +56,10 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        bool canDiscoverInternals = IsDiscoverInternalsAttributePresent(root);
+        // Get the SemanticModel and Compilation
+        SemanticModel semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false)
+                  ?? throw new InvalidOperationException("SemanticModel cannot be null.");
+        bool canDiscoverInternals = IsDiscoverInternalsAttributePresent(semanticModel);
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
@@ -83,21 +86,17 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
         return document.WithSyntaxRoot(newRoot);
     }
 
-    private static bool IsDiscoverInternalsAttributePresent(SyntaxNode root)
+    private static bool IsDiscoverInternalsAttributePresent(SemanticModel semanticModel)
     {
-        IEnumerable<AttributeListSyntax> attributeLists = root.DescendantNodes().OfType<AttributeListSyntax>();
-
-        foreach (AttributeListSyntax attributeList in attributeLists)
+        Compilation compilation = semanticModel.Compilation;
+        IAssemblySymbol assemblySymbol = compilation.Assembly;
+        var wellKnownTypeProvider = WellKnownTypeProvider.GetOrCreate(semanticModel.Compilation);
+        INamedTypeSymbol? discoverInternalsAttribute = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDiscoverInternalsAttribute);
+        foreach (AttributeData attribute in assemblySymbol.GetAttributes())
         {
-            if (attributeList.Target?.Identifier.IsKind(SyntaxKind.AssemblyKeyword) == true)
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, discoverInternalsAttribute))
             {
-                foreach (AttributeSyntax attribute in attributeList.Attributes)
-                {
-                    if (attribute.Name.ToString().Contains("DiscoverInternals"))
-                    {
-                        return true;
-                    }
-                }
+                return true;
             }
         }
 
