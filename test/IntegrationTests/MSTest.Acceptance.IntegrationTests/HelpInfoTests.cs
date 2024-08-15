@@ -45,6 +45,8 @@ Options:
   --results-directory                      The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.
 Extension options:
   --filter         Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
+  --no-ansi        Disable outputting ANSI escape characters to screen.
+  --no-progress    Disable reporting progress to screen.
   --settings       The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
   --test-parameter Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters
 """;
@@ -78,8 +80,6 @@ Extension options:
         Arity: 1..N
         Hidden: False
         Description: Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters
-Registered tools:
-  There are no registered tools.
 """;
 
         testHostResult.AssertOutputContains(output);
