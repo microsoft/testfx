@@ -110,8 +110,16 @@ internal sealed class AnsiTerminalTestProgressFrame
     /// </summary>
     public void Render(AnsiTerminalTestProgressFrame previousFrame, AnsiTerminal terminal)
     {
-        // Move cursor back to 1st line of progress.
-        terminal.MoveCursorUp(previousFrame.ProgressCount + 1);
+        // Don't go up if we did not render progress in previous frame or we cleared it.
+        if (previousFrame.ProgressCount > 0)
+        {
+            // Move cursor back to 1st line of progress.
+            // +2 because we prepend 1 empty line before the progress
+            // and new line after the progress indicator.
+            terminal.MoveCursorUp(previousFrame.ProgressCount + 2);
+        }
+
+        terminal.AppendLine();
 
         int i = 0;
         for (; i < ProgressCount; i++)
@@ -151,7 +159,9 @@ internal sealed class AnsiTerminalTestProgressFrame
                 AppendTestWorkerProgress(i, terminal);
             }
 
-            // Next line
+            // This makes the progress not stick to the last line on the command line, which is
+            // not what I would prefer. But also if someone writes to console, the message will
+            // start at the beginning of the new line. Not after the progress bar that is kept on screen.
             terminal.AppendLine();
         }
 

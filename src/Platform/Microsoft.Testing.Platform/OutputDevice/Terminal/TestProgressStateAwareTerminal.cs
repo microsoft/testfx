@@ -40,7 +40,15 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             {
                 lock (_lock)
                 {
-                    _terminal.RenderProgress(_progressItems);
+                    _terminal.StartUpdate();
+                    try
+                    {
+                        _terminal.RenderProgress(_progressItems);
+                    }
+                    finally
+                    {
+                        _terminal.StopUpdate();
+                    }
                 }
             }
         }
@@ -111,9 +119,10 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         {
             lock (_lock)
             {
-                _terminal.EraseProgress();
                 _terminal.StartUpdate();
+                _terminal.EraseProgress();
                 write(_terminal);
+                _terminal.RenderProgress(_progressItems);
                 _terminal.StopUpdate();
             }
         }

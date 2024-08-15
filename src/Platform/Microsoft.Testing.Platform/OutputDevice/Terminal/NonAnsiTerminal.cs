@@ -164,81 +164,73 @@ internal sealed class NonAnsiTerminal : ITerminal
 
     public void RenderProgress(TestProgressState?[] progress)
     {
-        StartUpdate();
-        try
+        foreach (TestProgressState? p in progress)
         {
-            foreach (TestProgressState? p in progress)
+            if (p == null)
             {
-                if (p == null)
-                {
-                    continue;
-                }
-
-                string durationString = HumanReadableDurationFormatter.Render(p.Stopwatch.Elapsed);
-
-                int passed = p.Passed;
-                int failed = p.Failed;
-                int skipped = p.Skipped;
-
-                string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
-                Append('[');
-                SetColor(TerminalColor.DarkGreen);
-                Append("✓");
-                Append(passed.ToString(CultureInfo.CurrentCulture));
-                ResetColor();
-
-                Append("/");
-
-                SetColor(TerminalColor.DarkRed);
-                Append("x");
-                Append(failed.ToString(CultureInfo.CurrentCulture));
-                ResetColor();
-
-                Append("/");
-
-                SetColor(TerminalColor.DarkYellow);
-                Append('?');
-                Append(skipped.ToString(CultureInfo.CurrentCulture));
-                ResetColor();
-                Append(']');
-
-                Append(' ');
-                Append(p.AssemblyName);
-
-                if (p.TargetFramework != null || p.Architecture != null)
-                {
-                    Append(" (");
-                    if (p.TargetFramework != null)
-                    {
-                        Append(p.TargetFramework);
-                        Append('|');
-                    }
-
-                    if (p.Architecture != null)
-                    {
-                        Append(p.Architecture);
-                    }
-
-                    Append(')');
-                }
-
-                if (!RoslynString.IsNullOrWhiteSpace(detail))
-                {
-                    Append(" - ");
-                    Append(detail);
-                }
-
-                Append(durationString);
-
-                AppendLine();
+                continue;
             }
+
+            string durationString = HumanReadableDurationFormatter.Render(p.Stopwatch.Elapsed);
+
+            int passed = p.Passed;
+            int failed = p.Failed;
+            int skipped = p.Skipped;
+
+            string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
+            Append('[');
+            SetColor(TerminalColor.DarkGreen);
+            Append("✓");
+            Append(passed.ToString(CultureInfo.CurrentCulture));
+            ResetColor();
+
+            Append("/");
+
+            SetColor(TerminalColor.DarkRed);
+            Append("x");
+            Append(failed.ToString(CultureInfo.CurrentCulture));
+            ResetColor();
+
+            Append("/");
+
+            SetColor(TerminalColor.DarkYellow);
+            Append('?');
+            Append(skipped.ToString(CultureInfo.CurrentCulture));
+            ResetColor();
+            Append(']');
+
+            Append(' ');
+            Append(p.AssemblyName);
+
+            if (p.TargetFramework != null || p.Architecture != null)
+            {
+                Append(" (");
+                if (p.TargetFramework != null)
+                {
+                    Append(p.TargetFramework);
+                    Append('|');
+                }
+
+                if (p.Architecture != null)
+                {
+                    Append(p.Architecture);
+                }
+
+                Append(')');
+            }
+
+            if (!RoslynString.IsNullOrWhiteSpace(detail))
+            {
+                Append(" - ");
+                Append(detail);
+            }
+
+            Append(durationString);
 
             AppendLine();
         }
-        finally
-        {
-            StopUpdate();
-        }
+
+        AppendLine();
     }
 
     public void StartBusyIndicator()
