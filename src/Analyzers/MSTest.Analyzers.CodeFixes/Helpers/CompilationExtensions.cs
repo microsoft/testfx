@@ -7,9 +7,9 @@ using Microsoft.CodeAnalysis;
 
 namespace MSTest.Analyzers.Helpers;
 
-internal class Utils
+internal static class CompilationExtensions
 {
-    public static bool IsDiscoverInternalsAttributePresent(SemanticModel semanticModel)
+    public static bool HasDiscoverInternalAttribute(SemanticModel semanticModel)
     {
         Compilation compilation = semanticModel.Compilation;
         IAssemblySymbol assemblySymbol = compilation.Assembly;

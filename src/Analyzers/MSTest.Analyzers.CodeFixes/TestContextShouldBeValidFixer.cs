@@ -59,7 +59,7 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
         // Get the SemanticModel and Compilation
         SemanticModel semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false)
             ?? throw new InvalidOperationException("SemanticModel cannot be null.");
-        bool canDiscoverInternals = Utils.IsDiscoverInternalsAttributePresent(semanticModel);
+        bool canDiscoverInternals = CompilationExtensions.HasDiscoverInternalAttribute(semanticModel);
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
@@ -86,7 +86,7 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
         }
         else
         {
-            // ensure that the property have seter and getter
+            // ensure that the property has setter and getter
             var propertyDeclaration = (PropertyDeclarationSyntax)newMemberDeclaration;
             SyntaxList<AccessorDeclarationSyntax> accessors = propertyDeclaration.AccessorList?.Accessors ?? default;
 
