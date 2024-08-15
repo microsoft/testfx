@@ -52,7 +52,7 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
             diagnostic);
     }
 
-    public static async Task<Document> FixClassDeclarationAsync(Document document, SyntaxNode root, ClassDeclarationSyntax classDeclaration, CancellationToken cancellationToken)
+    public static async Task<Document> FixClassDeclarationAsync(Document document, SyntaxNode _, ClassDeclarationSyntax classDeclaration, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
