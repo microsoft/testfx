@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -96,6 +97,15 @@ public static class ServiceProviderExtensions
     /// <returns>The output device.</returns>
     public static IOutputDevice GetOutputDevice(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IOutputDevice>();
+
+    /// <summary>
+    /// Gets the IClientInfo from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The IClientInfo object.</returns>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public static IClientInfo GetClientInfo(this IServiceProvider serviceProvider)
+        => serviceProvider.GetRequiredServiceInternal<IClientInfo>();
 
     // Internals extensions
     internal static TService GetRequiredServiceInternal<TService>(this IServiceProvider provider)

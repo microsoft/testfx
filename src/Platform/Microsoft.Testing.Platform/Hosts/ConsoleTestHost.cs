@@ -26,7 +26,8 @@ internal sealed class ConsoleTestHost(
     NamedPipeClient? dotnetTestPipeClient = null)
     : CommonTestHost(serviceProvider, dotnetTestPipeClient)
 {
-    private static readonly ClientInfo Client = new("testingplatform-console", AppVersion.DefaultSemVer);
+    private static readonly ClientInfo ClientInfoHost = new("testingplatform-console", AppVersion.DefaultSemVer);
+    private static readonly IClientInfo ClientInfoService = new ClientInfoService("testingplatform-console", AppVersion.DefaultSemVer);
 
     private readonly ILogger<ConsoleTestHost> _logger = serviceProvider.GetLoggerFactory().CreateLogger<ConsoleTestHost>();
     private readonly IClock _clock = serviceProvider.GetClock();
@@ -45,6 +46,9 @@ internal sealed class ConsoleTestHost(
 
         CancellationToken abortRun = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
         DateTimeOffset adapterLoadStart = _clock.UtcNow;
+
+        // Add the ClientInfo service to the service provider
+        ServiceProvider.TryAddService(ClientInfoService);
 
         // Use user provided filter factory or create console default one.
         ITestExecutionFilterFactory testExecutionFilterFactory = ServiceProvider.GetService<ITestExecutionFilterFactory>()
@@ -87,7 +91,7 @@ internal sealed class ConsoleTestHost(
                 ServiceProvider,
                 ServiceProvider.GetBaseMessageBus(),
                 testFramework,
-                Client);
+                ClientInfoHost);
             requestExecuteStop = _clock.UtcNow;
 
             // Get the exit code service to be able to set the exit code

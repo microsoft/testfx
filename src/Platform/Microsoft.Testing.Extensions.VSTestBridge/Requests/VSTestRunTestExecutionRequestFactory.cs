@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
 using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -70,8 +72,9 @@ public sealed class VSTestRunTestExecutionRequestFactory : ITestExecutionRequest
         ICommandLineOptions commandLineOptions = serviceProvider.GetRequiredService<ICommandLineOptions>();
         ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         IFileSystem fileSystem = serviceProvider.GetFileSystem();
+        IClientInfo clientInfo = serviceProvider.GetClientInfo();
 
-        RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, runTestExecutionRequest.Session.Client, loggerFactory);
+        RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory);
         RunContextAdapter runContext = runTestExecutionRequest.Filter is TestNodeUidListFilter uidListFilter
             ? new(commandLineOptions, runSettings, uidListFilter.TestNodeUids)
             : new(commandLineOptions, runSettings);
@@ -79,7 +82,7 @@ public sealed class VSTestRunTestExecutionRequestFactory : ITestExecutionRequest
         ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
         IMessageBus messageBus = serviceProvider.GetRequiredService<IMessageBus>();
         IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
-        FrameworkHandlerAdapter frameworkHandlerAdapter = new(adapterExtension, runTestExecutionRequest.Session, testAssemblyPaths,
+        FrameworkHandlerAdapter frameworkHandlerAdapter = new(adapterExtension, runTestExecutionRequest.Session, clientInfo, testAssemblyPaths,
             testApplicationModuleInfo, loggerFactory, messageBus, outputDevice, adapterExtension.IsTrxEnabled, cancellationToken);
 
         return new(runTestExecutionRequest.Session, new(), testAssemblyPaths, runContext, frameworkHandlerAdapter);

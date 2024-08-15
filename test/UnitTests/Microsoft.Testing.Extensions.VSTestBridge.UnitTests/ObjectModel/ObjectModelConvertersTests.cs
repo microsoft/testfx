@@ -1,9 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -12,8 +15,8 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 [TestGroup]
 public sealed class ObjectModelConvertersTests : TestBase
 {
-    private static readonly ClientInfo TestClient = new("UnitTest", string.Empty);
-    private static readonly ClientInfo VSTestClient = new(WellKnownClients.VisualStudio, string.Empty);
+    private static readonly IClientInfo TestClient = new ClientInfoService("UnitTest", string.Empty);
+    private static readonly IClientInfo VSTestClient = new ClientInfoService(WellKnownClients.VisualStudio, string.Empty);
 
     public ObjectModelConvertersTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
