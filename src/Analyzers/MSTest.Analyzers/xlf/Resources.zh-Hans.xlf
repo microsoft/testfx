@@ -447,6 +447,11 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">公共类型应为测试类</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat">
+        <source>Test class '{0}' should be valid</source>
+        <target state="new">Test class '{0}' should be valid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">测试方法“{0}”签名无效</target>
@@ -476,21 +481,6 @@ The type declaring these methods should also respect the following rules:
 - 它应为 "public" (如果设置了“[assembly: DiscoverInternals]”属性，则应为 "internal")
 - 它不应为 "static" (除非它只包含 "AssemblyInitialize" 和/或 "AssemblyCleanup" 方法)
 - 它不应是泛型的。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
-        <source>Test class '{0}' should not be 'static'</source>
-        <target state="translated">测试类“{0}”不应为“static”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_Public">
-        <source>Test class '{0}' should be 'public'</source>
-        <target state="translated">测试类“{0}”应为“public”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Test class '{0}' should be 'public' or 'internal'</source>
-        <target state="translated">测试类“{0}”应为“public”或“internal”</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidTitle">

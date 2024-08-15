@@ -669,29 +669,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should not be &apos;static&apos;.
+        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should be valid.
         /// </summary>
-        internal static string TestClassShouldBeValidMessageFormat_NotStatic {
+        internal static string TestClassShouldBeValidMessageFormat {
             get {
-                return ResourceManager.GetString("TestClassShouldBeValidMessageFormat_NotStatic", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should be &apos;public&apos;.
-        /// </summary>
-        internal static string TestClassShouldBeValidMessageFormat_Public {
-            get {
-                return ResourceManager.GetString("TestClassShouldBeValidMessageFormat_Public", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should be &apos;public&apos; or &apos;internal&apos;.
-        /// </summary>
-        internal static string TestClassShouldBeValidMessageFormat_PublicOrInternal {
-            get {
-                return ResourceManager.GetString("TestClassShouldBeValidMessageFormat_PublicOrInternal", resourceCulture);
+                return ResourceManager.GetString("TestClassShouldBeValidMessageFormat", resourceCulture);
             }
         }
         

@@ -22,6 +22,11 @@
         <target state="translated">'[TestClass]' 추가</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldBeValidFix">
+        <source>Fix test class signature</source>
+        <target state="new">Fix test class signature</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidFix">
         <source>Fix test method signature</source>
         <target state="translated">테스트 메서드 시그니처 수정</target>

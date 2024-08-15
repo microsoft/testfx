@@ -447,6 +447,11 @@ Le type doit être une classe
         <target state="translated">Les types publics doivent être des classes de test</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat">
+        <source>Test class '{0}' should be valid</source>
+        <target state="new">Test class '{0}' should be valid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">La signature « {0} » de la méthode de test n’est pas valide</target>
@@ -476,21 +481,6 @@ Le type doit être une classe
 – Elle doit être « publique » (ou « interne » si l’attribut « [assembly : DiscoverInternals] » est défini)
 – Elle ne doit pas être « statique » (sauf si elle ne contient que des méthodes « AssemblyInitialize » et/ou « AssemblyCleanup »)
 – Elle ne doit pas être générique.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
-        <source>Test class '{0}' should not be 'static'</source>
-        <target state="translated">La classe de test « {0} » ne doit pas être « static »</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_Public">
-        <source>Test class '{0}' should be 'public'</source>
-        <target state="translated">La classe de test « {0} » doit être « public »</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Test class '{0}' should be 'public' or 'internal'</source>
-        <target state="translated">La classe de test « {0} » doit être « public » ou « internal »</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidTitle">

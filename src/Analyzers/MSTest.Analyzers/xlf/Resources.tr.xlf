@@ -447,6 +447,11 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">Genel türler test sınıfları olmalıdır</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat">
+        <source>Test class '{0}' should be valid</source>
+        <target state="new">Test class '{0}' should be valid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">'{0}' test yöntemi imzası geçersiz</target>
@@ -477,21 +482,6 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
 - 'public' (veya '[assembly: DiscoverInternals]' özniteliği ayarlanmışsa 'internal') olmalıdır
 - 'static' olmamalıdır (yalnızca 'AssemblyInitialize' ve/veya 'AssemblyCleanup' yöntemlerini içermesi hariç)
 - genel olmalıdır.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
-        <source>Test class '{0}' should not be 'static'</source>
-        <target state="translated">'{0}' test sınıfı 'static' olamaz</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_Public">
-        <source>Test class '{0}' should be 'public'</source>
-        <target state="translated">'{0}' test sınıfı 'public' olmalıdır</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Test class '{0}' should be 'public' or 'internal'</source>
-        <target state="translated">'{0}' test sınıfı 'public' veya 'internal' olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidTitle">

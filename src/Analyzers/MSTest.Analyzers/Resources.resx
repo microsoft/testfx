@@ -325,14 +325,8 @@ The type declaring these methods should also respect the following rules:
 - it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</value>
   </data>
-  <data name="TestClassShouldBeValidMessageFormat_NotStatic" xml:space="preserve">
-    <value>Test class '{0}' should not be 'static'</value>
-  </data>
-  <data name="TestClassShouldBeValidMessageFormat_Public" xml:space="preserve">
-    <value>Test class '{0}' should be 'public'</value>
-  </data>
-  <data name="TestClassShouldBeValidMessageFormat_PublicOrInternal" xml:space="preserve">
-    <value>Test class '{0}' should be 'public' or 'internal'</value>
+  <data name="TestClassShouldBeValidMessageFormat" xml:space="preserve">
+    <value>Test class '{0}' should be valid</value>
   </data>
   <data name="TestClassShouldBeValidTitle" xml:space="preserve">
     <value>Test classes should have valid layout</value>
