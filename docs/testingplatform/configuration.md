@@ -3,7 +3,7 @@
 The `IConfiguration` interface can be retrived using the [`IServiceProvider`](iserviceprovider.md) and provides access to the configuration settings for the testing framework and any extension points. By default, these configurations are loaded from:
 
 * Environment variables
-* A JSON file named `[assemblyName].testingplatformconfig.json` located near the entry point assembly.
+* A JSON file named `[assemblyName].testconfig.json` located near the entry point assembly.
 
 **The order of precedence is maintained, which means that if a configuration is found in the environment variables, the JSON file will not be processed.**
 
