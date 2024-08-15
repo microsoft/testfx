@@ -452,6 +452,11 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="new">Test class '{0}' should be valid</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat">
+        <source>Property 'TestContext' should be valid</source>
+        <target state="new">Property 'TestContext' should be valid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">Signatura {0} metody Test je neplatná.</target>
@@ -557,31 +562,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 – musí být public (nebo internal, pokud je nastaven atribut [assembly: DiscoverInternals]),
 – musí být static,
 – nemělo by být jen pro čtení.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotField">
-        <source>Member 'TestContext' should be a property and not a field</source>
-        <target state="translated">Člen TestContext by měl být vlastnost, nikoli pole.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotReadonly">
-        <source>Property 'TestContext' should be settable</source>
-        <target state="translated">Vlastnost TestContext by měla být nastavitelná.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotStatic">
-        <source>Property 'TestContext' should not be 'static'</source>
-        <target state="translated">Vlastnost TestContext by neměla být static.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_Public">
-        <source>Property 'TestContext' should be 'public'</source>
-        <target state="translated">Vlastnost TestContext by měla být public.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Property 'TestContext' should be 'public' or 'internal'</source>
-        <target state="translated">Vlastnost TestContext by měla být public nebo internal.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">

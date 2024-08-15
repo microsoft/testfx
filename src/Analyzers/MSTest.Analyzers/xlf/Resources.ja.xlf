@@ -452,6 +452,11 @@ The type declaring these methods should also respect the following rules:
         <target state="new">Test class '{0}' should be valid</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat">
+        <source>Property 'TestContext' should be valid</source>
+        <target state="new">Property 'TestContext' should be valid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">テスト メソッド '{0}' シグネチャが無効です</target>
@@ -558,31 +563,6 @@ The type declaring these methods should also respect the following rules:
 - 'public' ('[assembly: DiscoverInternals]' 属性が設定されている場合は 'internal' である必要があります)
 - 'static' にすることはできません
 - 読み取り専用にすることはできません。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotField">
-        <source>Member 'TestContext' should be a property and not a field</source>
-        <target state="translated">メンバー 'TestContext' はフィールドではなくプロパティにする必要があります</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotReadonly">
-        <source>Property 'TestContext' should be settable</source>
-        <target state="translated">プロパティ 'TestContext' は設定可能である必要があります</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotStatic">
-        <source>Property 'TestContext' should not be 'static'</source>
-        <target state="translated">プロパティ 'TestContext' を 'static' にすることはできません</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_Public">
-        <source>Property 'TestContext' should be 'public'</source>
-        <target state="translated">プロパティ 'TestContext' は 'public' である必要があります</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Property 'TestContext' should be 'public' or 'internal'</source>
-        <target state="translated">プロパティ 'TestContext' は 'public' または 'internal' である必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">

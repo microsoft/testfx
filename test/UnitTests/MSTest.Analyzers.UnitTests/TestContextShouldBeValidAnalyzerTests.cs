@@ -40,7 +40,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.NotFieldRule).WithLocation(0));
+            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule).WithLocation(0));
     }
 
     [Arguments("TestContext", "private")]
@@ -65,7 +65,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.PublicRule)
+            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
                 .WithLocation(0));
     }
 
@@ -100,7 +100,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.PublicOrInternalRule)
+            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
                 .WithLocation(0));
     }
 
@@ -137,7 +137,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.NotStaticRule)
+            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
                 .WithLocation(0));
     }
 
@@ -155,7 +155,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.NotReadonlyRule)
+            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
                 .WithLocation(0));
     }
 

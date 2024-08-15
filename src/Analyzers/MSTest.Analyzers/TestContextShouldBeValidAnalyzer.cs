@@ -20,9 +20,9 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.TestContextShouldBeValidTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.TestContextShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestContextShouldBeValidMessageFormat_Public), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestContextShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor PublicRule = DiagnosticDescriptorHelper.Create(
+    internal static readonly DiagnosticDescriptor TestContextShouldBeValidRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestContextShouldBeValidRuleId,
         Title,
         MessageFormat,
@@ -31,13 +31,8 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    internal static readonly DiagnosticDescriptor PublicOrInternalRule = PublicRule.WithMessage(new(nameof(Resources.TestContextShouldBeValidMessageFormat_PublicOrInternal), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor NotStaticRule = PublicRule.WithMessage(new(nameof(Resources.TestContextShouldBeValidMessageFormat_NotStatic), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor NotReadonlyRule = PublicRule.WithMessage(new(nameof(Resources.TestContextShouldBeValidMessageFormat_NotReadonly), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor NotFieldRule = PublicRule.WithMessage(new(nameof(Resources.TestContextShouldBeValidMessageFormat_NotField), Resources.ResourceManager, typeof(Resources)));
-
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(PublicRule);
+        = ImmutableArray.Create(TestContextShouldBeValidRule);
 
     public override void Initialize(AnalysisContext context)
     {
@@ -93,22 +88,25 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
         {
             if (!canDiscoverInternals && resultantVisibility != SymbolVisibility.Public)
             {
-                context.ReportDiagnostic(propertySymbol.CreateDiagnostic(PublicRule));
+                context.ReportDiagnostic(propertySymbol.CreateDiagnostic(TestContextShouldBeValidRule));
+                return;
             }
             else if (canDiscoverInternals && resultantVisibility == SymbolVisibility.Private)
             {
-                context.ReportDiagnostic(propertySymbol.CreateDiagnostic(PublicOrInternalRule));
+                context.ReportDiagnostic(propertySymbol.CreateDiagnostic(TestContextShouldBeValidRule));
+                return;
             }
         }
 
         if (propertySymbol.IsStatic)
         {
-            context.ReportDiagnostic(propertySymbol.CreateDiagnostic(NotStaticRule));
+            context.ReportDiagnostic(propertySymbol.CreateDiagnostic(TestContextShouldBeValidRule));
+            return;
         }
 
         if (propertySymbol.SetMethod is null)
         {
-            context.ReportDiagnostic(propertySymbol.CreateDiagnostic(NotReadonlyRule));
+            context.ReportDiagnostic(propertySymbol.CreateDiagnostic(TestContextShouldBeValidRule));
         }
     }
 
@@ -117,7 +115,7 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
         if (string.Equals(fieldSymbol.Name, "TestContext", StringComparison.OrdinalIgnoreCase)
             && SymbolEqualityComparer.Default.Equals(testContextSymbol, fieldSymbol.Type))
         {
-            context.ReportDiagnostic(fieldSymbol.CreateDiagnostic(NotFieldRule));
+            context.ReportDiagnostic(fieldSymbol.CreateDiagnostic(TestContextShouldBeValidRule));
         }
     }
 }
