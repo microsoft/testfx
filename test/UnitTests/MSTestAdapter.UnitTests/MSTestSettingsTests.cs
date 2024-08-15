@@ -649,6 +649,7 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         Verify(!MSTestSettings.CurrentSettings.DisableParallelization);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Never);
     }
 
     public void DisableParallelizationShouldBeConsumedFromRunSettingsWhenSpecified()

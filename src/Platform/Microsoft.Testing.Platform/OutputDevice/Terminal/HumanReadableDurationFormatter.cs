@@ -43,7 +43,7 @@ internal static class HumanReadableDurationFormatter
 
         if (duration.Milliseconds >= 0 || hasParentValue)
         {
-            terminal.Append(GetFormattedPart(duration.Seconds, hasParentValue, "ms", paddingWitdh: 3));
+            terminal.Append(GetFormattedPart(duration.Milliseconds, hasParentValue, "ms", paddingWitdh: 3));
         }
 
         if (wrapInParentheses)
@@ -86,7 +86,7 @@ internal static class HumanReadableDurationFormatter
 
         if (duration.Seconds > 0 || hasParentValue || !showMilliseconds)
         {
-            stringBuilder.Append(GetFormattedPart(duration.Minutes, hasParentValue, "s"));
+            stringBuilder.Append(GetFormattedPart(duration.Seconds, hasParentValue, "s"));
             hasParentValue = true;
         }
 
@@ -94,7 +94,7 @@ internal static class HumanReadableDurationFormatter
         {
             if (duration.Milliseconds >= 0 || hasParentValue)
             {
-                stringBuilder.Append(GetFormattedPart(duration.Seconds, hasParentValue, "ms", paddingWitdh: 3));
+                stringBuilder.Append(GetFormattedPart(duration.Milliseconds, hasParentValue, "ms", paddingWitdh: 3));
             }
         }
 

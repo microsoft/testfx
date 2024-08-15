@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
@@ -57,7 +58,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
     public TerminalOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
-        bool isVSTestMode, bool isListTests, bool isServerMode, int minimumExpectedTest, FileLoggerProvider? fileLoggerProvider, IClock clock)
+        bool isVSTestMode, bool isListTests, bool isServerMode, int minimumExpectedTest, FileLoggerProvider? fileLoggerProvider, IClock clock, CommandLineParseResult parseResult)
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _testApplicationModuleInfo = testApplicationModuleInfo;
@@ -94,6 +95,21 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             _bannerDisplayed = true;
         }
 
+        bool noAnsi = parseResult.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
+        bool noProgress = parseResult.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
+
+        Func<bool?> shouldShowProgress = noProgress
+            // User preference is to not show progress.
+            ? () => false
+            // User preference is to allow showing progress, figure if we should actually show it based on whether or not we are a testhost controller.
+            //
+            // TestHost controller is not running any tests and it should not be writing progress.
+            //
+            // The test host controller info is not setup and populated until after this constructor, because it writes banner and then after it figures out if
+            // the runner is a testHost controller, so we would always have it as null if we capture it directly. Instead we need to check it via
+            // func.
+            : () => testHostControllerInfo.IsCurrentProcessTestHostController == null ? null : !testHostControllerInfo.IsCurrentProcessTestHostController;
+
         // This is single exe run, don't show all the details of assemblies and their summaries
         // and don't show passed tests.
         bool verbose = false;
@@ -104,12 +120,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             ShowAssemblyStartAndComplete = verbose,
             ShowPassedTests = verbose,
             MinimumExpectedTests = minimumExpectedTest,
-            UseAnsi = true,
-            // TestHost controller is not running any tests and it should not be writing progress.
-            // The test host controller info is not setup and populated until after this constructor, because it writes banner and then after it figures out if
-            // the runner is a testHost controller, so we would always have it as null if we capture it directly. Instead we need to check it via
-            // func.
-            ShowProgress = () => testHostControllerInfo.IsCurrentProcessTestHostController == null ? null : !testHostControllerInfo.IsCurrentProcessTestHostController,
+            UseAnsi = !noAnsi,
+            ShowProgress = shouldShowProgress,
         });
 
         _testApplicationCancellationTokenSource.CancellationToken.Register(() => _terminalTestReporter.StartCancelling());

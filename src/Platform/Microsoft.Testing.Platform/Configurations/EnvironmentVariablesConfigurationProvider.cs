@@ -33,7 +33,6 @@ internal sealed class EnvironmentVariablesConfigurationProvider : IConfiguration
     public EnvironmentVariablesConfigurationProvider(IEnvironment environmentVariables, string prefix)
     {
         _prefix = prefix;
-        _normalizedPrefix = string.Empty;
         _normalizedPrefix = Normalize(_prefix);
         _environmentVariables = environmentVariables;
     }

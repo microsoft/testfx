@@ -584,4 +584,16 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>in</value>
     <comment>in that is used in stack frame it is followed by file name</comment>
   </data>
+  <data name="TerminalNoAnsiOptionDescription" xml:space="preserve">
+    <value>Disable outputting ANSI escape characters to screen.</value>
+  </data>
+  <data name="TerminalNoProgressOptionDescription" xml:space="preserve">
+    <value>Disable reporting progress to screen.</value>
+  </data>
+  <data name="TerminalTestReporterDescription" xml:space="preserve">
+    <value>Writes test results to terminal.</value>
+  </data>
+  <data name="TerminalTestReporterDisplayName" xml:space="preserve">
+    <value>Terminal test reporter</value>
+  </data>
 </root>
