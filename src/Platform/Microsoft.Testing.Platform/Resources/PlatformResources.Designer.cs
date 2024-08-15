@@ -1130,6 +1130,42 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Disable outputting ANSI escape characters to screen..
+        /// </summary>
+        internal static string TerminalNoAnsiOptionDescription {
+            get {
+                return ResourceManager.GetString("TerminalNoAnsiOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Disable reporting progress to screen..
+        /// </summary>
+        internal static string TerminalNoProgressOptionDescription {
+            get {
+                return ResourceManager.GetString("TerminalNoProgressOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Writes test results to terminal..
+        /// </summary>
+        internal static string TerminalTestReporterDescription {
+            get {
+                return ResourceManager.GetString("TerminalTestReporterDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Terminal test reporter.
+        /// </summary>
+        internal static string TerminalTestReporterDisplayName {
+            get {
+                return ResourceManager.GetString("TerminalTestReporterDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An &apos;ITestFrameworkInvoker&apos; factory is already set.
         /// </summary>
         internal static string TestAdapterInvokerFactoryAlreadySetErrorMessage {

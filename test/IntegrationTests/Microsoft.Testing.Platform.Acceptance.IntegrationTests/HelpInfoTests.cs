@@ -40,6 +40,8 @@ Options:
   --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run.
   --results-directory                      The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.
 Extension options:
+  --no-ansi         Disable outputting ANSI escape characters to screen.
+  --no-progress     Disable reporting progress to screen.
   --treenode-filter Use a tree filter to filter down the tests to execute
 """;
 
@@ -72,6 +74,8 @@ Options:
   --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run.
   --results-directory                      The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.
 Extension options:
+  --no-ansi         Disable outputting ANSI escape characters to screen.
+  --no-progress     Disable reporting progress to screen.
   --treenode-filter Use a tree filter to filter down the tests to execute
 """;
 
@@ -107,6 +111,8 @@ Options:
   --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run.
   --results-directory                      The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.
 Extension options:
+  --no-ansi         Disable outputting ANSI escape characters to screen.
+  --no-progress     Disable reporting progress to screen.
   --treenode-filter Use a tree filter to filter down the tests to execute
 """;
 
@@ -223,6 +229,19 @@ Built-in command line providers:
         Hidden: True
         Description: Enable the server mode\.
 Registered command line providers:
+  TerminalTestReporterCommandLineOptionsProvider
+    Name: Terminal test reporter
+    Version: .+
+    Description: Writes test results to terminal.
+    Options:
+      --no-ansi
+        Arity: 0
+        Hidden: False
+        Description: Disable outputting ANSI escape characters to screen.
+      --no-progress
+        Arity: 0
+        Hidden: False
+        Description: Disable reporting progress to screen.
   TestingFrameworkExtension
     Name: Microsoft Testing Framework
     Version: .+
@@ -275,6 +294,8 @@ Extension options:
   --hangdump-filename   Specify the name of the dump file
   --hangdump-timeout    Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.
   --hangdump-type       Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'
+  --no-ansi             Disable outputting ANSI escape characters to screen.
+  --no-progress         Disable reporting progress to screen.
   --report-trx          Enable generating TRX report
   --report-trx-filename The name of the generated TRX report
   --treenode-filter     Use a tree filter to filter down the tests to execute
@@ -319,6 +340,8 @@ Extension options:
   --hangdump-filename   Specify the name of the dump file
   --hangdump-timeout    Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.
   --hangdump-type       Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'
+  --no-ansi             Disable outputting ANSI escape characters to screen.
+  --no-progress         Disable reporting progress to screen.
   --report-trx          Enable generating TRX report
   --report-trx-filename The name of the generated TRX report
   --treenode-filter     Use a tree filter to filter down the tests to execute
@@ -496,6 +519,19 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Disable retry mechanism if the number of failed tests is greater than the specified value
+  TerminalTestReporterCommandLineOptionsProvider
+    Name: Terminal test reporter
+    Version: *
+    Description: Writes test results to terminal.
+    Options:
+      --no-ansi
+        Arity: 0
+        Hidden: False
+        Description: Disable outputting ANSI escape characters to screen.
+      --no-progress
+        Arity: 0
+        Hidden: False
+        Description: Disable reporting progress to screen.
   TestingFrameworkExtension
     Name: Microsoft Testing Framework
     Version: *
