@@ -40,19 +40,19 @@ public class ConfigurationManagerTests : TestBase
 
     internal static IEnumerable<(string JsonFileConfig, string Key, string? Result)> GetConfigurationValueFromJsonData()
     {
-        yield return ("{\"TestingPlatform\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "TestingPlatform:Troubleshooting:CrashDump:Enable", "True");
-        yield return ("{\"TestingPlatform\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "TestingPlatform:Troubleshooting:CrashDump:enable", "True");
-        yield return ("{\"TestingPlatform\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "TestingPlatform:Troubleshooting:CrashDump:Missing", null);
-        yield return ("{\"TestingPlatform\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "TestingPlatform:Troubleshooting:CrashDump", "{\"Enable\": true}");
-        yield return ("{\"TestingPlatform\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true} , \"CrashDump2\": {\"Enable\": true}}}}", "TestingPlatform:Troubleshooting:CrashDump", "{\"Enable\": true}");
-        yield return ("{\"TestingPlatform\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "TestingPlatform:", null);
-        yield return ("{}", "TestingPlatform:Troubleshooting:CrashDump:Enable", null);
-        yield return ("{\"TestingPlatform\": [1,2] }", "TestingPlatform:0", "1");
-        yield return ("{\"TestingPlatform\": [1,2] }", "TestingPlatform:1", "2");
-        yield return ("{\"TestingPlatform\": [1,2] }", "TestingPlatform", "[1,2]");
-        yield return ("{\"TestingPlatform\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "TestingPlatform:Array:0", null);
-        yield return ("{\"TestingPlatform\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "TestingPlatform:Array:0:Key", "Value");
-        yield return ("{\"TestingPlatform\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "TestingPlatform:Array:1:Key", "3");
+        yield return ("{\"platformOptions\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Enable", "True");
+        yield return ("{\"platformOptions\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:enable", "True");
+        yield return ("{\"platformOptions\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Missing", null);
+        yield return ("{\"platformOptions\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump", "{\"Enable\": true}");
+        yield return ("{\"platformOptions\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true} , \"CrashDump2\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump", "{\"Enable\": true}");
+        yield return ("{\"platformOptions\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:", null);
+        yield return ("{}", "platformOptions:Troubleshooting:CrashDump:Enable", null);
+        yield return ("{\"platformOptions\": [1,2] }", "platformOptions:0", "1");
+        yield return ("{\"platformOptions\": [1,2] }", "platformOptions:1", "2");
+        yield return ("{\"platformOptions\": [1,2] }", "platformOptions", "[1,2]");
+        yield return ("{\"platformOptions\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "platformOptions:Array:0", null);
+        yield return ("{\"platformOptions\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "platformOptions:Array:0:Key", "Value");
+        yield return ("{\"platformOptions\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "platformOptions:Array:1:Key", "3");
     }
 
     public async ValueTask InvalidJson_Fail()

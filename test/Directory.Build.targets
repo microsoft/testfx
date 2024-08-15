@@ -41,7 +41,7 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(UseVSTestRunner)' == 'false' ">
-    <None Update="*.testingplatformconfig.json">
+    <None Update="*.testconfig.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="*.launcher.config.json">

@@ -6,12 +6,12 @@ namespace Microsoft.Testing.Platform.Configurations;
 internal static class PlatformConfigurationConstants
 {
     public const string KeyDelimiter = ":";
-    public const string PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds = "testingPlatform:testHostControllersManager:singleConnectionNamedPipeServer:waitConnectionTimeoutSeconds";
-    public const string PlatformTestHostControllersManagerNamedPipeClientConnectTimeoutSeconds = "testingPlatform:testHostControllersManager:namedPipeClient:connectTimeoutSeconds";
-    public const string PlatformResultDirectory = "testingPlatform:resultDirectory";
-    public const string PlatformCurrentWorkingDirectory = "testingPlatform:currentWorkingDirectory";
-    public const string PlatformTestHostWorkingDirectory = "testingPlatform:testHostWorkingDirectory";
-    public const string PlatformExitProcessOnUnhandledException = "testingPlatform:exitProcessOnUnhandledException";
-    public const string PlatformTelemetryIsDevelopmentRepository = "testingPlatform:telemetry:isDevelopmentRepository";
-    public const string PlatformConfigSuffixFileName = ".testingplatformconfig.json";
+    public const string PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds = "platformOptions:testHostControllersManager:singleConnectionNamedPipeServer:waitConnectionTimeoutSeconds";
+    public const string PlatformTestHostControllersManagerNamedPipeClientConnectTimeoutSeconds = "platformOptions:testHostControllersManager:namedPipeClient:connectTimeoutSeconds";
+    public const string PlatformResultDirectory = "platformOptions:resultDirectory";
+    public const string PlatformCurrentWorkingDirectory = "platformOptions:currentWorkingDirectory";
+    public const string PlatformTestHostWorkingDirectory = "platformOptions:testHostWorkingDirectory";
+    public const string PlatformExitProcessOnUnhandledException = "platformOptions:exitProcessOnUnhandledException";
+    public const string PlatformTelemetryIsDevelopmentRepository = "platformOptions:telemetry:isDevelopmentRepository";
+    public const string PlatformConfigSuffixFileName = ".testconfig.json";
 }
