@@ -613,6 +613,26 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
         <target state="translated">Le fournisseur de télémétrie est déjà défini</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalNoAnsiOptionDescription">
+        <source>Disable outputting ANSI escape characters to screen.</source>
+        <target state="new">Disable outputting ANSI escape characters to screen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalNoProgressOptionDescription">
+        <source>Disable reporting progress to screen.</source>
+        <target state="new">Disable reporting progress to screen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDescription">
+        <source>Writes test results to terminal.</source>
+        <target state="new">Writes test results to terminal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDisplayName">
+        <source>Terminal test reporter</source>
+        <target state="new">Terminal test reporter</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
         <target state="translated">Désolé, une fabrique « ITestFrameworkInvoker » est déjà définie</target>
