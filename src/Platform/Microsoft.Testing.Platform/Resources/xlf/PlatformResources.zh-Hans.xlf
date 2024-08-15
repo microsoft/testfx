@@ -613,6 +613,26 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
         <target state="translated">已设置遥测提供程序</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalNoAnsiOptionDescription">
+        <source>Disable outputting ANSI escape characters to screen.</source>
+        <target state="new">Disable outputting ANSI escape characters to screen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalNoProgressOptionDescription">
+        <source>Disable reporting progress to screen.</source>
+        <target state="new">Disable reporting progress to screen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDescription">
+        <source>Writes test results to terminal.</source>
+        <target state="new">Writes test results to terminal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDisplayName">
+        <source>Terminal test reporter</source>
+        <target state="new">Terminal test reporter</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
         <target state="translated">已设置“ITestFrameworkInvoker”工厂</target>

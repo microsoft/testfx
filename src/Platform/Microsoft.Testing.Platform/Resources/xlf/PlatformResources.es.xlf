@@ -613,6 +613,26 @@ Más información sobre la telemetría de la Plataforma de pruebas de Microsoft:
         <target state="translated">El proveedor de telemetría ya está establecido</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalNoAnsiOptionDescription">
+        <source>Disable outputting ANSI escape characters to screen.</source>
+        <target state="new">Disable outputting ANSI escape characters to screen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalNoProgressOptionDescription">
+        <source>Disable reporting progress to screen.</source>
+        <target state="new">Disable reporting progress to screen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDescription">
+        <source>Writes test results to terminal.</source>
+        <target state="new">Writes test results to terminal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDisplayName">
+        <source>Terminal test reporter</source>
+        <target state="new">Terminal test reporter</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
         <target state="translated">Ya se ha establecido una fábrica "ITestFrameworkInvoker"</target>
