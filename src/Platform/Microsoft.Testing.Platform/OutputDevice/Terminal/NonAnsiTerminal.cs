@@ -6,13 +6,13 @@ using System.Text;
 
 using Microsoft.Testing.Platform.Helpers;
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// Non-ANSI terminal that writes text using the standard Console.Foreground color capabilities to stay compatible with
 /// standard Windows command line, and other command lines that are not capable of ANSI, or when output is redirected.
 /// </summary>
-internal class NonAnsiTerminal : ITerminal
+internal sealed class NonAnsiTerminal : ITerminal
 {
     private readonly IConsole _console;
     private readonly ConsoleColor _defaultForegroundColor;
@@ -201,6 +201,9 @@ internal class NonAnsiTerminal : ITerminal
                 Append(skipped.ToString(CultureInfo.CurrentCulture));
                 ResetColor();
                 Append(']');
+
+                Append(' ');
+                Append(p.AssemblyName);
 
                 if (p.TargetFramework != null || p.Architecture != null)
                 {

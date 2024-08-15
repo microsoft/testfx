@@ -4,7 +4,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal static class HumanReadableDurationFormatter
 {
@@ -25,25 +25,25 @@ internal static class HumanReadableDurationFormatter
 
         if (duration.Hours > 0 || hasParentValue)
         {
-            terminal.Append($"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Hours.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : duration.Hours.ToString(CultureInfo.InvariantCulture))}h");
+            terminal.Append(GetFormattedPart(duration.Hours, hasParentValue, "h"));
             hasParentValue = true;
         }
 
         if (duration.Minutes > 0 || hasParentValue)
         {
-            terminal.Append($"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Minutes.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : duration.Minutes.ToString(CultureInfo.InvariantCulture))}m");
+            terminal.Append(GetFormattedPart(duration.Minutes, hasParentValue, "m"));
             hasParentValue = true;
         }
 
         if (duration.Seconds > 0 || hasParentValue)
         {
-            terminal.Append($"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Seconds.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : duration.Seconds.ToString(CultureInfo.InvariantCulture))}s");
+            terminal.Append(GetFormattedPart(duration.Seconds, hasParentValue, "s"));
             hasParentValue = true;
         }
 
         if (duration.Milliseconds >= 0 || hasParentValue)
         {
-            terminal.Append($"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Milliseconds.ToString(CultureInfo.InvariantCulture).PadLeft(3, '0') : duration.Milliseconds.ToString(CultureInfo.InvariantCulture))}ms");
+            terminal.Append(GetFormattedPart(duration.Seconds, hasParentValue, "ms", paddingWitdh: 3));
         }
 
         if (wrapInParentheses)
@@ -51,6 +51,9 @@ internal static class HumanReadableDurationFormatter
             terminal.Append(')');
         }
     }
+
+    private static string GetFormattedPart(int value, bool hasParentValue, string suffix, int paddingWitdh = 2)
+        => $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? value.ToString(CultureInfo.InvariantCulture).PadLeft(paddingWitdh, '0') : value.ToString(CultureInfo.InvariantCulture))}{suffix}";
 
     public static string Render(TimeSpan duration, bool wrapInParentheses = true, bool showMilliseconds = false)
     {
@@ -71,19 +74,19 @@ internal static class HumanReadableDurationFormatter
 
         if (duration.Hours > 0 || hasParentValue)
         {
-            stringBuilder.Append(CultureInfo.CurrentCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Hours.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : duration.Hours.ToString(CultureInfo.InvariantCulture))}h");
+            stringBuilder.Append(GetFormattedPart(duration.Hours, hasParentValue, "h"));
             hasParentValue = true;
         }
 
         if (duration.Minutes > 0 || hasParentValue)
         {
-            stringBuilder.Append(CultureInfo.CurrentCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Minutes.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : duration.Minutes.ToString(CultureInfo.InvariantCulture))}m");
+            stringBuilder.Append(GetFormattedPart(duration.Minutes, hasParentValue, "m"));
             hasParentValue = true;
         }
 
         if (duration.Seconds > 0 || hasParentValue || !showMilliseconds)
         {
-            stringBuilder.Append(CultureInfo.CurrentCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Seconds.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : duration.Seconds.ToString(CultureInfo.InvariantCulture))}s");
+            stringBuilder.Append(GetFormattedPart(duration.Minutes, hasParentValue, "s"));
             hasParentValue = true;
         }
 
@@ -91,7 +94,7 @@ internal static class HumanReadableDurationFormatter
         {
             if (duration.Milliseconds >= 0 || hasParentValue)
             {
-                stringBuilder.Append(CultureInfo.CurrentCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? duration.Milliseconds.ToString(CultureInfo.InvariantCulture).PadLeft(3, '0') : duration.Milliseconds.ToString(CultureInfo.InvariantCulture))}ms");
+                stringBuilder.Append(GetFormattedPart(duration.Seconds, hasParentValue, "ms", paddingWitdh: 3));
             }
         }
 

@@ -4,9 +4,9 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
-internal class NativeMethods
+internal static class NativeMethods
 {
     internal const uint FILE_TYPE_CHAR = 0x0002;
     internal const int STD_OUTPUT_HANDLE = -11;
@@ -43,7 +43,7 @@ internal class NativeMethods
         {
             try
             {
-                IntPtr outputStream = GetStdHandle((int)handleType);
+                nint outputStream = GetStdHandle((int)handleType);
                 if (GetConsoleMode(outputStream, out uint consoleMode))
                 {
                     if ((consoleMode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) == ENABLE_VIRTUAL_TERMINAL_PROCESSING)
@@ -91,18 +91,18 @@ internal class NativeMethods
     {
         if (IsWindows && originalConsoleMode is not null)
         {
-            IntPtr stdOut = GetStdHandle((int)handleType);
+            nint stdOut = GetStdHandle((int)handleType);
             _ = SetConsoleMode(stdOut, originalConsoleMode.Value);
         }
     }
 
     [DllImport("kernel32.dll")]
     [SupportedOSPlatform("windows")]
-    internal static extern IntPtr GetStdHandle(int nStdHandle);
+    internal static extern nint GetStdHandle(int nStdHandle);
 
     [DllImport("kernel32.dll")]
     [SupportedOSPlatform("windows")]
-    internal static extern uint GetFileType(IntPtr hFile);
+    internal static extern uint GetFileType(nint hFile);
 
     internal enum StreamHandleType
     {
@@ -118,8 +118,8 @@ internal class NativeMethods
     }
 
     [DllImport("kernel32.dll")]
-    internal static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+    internal static extern bool GetConsoleMode(nint hConsoleHandle, out uint lpMode);
 
     [DllImport("kernel32.dll")]
-    internal static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+    internal static extern bool SetConsoleMode(nint hConsoleHandle, uint dwMode);
 }

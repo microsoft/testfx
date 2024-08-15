@@ -3,19 +3,19 @@
 
 using System.Diagnostics;
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.Helpers;
 
-internal sealed class SystemStopwatch : StopwatchAbstraction
+internal sealed class SystemStopwatch : IStopwatch
 {
     private readonly Stopwatch _stopwatch = new();
 
-    public override TimeSpan Elapsed => _stopwatch.Elapsed;
+    public TimeSpan Elapsed => _stopwatch.Elapsed;
 
-    public override void Start() => _stopwatch.Start();
+    public void Start() => _stopwatch.Start();
 
-    public override void Stop() => _stopwatch.Stop();
+    public void Stop() => _stopwatch.Stop();
 
-    public static StopwatchAbstraction StartNew()
+    public static IStopwatch StartNew()
     {
         SystemStopwatch wallClockStopwatch = new();
         wallClockStopwatch.Start();

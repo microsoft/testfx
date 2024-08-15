@@ -1,12 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// Outcome of a test.
 /// </summary>
-internal enum LoggerOutcome
+internal enum TestOutcome
 {
     /// <summary>
     /// Error.
@@ -34,7 +34,7 @@ internal enum LoggerOutcome
     Timeout,
 
     /// <summary>
-    /// Cancelled.
+    /// Canceled.
     /// </summary>
-    Cancelled,
+    Canceled,
 }

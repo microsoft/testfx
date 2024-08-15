@@ -7,12 +7,12 @@
 // https://github.com/keqingrong/supports-ansi/blob/master/index.js
 using System.Text.RegularExpressions;
 
-namespace Microsoft.Testing.Platform.OutputDevice.Console;
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// Works together with the <see cref="NativeMethods"/> to figure out if the current console is capable of using ANSI output codes.
 /// </summary>
-internal class AnsiDetector
+internal static class AnsiDetector
 {
     private static readonly Regex[] TerminalsRegexes =
     {

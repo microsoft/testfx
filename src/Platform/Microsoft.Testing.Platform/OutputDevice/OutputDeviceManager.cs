@@ -31,7 +31,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             }
         }
 
-        return new ConsoleOutputDevice(
+        return new TerminalOutputDevice(
             serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetConsole(),
             serviceProvider.GetTestApplicationModuleInfo(),
