@@ -68,16 +68,21 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        SymbolVisibility? resultantVisibility = namedTypeSymbol.GetResultantVisibility();
-        if (resultantVisibility is not null && !canDiscoverInternals && resultantVisibility != SymbolVisibility.Public)
+        if (namedTypeSymbol.GetResultantVisibility() is { } resultantVisibility)
         {
-            context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassShouldBeValidRule, namedTypeSymbol.Name));
+            if (!canDiscoverInternals && resultantVisibility != SymbolVisibility.Public)
+            {
+                context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassShouldBeValidRule, namedTypeSymbol.Name));
+                return;
+            }
+            else if (canDiscoverInternals && resultantVisibility == SymbolVisibility.Private)
+            {
+                context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassShouldBeValidRule, namedTypeSymbol.Name));
+                return;
+            }
         }
-        else if (resultantVisibility is not null && canDiscoverInternals && resultantVisibility == SymbolVisibility.Private)
-        {
-            context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassShouldBeValidRule, namedTypeSymbol.Name));
-        }
-        else if (namedTypeSymbol.IsStatic)
+
+        if (namedTypeSymbol.IsStatic)
         {
             foreach (ISymbol member in namedTypeSymbol.GetMembers())
             {
@@ -103,7 +108,7 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
                         context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassShouldBeValidRule, namedTypeSymbol.Name));
 
                         // We only need to report once per class.
-                        break;
+                        return;
                     }
                 }
             }
