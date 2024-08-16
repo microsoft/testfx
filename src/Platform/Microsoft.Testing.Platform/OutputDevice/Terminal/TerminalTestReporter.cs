@@ -721,7 +721,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
-    private TerminalColor ToTerminalColor(ConsoleColor consoleColor)
+    private static TerminalColor ToTerminalColor(ConsoleColor consoleColor)
         => consoleColor switch
         {
             ConsoleColor.Black => TerminalColor.Black,
