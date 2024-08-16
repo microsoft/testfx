@@ -7,9 +7,11 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
 
+using SL = Microsoft.Build.Logging.StructuredLogger;
+
 namespace MSTest.Acceptance.IntegrationTests;
 
-// [TestGroup]
+[TestGroup]
 public sealed class SdkTests : AcceptanceTestBase
 {
     private const string AssetName = "MSTestSdk";
@@ -66,7 +68,7 @@ namespace MSTestSdkTest
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
-    public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
+    private async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
@@ -103,7 +105,7 @@ namespace MSTestSdkTest
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
-    public async Task RunTests_With_MSTestRunner_DotnetTest(string multiTfm, BuildConfiguration buildConfiguration)
+    private async Task RunTests_With_MSTestRunner_DotnetTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
@@ -140,7 +142,7 @@ namespace MSTestSdkTest
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
-    public async Task RunTests_With_MSTestRunner_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
+    private async Task RunTests_With_MSTestRunner_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
@@ -172,7 +174,7 @@ namespace MSTestSdkTest
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
-    public async Task RunTests_With_CentralPackageManagement_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
+    private async Task RunTests_With_CentralPackageManagement_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
@@ -203,7 +205,7 @@ namespace MSTestSdkTest
         }
     }
 
-    public static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration, string MSBuildExtensionEnableFragment, string EnableCommandLineArg, string InvalidCommandLineArg)>> RunTests_With_MSTestRunner_Standalone_Plus_Extensions_Data()
+    private static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration, string MSBuildExtensionEnableFragment, string EnableCommandLineArg, string InvalidCommandLineArg)>> RunTests_With_MSTestRunner_Standalone_Plus_Extensions_Data()
     {
         foreach (TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)> buildConfig in GetBuildMatrixMultiTfmFoldedBuildConfiguration())
         {
@@ -245,7 +247,7 @@ namespace MSTestSdkTest
     }
 
     [ArgumentsProvider(nameof(RunTests_With_MSTestRunner_Standalone_Plus_Extensions_Data))]
-    public async Task RunTests_With_MSTestRunner_Standalone_Selectively_Enabled_Extensions(string multiTfm, BuildConfiguration buildConfiguration,
+    private async Task RunTests_With_MSTestRunner_Standalone_Selectively_Enabled_Extensions(string multiTfm, BuildConfiguration buildConfiguration,
         string msbuildExtensionEnableFragment,
         string enableCommandLineArg,
         string invalidCommandLineArg)
@@ -283,7 +285,7 @@ namespace MSTestSdkTest
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
-    public async Task RunTests_With_MSTestRunner_Standalone_EnableAll_Extensions(string multiTfm, BuildConfiguration buildConfiguration)
+    private async Task RunTests_With_MSTestRunner_Standalone_EnableAll_Extensions(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
@@ -314,7 +316,7 @@ namespace MSTestSdkTest
         }
     }
 
-    public static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration, bool EnableDefaultExtensions)>> RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data()
+    private static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration, bool EnableDefaultExtensions)>> RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data()
     {
         foreach (TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)> buildConfig in GetBuildMatrixMultiTfmFoldedBuildConfiguration())
         {
@@ -329,7 +331,7 @@ namespace MSTestSdkTest
     }
 
     [ArgumentsProvider(nameof(RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data))]
-    public async Task RunTests_With_MSTestRunner_Standalone_Enable_Default_Extensions(string multiTfm, BuildConfiguration buildConfiguration, bool enableDefaultExtensions)
+    private async Task RunTests_With_MSTestRunner_Standalone_Enable_Default_Extensions(string multiTfm, BuildConfiguration buildConfiguration, bool enableDefaultExtensions)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
@@ -368,7 +370,7 @@ namespace MSTestSdkTest
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
-    public async Task Invalid_TestingProfile_Name_Should_Fail(string multiTfm, BuildConfiguration buildConfiguration)
+    private async Task Invalid_TestingProfile_Name_Should_Fail(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
@@ -394,7 +396,7 @@ namespace MSTestSdkTest
         compilationResult.AssertOutputContains("Invalid value for property TestingExtensionsProfile. Valid values are 'Default', 'AllMicrosoft' and 'None'.");
     }
 
-    public async Task NativeAot_Smoke_Test_On_Windows() =>
+    private async Task NativeAot_Smoke_Test_On_Windows() =>
         // Sometimes we got strange error from the compilers like "fatal error LNK1136: invalid or corrupt file"
         // I suppose due to the load on the build machines. So, we retry the test a few times.
         await RetryHelper.RetryAsync(
@@ -437,7 +439,7 @@ namespace MSTestSdkTest
             }, 3, TimeSpan.FromSeconds(5));
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task EnablePlaywrightProperty_WhenUsingRunner_AllowsToRunPlaywrightTests(string tfm)
+    private async Task EnablePlaywrightProperty_WhenUsingRunner_AllowsToRunPlaywrightTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
@@ -461,7 +463,7 @@ namespace MSTestSdkTest
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task EnablePlaywrightProperty_WhenUsingVSTest_AllowsToRunPlaywrightTests(string tfm)
+    private async Task EnablePlaywrightProperty_WhenUsingVSTest_AllowsToRunPlaywrightTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
         string exeOrDllName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
@@ -490,14 +492,14 @@ namespace MSTestSdkTest
         }
     }
 
-    public async Task EnableAspireProperty_WhenUsingRunner_AllowsToRunAspireTests()
+    private async Task EnableAspireProperty_WhenUsingRunner_AllowsToRunAspireTests()
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent.UidFragment);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
     }
 
-    public async Task EnableAspireProperty_WhenUsingVSTest_AllowsToRunAspireTests()
+    private async Task EnableAspireProperty_WhenUsingVSTest_AllowsToRunAspireTests()
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent.UidFragment);
         string exeOrDllName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
@@ -508,6 +510,37 @@ namespace MSTestSdkTest
         // Ensure output contains the right platform banner
         dotnetTestResult.AssertOutputContains("Test Execution Command Line Tool");
         dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
+    }
+
+    public async Task SettingOutputTypeToLibraryReducesAddedExtensions()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+               AssetName,
+               SingleTestSourceCode
+               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+               .PatchCodeWithReplace("$OutputType$", "<OutputType>Library</OutputType>")
+               .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{TargetFrameworks.NetCurrent.UidFragment}</TargetFrameworks>")
+               .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
+               .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
+               .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
+               .PatchCodeWithReplace("$Extensions$", string.Empty));
+        string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath} -bl:{binlogFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+
+        Assert.AreEqual(0, compilationResult.ExitCode);
+
+        SL.Build binLog = SL.Serialization.Read(binlogFile);
+        SL.Task cscTask = binLog.FindChildrenRecursive<SL.Task>(task => task.Name == "Csc").Single();
+        SL.Item[] references = cscTask.FindChildrenRecursive<SL.Parameter>(p => p.Name == "References").Single().Children.OfType<SL.Item>().ToArray();
+
+        // Ensure that MSTest.Framework is referenced
+        Assert.IsTrue(references.Any(r => r.Text.EndsWith("Microsoft.VisualStudio.TestPlatform.TestFramework.dll", StringComparison.OrdinalIgnoreCase)));
+        Assert.IsTrue(references.Any(r => r.Text.EndsWith("Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase)));
+
+        // No adapter, no extensions, no vstest sdk
+        Assert.IsFalse(references.Any(r => r.Text.EndsWith("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll", StringComparison.OrdinalIgnoreCase)));
+        Assert.IsFalse(references.Any(r => r.Text.Contains("Microsoft.Testing.Extensions.", StringComparison.OrdinalIgnoreCase)));
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
