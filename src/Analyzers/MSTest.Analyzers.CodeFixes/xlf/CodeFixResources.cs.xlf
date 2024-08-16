@@ -39,7 +39,7 @@
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
-        <target state="new">Add '[TestMethod]'</target>
+        <target state="translated">Přidat [TestMethod]</target>
         <note />
       </trans-unit>
     </body>
