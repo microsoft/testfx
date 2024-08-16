@@ -281,6 +281,21 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <target state="translated">Nie przechowuj elementu TestContext w statycznym elemencie członkowskim</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotUseShadowingDescription">
+        <source>Shadowing test members could cause testing issues (such as NRE).</source>
+        <target state="new">Shadowing test members could cause testing issues (such as NRE).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingMessageFormat">
+        <source>Member '{0}' is already exist in the base class</source>
+        <target state="new">Member '{0}' is already exist in the base class</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingTitle">
+        <source>Do not use shadowing</source>
+        <target state="new">Do not use shadowing</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
         <target state="translated">Element „System.ComponentModel.DescriptionAttribute” nie ma żadnego efektu w kontekście testów i prawdopodobnie chcesz użyć elementu „Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute”.</target>

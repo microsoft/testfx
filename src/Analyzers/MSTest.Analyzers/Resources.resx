@@ -520,4 +520,13 @@ The type declaring these methods should also respect the following rules:
   <data name="TestClassShouldBeValidMessageFormat" xml:space="preserve">
     <value>Test class '{0}' should be valid</value>
   </data>
+  <data name="DoNotUseShadowingDescription" xml:space="preserve">
+    <value>Shadowing test members could cause testing issues (such as NRE).</value>
+  </data>
+  <data name="DoNotUseShadowingMessageFormat" xml:space="preserve">
+    <value>Member '{0}' is already exist in the base class</value>
+  </data>
+  <data name="DoNotUseShadowingTitle" xml:space="preserve">
+    <value>Do not use shadowing</value>
+  </data>
 </root>

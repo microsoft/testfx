@@ -281,6 +281,21 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <target state="translated">No almacenar TestContext en un miembro estático</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotUseShadowingDescription">
+        <source>Shadowing test members could cause testing issues (such as NRE).</source>
+        <target state="new">Shadowing test members could cause testing issues (such as NRE).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingMessageFormat">
+        <source>Member '{0}' is already exist in the base class</source>
+        <target state="new">Member '{0}' is already exist in the base class</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingTitle">
+        <source>Do not use shadowing</source>
+        <target state="new">Do not use shadowing</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
         <target state="translated">"System.ComponentModel.DescriptionAttribute" no tiene ningún efecto en el contexto de las pruebas y es probable que quiera usar "Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute" en su lugar.</target>
