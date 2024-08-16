@@ -3,9 +3,7 @@
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
-    <OutputType Condition=" '$(OutputType)' == '' ">Exe</OutputType>
-    <IsTestLibrary Condition=" '$(OutputType)' == 'Library' ">true</IsTestLibrary>
-    <IsTestLibrary Condition=" '$(OutputType)' != 'Library' ">false</IsTestLibrary>
+    <OutputType>Exe</OutputType>
     <MicrosoftTestingExtensionsCommonVersion Condition=" '$(MicrosoftTestingExtensionsCommonVersion)' == '' " >$(MicrosoftTestingPlatformVersion)</MicrosoftTestingExtensionsCommonVersion>
     <TestingPlatformDotnetTestSupport Condition=" $(TestingPlatformDotnetTestSupport) == '' ">true</TestingPlatformDotnetTestSupport>
     <TestingExtensionsProfile Condition=" $(TestingExtensionsProfile) == '' ">Default</TestingExtensionsProfile>
