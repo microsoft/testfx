@@ -80,7 +80,7 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
                 ISymbol originalBaseMemberSymbol = baseMember.OriginalDefinition;
 
                 // Compare the original definitions
-                if (!SymbolEqualityComparer.Default.Equals(originalMemberDefinition, originalBaseMemberSymbol))
+                if (SymbolEqualityComparer.Default.Equals(originalMemberDefinition, originalBaseMemberSymbol))
                 {
                     context.ReportDiagnostic(member.CreateDiagnostic(DoNotUseShadowingRule, member.Name));
                     return;
