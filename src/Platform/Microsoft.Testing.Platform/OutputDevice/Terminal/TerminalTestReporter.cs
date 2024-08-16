@@ -580,7 +580,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             return;
         }
 
-        terminal.SetColor(TerminalColor.Red);
+        terminal.SetColor(TerminalColor.Blue);
         AppendIndentedMessage(terminal, errorMessage, SingleIndentation);
         terminal.ResetColor();
         terminal.AppendLine();
@@ -683,7 +683,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
-            terminal.SetColor(TerminalColor.Red);
+            terminal.SetColor(TerminalColor.Blue);
             terminal.AppendLine(text);
             terminal.ResetColor();
         });
@@ -704,6 +704,61 @@ internal sealed partial class TerminalTestReporter : IDisposable
     internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, Exception exception)
         => WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString());
 
-    internal void WriteMessage(string text)
-        => _terminalWithProgress.WriteToTerminal(terminal => terminal.AppendLine(text));
+    internal void WriteMessage(string text, SystemConsoleColor? color = null)
+    {
+        if (color != null)
+        {
+            _terminalWithProgress.WriteToTerminal(terminal =>
+            {
+                terminal.SetColor(ToTerminalColor(color.ConsoleColor));
+                terminal.AppendLine(text);
+                terminal.ResetColor();
+            });
+        }
+        else
+        {
+            _terminalWithProgress.WriteToTerminal(terminal => terminal.AppendLine(text));
+        }
+    }
+
+    private TerminalColor ToTerminalColor(ConsoleColor consoleColor)
+    {
+        switch (consoleColor)
+        {
+            case ConsoleColor.Black:
+                return TerminalColor.Black;
+            case ConsoleColor.DarkBlue:
+                return TerminalColor.DarkBlue;
+            case ConsoleColor.DarkGreen:
+                return TerminalColor.DarkGreen;
+            case ConsoleColor.DarkCyan:
+                return TerminalColor.DarkCyan;
+            case ConsoleColor.DarkRed:
+                return TerminalColor.DarkRed;
+            case ConsoleColor.DarkMagenta:
+                return TerminalColor.DarkMagenta;
+            case ConsoleColor.DarkYellow:
+                return TerminalColor.DarkYellow;
+            case ConsoleColor.Gray:
+                return TerminalColor.Gray;
+            case ConsoleColor.DarkGray:
+                return TerminalColor.Gray;
+            case ConsoleColor.Blue:
+                return TerminalColor.Blue;
+            case ConsoleColor.Green:
+                return TerminalColor.Green;
+            case ConsoleColor.Cyan:
+                return TerminalColor.Cyan;
+            case ConsoleColor.Red:
+                return TerminalColor.Red;
+            case ConsoleColor.Magenta:
+                return TerminalColor.Magenta;
+            case ConsoleColor.Yellow:
+                return TerminalColor.Yellow;
+            case ConsoleColor.White:
+                return TerminalColor.White;
+            default:
+                return TerminalColor.Default;
+        }
+    }
 }

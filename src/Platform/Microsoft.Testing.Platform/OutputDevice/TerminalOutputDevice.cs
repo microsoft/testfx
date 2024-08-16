@@ -352,7 +352,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                                 _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _architecture, formattedTextOutputDeviceData.Text);
                                 break;
                             default:
-                                _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text);
+                                _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text, color);
                                 break;
                         }
                     }
