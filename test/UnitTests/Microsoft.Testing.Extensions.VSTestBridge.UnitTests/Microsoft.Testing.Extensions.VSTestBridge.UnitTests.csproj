@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>$(TargetFrameworks);net462</TargetFrameworks>
     <UseVSTestRunner>false</UseVSTestRunner>
+    <UseAppHost>true</UseAppHost>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
