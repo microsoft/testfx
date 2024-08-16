@@ -580,7 +580,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             return;
         }
 
-        terminal.SetColor(TerminalColor.Blue);
+        terminal.SetColor(TerminalColor.Red);
         AppendIndentedMessage(terminal, errorMessage, SingleIndentation);
         terminal.ResetColor();
         terminal.AppendLine();
@@ -683,7 +683,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
-            terminal.SetColor(TerminalColor.Blue);
+            terminal.SetColor(TerminalColor.Red);
             terminal.AppendLine(text);
             terminal.ResetColor();
         });
