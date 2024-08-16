@@ -60,11 +60,32 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
         }
 
         INamedTypeSymbol? currentType = namedTypeSymbol.BaseType;
-        var baseMembers = new List<ISymbol>();
+        var baseClassesMembers = new List<ISymbol>();
         while (currentType != null)
         {
-            baseMembers.AddRange(currentType.GetMembers());
+            baseClassesMembers.AddRange(currentType.GetMembers());
             currentType = currentType.BaseType;
+        }
+
+        if (baseClassesMembers.Count == 0)
+        {
+            return;
+        }
+
+        foreach (ISymbol member in namedTypeSymbol.GetMembers())
+        {
+            foreach (ISymbol baseMember in baseClassesMembers)
+            {
+                ISymbol originalMemberDefinition = member.OriginalDefinition;
+                ISymbol originalBaseMemberSymbol2 = baseMember.OriginalDefinition;
+
+                // Compare the original definitions
+                if (!SymbolEqualityComparer.Default.Equals(originalMemberDefinition, originalBaseMemberSymbol2))
+                {
+                    context.ReportDiagnostic(member.CreateDiagnostic(DoNotUseShadowingRule, member.Name));
+                    return;
+                }
+            }
         }
     }
 }
