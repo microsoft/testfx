@@ -115,7 +115,13 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             // The test host controller info is not setup and populated until after this constructor, because it writes banner and then after it figures out if
             // the runner is a testHost controller, so we would always have it as null if we capture it directly. Instead we need to check it via
             // func.
-            : () => testHostControllerInfo.IsCurrentProcessTestHostController == null ? null : !testHostControllerInfo.IsCurrentProcessTestHostController;
+            : () => _isServerMode
+                ? false
+                : _isListTests
+                    ? false
+                    : testHostControllerInfo.IsCurrentProcessTestHostController == null
+                        ? null
+                        : !testHostControllerInfo.IsCurrentProcessTestHostController;
 
         // This is single exe run, don't show all the details of assemblies and their summaries.
         _terminalTestReporter = new TerminalTestReporter(console, new()

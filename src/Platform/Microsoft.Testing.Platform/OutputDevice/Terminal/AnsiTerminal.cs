@@ -267,7 +267,7 @@ internal sealed class AnsiTerminal : ITerminal
             return;
         }
 
-        AppendLine($"{AnsiCodes.CSI}{_currentFrame.ProgressCount + 1}{AnsiCodes.MoveUpToLineStart}");
+        AppendLine($"{AnsiCodes.CSI}{_currentFrame.ProgressCount + 2}{AnsiCodes.MoveUpToLineStart}");
         Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInDisplay}");
         _currentFrame.Clear();
     }
@@ -282,15 +282,7 @@ internal sealed class AnsiTerminal : ITerminal
             EraseProgress();
         }
 
-        StartUpdate();
-        try
-        {
-            newFrame.Render(_currentFrame, this);
-        }
-        finally
-        {
-            StopUpdate();
-        }
+        newFrame.Render(_currentFrame, this);
 
         _currentFrame = newFrame;
     }

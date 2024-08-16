@@ -20,6 +20,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     private readonly ITerminal _terminal;
     private readonly Func<bool?> _showProgress;
+    private readonly bool _writeProgressImmediatelyAfterOutput;
     private readonly int _updateEvery;
     private TestProgressState?[] _progressItems = Array.Empty<TestProgressState>();
     private bool? _showProgressCached;
@@ -40,7 +41,15 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             {
                 lock (_lock)
                 {
-                    _terminal.RenderProgress(_progressItems);
+                    _terminal.StartUpdate();
+                    try
+                    {
+                        _terminal.RenderProgress(_progressItems);
+                    }
+                    finally
+                    {
+                        _terminal.StopUpdate();
+                    }
                 }
             }
         }
@@ -52,10 +61,11 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         _terminal.EraseProgress();
     }
 
-    public TestProgressStateAwareTerminal(ITerminal terminal, Func<bool?> showProgress, int updateEvery)
+    public TestProgressStateAwareTerminal(ITerminal terminal, Func<bool?> showProgress, bool writeProgressImmediatelyAfterOutput, int updateEvery)
     {
         _terminal = terminal;
         _showProgress = showProgress;
+        _writeProgressImmediatelyAfterOutput = writeProgressImmediatelyAfterOutput;
         _updateEvery = updateEvery;
     }
 
@@ -111,9 +121,14 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         {
             lock (_lock)
             {
-                _terminal.EraseProgress();
                 _terminal.StartUpdate();
+                _terminal.EraseProgress();
                 write(_terminal);
+                if (_writeProgressImmediatelyAfterOutput)
+                {
+                    _terminal.RenderProgress(_progressItems);
+                }
+
                 _terminal.StopUpdate();
             }
         }
