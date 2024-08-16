@@ -7,7 +7,7 @@ using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
 namespace TestingPlatformExplorer.OutOfProcess;
 
-internal class SetEnvironmentVariableForTestHost : ITestHostEnvironmentVariableProvider
+internal sealed class SetEnvironmentVariableForTestHost : ITestHostEnvironmentVariableProvider
 {
     public string Uid => nameof(SetEnvironmentVariableForTestHost);
 
