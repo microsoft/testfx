@@ -46,7 +46,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly IClock _clock;
     private readonly TerminalTestReporter _terminalTestReporter;
-    private readonly string? _architecture;
+    private readonly string? _longArchitecture;
+    private readonly string? _shortArchitecture;
     private readonly string? _targetFramework;
     private readonly string _assemblyName;
     private readonly char[] _dash = new char[] { '-' };
@@ -81,11 +82,14 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         if (_runtimeFeature.IsDynamicCodeSupported)
         {
 #if !NETCOREAPP
-            _architecture = GetShortArchitecture(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+            _longArchitecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+            _shortArchitecture = GetShortArchitecture(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
 #else
-            _architecture = GetShortArchitecture(RuntimeInformation.RuntimeIdentifier);
+            // RID has the operating system, we want to see that in the banner, but not next to every dll.
+            _longArchitecture = RuntimeInformation.RuntimeIdentifier;
+            _shortArchitecture = GetShortArchitecture(RuntimeInformation.RuntimeIdentifier);
 #endif
-            _targetFramework = GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+            _targetFramework = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
         }
 
         _assemblyName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
@@ -138,40 +142,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         _testApplicationCancellationTokenSource.CancellationToken.Register(() => _terminalTestReporter.StartCancelling());
     }
 
-    private static string? GetShortTargetFramework(string frameworkDescription)
-    {
-        // https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.runtimeinformation.frameworkdescription?view=net-8.0
-        string netFramework = ".NET Framework";
-        if (frameworkDescription.StartsWith(netFramework, ignoreCase: false, CultureInfo.InvariantCulture))
-        {
-            // .NET Framework 4.7.2
-            return frameworkDescription.Length > (netFramework.Length + 6)
-                ? $"net{frameworkDescription[netFramework.Length + 1]}{frameworkDescription[netFramework.Length + 3]}{frameworkDescription[netFramework.Length + 5]}"
-                : frameworkDescription;
-        }
-
-        string netCore = ".NET Core";
-        if (frameworkDescription.StartsWith(netCore, ignoreCase: false, CultureInfo.InvariantCulture))
-        {
-            // .NET Core 3.1
-            return frameworkDescription.Length > (netCore.Length + 4)
-                ? $"net{frameworkDescription[netCore.Length + 1]}{frameworkDescription[netCore.Length + 3]}"
-                : frameworkDescription;
-        }
-
-        string net = ".NET";
-        if (frameworkDescription.StartsWith(net, ignoreCase: false, CultureInfo.InvariantCulture))
-        {
-            // .NET 5
-            return frameworkDescription.Length > (net.Length + 2)
-                ? $"net{frameworkDescription[net.Length + 1]}"
-                : frameworkDescription;
-        }
-
-        return frameworkDescription;
-    }
-
-    private string? GetShortArchitecture(string runtimeIdentifier)
+    private string GetShortArchitecture(string runtimeIdentifier)
         => runtimeIdentifier.Contains('-')
             ? runtimeIdentifier.Split(_dash, 2)[1]
             : runtimeIdentifier;
@@ -250,7 +221,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                     if (_runtimeFeature.IsDynamicCodeSupported)
                     {
                         stringBuilder.Append(" [");
-                        stringBuilder.Append(_architecture);
+                        stringBuilder.Append(_longArchitecture);
                         stringBuilder.Append(" - ");
                         stringBuilder.Append(_targetFramework);
                         stringBuilder.Append(']');
@@ -265,11 +236,11 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             {
                 if (_fileLoggerProvider.SyncFlush)
                 {
-                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _architecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
+                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
                 }
                 else
                 {
-                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _architecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
+                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
                 }
             }
         }
@@ -280,7 +251,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         // Start test execution here, rather than in ShowBanner, because then we know
         // if we are a testHost controller or not, and if we should show progress bar.
         _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1);
-        _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _architecture);
+        _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _shortArchitecture);
         if (_logger is not null && _logger.IsEnabled(LogLevel.Trace))
         {
             await _logger.LogTraceAsync("DisplayBeforeSessionStartAsync");
@@ -298,7 +269,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         {
             if (!_firstCallTo_OnSessionStartingAsync)
             {
-                _terminalTestReporter.AssemblyRunCompleted(_assemblyName, _targetFramework, _architecture);
+                _terminalTestReporter.AssemblyRunCompleted(_assemblyName, _targetFramework, _shortArchitecture);
                 _terminalTestReporter.TestExecutionCompleted(_clock.UtcNow);
             }
         }
@@ -346,10 +317,10 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         switch (color.ConsoleColor)
                         {
                             case ConsoleColor.Red:
-                                _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _architecture, formattedTextOutputDeviceData.Text);
+                                _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, formattedTextOutputDeviceData.Text);
                                 break;
                             case ConsoleColor.Yellow:
-                                _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _architecture, formattedTextOutputDeviceData.Text);
+                                _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, formattedTextOutputDeviceData.Text);
                                 break;
                             default:
                                 _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text);
@@ -373,7 +344,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
                     {
                         await LogDebugAsync(exceptionOutputDeviceData.Exception.ToString());
-                        _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _architecture, exceptionOutputDeviceData.Exception);
+                        _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, exceptionOutputDeviceData.Exception);
 
                         break;
                     }
@@ -404,7 +375,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         _terminalTestReporter.TestCompleted(
                             _assemblyName,
                             _targetFramework,
-                            _architecture,
+                            _shortArchitecture,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Error,
                             duration,
@@ -418,7 +389,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         _terminalTestReporter.TestCompleted(
                              _assemblyName,
                              _targetFramework,
-                             _architecture,
+                             _shortArchitecture,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Fail,
                              duration,
@@ -432,7 +403,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         _terminalTestReporter.TestCompleted(
                              _assemblyName,
                              _targetFramework,
-                             _architecture,
+                             _shortArchitecture,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Timeout,
                              duration,
@@ -446,7 +417,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         _terminalTestReporter.TestCompleted(
                              _assemblyName,
                              _targetFramework,
-                             _architecture,
+                             _shortArchitecture,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Canceled,
                              duration,
@@ -460,7 +431,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         _terminalTestReporter.TestCompleted(
                             _assemblyName,
                             _targetFramework,
-                            _architecture,
+                            _shortArchitecture,
                             testNodeStateChanged.TestNode.DisplayName,
                             outcome: TestOutcome.Passed,
                             duration: duration,
@@ -474,7 +445,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         _terminalTestReporter.TestCompleted(
                             _assemblyName,
                             _targetFramework,
-                            _architecture,
+                            _shortArchitecture,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Skipped,
                             duration,
@@ -494,7 +465,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         isOutOfProcessArtifact,
                         _assemblyName,
                         _targetFramework,
-                        _architecture,
+                        _shortArchitecture,
                         artifact.TestNode.DisplayName,
                         artifact.FileInfo.FullName);
                 }
@@ -508,7 +479,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         isOutOfProcessArtifact,
                         _assemblyName,
                         _targetFramework,
-                        _architecture,
+                        _shortArchitecture,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }
@@ -521,7 +492,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         isOutOfProcessArtifact,
                         _assemblyName,
                         _targetFramework,
-                        _architecture,
+                        _shortArchitecture,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }
