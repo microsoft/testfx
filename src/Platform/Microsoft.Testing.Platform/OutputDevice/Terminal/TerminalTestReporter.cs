@@ -704,6 +704,42 @@ internal sealed partial class TerminalTestReporter : IDisposable
     internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, Exception exception)
         => WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString());
 
-    internal void WriteMessage(string text)
-        => _terminalWithProgress.WriteToTerminal(terminal => terminal.AppendLine(text));
+    internal void WriteMessage(string text, SystemConsoleColor? color = null)
+    {
+        if (color != null)
+        {
+            _terminalWithProgress.WriteToTerminal(terminal =>
+            {
+                terminal.SetColor(ToTerminalColor(color.ConsoleColor));
+                terminal.AppendLine(text);
+                terminal.ResetColor();
+            });
+        }
+        else
+        {
+            _terminalWithProgress.WriteToTerminal(terminal => terminal.AppendLine(text));
+        }
+    }
+
+    private static TerminalColor ToTerminalColor(ConsoleColor consoleColor)
+        => consoleColor switch
+        {
+            ConsoleColor.Black => TerminalColor.Black,
+            ConsoleColor.DarkBlue => TerminalColor.DarkBlue,
+            ConsoleColor.DarkGreen => TerminalColor.DarkGreen,
+            ConsoleColor.DarkCyan => TerminalColor.DarkCyan,
+            ConsoleColor.DarkRed => TerminalColor.DarkRed,
+            ConsoleColor.DarkMagenta => TerminalColor.DarkMagenta,
+            ConsoleColor.DarkYellow => TerminalColor.DarkYellow,
+            ConsoleColor.Gray => TerminalColor.Gray,
+            ConsoleColor.DarkGray => TerminalColor.Gray,
+            ConsoleColor.Blue => TerminalColor.Blue,
+            ConsoleColor.Green => TerminalColor.Green,
+            ConsoleColor.Cyan => TerminalColor.Cyan,
+            ConsoleColor.Red => TerminalColor.Red,
+            ConsoleColor.Magenta => TerminalColor.Magenta,
+            ConsoleColor.Yellow => TerminalColor.Yellow,
+            ConsoleColor.White => TerminalColor.White,
+            _ => TerminalColor.Default,
+        };
 }
