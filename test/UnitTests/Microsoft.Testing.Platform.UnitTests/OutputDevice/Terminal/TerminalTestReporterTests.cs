@@ -28,7 +28,7 @@ public sealed class TerminalTestReporterTests : TestBase
             err = ex;
         }
 
-        var firstStackTraceLine = err.StackTrace.Replace("\r", "").Split('\n')[0];
+        string firstStackTraceLine = err.StackTrace!.Replace("\r", string.Empty).Split('\n')[0];
         TerminalTestReporter.AppendStackFrame(terminal, firstStackTraceLine);
 
         Assert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly() in ", terminal.Output.ToString());
@@ -39,9 +39,7 @@ public sealed class TerminalTestReporterTests : TestBase
         private readonly StringBuilder _stringBuilder;
 
         public StringBuilderTerminal()
-        {
-            _stringBuilder = new StringBuilder();
-        }
+            => _stringBuilder = new();
 
         public string Output => _stringBuilder.ToString();
 
@@ -50,9 +48,13 @@ public sealed class TerminalTestReporterTests : TestBase
         public int Height => throw new NotImplementedException();
 
         public void Append(char value) => _stringBuilder.Append(value);
+
         public void Append(string value) => _stringBuilder.Append(value);
+
         public void AppendLine() => _stringBuilder.AppendLine();
+
         public void AppendLine(string value) => _stringBuilder.AppendLine(value);
+
         public void AppendLink(string path, int? lineNumber)
         {
             _stringBuilder.Append(path);
@@ -61,21 +63,29 @@ public sealed class TerminalTestReporterTests : TestBase
         }
 
         public void EraseProgress() => throw new NotImplementedException();
+
         public void HideCursor() => throw new NotImplementedException();
+
         public void RenderProgress(TestProgressState?[] progress) => throw new NotImplementedException();
+
         public void ResetColor()
         {
             // do nothing
         }
+
         public void SetColor(TerminalColor color)
         {
             // do nothing
         }
 
         public void ShowCursor() => throw new NotImplementedException();
+
         public void StartBusyIndicator() => throw new NotImplementedException();
+
         public void StartUpdate() => throw new NotImplementedException();
+
         public void StopBusyIndicator() => throw new NotImplementedException();
+
         public void StopUpdate() => throw new NotImplementedException();
     }
 }
