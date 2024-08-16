@@ -58,5 +58,13 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
         {
             return;
         }
+
+        INamedTypeSymbol? currentType = namedTypeSymbol.BaseType;
+        var baseMembers = new List<ISymbol>();
+        while (currentType != null)
+        {
+            baseMembers.AddRange(currentType.GetMembers());
+            currentType = currentType.BaseType;
+        }
     }
 }
