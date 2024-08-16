@@ -24,12 +24,12 @@
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
-        <target state="new">Fix test class signature</target>
+        <target state="translated">修正測試類別簽章</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidFix">
         <source>Fix test context</source>
-        <target state="new">Fix test context</target>
+        <target state="translated">修正測試內容</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidFix">

@@ -615,12 +615,12 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
       </trans-unit>
       <trans-unit id="TerminalNoAnsiOptionDescription">
         <source>Disable outputting ANSI escape characters to screen.</source>
-        <target state="new">Disable outputting ANSI escape characters to screen.</target>
+        <target state="translated">停用將 ANSI 逸出字元輸出至螢幕。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">
         <source>Disable reporting progress to screen.</source>
-        <target state="new">Disable reporting progress to screen.</target>
+        <target state="translated">停用向螢幕報告進度。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
@@ -635,12 +635,12 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
-        <target state="new">Writes test results to terminal.</target>
+        <target state="translated">將測試結果寫入終端機。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDisplayName">
         <source>Terminal test reporter</source>
-        <target state="new">Terminal test reporter</target>
+        <target state="translated">終端機測試報告者</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
