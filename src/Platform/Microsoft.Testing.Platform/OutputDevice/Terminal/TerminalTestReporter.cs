@@ -722,43 +722,24 @@ internal sealed partial class TerminalTestReporter : IDisposable
     }
 
     private TerminalColor ToTerminalColor(ConsoleColor consoleColor)
-    {
-        switch (consoleColor)
+        => consoleColor switch
         {
-            case ConsoleColor.Black:
-                return TerminalColor.Black;
-            case ConsoleColor.DarkBlue:
-                return TerminalColor.DarkBlue;
-            case ConsoleColor.DarkGreen:
-                return TerminalColor.DarkGreen;
-            case ConsoleColor.DarkCyan:
-                return TerminalColor.DarkCyan;
-            case ConsoleColor.DarkRed:
-                return TerminalColor.DarkRed;
-            case ConsoleColor.DarkMagenta:
-                return TerminalColor.DarkMagenta;
-            case ConsoleColor.DarkYellow:
-                return TerminalColor.DarkYellow;
-            case ConsoleColor.Gray:
-                return TerminalColor.Gray;
-            case ConsoleColor.DarkGray:
-                return TerminalColor.Gray;
-            case ConsoleColor.Blue:
-                return TerminalColor.Blue;
-            case ConsoleColor.Green:
-                return TerminalColor.Green;
-            case ConsoleColor.Cyan:
-                return TerminalColor.Cyan;
-            case ConsoleColor.Red:
-                return TerminalColor.Red;
-            case ConsoleColor.Magenta:
-                return TerminalColor.Magenta;
-            case ConsoleColor.Yellow:
-                return TerminalColor.Yellow;
-            case ConsoleColor.White:
-                return TerminalColor.White;
-            default:
-                return TerminalColor.Default;
-        }
-    }
+            ConsoleColor.Black => TerminalColor.Black,
+            ConsoleColor.DarkBlue => TerminalColor.DarkBlue,
+            ConsoleColor.DarkGreen => TerminalColor.DarkGreen,
+            ConsoleColor.DarkCyan => TerminalColor.DarkCyan,
+            ConsoleColor.DarkRed => TerminalColor.DarkRed,
+            ConsoleColor.DarkMagenta => TerminalColor.DarkMagenta,
+            ConsoleColor.DarkYellow => TerminalColor.DarkYellow,
+            ConsoleColor.Gray => TerminalColor.Gray,
+            ConsoleColor.DarkGray => TerminalColor.Gray,
+            ConsoleColor.Blue => TerminalColor.Blue,
+            ConsoleColor.Green => TerminalColor.Green,
+            ConsoleColor.Cyan => TerminalColor.Cyan,
+            ConsoleColor.Red => TerminalColor.Red,
+            ConsoleColor.Magenta => TerminalColor.Magenta,
+            ConsoleColor.Yellow => TerminalColor.Yellow,
+            ConsoleColor.White => TerminalColor.White,
+            _ => TerminalColor.Default,
+        };
 }
