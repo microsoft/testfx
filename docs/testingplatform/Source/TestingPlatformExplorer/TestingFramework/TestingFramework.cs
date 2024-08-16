@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -109,6 +110,15 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                 Properties = new PropertyBag(DiscoveredTestNodeStateProperty.CachedInstance),
                             };
 
+                            TestMethodIdentifierProperty testMethodIdentifierProperty = new(test.DeclaringType!.Assembly!.FullName!,
+                            test.DeclaringType!.Namespace!,
+                            test.DeclaringType.Name!,
+                            test.Name,
+                            test.GetParameters().Select(x => x.ParameterType.FullName).ToArray()!,
+                            test.ReturnType.FullName!);
+
+                            testNode.Properties.Add(testMethodIdentifierProperty);
+
                             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(discoverTestExecutionRequest.Session.SessionUid, testNode));
                         }
                     }
@@ -132,6 +142,14 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                         List<Task> results = new();
                         foreach (MethodInfo test in tests)
                         {
+                            if (runTestExecutionRequest.Filter is TestNodeUidListFilter filter)
+                            {
+                                if (!filter.TestNodeUids.Any(testId => testId == $"{test.DeclaringType!.FullName}.{test.Name}"))
+                                {
+                                    continue;
+                                }
+                            }
+
                             if (test.GetCustomAttribute<SkipAttribute>() != null)
                             {
                                 var skippedTestNode = new TestNode()
