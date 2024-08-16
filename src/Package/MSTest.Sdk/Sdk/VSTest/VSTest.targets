@@ -10,13 +10,12 @@
   </ItemGroup>
 
   <!-- If we are a test application (not a test library) -->
-  <ItemGroup Condition=" '$(IsTestLibrary)' != 'true' ">
+  <ItemGroup Condition=" '$(IsTestApplication)' == 'true' ">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Sdk="MSTest"
                       Version="$(MicrosoftNETTestSdkVersion)" VersionOverride="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest"
                       Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
   </ItemGroup>
-
 
   <!--
     Implicit imports
