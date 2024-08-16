@@ -9,7 +9,7 @@ internal static class TargetFrameworkParser
 {
     internal /* for testing */ static string? GetShortTargetFramework(string frameworkDescription)
     {
-        // https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.runtimeinformation.frameworkdescription?view=net-8.0
+        // https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.runtimeinformation.frameworkdescription
         string netFramework = ".NET Framework";
         if (frameworkDescription.StartsWith(netFramework, ignoreCase: false, CultureInfo.InvariantCulture))
         {
