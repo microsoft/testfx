@@ -59,8 +59,7 @@ internal sealed class ListTestsMessageBus(
             return;
         }
 
-        if (_testFramework.Uid != dataProducer.Uid
-            || data is not TestNodeUpdateMessage testNodeUpdatedMessage
+        if (data is not TestNodeUpdateMessage testNodeUpdatedMessage
             || testNodeUpdatedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is not DiscoveredTestNodeStateProperty)
         {
             if (_logger.IsEnabled(LogLevel.Trace))
