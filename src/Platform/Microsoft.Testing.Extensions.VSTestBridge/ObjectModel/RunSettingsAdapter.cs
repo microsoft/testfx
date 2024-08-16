@@ -1,12 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
@@ -20,7 +22,7 @@ internal sealed class RunSettingsAdapter : IRunSettings
         ICommandLineOptions commandLineOptions,
         IFileSystem fileSystem,
         IConfiguration configuration,
-        ClientInfo client,
+        IClientInfo client,
         ILoggerFactory loggerFactory)
     {
         string? runSettingsXml =

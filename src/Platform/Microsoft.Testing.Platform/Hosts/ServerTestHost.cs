@@ -53,6 +53,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     private int _serverToClientRequestId;
     private IMessageHandler? _messageHandler;
     private TestHost.ClientInfo? _client;
+    private IClientInfo? _clientInfoService;
 
     public ServerTestHost(
         ServiceProvider serviceProvider,
@@ -378,6 +379,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             case (JsonRpcMethods.Initialize, InitializeRequestArgs args):
                 {
                     _client = new(args.ClientInfo.Name, args.ClientInfo.Version);
+                    _clientInfoService = new ClientInfoService(args.ClientInfo.Name, args.ClientInfo.Version);
                     await _logger.LogDebugAsync($"Connection established with '{_client.Id}', protocol version {_client.Version}");
 
                     INamedFeatureCapability? namedFeatureCapability = ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();
@@ -438,6 +440,10 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         ServerTestExecutionFilterFactory filterFactory = new();
         TestHostTestFrameworkInvoker invoker = new(perRequestServiceProvider);
         PerRequestServerDataConsumer testNodeUpdateProcessor = new(perRequestServiceProvider, this, args.RunId, perRequestServiceProvider.GetTask());
+
+        // Add the client info service to the per request service provider
+        RoslynDebug.Assert(_clientInfoService is not null, "Request should only have been called after initialization");
+        perRequestServiceProvider.TryAddService(_clientInfoService);
 
         DateTimeOffset adapterLoadStart = _clock.UtcNow;
 

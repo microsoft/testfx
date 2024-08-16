@@ -1,2 +1,5 @@
 #nullable enable
-
+[TPEXP]Microsoft.Testing.Platform.Services.IClientInfo
+[TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Id.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Version.get -> string!
+[TPEXP]static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetClientInfo(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Services.IClientInfo!

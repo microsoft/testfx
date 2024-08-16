@@ -1,12 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
 using System.Xml.Linq;
 
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
@@ -15,7 +18,7 @@ internal static class RunSettingsPatcher
 {
     private static readonly char[] TestRunParameterSeparator = ['='];
 
-    public static XDocument Patch(string? runSettingsXml, IConfiguration configuration, ClientInfo client, ICommandLineOptions commandLineOptions)
+    public static XDocument Patch(string? runSettingsXml, IConfiguration configuration, IClientInfo client, ICommandLineOptions commandLineOptions)
     {
         XDocument runSettingsDocument = PatchSettingsWithDefaults(runSettingsXml, isDesignMode: client.Id == WellKnownClients.VisualStudio, configuration);
         PatchTestRunParameters(runSettingsDocument, commandLineOptions);
