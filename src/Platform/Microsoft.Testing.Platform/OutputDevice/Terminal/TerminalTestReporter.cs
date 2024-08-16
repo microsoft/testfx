@@ -532,14 +532,14 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
     }
 
-    private static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
+    internal /*for testing */ static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
     {
         terminal.Append(DoubleIndentation);
         Match match = GetFrameRegex().Match(stackTraceLine);
         if (match.Success)
         {
             terminal.SetColor(TerminalColor.Gray);
-            terminal.Append(PlatformResources.StackFrameIn);
+            terminal.Append(PlatformResources.StackFrameAt);
             terminal.Append(' ');
             terminal.ResetColor();
             terminal.SetColor(TerminalColor.Red);
