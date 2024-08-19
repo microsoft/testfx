@@ -117,7 +117,7 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
             [TestClass]
             public class DerivedClass : BaseClass
             {
-                public new TestContext [|TestContext|] { [|get|]; } = null;
+                public new TestContext [|TestContext|] { get; } = null;
             }
             """;
 
@@ -155,7 +155,7 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
             [TestClass]
             public class DerivedClass : BaseClass
             {
-                public TestContext [|TestContext|] { [|get|]; [|set|]; } = null;
+                public TestContext [|TestContext|] { get; set; } = null;
             }
             """;
 

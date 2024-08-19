@@ -59,14 +59,30 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        Dictionary<string, List<ISymbol>> symbolGroups = new();
+        Dictionary<string, List<ISymbol>> symbolGroups = GetBaseMembers(namedTypeSymbol);
+        foreach (ISymbol member in namedTypeSymbol.GetMembers())
+        {
+            foreach (ISymbol baseMember in symbolGroups.GetValueOrDefault(member.Name, new List<ISymbol>()))
+            {
+                // Check if the member is shadowing a base class member
+                if (IsMemberShadowing(member, baseMember))
+                {
+                    context.ReportDiagnostic(member.CreateDiagnostic(DoNotUseShadowingRule, member.Name));
+                }
+            }
+        }
+    }
 
+    private static Dictionary<string, List<ISymbol>> GetBaseMembers(INamedTypeSymbol namedTypeSymbol)
+    {
+        Dictionary<string, List<ISymbol>> symbolGroups = new();
         INamedTypeSymbol? currentType = namedTypeSymbol.BaseType;
         while (currentType is not null)
         {
             foreach (ISymbol member in currentType.GetMembers())
             {
-                if (member.IsOverride || member.Name == ".ctor")
+                if ((member is IMethodSymbol methodSymbol && (methodSymbol.MethodKind == MethodKind.PropertyGet || methodSymbol.MethodKind == MethodKind.PropertySet))
+                    || member.IsOverride || member.Name == ".ctor")
                 {
                     continue;
                 }
@@ -84,23 +100,13 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
             currentType = currentType.BaseType;
         }
 
-        foreach (ISymbol member in namedTypeSymbol.GetMembers())
-        {
-            foreach (ISymbol baseMember in symbolGroups.GetValueOrDefault(member.Name, new List<ISymbol>()))
-            {
-                // Check if the member is shadowing a base class member
-                if (!member.IsOverride && IsMemberShadowing(member, baseMember))
-                {
-                    context.ReportDiagnostic(member.CreateDiagnostic(DoNotUseShadowingRule, member.Name));
-                }
-            }
-        }
+        return symbolGroups;
     }
 
     private static bool IsMemberShadowing(ISymbol member, ISymbol baseMember)
     {
         // Ensure both members are of the same kind (Method, Property, etc.)
-        if (member.Kind != baseMember.Kind)
+        if (member.Kind != baseMember.Kind || member.IsOverride)
         {
             return false;
         }
