@@ -28,8 +28,8 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase
                     .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                     .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
                 string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
-                await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-                await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                await DotnetCli.RunAsync($"restore -r {RID} /p:NoWarn=NETSDK1201 {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} /p:NoWarn=NETSDK1201 -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
                 var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
                 TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
@@ -68,6 +68,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase
         <Nullable>enable</Nullable>
         <LangVersion>preview</LangVersion>
         <OutputType>Exe</OutputType>
+        <NoWarn>$(NoWarn);NU1605</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

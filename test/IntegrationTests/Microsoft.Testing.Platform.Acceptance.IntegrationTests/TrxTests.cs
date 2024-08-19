@@ -207,6 +207,7 @@ Out of process file artifacts produced:
         <OutputType>Exe</OutputType>
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
+        <NoWarn>$(NoWarn);NU1605</NoWarn>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />

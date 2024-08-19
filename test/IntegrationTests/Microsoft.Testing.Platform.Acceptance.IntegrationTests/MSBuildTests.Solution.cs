@@ -120,6 +120,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase
         <PlatformTarget>x64</PlatformTarget>
         <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
         <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+        <NoWarn>$(NoWarn);NU1605</NoWarn>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />

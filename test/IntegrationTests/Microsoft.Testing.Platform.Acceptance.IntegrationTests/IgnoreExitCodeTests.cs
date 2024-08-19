@@ -107,8 +107,8 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
 
         string assetPath = generator.TargetAssetPath;
         string globalPackagesPath = _acceptanceFixture.NuGetGlobalPackagesFolder.Path;
-        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {assetPath} -r {RID}", globalPackagesPath);
-        await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {assetPath} -c {buildConfiguration} -r {RID}", globalPackagesPath);
+        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {assetPath} -r {RID} /p:NoWarn=NETSDK1201", globalPackagesPath);
+        await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {assetPath} -c {buildConfiguration} -r {RID} /p:NoWarn=NETSDK1201", globalPackagesPath);
         var host = TestInfrastructure.TestHost.LocateFrom(assetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
         TestHostResult hostResult = await host.ExecuteAsync(
             command: commandLine,

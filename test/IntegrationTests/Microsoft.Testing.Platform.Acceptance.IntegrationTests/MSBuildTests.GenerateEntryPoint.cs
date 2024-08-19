@@ -27,9 +27,9 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase
                     CSharpSourceCode
                     .PatchCodeWithReplace("$TargetFrameworks$", tfm)
                     .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj ", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -r {RID} /p:NoWarn=NETSDK1201 {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj ", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
                 string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
-                compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -p:GenerateTestingPlatformEntryPoint=False -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+                compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} /p:NoWarn=NETSDK1201 -nodeReuse:false -p:GenerateTestingPlatformEntryPoint=False -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
                 SL.Build binLog = SL.Serialization.Read(binlogFile);
                 SL.Target generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPoint");
                 Assert.AreEqual("Target \"_GenerateTestingPlatformEntryPoint\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'True' ) was evaluated as ( 'False' == 'True' ).", ((SL.Message)generateTestingPlatformEntryPoint.Children[0]).Text);
@@ -124,9 +124,9 @@ let main args =
                         // We need to pickup local build packages -dev
                         .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingPlatformVersion);
                     using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, finalSourceCode);
-                    await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.{languageFileExtension}proj", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                    await DotnetCli.RunAsync($"restore -r {RID} /p:NoWarn=NETSDK1201 {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.{languageFileExtension}proj", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
                     string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
-                    DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                    DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} /p:NoWarn=NETSDK1201 -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
                     SL.Build binLog = SL.Serialization.Read(binlogFile);
                     SL.Target generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPoint");
                     SL.Task testingPlatformEntryPoint = generateTestingPlatformEntryPoint.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformEntryPointTask");
@@ -145,7 +145,7 @@ let main args =
                     Assert.IsNotNull(sourceFilePathInObj);
 
                     File.Delete(binlogFile);
-                    await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                    await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} /p:NoWarn=NETSDK1201 -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
                     binLog = SL.Serialization.Read(binlogFile);
                     generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>(t => t.Name == "_GenerateTestingPlatformEntryPoint" && t.Children.Count > 0).Single();
                     Assert.IsNotNull(generateTestingPlatformEntryPoint.FindChildrenRecursive<SL.Message>(m => m.Text.Contains("Skipping target \"_GenerateTestingPlatformEntryPoint\" because all output files are up-to-date with respect to the input files.", StringComparison.OrdinalIgnoreCase)).Single());
