@@ -3,7 +3,7 @@
 
   <Import Project="$(MSBuildThisFileDirectory)Common.targets"/>
 
-  <PropertyGroup>
+  <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">
     <EnableMSTestRunner>true</EnableMSTestRunner>
   </PropertyGroup>
 
@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <!-- Core (for test applications - not for test libraries) -->
-  <ItemGroup Condition=" '$(IsTestLibrary)' != 'true' ">
+  <ItemGroup Condition=" '$(IsTestApplication)' == 'true' ">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Sdk="MSTest"
                       Version="$(MicrosoftNETTestSdkVersion)" VersionOverride="$(MicrosoftNETTestSdkVersion)" />
     <!--
@@ -53,7 +53,7 @@
   </ItemGroup>
 
   <!-- Extensions (for test applications - not for test libraries) -->
-  <ItemGroup Condition=" '$(IsTestLibrary)' != 'true' ">
+  <ItemGroup Condition=" '$(IsTestApplication)' == 'true' ">
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Sdk="MSTest"
                       Version="$(MicrosoftTestingExtensionsTrxReportVersion)" VersionOverride="$(MicrosoftTestingExtensionsTrxReportVersion)"
                       Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " />
