@@ -131,7 +131,7 @@ public sealed class TerminalTestReporterTests : TestBase
 
         public string Output => _output.ToString();
 
-        public event ConsoleCancelEventHandler? CancelKeyPress;
+        public event ConsoleCancelEventHandler? CancelKeyPress = (sender, e) => { };
 
         public void Clear() => throw new NotImplementedException();
 
