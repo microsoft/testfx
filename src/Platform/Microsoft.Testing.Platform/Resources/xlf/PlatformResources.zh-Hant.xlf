@@ -625,12 +625,12 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="new">Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
+        <target state="translated">報告測試時的輸出詳細程度。有效值為 'Normal'、'Detailed'。預設為 'Normal'。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Normal' or 'Detailed'.</target>
+        <target state="translated">--輸出需要值為 'Normal' 或 'Detailed' 的單一參數。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
