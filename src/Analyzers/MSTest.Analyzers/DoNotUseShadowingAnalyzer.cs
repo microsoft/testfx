@@ -61,31 +61,53 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
 
         INamedTypeSymbol? currentType = namedTypeSymbol.BaseType;
         var baseClassesMembers = new List<ISymbol>();
-        while (currentType != null)
+        while (currentType is not null)
         {
             baseClassesMembers.AddRange(currentType.GetMembers());
             currentType = currentType.BaseType;
-        }
-
-        if (baseClassesMembers.Count == 0)
-        {
-            return;
         }
 
         foreach (ISymbol member in namedTypeSymbol.GetMembers())
         {
             foreach (ISymbol baseMember in baseClassesMembers)
             {
-                ISymbol originalMemberDefinition = member.OriginalDefinition;
-                ISymbol originalBaseMemberSymbol = baseMember.OriginalDefinition;
-
-                // Compare the original definitions
-                if (SymbolEqualityComparer.Default.Equals(originalMemberDefinition, originalBaseMemberSymbol))
+                // Check if the member is shadowing a base class member
+                if (IsMemberShadowing(member, baseMember))
                 {
                     context.ReportDiagnostic(member.CreateDiagnostic(DoNotUseShadowingRule, member.Name));
                     return;
                 }
             }
         }
+    }
+
+    private static bool IsMemberShadowing(ISymbol member, ISymbol baseMember)
+    {
+        // Ensure both members are of the same kind (Method, Property, etc.)
+        if (member.Kind != baseMember.Kind)
+        {
+            return false;
+        }
+
+        // Compare methods
+        if (member is IMethodSymbol methodSymbol && baseMember is IMethodSymbol baseMethodSymbol)
+        {
+            return methodSymbol.Name == baseMethodSymbol.Name &&
+                   baseMethodSymbol.Name != ".ctor" &&
+                   methodSymbol.Parameters.Length == baseMethodSymbol.Parameters.Length &&
+                   methodSymbol.Parameters.Zip(baseMethodSymbol.Parameters, (p1, p2) =>
+                   SymbolEqualityComparer.Default.Equals(p1.Type, p2.Type)).All(equal => equal) &&
+                   !methodSymbol.IsOverride;
+        }
+
+        // Compare properties
+        else if (member is IPropertySymbol propertySymbol && baseMember is IPropertySymbol basePropertySymbol)
+        {
+            return propertySymbol.Name == basePropertySymbol.Name &&
+                   SymbolEqualityComparer.Default.Equals(propertySymbol.Type, basePropertySymbol.Type) &&
+                   !propertySymbol.IsOverride;
+        }
+
+        return false;
     }
 }
