@@ -59,17 +59,34 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        Dictionary<string, List<ISymbol>> symbolGroups = new();
+
         INamedTypeSymbol? currentType = namedTypeSymbol.BaseType;
-        var baseClassesMembers = new List<ISymbol>();
         while (currentType is not null)
         {
-            baseClassesMembers.AddRange(currentType.GetMembers().Where(t => !t.IsOverride));
+            foreach (ISymbol member in currentType.GetMembers())
+            {
+                if (member.IsOverride || member.Name == ".ctor")
+                {
+                    continue;
+                }
+
+                if (!symbolGroups.TryGetValue(member.Name, out List<ISymbol>? members))
+                {
+                    members = new List<ISymbol>();
+                    symbolGroups[member.Name] = members;
+                }
+
+                // Add the member to the list
+                members.Add(member);
+            }
+
             currentType = currentType.BaseType;
         }
 
         foreach (ISymbol member in namedTypeSymbol.GetMembers())
         {
-            foreach (ISymbol baseMember in baseClassesMembers)
+            foreach (ISymbol baseMember in symbolGroups.GetValueOrDefault(member.Name, new List<ISymbol>()))
             {
                 // Check if the member is shadowing a base class member
                 if (!member.IsOverride && IsMemberShadowing(member, baseMember))
@@ -92,7 +109,6 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
         if (member is IMethodSymbol methodSymbol && baseMember is IMethodSymbol baseMethodSymbol)
         {
             return methodSymbol.Name == baseMethodSymbol.Name &&
-                   baseMethodSymbol.Name != ".ctor" && // to handle default ctos
                    methodSymbol.Parameters.Length == baseMethodSymbol.Parameters.Length &&
                    methodSymbol.Parameters.Zip(baseMethodSymbol.Parameters, (p1, p2) =>
                    SymbolEqualityComparer.Default.Equals(p1.Type, p2.Type)).All(equal => equal);
