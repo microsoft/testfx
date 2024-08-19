@@ -31,7 +31,13 @@ public sealed class TerminalTestReporterTests : TestBase
         string firstStackTraceLine = err.StackTrace!.Replace("\r", string.Empty).Split('\n')[0];
         TerminalTestReporter.AppendStackFrame(terminal, firstStackTraceLine);
 
+#if NETCOREAPP
         Assert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly() in ", terminal.Output.ToString());
+#else
+        Assert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly()", terminal.Output.ToString());
+#endif
+        // Line number without the respective file
+        Assert.That(!terminal.Output.ToString().Contains(" :0"));
     }
 
     internal class StringBuilderTerminal : ITerminal
