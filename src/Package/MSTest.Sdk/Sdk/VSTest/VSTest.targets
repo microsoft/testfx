@@ -15,11 +15,6 @@
                       Version="$(MicrosoftNETTestSdkVersion)" VersionOverride="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest"
                       Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.TestFramework" Sdk="MSTest"
-                      Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.Analyzers" Sdk="MSTest"
-                      Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)"
-                      Condition=" '$(EnableMSTestAnalyzers)' != 'false' " />
   </ItemGroup>
 
 
