@@ -138,7 +138,6 @@ TestMethod3$
         <OutputType>Exe</OutputType>
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
-        <NoWarn>$(NoWarn);NU1605</NoWarn>
     </PropertyGroup>
     <ItemGroup>
         <!-- Platform and TrxReport.Abstractions are only needed because Internal.Framework relies on a preview version that we want to override with currently built one -->
