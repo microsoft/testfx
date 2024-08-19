@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <Target Name="_MSTestSDKValidateFeatures" BeforeTargets="Build">
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' != '' " Text="'EnableMicrosoftTestingExtensionsCodeCoverage' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' != '' " Text="'EnableMicrosoftTestingExtensionsCrashDump' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' != '' " Text="'EnableMicrosoftTestingExtensionsHangDump' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' != '' " Text="'EnableMicrosoftTestingExtensionsHotReload' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' != '' " Text="'EnableMicrosoftTestingExtensionsRetry' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' != '' " Text="'EnableMicrosoftTestingExtensionsTrxReport' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMSTestRunner)' != '' " Text="'EnableMSTestRunner' is not supported by VSTest." />
+    <Error Condition=" '$(TestingExtensionsProfile)' != '' " Text="'TestingExtensionsProfile' is not supported by VSTest." />
+    <Error Condition=" '$(TestingPlatformDotnetTestSupport)' != '' " Text="'TestingPlatformDotnetTestSupport' is not supported by VSTest." />
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="MSTest.TestFramework" Sdk="MSTest"
                       Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
