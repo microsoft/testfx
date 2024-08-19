@@ -75,7 +75,6 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
                 if (IsMemberShadowing(member, baseMember))
                 {
                     context.ReportDiagnostic(member.CreateDiagnostic(DoNotUseShadowingRule, member.Name));
-                    return;
                 }
             }
         }
