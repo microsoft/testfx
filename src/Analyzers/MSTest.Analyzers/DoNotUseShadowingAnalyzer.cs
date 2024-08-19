@@ -63,7 +63,7 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
         var baseClassesMembers = new List<ISymbol>();
         while (currentType is not null)
         {
-            baseClassesMembers.AddRange(currentType.GetMembers());
+            baseClassesMembers.AddRange(currentType.GetMembers().Where(t => !t.IsOverride));
             currentType = currentType.BaseType;
         }
 
@@ -72,7 +72,7 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
             foreach (ISymbol baseMember in baseClassesMembers)
             {
                 // Check if the member is shadowing a base class member
-                if (IsMemberShadowing(member, baseMember))
+                if (!member.IsOverride && IsMemberShadowing(member, baseMember))
                 {
                     context.ReportDiagnostic(member.CreateDiagnostic(DoNotUseShadowingRule, member.Name));
                 }
@@ -95,16 +95,14 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
                    baseMethodSymbol.Name != ".ctor" && // to handle default ctos
                    methodSymbol.Parameters.Length == baseMethodSymbol.Parameters.Length &&
                    methodSymbol.Parameters.Zip(baseMethodSymbol.Parameters, (p1, p2) =>
-                   SymbolEqualityComparer.Default.Equals(p1.Type, p2.Type)).All(equal => equal) &&
-                   !methodSymbol.IsOverride;
+                   SymbolEqualityComparer.Default.Equals(p1.Type, p2.Type)).All(equal => equal);
         }
 
         // Compare properties
         else if (member is IPropertySymbol propertySymbol && baseMember is IPropertySymbol basePropertySymbol)
         {
             return propertySymbol.Name == basePropertySymbol.Name &&
-                   SymbolEqualityComparer.Default.Equals(propertySymbol.Type, basePropertySymbol.Type) &&
-                   !propertySymbol.IsOverride;
+                   SymbolEqualityComparer.Default.Equals(propertySymbol.Type, basePropertySymbol.Type);
         }
 
         return false;
