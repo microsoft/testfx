@@ -226,7 +226,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || _wasCancelled;
         terminal.SetColor(runFailed ? TerminalColor.Red : TerminalColor.Green);
 
-        terminal.AppendLine();
         terminal.Append(PlatformResources.TestRunSummary);
         terminal.Append(' ');
 
