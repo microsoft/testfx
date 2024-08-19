@@ -268,6 +268,7 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
     <PropertyGroup>
         <TargetFramework>$TargetFrameworks$</TargetFramework>
         <OutputType>Exe</OutputType>
+        <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -394,6 +395,7 @@ End Namespace
         <TargetFramework>$TargetFrameworks$</TargetFramework>
         <LangVersion>preview</LangVersion>
         <OutputType>Exe</OutputType>
+        <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
