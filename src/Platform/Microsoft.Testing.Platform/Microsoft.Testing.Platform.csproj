@@ -33,17 +33,17 @@ This package provides the core platform and the .NET implementation of the proto
   <!-- Exclude .NET Json api not available in netstandard2.0 -->
   <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
     <Compile Remove="Configurations/JsonConfigurationFileParser.cs" />
-    <Compile Remove="ServerMode/Json/Json.cs" />
-    <Compile Remove="ServerMode/Json/JsonCollectionDeserializer.cs" />
-    <Compile Remove="ServerMode/Json/JsonDeserializer.cs" />
-    <Compile Remove="ServerMode/Json/JsonElementDeserializer.cs" />
-    <Compile Remove="ServerMode/Json/JsonExtensions.cs" />
-    <Compile Remove="ServerMode/Json/JsonObjectSerializer.cs" />
-    <Compile Remove="ServerMode/Json/JsonObjectSerializer1.cs" />
-    <Compile Remove="ServerMode/Json/JsonPropertyBagDeserializer.cs" />
-    <Compile Remove="ServerMode/Json/JsonSerializer.cs" />
-    <Compile Remove="ServerMode/Json/JsonValueSerializer.cs" />
-    <Compile Remove="ServerMode/Json/JsonValueSerializer1.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/JsonCollectionDeserializer.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/JsonDeserializer.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/JsonElementDeserializer.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/JsonExtensions.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/JsonObjectSerializer.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/JsonObjectSerializer1.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/JsonPropertyBagDeserializer.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/JsonSerializer.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/JsonValueSerializer.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/JsonValueSerializer1.cs" />
   </ItemGroup>
   <!-- end netstandard2.0 polyfill -->
 
