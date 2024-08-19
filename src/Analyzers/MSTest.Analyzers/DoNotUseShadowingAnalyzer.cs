@@ -93,7 +93,7 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
         if (member is IMethodSymbol methodSymbol && baseMember is IMethodSymbol baseMethodSymbol)
         {
             return methodSymbol.Name == baseMethodSymbol.Name &&
-                   baseMethodSymbol.Name != ".ctor" &&
+                   baseMethodSymbol.Name != ".ctor" && // to handle default ctos
                    methodSymbol.Parameters.Length == baseMethodSymbol.Parameters.Length &&
                    methodSymbol.Parameters.Zip(baseMethodSymbol.Parameters, (p1, p2) =>
                    SymbolEqualityComparer.Default.Equals(p1.Type, p2.Type)).All(equal => equal) &&
