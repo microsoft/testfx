@@ -280,7 +280,6 @@ namespace MSTestSdkTest
         }
     }
 
-    [NonTest] // TODO: FIX ME: Test is broken
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
     public async Task Invalid_TestingProfile_Name_Should_Fail(string multiTfm, BuildConfiguration buildConfiguration)
     {
@@ -401,8 +400,7 @@ namespace MSTestSdkTest
         dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
     }
 
-    [NonTest] // TODO: FIX ME: Test is broken
-    public async Task SettingOutputTypeToLibraryReducesAddedExtensions()
+    public async Task SettingIsTestApplicationToFalseReducesAddedExtensionsAndMakesProjectNotExecutable()
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
@@ -427,6 +425,9 @@ namespace MSTestSdkTest
         // No adapter, no extensions, no vstest sdk
         Assert.IsFalse(references.Any(r => r.Text.EndsWith("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll", StringComparison.OrdinalIgnoreCase)));
         Assert.IsFalse(references.Any(r => r.Text.Contains("Microsoft.Testing.Extensions.", StringComparison.OrdinalIgnoreCase)));
+
+        // It's not an executable
+        Assert.IsFalse(binLog.FindChildrenRecursive<SL.Property>(p => p.Name == "OutputType").Any(p => p.Value == "Exe"));
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]

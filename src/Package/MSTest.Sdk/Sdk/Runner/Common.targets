@@ -3,10 +3,13 @@
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
-    <OutputType>Exe</OutputType>
     <MicrosoftTestingExtensionsCommonVersion Condition=" '$(MicrosoftTestingExtensionsCommonVersion)' == '' " >$(MicrosoftTestingPlatformVersion)</MicrosoftTestingExtensionsCommonVersion>
-    <TestingPlatformDotnetTestSupport Condition=" $(TestingPlatformDotnetTestSupport) == '' ">true</TestingPlatformDotnetTestSupport>
     <TestingExtensionsProfile Condition=" $(TestingExtensionsProfile) == '' ">Default</TestingExtensionsProfile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport Condition=" $(TestingPlatformDotnetTestSupport) == '' ">true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
 
   <Target Name="_MSTestSDKValidateTestingExtensionsProfile" BeforeTargets="Build">

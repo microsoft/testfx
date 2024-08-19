@@ -3,7 +3,7 @@
 
   <Import Project="$(MSBuildThisFileDirectory)Common.targets"/>
 
-  <PropertyGroup>
+  <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">
     <EnableMSTestRunner>true</EnableMSTestRunner>
   </PropertyGroup>
 
