@@ -51,7 +51,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private bool _wasCancelled;
 
 #if NET7_0_OR_GREATER
-    [GeneratedRegex(@$"^   at (?<code>.+) in (?<file>.+):line (?<line>\d+)$", RegexOptions.ExplicitCapture, 1000)]
+    [GeneratedRegex(@$"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture, 1000)]
     private static partial Regex GetFrameRegex();
 #else
     private static Regex? s_regex;
@@ -96,7 +96,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");
 
-        s_regex = new Regex(@$"^   {atString} (?<code>.+)( {inPattern})?$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
+        s_regex = new Regex(@$"^   {atString} ((?<code>.+) {inPattern}|(?<code1>.+))$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
         return s_regex;
     }
 #endif
@@ -147,6 +147,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 terminal.Append(PlatformResources.RunningTestsFrom);
                 terminal.Append(' ');
                 AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly, targetFramework, architecture);
+                terminal.AppendLine();
             });
         }
 
@@ -537,23 +538,39 @@ internal sealed partial class TerminalTestReporter : IDisposable
         Match match = GetFrameRegex().Match(stackTraceLine);
         if (match.Success)
         {
+            bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
             terminal.SetColor(TerminalColor.Gray);
             terminal.Append(PlatformResources.StackFrameAt);
             terminal.Append(' ');
             terminal.ResetColor();
             terminal.SetColor(TerminalColor.Red);
-            terminal.Append(match.Groups["code"].Value);
-            terminal.SetColor(TerminalColor.Gray);
-            terminal.Append(' ');
-            terminal.Append(PlatformResources.StackFrameIn);
-            terminal.Append(' ');
-            if (!RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
+            if (weHaveFilePathAndCodeLine)
             {
-                int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
-                terminal.AppendLink(match.Groups["file"].Value, line);
+                terminal.Append(match.Groups["code"].Value);
+            }
+            else
+            {
+                terminal.Append(match.Groups["code1"].Value);
+            }
+
+            if (weHaveFilePathAndCodeLine)
+            {
+                terminal.SetColor(TerminalColor.Gray);
+                terminal.Append(' ');
+                terminal.Append(PlatformResources.StackFrameIn);
+                terminal.Append(' ');
+                if (!RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
+                {
+                    int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
+                    terminal.AppendLink(match.Groups["file"].Value, line);
+                }
             }
 
             terminal.AppendLine();
+        }
+        else
+        {
+            terminal.AppendLine(stackTraceLine);
         }
     }
 
