@@ -115,7 +115,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         int nonAnsiUpdateCadenceInMs = 3_000;
         // When writing to ANSI we update the progress in place and it should look responsive so we update every half second, because we only show seconds on the screen, so it is good enough.
         int ansiUpdateCadenceInMs = 500;
-        if (!_options.UseAnsi)
+        if (!_options.UseAnsi || _options.ForceAnsi is false)
         {
             terminalWithProgress = new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
         }
@@ -124,7 +124,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             // Autodetect.
             (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
             _originalConsoleMode = originalConsoleMode;
-            terminalWithProgress = consoleAcceptsAnsiCodes
+            terminalWithProgress = consoleAcceptsAnsiCodes || _options.ForceAnsi is true
                 ? new TestProgressStateAwareTerminal(new AnsiTerminal(console, _options.BaseDirectory), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs)
                 : new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
         }

@@ -48,6 +48,7 @@ public sealed class TerminalTestReporterTests : TestBase
         {
             ShowPassedTests = true,
             UseAnsi = true,
+            ForceAnsi = true,
 
             ShowAssembly = false,
             ShowAssemblyStartAndComplete = false,
