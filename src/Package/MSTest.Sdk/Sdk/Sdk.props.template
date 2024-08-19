@@ -5,6 +5,10 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
   <PropertyGroup>
+    <IsTestApplication Condition=" '$(IsTestApplication)' == '' ">true</IsTestApplication>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <EnableAspireTesting Condition=" '$(EnableAspireTesting)' == '' ">false</EnableAspireTesting>
     <EnablePlaywright Condition=" '$(EnablePlaywright)' == '' ">false</EnablePlaywright>
     <UseVSTest Condition=" '$(UseVSTest)' == '' " >false</UseVSTest>
