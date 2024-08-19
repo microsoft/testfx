@@ -464,12 +464,12 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="new">Test class '{0}' should be valid</target>
+        <target state="translated">La classe de test « {0} » doit être valide</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
         <source>Property 'TestContext' should be valid</source>
-        <target state="new">Property 'TestContext' should be valid</target>
+        <target state="translated">La propriété « TestContext » doit être valide</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">

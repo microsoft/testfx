@@ -464,12 +464,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="new">Test class '{0}' should be valid</target>
+        <target state="translated">테스트 클래스 '{0}'은(는) 유효해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
         <source>Property 'TestContext' should be valid</source>
-        <target state="new">Property 'TestContext' should be valid</target>
+        <target state="translated">'TestContext' 속성은 유효해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">

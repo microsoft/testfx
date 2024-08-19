@@ -615,32 +615,32 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
       </trans-unit>
       <trans-unit id="TerminalNoAnsiOptionDescription">
         <source>Disable outputting ANSI escape characters to screen.</source>
-        <target state="new">Disable outputting ANSI escape characters to screen.</target>
+        <target state="translated">Desabilite a saída de caracteres de escape ANSI para a tela.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">
         <source>Disable reporting progress to screen.</source>
-        <target state="new">Disable reporting progress to screen.</target>
+        <target state="translated">Desabilite o progresso do relatório na tela.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="new">Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
+        <target state="translated">Detalhamento da saída ao relatar testes. Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal”.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Normal' or 'Detailed'.</target>
+        <target state="translated">--saída espera um único parâmetro com o valor “Normal” ou “Detalhado”.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
-        <target state="new">Writes test results to terminal.</target>
+        <target state="translated">Grava resultados de teste no terminal.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDisplayName">
         <source>Terminal test reporter</source>
-        <target state="new">Terminal test reporter</target>
+        <target state="translated">Relator de teste do terminal</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">

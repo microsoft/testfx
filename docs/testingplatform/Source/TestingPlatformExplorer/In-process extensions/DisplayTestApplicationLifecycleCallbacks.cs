@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.OutputDevice;
 
 namespace TestingPlatformExplorer.InProcess;
-internal class DisplayTestApplicationLifecycleCallbacks : ITestApplicationLifecycleCallbacks, IOutputDeviceDataProducer
+internal sealed class DisplayTestApplicationLifecycleCallbacks : ITestApplicationLifecycleCallbacks, IOutputDeviceDataProducer
 {
     private readonly IOutputDevice _outputDevice;
 

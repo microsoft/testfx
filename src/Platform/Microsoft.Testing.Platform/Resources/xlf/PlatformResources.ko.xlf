@@ -615,32 +615,32 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       </trans-unit>
       <trans-unit id="TerminalNoAnsiOptionDescription">
         <source>Disable outputting ANSI escape characters to screen.</source>
-        <target state="new">Disable outputting ANSI escape characters to screen.</target>
+        <target state="translated">ANSI 이스케이프 문자를 화면에 출력하지 않도록 설정합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">
         <source>Disable reporting progress to screen.</source>
-        <target state="new">Disable reporting progress to screen.</target>
+        <target state="translated">화면에 보고 진행률을 사용하지 않도록 설정합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="new">Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
+        <target state="translated">테스트를 보고할 때 세부 정보 표시를 출력합니다. 유효한 값은 'Normal', 'Detailed'입니다. 기본값은 'Normal'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Normal' or 'Detailed'.</target>
+        <target state="translated">--output에는 값이 'Normal' 또는 'Detailed'인 단일 매개 변수가 필요합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
-        <target state="new">Writes test results to terminal.</target>
+        <target state="translated">테스트 결과를 터미널에 씁니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDisplayName">
         <source>Terminal test reporter</source>
-        <target state="new">Terminal test reporter</target>
+        <target state="translated">터미널 테스트 보고자</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">

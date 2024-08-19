@@ -4,6 +4,8 @@
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
     <UseVSTestRunner>false</UseVSTestRunner>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>true</UseAppHost>
   </PropertyGroup>
 
   <ItemGroup>
