@@ -8,7 +8,7 @@
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' != '' " Text="'EnableMicrosoftTestingExtensionsHotReload' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' != '' " Text="'EnableMicrosoftTestingExtensionsRetry' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' != '' " Text="'EnableMicrosoftTestingExtensionsTrxReport' is not supported by VSTest." />
-    <Error Condition=" '$(EnableMSTestRunner)' != '' " Text="'EnableMSTestRunner' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMSTestRunner)' == 'true' " Text="'EnableMSTestRunner' cannot be combined with 'UseVSTest'." />
     <Error Condition=" '$(TestingExtensionsProfile)' != '' " Text="'TestingExtensionsProfile' is not supported by VSTest." />
     <Error Condition=" '$(TestingPlatformDotnetTestSupport)' != '' " Text="'TestingPlatformDotnetTestSupport' is not supported by VSTest." />
   </Target>
