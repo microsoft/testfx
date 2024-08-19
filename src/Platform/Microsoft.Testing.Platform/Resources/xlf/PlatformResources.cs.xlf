@@ -625,12 +625,12 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="new">Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
+        <target state="translated">Podrobnosti výstupu při vytváření sestav testů. Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Normal' or 'Detailed'.</target>
+        <target state="translated">--output očekává jeden parametr s hodnotou Normal nebo Detailed.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">

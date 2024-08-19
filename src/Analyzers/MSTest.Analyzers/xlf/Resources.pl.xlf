@@ -449,12 +449,12 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="new">Test class '{0}' should be valid</target>
+        <target state="translated">Klasa testowa „{0}” powinna być prawidłowa</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
         <source>Property 'TestContext' should be valid</source>
-        <target state="new">Property 'TestContext' should be valid</target>
+        <target state="translated">Właściwość „TestContext” powinna być prawidłowa</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">

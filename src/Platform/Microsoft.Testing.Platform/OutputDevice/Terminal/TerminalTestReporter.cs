@@ -96,7 +96,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");
 
-        s_regex = new Regex(@$"^   {atString} (?<code>.+) {inPattern}$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
+        s_regex = new Regex(@$"^   {atString} (?<code>.+)( {inPattern})?$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
         return s_regex;
     }
 #endif
@@ -531,14 +531,14 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
     }
 
-    private static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
+    internal /*for testing */ static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
     {
         terminal.Append(DoubleIndentation);
         Match match = GetFrameRegex().Match(stackTraceLine);
         if (match.Success)
         {
             terminal.SetColor(TerminalColor.Gray);
-            terminal.Append(PlatformResources.StackFrameIn);
+            terminal.Append(PlatformResources.StackFrameAt);
             terminal.Append(' ');
             terminal.ResetColor();
             terminal.SetColor(TerminalColor.Red);
@@ -547,8 +547,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
             terminal.Append(' ');
             terminal.Append(PlatformResources.StackFrameIn);
             terminal.Append(' ');
-            int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
-            terminal.AppendLink(match.Groups["file"].Value, line);
+            if (!RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
+            {
+                int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
+                terminal.AppendLink(match.Groups["file"].Value, line);
+            }
+
             terminal.AppendLine();
         }
     }
