@@ -54,7 +54,8 @@ public static class DotnetCli
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
         int timeoutInSeconds = 50,
-        bool disableCodeCoverage = true)
+        bool disableCodeCoverage = true,
+        bool warnAsError = true)
     {
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
@@ -87,6 +88,12 @@ public static class DotnetCli
             }
 
             environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
+
+            // Treat warnings as errors by default.
+            if (warnAsError)
+            {
+                args += " /warnaserror";
+            }
 
             if (DoNotRetry)
             {
