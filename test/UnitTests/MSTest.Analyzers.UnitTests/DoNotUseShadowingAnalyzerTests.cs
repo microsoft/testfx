@@ -29,7 +29,7 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButDifferentSignature_NoDiagnostic()
+    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButDifferentParameters_NoDiagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -42,6 +42,63 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
             public class DerivedClass : BaseClass
             {
                 public void Method() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_WithParameters_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                public void Method(int x) { }
+            }
+
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                public void [|Method|](int y) { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassHaveOverrideProperty_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public abstract class BaseClass
+            {
+                public abstract int Method { get; }
+            }
+
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                public override int Method { get; }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassOverrideMethodFromBaseClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public abstract class BaseClass
+            {
+                public abstract void Method();
+            }
+
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                public override void Method() { }
             }
             """;
 
