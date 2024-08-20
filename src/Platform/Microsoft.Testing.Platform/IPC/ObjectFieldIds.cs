@@ -28,7 +28,7 @@ internal static class SuccessfulTestResultMessageFieldsId
     internal const int State = 3;
     internal const int Reason = 4;
     internal const int SessionUid = 5;
-    internal const int ModulePath = 6;
+    internal const int ExecutionId = 6;
 }
 
 internal static class FailedTestResultMessageFieldsId
@@ -40,7 +40,7 @@ internal static class FailedTestResultMessageFieldsId
     internal const int ErrorMessage = 5;
     internal const int ErrorStackTrace = 6;
     internal const int SessionUid = 7;
-    internal const int ModulePath = 8;
+    internal const int ExecutionId = 8;
 }
 
 internal static class FileArtifactInfoFieldsId
@@ -51,12 +51,12 @@ internal static class FileArtifactInfoFieldsId
     internal const int TestUid = 4;
     internal const int TestDisplayName = 5;
     internal const int SessionUid = 6;
-    internal const int ModulePath = 7;
+    internal const int ExecutionId = 7;
 }
 
 internal static class TestSessionEventFieldsId
 {
     internal const int SessionType = 1;
     internal const int SessionUid = 2;
-    internal const int ModulePath = 3;
+    internal const int ExecutionId = 3;
 }

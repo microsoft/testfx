@@ -32,9 +32,9 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
     |---File SessionUid Size---| (4 bytes)
     |---File SessionUid Value---| (n bytes)
 
-    |---File ModulePath Id---| 1 (2 bytes)
-    |---File ModulePath Size---| (4 bytes)
-    |---File ModulePath Value---| (n bytes)
+    |---File ExecutionId Id---| 1 (2 bytes)
+    |---File ExecutionId Size---| (4 bytes)
+    |---File ExecutionId Value---| (n bytes)
 */
 
 internal sealed class FileArtifactInfoSerializer : BaseSerializer, INamedPipeSerializer
@@ -49,7 +49,7 @@ internal sealed class FileArtifactInfoSerializer : BaseSerializer, INamedPipeSer
         string? testUid = null;
         string? testDisplayName = null;
         string? sessionUid = null;
-        string? modulePath = null;
+        string? executionId = null;
 
         ushort fieldCount = ReadShort(stream);
 
@@ -84,8 +84,8 @@ internal sealed class FileArtifactInfoSerializer : BaseSerializer, INamedPipeSer
                     sessionUid = ReadString(stream);
                     break;
 
-                case FileArtifactInfoFieldsId.ModulePath:
-                    modulePath = ReadString(stream);
+                case FileArtifactInfoFieldsId.ExecutionId:
+                    executionId = ReadString(stream);
                     break;
 
                 default:
@@ -95,7 +95,7 @@ internal sealed class FileArtifactInfoSerializer : BaseSerializer, INamedPipeSer
             }
         }
 
-        return new FileArtifactInfo(fullPath, displayName, description, testUid, testDisplayName, sessionUid, modulePath);
+        return new FileArtifactInfo(fullPath, displayName, description, testUid, testDisplayName, sessionUid, executionId);
     }
 
     public void Serialize(object objectToSerialize, Stream stream)
@@ -112,7 +112,7 @@ internal sealed class FileArtifactInfoSerializer : BaseSerializer, INamedPipeSer
         WriteField(stream, FileArtifactInfoFieldsId.TestUid, fileArtifactInfo.TestUid);
         WriteField(stream, FileArtifactInfoFieldsId.TestDisplayName, fileArtifactInfo.TestDisplayName);
         WriteField(stream, FileArtifactInfoFieldsId.SessionUid, fileArtifactInfo.SessionUid);
-        WriteField(stream, FileArtifactInfoFieldsId.ModulePath, fileArtifactInfo.ModulePath);
+        WriteField(stream, FileArtifactInfoFieldsId.ExecutionId, fileArtifactInfo.ExecutionId);
     }
 
     private static ushort GetFieldCount(FileArtifactInfo fileArtifactInfo) =>
@@ -122,5 +122,5 @@ internal sealed class FileArtifactInfoSerializer : BaseSerializer, INamedPipeSer
         (fileArtifactInfo.TestUid is null ? 0 : 1) +
         (fileArtifactInfo.TestDisplayName is null ? 0 : 1) +
         (fileArtifactInfo.SessionUid is null ? 0 : 1) +
-        (fileArtifactInfo.ModulePath is null ? 0 : 1));
+        (fileArtifactInfo.ExecutionId is null ? 0 : 1));
 }

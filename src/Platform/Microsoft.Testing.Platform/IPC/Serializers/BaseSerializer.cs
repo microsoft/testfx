@@ -106,6 +106,8 @@ internal abstract class BaseSerializer
         stream.Write(bytes);
     }
 
+    protected static void WriteByte(Stream stream, byte value) => stream.WriteByte(value);
+
     protected static void WriteBool(Stream stream, bool value)
     {
         Span<byte> bytes = stackalloc byte[sizeof(bool)];
@@ -157,6 +159,8 @@ internal abstract class BaseSerializer
 #endif
         return BitConverter.ToBoolean(bytes);
     }
+
+    protected static byte ReadByte(Stream stream) => (byte)stream.ReadByte();
 
 #else
     protected static string ReadString(Stream stream)
@@ -232,11 +236,20 @@ internal abstract class BaseSerializer
         return BitConverter.ToUInt16(bytes, 0);
     }
 
+    protected static byte ReadByte(Stream stream)
+    {
+        byte[] bytes = new byte[sizeof(byte)];
+        _ = stream.Read(bytes, 0, bytes.Length);
+        return bytes[0];
+    }
+
     protected static void WriteBool(Stream stream, bool value)
     {
         byte[] bytes = BitConverter.GetBytes(value);
         stream.Write(bytes, 0, bytes.Length);
     }
+
+    protected static void WriteByte(Stream stream, byte value) => stream.WriteByte(value);
 
     protected static bool ReadBool(Stream stream)
     {
@@ -268,6 +281,16 @@ internal abstract class BaseSerializer
         WriteString(stream, value);
     }
 
+    protected static void WriteField(Stream stream, byte? value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        WriteByte(stream, value.Value);
+    }
+
     protected static void WriteField(Stream stream, ushort id, bool? value)
     {
         if (value is null)
@@ -278,6 +301,18 @@ internal abstract class BaseSerializer
         WriteShort(stream, id);
         WriteSize<bool>(stream);
         WriteBool(stream, value.Value);
+    }
+
+    protected static void WriteField(Stream stream, ushort id, byte? value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        WriteShort(stream, id);
+        WriteSize<bool>(stream);
+        WriteByte(stream, value.Value);
     }
 
     protected static void SetPosition(Stream stream, long position) => stream.Position = position;
