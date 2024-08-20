@@ -180,21 +180,21 @@ internal sealed class NonAnsiTerminal : ITerminal
             string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
             Append('[');
             SetColor(TerminalColor.DarkGreen);
-            Append("✓");
+            Append('✓');
             Append(passed.ToString(CultureInfo.CurrentCulture));
             ResetColor();
 
-            Append("/");
+            Append('/');
 
             SetColor(TerminalColor.DarkRed);
-            Append("x");
+            Append('x');
             Append(failed.ToString(CultureInfo.CurrentCulture));
             ResetColor();
 
-            Append("/");
+            Append('/');
 
             SetColor(TerminalColor.DarkYellow);
-            Append('?');
+            Append('↓');
             Append(skipped.ToString(CultureInfo.CurrentCulture));
             ResetColor();
             Append(']');
