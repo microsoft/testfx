@@ -7,23 +7,16 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal sealed class TestProgressState
 {
-    public TestProgressState(int passed, int failed, int skipped, string assemblyName, string? targetFramework, string? architecture, IStopwatch stopwatch, string? detail)
+    public TestProgressState(string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch)
     {
-        Passed = passed;
-        Failed = failed;
-        Skipped = skipped;
-        AssemblyName = assemblyName;
+        Assembly = assembly;
         TargetFramework = targetFramework;
         Architecture = architecture;
         Stopwatch = stopwatch;
-        Detail = detail;
+        AssemblyName = Path.GetFileName(assembly)!;
     }
 
-    public int Passed { get; }
-
-    public int Failed { get; }
-
-    public int Skipped { get; }
+    public string Assembly { get; }
 
     public string AssemblyName { get; }
 
@@ -33,5 +26,31 @@ internal sealed class TestProgressState
 
     public IStopwatch Stopwatch { get; }
 
-    public string? Detail { get; }
+    public List<string> Attachments { get; } = new();
+
+    public List<IProgressMessage> Messages { get; } = new();
+
+    public int FailedTests { get; internal set; }
+
+    public int PassedTests { get; internal set; }
+
+    public int SkippedTests { get; internal set; }
+
+    public int TotalTests { get; internal set; }
+
+    public int TimedOutTests { get; internal set; }
+
+    public int CanceledTests { get; internal set; }
+
+    public string? Detail { get; internal set; }
+
+    public int SlotIndex { get; internal set; }
+
+    public long LastUpdate { get; internal set; }
+
+    internal void AddError(string text)
+        => Messages.Add(new ErrorMessage(text));
+
+    internal void AddWarning(string text)
+        => Messages.Add(new WarningMessage(text));
 }
