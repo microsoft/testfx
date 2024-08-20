@@ -51,21 +51,21 @@ internal sealed class AnsiTerminalTestProgressFrame
         string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
         terminal.Append('[');
         terminal.SetColor(TerminalColor.DarkGreen);
-        terminal.Append("✓");
+        terminal.Append('✓');
         terminal.Append(passed.ToString(CultureInfo.CurrentCulture));
         terminal.ResetColor();
 
-        terminal.Append("/");
+        terminal.Append('/');
 
         terminal.SetColor(TerminalColor.DarkRed);
-        terminal.Append("x");
+        terminal.Append('x');
         terminal.Append(failed.ToString(CultureInfo.CurrentCulture));
         terminal.ResetColor();
 
-        terminal.Append("/");
+        terminal.Append('/');
 
         terminal.SetColor(TerminalColor.DarkYellow);
-        terminal.Append('?');
+        terminal.Append('↓');
         terminal.Append(skipped.ToString(CultureInfo.CurrentCulture));
         terminal.ResetColor();
         terminal.Append(']');
