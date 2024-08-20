@@ -59,12 +59,14 @@ public sealed class TerminalTestReporterTests : TestBase
         DateTimeOffset startTime = DateTimeOffset.MinValue;
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
         terminalReporter.TestExecutionStarted(startTime, 1);
-        string assembly = @"C:\work\assembly.dll";
+
         string targetFramework = "net8.0";
         string architecture = "x64";
-
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
         string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
+        string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
+        string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
         terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
@@ -96,14 +98,14 @@ public sealed class TerminalTestReporterTests : TestBase
               Actual
                 DEF␛[m
             ␛[31;1m  Stack Trace:
-                ␛[90;1mat ␛[m␛[91;1mFailingTest()␛[90;1m in ␛[90;1m␛]8;;file:///{folder}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m
+                ␛[90;1mat ␛[m␛[91;1mFailingTest()␛[90;1m in ␛[90;1m␛]8;;file:///{folderLink}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m
 
 
               Out of process file artifacts produced:
-                - ␛[90;1m␛]8;;file:///{folder}artifact1.txt␛\{folder}artifact1.txt␛]8;;␛\␛[m
+                - ␛[90;1m␛]8;;file:///{folderLink}artifact1.txt␛\{folder}artifact1.txt␛]8;;␛\␛[m
               In process file artifacts produced:
-                - ␛[90;1m␛]8;;file:///{folder}artifact2.txt␛\{folder}artifact2.txt␛]8;;␛\␛[m
-            ␛[91;1mTest run summary: Failed!␛[90;1m - ␛[m␛[90;1m␛]8;;file:///{folderNoSlash}␛\{folder}assembly.dll␛]8;;␛\␛[m (net8.0|x64)
+                - ␛[90;1m␛]8;;file:///{folderLink}artifact2.txt␛\{folder}artifact2.txt␛]8;;␛\␛[m
+            ␛[91;1mTest run summary: Failed!␛[90;1m - ␛[m␛[90;1m␛]8;;file:///{folderLinkNoSlash}␛\{folder}assembly.dll␛]8;;␛\␛[m (net8.0|x64)
             ␛[m  total: 5
             ␛[91;1m  failed: 1
             ␛[m  succeeded: 1
