@@ -106,8 +106,6 @@ internal abstract class BaseSerializer
         stream.Write(bytes);
     }
 
-    protected static void WriteByte(Stream stream, byte value) => stream.WriteByte(value);
-
     protected static void WriteBool(Stream stream, bool value)
     {
         Span<byte> bytes = stackalloc byte[sizeof(bool)];
@@ -159,8 +157,6 @@ internal abstract class BaseSerializer
 #endif
         return BitConverter.ToBoolean(bytes);
     }
-
-    protected static byte ReadByte(Stream stream) => (byte)stream.ReadByte();
 
 #else
     protected static string ReadString(Stream stream)
@@ -236,20 +232,11 @@ internal abstract class BaseSerializer
         return BitConverter.ToUInt16(bytes, 0);
     }
 
-    protected static byte ReadByte(Stream stream)
-    {
-        byte[] bytes = new byte[sizeof(byte)];
-        _ = stream.Read(bytes, 0, bytes.Length);
-        return bytes[0];
-    }
-
     protected static void WriteBool(Stream stream, bool value)
     {
         byte[] bytes = BitConverter.GetBytes(value);
         stream.Write(bytes, 0, bytes.Length);
     }
-
-    protected static void WriteByte(Stream stream, byte value) => stream.WriteByte(value);
 
     protected static bool ReadBool(Stream stream)
     {
@@ -258,6 +245,10 @@ internal abstract class BaseSerializer
         return BitConverter.ToBoolean(bytes, 0);
     }
 #endif
+
+    protected static byte ReadByte(Stream stream) => (byte)stream.ReadByte();
+
+    protected static void WriteByte(Stream stream, byte value) => stream.WriteByte(value);
 
     protected static void WriteField(Stream stream, ushort id, string? value)
     {
