@@ -55,7 +55,8 @@ public static class DotnetCli
         bool disableTelemetry = true,
         int timeoutInSeconds = 50,
         bool disableCodeCoverage = true,
-        bool warnAsError = true)
+        bool warnAsError = true,
+        bool suppressPreviewDotNetMessage = true)
     {
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
@@ -90,7 +91,7 @@ public static class DotnetCli
             environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
 
             string extraArgs = warnAsError ? " /warnaserror" : string.Empty;
-            extraArgs += " -p:SuppressNETCoreSdkPreviewMessage=true";
+            extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {
                 args = args.Insert(platformArgsIndex, extraArgs);
