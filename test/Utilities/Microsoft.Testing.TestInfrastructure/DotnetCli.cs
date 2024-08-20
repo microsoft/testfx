@@ -94,7 +94,7 @@ public static class DotnetCli
             extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {
-                args = args.Insert(platformArgsIndex, extraArgs);
+                args = args.Insert(platformArgsIndex, extraArgs + " ");
             }
             else
             {

@@ -357,7 +357,12 @@ namespace MSTestSdkTest
         string exeOrDllName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? testHost.FullName
             : testHost.FullName + ".dll";
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {exeOrDllName}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false, warnAsError: false);
+        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
+            $"test {exeOrDllName}",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            failIfReturnValueIsNotZero: false,
+            warnAsError: false,
+            suppressPreviewDotNetMessage: false);
 
         // Ensure output contains the right platform banner
         dotnetTestResult.AssertOutputContains("VSTest version");
@@ -393,7 +398,11 @@ namespace MSTestSdkTest
         string exeOrDllName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? testHost.FullName
             : testHost.FullName + ".dll";
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {exeOrDllName}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false);
+        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
+            $"test {exeOrDllName}",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            warnAsError: false,
+            suppressPreviewDotNetMessage: false);
         Assert.AreEqual(0, dotnetTestResult.ExitCode);
         // Ensure output contains the right platform banner
         dotnetTestResult.AssertOutputContains("VSTest version");
