@@ -95,6 +95,8 @@ public static class DotnetCli
                 args += " /warnaserror";
             }
 
+            args += " /p:SuppressNETCoreSdkPreviewMessage=true";
+
             if (DoNotRetry)
             {
                 return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero);

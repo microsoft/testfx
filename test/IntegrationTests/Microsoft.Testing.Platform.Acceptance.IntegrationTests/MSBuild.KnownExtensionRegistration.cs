@@ -68,6 +68,8 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase
         <Nullable>enable</Nullable>
         <LangVersion>preview</LangVersion>
         <OutputType>Exe</OutputType>
+        <!-- Do not warn about package downgrade. NuGet uses alphabetical sort as ordering so -dev or -ci are considered downgrades of -preview. -->
+        <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
