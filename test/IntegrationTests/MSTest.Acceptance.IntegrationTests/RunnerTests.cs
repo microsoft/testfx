@@ -31,7 +31,9 @@ public class RunnerTests : AcceptanceTestBase
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
         string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         compilationResult = await DotnetCli.RunAsync(
             $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
