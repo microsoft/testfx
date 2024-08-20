@@ -246,7 +246,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             int size = arg.Length;
             if (!float.TryParse(arg[..(size - 1)], out float value))
             {
-                throw new InvalidOperationException(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage);
+                throw ApplicationStateGuard.Unreachable();
             }
 
             TimeSpan timeout = char.ToLowerInvariant(arg[size - 1]) switch
@@ -254,7 +254,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 'h' => TimeSpan.FromHours(value),
                 'm' => TimeSpan.FromMinutes(value),
                 's' => TimeSpan.FromSeconds(value),
-                _ => throw new InvalidOperationException(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage),
+                _ => throw ApplicationStateGuard.Unreachable(),
             };
 
             testApplicationCancellationTokenSource.CancelAfter(timeout);
