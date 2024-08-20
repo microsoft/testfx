@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <Target Name="_MSTestSDKValidateFeatures" BeforeTargets="Build">
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' != '' " Text="'EnableMicrosoftTestingExtensionsCodeCoverage' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' != '' " Text="'EnableMicrosoftTestingExtensionsCrashDump' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' != '' " Text="'EnableMicrosoftTestingExtensionsHangDump' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' != '' " Text="'EnableMicrosoftTestingExtensionsHotReload' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' != '' " Text="'EnableMicrosoftTestingExtensionsRetry' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' != '' " Text="'EnableMicrosoftTestingExtensionsTrxReport' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMSTestRunner)' == 'true' " Text="'EnableMSTestRunner' cannot be combined with 'UseVSTest'." />
+    <Error Condition=" '$(TestingExtensionsProfile)' != '' " Text="'TestingExtensionsProfile' is not supported by VSTest." />
+    <Error Condition=" '$(TestingPlatformDotnetTestSupport)' == 'true' " Text="'TestingPlatformDotnetTestSupport' is not supported by VSTest." />
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="MSTest.TestFramework" Sdk="MSTest"
                       Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
@@ -10,18 +22,12 @@
   </ItemGroup>
 
   <!-- If we are a test application (not a test library) -->
-  <ItemGroup Condition=" '$(IsTestLibrary)' != 'true' ">
+  <ItemGroup Condition=" '$(IsTestApplication)' == 'true' ">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Sdk="MSTest"
                       Version="$(MicrosoftNETTestSdkVersion)" VersionOverride="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest"
                       Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.TestFramework" Sdk="MSTest"
-                      Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.Analyzers" Sdk="MSTest"
-                      Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)"
-                      Condition=" '$(EnableMSTestAnalyzers)' != 'false' " />
   </ItemGroup>
-
 
   <!--
     Implicit imports

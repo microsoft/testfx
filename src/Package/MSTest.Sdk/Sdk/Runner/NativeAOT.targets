@@ -3,12 +3,14 @@
 
   <Import Project="$(MSBuildThisFileDirectory)Common.targets"/>
 
-  <Target Name="_MSTestSDKValidatePlaywright" BeforeTargets="Build">
-    <Error Condition=" '$(EnablePlaywright)' == 'true' " Text="Playwright MSTest currently doesn't support NativeAOT mode." />
-  </Target>
-
-  <Target Name="_MSTestSDKValidateAspire" BeforeTargets="Build">
+  <Target Name="_MSTestSDKValidateFeatures" BeforeTargets="Build">
     <Error Condition=" '$(EnableAspireTesting)' == 'true' " Text="Aspire MSTest currently doesn't support NativeAOT mode." />
+    <Error Condition=" '$(EnablePlaywright)' == 'true' " Text="Playwright MSTest currently doesn't support NativeAOT mode." />
+
+    <Warning Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == 'true' " Text="Crash dump extension might not be working well under Native AOT." />
+    <Warning Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' " Text="Hang dump extension might not be working well under Native AOT." />
+    <Warning Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'true' " Text="Hot reload extension might not be working well under Native AOT." />
+    <Warning Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' " Text="Hot reload extension might not be working well under Native AOT." />
   </Target>
 
   <!-- Core -->
@@ -21,6 +23,15 @@
                       Version="$(MSTestEngineVersion)" VersionOverride="$(MSTestEngineVersion)" />
     <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest"
                       Version="$(MSTestEngineVersion)" VersionOverride="$(MSTestEngineVersion)" />
+    <!--
+      Most of the times this dependency is not required but we leave the opportunity to align the version of the platform being used.
+      At the moment this is mainly used for our acceptance tests because the locally/CI built version ends with -dev or -ci which is
+      considered by NuGet resolver as older than any -preview version. Using this property we can ensure the local version is being
+      selected.
+      -->
+    <PackageReference Include="Microsoft.Testing.Platform" Sdk="MSTest"
+                      Version="$(MicrosoftTestingPlatformVersion)" VersionOverride="$(MicrosoftTestingPlatformVersion)"
+                      Condition=" '$(EnableMicrosoftTestingPlatform)' == 'true' " />
   </ItemGroup>
 
   <!-- Extensions -->

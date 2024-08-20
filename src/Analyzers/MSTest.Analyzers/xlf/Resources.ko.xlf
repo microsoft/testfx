@@ -281,6 +281,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">TestContext를 정적 멤버에 저장하지 마세요</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotUseShadowingDescription">
+        <source>Shadowing test members could cause testing issues (such as NRE).</source>
+        <target state="new">Shadowing test members could cause testing issues (such as NRE).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingMessageFormat">
+        <source>Member '{0}' is already exist in the base class</source>
+        <target state="new">Member '{0}' is already exist in the base class</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingTitle">
+        <source>Do not use shadowing</source>
+        <target state="new">Do not use shadowing</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
         <target state="translated">'System.ComponentModel.DescriptionAttribute'는 테스트 컨텍스트에 영향을 주지 않으며 대신 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'를 사용하려고 한 것 같습니다.</target>

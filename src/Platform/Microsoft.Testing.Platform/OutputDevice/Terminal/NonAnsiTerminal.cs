@@ -177,21 +177,23 @@ internal sealed class NonAnsiTerminal : ITerminal
             int failed = p.Failed;
             int skipped = p.Skipped;
 
+            // Use just ascii here, so we don't put too many restrictions on fonts needing to
+            // properly show unicode, or logs being saved in particular encoding.
             string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
             Append('[');
             SetColor(TerminalColor.DarkGreen);
-            Append("✓");
+            Append('+');
             Append(passed.ToString(CultureInfo.CurrentCulture));
             ResetColor();
 
-            Append("/");
+            Append('/');
 
             SetColor(TerminalColor.DarkRed);
-            Append("x");
+            Append('x');
             Append(failed.ToString(CultureInfo.CurrentCulture));
             ResetColor();
 
-            Append("/");
+            Append('/');
 
             SetColor(TerminalColor.DarkYellow);
             Append('?');

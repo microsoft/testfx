@@ -50,7 +50,6 @@ public class MSBuildTests_Solution : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrix))]
-    [NonTest] // TODO: AMAURY/MARCO - Investigate test
     public async Task MSBuildTests_UseMSBuildTestInfrastructure_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration _, bool isMultiTfm, string command)
     {
         CheckPatch();

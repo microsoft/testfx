@@ -1,9 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
-namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+namespace MSTest.Acceptance.IntegrationTests;
 
 /// <summary>
 /// When PublishAOT=true is set on a project, it will set IsDynamicCodeSupported to false, but the code will still run as managed

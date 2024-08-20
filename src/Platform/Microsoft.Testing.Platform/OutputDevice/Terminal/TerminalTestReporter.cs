@@ -51,7 +51,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private bool _wasCancelled;
 
 #if NET7_0_OR_GREATER
-    [GeneratedRegex(@$"^   at (?<code>.+) in (?<file>.+):line (?<line>\d+)$", RegexOptions.ExplicitCapture, 1000)]
+    [GeneratedRegex(@$"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture, 1000)]
     private static partial Regex GetFrameRegex();
 #else
     private static Regex? s_regex;
@@ -96,7 +96,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");
 
-        s_regex = new Regex(@$"^   {atString} (?<code>.+) {inPattern}$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
+        s_regex = new Regex(@$"^   {atString} ((?<code>.+) {inPattern}|(?<code1>.+))$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
         return s_regex;
     }
 #endif
@@ -115,7 +115,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         int nonAnsiUpdateCadenceInMs = 3_000;
         // When writing to ANSI we update the progress in place and it should look responsive so we update every half second, because we only show seconds on the screen, so it is good enough.
         int ansiUpdateCadenceInMs = 500;
-        if (!_options.UseAnsi)
+        if (!_options.UseAnsi || _options.ForceAnsi is false)
         {
             terminalWithProgress = new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
         }
@@ -124,7 +124,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             // Autodetect.
             (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
             _originalConsoleMode = originalConsoleMode;
-            terminalWithProgress = consoleAcceptsAnsiCodes
+            terminalWithProgress = consoleAcceptsAnsiCodes || _options.ForceAnsi is true
                 ? new TestProgressStateAwareTerminal(new AnsiTerminal(console, _options.BaseDirectory), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs)
                 : new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
         }
@@ -147,6 +147,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 terminal.Append(PlatformResources.RunningTestsFrom);
                 terminal.Append(' ');
                 AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly, targetFramework, architecture);
+                terminal.AppendLine();
             });
         }
 
@@ -226,7 +227,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || _wasCancelled;
         terminal.SetColor(runFailed ? TerminalColor.Red : TerminalColor.Green);
 
-        terminal.AppendLine();
         terminal.Append(PlatformResources.TestRunSummary);
         terminal.Append(' ');
 
@@ -532,25 +532,45 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
     }
 
-    private static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
+    internal /*for testing */ static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
     {
         terminal.Append(DoubleIndentation);
         Match match = GetFrameRegex().Match(stackTraceLine);
         if (match.Success)
         {
+            bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
             terminal.SetColor(TerminalColor.Gray);
-            terminal.Append(PlatformResources.StackFrameIn);
+            terminal.Append(PlatformResources.StackFrameAt);
             terminal.Append(' ');
             terminal.ResetColor();
             terminal.SetColor(TerminalColor.Red);
-            terminal.Append(match.Groups["code"].Value);
-            terminal.SetColor(TerminalColor.Gray);
-            terminal.Append(' ');
-            terminal.Append(PlatformResources.StackFrameIn);
-            terminal.Append(' ');
-            int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
-            terminal.AppendLink(match.Groups["file"].Value, line);
+            if (weHaveFilePathAndCodeLine)
+            {
+                terminal.Append(match.Groups["code"].Value);
+            }
+            else
+            {
+                terminal.Append(match.Groups["code1"].Value);
+            }
+
+            if (weHaveFilePathAndCodeLine)
+            {
+                terminal.SetColor(TerminalColor.Gray);
+                terminal.Append(' ');
+                terminal.Append(PlatformResources.StackFrameIn);
+                terminal.Append(' ');
+                if (!RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
+                {
+                    int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
+                    terminal.AppendLink(match.Groups["file"].Value, line);
+                }
+            }
+
             terminal.AppendLine();
+        }
+        else
+        {
+            terminal.AppendLine(stackTraceLine);
         }
     }
 

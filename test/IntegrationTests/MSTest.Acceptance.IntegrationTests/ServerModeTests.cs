@@ -4,7 +4,9 @@
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
-namespace MSTest.Acceptance.IntegrationTests.Messages.V100;
+using MSTest.Acceptance.IntegrationTests.Messages.V100;
+
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestGroup]
 public sealed class ServerModeTests : ServerModeTestsBase

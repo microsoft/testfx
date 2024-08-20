@@ -227,7 +227,6 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         stringBuilder.Append(']');
                     }
 
-                    stringBuilder.AppendLine();
                     _terminalTestReporter.WriteMessage(stringBuilder.ToString());
                 }
             }

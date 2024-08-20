@@ -168,9 +168,7 @@ public class TempDirectory : IDisposable
 <Project>
     <PropertyGroup>
       <RepoRoot>{System.IO.Path.GetDirectoryName(currentDirectory)}/</RepoRoot>
-      <!--
-        Do not warn about package downgrade. NuGet uses alphabetical sort as ordering so -dev or -ci are considered downgrades of -preview.
-        -->
+      <!-- Do not warn about package downgrade. NuGet uses alphabetical sort as ordering so -dev or -ci are considered downgrades of -preview. -->
       <NoWarn>NU1605</NoWarn>
       <RunAnalyzers>false</RunAnalyzers>
     </PropertyGroup>
