@@ -89,13 +89,16 @@ public static class DotnetCli
 
             environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
 
-            // Treat warnings as errors by default.
-            if (warnAsError)
+            string extraArgs = warnAsError ? " /warnaserror" : string.Empty;
+            extraArgs += " -p:SuppressNETCoreSdkPreviewMessage=true";
+            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {
-                args += " /warnaserror";
+                args = args.Insert(platformArgsIndex, extraArgs);
             }
-
-            args += " /p:SuppressNETCoreSdkPreviewMessage=true";
+            else
+            {
+                args += extraArgs;
+            }
 
             if (DoNotRetry)
             {

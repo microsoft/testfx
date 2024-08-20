@@ -21,20 +21,11 @@ public class MSBuildTests_Test : AcceptanceTestBase
         return new TestArgumentsEntry<(string, string, BuildConfiguration, bool)>(entry, $"{entry.Item1},{(TargetFrameworks.All.ToMSBuildTargetFrameworks() == entry.Item2 ? "multitfm" : entry.Item2)},{entry.Item3},{(entry.Item4 ? "Succeeded" : "Failed")}");
     }
 
-    internal static IEnumerable<BuildConfiguration> GetBuildConfiguration()
-    {
-        string[] compilationModes = ["Debug", "Release"];
-        foreach (string compilationMode in compilationModes)
-        {
-            yield return compilationMode == "Debug" ? BuildConfiguration.Debug : BuildConfiguration.Release;
-        }
-    }
-
     internal static IEnumerable<(string BuildCommand, string TargetFramework, BuildConfiguration BuildConfiguration, bool TestSucceeded)> GetBuildMatrix()
     {
         foreach (TestArgumentsEntry<string> tfm in TargetFrameworks.All)
         {
-            foreach (BuildConfiguration compilationMode in GetBuildConfiguration())
+            foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
             {
                 foreach (bool testSucceeded in new bool[] { true, false })
                 {
@@ -53,7 +44,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
 
     internal static IEnumerable<(string BuildCommand, string TargetFramework, BuildConfiguration BuildConfiguration, bool TestSucceeded)> GetBuildMatrixMultiTfm()
     {
-        foreach (BuildConfiguration compilationMode in GetBuildConfiguration())
+        foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
         {
             foreach (bool testSucceeded in new bool[] { true, false })
             {
@@ -123,8 +114,12 @@ public class MSBuildTests_Test : AcceptanceTestBase
                 string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
 
                 DotnetMuxerResult compilationResult = testCommand.StartsWith("test", StringComparison.OrdinalIgnoreCase)
-                    ? await DotnetCli.RunAsync($"{testCommand} -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} /warnAsError \"{testAsset.TargetAssetPath}\" -- --treenode-filter /*/*/*/TestMethod1 --results-directory \"{testResultFolder}\"", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: true)
-                    : await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--treenode-filter /*/*/*/TestMethod1 --results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} /warnAsError \"{testAsset.TargetAssetPath}\"", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: true);
+                    ? await DotnetCli.RunAsync(
+                        $"{testCommand} -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\" -- --treenode-filter /*/*/*/TestMethod1 --results-directory \"{testResultFolder}\"",
+                        _acceptanceFixture.NuGetGlobalPackagesFolder.Path)
+                    : await DotnetCli.RunAsync(
+                        $"{testCommand} -p:TestingPlatformCommandLineArguments=\"--treenode-filter /*/*/*/TestMethod1 --results-directory \"{testResultFolder}\"\" -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"",
+                        _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
                 foreach (string tfmToAssert in tfmsToAssert)
                 {
@@ -132,7 +127,6 @@ public class MSBuildTests_Test : AcceptanceTestBase
                 }
             }, 3, TimeSpan.FromSeconds(10));
 
-    [NonTest] // TODO: AMAURY/MARCO - Investigate this test
     public async Task Invoke_DotnetTest_With_Arch_Switch_x86_Should_Work()
         => await RetryHelper.RetryAsync(
             async () =>
@@ -159,9 +153,11 @@ public class MSBuildTests_Test : AcceptanceTestBase
                     .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
                 string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
                 string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
-                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test --arch x86 -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false -bl:{binlogFile} /warnAsError \"{testAsset.TargetAssetPath}\"", _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
-                environmentVariables: dotnetRootX86,
-                failIfReturnValueIsNotZero: false);
+                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+                    $"test --arch x86 -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"",
+                    _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+                    environmentVariables: dotnetRootX86,
+                    failIfReturnValueIsNotZero: false);
 
                 string outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, "MSBuild Tests_net8.0_x86.log", SearchOption.AllDirectories).Single();
                 Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
@@ -176,11 +172,11 @@ public class MSBuildTests_Test : AcceptanceTestBase
         Assert.IsTrue(Regex.IsMatch(compilationResult.StandardOutput, $".*Run tests:.* \\[{tfm}|x64\\]"), compilationResult.StandardOutput);
         if (testSucceeded)
         {
-            Assert.IsTrue(Regex.IsMatch(compilationResult.StandardOutput, $".*error : Tests failed:.* \\[{tfm}|x64\\]"), compilationResult.StandardOutput);
+            Assert.IsTrue(Regex.IsMatch(compilationResult.StandardOutput, $"Tests succeeded:.* \\[{tfm}|x64\\]"), compilationResult.StandardOutput);
         }
         else
         {
-            Assert.IsTrue(Regex.IsMatch(compilationResult.StandardOutput, $"Tests succeeded:.* \\[{tfm}|x64\\]"), compilationResult.StandardOutput);
+            Assert.IsTrue(Regex.IsMatch(compilationResult.StandardOutput, $".*error : Tests failed:.* \\[{tfm}|x64\\]"), compilationResult.StandardOutput);
         }
 
         string outputFileLog = Path.Combine(testResultFolder, $"MSBuild Tests_{tfm}_x64.log");
@@ -188,8 +184,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
         Assert.IsFalse(string.IsNullOrEmpty(File.ReadAllText(outputFileLog)), $"Content of file '{File.ReadAllText(outputFileLog)}'");
     }
 
-    // We avoid to test the multitfm because it's already tested with the above tests and we don't want to have too heavy testing, msbuild is pretty heavy(a lot of processes started
-    // due to the no nodereuse and makes tests flaky.
+    // We avoid to test the multi-tfm because it's already tested with the above tests and we don't want to have too heavy testing, msbuild is pretty heavy (a lot of processes started due to the no 'nodereuse') and makes tests flaky.
     // We test two functionality for the same reason, we don't want to load too much the CI only for UX reasons.
     [ArgumentsProvider(nameof(GetBuildMatrix), TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
     public async Task InvokeTestingPlatform_Target_Showing_Error_And_Do_Not_Capture_The_Output_SingleTfm(string testCommand, string tfm, BuildConfiguration compilationMode, bool testSucceeded)
