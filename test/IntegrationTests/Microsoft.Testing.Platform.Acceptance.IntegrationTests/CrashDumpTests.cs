@@ -21,16 +21,14 @@ public sealed class CrashDumpTests : AcceptanceTestBase
 
     [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
     public async Task CrashDump_DefaultSetting_CreateDump(string tfm)
-        => await RetryHelper.RetryAsync(
-            async () =>
-            {
-                string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
-                var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashDump", tfm);
-                TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --results-directory {resultDirectory}");
-                testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
-                string? dumpFile = Directory.GetFiles(resultDirectory, "CrashDump.dll_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
-                Assert.IsTrue(dumpFile is not null, $"Dump file not found '{tfm}'\n{testHostResult}'");
-            }, 3, TimeSpan.FromSeconds(3), RetryPolicy);
+    {
+        string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashDump", tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --results-directory {resultDirectory}");
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        string? dumpFile = Directory.GetFiles(resultDirectory, "CrashDump.dll_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
+        Assert.IsTrue(dumpFile is not null, $"Dump file not found '{tfm}'\n{testHostResult}'");
+    }
 
     public async Task CrashDump_CustomDumpName_CreateDump()
     {
@@ -46,17 +44,15 @@ public sealed class CrashDumpTests : AcceptanceTestBase
     [Arguments("Triage")]
     [Arguments("Full")]
     public async Task CrashDump_Formats_CreateDump(string format)
-        => await RetryHelper.RetryAsync(
-            async () =>
-            {
-                string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
-                var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent.Arguments);
-                TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --crashdump-type {format} --results-directory {resultDirectory}");
-                testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
-                string? dumpFile = Directory.GetFiles(resultDirectory, "CrashDump.dll_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
-                Assert.IsTrue(dumpFile is not null, $"Dump file not found '{format}'\n{testHostResult}'");
-                File.Delete(dumpFile);
-            }, 3, TimeSpan.FromSeconds(3), RetryPolicy);
+    {
+        string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --crashdump-type {format} --results-directory {resultDirectory}");
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        string? dumpFile = Directory.GetFiles(resultDirectory, "CrashDump.dll_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
+        Assert.IsTrue(dumpFile is not null, $"Dump file not found '{format}'\n{testHostResult}'");
+        File.Delete(dumpFile);
+    }
 
     public async Task CrashDump_InvalidFormat_ShouldFail()
     {
