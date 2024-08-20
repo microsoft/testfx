@@ -20,6 +20,7 @@ public class IgnoreExitCodeTests : AcceptanceTestBase
     <UseAppHost>true</UseAppHost>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
+    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
