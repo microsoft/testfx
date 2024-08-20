@@ -173,9 +173,9 @@ internal sealed class NonAnsiTerminal : ITerminal
 
             string durationString = HumanReadableDurationFormatter.Render(p.Stopwatch.Elapsed);
 
-            int passed = p.Passed;
-            int failed = p.Failed;
-            int skipped = p.Skipped;
+            int passed = p.PassedTests;
+            int failed = p.FailedTests;
+            int skipped = p.SkippedTests;
 
             string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
             Append('[');
