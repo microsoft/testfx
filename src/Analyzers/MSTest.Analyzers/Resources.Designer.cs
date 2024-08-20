@@ -366,6 +366,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Shadowing test members could cause testing issues (such as NRE)..
+        /// </summary>
+        internal static string DoNotUseShadowingDescription {
+            get {
+                return ResourceManager.GetString("DoNotUseShadowingDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Member &apos;{0}&apos; is already exist in the base class.
+        /// </summary>
+        internal static string DoNotUseShadowingMessageFormat {
+            get {
+                return ResourceManager.GetString("DoNotUseShadowingMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not use shadowing.
+        /// </summary>
+        internal static string DoNotUseShadowingTitle {
+            get {
+                return ResourceManager.GetString("DoNotUseShadowingTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;System.ComponentModel.DescriptionAttribute&apos; has no effect in the context of tests and you likely wanted to use &apos;Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute&apos; instead..
         /// </summary>
         internal static string DoNotUseSystemDescriptionAttributeDescription {

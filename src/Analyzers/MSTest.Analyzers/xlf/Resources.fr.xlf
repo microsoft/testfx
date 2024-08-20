@@ -281,6 +281,21 @@ Le type doit être une classe
         <target state="translated">Ne pas stocker TestContext dans un membre statique</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotUseShadowingDescription">
+        <source>Shadowing test members could cause testing issues (such as NRE).</source>
+        <target state="new">Shadowing test members could cause testing issues (such as NRE).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingMessageFormat">
+        <source>Member '{0}' is already exist in the base class</source>
+        <target state="new">Member '{0}' is already exist in the base class</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingTitle">
+        <source>Do not use shadowing</source>
+        <target state="new">Do not use shadowing</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
         <target state="translated">« System.ComponentModel.DescriptionAttribute » n’a aucun effet dans le contexte des tests et vous vouliez probablement utiliser « Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute » à la place.</target>
