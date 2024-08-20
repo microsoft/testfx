@@ -64,15 +64,15 @@ namespace MSTestSdkTest
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
     public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
-        using TestAsset generator = await TestAsset.GenerateAssetAsync(
-               AssetName,
-               SingleTestSourceCode
-               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-               .PatchCodeWithReplace("$TargetFramework$", multiTfm)
-               .PatchCodeWithReplace("$ExtraProperties$", "<UseVSTest>true</UseVSTest>"));
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", multiTfm)
+            .PatchCodeWithReplace("$ExtraProperties$", "<UseVSTest>true</UseVSTest>"));
 
         // Pass '-p:vstestusemsbuildoutput=false' to ensure that the output is not Terminal Logger (only net9+)
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {generator.TargetAssetPath} -p:vstestusemsbuildoutput=false", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath} -p:vstestusemsbuildoutput=false", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
         compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
@@ -90,14 +90,14 @@ namespace MSTestSdkTest
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
     public async Task RunTests_With_MSTestRunner_DotnetTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
-        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
                SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
         compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net8\.0|x64\]");
@@ -115,18 +115,18 @@ namespace MSTestSdkTest
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
     public async Task RunTests_With_MSTestRunner_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
-        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
                SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
         foreach (string tfm in multiTfm.Split(";"))
         {
-            var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
+            var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
             TestHostResult testHostResult = await testHost.ExecuteAsync();
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
         }
@@ -135,18 +135,18 @@ namespace MSTestSdkTest
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
     public async Task RunTests_With_CentralPackageManagement_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
-        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
                SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
         foreach (string tfm in multiTfm.Split(";"))
         {
-            var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
+            var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
             TestHostResult testHostResult = await testHost.ExecuteAsync();
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
         }
@@ -199,18 +199,18 @@ namespace MSTestSdkTest
         string enableCommandLineArg,
         string invalidCommandLineArg)
     {
-        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
                SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", msbuildExtensionEnableFragment));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
         foreach (string tfm in multiTfm.Split(";"))
         {
-            var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
+            var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
             TestHostResult testHostResult = await testHost.ExecuteAsync(command: enableCommandLineArg);
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
 
@@ -222,18 +222,18 @@ namespace MSTestSdkTest
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
     public async Task RunTests_With_MSTestRunner_Standalone_EnableAll_Extensions(string multiTfm, BuildConfiguration buildConfiguration)
     {
-        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
                SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
         foreach (string tfm in multiTfm.Split(";"))
         {
-            var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
+            var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
             TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump");
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
         }
@@ -256,18 +256,18 @@ namespace MSTestSdkTest
     [ArgumentsProvider(nameof(RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data))]
     public async Task RunTests_With_MSTestRunner_Standalone_Enable_Default_Extensions(string multiTfm, BuildConfiguration buildConfiguration, bool enableDefaultExtensions)
     {
-        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
                SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", enableDefaultExtensions ? string.Empty : "<TestingExtensionsProfile>None</TestingExtensionsProfile>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
         foreach (string tfm in multiTfm.Split(";"))
         {
-            var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
+            var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
             TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --report-trx");
             if (enableDefaultExtensions)
             {
@@ -283,14 +283,14 @@ namespace MSTestSdkTest
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
     public async Task Invalid_TestingProfile_Name_Should_Fail(string multiTfm, BuildConfiguration buildConfiguration)
     {
-        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
                SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", "<TestingExtensionsProfile>WrongName</TestingExtensionsProfile>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
         Assert.AreEqual(1, compilationResult.ExitCode);
         compilationResult.AssertOutputContains("Invalid value for property TestingExtensionsProfile. Valid values are 'Default', 'AllMicrosoft' and 'None'.");
     }
@@ -307,7 +307,7 @@ namespace MSTestSdkTest
                     return;
                 }
 
-                using TestAsset generator = await TestAsset.GenerateAssetAsync(
+                using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                     AssetName,
                     SingleTestSourceCode
                     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
@@ -317,10 +317,10 @@ namespace MSTestSdkTest
         <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
         """));
 
-                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"publish -r {RID} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"publish -r {RID} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
                 compilationResult.AssertOutputNotContains("warning");
                 compilationResult.AssertOutputContains("Generating native code");
-                var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments, verb: Verb.publish);
+                var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments, verb: Verb.publish);
                 TestHostResult testHostResult = await testHost.ExecuteAsync();
                 testHostResult.AssertExitCodeIs(ExitCodes.Success);
                 testHostResult.AssertOutputContainsSummary(0, 1, 0);
@@ -357,7 +357,12 @@ namespace MSTestSdkTest
         string exeOrDllName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? testHost.FullName
             : testHost.FullName + ".dll";
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {exeOrDllName}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false, warnAsError: false);
+        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
+            $"test {exeOrDllName}",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            failIfReturnValueIsNotZero: false,
+            warnAsError: false,
+            suppressPreviewDotNetMessage: false);
 
         // Ensure output contains the right platform banner
         dotnetTestResult.AssertOutputContains("VSTest version");
@@ -393,7 +398,11 @@ namespace MSTestSdkTest
         string exeOrDllName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? testHost.FullName
             : testHost.FullName + ".dll";
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {exeOrDllName}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false);
+        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
+            $"test {exeOrDllName}",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            warnAsError: false,
+            suppressPreviewDotNetMessage: false);
         Assert.AreEqual(0, dotnetTestResult.ExitCode);
         // Ensure output contains the right platform banner
         dotnetTestResult.AssertOutputContains("VSTest version");
