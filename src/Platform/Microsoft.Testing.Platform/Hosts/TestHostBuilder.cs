@@ -25,6 +25,7 @@ using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
@@ -182,11 +183,30 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         UnhandledExceptionsPolicy unhandledExceptionsPolicy = new(fastFailOnFailure: exitProcessOnUnhandledException);
         serviceProvider.AddService(unhandledExceptionsPolicy);
+        ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
+        TimeSpan? timeout = null;
+        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey) && commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
+        {
+            string arg = args[0];
+            int size = arg.Length;
+            if (!float.TryParse(arg[..(size - 1)], out float value))
+            {
+                throw new InvalidOperationException(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage);
+            }
+
+            timeout = char.ToLowerInvariant(arg[size - 1]) switch
+            {
+                'h' => (TimeSpan?)TimeSpan.FromHours(value),
+                'm' => (TimeSpan?)TimeSpan.FromMinutes(value),
+                's' => (TimeSpan?)TimeSpan.FromSeconds(value),
+                _ => throw new InvalidOperationException(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage),
+            };
+        }
 
         // Add the lifetime application implementation
         CTRLPlusCCancellationTokenSource testApplicationCancellationTokenSource = new(
             systemConsole,
-            loggingState.FileLoggerProvider?.CreateLogger(nameof(CTRLPlusCCancellationTokenSource)));
+            loggingState.FileLoggerProvider?.CreateLogger(nameof(CTRLPlusCCancellationTokenSource)), timeout);
         serviceProvider.AddService(testApplicationCancellationTokenSource, throwIfSameInstanceExit: true);
 
         // Add output display proxy, needed by command line manager.
@@ -237,7 +257,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         }
 
         // Register the server mode log forwarder if needed. We follow the console --diagnostic behavior.
-        ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
         if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && loggingState.FileLoggerProvider is not null)
         {
             ServerLoggerForwarderProvider serverLoggerProxy = new(loggingState.LogLevel, serviceProvider);

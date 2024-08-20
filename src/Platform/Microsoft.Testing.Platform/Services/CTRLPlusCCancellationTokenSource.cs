@@ -11,7 +11,7 @@ internal class CTRLPlusCCancellationTokenSource : ITestApplicationCancellationTo
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly ILogger? _logger;
 
-    public CTRLPlusCCancellationTokenSource(IConsole? console = null, ILogger? logger = null)
+    public CTRLPlusCCancellationTokenSource(IConsole? console = null, ILogger? logger = null, TimeSpan? timeout = null)
     {
         if (console is not null)
         {
@@ -19,6 +19,10 @@ internal class CTRLPlusCCancellationTokenSource : ITestApplicationCancellationTo
         }
 
         _logger = logger;
+        if (timeout is not null)
+        {
+            _cancellationTokenSource.CancelAfter((TimeSpan)timeout);
+        }
     }
 
     public CancellationToken CancellationToken
