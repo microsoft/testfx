@@ -130,8 +130,18 @@ public static class DotnetCli
         using DotnetMuxer dotnet = new(environmentVariables);
         int exitCode = await dotnet.ExecuteAsync(args, workingDirectory, timeoutInSeconds);
 
-        return exitCode != 0 && failIfReturnValueIsNotZero
-            ? throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}")
-            : new DotnetMuxerResult(args, exitCode, dotnet.StandardOutput, dotnet.StandardOutputLines, dotnet.StandardError, dotnet.StandardErrorLines);
+        if (exitCode != 0 && failIfReturnValueIsNotZero)
+        {
+            throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}");
+        }
+
+        if (dotnet.StandardOutput.Contains("error MSB4166: Child node")
+            && dotnet.StandardOutput.Contains("exited prematurely. Shutting down."))
+        {
+            throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}");
+        }
+
+        // Return a result object and let caller decide what to do with it.
+        return new DotnetMuxerResult(args, exitCode, dotnet.StandardOutput, dotnet.StandardOutputLines, dotnet.StandardError, dotnet.StandardErrorLines);
     }
 }

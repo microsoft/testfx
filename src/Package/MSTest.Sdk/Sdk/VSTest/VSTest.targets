@@ -10,7 +10,7 @@
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' != '' " Text="'EnableMicrosoftTestingExtensionsTrxReport' is not supported by VSTest." />
     <Error Condition=" '$(EnableMSTestRunner)' == 'true' " Text="'EnableMSTestRunner' cannot be combined with 'UseVSTest'." />
     <Error Condition=" '$(TestingExtensionsProfile)' != '' " Text="'TestingExtensionsProfile' is not supported by VSTest." />
-    <Error Condition=" '$(TestingPlatformDotnetTestSupport)' != '' " Text="'TestingPlatformDotnetTestSupport' is not supported by VSTest." />
+    <Error Condition=" '$(TestingPlatformDotnetTestSupport)' == 'true' " Text="'TestingPlatformDotnetTestSupport' is not supported by VSTest." />
   </Target>
 
   <ItemGroup>
