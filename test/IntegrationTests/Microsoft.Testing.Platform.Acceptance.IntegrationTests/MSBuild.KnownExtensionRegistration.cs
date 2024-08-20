@@ -18,38 +18,36 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase
 
     [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
     public async Task Microsoft_Testing_Platform_Extensions_ShouldBe_Correctly_Registered(string tfm, BuildConfiguration compilationMode, Verb verb)
-        => await RetryHelper.RetryAsync(
-            async () =>
-            {
-                TestAsset testAsset = await TestAsset.GenerateAssetAsync(
-                    nameof(Microsoft_Testing_Platform_Extensions_ShouldBe_Correctly_Registered),
-                    SourceCode
-                    .PatchCodeWithReplace("$TargetFrameworks$", tfm)
-                    .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                    .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
-                string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
-                await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-                await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+    {
+        TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            nameof(Microsoft_Testing_Platform_Extensions_ShouldBe_Correctly_Registered),
+            SourceCode
+            .PatchCodeWithReplace("$TargetFrameworks$", tfm)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+        string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
+        await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
-                var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
-                TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
-                testHostResult.AssertOutputContains("--crashdump");
-                testHostResult.AssertOutputContains("--report-trx");
-                testHostResult.AssertOutputContains("--retry-failed-tests");
-                testHostResult.AssertOutputContains("--hangdump");
+        var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
+        testHostResult.AssertOutputContains("--crashdump");
+        testHostResult.AssertOutputContains("--report-trx");
+        testHostResult.AssertOutputContains("--retry-failed-tests");
+        testHostResult.AssertOutputContains("--hangdump");
 
-                SL.Build binLog = SL.Serialization.Read(binlogFile);
-                SL.Target generateAutoRegisteredExtensions = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateAutoRegisteredExtensions");
-                SL.Task testingPlatformAutoRegisteredExtensions = generateAutoRegisteredExtensions.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformAutoRegisteredExtensions");
-                SL.Message generatedSource = testingPlatformAutoRegisteredExtensions.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("AutoRegisteredExtensions source:"));
+        SL.Build binLog = SL.Serialization.Read(binlogFile);
+        SL.Target generateAutoRegisteredExtensions = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateAutoRegisteredExtensions");
+        SL.Task testingPlatformAutoRegisteredExtensions = generateAutoRegisteredExtensions.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformAutoRegisteredExtensions");
+        SL.Message generatedSource = testingPlatformAutoRegisteredExtensions.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("AutoRegisteredExtensions source:"));
 
-                Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
-                Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.HangDump.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
-                Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.HotReload.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
-                Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.Retry.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
-                Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.Telemetry.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
-                Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.TrxReport.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
-            }, 3, TimeSpan.FromSeconds(5));
+        Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
+        Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.HangDump.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
+        Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.HotReload.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
+        Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.Retry.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
+        Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.Telemetry.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
+        Assert.IsTrue(generatedSource.Text.Contains("Microsoft.Testing.Extensions.TrxReport.TestingPlatformBuilderHook.AddExtensions"), generatedSource.Text);
+    }
 
     private const string SourceCode = """
 #file MSBuildTests.csproj
