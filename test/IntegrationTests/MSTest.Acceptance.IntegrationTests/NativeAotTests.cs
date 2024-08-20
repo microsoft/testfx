@@ -13,7 +13,6 @@ public class NativeAotTests : AcceptanceTestBase
     public NativeAotTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
         : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
-    [NonTest]
     public async Task NativeAotTests_WillRunWithExitCodeZero()
     {
         string testCode = """
@@ -30,8 +29,8 @@ public class NativeAotTests : AcceptanceTestBase
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="MSTest.Engine" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
-        <PackageReference Include="MSTest.SourceGeneration" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
+        <PackageReference Include="MSTest.Engine" Version="$MSTestEngineVersion$" />
+        <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestEngineVersion$" />
         <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
     </ItemGroup>
 </Project>
@@ -41,6 +40,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
+using Microsoft.Testing.Framework;
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities;
@@ -94,7 +94,8 @@ public class UnitTest1
            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent.Arguments)
-           .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
+           .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+           .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion),
            addPublicFeeds: true);
 
         await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
@@ -102,7 +103,9 @@ public class UnitTest1
             $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         compilationResult.AssertOutputContains("Generating native code");
-        string publishFolder = compilationResult.StandardOutputLines.Last().Split(" -> ")[1];
+        string publishFolder = compilationResult.StandardOutputLines
+            .Last(x => x.Contains("->") && x.Contains("publish"))
+            .Split(" -> ")[1];
         var commandLine = new TestInfrastructure.CommandLine();
 
         int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(Path.Combine(publishFolder, "NativeAotTests.exe"));

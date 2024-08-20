@@ -61,10 +61,12 @@ public class UnitTest1
         MSTestVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestVersion");
         MicrosoftTestingPlatformVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestVersion");
         MicrosoftTestingEnterpriseExtensionsVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.");
+        MSTestEngineVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.Engine");
 #else
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
         MicrosoftTestingEnterpriseExtensionsVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MicrosoftTestingInternalFrameworkVersion");
+        MSTestEngineVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestEngineVersion");
 #endif
     }
 
@@ -76,6 +78,8 @@ public class UnitTest1
     internal static string RID { get; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
 
     public static string MSTestVersion { get; private set; }
+
+    public static string MSTestEngineVersion { get; private set; }
 
     public static string MicrosoftNETTestSdkVersion { get; private set; }
 
