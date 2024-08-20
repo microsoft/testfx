@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.InteropServices;
 using System.Text;
 
 using Microsoft.Testing.Platform.Helpers;
@@ -59,8 +60,11 @@ public sealed class TerminalTestReporterTests : TestBase
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
         terminalReporter.TestExecutionStarted(startTime, 1);
         string assembly = @"C:\work\assembly.dll";
-        string targetFramework = ".NET 8.0.0";
-        string architecture = "win-x64";
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+
+        string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
+        string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
 
         terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
@@ -72,15 +76,15 @@ public sealed class TerminalTestReporterTests : TestBase
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
             errorMessage: null, errorStackTrace: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
-            errorMessage: "Tests failed", errorStackTrace: @"   at FailingTest() in C:\work\codefile.cs:line 10", expected: "ABC", actual: "DEF");
-        terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, testName: null, @"C:\work\artifact1.txt");
-        terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, testName: null, @"C:\work\artifact2.txt");
+            errorMessage: "Tests failed", errorStackTrace: @$"   at FailingTest() in {folder}codefile.cs:line 10", expected: "ABC", actual: "DEF");
+        terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact1.txt");
+        terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact2.txt");
         terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture);
         terminalReporter.TestExecutionCompleted(endTime);
 
         string output = stringBuilderConsole.Output;
 
-        string expected = """
+        string expected = $"""
             ␛[32;1mpassed␛[m PassedTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
             ␛[33;1mskipped␛[m SkippedTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
             ␛[31;1mfailed (canceled)␛[m TimedoutTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
@@ -92,14 +96,14 @@ public sealed class TerminalTestReporterTests : TestBase
               Actual
                 DEF␛[m
             ␛[31;1m  Stack Trace:
-                ␛[90;1mat ␛[m␛[91;1mFailingTest()␛[90;1m in ␛[90;1m␛]8;;file:///C:/work/codefile.cs␛\C:\work\codefile.cs:10␛]8;;␛\␛[m
+                ␛[90;1mat ␛[m␛[91;1mFailingTest()␛[90;1m in ␛[90;1m␛]8;;file:///{folder}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m
 
 
               Out of process file artifacts produced:
-                - ␛[90;1m␛]8;;file:///C:/work/artifact1.txt␛\C:\work\artifact1.txt␛]8;;␛\␛[m
+                - ␛[90;1m␛]8;;file:///{folder}artifact1.txt␛\{folder}artifact1.txt␛]8;;␛\␛[m
               In process file artifacts produced:
-                - ␛[90;1m␛]8;;file:///C:/work/artifact2.txt␛\C:\work\artifact2.txt␛]8;;␛\␛[m
-            ␛[91;1mTest run summary: Failed!␛[90;1m - ␛[m␛[90;1m␛]8;;file:///C:/work␛\C:\work\assembly.dll␛]8;;␛\␛[m (.NET 8.0.0|win-x64)
+                - ␛[90;1m␛]8;;file:///{folder}artifact2.txt␛\{folder}artifact2.txt␛]8;;␛\␛[m
+            ␛[91;1mTest run summary: Failed!␛[90;1m - ␛[m␛[90;1m␛]8;;file:///{folderNoSlash}␛\{folder}assembly.dll␛]8;;␛\␛[m (net8.0|x64)
             ␛[m  total: 5
             ␛[91;1m  failed: 1
             ␛[m  succeeded: 1
