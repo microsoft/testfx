@@ -19,7 +19,6 @@ public class HangDumpTests(ITestExecutionContext testExecutionContext) : TestBas
 {
     private HangDumpCommandLineProvider GetProvider()
     {
-        Thread.Sleep(10000);
         var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
         _ = testApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns("FullPath");
         return new(new HangDumpConfiguration(
@@ -30,7 +29,6 @@ public class HangDumpTests(ITestExecutionContext testExecutionContext) : TestBas
 
     public async Task IsValid_If_Timeout_Value_Has_CorrectValue()
     {
-        Thread.Sleep(10000);
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
         CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTimeoutOptionName);
 
@@ -41,7 +39,6 @@ public class HangDumpTests(ITestExecutionContext testExecutionContext) : TestBas
 
     public async Task IsInvalid_If_Timeout_Value_Has_IncorrectValue()
     {
-        Thread.Sleep(10000);
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
         CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTimeoutOptionName);
 
