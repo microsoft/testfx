@@ -503,6 +503,11 @@
         <target state="translated">Případné PID nadřazeného hostitelského řadiče testů</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
+        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] and 'value' is float</source>
+        <target state="new">'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] and 'value' is float</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
         <source>Bridge to VSTest APIs</source>
         <target state="translated">Most k rozhraním API VSTest</target>

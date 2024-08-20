@@ -954,6 +954,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;timeout&apos; option should have one argument as string in the format &lt;value&gt;[h|m|s] and &apos;value&apos; is float.
+        /// </summary>
+        internal static string PlatformCommandLineTimeoutArgumentErrorMessage {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineTimeoutArgumentErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Bridge to VSTest APIs.
         /// </summary>
         internal static string PlatformCommandLineVSTestAdapterModeOptionDescription {

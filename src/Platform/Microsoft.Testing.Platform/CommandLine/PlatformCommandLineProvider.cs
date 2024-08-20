@@ -115,6 +115,16 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitSingleArgument, ExitOnProcessExitOptionKey));
         }
 
+        if (commandOption.Name == TimeoutOptionKey)
+        {
+            string arg = arguments[0];
+            int size = arg.Length;
+            if ((char.ToLowerInvariant(arg[size - 1]) != 'h' && char.ToLowerInvariant(arg[size - 1]) != 'm' && char.ToLowerInvariant(arg[size - 1]) != 's') || !float.TryParse(arg[..(size - 1)], out float _))
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage);
+            }
+        }
+
         // Now validate the minimum expected tests option
         return IsMinimumExpectedTestsOptionValidAsync(commandOption, arguments);
     }

@@ -602,4 +602,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="TerminalOutputOptionInvalidArgument" xml:space="preserve">
     <value>--output expects a single parameter with value 'Normal' or 'Detailed'.</value>
   </data>
+  <data name="PlatformCommandLineTimeoutArgumentErrorMessage" xml:space="preserve">
+    <value>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] and 'value' is float</value>
+  </data>
 </root>
