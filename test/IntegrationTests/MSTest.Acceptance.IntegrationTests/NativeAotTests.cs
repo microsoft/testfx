@@ -104,12 +104,10 @@ public class UnitTest1
             $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         compilationResult.AssertOutputContains("Generating native code");
-        string publishFolder = compilationResult.StandardOutputLines
-            .Last(x => x.Contains("->") && x.Contains("publish"))
-            .Split(" -> ")[1];
-        var commandLine = new TestInfrastructure.CommandLine();
 
-        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(Path.Combine(publishFolder, "NativeAotTests.exe"));
-        Assert.AreEqual(0, exitCode);
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent.Arguments, RID, Verb.publish);
+
+        TestHostResult result = await testHost.ExecuteAsync();
+        result.AssertExitCodeIs(0);
     }
 }
