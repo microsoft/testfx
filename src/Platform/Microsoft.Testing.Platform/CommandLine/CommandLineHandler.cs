@@ -229,6 +229,8 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
     public bool IsHelpInvoked() => IsOptionSet(PlatformCommandLineProvider.HelpOptionKey) || IsOptionSet(PlatformCommandLineProvider.HelpOptionQuestionMark);
 
+    public bool IsTimeOutInvoked() => IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey);
+
     public bool IsInfoInvoked() => IsOptionSet(PlatformCommandLineProvider.InfoOptionKey);
 
     public bool IsDotNetTestPipeInvoked() => IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey);

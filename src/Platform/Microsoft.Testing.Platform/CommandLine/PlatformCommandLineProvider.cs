@@ -15,6 +15,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
 {
     public const string HelpOptionKey = "help";
     public const string HelpOptionQuestionMark = "?";
+    public const string TimeoutOptionKey = "timeout";
     public const string InfoOptionKey = "info";
     public const string DiagnosticOptionKey = "diagnostic";
     public const string DiagnosticOutputFilePrefixOptionKey = "diagnostic-output-fileprefix";
@@ -46,6 +47,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         // Visible options
         new(HelpOptionKey, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         new(InfoOptionKey, PlatformResources.PlatformCommandLineInfoOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+        new(TimeoutOptionKey, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ResultDirectoryOptionKey, PlatformResources.PlatformCommandLineResultDirectoryOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(DiagnosticOptionKey, PlatformResources.PlatformCommandLineDiagnosticOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         new(DiagnosticOutputFilePrefixOptionKey, PlatformResources.PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
