@@ -28,6 +28,7 @@ public abstract class AcceptanceTestBase : TestBase
     $OutputType$
     $EnableMSTestRunner$
     $Extra$
+    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

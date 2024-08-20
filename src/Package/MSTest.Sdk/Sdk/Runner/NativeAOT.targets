@@ -23,6 +23,15 @@
                       Version="$(MSTestEngineVersion)" VersionOverride="$(MSTestEngineVersion)" />
     <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest"
                       Version="$(MSTestEngineVersion)" VersionOverride="$(MSTestEngineVersion)" />
+    <!--
+      Most of the times this dependency is not required but we leave the opportunity to align the version of the platform being used.
+      At the moment this is mainly used for our acceptance tests because the locally/CI built version ends with -dev or -ci which is
+      considered by NuGet resolver as older than any -preview version. Using this property we can ensure the local version is being
+      selected.
+      -->
+    <PackageReference Include="Microsoft.Testing.Platform" Sdk="MSTest"
+                      Version="$(MicrosoftTestingPlatformVersion)" VersionOverride="$(MicrosoftTestingPlatformVersion)"
+                      Condition=" '$(EnableMicrosoftTestingPlatform)' == 'true' " />
   </ItemGroup>
 
   <!-- Extensions -->
