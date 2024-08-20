@@ -954,7 +954,7 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;timeout&apos; option should have one argument as string in the format &lt;value&gt;[h|m|s] and &apos;value&apos; is float.
+        ///   Looks up a localized string similar to &apos;timeout&apos; option should have one argument as string in the format &lt;value&gt;[h|m|s] where &apos;value&apos; is float.
         /// </summary>
         internal static string PlatformCommandLineTimeoutArgumentErrorMessage {
             get {
