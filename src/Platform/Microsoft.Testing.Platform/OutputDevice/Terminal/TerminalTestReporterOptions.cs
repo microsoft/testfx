@@ -41,4 +41,9 @@ internal sealed class TerminalTestReporterOptions
     /// Gets a value indicating whether we should use ANSI escape codes or disable them. When true the capabilities of the console are autodetected.
     /// </summary>
     public bool UseAnsi { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether we should force ANSI escape codes. When true the ANSI is used without auto-detecting capabilities of the console. This is needed only for testing.
+    /// </summary>
+    internal /* for testing */ bool? ForceAnsi { get; init; }
 }
