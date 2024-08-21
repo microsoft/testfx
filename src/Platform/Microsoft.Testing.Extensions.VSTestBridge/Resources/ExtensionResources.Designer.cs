@@ -61,6 +61,15 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid .runsettings file, &apos;&lt;RunSettings&gt;&apos; attribute is missing.
+        /// </summary>
+        internal static string MissingRunSettingsAttribute {
+            get {
+                return ResourceManager.GetString("MissingRunSettingsAttribute", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to runsettings file &apos;{0}&apos; cannot be read.
         /// </summary>
         internal static string RunsettingsFileCannotBeRead {
@@ -111,6 +120,33 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Resources {
         internal static string TestRunParameterOptionDescription {
             get {
                 return ResourceManager.GetString("TestRunParameterOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Runsettings attribute &apos;{0}&apos; is not supported by Microsoft.Testing.Platform and will be ignored.
+        /// </summary>
+        internal static string UnsupportedRunconfigurationSetting {
+            get {
+                return ResourceManager.GetString("UnsupportedRunconfigurationSetting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored.
+        /// </summary>
+        internal static string UnsupportedRunsettingsDatacollectors {
+            get {
+                return ResourceManager.GetString("UnsupportedRunsettingsDatacollectors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored.
+        /// </summary>
+        internal static string UnsupportedRunsettingsLoggers {
+            get {
+                return ResourceManager.GetString("UnsupportedRunsettingsLoggers", resourceCulture);
             }
         }
         

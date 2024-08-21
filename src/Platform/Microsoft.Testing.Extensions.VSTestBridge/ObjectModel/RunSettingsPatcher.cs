@@ -6,6 +6,7 @@
 using System.Xml.Linq;
 
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
+using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -39,7 +40,7 @@ internal static class RunSettingsPatcher
         var document = XDocument.Parse(runSettingsXml);
         if (document.Element("RunSettings") is not { } runSettingsElement)
         {
-            throw new InvalidOperationException("Invalid runsettings, <RunSettings> section is missing.");
+            throw new InvalidOperationException(ExtensionResources.MissingRunSettingsAttribute);
         }
 
         bool isPatchingCommentAdded = false;

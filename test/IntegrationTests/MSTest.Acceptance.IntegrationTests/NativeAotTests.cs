@@ -99,10 +99,13 @@ public class UnitTest1
            .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion),
            addPublicFeeds: true);
 
-        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync(
+            $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
-            _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            retryCount: 10);
         compilationResult.AssertOutputContains("Generating native code");
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent.Arguments, RID, Verb.publish);
