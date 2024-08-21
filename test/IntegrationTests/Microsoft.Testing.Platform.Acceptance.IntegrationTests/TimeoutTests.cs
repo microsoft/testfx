@@ -57,7 +57,7 @@ public class TimeoutTests : AcceptanceTestBase
     public async Task TimeoutWithValidArg_WithSecondAsSuffix_WithTestNotTimeOut_BuildPasses(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 20s");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 12.5s");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
