@@ -55,30 +55,39 @@ public class TimeoutTests : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TimeoutWithValidArg_WithSecondAsSuffix_WithTestNotTimeOut_BuildPasses(string tfm)
+    public async Task TimeoutWithValidArg_WithSecondAsSuffix_WithTestNotTimeOut_OutputDoesNotContainCancelingMessage(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 12.5s");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        string output = testHostResult.StandardOutput;
+        Assert.IsFalse(output.Contains("Canceling the test session"));
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TimeoutWithValidArg_WithMinuteAsSuffix_WithTestNotTimeOut_BuildPasses(string tfm)
+    public async Task TimeoutWithValidArg_WithMinuteAsSuffix_WithTestNotTimeOut_OutputDoesNotContainCancelingMessage(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1m");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        string output = testHostResult.StandardOutput;
+        Assert.IsFalse(output.Contains("Canceling the test session"));
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TimeoutWithValidArg_WithHourAsSuffix_WithTestNotTimeOut_BuildPasses(string tfm)
+    public async Task TimeoutWithValidArg_WithHourAsSuffix_WithTestNotTimeOut_OutputDoesNotContainCancelingMessage(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1h");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        string output = testHostResult.StandardOutput;
+        Assert.IsFalse(output.Contains("Canceling the test session"));
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
