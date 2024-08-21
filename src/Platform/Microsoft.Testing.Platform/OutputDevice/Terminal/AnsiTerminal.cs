@@ -16,15 +16,27 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// </summary>
 internal sealed class AnsiTerminal : ITerminal
 {
+    /// <summary>
+    /// File extensions that we will link to directly, all other files
+    /// are linked to their directory, to avoid opening dlls, or executables.
+    /// </summary>
     private static readonly string[] KnownFileExtensions = new string[]
     {
+        // code files
         ".cs",
         ".vb",
         ".fs",
-        ".trx",
-        ".coverage",
+        // logs
         ".log",
         ".txt",
+        // reports
+        ".coverage",
+        ".ctrf",
+        ".html",
+        ".junit",
+        ".nunit",
+        ".trx",
+        ".xml",
     };
 
     private readonly IConsole _console;

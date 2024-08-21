@@ -67,12 +67,12 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
         IFileSystem fileSystem = serviceProvider.GetFileSystem();
         IClientInfo clientInfo = serviceProvider.GetClientInfo();
 
-        ICommandLineOptions commandLineOptions = serviceProvider.GetRequiredService<ICommandLineOptions>();
-        RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory);
-        DiscoveryContextAdapter discoveryContext = new(commandLineOptions, runSettings);
-
         IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
         MessageLoggerAdapter messageLogger = new(loggerFactory, outputDevice, adapterExtension);
+
+        ICommandLineOptions commandLineOptions = serviceProvider.GetRequiredService<ICommandLineOptions>();
+        RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory, messageLogger);
+        DiscoveryContextAdapter discoveryContext = new(commandLineOptions, runSettings);
 
         ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
         IMessageBus messageBus = serviceProvider.GetRequiredService<IMessageBus>();
