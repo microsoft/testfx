@@ -313,7 +313,10 @@ namespace MSTestSdkTest
         """),
             addPublicFeeds: true);
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"publish -r {RID} -f {TargetFrameworks.NetCurrent.Arguments} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"publish -r {RID} -f {TargetFrameworks.NetCurrent.Arguments} {testAsset.TargetAssetPath}",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            retryCount: 10);
         compilationResult.AssertOutputNotContains("warning");
         compilationResult.AssertOutputContains("Generating native code");
         var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments, verb: Verb.publish);
