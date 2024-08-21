@@ -45,12 +45,13 @@ public class TimeoutTests : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TimeoutWithValidArg_WithTestTimeOut_BuildFails(string tfm)
+    public async Task TimeoutWithValidArg_WithTestTimeOut_OutputContainsCancelingMessage(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1s");
 
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
+        testHostResult.StandardOutput.Contains("Canceling the test session");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
