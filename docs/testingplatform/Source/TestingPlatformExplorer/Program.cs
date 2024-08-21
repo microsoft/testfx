@@ -3,6 +3,7 @@
 
 using System.Reflection;
 
+using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Services;
@@ -30,15 +31,19 @@ testApplicationBuilder.TestHost.AddDataConsumer(serviceProvider
     => new DisplayDataConsumer(serviceProvider.GetOutputDevice()));
 
 // Out-of-process extensions
-testApplicationBuilder.TestHostControllers.AddEnvironmentVariableProvider(_
-    => new SetEnvironmentVariableForTestHost());
-testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider =>
-    new MonitorTestHost(serviceProvider.GetOutputDevice()));
+//testApplicationBuilder.TestHostControllers.AddEnvironmentVariableProvider(_
+//    => new SetEnvironmentVariableForTestHost());
+//testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider =>
+//    new MonitorTestHost(serviceProvider.GetOutputDevice()));
 
 // In-process composite extension SessionLifeTimeHandler+DataConsumer
 CompositeExtensionFactory<DisplayCompositeExtensionFactorySample> compositeExtensionFactory = new(serviceProvider => new DisplayCompositeExtensionFactorySample(serviceProvider.GetOutputDevice()));
 testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(compositeExtensionFactory);
 testApplicationBuilder.TestHost.AddDataConsumer(compositeExtensionFactory);
+
+// Register public extensions
+// Trx
+testApplicationBuilder.AddTrxReportProvider();
 
 using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();
