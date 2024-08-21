@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.UnitTests;
@@ -68,5 +69,11 @@ public sealed class CommandLineTests : TestBase
         yield return (21, ["--option1:a=a"], new CommandLineParseResult(null, new List<OptionRecord> { new("option1", ["a=a"]) }.ToArray(), [], []));
         yield return (22, ["--option1:a:a"], new CommandLineParseResult(null, new List<OptionRecord> { new("option1", ["a:a"]) }.ToArray(), [], []));
         yield return (23, ["--option1:a:a", "--option1:a=a"], new CommandLineParseResult(null, new List<OptionRecord> { new("option1", ["a:a"]), new("option1", ["a=a"]) }.ToArray(), [], []));
+    }
+
+    public void CommandLineOptionWithNumber_IsSupported()
+    {
+        _ = new CommandLineOption("123", "sample", ArgumentArity.ZeroOrOne, false);
+        _ = new CommandLineOption("1aa1", "sample", ArgumentArity.ZeroOrOne, false);
     }
 }
