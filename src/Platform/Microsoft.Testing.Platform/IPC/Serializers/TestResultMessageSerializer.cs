@@ -28,9 +28,10 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
     |---Test SessionUid Size---| (4 bytes)
     |---Test SessionUid Value---| (n bytes)
 
-    |---Test ModulePath Id---| 1 (2 bytes)
-    |---Test ModulePath Size---| (4 bytes)
-    |---Test ModulePath Value---| (n bytes)
+
+    |---Test ExecutionId Id---| 1 (2 bytes)
+    |---Test ExecutionId Size---| (4 bytes)
+    |---Test ExecutionId Value---| (n bytes)
 */
 
 internal sealed class SuccessfulTestResultMessageSerializer : BaseSerializer, INamedPipeSerializer
@@ -41,10 +42,10 @@ internal sealed class SuccessfulTestResultMessageSerializer : BaseSerializer, IN
     {
         string? uid = null;
         string? displayName = null;
-        string? state = null;
+        byte? state = null;
         string? reason = null;
         string? sessionUid = null;
-        string? modulePath = null;
+        string? executionId = null;
 
         ushort fieldCount = ReadShort(stream);
 
@@ -64,7 +65,7 @@ internal sealed class SuccessfulTestResultMessageSerializer : BaseSerializer, IN
                     break;
 
                 case SuccessfulTestResultMessageFieldsId.State:
-                    state = ReadString(stream);
+                    state = ReadByte(stream);
                     break;
 
                 case SuccessfulTestResultMessageFieldsId.Reason:
@@ -75,8 +76,8 @@ internal sealed class SuccessfulTestResultMessageSerializer : BaseSerializer, IN
                     sessionUid = ReadString(stream);
                     break;
 
-                case SuccessfulTestResultMessageFieldsId.ModulePath:
-                    modulePath = ReadString(stream);
+                case SuccessfulTestResultMessageFieldsId.ExecutionId:
+                    executionId = ReadString(stream);
                     break;
 
                 default:
@@ -86,7 +87,7 @@ internal sealed class SuccessfulTestResultMessageSerializer : BaseSerializer, IN
             }
         }
 
-        return new SuccessfulTestResultMessage(uid, displayName, state, reason, sessionUid, modulePath);
+        return new SuccessfulTestResultMessage(uid, displayName, state, reason, sessionUid, executionId);
     }
 
     public void Serialize(object objectToSerialize, Stream stream)
@@ -102,7 +103,7 @@ internal sealed class SuccessfulTestResultMessageSerializer : BaseSerializer, IN
         WriteField(stream, SuccessfulTestResultMessageFieldsId.State, testResultMessage.State);
         WriteField(stream, SuccessfulTestResultMessageFieldsId.Reason, testResultMessage.Reason);
         WriteField(stream, SuccessfulTestResultMessageFieldsId.SessionUid, testResultMessage.SessionUid);
-        WriteField(stream, SuccessfulTestResultMessageFieldsId.ModulePath, testResultMessage.ModulePath);
+        WriteField(stream, SuccessfulTestResultMessageFieldsId.ExecutionId, testResultMessage.ExecutionId);
     }
 
     private static ushort GetFieldCount(SuccessfulTestResultMessage testResultMessage) =>
@@ -111,7 +112,7 @@ internal sealed class SuccessfulTestResultMessageSerializer : BaseSerializer, IN
         (testResultMessage.State is null ? 0 : 1) +
         (testResultMessage.Reason is null ? 0 : 1) +
         (testResultMessage.SessionUid is null ? 0 : 1) +
-        (testResultMessage.ModulePath is null ? 0 : 1));
+        (testResultMessage.ExecutionId is null ? 0 : 1));
 }
 
 /*
@@ -145,9 +146,9 @@ internal sealed class SuccessfulTestResultMessageSerializer : BaseSerializer, IN
     |---Test SessionUid Size---| (4 bytes)
     |---Test SessionUid Value---| (n bytes)
 
-    |---Test ModulePath Id---| 1 (2 bytes)
-    |---Test ModulePath Size---| (4 bytes)
-    |---Test ModulePath Value---| (n bytes)
+    |---Test ExecutionId Id---| 1 (2 bytes)
+    |---Test ExecutionId Size---| (4 bytes)
+    |---Test ExecutionId Value---| (n bytes)
 */
 
 internal sealed class FailedTestResultMessageSerializer : BaseSerializer, INamedPipeSerializer
@@ -158,12 +159,12 @@ internal sealed class FailedTestResultMessageSerializer : BaseSerializer, INamed
     {
         string? uid = null;
         string? displayName = null;
-        string? state = null;
+        byte? state = null;
         string? reason = null;
         string? errorMessage = null;
         string? errorStackTrace = null;
         string? sessionUid = null;
-        string? modulePath = null;
+        string? executionId = null;
 
         ushort fieldCount = ReadShort(stream);
 
@@ -183,7 +184,7 @@ internal sealed class FailedTestResultMessageSerializer : BaseSerializer, INamed
                     break;
 
                 case FailedTestResultMessageFieldsId.State:
-                    state = ReadString(stream);
+                    state = ReadByte(stream);
                     break;
 
                 case FailedTestResultMessageFieldsId.Reason:
@@ -202,8 +203,8 @@ internal sealed class FailedTestResultMessageSerializer : BaseSerializer, INamed
                     sessionUid = ReadString(stream);
                     break;
 
-                case FailedTestResultMessageFieldsId.ModulePath:
-                    modulePath = ReadString(stream);
+                case FailedTestResultMessageFieldsId.ExecutionId:
+                    executionId = ReadString(stream);
                     break;
 
                 default:
@@ -213,7 +214,7 @@ internal sealed class FailedTestResultMessageSerializer : BaseSerializer, INamed
             }
         }
 
-        return new FailedTestResultMessage(uid, displayName, state, reason, errorMessage, errorStackTrace, sessionUid, modulePath);
+        return new FailedTestResultMessage(uid, displayName, state, reason, errorMessage, errorStackTrace, sessionUid, executionId);
     }
 
     public void Serialize(object objectToSerialize, Stream stream)
@@ -231,7 +232,7 @@ internal sealed class FailedTestResultMessageSerializer : BaseSerializer, INamed
         WriteField(stream, FailedTestResultMessageFieldsId.ErrorMessage, testResultMessage.ErrorMessage);
         WriteField(stream, FailedTestResultMessageFieldsId.ErrorStackTrace, testResultMessage.ErrorStackTrace);
         WriteField(stream, FailedTestResultMessageFieldsId.SessionUid, testResultMessage.SessionUid);
-        WriteField(stream, FailedTestResultMessageFieldsId.ModulePath, testResultMessage.ModulePath);
+        WriteField(stream, FailedTestResultMessageFieldsId.ExecutionId, testResultMessage.ExecutionId);
     }
 
     private static ushort GetFieldCount(FailedTestResultMessage testResultMessage) =>
@@ -242,5 +243,5 @@ internal sealed class FailedTestResultMessageSerializer : BaseSerializer, INamed
         (testResultMessage.ErrorMessage is null ? 0 : 1) +
         (testResultMessage.ErrorStackTrace is null ? 0 : 1) +
         (testResultMessage.SessionUid is null ? 0 : 1) +
-        (testResultMessage.ModulePath is null ? 0 : 1));
+        (testResultMessage.ExecutionId is null ? 0 : 1));
 }

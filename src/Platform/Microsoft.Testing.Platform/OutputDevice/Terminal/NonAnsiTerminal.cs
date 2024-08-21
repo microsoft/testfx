@@ -173,9 +173,9 @@ internal sealed class NonAnsiTerminal : ITerminal
 
             string durationString = HumanReadableDurationFormatter.Render(p.Stopwatch.Elapsed);
 
-            int passed = p.Passed;
-            int failed = p.Failed;
-            int skipped = p.Skipped;
+            int passed = p.PassedTests;
+            int failed = p.FailedTests;
+            int skipped = p.SkippedTests;
 
             // Use just ascii here, so we don't put too many restrictions on fonts needing to
             // properly show unicode, or logs being saved in particular encoding.

@@ -32,7 +32,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     internal Func<IStopwatch> CreateStopwatch { get; set; } = SystemStopwatch.StartNew;
 
-    private readonly Dictionary<string, TestModule> _assemblies = new();
+    private readonly Dictionary<string, TestProgressState> _assemblies = new();
 
     private readonly List<TestRunArtifact> _artifacts = new();
 
@@ -154,19 +154,19 @@ internal sealed partial class TerminalTestReporter : IDisposable
         GetOrAddAssemblyRun(assembly, targetFramework, architecture);
     }
 
-    private TestModule GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture)
+    private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture)
     {
         string key = $"{assembly}|{targetFramework}|{architecture}";
-        if (_assemblies.TryGetValue(key, out TestModule? asm))
+        if (_assemblies.TryGetValue(key, out TestProgressState? asm))
         {
             return asm;
         }
 
         IStopwatch sw = CreateStopwatch();
-        var progress = new TestProgressState(0, 0, 0, Path.GetFileName(assembly), targetFramework, architecture, sw, detail: null);
-        int slotIndex = _terminalWithProgress.AddWorker(progress);
+        var assemblyRun = new TestProgressState(assembly, targetFramework, architecture, sw);
+        int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
+        assemblyRun.SlotIndex = slotIndex;
 
-        var assemblyRun = new TestModule(slotIndex, assembly, targetFramework, architecture, sw);
         _assemblies.Add(key, assemblyRun);
 
         return assemblyRun;
@@ -253,18 +253,18 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         if (!_options.ShowAssembly && _assemblies.Count == 1)
         {
-            TestModule testModule = _assemblies.Values.Single();
+            TestProgressState testProgressState = _assemblies.Values.Single();
             terminal.SetColor(TerminalColor.Gray);
             terminal.Append(" - ");
             terminal.ResetColor();
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, testModule.Assembly, testModule.TargetFramework, testModule.Architecture);
+            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, testProgressState.Assembly, testProgressState.TargetFramework, testProgressState.Architecture);
         }
 
         terminal.AppendLine();
 
         if (_options.ShowAssembly && _assemblies.Count > 1)
         {
-            foreach (TestModule assemblyRun in _assemblies.Values)
+            foreach (TestProgressState assemblyRun in _assemblies.Values)
             {
                 terminal.Append(SingleIndentation);
                 AppendAssemblySummary(assemblyRun, terminal);
@@ -377,7 +377,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? expected,
         string? actual)
     {
-        TestModule asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}"];
+        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}"];
 
         switch (outcome)
         {
@@ -407,8 +407,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 break;
         }
 
-        var update = new TestProgressState(asm.PassedTests, asm.FailedTests, asm.SkippedTests, Path.GetFileName(asm.Assembly), asm.TargetFramework, asm.Architecture, asm.Stopwatch, null);
-        _terminalWithProgress.UpdateWorker(asm.SlotIndex, update);
+        _terminalWithProgress.UpdateWorker(asm.SlotIndex);
         if (outcome != TestOutcome.Passed || _options.ShowPassedTests)
         {
             _terminalWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
@@ -636,7 +635,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     internal void AssemblyRunCompleted(string assembly, string? targetFramework, string? architecture)
     {
-        TestModule assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
+        TestProgressState assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         assemblyRun.Stopwatch.Stop();
 
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
@@ -647,7 +646,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
-    private static void AppendAssemblySummary(TestModule assemblyRun, ITerminal terminal)
+    private static void AppendAssemblySummary(TestProgressState assemblyRun, ITerminal terminal)
     {
         int failedTests = assemblyRun.FailedTests + assemblyRun.CanceledTests + assemblyRun.TimedOutTests;
         int warnings = 0;
@@ -698,7 +697,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string text)
     {
-        TestModule asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
+        TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddError(text);
 
         _terminalWithProgress.WriteToTerminal(terminal =>
@@ -711,7 +710,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     internal void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string text)
     {
-        TestModule asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
+        TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddWarning(text);
         _terminalWithProgress.WriteToTerminal(terminal =>
         {

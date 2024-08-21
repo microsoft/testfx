@@ -12,7 +12,7 @@ internal sealed class AnsiTerminalTestProgressFrame
 {
     private const int MaxColumn = 250;
 
-    private readonly (TestProgressState TestWorkerProgress, int DurationLength)[] _progressItems;
+    private readonly (TestProgressState TestProgressState, int DurationLength)[] _progressItems;
 
     public int Width { get; }
 
@@ -31,22 +31,22 @@ internal sealed class AnsiTerminalTestProgressFrame
         {
             if (status is not null)
             {
-                _progressItems[ProgressCount++].TestWorkerProgress = status;
+                _progressItems[ProgressCount++].TestProgressState = status;
             }
         }
     }
 
     public void AppendTestWorkerProgress(int i, AnsiTerminal terminal)
     {
-        TestProgressState p = _progressItems[i].TestWorkerProgress;
+        TestProgressState p = _progressItems[i].TestProgressState;
 
         string durationString = HumanReadableDurationFormatter.Render(p.Stopwatch.Elapsed);
 
         _progressItems[i].DurationLength = durationString.Length;
 
-        int passed = p.Passed;
-        int failed = p.Failed;
-        int skipped = p.Skipped;
+        int passed = p.PassedTests;
+        int failed = p.FailedTests;
+        int skipped = p.SkippedTests;
 
         string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
         terminal.Append('[');
@@ -128,10 +128,10 @@ internal sealed class AnsiTerminalTestProgressFrame
             // rather than deleting whole line and have the line flicker. Most commonly this will rewrite just the time part of the line.
             if (previousFrame.ProgressCount > i)
             {
-                if (previousFrame._progressItems[i].TestWorkerProgress == _progressItems[i].TestWorkerProgress)
+                if (previousFrame._progressItems[i].TestProgressState.LastUpdate != _progressItems[i].TestProgressState.LastUpdate)
                 {
                     // Same everything except time, AND same number of digits in time
-                    string durationString = HumanReadableDurationFormatter.Render(_progressItems[i].TestWorkerProgress.Stopwatch.Elapsed);
+                    string durationString = HumanReadableDurationFormatter.Render(_progressItems[i].TestProgressState.Stopwatch.Elapsed);
 
                     if (previousFrame._progressItems[i].DurationLength == durationString.Length)
                     {

@@ -5,7 +5,6 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.IPC;
@@ -13,12 +12,10 @@ namespace Microsoft.Testing.Platform.IPC;
 internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
     private readonly NamedPipeClient _dotnetTestPipeClient;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
 
-    public DotnetTestDataConsumer(NamedPipeClient dotnetTestPipeClient, ITestApplicationModuleInfo testApplicationModuleInfo)
+    public DotnetTestDataConsumer(NamedPipeClient dotnetTestPipeClient)
     {
         _dotnetTestPipeClient = dotnetTestPipeClient;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
     }
 
     public Type[] DataTypesConsumed => new[]
@@ -44,7 +41,7 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
         {
             case TestNodeUpdateMessage testNodeUpdateMessage:
 
-                GetTestNodeDetails(testNodeUpdateMessage, out string state, out string? reason, out string? errorMessage, out string? errorStackTrace);
+                GetTestNodeDetails(testNodeUpdateMessage, out byte? state, out string? reason, out string? errorMessage, out string? errorStackTrace);
 
                 switch (state)
                 {
@@ -56,7 +53,7 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
                            state,
                            reason ?? string.Empty,
                            testNodeUpdateMessage.SessionUid.Value,
-                           _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+                           string.Empty);
 
                         await _dotnetTestPipeClient.RequestReplyAsync<SuccessfulTestResultMessage, VoidResponse>(successfulTestResultMessage, cancellationToken);
                         break;
@@ -70,7 +67,7 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
                            errorMessage ?? string.Empty,
                            errorStackTrace ?? string.Empty,
                            testNodeUpdateMessage.SessionUid.Value,
-                           _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+                           string.Empty);
 
                         await _dotnetTestPipeClient.RequestReplyAsync<FailedTestResultMessage, VoidResponse>(testResultMessage, cancellationToken);
                         break;
@@ -86,7 +83,7 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
                     testNodeFileArtifact.TestNode.Uid.Value,
                     testNodeFileArtifact.TestNode.DisplayName,
                     testNodeFileArtifact.SessionUid.Value,
-                    _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+                    string.Empty);
 
                 await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactInfo, VoidResponse>(fileArtifactInfo, cancellationToken);
                 break;
@@ -99,7 +96,7 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
                     string.Empty,
                     string.Empty,
                     sessionFileArtifact.SessionUid.Value,
-                    _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+                    string.Empty);
 
                 await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactInfo, VoidResponse>(fileArtifactInfo, cancellationToken);
                 break;
@@ -112,7 +109,7 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
                    string.Empty,
                    string.Empty,
                    string.Empty,
-                   _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+                   string.Empty);
 
                 await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactInfo, VoidResponse>(fileArtifactInfo, cancellationToken);
                 break;
@@ -121,9 +118,9 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
         await Task.CompletedTask;
     }
 
-    private static void GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage, out string state, out string? reason, out string? errorMessage, out string? errorStackTrace)
+    private static void GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage, out byte? state, out string? reason, out string? errorMessage, out string? errorStackTrace)
     {
-        state = string.Empty;
+        state = null;
         reason = string.Empty;
         errorMessage = string.Empty;
         errorStackTrace = string.Empty;
@@ -178,7 +175,7 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
         TestSessionEvent sessionStartEvent = new(
             SessionEventTypes.TestSessionStart,
             sessionUid.Value,
-            _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+            string.Empty);
 
         await _dotnetTestPipeClient.RequestReplyAsync<TestSessionEvent, VoidResponse>(sessionStartEvent, cancellationToken);
     }
@@ -188,7 +185,7 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
         TestSessionEvent sessionEndEvent = new(
             SessionEventTypes.TestSessionEnd,
             sessionUid.Value,
-            _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+            string.Empty);
 
         await _dotnetTestPipeClient.RequestReplyAsync<TestSessionEvent, VoidResponse>(sessionEndEvent, cancellationToken);
     }

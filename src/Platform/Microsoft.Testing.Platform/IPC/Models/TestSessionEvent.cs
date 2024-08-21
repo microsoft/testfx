@@ -3,4 +3,4 @@
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
-internal sealed record TestSessionEvent(string? SessionType, string? SessionUid, string? ModulePath) : IRequest;
+internal sealed record TestSessionEvent(byte? SessionType, string? SessionUid, string? ExecutionId) : IRequest;
