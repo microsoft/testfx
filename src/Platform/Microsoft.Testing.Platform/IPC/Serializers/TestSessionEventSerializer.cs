@@ -16,9 +16,9 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
     |---SessionUid Size---| (4 bytes)
     |---SessionUid Value---| (n bytes)
 
-    |---ModulePath Id---| 1 (2 bytes)
-    |---ModulePath Size---| (4 bytes)
-    |---ModulePath Value---| (n bytes)
+    |---ExecutionId Id---| 1 (2 bytes)
+    |---ExecutionId Size---| (4 bytes)
+    |---ExecutionId Value---| (n bytes)
 */
 
 internal sealed class TestSessionEventSerializer : BaseSerializer, INamedPipeSerializer
@@ -27,9 +27,9 @@ internal sealed class TestSessionEventSerializer : BaseSerializer, INamedPipeSer
 
     public object Deserialize(Stream stream)
     {
-        string? type = null;
+        byte? type = null;
         string? sessionUid = null;
-        string? modulePath = null;
+        string? executionId = null;
 
         ushort fieldCount = ReadShort(stream);
 
@@ -41,25 +41,26 @@ internal sealed class TestSessionEventSerializer : BaseSerializer, INamedPipeSer
             switch (fieldId)
             {
                 case TestSessionEventFieldsId.SessionType:
-                    type = ReadString(stream);
+                    type = ReadByte(stream);
                     break;
 
                 case TestSessionEventFieldsId.SessionUid:
                     sessionUid = ReadString(stream);
                     break;
 
-                case TestSessionEventFieldsId.ModulePath:
-                    modulePath = ReadString(stream);
+                case TestSessionEventFieldsId.ExecutionId:
+                    executionId = ReadString(stream);
                     break;
 
                 default:
                     // If we don't recognize the field id, skip the payload corresponding to that field
                     SetPosition(stream, stream.Position + fieldSize);
+
                     break;
             }
         }
 
-        return new TestSessionEvent(type, sessionUid, modulePath);
+        return new TestSessionEvent(type, sessionUid, executionId);
     }
 
     public void Serialize(object objectToSerialize, Stream stream)
@@ -72,11 +73,11 @@ internal sealed class TestSessionEventSerializer : BaseSerializer, INamedPipeSer
 
         WriteField(stream, TestSessionEventFieldsId.SessionType, testSessionEvent.SessionType);
         WriteField(stream, TestSessionEventFieldsId.SessionUid, testSessionEvent.SessionUid);
-        WriteField(stream, TestSessionEventFieldsId.ModulePath, testSessionEvent.ModulePath);
+        WriteField(stream, TestSessionEventFieldsId.ExecutionId, testSessionEvent.ExecutionId);
     }
 
     private static ushort GetFieldCount(TestSessionEvent testSessionEvent) =>
         (ushort)((testSessionEvent.SessionType is null ? 0 : 1) +
         (testSessionEvent.SessionUid is null ? 0 : 1) +
-        (testSessionEvent.ModulePath is null ? 0 : 1));
+        (testSessionEvent.ExecutionId is null ? 0 : 1));
 }

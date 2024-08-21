@@ -246,6 +246,10 @@ internal abstract class BaseSerializer
     }
 #endif
 
+    protected static byte ReadByte(Stream stream) => (byte)stream.ReadByte();
+
+    protected static void WriteByte(Stream stream, byte value) => stream.WriteByte(value);
+
     protected static void WriteField(Stream stream, ushort id, string? value)
     {
         if (value is null)
@@ -268,6 +272,16 @@ internal abstract class BaseSerializer
         WriteString(stream, value);
     }
 
+    protected static void WriteField(Stream stream, byte? value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        WriteByte(stream, value.Value);
+    }
+
     protected static void WriteField(Stream stream, ushort id, bool? value)
     {
         if (value is null)
@@ -278,6 +292,18 @@ internal abstract class BaseSerializer
         WriteShort(stream, id);
         WriteSize<bool>(stream);
         WriteBool(stream, value.Value);
+    }
+
+    protected static void WriteField(Stream stream, ushort id, byte? value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        WriteShort(stream, id);
+        WriteSize<bool>(stream);
+        WriteByte(stream, value.Value);
     }
 
     protected static void SetPosition(Stream stream, long position) => stream.Position = position;

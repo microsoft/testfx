@@ -3,4 +3,4 @@
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
-internal sealed record FileArtifactInfo(string? FullPath, string? DisplayName, string? Description, string? TestUid, string? TestDisplayName, string? SessionUid, string? ModulePath) : IRequest;
+internal sealed record FileArtifactInfo(string? FullPath, string? DisplayName, string? Description, string? TestUid, string? TestDisplayName, string? SessionUid, string? ExecutionId) : IRequest;

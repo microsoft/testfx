@@ -89,7 +89,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPip
 
     private async Task<bool> DoHandshakeAsync(NamedPipeClient dotnetTestPipeClient, ITestApplicationModuleInfo? testApplicationModuleInfo, CancellationToken testApplicationCancellationToken)
     {
-        HandshakeInfo handshakeInfo = new(new Dictionary<string, string>()
+        HandshakeInfo handshakeInfo = new(new Dictionary<byte, string>()
         {
             { HandshakeInfoPropertyNames.PID, ServiceProvider.GetProcessHandler().GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) },
             { HandshakeInfoPropertyNames.Architecture, RuntimeInformation.OSArchitecture.ToString() },
@@ -98,6 +98,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPip
             { HandshakeInfoPropertyNames.ProtocolVersion, ProtocolConstants.Version },
             { HandshakeInfoPropertyNames.HostType, GetType().Name },
             { HandshakeInfoPropertyNames.ModulePath, testApplicationModuleInfo?.GetCurrentTestApplicationFullPath() ?? string.Empty },
+            { HandshakeInfoPropertyNames.ExecutionId, string.Empty },
         });
 
         HandshakeInfo response = await dotnetTestPipeClient.RequestReplyAsync<HandshakeInfo, HandshakeInfo>(handshakeInfo, testApplicationCancellationToken);
