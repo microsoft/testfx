@@ -74,16 +74,16 @@ public sealed class VSTestRunTestExecutionRequestFactory : ITestExecutionRequest
         IFileSystem fileSystem = serviceProvider.GetFileSystem();
         IClientInfo clientInfo = serviceProvider.GetClientInfo();
 
-        RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory);
-        RunContextAdapter runContext = runTestExecutionRequest.Filter is TestNodeUidListFilter uidListFilter
-            ? new(commandLineOptions, runSettings, uidListFilter.TestNodeUids)
-            : new(commandLineOptions, runSettings);
-
         ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
         IMessageBus messageBus = serviceProvider.GetRequiredService<IMessageBus>();
         IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
         FrameworkHandlerAdapter frameworkHandlerAdapter = new(adapterExtension, runTestExecutionRequest.Session, clientInfo, testAssemblyPaths,
             testApplicationModuleInfo, loggerFactory, messageBus, outputDevice, adapterExtension.IsTrxEnabled, cancellationToken);
+
+        RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory, frameworkHandlerAdapter);
+        RunContextAdapter runContext = runTestExecutionRequest.Filter is TestNodeUidListFilter uidListFilter
+            ? new(commandLineOptions, runSettings, uidListFilter.TestNodeUids)
+            : new(commandLineOptions, runSettings);
 
         return new(runTestExecutionRequest.Session, new(), testAssemblyPaths, runContext, frameworkHandlerAdapter);
     }
