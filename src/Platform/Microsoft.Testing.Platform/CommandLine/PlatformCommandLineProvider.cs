@@ -35,7 +35,9 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string PortOptionKey = "port";
     public const string ClientPortOptionKey = "client-port";
     public const string ClientHostOptionKey = "client-host";
+    public const string JsonRpcProtocolName = "jsonrpc";
     public const string DotNetTestPipeOptionKey = "dotnet-test-pipe";
+    public const string DotnetTestCliProtocolName = "dotnettestcli";
 
     private static readonly string[] VerbosityOptions = ["Trace", "Debug", "Information", "Warning", "Error", "Critical"];
 

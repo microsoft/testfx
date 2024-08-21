@@ -36,8 +36,6 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
 {
-    private const string DotnetTestCliProtocol = "dotnettestcli";
-
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
 
@@ -386,7 +384,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AddServices(testApplicationLifecycleCallback);
 
         // ServerMode and Console mode uses different host
-        if (commandLineHandler.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && !HasDotnetTestServerOption(commandLineHandler))
+        bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
+        bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
+        if (hasServerFlag && isJsonRpcProtocol)
         {
             // Build the server mode with the user preferences
             IMessageHandlerFactory messageHandlerFactory = ((ServerModeManager)ServerMode).Build(serviceProvider);
@@ -507,7 +507,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
     private static bool HasDotnetTestServerOption(CommandLineHandler commandLineHandler) =>
         commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
         serverArgs.Length == 1 &&
-        serverArgs[0].Equals(DotnetTestCliProtocol, StringComparison.Ordinal);
+        serverArgs[0].Equals(PlatformCommandLineProvider.DotnetTestCliProtocolName, StringComparison.OrdinalIgnoreCase);
 
     private static async Task<NamedPipeClient?> ConnectToTestHostProcessMonitorIfAvailableAsync(
         IProcessHandler processHandler,
