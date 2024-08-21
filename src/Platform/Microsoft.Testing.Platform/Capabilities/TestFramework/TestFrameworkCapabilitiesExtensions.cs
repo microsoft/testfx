@@ -1,9 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 
-internal static class TestFrameworkCapabilitiesExtensions
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public static class TestFrameworkCapabilitiesExtensions
 {
     public static bool HasCapability<T>(this ITestFrameworkCapabilities capabilities)
         where T : ICapability
