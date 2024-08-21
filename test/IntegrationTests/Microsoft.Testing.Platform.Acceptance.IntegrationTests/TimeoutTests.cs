@@ -44,6 +44,42 @@ public class TimeoutTests : AcceptanceTestBase
         testHostResult.StandardError.Contains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
     }
 
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task TimeoutWithValidArg_WithTestTimeOut_BuildFails(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1s");
+
+        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task TimeoutWithValidArg_WithSecondAsSuffix_WithTestNotTimeOut_BuildPasses(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 20s");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task TimeoutWithValidArg_WithMinuteAsSuffix_WithTestNotTimeOut_BuildPasses(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1m");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task TimeoutWithValidArg_WithHourAsSuffix_WithTestNotTimeOut_BuildPasses(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1h");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+    }
+
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
@@ -85,6 +121,7 @@ public class UnitTest1
     public void TestMethod1()
     {
         Assert.IsTrue(true);
+        Thread.Sleep(10000);
     }
 }
 
