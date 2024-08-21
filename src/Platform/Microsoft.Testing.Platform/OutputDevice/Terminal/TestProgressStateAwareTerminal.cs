@@ -29,6 +29,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     /// The thread that performs periodic refresh of the console output.
     /// </summary>
     private Thread? _refresher;
+    private long _counter;
 
     /// <summary>
     /// The <see cref="_refresher"/> thread proc.
@@ -148,11 +149,20 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         }
     }
 
-    internal void UpdateWorker(int slotIndex, TestProgressState update)
+    internal void UpdateWorker(int slotIndex)
     {
         if (GetShowProgress())
         {
-            _progressItems[slotIndex] = update;
+            // We increase the counter to say that this version of data is newer than what we had before and
+            // it should be completely re-rendered. Another approach would be to use timestamps, or to replace the
+            // instance and compare that, but that means more objects floating around.
+            _counter++;
+
+            TestProgressState? progress = _progressItems[slotIndex];
+            if (progress != null)
+            {
+                progress.LastUpdate = _counter;
+            }
         }
     }
 
