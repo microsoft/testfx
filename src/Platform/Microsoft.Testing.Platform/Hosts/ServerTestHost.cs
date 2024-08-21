@@ -94,12 +94,12 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     protected override bool RunTestApplicationLifeCycleCallbacks => true;
 
     private void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
-        => _logger.LogError($"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}");
+        => _logger.LogWarning($"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}");
 
     private void OnTaskSchedulerUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
         e.SetObserved();
-        _logger.LogError($"[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {e.Exception}");
+        _logger.LogWarning($"[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {e.Exception}");
     }
 
     [MemberNotNull(nameof(_messageHandler))]
