@@ -372,13 +372,16 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
-        <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
-        <target state="translated">Yerleşik dosya kaydediciyi günlüğü eşzamanlı olarak yazmaya zorlar. Herhangi bir günlüğü (kilitlenme durumunda) kaybetmek istemediğiniz senaryolar için faydalıdır. Bunun test yürütmesini yavaşlatacağını unutmayın.</target>
+        <source>Force the built-in file logger to write the log synchronously. 
+Useful for scenario where you don't want to lose any log (i.e. in case of crash). 
+Note that this is slowing down the test execution.</source>
+        <target state="needs-review-translation">Yerleşik dosya kaydediciyi günlüğü eşzamanlı olarak yazmaya zorlar. Herhangi bir günlüğü (kilitlenme durumunda) kaybetmek istemediğiniz senaryolar için faydalıdır. Bunun test yürütmesini yavaşlatacağını unutmayın.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <source>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">Tanılama günlük kaydını etkinleştirir. Varsayılan günlük düzeyi: 'İzleme'. Dosya, çıkış dizinine log_[MMddHHssfff].diag adıyla yazılır</target>
+        <source>Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+        <target state="needs-review-translation">Tanılama günlük kaydını etkinleştirir. Varsayılan günlük düzeyi: 'İzleme'. Dosya, çıkış dizinine log_[MMddHHssfff].diag adıyla yazılır</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -392,8 +395,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
-        <source>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">Tanılama günlüğüne kaydetme için çıkış dizini belirtilmezse dosya varsayılan 'TestResults' dizini içinde oluşturulur.</target>
+        <source>Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</source>
+        <target state="needs-review-translation">Tanılama günlüğüne kaydetme için çıkış dizini belirtilmezse dosya varsayılan 'TestResults' dizini içinde oluşturulur.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
@@ -402,8 +406,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
-        <source>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</source>
-        <target state="translated">--diagnostic için ayrıntı düzeyini tanımlayın. Kullanılabilir değerler: 'Trace', 'Debug', 'Information', 'Warning', 'Error' ve 'Critical'</target>
+        <source>Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
+        <target state="needs-review-translation">--diagnostic için ayrıntı düzeyini tanımlayın. Kullanılabilir değerler: 'Trace', 'Debug', 'Information', 'Warning', 'Error' ve 'Critical'</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
@@ -439,8 +444,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="translated">Belirli çıkış kodları için başarılı olmayan çıkış değerini bildirme (örneğin, '--ignore-exit-code 8;9' çıkış kodu 8 ve 9'u yoksayar ve bu durumda 0 değerini döndürür)</target>
+        <source>Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="needs-review-translation">Belirli çıkış kodları için başarılı olmayan çıkış değerini bildirme (örneğin, '--ignore-exit-code 8;9' çıkış kodu 8 ve 9'u yoksayar ve bu durumda 0 değerini döndürür)</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -454,8 +460,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <source>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">'--minimum-expected-tests', sıfır olmayan tek bir pozitif tamsayı değeri (ör. '--minimum-expected-tests 10') bekler</target>
+        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</source>
+        <target state="needs-review-translation">'--minimum-expected-tests', sıfır olmayan tek bir pozitif tamsayı değeri (ör. '--minimum-expected-tests 10') bekler</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
@@ -484,8 +491,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
-        <source>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</source>
-        <target state="translated">Test sonuçlarının yerleştirileceği dizin. Belirtilen dizin yoksa oluşturulur. Varsayılan değer, test uygulamasını içeren dizindeki TestResults'dır.</target>
+        <source>The directory where the test results are going to be placed.
+If the specified directory doesn't exist, it's created.
+The default is TestResults in the directory that contains the test application.</source>
+        <target state="needs-review-translation">Test sonuçlarının yerleştirileceği dizin. Belirtilen dizin yoksa oluşturulur. Varsayılan değer, test uygulamasını içeren dizindeki TestResults'dır.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -624,8 +633,9 @@ Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">Testleri bildirirken çıkış ayrıntı düzeyi. Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Normal’.</target>
+        <source>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
+        <target state="needs-review-translation">Testleri bildirirken çıkış ayrıntı düzeyi. Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Normal’.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">

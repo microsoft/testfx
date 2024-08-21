@@ -372,13 +372,16 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
-        <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
-        <target state="translated">기본 제공 파일 로거가 로그를 동기적으로 기록하도록 강제합니다. 로그를 잃지 않으려는 시나리오(예: 충돌 시)에 유용합니다. 이로 인해 테스트 실행 속도가 느려집니다.</target>
+        <source>Force the built-in file logger to write the log synchronously. 
+Useful for scenario where you don't want to lose any log (i.e. in case of crash). 
+Note that this is slowing down the test execution.</source>
+        <target state="needs-review-translation">기본 제공 파일 로거가 로그를 동기적으로 기록하도록 강제합니다. 로그를 잃지 않으려는 시나리오(예: 충돌 시)에 유용합니다. 이로 인해 테스트 실행 속도가 느려집니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <source>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">진단 로깅을 사용합니다. 기본값 로그 수준은 'Trace'입니다. 파일은 log_[MMddHHssfff].diag라는 이름으로 출력 디렉터리에 기록됩니다.</target>
+        <source>Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+        <target state="needs-review-translation">진단 로깅을 사용합니다. 기본값 로그 수준은 'Trace'입니다. 파일은 log_[MMddHHssfff].diag라는 이름으로 출력 디렉터리에 기록됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -392,8 +395,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
-        <source>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">진단 로깅의 출력 디렉터리를 지정하지 않으면 기본 'TestResults' 디렉터리 내에 파일이 생성됩니다.</target>
+        <source>Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</source>
+        <target state="needs-review-translation">진단 로깅의 출력 디렉터리를 지정하지 않으면 기본 'TestResults' 디렉터리 내에 파일이 생성됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
@@ -402,8 +406,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
-        <source>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</source>
-        <target state="translated">--diagnostic에 대한 세부 정보 표시 수준을 정의합니다. 사용 가능한 값은 'Trace', 'Debug', 'Information', 'Warning', 'Error', 'Critical'입니다.</target>
+        <source>Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
+        <target state="needs-review-translation">--diagnostic에 대한 세부 정보 표시 수준을 정의합니다. 사용 가능한 값은 'Trace', 'Debug', 'Information', 'Warning', 'Error', 'Critical'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
@@ -439,8 +444,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="translated">특정 종료 코드에 대해 성공하지 못한 종료 값을 보고하지 마세요(예: '--ignore-exit-code 8; 9'는 종료 코드 8 및 9를 무시하고 이 경우 0을 반환함).</target>
+        <source>Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="needs-review-translation">특정 종료 코드에 대해 성공하지 못한 종료 값을 보고하지 마세요(예: '--ignore-exit-code 8; 9'는 종료 코드 8 및 9를 무시하고 이 경우 0을 반환함).</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -454,8 +460,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <source>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">'--minimum-expected-tests'에는 0이 아닌 단일 양의 정수 값(예: '--minimum-expected-tests 10')이 필요합니다.</target>
+        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</source>
+        <target state="needs-review-translation">'--minimum-expected-tests'에는 0이 아닌 단일 양의 정수 값(예: '--minimum-expected-tests 10')이 필요합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
@@ -484,8 +491,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
-        <source>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</source>
-        <target state="translated">테스트 결과를 배치할 디렉터리입니다. 지정한 디렉터리가 없으면 디렉터리가 만들어집니다. 기본값은 테스트 애플리케이션을 포함하는 디렉터리의 TestResults입니다.</target>
+        <source>The directory where the test results are going to be placed.
+If the specified directory doesn't exist, it's created.
+The default is TestResults in the directory that contains the test application.</source>
+        <target state="needs-review-translation">테스트 결과를 배치할 디렉터리입니다. 지정한 디렉터리가 없으면 디렉터리가 만들어집니다. 기본값은 테스트 애플리케이션을 포함하는 디렉터리의 TestResults입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -624,8 +633,9 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">테스트를 보고할 때 세부 정보 표시를 출력합니다. 유효한 값은 'Normal', 'Detailed'입니다. 기본값은 'Normal'입니다.</target>
+        <source>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
+        <target state="needs-review-translation">테스트를 보고할 때 세부 정보 표시를 출력합니다. 유효한 값은 'Normal', 'Detailed'입니다. 기본값은 'Normal'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">

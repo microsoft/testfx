@@ -322,13 +322,13 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                                 _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, formattedTextOutputDeviceData.Text);
                                 break;
                             default:
-                                _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text, color);
+                                _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text, color, formattedTextOutputDeviceData.Padding);
                                 break;
                         }
                     }
                     else
                     {
-                        _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text);
+                        _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text, padding: formattedTextOutputDeviceData.Padding);
                     }
 
                     break;

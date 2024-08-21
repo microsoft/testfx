@@ -372,13 +372,16 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
-        <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
-        <target state="translated">Fuerce al registrador de archivos integrado a escribir el registro de forma sincrónica. Resulta útil para escenarios en los que no quiere perder ningún registro (es decir, en caso de bloqueo). Tenga en cuenta que esto ralentiza la ejecución de pruebas.</target>
+        <source>Force the built-in file logger to write the log synchronously. 
+Useful for scenario where you don't want to lose any log (i.e. in case of crash). 
+Note that this is slowing down the test execution.</source>
+        <target state="needs-review-translation">Fuerce al registrador de archivos integrado a escribir el registro de forma sincrónica. Resulta útil para escenarios en los que no quiere perder ningún registro (es decir, en caso de bloqueo). Tenga en cuenta que esto ralentiza la ejecución de pruebas.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <source>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">Habilite el registro de diagnóstico. El nivel de registro predeterminado es "Seguimiento". El archivo se escribirá en el directorio de salida con el nombre log_[MMddHHssfff].diag</target>
+        <source>Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+        <target state="needs-review-translation">Habilite el registro de diagnóstico. El nivel de registro predeterminado es "Seguimiento". El archivo se escribirá en el directorio de salida con el nombre log_[MMddHHssfff].diag</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -392,8 +395,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
-        <source>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">Directorio de salida del registro de diagnóstico; si no se especifica, el archivo se generará dentro del directorio predeterminado “TestResults”.</target>
+        <source>Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</source>
+        <target state="needs-review-translation">Directorio de salida del registro de diagnóstico; si no se especifica, el archivo se generará dentro del directorio predeterminado “TestResults”.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
@@ -402,8 +406,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
-        <source>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</source>
-        <target state="translated">Defina el nivel de detalle de --diagnostic. Los valores disponibles son “Seguimiento”, “Depurar”, “Información”, “Advertencia”, 'Error' y “Crítico”</target>
+        <source>Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
+        <target state="needs-review-translation">Defina el nivel de detalle de --diagnostic. Los valores disponibles son “Seguimiento”, “Depurar”, “Información”, “Advertencia”, 'Error' y “Crítico”</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
@@ -439,8 +444,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="translated">No notificar el valor de salida no correcto para códigos de salida específicos (por ejemplo, ''--ignore-exit-code 8; 9'' omitir código de salida 8 y 9 y devolverá 0 en este caso)</target>
+        <source>Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="needs-review-translation">No notificar el valor de salida no correcto para códigos de salida específicos (por ejemplo, ''--ignore-exit-code 8; 9'' omitir código de salida 8 y 9 y devolverá 0 en este caso)</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -454,8 +460,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <source>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">“--minimum-expected-tests” espera un único valor entero positivo distinto de cero (por ejemplo, “--minimum-expected-tests 10”)</target>
+        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</source>
+        <target state="needs-review-translation">“--minimum-expected-tests” espera un único valor entero positivo distinto de cero (por ejemplo, “--minimum-expected-tests 10”)</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
@@ -484,8 +491,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
-        <source>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</source>
-        <target state="translated">Directorio donde se van a colocar los resultados de las pruebas. Si el directorio especificado no existe, se crea. El valor predeterminado es TestResults en el directorio que contiene la aplicación de prueba.</target>
+        <source>The directory where the test results are going to be placed.
+If the specified directory doesn't exist, it's created.
+The default is TestResults in the directory that contains the test application.</source>
+        <target state="needs-review-translation">Directorio donde se van a colocar los resultados de las pruebas. Si el directorio especificado no existe, se crea. El valor predeterminado es TestResults en el directorio que contiene la aplicación de prueba.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -624,8 +633,9 @@ Más información sobre la telemetría de la Plataforma de pruebas de Microsoft:
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">Nivel de detalle de la salida al crear informes de pruebas. Los valores válidos son "Normal", "Detallado". El valor predeterminado es "Normal".</target>
+        <source>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
+        <target state="needs-review-translation">Nivel de detalle de la salida al crear informes de pruebas. Los valores válidos son "Normal", "Detallado". El valor predeterminado es "Normal".</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">

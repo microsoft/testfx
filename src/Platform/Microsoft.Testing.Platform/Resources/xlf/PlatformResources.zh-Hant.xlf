@@ -372,13 +372,16 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
-        <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
-        <target state="translated">強制內建檔案記錄器以同步方式寫入記錄。適用於不想遺失任何記錄的案例 (例如損毀)。請注意，這會減慢測試執行的速度。</target>
+        <source>Force the built-in file logger to write the log synchronously. 
+Useful for scenario where you don't want to lose any log (i.e. in case of crash). 
+Note that this is slowing down the test execution.</source>
+        <target state="needs-review-translation">強制內建檔案記錄器以同步方式寫入記錄。適用於不想遺失任何記錄的案例 (例如損毀)。請注意，這會減慢測試執行的速度。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <source>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">啟用診斷記錄。預設記錄層級為 'Trace'。檔案將以 log_[MMddHHssfff].diag 名稱寫入輸出目錄中</target>
+        <source>Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+        <target state="needs-review-translation">啟用診斷記錄。預設記錄層級為 'Trace'。檔案將以 log_[MMddHHssfff].diag 名稱寫入輸出目錄中</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -392,8 +395,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
-        <source>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">診斷記錄的輸出目錄，若未指定，則會在預設的 'TestResults' 目錄內產生檔案。</target>
+        <source>Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</source>
+        <target state="needs-review-translation">診斷記錄的輸出目錄，若未指定，則會在預設的 'TestResults' 目錄內產生檔案。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
@@ -402,8 +406,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
-        <source>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</source>
-        <target state="translated">定義 --diagnostic 的詳細程度層級。可用的值為 'Trace'、'Debug'、'Information'、'Warning'、'Error' 和 'Critical'</target>
+        <source>Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
+        <target state="needs-review-translation">定義 --diagnostic 的詳細程度層級。可用的值為 'Trace'、'Debug'、'Information'、'Warning'、'Error' 和 'Critical'</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
@@ -439,8 +444,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="translated">不要報告特定結束代碼的未成功結束值 (例如 '--ignore-exit-code 8;9' 會忽略結束代碼 8 和 9，而在這些情況下會傳回 0)</target>
+        <source>Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="needs-review-translation">不要報告特定結束代碼的未成功結束值 (例如 '--ignore-exit-code 8;9' 會忽略結束代碼 8 和 9，而在這些情況下會傳回 0)</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -454,8 +460,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <source>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">'--minimum-expected-tests' 需要單一非零的正整數值 (例如 '--minimum-expected-tests 10')</target>
+        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</source>
+        <target state="needs-review-translation">'--minimum-expected-tests' 需要單一非零的正整數值 (例如 '--minimum-expected-tests 10')</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
@@ -484,8 +491,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
-        <source>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</source>
-        <target state="translated">將放置測試結果的目錄。如果指定的目錄不存在，系統會建立該目錄。預設值是包含測試應用程式之目錄中的 TestResults。</target>
+        <source>The directory where the test results are going to be placed.
+If the specified directory doesn't exist, it's created.
+The default is TestResults in the directory that contains the test application.</source>
+        <target state="needs-review-translation">將放置測試結果的目錄。如果指定的目錄不存在，系統會建立該目錄。預設值是包含測試應用程式之目錄中的 TestResults。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -624,8 +633,9 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">報告測試時的輸出詳細程度。有效值為 'Normal'、'Detailed'。預設為 'Normal'。</target>
+        <source>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
+        <target state="needs-review-translation">報告測試時的輸出詳細程度。有效值為 'Normal'、'Detailed'。預設為 'Normal'。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
