@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.InteropServices;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -9,14 +11,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestGroup]
 public class NativeAotTests : AcceptanceTestBase
 {
-    private readonly AcceptanceFixture _acceptanceFixture;
-
-    public NativeAotTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
-
-    public async Task NativeAotTests_WillRunWithExitCodeZero()
-    {
-        string testCode = """
+    private const string SourceCode = """
 #file NativeAotTests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
@@ -89,9 +84,23 @@ public class UnitTest1
 }
 """;
 
+    private readonly AcceptanceFixture _acceptanceFixture;
+
+    public NativeAotTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
+        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
+
+    public async Task NativeAotTests_WillRunWithExitCodeZero()
+    {
+        // The publish native AOT is not always working on Linux,
+        // see https://github.com/dotnet/sdk/issues/34049
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
            "NativeAotTests",
-           testCode
+           SourceCode
            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent.Arguments)
@@ -105,6 +114,7 @@ public class UnitTest1
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            // Can fail on CI because of some linker error, so we increase the retry count
             retryCount: 10);
         compilationResult.AssertOutputContains("Generating native code");
 
