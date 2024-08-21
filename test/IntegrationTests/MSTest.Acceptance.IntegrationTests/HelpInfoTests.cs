@@ -43,6 +43,7 @@ Options:
   --list-tests                             List available tests.
   --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run.
   --results-directory                      The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.
+  --timeout                                A global test execution timeout, it should have one argument as string in the format <value>[h|m|s] where 'value' is float.
 Extension options:
   --filter         Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
   --no-ansi        Disable outputting ANSI escape characters to screen.

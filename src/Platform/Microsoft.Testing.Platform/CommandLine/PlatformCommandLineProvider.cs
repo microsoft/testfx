@@ -15,6 +15,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
 {
     public const string HelpOptionKey = "help";
     public const string HelpOptionQuestionMark = "?";
+    public const string TimeoutOptionKey = "timeout";
     public const string InfoOptionKey = "info";
     public const string DiagnosticOptionKey = "diagnostic";
     public const string DiagnosticOutputFilePrefixOptionKey = "diagnostic-output-fileprefix";
@@ -46,6 +47,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         // Visible options
         new(HelpOptionKey, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         new(InfoOptionKey, PlatformResources.PlatformCommandLineInfoOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+        new(TimeoutOptionKey, PlatformResources.PlatformCommandLineTimeoutOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ResultDirectoryOptionKey, PlatformResources.PlatformCommandLineResultDirectoryOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(DiagnosticOptionKey, PlatformResources.PlatformCommandLineDiagnosticOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         new(DiagnosticOutputFilePrefixOptionKey, PlatformResources.PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
@@ -111,6 +113,16 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         if (commandOption.Name == ExitOnProcessExitOptionKey && (!int.TryParse(arguments[0], out int _)))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitSingleArgument, ExitOnProcessExitOptionKey));
+        }
+
+        if (commandOption.Name == TimeoutOptionKey)
+        {
+            string arg = arguments[0];
+            int size = arg.Length;
+            if ((char.ToLowerInvariant(arg[size - 1]) != 'h' && char.ToLowerInvariant(arg[size - 1]) != 'm' && char.ToLowerInvariant(arg[size - 1]) != 's') || !float.TryParse(arg[..(size - 1)], out float _))
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage);
+            }
         }
 
         // Now validate the minimum expected tests option
