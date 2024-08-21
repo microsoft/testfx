@@ -694,7 +694,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         });
     }
 
-    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string text)
+    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string text, int? padding)
     {
         TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddError(text);
@@ -702,25 +702,41 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
             terminal.SetColor(TerminalColor.Red);
-            terminal.AppendLine(text);
+            if (padding == null)
+            {
+                terminal.AppendLine(text);
+            }
+            else
+            {
+                AppendIndentedLine(terminal, text, new string(' ', padding.Value));
+            }
+
             terminal.ResetColor();
         });
     }
 
-    internal void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string text)
+    internal void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string text, int? padding)
     {
         TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddWarning(text);
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
             terminal.SetColor(TerminalColor.Yellow);
-            terminal.AppendLine(text);
+            if (padding == null)
+            {
+                terminal.AppendLine(text);
+            }
+            else
+            {
+                AppendIndentedLine(terminal, text, new string(' ', padding.Value));
+            }
+
             terminal.ResetColor();
         });
     }
 
     internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, Exception exception)
-        => WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString());
+        => WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString(), padding: null);
 
     internal void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
     {
