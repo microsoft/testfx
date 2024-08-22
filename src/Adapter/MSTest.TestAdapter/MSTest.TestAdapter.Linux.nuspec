@@ -30,7 +30,7 @@
     $CommonFileElements$
 
     <!-- netstandard2.0 -->
-    <file src="netstandard2.0\build\commom\MSTest.TestAdapter.props" target="build\netstandard2.0\" />
+    <file src="netstandard2.0\build\common\MSTest.TestAdapter.props" target="build\netstandard2.0\" />
     <file src="netstandard2.0\build\netfx-netcore-netstandard\MSTest.TestAdapter.targets" target="build\netstandard2.0\" />
     <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\netstandard2.0\" />
     <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard2.0\" />
@@ -38,7 +38,7 @@
     <file src="netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\netstandard2.0\" />
 
     <!-- netcoreapp3.1 -->
-    <file src="netcoreapp3.1\build\commom\MSTest.TestAdapter.props" target="build\netcoreapp3.1\" />
+    <file src="netcoreapp3.1\build\common\MSTest.TestAdapter.props" target="build\netcoreapp3.1\" />
     <file src="netcoreapp3.1\build\netfx-netcore-netstandard\MSTest.TestAdapter.targets" target="build\netcoreapp3.1\" />
     <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\netcoreapp3.1\" />
     <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netcoreapp3.1\" />
@@ -46,7 +46,7 @@
     <file src="netcoreapp3.1\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\netcoreapp3.1\" />
 
     <!-- net6.0 -->
-    <file src="net6.0\build\commom\MSTest.TestAdapter.props" target="build\net6.0\MSTest.TestAdapter.props" />
+    <file src="net6.0\build\common\MSTest.TestAdapter.props" target="build\net6.0\MSTest.TestAdapter.props" />
     <file src="net6.0\build\net\MSTest.TestAdapter.targets" target="build\net6.0\MSTest.TestAdapter.targets" />
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\net6.0\" />
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net6.0\" />
@@ -54,7 +54,7 @@
     <file src="net6.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\net6.0\" />
 
     <!-- net7.0 -->
-    <file src="net7.0\build\commom\MSTest.TestAdapter.props" target="build\net7.0\MSTest.TestAdapter.props" />
+    <file src="net7.0\build\common\MSTest.TestAdapter.props" target="build\net7.0\MSTest.TestAdapter.props" />
     <file src="net7.0\build\net\MSTest.TestAdapter.targets" target="build\net7.0\MSTest.TestAdapter.targets" />
     <file src="net7.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\net7.0\" />
     <file src="net7.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net7.0\" />
@@ -62,7 +62,7 @@
     <file src="net7.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\net7.0\" />
 
     <!-- net8.0 -->
-    <file src="net8.0\build\commom\MSTest.TestAdapter.props" target="build\net8.0\MSTest.TestAdapter.props" />
+    <file src="net8.0\build\common\MSTest.TestAdapter.props" target="build\net8.0\MSTest.TestAdapter.props" />
     <file src="net8.0\build\net\MSTest.TestAdapter.targets" target="build\net8.0\MSTest.TestAdapter.targets" />
     <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\net8.0\" />
     <file src="net8.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net8.0\" />
