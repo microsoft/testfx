@@ -156,7 +156,7 @@ internal sealed class AnsiTerminalTestProgressFrame
             if (charsTaken < width)
             {
                 int charsToTake = width - charsTaken;
-                string cutText = text.Substring(text.Length - charsToTake);
+                string cutText = text[^charsToTake..];
                 terminal.Append(cutText);
                 charsTaken += charsToTake;
             }
