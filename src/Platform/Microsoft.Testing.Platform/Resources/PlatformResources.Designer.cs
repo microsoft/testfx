@@ -259,7 +259,7 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The ICommandLineOptions has not been built yet or is no more usable at this stage..
+        ///   Looks up a localized string similar to The ICommandLineOptions has not been built yet..
         /// </summary>
         internal static string CommandLineOptionsNotReady {
             get {

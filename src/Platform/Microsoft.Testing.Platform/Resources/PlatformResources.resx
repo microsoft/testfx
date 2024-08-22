@@ -623,6 +623,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
     <value>The message bus has not been built yet or is no more usable at this stage.</value>
   </data>
   <data name="CommandLineOptionsNotReady" xml:space="preserve">
-    <value>The ICommandLineOptions has not been built yet or is no more usable at this stage.</value>
+    <value>The ICommandLineOptions has not been built yet.</value>
   </data>
 </root>
