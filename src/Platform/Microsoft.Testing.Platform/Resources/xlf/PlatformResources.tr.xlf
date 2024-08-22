@@ -113,8 +113,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
-        <source>The ICommandLineOptions has not been built yet or is no more usable at this stage.</source>
-        <target state="new">The ICommandLineOptions has not been built yet or is no more usable at this stage.</target>
+        <source>The ICommandLineOptions has not been built yet.</source>
+        <target state="new">The ICommandLineOptions has not been built yet.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
