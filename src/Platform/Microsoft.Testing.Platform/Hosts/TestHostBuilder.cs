@@ -11,8 +11,8 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.DotnetTest;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
@@ -36,8 +36,6 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
 {
-    private const string DotnetTestCliProtocol = "dotnettestcli";
-
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
 
@@ -299,14 +297,22 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return toolsTestHost;
         }
 
-        NamedPipeClient? dotnetTestPipeClient = await ConnectToDotnetTestPipeIfAvailableAsync(commandLineHandler, testApplicationCancellationTokenSource);
+        DotnetTestConnection dotnetTestConnection = new(commandLineHandler, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
+        (NamedPipeClient? dotnetTestPipeClient, string? executionId) = await dotnetTestConnection.ConnectToDotnetTestPipeIfAvailableAsync();
+
+        // The execution id is used to identify the test execution
+        // We are storing it as an env var so that it can be read by the test host, test host controller and the test host orchestrator
+        if (executionId is not null)
+        {
+            environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID, executionId);
+        }
 
         // If --help is invoked we return
         if (commandLineHandler.IsHelpInvoked())
         {
             if (dotnetTestPipeClient is not null)
             {
-                await SendCommandLineOptionsToDotnetTestPipeAsync(dotnetTestPipeClient, commandLineHandler, testApplicationCancellationTokenSource.CancellationToken);
+                await dotnetTestConnection.SendCommandLineOptionsToDotnetTestPipeAsync();
             }
             else
             {
@@ -386,7 +392,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AddServices(testApplicationLifecycleCallback);
 
         // ServerMode and Console mode uses different host
-        if (commandLineHandler.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && !HasDotnetTestServerOption(commandLineHandler))
+        if (commandLineHandler.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && !DotnetTestHelper.HasDotnetTestServerOption(commandLineHandler))
         {
             // Build the server mode with the user preferences
             IMessageHandlerFactory messageHandlerFactory = ((ServerModeManager)ServerMode).Build(serviceProvider);
@@ -462,52 +468,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return actualTestHost;
         }
     }
-
-    private async Task SendCommandLineOptionsToDotnetTestPipeAsync(NamedPipeClient namedPipeClient, CommandLineHandler commandLineHandler, CancellationToken cancellationToken)
-    {
-        List<CommandLineOptionMessage> commandLineHelpOptions = new();
-        foreach (ICommandLineOptionsProvider commandLineOptionProvider in commandLineHandler.CommandLineOptionsProviders)
-        {
-            if (commandLineOptionProvider is IToolCommandLineOptionsProvider)
-            {
-                continue;
-            }
-
-            foreach (CommandLineOption commandLineOption in commandLineOptionProvider.GetCommandLineOptions())
-            {
-                commandLineHelpOptions.Add(new CommandLineOptionMessage(
-                    commandLineOption.Name,
-                    commandLineOption.Description,
-                    commandLineOption.IsHidden,
-                    commandLineOption.IsBuiltIn));
-            }
-        }
-
-        await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), cancellationToken);
-    }
-
-    private static async Task<NamedPipeClient?> ConnectToDotnetTestPipeIfAvailableAsync(CommandLineHandler commandLineHandler, CTRLPlusCCancellationTokenSource cancellationTokenSource)
-    {
-        NamedPipeClient? namedPipeClient = null;
-
-        // If we are in server mode and the pipe name is provided
-        // then, we need to connect to the pipe server.
-        if (HasDotnetTestServerOption(commandLineHandler) &&
-            commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
-        {
-            namedPipeClient = new(arguments[0]);
-            namedPipeClient.RegisterAllSerializers();
-
-            await namedPipeClient.ConnectAsync(cancellationTokenSource.CancellationToken);
-        }
-
-        return namedPipeClient;
-    }
-
-    private static bool HasDotnetTestServerOption(CommandLineHandler commandLineHandler) =>
-        commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
-        serverArgs.Length == 1 &&
-        serverArgs[0].Equals(DotnetTestCliProtocol, StringComparison.Ordinal);
 
     private static async Task<NamedPipeClient?> ConnectToTestHostProcessMonitorIfAvailableAsync(
         IProcessHandler processHandler,
@@ -619,7 +579,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         DotnetTestDataConsumer? dotnetTestDataConsumer = null;
         if (testFrameworkBuilderData.DotnetTestPipeClient is not null)
         {
-            dotnetTestDataConsumer = new DotnetTestDataConsumer(testFrameworkBuilderData.DotnetTestPipeClient);
+            dotnetTestDataConsumer = new DotnetTestDataConsumer(testFrameworkBuilderData.DotnetTestPipeClient, serviceProvider.GetEnvironment());
         }
 
         // Build and register "common non special" services - we need special treatment because extensions can start to log during the
