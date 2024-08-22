@@ -131,15 +131,15 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         return IsMinimumExpectedTestsOptionValidAsync(commandOption, arguments);
     }
 
-    public static int GetMinimumExpectedTests(CommandLineParseResult parseResult)
+    public static int GetMinimumExpectedTests(ICommandLineOptions commandLineOptions)
     {
-        OptionRecord? minimumExpectedTests = parseResult.Options.SingleOrDefault(o => o.Option == MinimumExpectedTestsOptionKey);
-        if (minimumExpectedTests is null || !IsMinimumExpectedTestsOptionValidAsync(MinimumExpectedTests, minimumExpectedTests.Arguments).Result.IsValid)
+        bool hasMinimumExpectedTestsOptionKey = commandLineOptions.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? minimumExpectedTests);
+        if (!hasMinimumExpectedTestsOptionKey || !IsMinimumExpectedTestsOptionValidAsync(MinimumExpectedTests, minimumExpectedTests ?? Array.Empty<string>()).Result.IsValid)
         {
             return 0;
         }
 
-        ApplicationStateGuard.Ensure(parseResult.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? arguments));
+        ApplicationStateGuard.Ensure(commandLineOptions.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? arguments));
         return int.Parse(arguments[0], CultureInfo.InvariantCulture);
     }
 
