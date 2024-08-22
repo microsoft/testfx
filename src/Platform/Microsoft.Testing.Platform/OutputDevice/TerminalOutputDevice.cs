@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
@@ -26,51 +27,55 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,
     ITestSessionLifetimeHandler,
-    IDisposable
+    IDisposable,
+    IAsyncInitializableExtension
 {
 #pragma warning disable SA1310 // Field names should not contain underscore
     private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
 #pragma warning restore SA1310 // Field names should not contain underscore
 
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
+    private readonly IConsole _console;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
+    private readonly ITestHostControllerInfo _testHostControllerInfo;
     private readonly IAsyncMonitor _asyncMonitor;
     private readonly IRuntimeFeature _runtimeFeature;
     private readonly IEnvironment _environment;
     private readonly IProcessHandler _process;
     private readonly IPlatformInformation _platformInformation;
-    private readonly bool _isVSTestMode;
-    private readonly bool _isListTests;
-    private readonly bool _isServerMode;
+    private readonly ICommandLineOptions _commandLineOptions;
     private readonly ILogger? _logger;
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly IClock _clock;
-    private readonly TerminalTestReporter _terminalTestReporter;
     private readonly string? _longArchitecture;
     private readonly string? _shortArchitecture;
     private readonly string? _targetFramework;
     private readonly string _assemblyName;
     private readonly char[] _dash = new char[] { '-' };
 
+    private TerminalTestReporter? _terminalTestReporter;
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
     private TestRequestExecutionTimeInfo? _testRequestExecutionTimeInfo;
+    private bool _isVSTestMode;
+    private bool _isListTests;
+    private bool _isServerMode;
 
     public TerminalOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
-        bool isVSTestMode, bool isListTests, bool isServerMode, int minimumExpectedTest, FileLoggerProvider? fileLoggerProvider, IClock clock, CommandLineParseResult parseResult)
+        ICommandLineOptions commandLineOptions, FileLoggerProvider? fileLoggerProvider, IClock clock)
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
+        _console = console;
         _testApplicationModuleInfo = testApplicationModuleInfo;
+        _testHostControllerInfo = testHostControllerInfo;
         _asyncMonitor = asyncMonitor;
         _runtimeFeature = runtimeFeature;
         _environment = environment;
         _process = process;
         _platformInformation = platformInformation;
-        _isVSTestMode = isVSTestMode;
-        _isListTests = isListTests;
-        _isServerMode = isServerMode;
+        _commandLineOptions = commandLineOptions;
         _fileLoggerProvider = fileLoggerProvider;
         _clock = clock;
 
@@ -98,13 +103,19 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         {
             _bannerDisplayed = true;
         }
+    }
 
-        bool noAnsi = parseResult.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
-        bool noProgress = parseResult.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
+    public Task InitializeAsync()
+    {
+        _isVSTestMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey);
+        _isListTests = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
+        _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
+        bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
+        bool noProgress = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
 
         bool showPassed = false;
-        OptionRecord? output = parseResult.Options.FirstOrDefault(o => o.Option == TerminalTestReporterCommandLineOptionsProvider.OutputOption);
-        if (output != null && output.Arguments.Length > 0 && TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(output.Arguments[0], StringComparison.OrdinalIgnoreCase))
+        bool outputOption = _commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.OutputOption, out string[]? arguments);
+        if (outputOption && arguments?.Length > 0 && TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
         {
             showPassed = true;
         }
@@ -119,27 +130,29 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             // The test host controller info is not setup and populated until after this constructor, because it writes banner and then after it figures out if
             // the runner is a testHost controller, so we would always have it as null if we capture it directly. Instead we need to check it via
             // func.
-            : () => _isServerMode
+            : () => _isVSTestMode
                 ? false
                 : _isListTests
                     ? false
-                    : testHostControllerInfo.IsCurrentProcessTestHostController == null
+                    : _testHostControllerInfo.IsCurrentProcessTestHostController == null
                         ? null
-                        : !testHostControllerInfo.IsCurrentProcessTestHostController;
+                        : !_testHostControllerInfo.IsCurrentProcessTestHostController;
 
         // This is single exe run, don't show all the details of assemblies and their summaries.
-        _terminalTestReporter = new TerminalTestReporter(console, new()
+        _terminalTestReporter = new TerminalTestReporter(_console, new()
         {
             BaseDirectory = null,
             ShowAssembly = false,
             ShowAssemblyStartAndComplete = false,
             ShowPassedTests = showPassed,
-            MinimumExpectedTests = minimumExpectedTest,
+            MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
             UseAnsi = !noAnsi,
             ShowProgress = shouldShowProgress,
         });
 
         _testApplicationCancellationTokenSource.CancellationToken.Register(() => _terminalTestReporter.StartCancelling());
+
+        return Task.CompletedTask;
     }
 
     private string GetShortArchitecture(string runtimeIdentifier)
@@ -181,6 +194,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
 
     public virtual async Task DisplayBannerAsync(string? bannerMessage)
     {
+        RoslynDebug.Assert(_terminalTestReporter is not null);
+
         if (_isVSTestMode)
         {
             return;
@@ -247,6 +262,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
 
     public async Task DisplayBeforeSessionStartAsync()
     {
+        RoslynDebug.Assert(_terminalTestReporter is not null);
+
         // Start test execution here, rather than in ShowBanner, because then we know
         // if we are a testHost controller or not, and if we should show progress bar.
         _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1);
@@ -259,6 +276,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
 
     public async Task DisplayAfterSessionEndRunAsync()
     {
+        RoslynDebug.Assert(_terminalTestReporter is not null);
+
         if (_isVSTestMode || _isListTests || _isServerMode)
         {
             return;
@@ -301,6 +320,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
     /// <param name="data">The data to be displayed.</param>
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
     {
+        RoslynDebug.Assert(_terminalTestReporter is not null);
+
         if (_isVSTestMode)
         {
             return;
@@ -353,6 +374,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
+        RoslynDebug.Assert(_terminalTestReporter is not null);
+
         await Task.CompletedTask;
         if (cancellationToken.IsCancellationRequested)
         {
