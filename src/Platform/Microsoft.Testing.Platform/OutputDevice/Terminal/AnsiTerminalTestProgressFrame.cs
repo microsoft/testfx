@@ -92,7 +92,7 @@ internal sealed class AnsiTerminalTestProgressFrame
 
         if (charsTaken < nonReservedWidth && (p.TargetFramework != null || p.Architecture != null))
         {
-            var lengthNeeded = 0;
+            int lengthNeeded = 0;
 
             lengthNeeded++; // for '('
             if (p.TargetFramework != null)
