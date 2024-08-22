@@ -9,11 +9,13 @@ internal class CommandLineOptionsProxy : ICommandLineOptions
 {
     private ICommandLineOptions? _commandLineOptions;
 
-    public bool IsOptionSet(string optionName)
-        => _commandLineOptions?.IsOptionSet(optionName) ?? throw new InvalidOperationException("The ICommandLineOptions has not been built yet or is no more usable at this stage.");
+    public bool IsOptionSet(string optionName) => _commandLineOptions is null
+            ? throw new InvalidOperationException("The ICommandLineOptions has not been built yet or is no more usable at this stage.")
+            : _commandLineOptions.IsOptionSet(optionName);
 
-    public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
-        => _commandLineOptions?.TryGetOptionArgumentList(optionName, out arguments) ?? throw new InvalidOperationException("The ICommandLineOptions has not been built yet or is no more usable at this stage.");
+    public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments) => _commandLineOptions is null
+            ? throw new InvalidOperationException("The ICommandLineOptions has not been built yet or is no more usable at this stage.")
+            : _commandLineOptions.TryGetOptionArgumentList(optionName, out arguments);
 
     public void SetCommandLineOptions(ICommandLineOptions commandLineOptions)
     {
