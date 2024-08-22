@@ -53,8 +53,13 @@
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionDescription">
-        <source>Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.</source>
-        <target state="translated">指定產生傾印前的逾時時間。逾時值會以下列其中一種格式顯示: 1.5h、1.5hour、1.5hours、90m、90min、90minute、90minutes 5400s、5400sec、5400second、5400seconds。預設為 30m。</target>
+        <source>Specify the timeout after which the dump will be generated.
+The timeout value is specified in one of the following formats:
+    1.5h, 1.5hour, 1.5hours,
+    90m, 90min, 90minute, 90minutes,
+    5400s, 5400sec, 5400second, 5400seconds.
+    Default is 30m.</source>
+        <target state="needs-review-translation">指定產生傾印前的逾時時間。逾時值會以下列其中一種格式顯示: 1.5h、1.5hour、1.5hours、90m、90min、90minute、90minutes 5400s、5400sec、5400second、5400seconds。預設為 30m。</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
@@ -63,13 +68,16 @@
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
-        <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'</source>
-        <target state="translated">指定傾印的類型。有效值為 'Mini'、'Heap'、'Triage' (只有在 .NET 6+ 可供使用) 或 'Full'。預設類型為 'Full'</target>
+        <source>Specify the type of the dump.
+Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
+Default type is 'Full'</source>
+        <target state="needs-review-translation">指定傾印的類型。有效值為 'Mini'、'Heap'、'Triage' (只有在 .NET 6+ 可供使用) 或 'Full'。預設類型為 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
-        <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
-        <target state="translated">'{0}' 不是有效的傾印類型。有效的選項為 'Mini'、'Heap'、'Triage' (只有在 .NET 6+ 可供使用) 和 'Full'</target>
+        <source>'{0}' is not a valid dump type.
+Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
+        <target state="needs-review-translation">'{0}' 不是有效的傾印類型。有效的選項為 'Mini'、'Heap'、'Triage' (只有在 .NET 6+ 可供使用) 和 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

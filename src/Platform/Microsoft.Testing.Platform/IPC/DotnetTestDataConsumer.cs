@@ -14,9 +14,7 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
     private readonly NamedPipeClient _dotnetTestPipeClient;
 
     public DotnetTestDataConsumer(NamedPipeClient dotnetTestPipeClient)
-    {
-        _dotnetTestPipeClient = dotnetTestPipeClient;
-    }
+        => _dotnetTestPipeClient = dotnetTestPipeClient;
 
     public Type[] DataTypesConsumed => new[]
     {

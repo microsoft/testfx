@@ -148,16 +148,24 @@
     <value>Hang dump timeout of '{0}' expired</value>
   </data>
   <data name="HangDumpTimeoutOptionDescription" xml:space="preserve">
-    <value>Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.</value>
+    <value>Specify the timeout after which the dump will be generated.
+The timeout value is specified in one of the following formats:
+    1.5h, 1.5hour, 1.5hours,
+    90m, 90min, 90minute, 90minutes,
+    5400s, 5400sec, 5400second, 5400seconds.
+    Default is 30m.</value>
   </data>
   <data name="HangDumpTimeoutOptionInvalidArgument" xml:space="preserve">
     <value>'--hangdump-timeout' expects a single timeout argument</value>
   </data>
   <data name="HangDumpTypeOptionDescription" xml:space="preserve">
-    <value>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'</value>
+    <value>Specify the type of the dump.
+Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
+Default type is 'Full'</value>
   </data>
   <data name="HangDumpTypeOptionInvalidType" xml:space="preserve">
-    <value>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</value>
+    <value>'{0}' is not a valid dump type.
+Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</value>
   </data>
   <data name="HangDumpUnsupportedRequestTypeErrorMessage" xml:space="preserve">
     <value>Request of type '{0}' is not supported</value>
