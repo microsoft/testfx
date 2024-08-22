@@ -312,7 +312,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         {
             if (dotnetTestPipeClient is not null)
             {
-                await dotnetTestConnection.SendCommandLineOptionsToDotnetTestPipeAsync();
+                await dotnetTestConnection.SendCommandLineOptionsToDotnetTestPipeAsync(dotnetTestPipeClient);
             }
             else
             {

@@ -11,17 +11,11 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.DotnetTest;
 
-internal sealed class DotnetTestConnection :
-#if NETCOREAPP
-    IAsyncDisposable,
-#endif
-    IDisposable
+internal sealed class DotnetTestConnection
 {
     private readonly CommandLineHandler _commandLineHandler;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly CTRLPlusCCancellationTokenSource _cancellationTokenSource;
-
-    private NamedPipeClient? _namedPipeClient;
 
     public DotnetTestConnection(CommandLineHandler commandLineHandler, ITestApplicationModuleInfo testApplicationModuleInfo, CTRLPlusCCancellationTokenSource cancellationTokenSource)
     {
@@ -32,6 +26,7 @@ internal sealed class DotnetTestConnection :
 
     public async Task<(NamedPipeClient? NamedPipeClient, string? ExecutionId)> ConnectToDotnetTestPipeIfAvailableAsync()
     {
+        NamedPipeClient? namedPipeClient = null;
         string executionId = string.Empty;
 
         // If we are in server mode and the pipe name is provided
@@ -41,16 +36,16 @@ internal sealed class DotnetTestConnection :
         {
             executionId = Guid.NewGuid().ToString("N");
 
-            _namedPipeClient = new(arguments[0]);
-            _namedPipeClient.RegisterAllSerializers();
+            namedPipeClient = new(arguments[0]);
+            namedPipeClient.RegisterAllSerializers();
 
-            await _namedPipeClient.ConnectAsync(_cancellationTokenSource.CancellationToken);
+            await namedPipeClient.ConnectAsync(_cancellationTokenSource.CancellationToken);
         }
 
-        return (_namedPipeClient, executionId);
+        return (namedPipeClient, executionId);
     }
 
-    public async Task SendCommandLineOptionsToDotnetTestPipeAsync()
+    public async Task SendCommandLineOptionsToDotnetTestPipeAsync(NamedPipeClient namedPipeClient)
     {
         List<CommandLineOptionMessage> commandLineHelpOptions = new();
         foreach (ICommandLineOptionsProvider commandLineOptionProvider in _commandLineHandler.CommandLineOptionsProviders)
@@ -70,18 +65,6 @@ internal sealed class DotnetTestConnection :
             }
         }
 
-        await _namedPipeClient!.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), _cancellationTokenSource.CancellationToken);
+        await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), _cancellationTokenSource.CancellationToken);
     }
-
-    public void Dispose() => _namedPipeClient?.Dispose();
-
-#if NETCOREAPP
-    public async ValueTask DisposeAsync()
-    {
-        if (_namedPipeClient is not null)
-        {
-            await _namedPipeClient.DisposeAsync();
-        }
-    }
-#endif
 }
