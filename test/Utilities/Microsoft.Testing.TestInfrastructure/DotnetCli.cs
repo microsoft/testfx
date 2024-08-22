@@ -54,6 +54,7 @@ public static class DotnetCli
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
         int timeoutInSeconds = 50,
+        int retryCount = 5,
         bool disableCodeCoverage = true,
         bool warnAsError = true,
         bool suppressPreviewDotNetMessage = true)
@@ -107,7 +108,7 @@ public static class DotnetCli
             }
             else
             {
-                IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 1.5);
+                IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount, factor: 1.5);
                 return await Policy
                     .Handle<Exception>()
                     .WaitAndRetryAsync(delay)

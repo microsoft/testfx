@@ -138,4 +138,16 @@
   <data name="TestRunParameterOptionArgumentIsNotParameter" xml:space="preserve">
     <value>argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</value>
   </data>
+  <data name="MissingRunSettingsAttribute" xml:space="preserve">
+    <value>Invalid .runsettings file, '&lt;RunSettings&gt;' attribute is missing</value>
+  </data>
+  <data name="UnsupportedRunsettingsLoggers" xml:space="preserve">
+    <value>Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</value>
+  </data>
+  <data name="UnsupportedRunsettingsDatacollectors" xml:space="preserve">
+    <value>Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored</value>
+  </data>
+  <data name="UnsupportedRunconfigurationSetting" xml:space="preserve">
+    <value>Runsettings attribute '{0}' is not supported by Microsoft.Testing.Platform and will be ignored</value>
+  </data>
 </root>

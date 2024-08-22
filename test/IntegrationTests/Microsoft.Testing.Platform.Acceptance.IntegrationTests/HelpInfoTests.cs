@@ -59,6 +59,9 @@ Options:
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
         The default is TestResults in the directory that contains the test application.
+    --timeout
+        A global test execution timeout.
+        Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Extension options:
     --no-ansi
         Disable outputting ANSI escape characters to screen.
@@ -231,6 +234,11 @@ Built-in command line providers:
         Arity: 0\.\.1
         Hidden: True
         Description: Enable the server mode\.
+      --timeout
+        Arity: 1
+        Hidden: False
+        Description: A global test execution timeout.
+        Takes one argument as string in the format <value>\[h\|m\|s\] where 'value' is float\.
 Registered command line providers:
   TerminalTestReporterCommandLineOptionsProvider
     Name: Terminal test reporter
@@ -317,6 +325,9 @@ Options:
         Disable retry mechanism if the percentage of failed tests is greater than the specified value
     --retry-failed-tests-max-tests
         Disable retry mechanism if the number of failed tests is greater than the specified value
+    --timeout
+        A global test execution timeout.
+        Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Extension options:
     --crashdump
         [net6.0+ only] Generate a dump file if the test process crashes
@@ -495,6 +506,11 @@ Built-in command line providers:
         Arity: 0..1
         Hidden: True
         Description: Enable the server mode.
+      --timeout
+        Arity: 1
+        Hidden: False
+        Description: A global test execution timeout.
+        Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Registered command line providers:
   CrashDumpCommandLineProvider
     Name: Crash dump
