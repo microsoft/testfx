@@ -59,7 +59,12 @@ The timeout value is specified in one of the following formats:
     90m, 90min, 90minute, 90minutes,
     5400s, 5400sec, 5400second, 5400seconds.
     Default is 30m.</source>
-        <target state="needs-review-translation">Określ limit czasu, po którym zostanie wygenerowany zrzut. Wartość limitu czasu jest określona w jednym z następujących formatów: 1,5 godziny, 1,5 godziny, 90 m, 90 min, 90 minut, 90 minut 5400 s, 5400 s, 5400 sekund, 5400 sekund, 5400 sekund. Wartość domyślna to 30 m.</target>
+        <target state="new">Specify the timeout after which the dump will be generated.
+The timeout value is specified in one of the following formats:
+    1.5h, 1.5hour, 1.5hours,
+    90m, 90min, 90minute, 90minutes,
+    5400s, 5400sec, 5400second, 5400seconds.
+    Default is 30m.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
@@ -71,13 +76,16 @@ The timeout value is specified in one of the following formats:
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
-        <target state="needs-review-translation">Określ typ zrzutu. Prawidłowe wartości to "Mini", "Heap", "Triage" (dostępne tylko na platformie .NET 6+) lub „Pełne”. Domyślny typ to „Pełne”</target>
+        <target state="new">Specify the type of the dump.
+Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
+Default type is 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
-        <target state="needs-review-translation">Typ „{0}” nie jest prawidłowym typem zrzutu. Prawidłowe opcje to „Mini”, „Sterta", "Klasyfikacja" (dostępne tylko na platformie .NET 6+) i „Pełne”</target>
+        <target state="new">'{0}' is not a valid dump type.
+Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
