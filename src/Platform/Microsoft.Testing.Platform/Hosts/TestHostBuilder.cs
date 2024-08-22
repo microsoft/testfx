@@ -118,6 +118,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         if (loggingState.FileLoggerProvider is not null)
         {
             logger = loggingState.FileLoggerProvider.CreateLogger(GetType().ToString());
+            FileLoggerInformation fileLoggerInformation = new(loggingState.FileLoggerProvider.SyncFlush, new(loggingState.FileLoggerProvider.FileLogger.FileName), loggingState.LogLevel);
+            serviceProvider.TryAddService(fileLoggerInformation);
         }
 
         if (logger is not null)
@@ -191,6 +193,10 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         CommandLineOptionsProxy commandLineOptionsProxy = new();
         serviceProvider.TryAddService(commandLineOptionsProxy);
 
+        // Add the logger factory proxy to the service provider.
+        LoggerFactoryProxy loggerFactoryProxy = new();
+        serviceProvider.TryAddService(loggerFactoryProxy);
+
         // Add output display proxy, needed by command line manager.
         // We don't add to the service right now because we need special treatment between console/server mode.
         IPlatformOutputDevice platformOutputDevice = ((PlatformOutputDeviceManager)OutputDisplay).Build(serviceProvider, loggingState);
@@ -226,7 +232,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Build the logger factory.
         ILoggerFactory loggerFactory = await ((LoggingManager)Logging).BuildAsync(serviceProvider, loggingState.LogLevel, systemMonitor);
-        serviceProvider.TryAddService(loggerFactory);
+
+        // Set the concrete logger factory
+        loggerFactoryProxy.SetLoggerFactory(loggerFactory);
 
         // Initialize the output device if needed.
         if (await platformOutputDevice.IsEnabledAsync())

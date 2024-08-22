@@ -44,8 +44,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
     private readonly IProcessHandler _process;
     private readonly IPlatformInformation _platformInformation;
     private readonly ICommandLineOptions _commandLineOptions;
-    private readonly ILogger? _logger;
-    private readonly FileLoggerProvider? _fileLoggerProvider;
+    private readonly IFileLoggerInformation? _fileLoggerInformation;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly IClock _clock;
     private readonly string? _longArchitecture;
     private readonly string? _shortArchitecture;
@@ -60,11 +60,12 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
     private bool _isVSTestMode;
     private bool _isListTests;
     private bool _isServerMode;
+    private ILogger? _logger;
 
     public TerminalOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
-        ICommandLineOptions commandLineOptions, FileLoggerProvider? fileLoggerProvider, IClock clock)
+        ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock)
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _console = console;
@@ -76,13 +77,9 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         _process = process;
         _platformInformation = platformInformation;
         _commandLineOptions = commandLineOptions;
-        _fileLoggerProvider = fileLoggerProvider;
+        _fileLoggerInformation = fileLoggerInformation;
+        _loggerFactory = loggerFactory;
         _clock = clock;
-
-        if (_fileLoggerProvider is not null)
-        {
-            _logger = _fileLoggerProvider.CreateLogger(GetType().ToString());
-        }
 
         if (_runtimeFeature.IsDynamicCodeSupported)
         {
@@ -107,6 +104,11 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
 
     public Task InitializeAsync()
     {
+        if (_fileLoggerInformation is not null)
+        {
+            _logger = _loggerFactory.CreateLogger(GetType().ToString());
+        }
+
         _isVSTestMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey);
         _isListTests = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
@@ -246,15 +248,15 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                 }
             }
 
-            if (_fileLoggerProvider is not null)
+            if (_fileLoggerInformation is not null)
             {
-                if (_fileLoggerProvider.SyncFlush)
+                if (_fileLoggerInformation.SyncronousWrite)
                 {
-                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName), padding: null);
+                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
                 }
                 else
                 {
-                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName), padding: null);
+                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
                 }
             }
         }

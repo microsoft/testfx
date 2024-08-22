@@ -638,6 +638,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The ILoggerFactory has not been built yet..
+        /// </summary>
+        internal static string LoggerFactoryNotReady {
+            get {
+                return ResourceManager.GetString("LoggerFactoryNotReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The message bus has not been built yet or is no more usable at this stage..
         /// </summary>
         internal static string MessageBusNotReady {
