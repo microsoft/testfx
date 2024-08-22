@@ -618,11 +618,9 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</value>
   <data name="PlatformCommandLineTimeoutOptionDescription" xml:space="preserve">
     <value>A global test execution timeout.
 Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</value>
-  </data>  
+  </data>
   <data name="LoggerFactoryNotReady" xml:space="preserve">
     <value>The ILoggerFactory has not been built yet.</value>
-  </data>
-</root>
   </data>
   <data name="MessageBusNotReady" xml:space="preserve">
     <value>The message bus has not been built yet or is no more usable at this stage.</value>
