@@ -584,12 +584,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.Append(SingleIndentation);
         terminal.AppendLine(PlatformResources.Expected);
         AppendIndentedLine(terminal, expected, DoubleIndentation);
-        terminal.AppendLine();
         terminal.Append(SingleIndentation);
         terminal.AppendLine(PlatformResources.Actual);
         AppendIndentedLine(terminal, actual, DoubleIndentation);
         terminal.ResetColor();
-        terminal.AppendLine();
     }
 
     private static void FormatErrorMessage(ITerminal terminal, string? errorMessage)
