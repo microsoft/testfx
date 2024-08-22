@@ -11,12 +11,12 @@ internal sealed class CommandLineOptionsProxy : ICommandLineOptions
 
     public bool IsOptionSet(string optionName)
         => _commandLineOptions is null
-            ? throw new InvalidOperationException("The ICommandLineOptions has not been built yet or is no more usable at this stage.")
+            ? throw new InvalidOperationException(Resources.PlatformResources.CommandLineOptionsNotReady)
             : _commandLineOptions.IsOptionSet(optionName);
 
     public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
         => _commandLineOptions is null
-            ? throw new InvalidOperationException("The ICommandLineOptions has not been built yet or is no more usable at this stage.")
+            ? throw new InvalidOperationException(Resources.PlatformResources.CommandLineOptionsNotReady)
             : _commandLineOptions.TryGetOptionArgumentList(optionName, out arguments);
 
     public void SetCommandLineOptions(ICommandLineOptions commandLineOptions)

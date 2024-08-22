@@ -259,6 +259,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The ICommandLineOptions has not been built yet or is no more usable at this stage..
+        /// </summary>
+        internal static string CommandLineOptionsNotReady {
+            get {
+                return ResourceManager.GetString("CommandLineOptionsNotReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unexpected argument {0}.
         /// </summary>
         internal static string CommandLineParserUnexpectedArgument {
@@ -629,6 +638,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The message bus has not been built yet or is no more usable at this stage..
+        /// </summary>
+        internal static string MessageBusNotReady {
+            get {
+                return ResourceManager.GetString("MessageBusNotReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Minimum expected tests policy violation, tests ran {0}, minimum expected {1}.
         /// </summary>
         internal static string MinimumExpectedTestsPolicyViolation {
@@ -972,7 +990,8 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A global test execution timeout, it should have one argument as string in the format &lt;value&gt;[h|m|s] where &apos;value&apos; is float..
+        ///   Looks up a localized string similar to A global test execution timeout.
+        ///Takes one argument as string in the format &lt;value&gt;[h|m|s] where &apos;value&apos; is float..
         /// </summary>
         internal static string PlatformCommandLineTimeoutOptionDescription {
             get {

@@ -112,6 +112,11 @@
         <target state="translated">'{1}' sağlayıcısındaki (UID: {2}) `--{0}` seçeneği ayrılmış '--internal' önekini kullanıyor</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionsNotReady">
+        <source>The ICommandLineOptions has not been built yet or is no more usable at this stage.</source>
+        <target state="new">The ICommandLineOptions has not been built yet or is no more usable at this stage.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">{0} bağımsız değişkeni beklenmiyordu</target>
@@ -319,6 +324,11 @@
       <trans-unit id="JsonRpcTcpServerToSingleClientDescription">
         <source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</source>
         <target state="translated">JsonRpc sunucusundan istemciye el sıkışması, test platformu protokol belirtimine dayalı uygulama.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MessageBusNotReady">
+        <source>The message bus has not been built yet or is no more usable at this stage.</source>
+        <target state="new">The message bus has not been built yet or is no more usable at this stage.</target>
         <note />
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
