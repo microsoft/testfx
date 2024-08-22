@@ -112,6 +112,11 @@
         <target state="translated">プロバイダー '{1}' のオプション '--{0}' (UID:{2}) は予約済みプレフィックス '--internal' を 使用しています</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionsNotReady">
+        <source>The ICommandLineOptions has not been built yet.</source>
+        <target state="new">The ICommandLineOptions has not been built yet.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">予期しない引数 {0}</target>
@@ -319,6 +324,11 @@
       <trans-unit id="JsonRpcTcpServerToSingleClientDescription">
         <source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</source>
         <target state="translated">テスト プラットフォーム プロトコル仕様に基づく JsonRpc サーバーからクライアント ハンドシェイクへの実装。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MessageBusNotReady">
+        <source>The message bus has not been built yet or is no more usable at this stage.</source>
+        <target state="new">The message bus has not been built yet or is no more usable at this stage.</target>
         <note />
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">

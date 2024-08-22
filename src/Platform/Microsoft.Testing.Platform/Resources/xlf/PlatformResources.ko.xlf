@@ -112,6 +112,11 @@
         <target state="translated">공급자 '{1}'(UID: {2})의 옵션 '-- {0}'이 예약된 접두사 '--internal'을 사용하고 있습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionsNotReady">
+        <source>The ICommandLineOptions has not been built yet.</source>
+        <target state="new">The ICommandLineOptions has not been built yet.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">예기치 않은 인수 {0}</target>
@@ -319,6 +324,11 @@
       <trans-unit id="JsonRpcTcpServerToSingleClientDescription">
         <source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</source>
         <target state="translated">테스트 플랫폼 프로토콜 사양을 기반으로 구현되는 JsonRpc 서버와 클라이언트의 핸드셰이크입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MessageBusNotReady">
+        <source>The message bus has not been built yet or is no more usable at this stage.</source>
+        <target state="new">The message bus has not been built yet or is no more usable at this stage.</target>
         <note />
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">

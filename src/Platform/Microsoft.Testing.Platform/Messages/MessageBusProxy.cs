@@ -50,7 +50,7 @@ internal sealed class MessageBusProxy : BaseMessageBus, IMessageBus
     {
         if (_messageBus is null)
         {
-            throw new InvalidOperationException("The message bus has not been built yet or is no more usable at this stage.");
+            throw new InvalidOperationException(Resources.PlatformResources.MessageBusNotReady);
         }
     }
 
