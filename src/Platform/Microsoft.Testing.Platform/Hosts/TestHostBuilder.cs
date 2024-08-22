@@ -211,7 +211,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             Logging.AddProvider((_, _) => loggingState.FileLoggerProvider);
         }
 
-        // Get te command line options
+        // Get the command line options
         ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
 
         // Register the server mode log forwarder if needed. We follow the console --diagnostic behavior.
