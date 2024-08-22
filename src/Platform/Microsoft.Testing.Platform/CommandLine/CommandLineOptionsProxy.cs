@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal class CommandLineOptionsProxy : ICommandLineOptions
+internal sealed class CommandLineOptionsProxy : ICommandLineOptions
 {
     private ICommandLineOptions? _commandLineOptions;
 
