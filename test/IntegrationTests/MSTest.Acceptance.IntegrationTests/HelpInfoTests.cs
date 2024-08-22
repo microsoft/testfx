@@ -52,7 +52,7 @@ Extension options:
   --test-parameter Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters
 """;
 
-        testHostResult.AssertOutputMatches(wildcardMatchPattern);
+        testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]

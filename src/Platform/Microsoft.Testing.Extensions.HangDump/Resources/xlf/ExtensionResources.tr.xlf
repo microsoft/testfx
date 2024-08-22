@@ -54,10 +54,10 @@
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated.
-The timeout value is specified in one of the following formats: 
-    1.5h, 1.5hour, 1.5hours, 
-    90m, 90min, 90minute, 90minutes, 
-    5400s, 5400sec, 5400second, 5400seconds. 
+The timeout value is specified in one of the following formats:
+    1.5h, 1.5hour, 1.5hours,
+    90m, 90min, 90minute, 90minutes,
+    5400s, 5400sec, 5400second, 5400seconds.
     Default is 30m.</source>
         <target state="needs-review-translation">Dökümün oluşturulacağı zaman aşımını belirtin. Zaman aşımı değeri şu formatlardan birinde belirtilir: 1,5 saat, 1,5 saat, 1,5 saat, 90 dakika, 90 dakika, 90 dakika, 90 dakika 5400s, 5400sn, 5400saniye, 5400saniye. Varsayılan değer 30m.</target>
         <note />

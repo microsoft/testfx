@@ -359,8 +359,8 @@
     <value>Specify the port of the client.</value>
   </data>
   <data name="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription" xml:space="preserve">
-    <value>Force the built-in file logger to write the log synchronously. 
-Useful for scenario where you don't want to lose any log (i.e. in case of crash). 
+    <value>Force the built-in file logger to write the log synchronously.
+Useful for scenario where you don't want to lose any log (i.e. in case of crash).
 Note that this is slowing down the test execution.</value>
   </data>
   <data name="PlatformCommandLineDiagnosticOptionDescription" xml:space="preserve">

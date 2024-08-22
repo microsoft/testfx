@@ -719,8 +719,8 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Force the built-in file logger to write the log synchronously. 
-        ///Useful for scenario where you don&apos;t want to lose any log (i.e. in case of crash). 
+        ///   Looks up a localized string similar to Force the built-in file logger to write the log synchronously.
+        ///Useful for scenario where you don&apos;t want to lose any log (i.e. in case of crash).
         ///Note that this is slowing down the test execution..
         /// </summary>
         internal static string PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription {

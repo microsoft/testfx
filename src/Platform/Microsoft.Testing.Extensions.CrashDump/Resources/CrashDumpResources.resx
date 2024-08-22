@@ -148,8 +148,8 @@
     <value>Test host process with PID '{0}' crashed, a dump file was generated</value>
   </data>
   <data name="CrashDumpTypeOptionDescription" xml:space="preserve">
-    <value>Specify the type of the dump. 
-Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'. 
+    <value>Specify the type of the dump.
+Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</value>
   </data>
   <data name="CrashDumpTypeOptionInvalidType" xml:space="preserve">

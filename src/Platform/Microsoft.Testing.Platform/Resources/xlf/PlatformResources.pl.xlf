@@ -372,8 +372,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
-        <source>Force the built-in file logger to write the log synchronously. 
-Useful for scenario where you don't want to lose any log (i.e. in case of crash). 
+        <source>Force the built-in file logger to write the log synchronously.
+Useful for scenario where you don't want to lose any log (i.e. in case of crash).
 Note that this is slowing down the test execution.</source>
         <target state="needs-review-translation">Wymuś synchroniczne zapisywanie dziennika przez wbudowany rejestrator plików. Przydatne w przypadku scenariusza, w którym nie chcesz utracić żadnego dziennika (tj. w przypadku awarii). Pamiętaj, że to spowalnia wykonywanie testu.</target>
         <note />

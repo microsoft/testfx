@@ -372,8 +372,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
-        <source>Force the built-in file logger to write the log synchronously. 
-Useful for scenario where you don't want to lose any log (i.e. in case of crash). 
+        <source>Force the built-in file logger to write the log synchronously.
+Useful for scenario where you don't want to lose any log (i.e. in case of crash).
 Note that this is slowing down the test execution.</source>
         <target state="needs-review-translation">기본 제공 파일 로거가 로그를 동기적으로 기록하도록 강제합니다. 로그를 잃지 않으려는 시나리오(예: 충돌 시)에 유용합니다. 이로 인해 테스트 실행 속도가 느려집니다.</target>
         <note />
