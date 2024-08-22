@@ -9,7 +9,8 @@ internal sealed class CommandLineOptionsProxy : ICommandLineOptions
 {
     private ICommandLineOptions? _commandLineOptions;
 
-    public bool IsOptionSet(string optionName) => _commandLineOptions is null
+    public bool IsOptionSet(string optionName)
+        => _commandLineOptions is null
             ? throw new InvalidOperationException("The ICommandLineOptions has not been built yet or is no more usable at this stage.")
             : _commandLineOptions.IsOptionSet(optionName);
 
