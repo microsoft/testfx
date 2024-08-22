@@ -4,7 +4,6 @@
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Tools;
 
@@ -22,7 +21,7 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, ITestAp
         _commandLineProviderFactory.Add(commandLineProviderFactory);
     }
 
-    internal async Task<CommandLineHandler> BuildAsync(IPlatformOutputDevice platformOutputDisplay, CommandLineParseResult parseResult)
+    internal async Task<CommandLineHandler> BuildAsync(CommandLineParseResult parseResult)
     {
         List<ICommandLineOptionsProvider> commandLineOptionsProviders = [];
         foreach (Func<ICommandLineOptionsProvider> commandLineProviderFactory in _commandLineProviderFactory)
@@ -47,6 +46,6 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, ITestAp
         ];
 
         return new CommandLineHandler(parseResult, commandLineOptionsProviders,
-            systemCommandLineOptionsProviders, _testApplicationModuleInfo, _runtimeFeature, platformOutputDisplay);
+            systemCommandLineOptionsProviders, _testApplicationModuleInfo, _runtimeFeature);
     }
 }
