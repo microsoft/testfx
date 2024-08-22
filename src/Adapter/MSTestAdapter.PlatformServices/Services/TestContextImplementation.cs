@@ -85,6 +85,10 @@ public class TestContextImplementation : TestContext, ITestContext
 
         // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
         _threadSafeStringWriter = stringWriter as ThreadSafeStringWriter;
+        var cancellationToken = (CancellationToken)properties["passedCancelationToken"];
+
+        CancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
         _properties = new Dictionary<string, object?>(properties)
         {
             [FullyQualifiedTestClassNameLabel] = _testMethod.FullClassName,

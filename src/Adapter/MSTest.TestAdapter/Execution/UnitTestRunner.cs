@@ -123,14 +123,17 @@ internal class UnitTestRunner : MarshalByRefObject
     /// <param name="testMethod"> The test Method. </param>
     /// <param name="testContextProperties"> The test context properties. </param>
     /// <returns> The <see cref="UnitTestResult"/>. </returns>
-    internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties)
+    internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties, TestRunCancellationToken? cancellationToken = null)
     {
         Guard.NotNull(testMethod);
 
         try
         {
             using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
-            var properties = new Dictionary<string, object?>(testContextProperties);
+            var properties = new Dictionary<string, object?>(testContextProperties)
+            {
+                { "passedCancelationToken", cancellationToken?.CancellationToken },
+            };
             ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
             testContext.SetOutcome(UTF.UnitTestOutcome.InProgress);
 
