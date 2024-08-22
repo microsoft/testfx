@@ -129,7 +129,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                 }
 
                 await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Hidden: {option.IsHidden}"));
-                await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Description: {option.Description}"));
+                await platformOutputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"Description: {option.Description}") { Padding = optionInfoIndent.Length });
             }
         }
 
@@ -148,7 +148,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                         await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerIdIndent}{provider.Uid}"));
                         await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerInfoIndent}Name: {provider.DisplayName}"));
                         await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerInfoIndent}Version: {provider.Version}"));
-                        await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerInfoIndent}Description: {provider.Description}"));
+                        await platformOutputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"Description: {provider.Description}") { Padding = providerInfoIndent.Length });
                         await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerInfoIndent}Options:"));
                     }
 
@@ -199,7 +199,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                     await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Command: {tool.Name}"));
                     await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Name: {tool.DisplayName}"));
                     await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Version: {tool.Version}"));
-                    await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Description: {tool.Description}"));
+                    await platformOutputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"Description: {tool.Description}") { Padding = 4 });
                     await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("    Tool command line providers:"));
                     if (groupedToolExtensions.TryGetValue(tool.Name, out List<IToolCommandLineOptionsProvider>? providers))
                     {
@@ -265,11 +265,11 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                 return false;
             }
 
-            int maxOptionNameLength = options.Max(option => option.Name.Length);
-
             foreach (CommandLineOption? option in options)
             {
-                await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{new string(' ', leftPaddingDepth * 2)}--{option.Name}{new string(' ', maxOptionNameLength - option.Name.Length)} {option.Description}"));
+                await platformOutputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"--{option.Name}") { Padding = 4 });
+                await platformOutputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(option.Description) { Padding = 8 });
+                await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Empty));
             }
 
             return options.Length != 0;

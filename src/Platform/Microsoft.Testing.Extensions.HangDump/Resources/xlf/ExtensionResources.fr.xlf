@@ -53,8 +53,13 @@
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionDescription">
-        <source>Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m.</source>
-        <target state="translated">Spécifiez le délai d’expiration après lequel le vidage sera généré. La valeur du délai d'attente est spécifiée dans l'un des formats suivants : 1,5 h, 1,5 heure, 1,5 heure, 90 m, 90 min, 90 minutes, 90 minutes 5 400 s, 5 400 s, 5 400 secondes, 5 400 secondes. La valeur par défaut est 30 m.</target>
+        <source>Specify the timeout after which the dump will be generated.
+The timeout value is specified in one of the following formats:
+    1.5h, 1.5hour, 1.5hours,
+    90m, 90min, 90minute, 90minutes,
+    5400s, 5400sec, 5400second, 5400seconds.
+    Default is 30m.</source>
+        <target state="needs-review-translation">Spécifiez le délai d’expiration après lequel le vidage sera généré. La valeur du délai d'attente est spécifiée dans l'un des formats suivants : 1,5 h, 1,5 heure, 1,5 heure, 90 m, 90 min, 90 minutes, 90 minutes 5 400 s, 5 400 s, 5 400 secondes, 5 400 secondes. La valeur par défaut est 30 m.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
@@ -63,13 +68,16 @@
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
-        <source>Specify the type of the dump. Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'. Default type is 'Full'</source>
-        <target state="translated">Spécifiez le type de l’image mémoire. Les valeurs valides sont « Mini », « Heap », « Triage » (uniquement disponible dans .NET 6+) ou « Full ». Le type par défaut est ' Full'</target>
+        <source>Specify the type of the dump.
+Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
+Default type is 'Full'</source>
+        <target state="needs-review-translation">Spécifiez le type de l’image mémoire. Les valeurs valides sont « Mini », « Heap », « Triage » (uniquement disponible dans .NET 6+) ou « Full ». Le type par défaut est ' Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
-        <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
-        <target state="translated">'{0}' n’est pas un type de vidage valide. Les options valides sont « Mini », « Heap », « Triage » (uniquement disponible dans .NET 6+) et « Full »</target>
+        <source>'{0}' is not a valid dump type.
+Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
+        <target state="needs-review-translation">'{0}' n’est pas un type de vidage valide. Les options valides sont « Mini », « Heap », « Triage » (uniquement disponible dans .NET 6+) et « Full »</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

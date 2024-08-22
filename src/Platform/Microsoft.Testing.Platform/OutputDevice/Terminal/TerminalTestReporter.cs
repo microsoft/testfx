@@ -583,13 +583,11 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.SetColor(TerminalColor.Red);
         terminal.Append(SingleIndentation);
         terminal.AppendLine(PlatformResources.Expected);
-        AppendIndentedMessage(terminal, expected, DoubleIndentation);
-        terminal.AppendLine();
+        AppendIndentedLine(terminal, expected, DoubleIndentation);
         terminal.Append(SingleIndentation);
         terminal.AppendLine(PlatformResources.Actual);
-        AppendIndentedMessage(terminal, actual, DoubleIndentation);
+        AppendIndentedLine(terminal, actual, DoubleIndentation);
         terminal.ResetColor();
-        terminal.AppendLine();
     }
 
     private static void FormatErrorMessage(ITerminal terminal, string? errorMessage)
@@ -600,12 +598,11 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
 
         terminal.SetColor(TerminalColor.Red);
-        AppendIndentedMessage(terminal, errorMessage, SingleIndentation);
+        AppendIndentedLine(terminal, errorMessage, SingleIndentation);
         terminal.ResetColor();
-        terminal.AppendLine();
     }
 
-    private static void AppendIndentedMessage(ITerminal terminal, string? message, string indent)
+    private static void AppendIndentedLine(ITerminal terminal, string? message, string indent)
     {
         if (RoslynString.IsNullOrWhiteSpace(message))
         {
@@ -615,7 +612,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         if (!message.Contains('\n'))
         {
             terminal.Append(indent);
-            terminal.Append(message);
+            terminal.AppendLine(message);
             return;
         }
 
@@ -695,7 +692,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         });
     }
 
-    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string text)
+    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string text, int? padding)
     {
         TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddError(text);
@@ -703,40 +700,74 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
             terminal.SetColor(TerminalColor.Red);
-            terminal.AppendLine(text);
+            if (padding == null)
+            {
+                terminal.AppendLine(text);
+            }
+            else
+            {
+                AppendIndentedLine(terminal, text, new string(' ', padding.Value));
+            }
+
             terminal.ResetColor();
         });
     }
 
-    internal void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string text)
+    internal void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string text, int? padding)
     {
         TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddWarning(text);
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
             terminal.SetColor(TerminalColor.Yellow);
-            terminal.AppendLine(text);
+            if (padding == null)
+            {
+                terminal.AppendLine(text);
+            }
+            else
+            {
+                AppendIndentedLine(terminal, text, new string(' ', padding.Value));
+            }
+
             terminal.ResetColor();
         });
     }
 
     internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, Exception exception)
-        => WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString());
+        => WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString(), padding: null);
 
-    internal void WriteMessage(string text, SystemConsoleColor? color = null)
+    internal void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
     {
         if (color != null)
         {
             _terminalWithProgress.WriteToTerminal(terminal =>
             {
                 terminal.SetColor(ToTerminalColor(color.ConsoleColor));
-                terminal.AppendLine(text);
+                if (padding == null)
+                {
+                    terminal.AppendLine(text);
+                }
+                else
+                {
+                    AppendIndentedLine(terminal, text, new string(' ', padding.Value));
+                }
+
                 terminal.ResetColor();
             });
         }
         else
         {
-            _terminalWithProgress.WriteToTerminal(terminal => terminal.AppendLine(text));
+            _terminalWithProgress.WriteToTerminal(terminal =>
+            {
+                if (padding == null)
+                {
+                    terminal.AppendLine(text);
+                }
+                else
+                {
+                    AppendIndentedLine(terminal, text, new string(' ', padding.Value));
+                }
+            });
         }
     }
 

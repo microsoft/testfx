@@ -146,8 +146,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
-        string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+        await DotnetCli.RunAsync(
             $"test --arch x86 -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
             environmentVariables: dotnetRootX86,

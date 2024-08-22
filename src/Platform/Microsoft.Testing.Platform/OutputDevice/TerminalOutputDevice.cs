@@ -250,11 +250,11 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             {
                 if (_fileLoggerProvider.SyncFlush)
                 {
-                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
+                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName), padding: null);
                 }
                 else
                 {
-                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
+                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName), padding: null);
                 }
             }
         }
@@ -337,19 +337,19 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         switch (color.ConsoleColor)
                         {
                             case ConsoleColor.Red:
-                                _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, formattedTextOutputDeviceData.Text);
+                                _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
                                 break;
                             case ConsoleColor.Yellow:
-                                _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, formattedTextOutputDeviceData.Text);
+                                _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
                                 break;
                             default:
-                                _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text, color);
+                                _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text, color, formattedTextOutputDeviceData.Padding);
                                 break;
                         }
                     }
                     else
                     {
-                        _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text);
+                        _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text, padding: formattedTextOutputDeviceData.Padding);
                     }
 
                     break;
