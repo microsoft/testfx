@@ -3,6 +3,8 @@
 
 using System.Globalization;
 
+using Microsoft.Testing.Platform.Helpers;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
@@ -44,64 +46,122 @@ internal sealed class AnsiTerminalTestProgressFrame
 
         _progressItems[i].DurationLength = durationString.Length;
 
+        int nonReservedWidth = Width - (durationString.Length + 2);
+
         int passed = p.PassedTests;
         int failed = p.FailedTests;
         int skipped = p.SkippedTests;
+        int charsTaken = 0;
 
-        string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
         terminal.Append('[');
+        charsTaken++;
         terminal.SetColor(TerminalColor.DarkGreen);
         terminal.Append('✓');
-        terminal.Append(passed.ToString(CultureInfo.CurrentCulture));
+        charsTaken++;
+        string passedText = passed.ToString(CultureInfo.CurrentCulture);
+        terminal.Append(passedText);
+        charsTaken += passedText.Length;
         terminal.ResetColor();
 
         terminal.Append('/');
+        charsTaken++;
 
         terminal.SetColor(TerminalColor.DarkRed);
         terminal.Append('x');
-        terminal.Append(failed.ToString(CultureInfo.CurrentCulture));
+        charsTaken++;
+        string failedText = failed.ToString(CultureInfo.CurrentCulture);
+        terminal.Append(failedText);
+        charsTaken += failedText.Length;
         terminal.ResetColor();
 
         terminal.Append('/');
+        charsTaken++;
 
         terminal.SetColor(TerminalColor.DarkYellow);
         terminal.Append('↓');
-        terminal.Append(skipped.ToString(CultureInfo.CurrentCulture));
+        charsTaken++;
+        string skippedText = skipped.ToString(CultureInfo.CurrentCulture);
+        terminal.Append(skippedText);
+        charsTaken += skippedText.Length;
         terminal.ResetColor();
         terminal.Append(']');
+        charsTaken++;
 
+        // -5 because we want to output at least 1 char from the name, and ' ...' followed by duration
         terminal.Append(' ');
-        terminal.Append(p.AssemblyName);
+        charsTaken++;
+        AppendToWidth(terminal, p.AssemblyName, nonReservedWidth, ref charsTaken);
 
-        AppendTargetFrameworkAndArchitecture(terminal, p);
+        if (charsTaken < nonReservedWidth && (p.TargetFramework != null || p.Architecture != null))
+        {
+            var lengthNeeded = 0;
 
-        if (!RoslynString.IsNullOrWhiteSpace(detail))
+            lengthNeeded++; // for '('
+            if (p.TargetFramework != null)
+            {
+                lengthNeeded += p.TargetFramework.Length;
+                if (p.Architecture != null)
+                {
+                    lengthNeeded++; // for '|'
+                }
+            }
+
+            if (p.Architecture != null)
+            {
+                lengthNeeded += p.Architecture.Length;
+            }
+
+            lengthNeeded++; // for ')'
+
+            if ((charsTaken + lengthNeeded) < nonReservedWidth)
+            {
+                terminal.Append(" (");
+                if (p.TargetFramework != null)
+                {
+                    terminal.Append(p.TargetFramework);
+                    if (p.Architecture != null)
+                    {
+                        terminal.Append('|');
+                    }
+                }
+
+                if (p.Architecture != null)
+                {
+                    terminal.Append(p.Architecture);
+                }
+
+                terminal.Append(')');
+            }
+        }
+
+        if (!RoslynString.IsNullOrWhiteSpace(p.Detail))
         {
             terminal.Append(" - ");
-            terminal.Append(detail);
+            terminal.Append(p.Detail);
         }
 
         terminal.SetCursorHorizontal(Width - durationString.Length);
         terminal.Append(durationString);
     }
 
-    private static void AppendTargetFrameworkAndArchitecture(AnsiTerminal terminal, TestProgressState p)
+    private static void AppendToWidth(AnsiTerminal terminal, string text, int width, ref int charsTaken)
     {
-        if (p.TargetFramework != null || p.Architecture != null)
+        if (charsTaken + text.Length < width)
         {
-            terminal.Append(" (");
-            if (p.TargetFramework != null)
+            terminal.Append(text);
+            charsTaken += text.Length;
+        }
+        else
+        {
+            terminal.Append("...");
+            charsTaken += 3;
+            if (charsTaken < width)
             {
-                terminal.Append(p.TargetFramework);
-                terminal.Append('|');
+                int charsToTake = width - charsTaken;
+                string cutText = text.Substring(text.Length - charsToTake);
+                terminal.Append(cutText);
+                charsTaken += charsToTake;
             }
-
-            if (p.Architecture != null)
-            {
-                terminal.Append(p.Architecture);
-            }
-
-            terminal.Append(')');
         }
     }
 
@@ -130,7 +190,7 @@ internal sealed class AnsiTerminalTestProgressFrame
             {
                 if (previousFrame._progressItems[i].TestProgressState.LastUpdate != _progressItems[i].TestProgressState.LastUpdate)
                 {
-                    // Same everything except time, AND same number of digits in time
+                    // Same everything except time.
                     string durationString = HumanReadableDurationFormatter.Render(_progressItems[i].TestProgressState.Stopwatch.Elapsed);
 
                     if (previousFrame._progressItems[i].DurationLength == durationString.Length)
