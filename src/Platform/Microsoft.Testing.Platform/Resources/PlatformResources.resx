@@ -308,7 +308,7 @@
     <value>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</value>
   </data>
   <data name="CommandLineOptionIsDeclaredByMultipleProviders" xml:space="preserve">
-    <value>Option '--{0}' is declared by multiple extensions: '{0}'</value>
+    <value>Option '--{0}' is declared by multiple extensions: '{1}'</value>
   </data>
   <data name="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround" xml:space="preserve">
     <value>You can fix the previous option clash by overriding the option name using the configuration file</value>
@@ -601,5 +601,11 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   </data>
   <data name="TerminalOutputOptionInvalidArgument" xml:space="preserve">
     <value>--output expects a single parameter with value 'Normal' or 'Detailed'.</value>
+  </data>
+  <data name="PlatformCommandLineTimeoutArgumentErrorMessage" xml:space="preserve">
+    <value>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</value>
+  </data>
+  <data name="PlatformCommandLineTimeoutOptionDescription" xml:space="preserve">
+    <value>A global test execution timeout, it should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</value>
   </data>
 </root>

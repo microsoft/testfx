@@ -37,6 +37,7 @@ internal sealed class AnsiTerminal : ITerminal
         ".nunit",
         ".trx",
         ".xml",
+        ".xunit",
     };
 
     private readonly IConsole _console;

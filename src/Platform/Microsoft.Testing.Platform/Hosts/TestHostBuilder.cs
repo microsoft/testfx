@@ -234,8 +234,30 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             Logging.AddProvider((_, _) => loggingState.FileLoggerProvider);
         }
 
-        // Register the server mode log forwarder if needed. We follow the console --diagnostic behavior.
         ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
+
+        // setting the timeout
+        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey) && commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
+        {
+            string arg = args[0];
+            int size = arg.Length;
+            if (!float.TryParse(arg[..(size - 1)], out float value))
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
+            TimeSpan timeout = char.ToLowerInvariant(arg[size - 1]) switch
+            {
+                'h' => TimeSpan.FromHours(value),
+                'm' => TimeSpan.FromMinutes(value),
+                's' => TimeSpan.FromSeconds(value),
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
+
+            testApplicationCancellationTokenSource.CancelAfter(timeout);
+        }
+
+        // Register the server mode log forwarder if needed. We follow the console --diagnostic behavior.
         if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && loggingState.FileLoggerProvider is not null)
         {
             ServerLoggerForwarderProvider serverLoggerProxy = new(loggingState.LogLevel, serviceProvider);
@@ -392,7 +414,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AddServices(testApplicationLifecycleCallback);
 
         // ServerMode and Console mode uses different host
-        if (commandLineHandler.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && !DotnetTestHelper.HasDotnetTestServerOption(commandLineHandler))
+        bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
+        bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
+        if (hasServerFlag && isJsonRpcProtocol)
         {
             // Build the server mode with the user preferences
             IMessageHandlerFactory messageHandlerFactory = ((ServerModeManager)ServerMode).Build(serviceProvider);
