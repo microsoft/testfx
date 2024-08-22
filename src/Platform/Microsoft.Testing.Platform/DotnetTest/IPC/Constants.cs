@@ -3,6 +3,11 @@
 
 namespace Microsoft.Testing.Platform.IPC;
 
+internal static class Constants
+{
+    internal const string DotnetTestCliProtocol = "dotnettestcli";
+}
+
 internal static class TestStates
 {
     internal const byte Passed = 0;
