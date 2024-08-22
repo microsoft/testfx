@@ -9,7 +9,7 @@ internal static class DotnetTestHelper
 {
     private const string DotnetTestCliProtocol = "dotnettestcli";
 
-    public static bool HasDotnetTestServerOption(CommandLineHandler commandLineHandler) =>
+    public static bool HasDotnetTestServerOption(this CommandLineHandler commandLineHandler) =>
         commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
         serverArgs.Length == 1 &&
         serverArgs[0].Equals(DotnetTestCliProtocol, StringComparison.Ordinal);

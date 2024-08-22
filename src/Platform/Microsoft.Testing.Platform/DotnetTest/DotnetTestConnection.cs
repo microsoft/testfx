@@ -31,7 +31,7 @@ internal sealed class DotnetTestConnection
 
         // If we are in server mode and the pipe name is provided
         // then, we need to connect to the pipe server.
-        if (DotnetTestHelper.HasDotnetTestServerOption(_commandLineHandler) &&
+        if (_commandLineHandler.HasDotnetTestServerOption() &&
             _commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
         {
             executionId = Guid.NewGuid().ToString("N");
