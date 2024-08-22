@@ -15,9 +15,9 @@ internal sealed class DotnetTestConnection
 {
     private readonly CommandLineHandler _commandLineHandler;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
-    private readonly CTRLPlusCCancellationTokenSource _cancellationTokenSource;
+    private readonly ITestApplicationCancellationTokenSource _cancellationTokenSource;
 
-    public DotnetTestConnection(CommandLineHandler commandLineHandler, ITestApplicationModuleInfo testApplicationModuleInfo, CTRLPlusCCancellationTokenSource cancellationTokenSource)
+    public DotnetTestConnection(CommandLineHandler commandLineHandler, ITestApplicationModuleInfo testApplicationModuleInfo, ITestApplicationCancellationTokenSource cancellationTokenSource)
     {
         _commandLineHandler = commandLineHandler;
         _testApplicationModuleInfo = testApplicationModuleInfo;
