@@ -45,7 +45,7 @@
     <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp3.1\" />
 
     <!-- net6.0 -->
-    <file src="$RepoRoot$src\Adapter\Build\NetWithWinUI\MSTest.TestFramework.targets" target="build\net6.0\" />
+    <file src="net6.0\build\winui\MSTest.TestFramework.targets" target="build\net6.0\" />
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net6.0\" />
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net6.0\" />
     <file src="net6.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net6.0\" />
@@ -55,7 +55,7 @@
     <file src="net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net6.0\winui\" />
 
     <!-- net7.0 -->
-    <file src="$RepoRoot$src\Adapter\Build\NetWithWinUI\MSTest.TestFramework.targets" target="build\net7.0\" />
+    <file src="net7.0\build\winui\MSTest.TestFramework.targets" target="build\net7.0\" />
     <file src="net7.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net7.0\" />
     <file src="net7.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net7.0\" />
     <file src="net7.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net7.0\" />
@@ -63,7 +63,7 @@
     <file src="net7.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net7.0\" />
 
     <!-- net8.0 -->
-    <file src="$RepoRoot$src\Adapter\Build\NetWithWinUI\MSTest.TestFramework.targets" target="build\net8.0\" />
+    <file src="net8.0\build\winui\MSTest.TestFramework.targets" target="build\net8.0\" />
     <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net8.0\" />
     <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net8.0\" />
     <file src="net8.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net8.0\" />
