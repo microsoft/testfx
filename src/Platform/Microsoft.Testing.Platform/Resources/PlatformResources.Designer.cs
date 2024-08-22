@@ -223,7 +223,7 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Option &apos;--{0}&apos; is declared by multiple extensions: &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Option &apos;--{0}&apos; is declared by multiple extensions: &apos;{1}&apos;.
         /// </summary>
         internal static string CommandLineOptionIsDeclaredByMultipleProviders {
             get {
