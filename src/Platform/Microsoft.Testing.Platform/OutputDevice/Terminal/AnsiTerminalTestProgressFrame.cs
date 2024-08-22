@@ -3,8 +3,6 @@
 
 using System.Globalization;
 
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
