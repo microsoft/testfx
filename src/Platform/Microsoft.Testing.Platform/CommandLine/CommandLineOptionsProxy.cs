@@ -14,7 +14,8 @@ internal sealed class CommandLineOptionsProxy : ICommandLineOptions
             ? throw new InvalidOperationException("The ICommandLineOptions has not been built yet or is no more usable at this stage.")
             : _commandLineOptions.IsOptionSet(optionName);
 
-    public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments) => _commandLineOptions is null
+    public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
+        => _commandLineOptions is null
             ? throw new InvalidOperationException("The ICommandLineOptions has not been built yet or is no more usable at this stage.")
             : _commandLineOptions.TryGetOptionArgumentList(optionName, out arguments);
 
