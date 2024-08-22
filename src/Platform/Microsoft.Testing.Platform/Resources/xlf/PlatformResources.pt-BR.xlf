@@ -326,6 +326,11 @@
         <target state="translated">Handshake de servidor JsonRpc para cliente, implementação baseada na especificação do protocolo da plataforma de teste.</target>
         <note />
       </trans-unit>
+      <trans-unit id="LoggerFactoryNotReady">
+        <source>The ILoggerFactory has not been built yet.</source>
+        <target state="new">The ILoggerFactory has not been built yet.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MessageBusNotReady">
         <source>The message bus has not been built yet or is no more usable at this stage.</source>
         <target state="new">The message bus has not been built yet or is no more usable at this stage.</target>

@@ -39,6 +39,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             serviceProvider.GetProcessHandler(),
             serviceProvider.GetPlatformInformation(),
             serviceProvider.GetCommandLineOptions(),
-            loggingState.FileLoggerProvider,
+            serviceProvider.GetFileLoggerInformation(),
+            serviceProvider.GetLoggerFactory(),
             serviceProvider.GetClock());
 }

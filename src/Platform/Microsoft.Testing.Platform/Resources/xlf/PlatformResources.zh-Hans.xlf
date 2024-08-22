@@ -326,6 +326,11 @@
         <target state="translated">基于测试平台协议规范的 JsonRpc 服务器到客户端握手实现。</target>
         <note />
       </trans-unit>
+      <trans-unit id="LoggerFactoryNotReady">
+        <source>The ILoggerFactory has not been built yet.</source>
+        <target state="new">The ILoggerFactory has not been built yet.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MessageBusNotReady">
         <source>The message bus has not been built yet or is no more usable at this stage.</source>
         <target state="new">The message bus has not been built yet or is no more usable at this stage.</target>
