@@ -66,11 +66,6 @@ internal sealed class DotnetTestConnection :
 
     public async Task SendCommandLineOptionsToDotnetTestPipeAsync()
     {
-        if (_dotnetTestPipeClient?.IsConnected == false)
-        {
-            return;
-        }
-
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
         List<CommandLineOptionMessage> commandLineHelpOptions = new();
@@ -96,11 +91,6 @@ internal sealed class DotnetTestConnection :
 
     public async Task<bool> DoHandshakeAsync(string hostType)
     {
-        if (_dotnetTestPipeClient?.IsConnected == false)
-        {
-            return false;
-        }
-
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
         HandshakeInfo handshakeInfo = new(new Dictionary<byte, string>()
@@ -123,11 +113,6 @@ internal sealed class DotnetTestConnection :
 
     public async Task SendMessageAsync(IRequest message)
     {
-        if (_dotnetTestPipeClient?.IsConnected == false)
-        {
-            return;
-        }
-
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
         switch (message)

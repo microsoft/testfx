@@ -61,6 +61,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 
     private string GetHostType()
     {
+        // For now, we don't  inherit TestHostOrchestratorHost from CommonTestHost one so we don't connect when we orchestrate
         string hostType = this switch
         {
             ConsoleTestHost => "TestHost",

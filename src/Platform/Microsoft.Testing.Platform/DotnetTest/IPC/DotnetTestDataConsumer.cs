@@ -44,11 +44,6 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (DotnetTestConnection?.IsConnected == false)
-        {
-            return;
-        }
-
         RoslynDebug.Assert(DotnetTestConnection is not null);
 
         switch (value)
@@ -186,11 +181,6 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
     public async Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
     {
-        if (DotnetTestConnection?.IsConnected == false)
-        {
-            return;
-        }
-
         RoslynDebug.Assert(DotnetTestConnection is not null);
 
         TestSessionEvent sessionStartEvent = new(
@@ -203,11 +193,6 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
     public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
     {
-        if (DotnetTestConnection?.IsConnected == false)
-        {
-            return;
-        }
-
         RoslynDebug.Assert(DotnetTestConnection is not null);
 
         TestSessionEvent sessionEndEvent = new(

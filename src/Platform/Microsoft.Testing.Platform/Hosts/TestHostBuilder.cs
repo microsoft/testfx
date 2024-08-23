@@ -351,7 +351,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         DotnetTestConnection dotnetTestConnection = new(serviceProvider, testApplicationCancellationTokenSource);
         bool isConnectedToDotnetTest = await dotnetTestConnection.TryConnectToDotnetTestPipeIfAvailableAsync();
-
         if (isConnectedToDotnetTest)
         {
             serviceProvider.AddService(dotnetTestConnection);
