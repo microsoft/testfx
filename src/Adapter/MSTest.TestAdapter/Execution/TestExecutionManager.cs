@@ -417,13 +417,14 @@ public class TestExecutionManager
             testExecutionRecorder.RecordStart(currentTest);
 
             DateTimeOffset startTime = DateTimeOffset.Now;
+            PlatformServiceProvider.Instance.Token = _cancellationToken;
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing test {0}", unitTestElement.TestMethod.Name);
 
             // Run single test passing test context properties to it.
             IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
             Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
-            UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties, _cancellationToken);
+            UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
 

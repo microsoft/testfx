@@ -73,9 +73,9 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets or sets the instance for the platform service.
     /// </summary>
-    internal static IPlatformServiceProvider Instance
+    internal static PlatformServiceProvider Instance
     {
-        get => s_instance ??= new PlatformServiceProvider();
+        get => (PlatformServiceProvider)(s_instance ??= new PlatformServiceProvider());
         set => s_instance = value;
     }
 
@@ -150,5 +150,12 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties) => new TestContextImplementation(testMethod, writer, properties);
+    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties)
+    {
+        var context = new TestContextImplementation(testMethod, writer, properties);
+        Token?.Register(() => context.CancellationTokenSource.Cancel());
+        return context;
+    }
+
+    public TestRunCancellationToken? Token { get; set; }
 }
