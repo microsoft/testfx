@@ -73,9 +73,9 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets or sets the instance for the platform service.
     /// </summary>
-    internal static PlatformServiceProvider Instance
+    internal static IPlatformServiceProvider Instance
     {
-        get => (PlatformServiceProvider)(s_instance ??= new PlatformServiceProvider());
+        get => s_instance ??= new PlatformServiceProvider();
         set => s_instance = value;
     }
 
