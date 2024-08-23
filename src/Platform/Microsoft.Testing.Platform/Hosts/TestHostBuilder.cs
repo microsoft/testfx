@@ -118,6 +118,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         if (loggingState.FileLoggerProvider is not null)
         {
             logger = loggingState.FileLoggerProvider.CreateLogger(GetType().ToString());
+            FileLoggerInformation fileLoggerInformation = new(loggingState.FileLoggerProvider.SyncFlush, new(loggingState.FileLoggerProvider.FileLogger.FileName), loggingState.LogLevel);
+            serviceProvider.TryAddService(fileLoggerInformation);
         }
 
         if (logger is not null)
@@ -187,18 +189,67 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             loggingState.FileLoggerProvider?.CreateLogger(nameof(CTRLPlusCCancellationTokenSource)));
         serviceProvider.AddService(testApplicationCancellationTokenSource, throwIfSameInstanceExit: true);
 
+        // Create command line proxy and add to the service provider.
+        CommandLineOptionsProxy commandLineOptionsProxy = new();
+        serviceProvider.TryAddService(commandLineOptionsProxy);
+
+        // Add the logger factory proxy to the service provider.
+        LoggerFactoryProxy loggerFactoryProxy = new();
+        serviceProvider.TryAddService(loggerFactoryProxy);
+
         // Add output display proxy, needed by command line manager.
         // We don't add to the service right now because we need special treatment between console/server mode.
-        IPlatformOutputDevice platformOutputDevice = await ((PlatformOutputDeviceManager)OutputDisplay).BuildAsync(serviceProvider, loggingState);
+        IPlatformOutputDevice platformOutputDevice = ((PlatformOutputDeviceManager)OutputDisplay).Build(serviceProvider, loggingState);
 
-        // Add the platform output device to the service provider for both modes.
-        serviceProvider.TryAddService(platformOutputDevice);
-
+        // Add Terminal options provider
         CommandLine.AddProvider(() => new TerminalTestReporterCommandLineOptionsProvider());
 
         // Build the command line service - we need special treatment because is possible that an extension query it during the creation.
         // Add Retry default argument commandlines
-        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(platformOutputDevice, loggingState.CommandLineParseResult);
+        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(loggingState.CommandLineParseResult);
+
+        // Set the concrete command line options to the proxy.
+        commandLineOptionsProxy.SetCommandLineOptions(commandLineHandler);
+
+        // Add FileLoggerProvider if needed
+        if (loggingState.FileLoggerProvider is not null)
+        {
+            Logging.AddProvider((_, _) => loggingState.FileLoggerProvider);
+        }
+
+        // Get the command line options
+        ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
+
+        // Register the server mode log forwarder if needed. We follow the console --diagnostic behavior.
+        bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
+        bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
+        if (hasServerFlag && isJsonRpcProtocol)
+        {
+            ServerLoggerForwarderProvider serverLoggerProxy = new(loggingState.LogLevel, serviceProvider);
+            serviceProvider.AddService(serverLoggerProxy);
+            Logging.AddProvider((logLevel, services) => serverLoggerProxy);
+        }
+
+        // Build the logger factory.
+        ILoggerFactory loggerFactory = await ((LoggingManager)Logging).BuildAsync(serviceProvider, loggingState.LogLevel, systemMonitor);
+
+        // Set the concrete logger factory
+        loggerFactoryProxy.SetLoggerFactory(loggerFactory);
+
+        // Initialize the output device if needed.
+        if (await platformOutputDevice.IsEnabledAsync())
+        {
+            await platformOutputDevice.TryInitializeAsync();
+        }
+        else
+        {
+            // If for some reason the custom output is not enabled we opt-in the default terminal output device.
+            platformOutputDevice = PlatformOutputDeviceManager.GetDefaultTerminalOutputDevice(serviceProvider, loggingState);
+            await platformOutputDevice.TryInitializeAsync();
+        }
+
+        // Add the platform output device to the service provider for both modes.
+        serviceProvider.TryAddService(platformOutputDevice);
 
         // Create the test framework capabilities
         ITestFrameworkCapabilities testFrameworkCapabilities = TestFramework.TestFrameworkCapabilitiesFactory(serviceProvider);
@@ -207,9 +258,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             await testFrameworkCapabilitiesAsyncInitializable.InitializeAsync();
         }
 
-        // Register the test framework capabilities to be used by services
-        serviceProvider.AddService(testFrameworkCapabilities);
-
         // If command line is not valid we return immediately.
         ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(
             loggingState.CommandLineParseResult,
@@ -217,24 +265,19 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             commandLineHandler.ExtensionsCommandLineOptionsProviders,
             commandLineHandler);
 
+        // Register the test framework capabilities to be used by services
+        serviceProvider.AddService(testFrameworkCapabilities);
+
         if (!loggingState.CommandLineParseResult.HasTool && !commandLineValidationResult.IsValid)
         {
             await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice, testFrameworkCapabilities);
             await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(commandLineValidationResult.ErrorMessage));
-            await commandLineHandler.PrintHelpAsync();
+            await commandLineHandler.PrintHelpAsync(platformOutputDevice);
             return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine);
         }
 
         // Register as ICommandLineOptions.
         serviceProvider.TryAddService(commandLineHandler);
-
-        // Add FileLoggerProvider if needed
-        if (loggingState.FileLoggerProvider is not null)
-        {
-            Logging.AddProvider((_, _) => loggingState.FileLoggerProvider);
-        }
-
-        ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
 
         // setting the timeout
         if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey) && commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
@@ -256,18 +299,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
             testApplicationCancellationTokenSource.CancelAfter(timeout);
         }
-
-        // Register the server mode log forwarder if needed. We follow the console --diagnostic behavior.
-        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && loggingState.FileLoggerProvider is not null)
-        {
-            ServerLoggerForwarderProvider serverLoggerProxy = new(loggingState.LogLevel, serviceProvider);
-            serviceProvider.AddService(serverLoggerProxy);
-            Logging.AddProvider((logLevel, services) => serverLoggerProxy);
-        }
-
-        // Build the logger factory.
-        ILoggerFactory loggerFactory = await ((LoggingManager)Logging).BuildAsync(serviceProvider, loggingState.LogLevel, systemMonitor);
-        serviceProvider.TryAddService(loggerFactory);
 
         // At this point we start to build extensions so we need to have all the information complete for the usage,
         // here we ensure to override the result directory if user passed the argument --results-directory in command line.
@@ -330,7 +361,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             }
             else
             {
-                await commandLineHandler.PrintHelpAsync(toolsInformation);
+                await commandLineHandler.PrintHelpAsync(platformOutputDevice, toolsInformation);
             }
 
             return new InformativeCommandLineTestHost(0, dotnetTestPipeClient);
@@ -339,7 +370,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // If --info is invoked we return
         if (commandLineHandler.IsInfoInvoked())
         {
-            await commandLineHandler.PrintInfoAsync(toolsInformation);
+            await commandLineHandler.PrintInfoAsync(platformOutputDevice, toolsInformation);
             return new InformativeCommandLineTestHost(0, dotnetTestPipeClient);
         }
 
@@ -406,8 +437,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AddServices(testApplicationLifecycleCallback);
 
         // ServerMode and Console mode uses different host
-        bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
-        bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
         if (hasServerFlag && isJsonRpcProtocol)
         {
             // Build the server mode with the user preferences

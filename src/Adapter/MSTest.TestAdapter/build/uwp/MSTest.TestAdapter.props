@@ -1,4 +1,5 @@
 <Project>
+
   <ItemGroup>
     <TestAdapterContent Include="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll">
       <Link>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</Link>
@@ -25,4 +26,5 @@
       -->
     <None Include="@(TestAdapterContent)" />
   </ItemGroup>
+
 </Project>

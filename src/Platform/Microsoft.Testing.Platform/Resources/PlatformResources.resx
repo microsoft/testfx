@@ -308,7 +308,7 @@
     <value>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</value>
   </data>
   <data name="CommandLineOptionIsDeclaredByMultipleProviders" xml:space="preserve">
-    <value>Option '--{0}' is declared by multiple extensions: '{0}'</value>
+    <value>Option '--{0}' is declared by multiple extensions: '{1}'</value>
   </data>
   <data name="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround" xml:space="preserve">
     <value>You can fix the previous option clash by overriding the option name using the configuration file</value>
@@ -359,10 +359,13 @@
     <value>Specify the port of the client.</value>
   </data>
   <data name="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription" xml:space="preserve">
-    <value>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</value>
+    <value>Force the built-in file logger to write the log synchronously.
+Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+Note that this is slowing down the test execution.</value>
   </data>
   <data name="PlatformCommandLineDiagnosticOptionDescription" xml:space="preserve">
-    <value>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</value>
+    <value>Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[MMddHHssfff].diag</value>
   </data>
   <data name="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage" xml:space="preserve">
     <value>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</value>
@@ -371,13 +374,15 @@
     <value>'--{0}' requires '--diagnostic' to be provided</value>
   </data>
   <data name="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription" xml:space="preserve">
-    <value>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</value>
+    <value>Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</value>
   </data>
   <data name="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription" xml:space="preserve">
     <value>Prefix for the log file name that will replace '[log]_.'</value>
   </data>
   <data name="PlatformCommandLineDiagnosticVerbosityOptionDescription" xml:space="preserve">
-    <value>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</value>
+    <value>Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</value>
   </data>
   <data name="PlatformCommandLineDiscoverTestsOptionDescription" xml:space="preserve">
     <value>List available tests.</value>
@@ -392,7 +397,8 @@
     <value>'--list-tests' and '--minimum-expected-tests' are incompatible options</value>
   </data>
   <data name="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument" xml:space="preserve">
-    <value>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</value>
+    <value>'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</value>
   </data>
   <data name="PlatformCommandLineNoBannerOptionDescription" xml:space="preserve">
     <value>Do not display the startup banner, the copyright message or the telemetry banner.</value>
@@ -410,7 +416,9 @@
     <value>Platform command line provider</value>
   </data>
   <data name="PlatformCommandLineResultDirectoryOptionDescription" xml:space="preserve">
-    <value>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</value>
+    <value>The directory where the test results are going to be placed.
+If the specified directory doesn't exist, it's created.
+The default is TestResults in the directory that contains the test application.</value>
   </data>
   <data name="PlatformCommandLineServerOptionDescription" xml:space="preserve">
     <value>Enable the server mode.</value>
@@ -475,7 +483,8 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>An unexpected exception occurred during byte conversion</value>
   </data>
   <data name="PlatformCommandLineIgnoreExitCodeOptionDescription" xml:space="preserve">
-    <value>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</value>
+    <value>Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</value>
   </data>
   <data name="PlatformCommandLineExitOnProcessExitOptionDescription" xml:space="preserve">
     <value>Exit the test process if dependent process exits. PID must be provided.</value>
@@ -597,7 +606,8 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>Terminal test reporter</value>
   </data>
   <data name="TerminalOutputOptionDescription" xml:space="preserve">
-    <value>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</value>
+    <value>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</value>
   </data>
   <data name="TerminalOutputOptionInvalidArgument" xml:space="preserve">
     <value>--output expects a single parameter with value 'Normal' or 'Detailed'.</value>
@@ -606,6 +616,16 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</value>
   </data>
   <data name="PlatformCommandLineTimeoutOptionDescription" xml:space="preserve">
-    <value>A global test execution timeout, it should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</value>
+    <value>A global test execution timeout.
+Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</value>
+  </data>
+  <data name="LoggerFactoryNotReady" xml:space="preserve">
+    <value>The ILoggerFactory has not been built yet.</value>
+  </data>
+  <data name="MessageBusNotReady" xml:space="preserve">
+    <value>The message bus has not been built yet or is no more usable at this stage.</value>
+  </data>
+  <data name="CommandLineOptionsNotReady" xml:space="preserve">
+    <value>The ICommandLineOptions has not been built yet.</value>
   </data>
 </root>

@@ -87,7 +87,7 @@ internal sealed class ToolsTestHost(
         }
 
         await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText($"Tool '{toolNameToRun}' not found in the list of registered tools."));
-        await _commandLineHandler.PrintHelpAsync();
+        await _commandLineHandler.PrintHelpAsync(_platformOutputDevice);
         return ExitCodes.InvalidCommandLine;
     }
 
