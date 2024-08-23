@@ -33,7 +33,6 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
 
     public const string ServerOptionKey = "server";
-    public const string PortOptionKey = "port";
     public const string ClientPortOptionKey = "client-port";
     public const string ClientHostOptionKey = "client-host";
     public const string JsonRpcProtocolName = "jsonrpc";
@@ -64,7 +63,6 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         // Hidden options
         new(HelpOptionQuestionMark, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
         new(ServerOptionKey, PlatformResources.PlatformCommandLineServerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
-        new(PortOptionKey, PlatformResources.PlatformCommandLinePortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(ClientPortOptionKey, PlatformResources.PlatformCommandLineClientPortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(ClientHostOptionKey, PlatformResources.PlatformCommandLineClientHostOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(SkipBuildersNumberCheckOptionKey, PlatformResources.PlatformCommandLineSkipBuildersNumberCheckOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
@@ -100,11 +98,6 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             {
                 return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage);
             }
-        }
-
-        if (commandOption.Name == PortOptionKey && (!int.TryParse(arguments[0], out int _)))
-        {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, PortOptionKey));
         }
 
         if (commandOption.Name == ClientPortOptionKey && (!int.TryParse(arguments[0], out int _)))

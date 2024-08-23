@@ -625,4 +625,7 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="CommandLineOptionsNotReady" xml:space="preserve">
     <value>The ICommandLineOptions has not been built yet.</value>
   </data>
+  <data name="MissingClientPortFoJsonRpc" xml:space="preserve">
+    <value>Expected --client-port when jsonRpc protocol is used.</value>
+  </data>
 </root>

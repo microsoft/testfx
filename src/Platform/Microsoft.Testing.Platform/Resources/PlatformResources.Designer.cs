@@ -656,6 +656,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expected --client-port when jsonRpc protocol is used..
+        /// </summary>
+        internal static string MissingClientPortFoJsonRpc {
+            get {
+                return ResourceManager.GetString("MissingClientPortFoJsonRpc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No serializer registered with ID &apos;{0}&apos;.
         /// </summary>
         internal static string NoSerializerRegisteredWithIdErrorMessage {

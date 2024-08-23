@@ -336,6 +336,11 @@
         <target state="translated">예상되는 최소 테스트 정책 위반, 테스트 실행 {0}, 필요한 최소 {1}</target>
         <note>{0}, {1} number of tests</note>
       </trans-unit>
+      <trans-unit id="MissingClientPortFoJsonRpc">
+        <source>Expected --client-port when jsonRpc protocol is used.</source>
+        <target state="new">Expected --client-port when jsonRpc protocol is used.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
         <source>No serializer registered with ID '{0}'</source>
         <target state="translated">ID '{0}'(으)로 등록된 직렬 변환기가 없습니다.</target>
