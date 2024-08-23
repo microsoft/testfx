@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -49,6 +51,11 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
     private readonly IClock _clock;
     private readonly string? _longArchitecture;
     private readonly string? _shortArchitecture;
+
+    // The effective runtime that is executing the application e.g. .NET 9, when .NET 8 application is running with --roll-forward latest.
+    private readonly string? _runtimeFramework;
+
+    // The targeted framework, .NET 8 when application specifies <TargetFramework>net8.0</TargetFramework>
     private readonly string? _targetFramework;
     private readonly string _assemblyName;
     private readonly char[] _dash = new char[] { '-' };
@@ -91,7 +98,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             _longArchitecture = RuntimeInformation.RuntimeIdentifier;
             _shortArchitecture = GetShortArchitecture(RuntimeInformation.RuntimeIdentifier);
 #endif
-            _targetFramework = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+            _runtimeFramework = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+            _targetFramework = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName) ?? _runtimeFramework;
         }
 
         _assemblyName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
@@ -240,7 +248,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         stringBuilder.Append(" [");
                         stringBuilder.Append(_longArchitecture);
                         stringBuilder.Append(" - ");
-                        stringBuilder.Append(_targetFramework);
+                        stringBuilder.Append(_runtimeFramework);
                         stringBuilder.Append(']');
                     }
 

@@ -7,8 +7,13 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 
 internal static class TargetFrameworkParser
 {
-    public static string? GetShortTargetFramework(string frameworkDescription)
+    public static string? GetShortTargetFramework(string? frameworkDescription)
     {
+        if (frameworkDescription == null)
+        {
+            return null;
+        }
+
         // https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.runtimeinformation.frameworkdescription
         string netFramework = ".NET Framework";
         if (frameworkDescription.StartsWith(netFramework, ignoreCase: false, CultureInfo.InvariantCulture))
