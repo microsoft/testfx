@@ -803,7 +803,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     {
         TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}"];
 
-        asm.Detail = new(_counter++, version: 0, CreateStopwatch(), displayName);
+        asm.Detail = new(_counter++, CreateStopwatch(), displayName);
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
     }
 }

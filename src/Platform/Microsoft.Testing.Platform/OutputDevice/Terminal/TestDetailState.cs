@@ -7,20 +7,28 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal sealed class TestDetailState
 {
-    public TestDetailState(long id, long version, IStopwatch stopwatch, string text)
+    private string _text;
+
+    public TestDetailState(long id, IStopwatch stopwatch, string text)
     {
         Id = id;
-        Version = version;
         Stopwatch = stopwatch;
-        Text = text;
+        _text = text;
     }
 
     public long Id { get; }
 
-    public long Version { get; }
+    public long Version { get; set; }
 
     public IStopwatch Stopwatch { get; }
 
-    public string Text { get; }
+    public string Text
+    {
+        get => _text;
+        set
+        {
+            Version++;
+            _text = value;
+        }
+    }
 }
-
