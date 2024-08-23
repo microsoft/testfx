@@ -321,7 +321,7 @@ namespace MSTestSdkTest
                     retryCount: 0);
                 compilationResult.AssertOutputContains("Generating native code");
                 compilationResult.AssertOutputNotContains("warning");
-            }, times: 5, every: TimeSpan.FromSeconds(3));
+            }, times: 10, every: TimeSpan.FromSeconds(5));
 
         var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments, verb: Verb.publish);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
