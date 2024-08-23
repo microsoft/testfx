@@ -36,8 +36,9 @@ internal sealed class FastFilter
 
     internal string? PropertyValueRegexReplacement { get; set; }
 
-    internal string[]? ValidForProperties(IEnumerable<string>? properties) => properties is null
-            ? (string[]?)null
+    internal string[]? ValidForProperties(IEnumerable<string>? properties)
+        => properties is null
+            ? null
             : FilterProperties.Keys.All(name => properties.Contains(name))
                 ? null
                 : FilterProperties.Keys.Where(name => !properties.Contains(name)).ToArray();
