@@ -117,7 +117,7 @@ public class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public ITestDataSource TestDataSource => MockTestDataSource.Object;
 
-    public TestRunCancellationToken Token { get; set; }
+    public TestRunCancellationToken TestRunCancellationToken { get; set; }
 
     public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties) => new TestContextImplementation(testMethod, writer, properties);
 

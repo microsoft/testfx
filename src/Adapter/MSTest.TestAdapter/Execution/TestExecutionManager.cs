@@ -417,7 +417,7 @@ public class TestExecutionManager
             testExecutionRecorder.RecordStart(currentTest);
 
             DateTimeOffset startTime = DateTimeOffset.Now;
-            PlatformServiceProvider.Instance.Token = _cancellationToken;
+            PlatformServiceProvider.Instance.TestRunCancellationToken = _cancellationToken;
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing test {0}", unitTestElement.TestMethod.Name);
 

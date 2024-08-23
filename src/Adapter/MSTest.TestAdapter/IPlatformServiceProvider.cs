@@ -118,5 +118,5 @@ internal interface IPlatformServiceProvider
     /// </remarks>
     ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties);
 
-    TestRunCancellationToken? Token { get; set; }
+    TestRunCancellationToken? TestRunCancellationToken { get; set; }
 }
