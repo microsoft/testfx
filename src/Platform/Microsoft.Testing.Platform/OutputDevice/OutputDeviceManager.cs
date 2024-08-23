@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
@@ -16,7 +15,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
         _platformOutputDeviceFactory = platformOutputDeviceFactory;
     }
 
-    public IPlatformOutputDevice Build(ServiceProvider serviceProvider, ApplicationLoggingState loggingState)
+    public IPlatformOutputDevice Build(ServiceProvider serviceProvider)
     {
         if (_platformOutputDeviceFactory is not null)
         {
@@ -24,10 +23,10 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             return platformOutputDevice;
         }
 
-        return GetDefaultTerminalOutputDevice(serviceProvider, loggingState);
+        return GetDefaultTerminalOutputDevice(serviceProvider);
     }
 
-    public static TerminalOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider, ApplicationLoggingState loggingState)
+    public static TerminalOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider)
         => new(
             serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetConsole(),
