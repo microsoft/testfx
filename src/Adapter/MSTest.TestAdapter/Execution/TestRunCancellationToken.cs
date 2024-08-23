@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 /// <summary>
@@ -11,14 +9,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 public class TestRunCancellationToken
 {
     /// <summary>
+    /// Callback to be invoked when canceled.
+    /// </summary>
+    private readonly List<Action> _registeredCallbacks = new();
+
+    /// <summary>
     /// Stores whether the test run is canceled or not.
     /// </summary>
     private bool _canceled;
-
-    /// <summary>
-    /// Callback to be invoked when canceled.
-    /// </summary>
-    private Action? _registeredCallback;
 
     public TestRunCancellationToken()
         : this(CancellationToken.None)
@@ -41,7 +39,7 @@ public class TestRunCancellationToken
             _canceled = value;
             if (_canceled)
             {
-                _registeredCallback?.Invoke();
+                _registeredCallbacks.ForEach(action => action());
             }
         }
     }
@@ -56,14 +54,27 @@ public class TestRunCancellationToken
     /// </summary>
     /// <param name="callback">Callback delegate for handling cancellation.</param>
     public void Register(Action callback)
-    {
-        DebugEx.Assert(_registeredCallback == null, "Callback delegate is already registered, use a new cancellationToken");
-
-        _registeredCallback = Guard.NotNull(callback);
-    }
+        => _registeredCallbacks.Add(callback);
 
     /// <summary>
     /// Unregister the callback method.
     /// </summary>
-    public void Unregister() => _registeredCallback = null;
+    public void Unregister() => _registeredCallbacks.Clear();
+
+    internal void ThrowIfCancellationRequested()
+    {
+        CancellationToken.ThrowIfCancellationRequested();
+
+        if (Canceled)
+        {
+            if (CancellationToken == CancellationToken.None)
+            {
+                throw new OperationCanceledException();
+            }
+            else
+            {
+                throw new OperationCanceledException(CancellationToken);
+            }
+        }
+    }
 }
