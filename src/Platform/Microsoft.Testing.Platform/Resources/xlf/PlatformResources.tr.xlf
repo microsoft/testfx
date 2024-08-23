@@ -326,6 +326,11 @@
         <target state="translated">JsonRpc sunucusundan istemciye el sıkışması, test platformu protokol belirtimine dayalı uygulama.</target>
         <note />
       </trans-unit>
+      <trans-unit id="LoggerFactoryNotReady">
+        <source>The ILoggerFactory has not been built yet.</source>
+        <target state="new">The ILoggerFactory has not been built yet.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MessageBusNotReady">
         <source>The message bus has not been built yet or is no more usable at this stage.</source>
         <target state="new">The message bus has not been built yet or is no more usable at this stage.</target>
