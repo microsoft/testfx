@@ -151,7 +151,12 @@ namespace Microsoft.Testing.Extensions.Diagnostics.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specify the timeout after which the dump will be generated. The timeout value is specified in one of the following formats: 1.5h, 1.5hour, 1.5hours, 90m, 90min, 90minute, 90minutes 5400s, 5400sec, 5400second, 5400seconds. Default is 30m..
+        ///   Looks up a localized string similar to Specify the timeout after which the dump will be generated.
+        ///The timeout value is specified in one of the following formats:
+        ///    1.5h, 1.5hour, 1.5hours,
+        ///    90m, 90min, 90minute, 90minutes,
+        ///    5400s, 5400sec, 5400second, 5400seconds.
+        ///    Default is 30m..
         /// </summary>
         internal static string HangDumpTimeoutOptionDescription {
             get {
@@ -169,7 +174,9 @@ namespace Microsoft.Testing.Extensions.Diagnostics.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specify the type of the dump. Valid values are &apos;Mini&apos;, &apos;Heap&apos;, &apos;Triage&apos; (only available in .NET 6+) or &apos;Full&apos;. Default type is &apos;Full&apos;.
+        ///   Looks up a localized string similar to Specify the type of the dump.
+        ///Valid values are &apos;Mini&apos;, &apos;Heap&apos;, &apos;Triage&apos; (only available in .NET 6+) or &apos;Full&apos;.
+        ///Default type is &apos;Full&apos;.
         /// </summary>
         internal static string HangDumpTypeOptionDescription {
             get {
@@ -178,7 +185,8 @@ namespace Microsoft.Testing.Extensions.Diagnostics.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; is not a valid dump type. Valid options are &apos;Mini&apos;, &apos;Heap&apos;, &apos;Triage&apos; (only available in .NET 6+) and &apos;Full&apos;.
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not a valid dump type.
+        ///Valid options are &apos;Mini&apos;, &apos;Heap&apos;, &apos;Triage&apos; (only available in .NET 6+) and &apos;Full&apos;.
         /// </summary>
         internal static string HangDumpTypeOptionInvalidType {
             get {

@@ -212,4 +212,7 @@ public static class ServiceProviderExtensions
 
     internal static IPlatformInformation GetPlatformInformation(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IPlatformInformation>();
+
+    internal static IFileLoggerInformation? GetFileLoggerInformation(this IServiceProvider serviceProvider)
+        => serviceProvider.GetServiceInternal<IFileLoggerInformation>();
 }

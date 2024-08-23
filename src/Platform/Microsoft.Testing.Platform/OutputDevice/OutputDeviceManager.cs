@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
@@ -18,20 +15,19 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
         _platformOutputDeviceFactory = platformOutputDeviceFactory;
     }
 
-    internal async Task<IPlatformOutputDevice> BuildAsync(ServiceProvider serviceProvider, ApplicationLoggingState loggingState)
+    public IPlatformOutputDevice Build(ServiceProvider serviceProvider)
     {
         if (_platformOutputDeviceFactory is not null)
         {
             IPlatformOutputDevice platformOutputDevice = _platformOutputDeviceFactory(serviceProvider);
-            if (await platformOutputDevice.IsEnabledAsync())
-            {
-                await platformOutputDevice.TryInitializeAsync();
-
-                return platformOutputDevice;
-            }
+            return platformOutputDevice;
         }
 
-        return new TerminalOutputDevice(
+        return GetDefaultTerminalOutputDevice(serviceProvider);
+    }
+
+    public static TerminalOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider)
+        => new(
             serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetConsole(),
             serviceProvider.GetTestApplicationModuleInfo(),
@@ -41,12 +37,8 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             serviceProvider.GetEnvironment(),
             serviceProvider.GetProcessHandler(),
             serviceProvider.GetPlatformInformation(),
-            loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey),
-            loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
-            loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey),
-            PlatformCommandLineProvider.GetMinimumExpectedTests(loggingState.CommandLineParseResult),
-            loggingState.FileLoggerProvider,
-            serviceProvider.GetClock(),
-            loggingState.CommandLineParseResult);
-    }
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetFileLoggerInformation(),
+            serviceProvider.GetLoggerFactory(),
+            serviceProvider.GetClock());
 }

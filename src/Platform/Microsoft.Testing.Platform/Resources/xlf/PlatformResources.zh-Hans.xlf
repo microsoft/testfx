@@ -112,6 +112,11 @@
         <target state="translated">来自提供程序“{1}” (UID: {2}) 的选项“--{0}”正在使用保留前缀“--internal”</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionsNotReady">
+        <source>The ICommandLineOptions has not been built yet.</source>
+        <target state="new">The ICommandLineOptions has not been built yet.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">意外的参数 {0}</target>
@@ -321,6 +326,16 @@
         <target state="translated">基于测试平台协议规范的 JsonRpc 服务器到客户端握手实现。</target>
         <note />
       </trans-unit>
+      <trans-unit id="LoggerFactoryNotReady">
+        <source>The ILoggerFactory has not been built yet.</source>
+        <target state="new">The ILoggerFactory has not been built yet.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MessageBusNotReady">
+        <source>The message bus has not been built yet or is no more usable at this stage.</source>
+        <target state="new">The message bus has not been built yet or is no more usable at this stage.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
         <target state="translated">最低预期测试策略冲突，测试已运行 {0} 次，最低预期 {1} 次</target>
@@ -372,13 +387,19 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
-        <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
-        <target state="translated">强制内置文件记录器同步写入日志。适用于不想丢失任何日志的情况 (即在故障的情况下)。请注意，这会减慢测试的执行速度。</target>
+        <source>Force the built-in file logger to write the log synchronously.
+Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+Note that this is slowing down the test execution.</source>
+        <target state="new">Force the built-in file logger to write the log synchronously.
+Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+Note that this is slowing down the test execution.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <source>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">启用诊断日志记录。默认日志级别为 "Trace"。文件将写入输出目录，名称为 log_[MMddHHssfff].diag</target>
+        <source>Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[MMddHHssfff].diag</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -392,8 +413,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
-        <source>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">诊断日志记录的输出目录，如果未指定，则文件将在默认的“TestResults”目录中生成。</target>
+        <source>Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</source>
+        <target state="new">Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
@@ -402,8 +425,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
-        <source>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</source>
-        <target state="translated">定义 --diagnostic 的详细程度。可用值为 'Trace', 'Debug', 'Information', 'Warning', 'Error', 和 'Critical'</target>
+        <source>Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
+        <target state="new">Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
@@ -439,8 +464,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="translated">不报告特定退出代码的不成功退出值（例如“--ignore-exit-code 8;9”会忽略退出代码 8 和 9，并在这些情况下返回 0）</target>
+        <source>Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="new">Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -454,8 +481,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <source>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">“--minimum-expected-tests”应有单个非零正整数值 (例如，“--minimum-expected-tests 10”)</target>
+        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</source>
+        <target state="new">'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
@@ -484,8 +513,12 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
-        <source>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</source>
-        <target state="translated">将要放置测试结果的目录。如果指定的目录不存在，则创建该目录。默认值是包含测试应用程序的目录中的 TestResults。</target>
+        <source>The directory where the test results are going to be placed.
+If the specified directory doesn't exist, it's created.
+The default is TestResults in the directory that contains the test application.</source>
+        <target state="new">The directory where the test results are going to be placed.
+If the specified directory doesn't exist, it's created.
+The default is TestResults in the directory that contains the test application.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -509,8 +542,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
-        <source>A global test execution timeout, it should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
-        <target state="new">A global test execution timeout, it should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</target>
+        <source>A global test execution timeout.
+Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
+        <target state="new">A global test execution timeout.
+Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
@@ -634,8 +669,10 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">报告测试时的输出详细程度。有效值为“常规”、“详细”。默认值为“常规”。</target>
+        <source>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
+        <target state="new">Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">

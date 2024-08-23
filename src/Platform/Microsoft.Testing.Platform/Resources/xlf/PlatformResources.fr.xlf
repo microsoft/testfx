@@ -112,6 +112,11 @@
         <target state="translated">L’option « --{0} » du fournisseur « {1} » (UID : {2}) utilise le préfixe réservé « --internal »</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionsNotReady">
+        <source>The ICommandLineOptions has not been built yet.</source>
+        <target state="new">The ICommandLineOptions has not been built yet.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">Arguments inattendue {0}</target>
@@ -321,6 +326,16 @@
         <target state="translated">Établissement d’une liaison entre le serveur et le client JsonRpc, implémentation basée sur la spécification du protocole de la plateforme de test.</target>
         <note />
       </trans-unit>
+      <trans-unit id="LoggerFactoryNotReady">
+        <source>The ILoggerFactory has not been built yet.</source>
+        <target state="new">The ILoggerFactory has not been built yet.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MessageBusNotReady">
+        <source>The message bus has not been built yet or is no more usable at this stage.</source>
+        <target state="new">The message bus has not been built yet or is no more usable at this stage.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
         <target state="translated">Violation de stratégie de tests minimale attendue, tests exécutés {0}, minimum attendu {1}</target>
@@ -372,13 +387,19 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
-        <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
-        <target state="translated">Forcer l’enregistreur d’événements de fichiers intégré à écrire le journal de manière synchrone. Utile pour les scénarios où vous ne voulez pas perdre de journal (c’est-à-dire en cas d’incident). Notez que cela ralentit l’exécution du test.</target>
+        <source>Force the built-in file logger to write the log synchronously.
+Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+Note that this is slowing down the test execution.</source>
+        <target state="new">Force the built-in file logger to write the log synchronously.
+Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+Note that this is slowing down the test execution.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <source>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">Activez la journalisation des diagnostics. Le niveau de consignation par défaut est « Trace ». Le fichier sera écrit dans le répertoire de sortie avec le nom log_[MMddHHssfff].diag</target>
+        <source>Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[MMddHHssfff].diag</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -392,8 +413,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
-        <source>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">Répertoire de sortie de la journalisation des diagnostics. S’il n’est pas spécifié, le fichier est généré dans le répertoire ’TestResults’ par défaut.</target>
+        <source>Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</source>
+        <target state="new">Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
@@ -402,8 +425,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
-        <source>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</source>
-        <target state="translated">Définissez le niveau de verbosité pour le --diagnostic. Les valeurs disponibles sont « Trace », « Debug », « Information », « Warning », « Error » et « Critical »</target>
+        <source>Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
+        <target state="new">Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
@@ -439,8 +464,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="translated">Ne signalez pas les valeurs de sortie non réussies pour des codes de sortie spécifiques (par exemple, « --ignore-exit-code 8;9 » ignore les codes de sortie 8 et 9 et renverra 0 dans ce cas)</target>
+        <source>Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="new">Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -454,8 +481,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <source>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">« --minimum-expected-tests » attend une seule valeur entière positive différente de zéro (par ex., « --minimum-expected-tests 10 »)</target>
+        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</source>
+        <target state="new">'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
@@ -484,8 +513,12 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
-        <source>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</source>
-        <target state="translated">Le répertoire dans lequel les résultats des tests vont être placés. Si le répertoire spécifié n’existe pas, il est créé. La valeur par défaut est TestResults dans le répertoire qui contient l’application de test.</target>
+        <source>The directory where the test results are going to be placed.
+If the specified directory doesn't exist, it's created.
+The default is TestResults in the directory that contains the test application.</source>
+        <target state="new">The directory where the test results are going to be placed.
+If the specified directory doesn't exist, it's created.
+The default is TestResults in the directory that contains the test application.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -509,8 +542,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
-        <source>A global test execution timeout, it should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
-        <target state="new">A global test execution timeout, it should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</target>
+        <source>A global test execution timeout.
+Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
+        <target state="new">A global test execution timeout.
+Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
@@ -634,8 +669,10 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">Verbosité de la sortie lors de l’établissement des rapports de tests. Les valeurs valides sont « Normal » et « Détaillé ». La valeur par défaut est « Normal ».</target>
+        <source>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
+        <target state="new">Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">

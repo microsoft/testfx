@@ -14,12 +14,23 @@ internal static class AcceptanceAssert
     public static void AssertExitCodeIsNot(this TestHostResult testHostResult, int exitCode, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.That(exitCode != testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult), callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber);
 
-    public static void AssertOutputMatches(this TestHostResult testHostResult, string wildcardPattern, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    /// <summary>
+    /// Ensure that the output matches the given pattern. The pattern can use `*` to mean any character, it is internally replaced by `.*` and matched as regex.
+    /// If you have lines in the pattern that are optional then you can output `###SKIP###` and the line in pattern will be skipped. This allows matching lines that are present only when some condition is met.
+    /// The output is matched from the first line. We do not ensure that no more lines are output after the pattern ends.
+    /// </summary>
+    public static void AssertOutputMatchesLines(this TestHostResult testHostResult, string linesWildcardPattern, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
     {
-        string[] wildcardLines = wildcardPattern.Split(Environment.NewLine);
-        for (int i = 0; i < testHostResult.StandardOutputLines.Count; i++)
+        string[] wildcardLines = linesWildcardPattern.Split(Environment.NewLine);
+        int j = 0;
+        for (int i = 0; i < wildcardLines.Length; i++)
         {
-            string outputLine = testHostResult.StandardOutputLines[i];
+            string outputLine = testHostResult.StandardOutputLines[j];
+
+            if (wildcardLines[i].Contains("###SKIP###"))
+            {
+                continue;
+            }
 
             if (wildcardLines[i].Contains('*'))
             {
@@ -30,7 +41,7 @@ internal static class AcceptanceAssert
 
                 Assert.That(
                     Regex.IsMatch(outputLine, matchingPatternLine, RegexOptions.Singleline),
-                    $"Output on line {i + 1}{Environment.NewLine}{outputLine}{Environment.NewLine}doesn't match pattern{Environment.NewLine}{matchingPatternLine}",
+                    $"Output on line {j + 1}{Environment.NewLine}{outputLine}{Environment.NewLine}doesn't match pattern{Environment.NewLine}{matchingPatternLine}{Environment.NewLine}Standard output:{Environment.NewLine}{testHostResult.StandardOutput}",
                     callerMemberName: callerMemberName,
                     callerFilePath: callerFilePath,
                     callerLineNumber: callerLineNumber);
@@ -40,11 +51,40 @@ internal static class AcceptanceAssert
                 string expectedLine = wildcardLines[i];
                 Assert.That(
                     string.Equals(outputLine, expectedLine, StringComparison.Ordinal),
-                    $"Output on line {i + 1} (length: {outputLine.Length}){Environment.NewLine}{outputLine}{Environment.NewLine}doesn't match line (length: {expectedLine.Length}){Environment.NewLine}{expectedLine}",
+                    $"Output on line {j + 1} (length: {outputLine.Length}){Environment.NewLine}{outputLine}{Environment.NewLine}doesn't match line (length: {expectedLine.Length}){Environment.NewLine}{expectedLine}{Environment.NewLine}Standard output:{Environment.NewLine}{testHostResult.StandardOutput}",
                     callerMemberName: callerMemberName,
                     callerFilePath: callerFilePath,
                     callerLineNumber: callerLineNumber);
             }
+
+            j++;
+        }
+    }
+
+    /// <summary>
+    /// Ensure that the output matches the given pattern. The pattern can use `*` to mean any character, it is internally replaced by `.*` and matched as regex.
+    /// If you have lines in the pattern that are optional then you can output `###SKIP###` and the line in pattern will be skipped. This allows matching lines that are present only when some condition is met.
+    /// The output is matched from the first line. We do not ensure that no more lines are output after the pattern ends.
+    /// </summary>
+    public static void AssertOutputMatchesRegexLines(this TestHostResult testHostResult, string linesRegexPattern, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    {
+        string[] patternLines = linesRegexPattern.Split(Environment.NewLine);
+        int j = 0;
+        for (int i = 0; i < patternLines.Length; i++)
+        {
+            if (patternLines[i].Contains("###SKIP###"))
+            {
+                continue;
+            }
+
+            string outputLine = testHostResult.StandardOutputLines[j];
+            Assert.That(
+                Regex.IsMatch(outputLine, patternLines[i], RegexOptions.Singleline),
+                $"Output on line {j + 1}{Environment.NewLine}{outputLine}{Environment.NewLine}doesn't match pattern{Environment.NewLine}{patternLines[i]}{Environment.NewLine}Standard output:{Environment.NewLine}{testHostResult.StandardOutput}",
+                callerMemberName: callerMemberName,
+                callerFilePath: callerFilePath,
+                callerLineNumber: callerLineNumber);
+            j++;
         }
     }
 

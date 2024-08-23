@@ -112,6 +112,11 @@
         <target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) používá vyhrazenou předponu --internal.</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionsNotReady">
+        <source>The ICommandLineOptions has not been built yet.</source>
+        <target state="new">The ICommandLineOptions has not been built yet.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">Neočekávaný argument {0}</target>
@@ -321,6 +326,16 @@
         <target state="translated">Handshake mezi klientem a serverem JsonRpc, implementace na základě specifikace protokolu testovací platformy</target>
         <note />
       </trans-unit>
+      <trans-unit id="LoggerFactoryNotReady">
+        <source>The ILoggerFactory has not been built yet.</source>
+        <target state="new">The ILoggerFactory has not been built yet.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MessageBusNotReady">
+        <source>The message bus has not been built yet or is no more usable at this stage.</source>
+        <target state="new">The message bus has not been built yet or is no more usable at this stage.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
         <target state="translated">Minimální očekávané porušení zásad testů, spuštěné testy: {0}, očekávané minimum: {1}</target>
@@ -372,13 +387,19 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
-        <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
-        <target state="translated">Umožňuje vynutit synchronní zápis do protokolu integrovaným protokolovacím nástrojem souborů. Užitečné pro scénář, kdy nechcete přijít o žádný protokol (například v případě chybového ukončení). Poznámka: Toto zpomaluje provádění testu.</target>
+        <source>Force the built-in file logger to write the log synchronously.
+Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+Note that this is slowing down the test execution.</source>
+        <target state="new">Force the built-in file logger to write the log synchronously.
+Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+Note that this is slowing down the test execution.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <source>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">Umožňuje povolit protokolování diagnostiky. Výchozí úroveň protokolování je Trasování. Soubor se zapíše do výstupního adresáře s názvem log_[MMddHHssfff].diag.</target>
+        <source>Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[MMddHHssfff].diag</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -392,8 +413,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
-        <source>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">Výstupní adresář diagnostického protokolování. Pokud není zadaný, soubor se vygeneruje ve výchozím adresáři TestResults.</target>
+        <source>Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</source>
+        <target state="new">Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
@@ -402,8 +425,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
-        <source>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</source>
-        <target state="translated">Umožňuje definovat úroveň podrobností pro možnost --diagnostic. Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</target>
+        <source>Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
+        <target state="new">Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
@@ -439,8 +464,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="translated">Neohlašujte neúspěšnou ukončovací hodnotu pro konkrétní ukončovací kódy (např. „--ignore-exit-code 8; 9“ ignoruje ukončovací kód 8 a 9 a v takovém případě vrátí hodnotu 0.)</target>
+        <source>Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="new">Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -454,8 +481,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <source>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">--minimum-expected-tests očekává jednu kladnou nenulovou celočíselnou hodnotu (např. --minimum-expected-tests 10).</target>
+        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</source>
+        <target state="new">'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
@@ -484,8 +513,12 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
-        <source>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</source>
-        <target state="translated">Adresář, do kterého budou umístěny výsledky testu. Pokud zadaný adresář neexistuje, vytvoří se. Výchozí hodnota je TestResults v adresáři, který obsahuje testovací aplikaci.</target>
+        <source>The directory where the test results are going to be placed.
+If the specified directory doesn't exist, it's created.
+The default is TestResults in the directory that contains the test application.</source>
+        <target state="new">The directory where the test results are going to be placed.
+If the specified directory doesn't exist, it's created.
+The default is TestResults in the directory that contains the test application.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -509,8 +542,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
-        <source>A global test execution timeout, it should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
-        <target state="new">A global test execution timeout, it should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</target>
+        <source>A global test execution timeout.
+Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
+        <target state="new">A global test execution timeout.
+Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
@@ -634,8 +669,10 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests. Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">Podrobnosti výstupu při vytváření sestav testů. Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
+        <source>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
+        <target state="new">Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
