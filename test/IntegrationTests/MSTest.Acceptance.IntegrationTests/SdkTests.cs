@@ -295,8 +295,13 @@ namespace MSTestSdkTest
         compilationResult.AssertOutputContains("Invalid value for property TestingExtensionsProfile. Valid values are 'Default', 'AllMicrosoft' and 'None'.");
     }
 
-    public async Task NativeAot_Smoke_Test()
+    public async Task NativeAot_Smoke_Test_Windows()
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
             SingleTestSourceCode
