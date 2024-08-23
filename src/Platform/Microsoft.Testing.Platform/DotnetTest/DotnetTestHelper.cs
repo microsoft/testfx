@@ -4,7 +4,7 @@
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.IPC;
 
-namespace Microsoft.Testing.Platform.DotnetTest;
+namespace Microsoft.Testing.Platform;
 
 internal static class DotnetTestHelper
 {

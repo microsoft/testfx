@@ -11,7 +11,6 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.DotnetTest;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
@@ -222,7 +221,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice, testFrameworkCapabilities);
             await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(commandLineValidationResult.ErrorMessage));
             await commandLineHandler.PrintHelpAsync();
-            return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine);
+            return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine, serviceProvider);
         }
 
         // Register as ICommandLineOptions.
@@ -319,36 +318,34 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return toolsTestHost;
         }
 
-        DotnetTestConnection dotnetTestConnection = new(commandLineHandler, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
-        (NamedPipeClient? dotnetTestPipeClient, string? executionId) = await dotnetTestConnection.ConnectToDotnetTestPipeIfAvailableAsync();
+        DotnetTestConnection dotnetTestConnection = new(serviceProvider, testApplicationCancellationTokenSource);
+        bool isConnectedToDotnetTest = await dotnetTestConnection.TryConnectToDotnetTestPipeIfAvailableAsync();
 
-        // The execution id is used to identify the test execution
-        // We are storing it as an env var so that it can be read by the test host, test host controller and the test host orchestrator
-        if (executionId is not null)
+        if (isConnectedToDotnetTest)
         {
-            environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID, executionId);
+            serviceProvider.AddService(dotnetTestConnection);
         }
 
         // If --help is invoked we return
         if (commandLineHandler.IsHelpInvoked())
         {
-            if (dotnetTestPipeClient is not null)
+            if (isConnectedToDotnetTest)
             {
-                await dotnetTestConnection.SendCommandLineOptionsToDotnetTestPipeAsync(dotnetTestPipeClient);
+                await dotnetTestConnection.SendCommandLineOptionsToDotnetTestPipeAsync();
             }
             else
             {
                 await commandLineHandler.PrintHelpAsync(toolsInformation);
             }
 
-            return new InformativeCommandLineTestHost(0, dotnetTestPipeClient);
+            return new InformativeCommandLineTestHost(0, serviceProvider);
         }
 
         // If --info is invoked we return
         if (commandLineHandler.IsInfoInvoked())
         {
             await commandLineHandler.PrintInfoAsync(toolsInformation);
-            return new InformativeCommandLineTestHost(0, dotnetTestPipeClient);
+            return new InformativeCommandLineTestHost(0, serviceProvider);
         }
 
         // ======= TEST HOST ORCHESTRATOR ======== //
@@ -376,7 +373,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             if (testHostControllers.RequireProcessRestart)
             {
                 testHostControllerInfo.IsCurrentProcessTestHostController = true;
-                TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, systemEnvironment, loggerFactory, systemClock, dotnetTestPipeClient);
+                TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, systemEnvironment, loggerFactory, systemClock);
 
                 await LogTestHostCreatedAsync(
                     serviceProvider,
@@ -470,7 +467,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 BuildTestFrameworkAsync,
                 (TestFrameworkManager)TestFramework,
                 (TestHostManager)TestHost,
-                dotnetTestPipeClient,
                 _testApplicationModuleInfo);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
@@ -601,9 +597,11 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Check if we're connected to the dotnet test pipe
         DotnetTestDataConsumer? dotnetTestDataConsumer = null;
-        if (testFrameworkBuilderData.DotnetTestPipeClient is not null)
+        DotnetTestConnection? dotnetTestConnection = serviceProvider.GetService<DotnetTestConnection>();
+
+        if (dotnetTestConnection?.IsConnected == true)
         {
-            dotnetTestDataConsumer = new DotnetTestDataConsumer(testFrameworkBuilderData.DotnetTestPipeClient, serviceProvider.GetEnvironment());
+            dotnetTestDataConsumer = new DotnetTestDataConsumer(serviceProvider);
         }
 
         // Build and register "common non special" services - we need special treatment because extensions can start to log during the
@@ -736,9 +734,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
         TestFrameworkManager testFrameworkManager,
         TestHostManager testHostManager,
-        NamedPipeClient? dotnetTestPipeClient,
         ITestApplicationModuleInfo testApplicationModuleInfo)
-        => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager, dotnetTestPipeClient);
+        => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager);
 
     protected virtual bool SkipAddingService(object service) => false;
 
