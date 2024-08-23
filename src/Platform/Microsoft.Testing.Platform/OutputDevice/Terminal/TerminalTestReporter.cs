@@ -101,10 +101,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
     }
 #endif
 
+    private int _counter;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with custom terminal and manual refresh for testing.
     /// </summary>
-    internal TerminalTestReporter(IConsole console, TerminalTestReporterOptions options)
+    public TerminalTestReporter(IConsole console, TerminalTestReporterOptions options)
     {
         _options = options;
 
@@ -163,7 +165,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
 
         IStopwatch sw = CreateStopwatch();
-        var assemblyRun = new TestProgressState(assembly, targetFramework, architecture, sw);
+        var assemblyRun = new TestProgressState(_counter++, assembly, targetFramework, architecture, sw);
         int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
         assemblyRun.SlotIndex = slotIndex;
 
@@ -172,7 +174,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         return assemblyRun;
     }
 
-    internal void TestExecutionCompleted(DateTimeOffset endTime)
+    public void TestExecutionCompleted(DateTimeOffset endTime)
     {
         _testExecutionEndTime = endTime;
         _terminalWithProgress.StopShowingProgress();
@@ -630,7 +632,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
-    internal void AssemblyRunCompleted(string assembly, string? targetFramework, string? architecture)
+    public void AssemblyRunCompleted(string assembly, string? targetFramework, string? architecture)
     {
         TestProgressState assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         assemblyRun.Stopwatch.Stop();
@@ -681,7 +683,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     /// <summary>
     /// Let the user know that cancellation was triggered.
     /// </summary>
-    internal void StartCancelling()
+    public void StartCancelling()
     {
         _wasCancelled = true;
         _terminalWithProgress.WriteToTerminal(terminal =>
@@ -692,7 +694,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         });
     }
 
-    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string text, int? padding)
+    public void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string text, int? padding)
     {
         TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddError(text);
@@ -713,7 +715,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         });
     }
 
-    internal void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string text, int? padding)
+    public void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string text, int? padding)
     {
         TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
         asm.AddWarning(text);
@@ -733,10 +735,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
         });
     }
 
-    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, Exception exception)
+    public void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, Exception exception)
         => WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString(), padding: null);
 
-    internal void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
+    public void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
     {
         if (color != null)
         {
@@ -792,4 +794,16 @@ internal sealed partial class TerminalTestReporter : IDisposable
             ConsoleColor.White => TerminalColor.White,
             _ => TerminalColor.Default,
         };
+
+    public void TestInProgress(
+        string assembly,
+        string? targetFramework,
+        string? architecture,
+        string displayName)
+    {
+        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}"];
+
+        asm.Detail = new(_counter++, version: 0, CreateStopwatch(), displayName);
+        _terminalWithProgress.UpdateWorker(asm.SlotIndex);
+    }
 }

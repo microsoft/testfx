@@ -392,7 +392,11 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case InProgressTestNodeStateProperty:
-                        // do nothing.
+                        _terminalTestReporter.TestInProgress(
+                            _assemblyName,
+                            _targetFramework,
+                            _shortArchitecture,
+                            testNodeStateChanged.TestNode.DisplayName);
                         break;
 
                     case ErrorTestNodeStateProperty errorState:

@@ -7,8 +7,9 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal sealed class TestProgressState
 {
-    public TestProgressState(string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch)
+    public TestProgressState(long id, string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch)
     {
+        Id = id;
         Assembly = assembly;
         TargetFramework = targetFramework;
         Architecture = architecture;
@@ -42,11 +43,13 @@ internal sealed class TestProgressState
 
     public int CanceledTests { get; internal set; }
 
-    public string? Detail { get; internal set; }
+    public TestDetailState? Detail { get; internal set; }
 
     public int SlotIndex { get; internal set; }
 
-    public long LastUpdate { get; internal set; }
+    public long Id { get; internal set; }
+
+    public long Version { get; internal set; }
 
     internal void AddError(string text)
         => Messages.Add(new ErrorMessage(text));

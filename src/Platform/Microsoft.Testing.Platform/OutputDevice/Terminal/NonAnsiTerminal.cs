@@ -179,7 +179,7 @@ internal sealed class NonAnsiTerminal : ITerminal
 
             // Use just ascii here, so we don't put too many restrictions on fonts needing to
             // properly show unicode, or logs being saved in particular encoding.
-            string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
+            string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail?.Text) ? $"- {p.Detail.Text}" : null;
             Append('[');
             SetColor(TerminalColor.DarkGreen);
             Append('+');
