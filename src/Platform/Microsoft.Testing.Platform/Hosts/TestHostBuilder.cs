@@ -199,7 +199,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Add output display proxy, needed by command line manager.
         // We don't add to the service right now because we need special treatment between console/server mode.
-        IPlatformOutputDevice platformOutputDevice = ((PlatformOutputDeviceManager)OutputDisplay).Build(serviceProvider, loggingState);
+        IPlatformOutputDevice platformOutputDevice = ((PlatformOutputDeviceManager)OutputDisplay).Build(serviceProvider);
 
         // Add Terminal options provider
         CommandLine.AddProvider(() => new TerminalTestReporterCommandLineOptionsProvider());
@@ -244,7 +244,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         else
         {
             // If for some reason the custom output is not enabled we opt-in the default terminal output device.
-            platformOutputDevice = PlatformOutputDeviceManager.GetDefaultTerminalOutputDevice(serviceProvider, loggingState);
+            platformOutputDevice = PlatformOutputDeviceManager.GetDefaultTerminalOutputDevice(serviceProvider);
             await platformOutputDevice.TryInitializeAsync();
         }
 
