@@ -11,14 +11,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 public class TestRunCancellationToken
 {
     /// <summary>
+    /// Callback to be invoked when canceled.
+    /// </summary>
+    private readonly List<Action?> _registeredCallback = new();
+
+    /// <summary>
     /// Stores whether the test run is canceled or not.
     /// </summary>
     private bool _canceled;
-
-    /// <summary>
-    /// Callback to be invoked when canceled.
-    /// </summary>
-    private Action? _registeredCallback;
 
     public TestRunCancellationToken()
         : this(CancellationToken.None)
@@ -41,7 +41,10 @@ public class TestRunCancellationToken
             _canceled = value;
             if (_canceled)
             {
-                _registeredCallback?.Invoke();
+                foreach (Action? callBack in _registeredCallback)
+                {
+                    callBack?.Invoke();
+                }
             }
         }
     }
@@ -57,13 +60,13 @@ public class TestRunCancellationToken
     /// <param name="callback">Callback delegate for handling cancellation.</param>
     public void Register(Action callback)
     {
-        DebugEx.Assert(_registeredCallback == null, "Callback delegate is already registered, use a new cancellationToken");
+        DebugEx.Assert(_registeredCallback != null, "Callback delegate is already registered, use a new cancellationToken");
 
-        _registeredCallback = Guard.NotNull(callback);
+        _registeredCallback.Add(Guard.NotNull(callback));
     }
 
     /// <summary>
     /// Unregister the callback method.
     /// </summary>
-    public void Unregister() => _registeredCallback = null;
+    public void Unregister() => _registeredCallback.Clear();
 }
