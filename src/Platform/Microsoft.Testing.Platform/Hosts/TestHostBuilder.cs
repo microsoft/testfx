@@ -349,7 +349,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return toolsTestHost;
         }
 
-        DotnetTestConnection dotnetTestConnection = new(serviceProvider, testApplicationCancellationTokenSource);
+        DotnetTestConnection dotnetTestConnection = new(commandLineHandler, processHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
         bool isConnectedToDotnetTest = await dotnetTestConnection.TryConnectToDotnetTestPipeIfAvailableAsync();
         if (isConnectedToDotnetTest)
         {
@@ -629,7 +629,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         if (dotnetTestConnection?.IsConnected == true)
         {
-            dotnetTestDataConsumer = new DotnetTestDataConsumer(serviceProvider);
+            dotnetTestDataConsumer = new DotnetTestDataConsumer(dotnetTestConnection, serviceProvider.GetEnvironment());
         }
 
         // Build and register "common non special" services - we need special treatment because extensions can start to log during the

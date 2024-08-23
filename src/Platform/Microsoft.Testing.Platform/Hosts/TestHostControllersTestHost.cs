@@ -133,7 +133,9 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             // We register the DotnetTestDataConsumer as last to ensure that it will be the last one to consume the data.
             if (DotnetTestConnection?.IsConnected == true)
             {
-                dataConsumersBuilder.Add(new DotnetTestDataConsumer(ServiceProvider));
+                RoslynDebug.Assert(dotnetTestConnection is not null);
+
+                dataConsumersBuilder.Add(new DotnetTestDataConsumer(dotnetTestConnection, ServiceProvider.GetEnvironment()));
             }
 
             AsynchronousMessageBus concreteMessageBusService = new(

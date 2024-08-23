@@ -21,20 +21,20 @@ internal sealed class DotnetTestConnection :
 #endif
     IDisposable
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly CommandLineHandler _commandLineHandler;
+    private readonly IProcessHandler _processHandler;
+    private readonly IEnvironment _environment;
+    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestApplicationCancellationTokenSource _cancellationTokenSource;
 
     private NamedPipeClient? _dotnetTestPipeClient;
 
-    private CommandLineHandler CommandLineHandler => _serviceProvider.GetRequiredService<CommandLineHandler>();
-
-    private IEnvironment Environment => _serviceProvider.GetRequiredService<IEnvironment>();
-
-    private ITestApplicationModuleInfo TestApplicationModuleInfo => _serviceProvider.GetRequiredService<ITestApplicationModuleInfo>();
-
-    public DotnetTestConnection(IServiceProvider serviceProvider, ITestApplicationCancellationTokenSource cancellationTokenSource)
+    public DotnetTestConnection(CommandLineHandler commandLineHandler, IProcessHandler processHandler, IEnvironment environment, ITestApplicationModuleInfo testApplicationModuleInfo, ITestApplicationCancellationTokenSource cancellationTokenSource)
     {
-        _serviceProvider = serviceProvider;
+        _commandLineHandler = commandLineHandler;
+        _processHandler = processHandler;
+        _environment = environment;
+        _testApplicationModuleInfo = testApplicationModuleInfo;
         _cancellationTokenSource = cancellationTokenSource;
     }
 
@@ -42,15 +42,15 @@ internal sealed class DotnetTestConnection :
     {
         // If we are in server mode and the pipe name is provided
         // then, we need to connect to the pipe server.
-        if (CommandLineHandler.HasDotnetTestServerOption() &&
-            CommandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
+        if (_commandLineHandler.HasDotnetTestServerOption() &&
+            _commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
         {
             // The execution id is used to identify the test execution
             // We are storing it as an env var so that it can be read by the test host, test host controller and the test host orchestrator
             // If it already exists, we don't overwrite it
-            if (RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID)))
+            if (RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID)))
             {
-                Environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID, Guid.NewGuid().ToString("N"));
+                _environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID, Guid.NewGuid().ToString("N"));
             }
 
             _dotnetTestPipeClient = new(arguments[0]);
@@ -69,7 +69,7 @@ internal sealed class DotnetTestConnection :
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
         List<CommandLineOptionMessage> commandLineHelpOptions = new();
-        foreach (ICommandLineOptionsProvider commandLineOptionProvider in CommandLineHandler.CommandLineOptionsProviders)
+        foreach (ICommandLineOptionsProvider commandLineOptionProvider in _commandLineHandler.CommandLineOptionsProviders)
         {
             if (commandLineOptionProvider is IToolCommandLineOptionsProvider)
             {
@@ -86,7 +86,7 @@ internal sealed class DotnetTestConnection :
             }
         }
 
-        await _dotnetTestPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(TestApplicationModuleInfo.GetCurrentTestApplicationFullPath(), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), _cancellationTokenSource.CancellationToken);
+        await _dotnetTestPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), _cancellationTokenSource.CancellationToken);
     }
 
     public async Task<bool> DoHandshakeAsync(string hostType)
@@ -95,14 +95,14 @@ internal sealed class DotnetTestConnection :
 
         HandshakeInfo handshakeInfo = new(new Dictionary<byte, string>()
         {
-            { HandshakeInfoPropertyNames.PID, _serviceProvider.GetProcessHandler().GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) },
+            { HandshakeInfoPropertyNames.PID, _processHandler.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) },
             { HandshakeInfoPropertyNames.Architecture, RuntimeInformation.OSArchitecture.ToString() },
             { HandshakeInfoPropertyNames.Framework, RuntimeInformation.FrameworkDescription },
             { HandshakeInfoPropertyNames.OS, RuntimeInformation.OSDescription },
             { HandshakeInfoPropertyNames.ProtocolVersion, ProtocolConstants.Version },
             { HandshakeInfoPropertyNames.HostType, hostType },
-            { HandshakeInfoPropertyNames.ModulePath, TestApplicationModuleInfo?.GetCurrentTestApplicationFullPath() ?? string.Empty },
-            { HandshakeInfoPropertyNames.ExecutionId,  Environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID) ?? string.Empty },
+            { HandshakeInfoPropertyNames.ModulePath, _testApplicationModuleInfo?.GetCurrentTestApplicationFullPath() ?? string.Empty },
+            { HandshakeInfoPropertyNames.ExecutionId,  _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID) ?? string.Empty },
         });
 
         HandshakeInfo response = await _dotnetTestPipeClient.RequestReplyAsync<HandshakeInfo, HandshakeInfo>(handshakeInfo, _cancellationTokenSource.CancellationToken);
