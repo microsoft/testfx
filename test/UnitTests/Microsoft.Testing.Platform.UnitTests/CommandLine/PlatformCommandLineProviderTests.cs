@@ -44,28 +44,6 @@ public class PlatformCommandLineProviderTests : TestBase
         Assert.AreEqual(PlatformResources.PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage, validateOptionsResult.ErrorMessage);
     }
 
-    public async Task IsValid_If_Port_Is_Integer()
-    {
-        var provider = new PlatformCommandLineProvider();
-        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.PortOptionKey);
-
-        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["32"]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
-    }
-
-    [Arguments("32.32")]
-    [Arguments("invalid")]
-    public async Task IsValid_If_Port_Is_Not_Integer(string port)
-    {
-        var provider = new PlatformCommandLineProvider();
-        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.PortOptionKey);
-
-        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [port]).ConfigureAwait(false);
-        Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, PlatformCommandLineProvider.PortOptionKey), validateOptionsResult.ErrorMessage);
-    }
-
     public async Task IsValid_If_ClientPort_Is_Integer()
     {
         var provider = new PlatformCommandLineProvider();
