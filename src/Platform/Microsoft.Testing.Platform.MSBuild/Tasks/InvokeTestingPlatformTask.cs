@@ -76,6 +76,9 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     [Required]
     public ITaskItem ProjectFullPath { get; set; }
 
+    [Required]
+    public ITaskItem VSTestNoBuild { get; set; }
+
     public ITaskItem? DotnetHostPath { get; set; }
 
     public ITaskItem? TestingPlatformCommandLineArguments { get; set; }
@@ -173,6 +176,11 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                     builder.AppendSwitchIfNotNull("--project ", ProjectFullPath.ItemSpec);
                     builder.AppendSwitchIfNotNull("--framework ", TargetFramework.ItemSpec);
                     builder.AppendSwitchIfNotNull("--arch ", TestArchitecture.ItemSpec.ToLowerInvariant());
+                    if (bool.TryParse(VSTestNoBuild.ItemSpec, out bool noBuild) && noBuild)
+                    {
+                        builder.AppendSwitch("--no-build");
+                    }
+
                     builder.AppendTextUnquoted($" -- ");
                 }
                 else
