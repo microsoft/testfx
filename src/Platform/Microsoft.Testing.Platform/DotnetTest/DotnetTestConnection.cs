@@ -93,13 +93,14 @@ internal sealed class DotnetTestConnection :
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
+        string supportedProtocolVersions = ProtocolConstants.Version;
         HandshakeInfo handshakeInfo = new(new Dictionary<byte, string>()
         {
             { HandshakeInfoPropertyNames.PID, _processHandler.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) },
             { HandshakeInfoPropertyNames.Architecture, RuntimeInformation.OSArchitecture.ToString() },
             { HandshakeInfoPropertyNames.Framework, RuntimeInformation.FrameworkDescription },
             { HandshakeInfoPropertyNames.OS, RuntimeInformation.OSDescription },
-            { HandshakeInfoPropertyNames.ProtocolVersion, ProtocolConstants.Version },
+            { HandshakeInfoPropertyNames.SupportedProtocolVersions, supportedProtocolVersions },
             { HandshakeInfoPropertyNames.HostType, hostType },
             { HandshakeInfoPropertyNames.ModulePath, _testApplicationModuleInfo?.GetCurrentTestApplicationFullPath() ?? string.Empty },
             { HandshakeInfoPropertyNames.ExecutionId,  _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID) ?? string.Empty },
@@ -107,8 +108,21 @@ internal sealed class DotnetTestConnection :
 
         HandshakeInfo response = await _dotnetTestPipeClient.RequestReplyAsync<HandshakeInfo, HandshakeInfo>(handshakeInfo, _cancellationTokenSource.CancellationToken);
 
-        return response.Properties?.TryGetValue(HandshakeInfoPropertyNames.ProtocolVersion, out string? protocolVersion) == true &&
-            protocolVersion.Equals(ProtocolConstants.Version, StringComparison.Ordinal);
+        return response.Properties?.TryGetValue(HandshakeInfoPropertyNames.SupportedProtocolVersions, out string? protocolVersion) == true &&
+            IsVersionCompatible(protocolVersion, supportedProtocolVersions);
+    }
+
+    public static bool IsVersionCompatible(string protocolVersion, string supportedProtocolVersions)
+    {
+        foreach (string supportedProtocolVersion in supportedProtocolVersions.Split(';'))
+        {
+            if (protocolVersion.Equals(supportedProtocolVersion, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public async Task SendMessageAsync(IRequest message)
