@@ -50,12 +50,10 @@ public class AbortionTests : AcceptanceTestBase
 <Project Sdk="Microsoft.NET.Sdk">
    <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-    <OutputType>Exe</OutputType>
-    <UseAppHost>true</UseAppHost>
-    <Nullable>enable</Nullable>
-    <LangVersion>preview</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <Nullable>enable</Nullable>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
