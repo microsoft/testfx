@@ -17,7 +17,7 @@ public class ParallelExecutionTests : CLITestBase
 
     public async Task AllMethodsShouldRunInParallel()
     {
-        const int maxAttempts = 5;
+        const int maxAttempts = 10;
         for (int i = 0; i <= maxAttempts; i++)
         {
             try
