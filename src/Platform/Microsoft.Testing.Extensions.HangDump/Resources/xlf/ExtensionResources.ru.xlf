@@ -59,12 +59,12 @@ The timeout value is specified in one of the following formats:
     90m, 90min, 90minute, 90minutes,
     5400s, 5400sec, 5400second, 5400seconds.
     Default is 30m.</source>
-        <target state="new">Specify the timeout after which the dump will be generated.
-The timeout value is specified in one of the following formats:
-    1.5h, 1.5hour, 1.5hours,
-    90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
-    Default is 30m.</target>
+        <target state="translated">Укажите время ожидания, по истечении которого будет создан дамп.
+Значение времени ожидания задано в одном из следующих форматов:
+    1,5 ч, 1,5 ч, 1,5 часа,
+    90 м, 90 мин, 90 минут, 90 минут,
+    5400 с, 5400 сек, 5400 секунд, 5400s секунд.
+    Значение по умолчанию — 30 м.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
@@ -76,16 +76,16 @@ The timeout value is specified in one of the following formats:
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
-Default type is 'Full'</target>
+        <target state="translated">Укажите тип дампа.
+Допустимые значения: "Mini", "Heap", "Triage" (доступно только в .NET 6+) или "Full".
+Тип по умолчанию — "Full"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</target>
+        <target state="translated">"{0}" не является допустимым типом дампа.
+Допустимые параметры: "Mini", "Heap", "Triage" (доступно только в .NET 6+) и "Full"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
