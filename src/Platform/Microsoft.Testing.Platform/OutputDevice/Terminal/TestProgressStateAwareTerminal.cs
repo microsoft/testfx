@@ -105,7 +105,15 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     {
         if (GetShowProgress())
         {
-            _cts.Cancel();
+            try
+            {
+                _cts.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // When we dispose _cts too early this will throw.
+            }
+
             _refresher?.Join();
 
             _terminal.EraseProgress();
