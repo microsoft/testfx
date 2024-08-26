@@ -178,7 +178,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                     builder.AppendSwitchIfNotNull("--arch ", TestArchitecture.ItemSpec.ToLowerInvariant());
                     if (bool.TryParse(VSTestNoBuild.ItemSpec, out bool noBuild) && noBuild)
                     {
-                        builder.AppendSwitch("--no-build");
+                        builder.AppendSwitch("--no-build ");
                     }
 
                     builder.AppendTextUnquoted($" -- ");
