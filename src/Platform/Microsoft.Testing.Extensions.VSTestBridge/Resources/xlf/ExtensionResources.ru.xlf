@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="MissingRunSettingsAttribute">
         <source>Invalid .runsettings file, '&lt;RunSettings&gt;' attribute is missing</source>
-        <target state="new">Invalid .runsettings file, '&lt;RunSettings&gt;' attribute is missing</target>
+        <target state="translated">Недопустимый файл RUNSETTINGS, отсутствует атрибут "&lt;RunSettings&gt;"</target>
         <note />
       </trans-unit>
       <trans-unit id="RunSettingsOptionDescription">
@@ -39,17 +39,17 @@
       </trans-unit>
       <trans-unit id="UnsupportedRunconfigurationSetting">
         <source>Runsettings attribute '{0}' is not supported by Microsoft.Testing.Platform and will be ignored</source>
-        <target state="new">Runsettings attribute '{0}' is not supported by Microsoft.Testing.Platform and will be ignored</target>
+        <target state="translated">Атрибут Runsettings "{0}" не поддерживается в Microsoft.Testing.Platform и будет пропущен</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRunsettingsDatacollectors">
         <source>Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored</source>
-        <target state="new">Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored</target>
+        <target state="translated">Сборщики данных Runsettings не поддерживаются в Microsoft.Testing.Platform и будут пропущены</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRunsettingsLoggers">
         <source>Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</source>
-        <target state="new">Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</target>
+        <target state="translated">Средства ведения журналов Runsettings не поддерживаются в Microsoft.Testing.Platform и будут пропущены</target>
         <note />
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
