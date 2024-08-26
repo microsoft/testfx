@@ -56,9 +56,9 @@
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
-        <target state="new">Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
+        <target state="translated">Określ typ zrzutu.
+Prawidłowe wartości to „Mini”, „Sterta”, „Klasyfikacja” i „Pełne”. Typ domyślny to „Pełne”.
+Aby uzyskać więcej informacji, odwiedź stronę https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">

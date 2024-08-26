@@ -59,12 +59,12 @@ The timeout value is specified in one of the following formats:
     90m, 90min, 90minute, 90minutes,
     5400s, 5400sec, 5400second, 5400seconds.
     Default is 30m.</source>
-        <target state="new">Specify the timeout after which the dump will be generated.
-The timeout value is specified in one of the following formats:
-    1.5h, 1.5hour, 1.5hours,
-    90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
-    Default is 30m.</target>
+        <target state="translated">Geben Sie das Timeout an, nach dem das Speicherabbild generiert wird.
+Der Timeoutwert wird in einem der folgenden Formate angegeben:
+    1,5 h, 1,5 Stunde, 1,5 Stunden,
+    90 m, 90 Min., 90 Minute, 90 Minuten,
+    5400 s, 5400 Sek, 5400 Sekunde, 5400 Sekunden.
+    Der Standardwert ist 30m.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
@@ -76,16 +76,16 @@ The timeout value is specified in one of the following formats:
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
-Default type is 'Full'</target>
+        <target state="translated">Geben Sie den Typ des Speicherabbilds an.
+Gültige Werte sind "Mini", "Heap", "Triage" (nur in .NET 6 und höher verfügbar) oder "Full".
+Der Standardtyp ist "Full".</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</target>
+        <target state="translated">"{0}" ist kein gültiger Speicherabbildtyp.
+Gültige Optionen sind "Mini", "Heap", "Triage" (nur in .NET 6 und höher verfügbar) und "Full".</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
