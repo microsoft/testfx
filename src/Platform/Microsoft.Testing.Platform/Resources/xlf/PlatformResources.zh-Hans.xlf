@@ -341,6 +341,11 @@
         <target state="translated">最低预期测试策略冲突，测试已运行 {0} 次，最低预期 {1} 次</target>
         <note>{0}, {1} number of tests</note>
       </trans-unit>
+      <trans-unit id="MissingClientPortFoJsonRpc">
+        <source>Expected --client-port when jsonRpc protocol is used.</source>
+        <target state="new">Expected --client-port when jsonRpc protocol is used.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
         <source>No serializer registered with ID '{0}'</source>
         <target state="translated">没有使用 ID“{0}”注册序列化程序</target>

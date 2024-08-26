@@ -32,14 +32,6 @@ internal sealed partial class ServerModeManager
             _outputDevice = outputDevice;
         }
 
-        public MessageHandlerFactory(
-            int? port,
-            IOutputDevice outputDevice)
-        {
-            _port = port ?? 0;
-            _outputDevice = outputDevice;
-        }
-
         public string Uid => nameof(MessageHandlerFactory);
 
         public string Version => AppVersion.DefaultSemVer;

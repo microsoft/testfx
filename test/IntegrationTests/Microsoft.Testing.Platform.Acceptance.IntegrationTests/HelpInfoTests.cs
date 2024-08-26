@@ -220,10 +220,6 @@ Built-in command line providers:
         Arity: 0\.\.1
         Hidden: True
         Description: Do not display the startup banner, the copyright message or the telemetry banner\.
-      --port
-        Arity: 1
-        Hidden: True
-        Description: Specify the port of the server\.
       --results-directory
         Arity: 1
         Hidden: False
@@ -492,10 +488,6 @@ Built-in command line providers:
         Arity: 0..1
         Hidden: True
         Description: Do not display the startup banner, the copyright message or the telemetry banner.
-      --port
-        Arity: 1
-        Hidden: True
-        Description: Specify the port of the server.
       --results-directory
         Arity: 1
         Hidden: False
