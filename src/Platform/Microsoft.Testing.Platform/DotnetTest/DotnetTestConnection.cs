@@ -112,18 +112,7 @@ internal sealed class DotnetTestConnection :
             IsVersionCompatible(protocolVersion, supportedProtocolVersions);
     }
 
-    public static bool IsVersionCompatible(string protocolVersion, string supportedProtocolVersions)
-    {
-        foreach (string supportedProtocolVersion in supportedProtocolVersions.Split(';'))
-        {
-            if (protocolVersion.Equals(supportedProtocolVersion, StringComparison.Ordinal))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+    public static bool IsVersionCompatible(string protocolVersion, string supportedProtocolVersions) => supportedProtocolVersions.Split(';').Contains(protocolVersion);
 
     public async Task SendMessageAsync(IRequest message)
     {
