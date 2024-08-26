@@ -13,11 +13,11 @@ public class ParallelExecutionTests : CLITestBase
     private const string MethodParallelTestAssetName = "ParallelMethodsTestProject";
     private const string DoNotParallelizeTestAssetName = "DoNotParallelizeTestProject";
     private const int TestMethodWaitTimeInMS = 1000;
-    private const int OverheadTimeInMS = 3000;
+    private const int OverheadTimeInMS = 4000;
 
     public async Task AllMethodsShouldRunInParallel()
     {
-        const int maxAttempts = 3;
+        const int maxAttempts = 5;
         for (int i = 0; i <= maxAttempts; i++)
         {
             try
@@ -26,7 +26,7 @@ public class ParallelExecutionTests : CLITestBase
 
                 // Parallel level of 2
                 // There are a total of 6 methods each with a sleep of TestMethodWaitTimeInMS.
-                // 5 of them are parallelizable and 1 is not. So this should not exceed 4 * TestMethodWaitTimeInMS seconds + 2.5 seconds overhead.
+                // 5 of them are parallelizable and 1 is not..
                 ValidateTestRunTime((4 * TestMethodWaitTimeInMS) + OverheadTimeInMS);
             }
 

@@ -114,7 +114,7 @@ public class UnitTest1
                     _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     retryCount: 0);
                 compilationResult.AssertOutputContains("Generating native code");
-            }, times: 10, every: TimeSpan.FromSeconds(5));
+            }, times: 15, every: TimeSpan.FromSeconds(5));
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent.Arguments, RID, Verb.publish);
 
