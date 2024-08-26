@@ -28,7 +28,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         int exitCode;
         try
         {
-            if (DotnetTestConnection?.IsConnected == false)
+            if (DotnetTestConnection is null || DotnetTestConnection?.IsConnected == false)
             {
                 exitCode = await RunTestAppAsync(testApplicationCancellationToken);
                 return exitCode;
