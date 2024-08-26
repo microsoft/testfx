@@ -52,8 +52,8 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         {
             await DisposeServiceProviderAsync(ServiceProvider, isProcessShutdown: true);
             await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>());
-            await DisposeHelper.DisposeAsync(ServiceProvider.GetTestApplicationCancellationTokenSource());
             await DisposeHelper.DisposeAsync(DotnetTestConnection);
+            await DisposeHelper.DisposeAsync(ServiceProvider.GetTestApplicationCancellationTokenSource());
         }
 
         return exitCode;
