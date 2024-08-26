@@ -17,15 +17,10 @@ internal sealed partial class ServerModeManager : IServerModeManager
     {
         ICommandLineOptions commandLineService = serviceProvider.GetCommandLineOptions();
 
-        int? serverPort;
-        serverPort = commandLineService.TryGetOptionArgumentList(PlatformCommandLineProvider.PortOptionKey, out string[]? serverPortArgs)
-            ? int.Parse(serverPortArgs[0], CultureInfo.InvariantCulture)
-            : null;
-
         int? clientPort;
         clientPort = commandLineService.TryGetOptionArgumentList(PlatformCommandLineProvider.ClientPortOptionKey, out string[]? clientPortArgs)
             ? int.Parse(clientPortArgs[0], CultureInfo.InvariantCulture)
-            : null;
+            : throw new InvalidOperationException(PlatformResources.MissingClientPortFoJsonRpc);
 
         string? clientHostName;
         clientHostName = commandLineService.TryGetOptionArgumentList(PlatformCommandLineProvider.ClientHostOptionKey, out string[]? clientHostArgs)
@@ -36,13 +31,6 @@ internal sealed partial class ServerModeManager : IServerModeManager
         {
             switch (CommunicationProtocol)
             {
-                case JsonRpcTcpServer tcpServerCommunicationProtocol:
-                    {
-                        serverPort ??= tcpServerCommunicationProtocol.Port;
-
-                        break;
-                    }
-
                 case JsonRpcTcpServerToSingleClient tcpServerToSingleClientCommunicationProtocol:
                     {
                         clientPort ??= tcpServerToSingleClientCommunicationProtocol.ClientPort;
@@ -62,8 +50,6 @@ internal sealed partial class ServerModeManager : IServerModeManager
             }
         }
 
-        return clientPort is not null && clientHostName is not null
-            ? new MessageHandlerFactory(clientHostName, clientPort.Value, serviceProvider.GetOutputDevice())
-            : new MessageHandlerFactory(serverPort, serviceProvider.GetOutputDevice());
+        return new MessageHandlerFactory(clientHostName, clientPort.Value, serviceProvider.GetOutputDevice());
     }
 }
