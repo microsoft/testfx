@@ -2,15 +2,18 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class ClsTests : CLITestBase
 {
     private const string TestAssetName = "ClsTestProject";
 
     // This test in itself is not so important. What matters is that the asset gets build. If we regress and start having
-    // the [DataRow] attribute no longer CLS compliant, the build will raise a warning in VS (and the build will fail in CI).
+    // the [DataRow] attribute no longer CLS compliant, the build will raise a warning in VS (and the build will fail in CI.)
+    [TestMethod]
     public void TestsAreRun()
     {
         // Arrange

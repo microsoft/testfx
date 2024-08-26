@@ -2,13 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class DiscoverInternalsTests : CLITestBase
 {
     private const string TestAsset = "DiscoverInternalsProject";
 
+    [TestMethod]
     public void InternalTestClassesAreDiscoveredWhenTheDiscoverInternalsAttributeIsPresent()
     {
         // Arrange
@@ -25,6 +28,7 @@ public class DiscoverInternalsTests : CLITestBase
             "NestedInternalClass_TestMethod1");
     }
 
+    [TestMethod]
     public void AnInternalTestClassDerivedFromAPublicAbstractGenericBaseClassForAnInternalTypeIsDiscovered()
     {
         // Arrange
@@ -39,6 +43,7 @@ public class DiscoverInternalsTests : CLITestBase
             "EqualityIsCaseInsensitive");
     }
 
+    [TestMethod]
     public void AnInternalTypeCanBeUsedInADynamicDataTestMethod()
     {
         string assemblyPath = Path.IsPathRooted(TestAsset) ? TestAsset : GetAssetFullPath(TestAsset);

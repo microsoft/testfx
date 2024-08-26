@@ -4,13 +4,16 @@
 using FluentAssertions;
 
 using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public partial class TestId : CLITestBase
 {
     private const string LegacyStrategyDll = "TestIdProject.LegacyStrategy";
 
+    [TestMethod]
     public void TestIdUniqueness_DataRowArray_LegacyStrategy()
     {
         // Arrange
@@ -33,6 +36,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DataRowString_LegacyStrategy()
     {
         // Arrange
@@ -56,6 +60,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DynamicDataArrays_LegacyStrategy()
     {
         // Arrange
@@ -78,6 +83,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DynamicDataTuple_LegacyStrategy()
     {
         // Arrange
@@ -99,6 +105,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DynamicDataGenericCollections_LegacyStrategy()
     {
         // Arrange
@@ -122,6 +129,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_TestDataSourceArrays_LegacyStrategy()
     {
         // Arrange
@@ -144,6 +152,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_TestDataSourceTuples_LegacyStrategy()
     {
         // Arrange
@@ -165,6 +174,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_TestDataSourceGenericCollections_LegacyStrategy()
     {
         // Arrange

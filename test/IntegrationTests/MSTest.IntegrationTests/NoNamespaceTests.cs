@@ -7,13 +7,16 @@ using Microsoft.MSTestV2.CLIAutomation;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class NoNamespaceTests : CLITestBase
 {
     private const string TestAssetName = "HierarchyProject";
 
+    [TestMethod]
     public void TestsAreDiscoveredWithExpectedHierarchy()
     {
         // Arrange & Act

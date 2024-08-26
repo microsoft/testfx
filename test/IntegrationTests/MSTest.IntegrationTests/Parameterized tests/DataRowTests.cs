@@ -2,13 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class DataRowTests : CLITestBase
 {
     private const string TestAssetName = "DataRowTestProject";
 
+    [TestMethod]
     public void ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerivedClassHasDataRows_SimpleDataRows()
     {
         // Arrange
@@ -28,6 +31,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethod (\"DerivedString2\")");
     }
 
+    [TestMethod]
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
         // Arrange
@@ -44,6 +48,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethod (\"DerivedString2\")");
     }
 
+    [TestMethod]
     public void DataRowsExecuteWithRequiredAndOptionalParameters()
     {
         // Arrange
@@ -61,6 +66,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethodWithSomeOptionalParameters (123,\"DerivedOptionalString2\",\"DerivedOptionalString3\")");
     }
 
+    [TestMethod]
     public void DataRowsExecuteWithParamsArrayParameter()
     {
         // Arrange
@@ -79,6 +85,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethodWithParamsParameters (2,\"DerivedParamsArg1\",\"DerivedParamsArg2\",\"DerivedParamsArg3\")");
     }
 
+    [TestMethod]
     public void DataRowsFailWhenInvalidArgumentsProvided()
     {
         // Arrange
@@ -96,6 +103,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethodFailsWithInvalidArguments (2,\"DerivedRequiredArgument\",\"DerivedOptionalArgument\",\"DerivedExtraArgument\")");
     }
 
+    [TestMethod]
     public void DataRowsShouldSerializeDoublesProperly()
     {
         // Arrange
@@ -112,6 +120,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestDouble (10.02,20.02)");
     }
 
+    [TestMethod]
     public void DataRowsShouldSerializeMixedTypesProperly()
     {
         // Arrange
@@ -127,6 +136,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMixed (10,10,10,10,10,10,10,\"10\")");
     }
 
+    [TestMethod]
     public void DataRowsShouldSerializeEnumsProperly()
     {
         // Arrange
@@ -145,6 +155,7 @@ public class DataRowTests : CLITestBase
             "DataRowEnums (Gamma)");
     }
 
+    [TestMethod]
     public void DataRowsShouldHandleNonSerializableValues()
     {
         // Arrange
@@ -166,6 +177,7 @@ public class DataRowTests : CLITestBase
             "DataRowNonSerializable (DataRowTestProject.DataRowTests_DerivedClass)");
     }
 
+    [TestMethod]
     public void ExecuteDataRowTests_Enums()
     {
         // Arrange
@@ -241,6 +253,7 @@ public class DataRowTests : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
     }
 
+    [TestMethod]
     public void ExecuteDataRowTests_NonSerializablePaths()
     {
         // Arrange
@@ -259,6 +272,7 @@ public class DataRowTests : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
     }
 
+    [TestMethod]
     public void ExecuteDataRowTests_Regular()
     {
         // Arrange
@@ -320,6 +334,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethodFailsWithInvalidArguments (2,\"DerivedRequiredArgument\",\"DerivedOptionalArgument\",\"DerivedExtraArgument\")");
     }
 
+    [TestMethod]
     public void GetDisplayName_AfterOverriding_GetsTheNewDisplayName()
     {
         // Arrange
@@ -334,6 +349,7 @@ public class DataRowTests : CLITestBase
             "Overridden DisplayName");
     }
 
+    [TestMethod]
     public void ParameterizedTestsWithTestMethodSettingDisplayName_DataIsPrefixWithDisplayName()
     {
         // Arrange

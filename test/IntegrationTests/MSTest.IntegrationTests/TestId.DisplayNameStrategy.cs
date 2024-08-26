@@ -4,6 +4,7 @@
 using FluentAssertions;
 
 using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.IntegrationTests;
 
@@ -11,6 +12,7 @@ public partial class TestId : CLITestBase
 {
     private const string DisplayNameStrategyDll = "TestIdProject.DisplayNameStrategy";
 
+    [TestMethod]
     public void TestIdUniqueness_DataRowArray_DisplayNameStrategy()
     {
         // Arrange
@@ -32,6 +34,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DataRowString_DisplayNameStrategy()
     {
         // Arrange
@@ -55,6 +58,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().HaveCount(3);
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DynamicDataArrays_DisplayNameStrategy()
     {
         // Arrange
@@ -96,6 +100,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DynamicDataGenericCollections_DisplayNameStrategy()
     {
         // Arrange
@@ -118,6 +123,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_TestDataSourceArrays_DisplayNameStrategy()
     {
         // Arrange
@@ -139,6 +145,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_TestDataSourceTuples_DisplayNameStrategy()
     {
         // Arrange
@@ -159,6 +166,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_TestDataSourceGenericCollections_DisplayNameStrategy()
     {
         // Arrange
