@@ -1,14 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Runtime.InteropServices;
-
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.IPC;
-using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -18,11 +13,11 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPipeClient? dotnetTestPipeClient = null) : ITestHost
+internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestHost
 {
     public ServiceProvider ServiceProvider => serviceProvider;
 
-    protected NamedPipeClient? DotnetTestPipeClient => dotnetTestPipeClient;
+    protected DotnetTestConnection? DotnetTestConnection => ServiceProvider.GetService<DotnetTestConnection>();
 
     protected abstract bool RunTestApplicationLifeCycleCallbacks { get; }
 
@@ -33,14 +28,16 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPip
         int exitCode;
         try
         {
-            if (dotnetTestPipeClient is null)
+            if (DotnetTestConnection is null || DotnetTestConnection?.IsConnected == false)
             {
                 exitCode = await RunTestAppAsync(testApplicationCancellationToken);
                 return exitCode;
             }
 
+            RoslynDebug.Assert(DotnetTestConnection is not null);
+
             ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
-            bool isDotnetTestHandshakeSuccessful = await DoHandshakeAsync(dotnetTestPipeClient, testApplicationModuleInfo, testApplicationCancellationToken);
+            bool isDotnetTestHandshakeSuccessful = await DotnetTestConnection.DoHandshakeAsync(GetHostType());
 
             exitCode = isDotnetTestHandshakeSuccessful
                 ? await RunTestAppAsync(testApplicationCancellationToken)
@@ -56,10 +53,22 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPip
             await DisposeServiceProviderAsync(ServiceProvider, isProcessShutdown: true);
             await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>());
             await DisposeHelper.DisposeAsync(ServiceProvider.GetTestApplicationCancellationTokenSource());
-            await DisposeHelper.DisposeAsync(dotnetTestPipeClient);
+            await DisposeHelper.DisposeAsync(DotnetTestConnection);
         }
 
         return exitCode;
+    }
+
+    private string GetHostType()
+    {
+        // For now, we don't  inherit TestHostOrchestratorHost from CommonTestHost one so we don't connect when we orchestrate
+        string hostType = this switch
+        {
+            ConsoleTestHost => "TestHost",
+            TestHostControllersTestHost => "TestHostController",
+            _ => throw new InvalidOperationException("Unknown host type"),
+        };
+        return hostType;
     }
 
     private async Task<int> RunTestAppAsync(CancellationToken testApplicationCancellationToken)
@@ -85,26 +94,6 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider, NamedPip
         }
 
         return exitCode;
-    }
-
-    private async Task<bool> DoHandshakeAsync(NamedPipeClient dotnetTestPipeClient, ITestApplicationModuleInfo? testApplicationModuleInfo, CancellationToken testApplicationCancellationToken)
-    {
-        HandshakeInfo handshakeInfo = new(new Dictionary<byte, string>()
-        {
-            { HandshakeInfoPropertyNames.PID, ServiceProvider.GetProcessHandler().GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) },
-            { HandshakeInfoPropertyNames.Architecture, RuntimeInformation.OSArchitecture.ToString() },
-            { HandshakeInfoPropertyNames.Framework, RuntimeInformation.FrameworkDescription },
-            { HandshakeInfoPropertyNames.OS, RuntimeInformation.OSDescription },
-            { HandshakeInfoPropertyNames.ProtocolVersion, ProtocolConstants.Version },
-            { HandshakeInfoPropertyNames.HostType, GetType().Name },
-            { HandshakeInfoPropertyNames.ModulePath, testApplicationModuleInfo?.GetCurrentTestApplicationFullPath() ?? string.Empty },
-            { HandshakeInfoPropertyNames.ExecutionId, string.Empty },
-        });
-
-        HandshakeInfo response = await dotnetTestPipeClient.RequestReplyAsync<HandshakeInfo, HandshakeInfo>(handshakeInfo, testApplicationCancellationToken);
-
-        return response.Properties?.TryGetValue(HandshakeInfoPropertyNames.ProtocolVersion, out string? protocolVersion) == true &&
-            protocolVersion.Equals(ProtocolConstants.Version, StringComparison.Ordinal);
     }
 
     protected abstract Task<int> InternalRunAsync();

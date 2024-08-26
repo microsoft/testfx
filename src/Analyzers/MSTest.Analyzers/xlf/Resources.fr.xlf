@@ -283,17 +283,17 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="DoNotUseShadowingDescription">
         <source>Shadowing test members could cause testing issues (such as NRE).</source>
-        <target state="new">Shadowing test members could cause testing issues (such as NRE).</target>
+        <target state="translated">Le cliché instantané des membres de test peut entraîner des problèmes de test (tels que NRE).</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
         <source>Member '{0}' is already exist in the base class</source>
-        <target state="new">Member '{0}' is already exist in the base class</target>
+        <target state="translated">Le membre '{0}' existe déjà dans la classe de base</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">
         <source>Do not use shadowing</source>
-        <target state="new">Do not use shadowing</target>
+        <target state="translated">Ne pas utiliser le cliché instantané</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
