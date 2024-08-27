@@ -94,7 +94,7 @@
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
         <source>Option '--{0}' is declared by multiple extensions: '{1}'</source>
-        <target state="new">Option '--{0}' is declared by multiple extensions: '{1}'</target>
+        <target state="translated">'--{0}' seçeneği birden çok uzantı tarafından bildirildi: '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
@@ -114,7 +114,7 @@
       </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
         <source>The ICommandLineOptions has not been built yet.</source>
-        <target state="new">The ICommandLineOptions has not been built yet.</target>
+        <target state="translated">ICommandLineOptions henüz derlenmedi.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
@@ -328,12 +328,12 @@
       </trans-unit>
       <trans-unit id="LoggerFactoryNotReady">
         <source>The ILoggerFactory has not been built yet.</source>
-        <target state="new">The ILoggerFactory has not been built yet.</target>
+        <target state="translated">ILoggerFactory henüz derlenmedi.</target>
         <note />
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
         <source>The message bus has not been built yet or is no more usable at this stage.</source>
-        <target state="new">The message bus has not been built yet or is no more usable at this stage.</target>
+        <target state="translated">İleti veri yolu henüz derlenmedi veya bu aşamada artık kullanılamıyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
@@ -395,16 +395,16 @@
         <source>Force the built-in file logger to write the log synchronously.
 Useful for scenario where you don't want to lose any log (i.e. in case of crash).
 Note that this is slowing down the test execution.</source>
-        <target state="new">Force the built-in file logger to write the log synchronously.
-Useful for scenario where you don't want to lose any log (i.e. in case of crash).
-Note that this is slowing down the test execution.</target>
+        <target state="translated">Yerleşik dosya kaydediciyi günlüğü eşzamanlı olarak yazmaya zorlar.
+Herhangi bir günlüğü (kilitlenme durumunda) kaybetmek istemediğiniz senaryolar için faydalıdır.
+Bunun test yürütmesini yavaşlatacağını unutmayın.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[MMddHHssfff].diag</target>
+        <target state="translated">Tanılama günlük kaydını etkinleştirir. Varsayılan günlük düzeyi: 'İzleme'.
+Dosya, çıkış dizinine log_[MMddHHssfff].diag adıyla yazılır</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -420,8 +420,8 @@ The file will be written in the output directory with the name log_[MMddHHssfff]
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
         <source>Output directory of the diagnostic logging.
 If not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="new">Output directory of the diagnostic logging.
-If not specified the file will be generated inside the default 'TestResults' directory.</target>
+        <target state="translated">Tanılama günlüğünün çıkış dizini.
+Belirtilmezse dosya varsayılan 'TestResults' dizini içinde oluşturulur.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
@@ -432,8 +432,8 @@ If not specified the file will be generated inside the default 'TestResults' dir
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
         <source>Define the level of the verbosity for the --diagnostic.
 The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
-        <target state="new">Define the level of the verbosity for the --diagnostic.
-The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</target>
+        <target state="translated">--diagnostic için ayrıntı düzeyini tanımlayın.
+Kullanılabilir değerler: 'Trace', 'Debug', 'Information', 'Warning', 'Error' ve 'Critical'.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
@@ -471,8 +471,8 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
         <source>Do not report non successful exit value for specific exit codes
 (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="new">Do not report non successful exit value for specific exit codes
-(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</target>
+        <target state="translated">Belirli çıkış kodları için başarılı olmayan çıkış değerini raporlamayın
+(ör. '--ignore-exit-code 8; 9' çıkış kodu 8 ve 9'u yoksayar ve bu durumda 0 döndürür)</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -488,8 +488,8 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
         <source>'--minimum-expected-tests' expects a single non-zero positive integer value
 (e.g. '--minimum-expected-tests 10')</source>
-        <target state="new">'--minimum-expected-tests' expects a single non-zero positive integer value
-(e.g. '--minimum-expected-tests 10')</target>
+        <target state="translated">'--minimum-expected-tests', sıfır olmayan tek bir pozitif tamsayı değeri bekler
+(ör. '--minimum-expected-tests 10')</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
@@ -521,9 +521,9 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
         <source>The directory where the test results are going to be placed.
 If the specified directory doesn't exist, it's created.
 The default is TestResults in the directory that contains the test application.</source>
-        <target state="new">The directory where the test results are going to be placed.
-If the specified directory doesn't exist, it's created.
-The default is TestResults in the directory that contains the test application.</target>
+        <target state="translated">Test sonuçlarının yerleştirileceği dizin.
+Belirtilen dizin yoksa oluşturulur.
+Varsayılan değer, test uygulamasını içeren dizindeki TestResults'dır.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -543,14 +543,14 @@ The default is TestResults in the directory that contains the test application.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
-        <target state="new">'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</target>
+        <target state="translated">'timeout' seçeneği, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|s] biçiminde dize olarak bir bağımsız değişkene sahip olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
 Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
-        <target state="new">A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</target>
+        <target state="translated">Genel bir test yürütme zaman aşımı.
+Bir bağımsız değişkeni, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|s] biçiminde dize olarak alır.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
@@ -676,8 +676,8 @@ Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests.
 Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="new">Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
+        <target state="translated">Testleri bildirirken çıkış ayrıntı düzeyi.
+Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Normal’.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
