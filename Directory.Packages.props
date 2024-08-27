@@ -20,7 +20,9 @@
     <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
   </PropertyGroup>
   <PropertyGroup Label="Test dependencies">
+    <CodecovVersion>1.12.3</CodecovVersion>
     <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.3-beta1.24352.1</MicrosoftCodeAnalysisAnalyzerTestingVersion>
+    <ReportGeneratorVersion>4.3.6</ReportGeneratorVersion>
   </PropertyGroup>
   <ItemGroup Label="Product dependencies">
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.22.0" />
