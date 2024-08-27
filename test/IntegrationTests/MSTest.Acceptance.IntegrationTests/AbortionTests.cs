@@ -3,10 +3,11 @@
 
 using System.Runtime.InteropServices;
 
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
 
-namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestGroup]
 public class AbortionTests : AcceptanceTestBase
@@ -27,7 +28,7 @@ public class AbortionTests : AcceptanceTestBase
             return;
         }
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
@@ -50,10 +51,12 @@ public class AbortionTests : AcceptanceTestBase
 <Project Sdk="Microsoft.NET.Sdk">
    <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
     <GenerateProgramFile>false</GenerateProgramFile>
     <LangVersion>preview</LangVersion>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
@@ -100,40 +103,19 @@ public class Program
 
     public enum ConsoleCtrlEvent
     {
-        CTRL_C = 0,
-        CTRL_BREAK = 1,
-        CTRL_CLOSE = 2,
-        CTRL_LOGOFF = 5,
-        CTRL_SHUTDOWN = 6
+        CTRL_C = 0
     }
 }
 
 internal class DummyAdapter
 {
     public static readonly ManualResetEventSlim FireCancel = new ManualResetEventSlim(false);
-
-    public async Task ExecuteRequestAsync(CancellationToken cancellationToken)
-    {
-        // This will trigger pressing CTRL+C that should propagate through the platform
-        // and down to us as the context.Cancellation token being canceled.
-        // It should happen almost immediately, but we allow 15 seconds for this to happen
-        // if it does not happen then the platform does not handle cancellation correctly and
-        // the test fails.
-        // If it happens, we return a result, and platform should report Aborted exit code and result.
-        FireCancel.Set();
-
-        var timeoutTask = Task.Delay(15_000, cancellationToken);
-        await timeoutTask;
-        if (!timeoutTask.IsCanceled)
-        {
-            throw new Exception("Cancellation was not propagated to the adapter within 15 seconds since CTRL+C.");
-        }
-    }
 }
 
 #file UnitTest1.cs
 using System;
 using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -146,6 +128,7 @@ public class UnitTest1
     {
 	    //ManualResetEventSlim waitHandle = new(false);
 	    //waitHandle.Wait(TestContext.CancellationTokenSource.Token);
+        DummyAdapter.FireCancel.Set();
     }
 }
 """;
