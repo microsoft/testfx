@@ -324,7 +324,6 @@
                                TestingPlatformShowTestsFailure="$(TestingPlatformShowTestsFailure)"
                                TestingPlatformCommandLineArguments="$(TestingPlatformCommandLineArguments)"
                                VSTestCLIRunSettings="$(VSTestCLIRunSettings)"
-                               VSTestNoBuild="$(VSTestNoBuild)"
                                TestingPlatformCaptureOutput="$(TestingPlatformCaptureOutput)"
                                DotnetHostPath="$(DOTNET_HOST_PATH)" />
   </Target>

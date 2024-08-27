@@ -79,9 +79,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     [Required]
     public ITaskItem ProjectFullPath { get; set; }
 
-    [Required]
-    public ITaskItem VSTestNoBuild { get; set; }
-
     public ITaskItem? DotnetHostPath { get; set; }
 
     public ITaskItem? TestingPlatformCommandLineArguments { get; set; }
