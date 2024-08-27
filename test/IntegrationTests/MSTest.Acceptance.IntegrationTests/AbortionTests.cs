@@ -126,8 +126,16 @@ public class UnitTest1
     [TestMethod]
     public async Task TestA()
     {
+        var fireCtrlCTask = Task.Run(() =>
+        {
+            // Delay for a short period before firing CTRL+C to simulate some processing time
+            Task.Delay(10000).Wait();
+            DummyAdapter.FireCancel.Set();
+
+        });
+
+        // Start a task that represents the infinite delay, which should be canceled
         await Task.Delay(Timeout.Infinite, TestContext.CancellationTokenSource.Token);
-        DummyAdapter.FireCancel.Set();
     }
 }
 """;
