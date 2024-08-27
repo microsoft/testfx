@@ -56,7 +56,6 @@
   </ItemGroup>
   <ItemGroup Label="Test dependencies">
     <PackageVersion Include="Codecov" Version="1.12.3" />
-    <PackageVersion Include="ReportGenerator" Version="4.3.6" />
     <PackageVersion Include="FluentAssertions" Version="6.12.0" />
     <PackageVersion Include="FSharp.Core" Version="8.0.200" />
     <!-- Pinned to 4.18.4 for security -->
