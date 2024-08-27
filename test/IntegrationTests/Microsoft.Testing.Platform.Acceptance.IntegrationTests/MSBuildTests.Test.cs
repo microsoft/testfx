@@ -156,8 +156,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
         Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
         string logFileContent = File.ReadAllText(outputFileLog);
         Assert.IsTrue(Regex.IsMatch(logFileContent, ".*win-x86.*"), logFileContent);
-        Assert.IsTrue(Regex.IsMatch(logFileContent, @".*dotnet\.exe run.*"), logFileContent);
-        Assert.IsTrue(Regex.IsMatch(logFileContent, @".*--arch x86.*"), logFileContent);
+        Assert.IsTrue(Regex.IsMatch(logFileContent, @"\.dotnet\\x86\\dotnet\.exe"), logFileContent);
     }
 
     private static void CommonAssert(DotnetMuxerResult compilationResult, string tfm, bool testSucceeded, string testResultFolder)

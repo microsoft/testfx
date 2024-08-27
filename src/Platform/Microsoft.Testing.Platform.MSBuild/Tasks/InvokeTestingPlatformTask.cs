@@ -15,8 +15,11 @@ using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.MSBuild.Tasks;
 using Microsoft.Testing.Platform.MSBuild.TestPlatformExtensions;
 using Microsoft.Testing.Platform.MSBuild.TestPlatformExtensions.Serializers;
+
+using static Microsoft.Testing.Platform.MSBuild.Tasks.DotnetMuxerLocator;
 
 using Task = System.Threading.Tasks.Task;
 
@@ -126,17 +129,39 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         // We look for dotnet muxer only if we're not running with mono.
         if (dotnetRunnerName != MonoRunnerName)
         {
-            ProcessModule? mainModule = _currentProcess.MainModule;
-            if (mainModule != null && Path.GetFileName(mainModule.FileName) == dotnetRunnerName)
+            if (!IsCurrentProcessArchitectureCompatible())
             {
-                Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using current process: '{mainModule.FileName}' architecture: '{_currentProcessArchitecture}'");
-                return mainModule.FileName;
+                Log.LogMessage(MessageImportance.Low, $"Current process architecture '{_currentProcessArchitecture}' is not compatible with '{TestArchitecture.ItemSpec}'");
+                PlatformArchitecture targetArchitecture = EnumPolyfill.Parse<PlatformArchitecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+                StringBuilder resolutionLog = new();
+                DotnetMuxerLocator dotnetMuxerLocator = new(log => resolutionLog.AppendLine(log));
+                if (dotnetMuxerLocator.TryGetDotnetPathByArchitecture(targetArchitecture, out string? dotnetPath))
+                {
+                    Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
+                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using architecture: '{TestArchitecture.ItemSpec}' '{dotnetPath}'");
+                    return dotnetPath;
+                }
+                else
+                {
+                    Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
+                    Log.LogError(Resources.MSBuildResources.FullPathToolCalculationFailed, dotnetRunnerName);
+                    return null;
+                }
             }
-
-            if (DotnetHostPath is not null && File.Exists(DotnetHostPath.ItemSpec))
+            else
             {
-                Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using DOTNET_HOST_PATH environment variable: '{DotnetHostPath.ItemSpec}'");
-                return DotnetHostPath.ItemSpec;
+                ProcessModule? mainModule = _currentProcess.MainModule;
+                if (mainModule != null && Path.GetFileName(mainModule.FileName) == dotnetRunnerName)
+                {
+                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using current process: '{mainModule.FileName}' architecture: '{_currentProcessArchitecture}'");
+                    return mainModule.FileName;
+                }
+
+                if (DotnetHostPath is not null && File.Exists(DotnetHostPath.ItemSpec))
+                {
+                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using DOTNET_HOST_PATH environment variable: '{DotnetHostPath.ItemSpec}'");
+                    return DotnetHostPath.ItemSpec;
+                }
             }
         }
 
@@ -169,25 +194,8 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             string dotnetRunnerName = ToolName;
             if (dotnetRunnerName != MonoRunnerName && Path.GetFileName(_currentProcess.MainModule?.FileName) == dotnetRunnerName)
             {
-                if (!IsCurrentProcessArchitectureCompatible())
-                {
-                    Log.LogMessage(MessageImportance.Low, $"Current muxer architecture is not compatible with the TestArchitecture({TestArchitecture}) run with --arch {TestArchitecture.ItemSpec.ToLowerInvariant()}");
-                    builder.AppendSwitch("run");
-                    builder.AppendSwitchIfNotNull("--project ", ProjectFullPath.ItemSpec);
-                    builder.AppendSwitchIfNotNull("--framework ", TargetFramework.ItemSpec);
-                    builder.AppendSwitchIfNotNull("--arch ", TestArchitecture.ItemSpec.ToLowerInvariant());
-                    if (bool.TryParse(VSTestNoBuild.ItemSpec, out bool noBuild) && noBuild)
-                    {
-                        builder.AppendSwitch("--no-build ");
-                    }
-
-                    builder.AppendTextUnquoted($" -- ");
-                }
-                else
-                {
-                    builder.AppendSwitch("exec");
-                    builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
-                }
+                builder.AppendSwitch("exec");
+                builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
             }
         }
         else
