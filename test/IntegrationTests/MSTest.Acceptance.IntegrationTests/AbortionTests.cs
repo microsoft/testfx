@@ -124,10 +124,9 @@ public class UnitTest1
     public TestContext TestContext { get; set; } = default!;
 
     [TestMethod]
-    public void TestA()
+    public async Task TestA()
     {
-	    //ManualResetEventSlim waitHandle = new(false);
-	    //waitHandle.Wait(TestContext.CancellationTokenSource.Token);
+        await Task.Delay(Timeout.Infinite, TestContext.CancellationTokenSource.Token);
         DummyAdapter.FireCancel.Set();
     }
 }
