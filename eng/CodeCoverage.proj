@@ -20,8 +20,8 @@
       <_CodecovPath>$(PkgCodecov)\tools\Codecov.exe</_CodecovPath>
     </PropertyGroup>
 
-    <Message Importance="high" Text="dotnet-coverage merge --output $(ArtifactsDir)coverage\Cobertura.xml --output-format cobertura $(ArtifactsDir)TestResults\**\*.coverage" />
-    <Exec Command="dotnet-coverage merge --output $(ArtifactsDir)coverage\Cobertura.xml --output-format cobertura $(ArtifactsDir)TestResults\**\*.coverage" />
+    <Message Importance="high" Text="&quot;dotnet-coverage&quot; merge --output $(ArtifactsDir)coverage\Cobertura.xml --output-format cobertura $(ArtifactsDir)TestResults\**\*.coverage" />
+    <Exec Command="&quot;dotnet-coverage&quot; merge --output $(ArtifactsDir)coverage\Cobertura.xml --output-format cobertura $(ArtifactsDir)TestResults\**\*.coverage" />
 
     <ItemGroup>
       <_CodecovArgs Include="-f;$(ArtifactsDir)coverage\Cobertura.xml" />
