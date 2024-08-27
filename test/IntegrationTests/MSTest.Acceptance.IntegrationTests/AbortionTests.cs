@@ -129,7 +129,7 @@ public class UnitTest1
         var fireCtrlCTask = Task.Run(() =>
         {
             // Delay for a short period before firing CTRL+C to simulate some processing time
-            Task.Delay(10000).Wait();
+            Task.Delay(1000).Wait();
             DummyAdapter.FireCancel.Set();
 
         });
