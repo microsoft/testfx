@@ -59,12 +59,12 @@ The timeout value is specified in one of the following formats:
     90m, 90min, 90minute, 90minutes,
     5400s, 5400sec, 5400second, 5400seconds.
     Default is 30m.</source>
-        <target state="new">Specify the timeout after which the dump will be generated.
-The timeout value is specified in one of the following formats:
-    1.5h, 1.5hour, 1.5hours,
-    90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
-    Default is 30m.</target>
+        <target state="translated">指定產生傾印前的逾時時間。
+以下欄其中一種格式指定逾時值: 
+    1.5 小時，1.5 小時，1.5 小時，
+    90 分鐘、90 分鐘、90 分鐘、90 分鐘、
+    5400 秒、5400 秒、5400 秒、5400 秒。
+    預設為 30m。</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
@@ -76,16 +76,16 @@ The timeout value is specified in one of the following formats:
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
-Default type is 'Full'</target>
+        <target state="translated">指定傾印的類型。
+有效值為 'Mini'、'Heap'、'Triage' (只有在 .NET 6+ 可供使用) 或 'Full'。
+預設類型為 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</target>
+        <target state="translated">'{0}' 不是有效的傾印類型。
+有效的選項為 'Mini'、'Heap'、'Triage' (只有在 .NET 6+ 可供使用) 和 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

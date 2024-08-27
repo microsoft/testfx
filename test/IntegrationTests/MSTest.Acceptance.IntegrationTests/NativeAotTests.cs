@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.InteropServices;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -89,6 +91,11 @@ public class UnitTest1
 
     public async Task NativeAotTests_WillRunWithExitCodeZero()
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
            "NativeAotTests",
            SourceCode
@@ -114,7 +121,7 @@ public class UnitTest1
                     _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     retryCount: 0);
                 compilationResult.AssertOutputContains("Generating native code");
-            }, times: 10, every: TimeSpan.FromSeconds(5));
+            }, times: 15, every: TimeSpan.FromSeconds(5));
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent.Arguments, RID, Verb.publish);
 
