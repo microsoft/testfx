@@ -204,7 +204,7 @@
   </Target>
 
   <!-- We always include the entry point also if the task _GenerateAutoRegisteredExtensions is skipped for caching reason -->
-  <!-- !!! DO NOT UPDATE THE NAME OF THIS TARGET IS USED BY ADAPTERS https://github.com/microsoft/testfx/issues/3478#issuecomment-2313889212 !!! --> 
+  <!-- !!! DO NOT CHANGE THE NAME OF THIS TARGET IS USED BY ADAPTERS https://github.com/microsoft/testfx/issues/3478#issuecomment-2313889212 !!! --> 
   <Target Name="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation" BeforeTargets="_IncludeGenerateTestingPlatformEntryPointIntoCompilation;CoreCompile" Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
     <ItemGroup>
       <Compile Include="$(_AutoRegisteredExtensionsSourcePath)" />
