@@ -187,7 +187,6 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
         if (IsNetCoreApp)
         {
-            // Check if we need to use dotnet run with --arch switch
             string dotnetRunnerName = ToolName;
             if (dotnetRunnerName != MonoRunnerName && Path.GetFileName(_currentProcess.MainModule!.FileName!).Equals(dotnetRunnerName, StringComparison.OrdinalIgnoreCase))
             {
