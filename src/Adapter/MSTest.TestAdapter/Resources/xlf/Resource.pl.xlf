@@ -383,9 +383,9 @@ Błąd: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
-        <source>MSTest Executor: Test Parallelization enabled for {0} (Workers: {1}, Scope: {2}).</source>
-        <target state="translated">Moduł wykonywania MSTest: włączono obsługę równoległego wykonywania testów dla elementu {0} (procesy robocze: {1}, zakres: {2}).</target>
-        <note></note>
+        <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
+        <target state="needs-review-translation">Moduł wykonywania MSTest: włączono obsługę równoległego wykonywania testów dla elementu {0} (procesy robocze: {1}, zakres: {2}).</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
