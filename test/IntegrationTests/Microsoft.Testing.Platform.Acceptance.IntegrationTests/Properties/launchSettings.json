@@ -2,9 +2,10 @@
   "profiles": {
     "Microsoft.Testing.Platform.Acceptance.IntegrationTests": {
       "commandName": "Project",
-      "commandLineArgs": "--treenode-filter /*/*/*/**",
+      "commandLineArgs": "--treenode-filter /*/*/MSBuildTests_Test/*Invoke_DotnetTest_With_DOTNET_HOST_PATH_Should_Work*",
       "environmentVariables": {
         //"TESTINGPLATFORM_HOTRELOAD_ENABLED": "1"
+        "TESTINGPLATFORM_MSBUILD_LAUNCH_ATTACH_DEBUGGER": "1"
       }
     }
   }

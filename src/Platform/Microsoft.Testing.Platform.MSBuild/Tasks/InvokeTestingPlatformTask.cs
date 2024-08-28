@@ -147,17 +147,17 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             }
             else
             {
-                ProcessModule? mainModule = _currentProcess.MainModule;
-                if (mainModule != null && Path.GetFileName(mainModule.FileName) == dotnetRunnerName)
-                {
-                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using current process: '{mainModule.FileName}' architecture: '{_currentProcessArchitecture}'");
-                    return mainModule.FileName;
-                }
-
                 if (DotnetHostPath is not null && File.Exists(DotnetHostPath.ItemSpec))
                 {
                     Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using DOTNET_HOST_PATH environment variable: '{DotnetHostPath.ItemSpec}'");
                     return DotnetHostPath.ItemSpec;
+                }
+
+                ProcessModule? mainModule = _currentProcess.MainModule;
+                if (mainModule != null && Path.GetFileName(mainModule.FileName)!.Equals(dotnetRunnerName, StringComparison.OrdinalIgnoreCase))
+                {
+                    Log.LogMessage(MessageImportance.Low, $"dotnet muxer tool path found using current process: '{mainModule.FileName}' architecture: '{_currentProcessArchitecture}'");
+                    return mainModule.FileName;
                 }
             }
         }
@@ -189,7 +189,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         {
             // Check if we need to use dotnet run with --arch switch
             string dotnetRunnerName = ToolName;
-            if (dotnetRunnerName != MonoRunnerName && Path.GetFileName(_currentProcess.MainModule?.FileName) == dotnetRunnerName)
+            if (dotnetRunnerName != MonoRunnerName && Path.GetFileName(_currentProcess.MainModule!.FileName!).Equals(dotnetRunnerName, StringComparison.OrdinalIgnoreCase))
             {
                 builder.AppendSwitch("exec");
                 builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
