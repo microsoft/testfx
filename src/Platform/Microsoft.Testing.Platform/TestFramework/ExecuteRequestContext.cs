@@ -14,14 +14,14 @@ namespace Microsoft.Testing.Platform.Extensions.TestFramework;
 /// </remarks>
 public sealed class ExecuteRequestContext
 {
-    private readonly SemaphoreSlim _semaphore;
+    private readonly IRequestCompleteNotifier _requestCompleteNotifier;
 
-    internal ExecuteRequestContext(IRequest request, IMessageBus messageBus, SemaphoreSlim semaphore,
+    public ExecuteRequestContext(IRequest request, IMessageBus messageBus, IRequestCompleteNotifier requestCompleteNotifier,
         CancellationToken cancellationToken)
     {
         Request = request;
         MessageBus = messageBus;
-        _semaphore = semaphore;
+        _requestCompleteNotifier = requestCompleteNotifier;
         CancellationToken = cancellationToken;
     }
 
@@ -44,5 +44,5 @@ public sealed class ExecuteRequestContext
     /// Completes the execution request.
     /// </summary>
     public void Complete()
-        => _semaphore.Release();
+        => _requestCompleteNotifier.Complete();
 }

@@ -1,6 +1,9 @@
 #nullable enable
+Microsoft.Testing.Platform.Extensions.TestFramework.ExecuteRequestContext.ExecuteRequestContext(Microsoft.Testing.Platform.Requests.IRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.Requests.IRequestCompleteNotifier! requestCompleteNotifier, System.Threading.CancellationToken cancellationToken) -> void
 Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.Padding.get -> int?
 Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.Padding.init -> void
+Microsoft.Testing.Platform.Requests.IRequestCompleteNotifier
+Microsoft.Testing.Platform.Requests.IRequestCompleteNotifier.Complete() -> void
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilitiesExtensions
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Id.get -> string!
