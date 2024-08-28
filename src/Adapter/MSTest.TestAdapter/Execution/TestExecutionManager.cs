@@ -31,7 +31,7 @@ public class TestExecutionManager
     /// <summary>
     /// Specifies whether the test run is canceled or not.
     /// </summary>
-    private TestRunCancellationToken? _cancellationToken;
+    private TestRunCancellationToken? _testRunCancellationToken;
 
     public TestExecutionManager()
         : this(new EnvironmentWrapper())
@@ -99,7 +99,8 @@ public class TestExecutionManager
         DebugEx.Assert(frameworkHandle != null, "frameworkHandle");
         DebugEx.Assert(runCancellationToken != null, "runCancellationToken");
 
-        _cancellationToken = runCancellationToken;
+        _testRunCancellationToken = runCancellationToken;
+        PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
 
         bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
 
@@ -117,7 +118,8 @@ public class TestExecutionManager
 
     public void RunTests(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
     {
-        _cancellationToken = cancellationToken;
+        _testRunCancellationToken = cancellationToken;
+        PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
 
         var discoverySink = new TestCaseDiscoverySink();
 
@@ -126,7 +128,7 @@ public class TestExecutionManager
         // deploy everything first.
         foreach (string source in sources)
         {
-            if (_cancellationToken.Canceled)
+            if (_testRunCancellationToken.Canceled)
             {
                 break;
             }
@@ -294,9 +296,10 @@ public class TestExecutionManager
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
             typeof(UnitTestRunner),
             [MSTestSettings.CurrentSettings, unitTestElements, (int)sourceSettings.ClassCleanupLifecycle])!;
-#if NETFRAMEWORK
-        _cancellationToken?.Register(testRunner.Cancel);
-#endif
+
+        // Ensures that the cancellation token gets through AppDomain boundary.
+        _testRunCancellationToken?.Register(testRunner.Cancel);
+
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
         {
             // The runsettings value takes precedence over an assembly level setting. Reset the level.
@@ -347,7 +350,7 @@ public class TestExecutionManager
                     {
                         while (!queue!.IsEmpty)
                         {
-                            if (_cancellationToken is { Canceled: true })
+                            if (_testRunCancellationToken is { Canceled: true })
                             {
                                 // if a cancellation has been requested, do not queue any more test runs.
                                 break;
@@ -400,7 +403,7 @@ public class TestExecutionManager
 
         foreach (TestCase currentTest in tests)
         {
-            if (_cancellationToken is { Canceled: true })
+            if (_testRunCancellationToken is { Canceled: true })
             {
                 break;
             }
@@ -419,7 +422,6 @@ public class TestExecutionManager
             testExecutionRecorder.RecordStart(currentTest);
 
             DateTimeOffset startTime = DateTimeOffset.Now;
-            PlatformServiceProvider.Instance.TestRunCancellationToken = _cancellationToken;
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing test {0}", unitTestElement.TestMethod.Name);
 

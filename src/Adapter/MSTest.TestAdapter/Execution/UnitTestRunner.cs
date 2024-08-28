@@ -47,9 +47,9 @@ internal class UnitTestRunner : MarshalByRefObject
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
-#if NETFRAMEWORK
+
         PlatformServiceProvider.Instance.TestRunCancellationToken ??= new TestRunCancellationToken();
-#endif
+
         _reflectHelper = reflectHelper;
         _typeCache = new TypeCache(reflectHelper);
 
@@ -68,11 +68,10 @@ internal class UnitTestRunner : MarshalByRefObject
             _reflectHelper);
     }
 
-#if NETFRAMEWORK
 #pragma warning disable CA1822 // Mark members as static
-    public void Cancel() => PlatformServiceProvider.Instance.TestRunCancellationToken?.Cancel();
+    public void Cancel()
+        => PlatformServiceProvider.Instance.TestRunCancellationToken?.Cancel();
 #pragma warning restore CA1822 // Mark members as static
-#endif
 
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
