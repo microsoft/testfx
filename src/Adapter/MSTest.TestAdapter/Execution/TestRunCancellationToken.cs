@@ -45,6 +45,7 @@ public class TestRunCancellationToken
                     callBack?.Invoke();
                 }
             }
+
             _canceled = value;
         }
     }
