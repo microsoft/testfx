@@ -159,6 +159,41 @@ public class MSBuildTests_Test : AcceptanceTestBase
         Assert.IsTrue(Regex.IsMatch(logFileContent, @"\.dotnet\\x86\\dotnet\.exe"), logFileContent);
     }
 
+    public async Task Invoke_DotnetTest_With_DOTNET_HOST_PATH_Should_Work()
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        string root = RootFinder.Find();
+        string dotnetHostPath = Path.Combine(root, ".dotnet", "dotnet.exe");
+        var dotnetHostPathEnvVar = new Dictionary<string, string>
+        {
+            { "DOTNET_HOST_PATH", dotnetHostPath },
+        };
+
+        TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", string.Empty)
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFrameworks>{TargetFrameworks.NetCurrent.Arguments}</TargetFrameworks>")
+            .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+        string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
+        await DotnetCli.RunAsync(
+            $"test -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            environmentVariables: dotnetHostPathEnvVar,
+            failIfReturnValueIsNotZero: false);
+
+        string outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, "MSBuild Tests_net8.0_x64.log", SearchOption.AllDirectories).Single();
+        Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
+        string logFileContent = File.ReadAllText(outputFileLog);
+        Assert.IsTrue(Regex.IsMatch(logFileContent, @"\.dotnet\\dotnet\.exe"), logFileContent);
+    }
+
     private static void CommonAssert(DotnetMuxerResult compilationResult, string tfm, bool testSucceeded, string testResultFolder)
     {
         Assert.IsTrue(Regex.IsMatch(compilationResult.StandardOutput, $".*Run tests:.* \\[{tfm}|x64\\]"), compilationResult.StandardOutput);
