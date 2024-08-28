@@ -68,9 +68,11 @@ internal class UnitTestRunner : MarshalByRefObject
             _reflectHelper);
     }
 
+#if NETFRAMEWORK
 #pragma warning disable CA1822 // Mark members as static
     public void Cancel() => PlatformServiceProvider.Instance.TestRunCancellationToken?.Cancel();
 #pragma warning restore CA1822 // Mark members as static
+#endif
 
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.

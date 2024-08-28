@@ -294,9 +294,9 @@ public class TestExecutionManager
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
             typeof(UnitTestRunner),
             [MSTestSettings.CurrentSettings, unitTestElements, (int)sourceSettings.ClassCleanupLifecycle])!;
-
+#if NETFRAMEWORK
         _cancellationToken?.Register(testRunner.Cancel);
-
+#endif
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
         {
             // The runsettings value takes precedence over an assembly level setting. Reset the level.
