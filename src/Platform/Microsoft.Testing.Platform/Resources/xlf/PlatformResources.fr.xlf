@@ -343,7 +343,7 @@
       </trans-unit>
       <trans-unit id="MissingClientPortFoJsonRpc">
         <source>Expected --client-port when jsonRpc protocol is used.</source>
-        <target state="new">Expected --client-port when jsonRpc protocol is used.</target>
+        <target state="translated">Attendu --client-port attendu lorsque le protocole jsonRpc est utilisé.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
