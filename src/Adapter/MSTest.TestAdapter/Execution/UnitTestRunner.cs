@@ -66,6 +66,8 @@ internal class UnitTestRunner : MarshalByRefObject
             _reflectHelper);
     }
 
+    public void Cancel() => PlatformServiceProvider.Instance.TestRunCancellationToken?.Cancel();
+
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>

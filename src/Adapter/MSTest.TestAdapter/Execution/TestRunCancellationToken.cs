@@ -38,14 +38,14 @@ public class TestRunCancellationToken
 
         private set
         {
-            _canceled = value;
-            if (_canceled)
+            if (!_canceled && value)
             {
                 foreach (Action? callBack in _registeredCallback)
                 {
                     callBack?.Invoke();
                 }
             }
+            _canceled = value;
         }
     }
 

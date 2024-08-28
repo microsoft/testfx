@@ -295,6 +295,8 @@ public class TestExecutionManager
             typeof(UnitTestRunner),
             [MSTestSettings.CurrentSettings, unitTestElements, (int)sourceSettings.ClassCleanupLifecycle])!;
 
+        PlatformServiceProvider.Instance.TestRunCancellationToken?.Register(testRunner.Cancel);
+
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
         {
             // The runsettings value takes precedence over an assembly level setting. Reset the level.
