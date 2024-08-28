@@ -13,10 +13,7 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
     private readonly TestAssetFixture _testAssetFixture;
 
     public EnvironmentVariablesConfigurationProviderTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task SetEnvironmentVariable_ShouldSucceed(string currentTfm)

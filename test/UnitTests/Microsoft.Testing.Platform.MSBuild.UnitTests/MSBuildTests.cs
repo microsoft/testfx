@@ -91,10 +91,7 @@ internal sealed class TestingPlatformEntryPoint
     {
         private readonly Dictionary<string, string> _keyValuePairs = new();
 
-        public CustomTaskItem(string itemSpec)
-        {
-            ItemSpec = itemSpec;
-        }
+        public CustomTaskItem(string itemSpec) => ItemSpec = itemSpec;
 
         public CustomTaskItem Add(string key, string value)
         {

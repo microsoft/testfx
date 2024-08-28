@@ -281,6 +281,21 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="translated">Não armazene TestContext em um membro estático</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotUseShadowingDescription">
+        <source>Shadowing test members could cause testing issues (such as NRE).</source>
+        <target state="translated">Membros de teste de sombreamento podem causar problemas de teste (como NRE).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingMessageFormat">
+        <source>Member '{0}' is already exist in the base class</source>
+        <target state="translated">O membro "{0}" já existe na classe base</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingTitle">
+        <source>Do not use shadowing</source>
+        <target state="translated">Não usar sombreamento</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
         <target state="translated">'System.ComponentModel.DescriptionAttribute' não tem efeito no contexto de testes e você provavelmente quis usar 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'.</target>
@@ -447,6 +462,16 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="translated">Os tipos públicos devem ser classes de teste</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat">
+        <source>Test class '{0}' should be valid</source>
+        <target state="translated">A classe de teste ''{0}'' deve ser válida</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat">
+        <source>Property 'TestContext' should be valid</source>
+        <target state="translated">A propriedade ''TestContext'' deve ser válida</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">A assinatura "{0}" do método de teste é inválida</target>
@@ -476,21 +501,6 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
 - deve ser "público" (ou "interno" se o atributo "[assembly: DiscoverInternals]" estiver definido) 
 - não deve ser ''estático'' (exceto se contiver apenas os métodos ''AssemblyInitialize'' e/ou ''AssemblyCleanup'')
 - não deve ser genérico.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
-        <source>Test class '{0}' should not be 'static'</source>
-        <target state="translated">A classe de teste ''{0}'' não deve ser ''estática''</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_Public">
-        <source>Test class '{0}' should be 'public'</source>
-        <target state="translated">A classe de teste ''{0}'' deve ser ''pública''</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Test class '{0}' should be 'public' or 'internal'</source>
-        <target state="translated">A classe de teste ''{0}'' deve ser ''pública'' ou ''interna''</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidTitle">
@@ -567,31 +577,6 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
 – deve ser "public" (ou "internal" se o atributo "[assembly: DiscoverInternals]" estiver definido) 
 – não deve ser ''static''
 – não deve ser somente leitura.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotField">
-        <source>Member 'TestContext' should be a property and not a field</source>
-        <target state="translated">O membro ''TestContext'' deve ser uma propriedade e não um campo</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotReadonly">
-        <source>Property 'TestContext' should be settable</source>
-        <target state="translated">A propriedade ''TestContext'' deve ser configurável</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotStatic">
-        <source>Property 'TestContext' should not be 'static'</source>
-        <target state="translated">A propriedade ''TestContext'' não deve ser ''static''</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_Public">
-        <source>Property 'TestContext' should be 'public'</source>
-        <target state="translated">A propriedade ''TestContext'' deve ser ''public''</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Property 'TestContext' should be 'public' or 'internal'</source>
-        <target state="translated">A propriedade ''TestContext'' deve ser ''public'' ou ''internal''</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">

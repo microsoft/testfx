@@ -7,8 +7,5 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public abstract class TestBase
 {
-    protected TestBase(ITestExecutionContext testExecutionContext)
-    {
-        TestsRunWatchDog.AddTestRun(testExecutionContext.TestInfo.StableUid);
-    }
+    protected TestBase(ITestExecutionContext testExecutionContext) => TestsRunWatchDog.AddTestRun(testExecutionContext.TestInfo.StableUid);
 }

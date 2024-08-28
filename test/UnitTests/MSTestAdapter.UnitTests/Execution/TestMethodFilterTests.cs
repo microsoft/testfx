@@ -17,10 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class TestMethodFilterTests : TestContainer
 {
-    public TestMethodFilterTests()
-    {
-        TestMethodFilter = new TestMethodFilter();
-    }
+    public TestMethodFilterTests() => TestMethodFilter = new TestMethodFilter();
 
     private TestMethodFilter TestMethodFilter { get; set; }
 
@@ -193,10 +190,7 @@ public class TestMethodFilterTests : TestContainer
     {
         private readonly Func<ITestCaseFilterExpression> _getFilter;
 
-        public TestableRunContext(Func<ITestCaseFilterExpression> getFilter)
-        {
-            _getFilter = getFilter;
-        }
+        public TestableRunContext(Func<ITestCaseFilterExpression> getFilter) => _getFilter = getFilter;
 
         public IRunSettings RunSettings { get; }
 
@@ -221,10 +215,7 @@ public class TestMethodFilterTests : TestContainer
     {
         private readonly Func<ITestCaseFilterExpression> _getFilter;
 
-        public TestableDiscoveryContextWithGetTestCaseFilter(Func<ITestCaseFilterExpression> getFilter)
-        {
-            _getFilter = getFilter;
-        }
+        public TestableDiscoveryContextWithGetTestCaseFilter(Func<ITestCaseFilterExpression> getFilter) => _getFilter = getFilter;
 
         public IRunSettings RunSettings { get; }
 

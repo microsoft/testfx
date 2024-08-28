@@ -281,6 +281,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">請勿將 TestContext 儲存在靜態成員中</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotUseShadowingDescription">
+        <source>Shadowing test members could cause testing issues (such as NRE).</source>
+        <target state="translated">陰影測試成員可能會導致測試問題 (例如 NRE)。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingMessageFormat">
+        <source>Member '{0}' is already exist in the base class</source>
+        <target state="translated">成員 '{0}' 已存在於基類中</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingTitle">
+        <source>Do not use shadowing</source>
+        <target state="translated">不使用陰影</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
         <target state="translated">'System.ComponentModel.DescriptionAttribute' 在測試內容中沒有作用，建議您改用 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'。</target>
@@ -447,6 +462,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">公用類型應為測試類別</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat">
+        <source>Test class '{0}' should be valid</source>
+        <target state="translated">測試類別 '{0}' 應為有效</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat">
+        <source>Property 'TestContext' should be valid</source>
+        <target state="translated">屬性 'TestContext' 應為有效</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">測試方法 '{0}' 簽章無效</target>
@@ -476,21 +501,6 @@ The type declaring these methods should also respect the following rules:
 - 它應該是 'public' (如果設定 '[assembly: DiscoverInternals]' 屬性，則為 'internal')
 - 它不應該是 'static' (除非其僅包含 'AssemblyInitialize' 和/或 'AssemblyCleanup' 方法)
 - 它不能是泛型。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
-        <source>Test class '{0}' should not be 'static'</source>
-        <target state="translated">測試類別 '{0}' 不應為 'static'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_Public">
-        <source>Test class '{0}' should be 'public'</source>
-        <target state="translated">測試類別 '{0}'應為 'public'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Test class '{0}' should be 'public' or 'internal'</source>
-        <target state="translated">測試類別 '{0}' 應為 'public' 或 'internal'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidTitle">
@@ -567,31 +577,6 @@ The type declaring these methods should also respect the following rules:
 - 它應該是 'public' (如果設定 '[assembly: DiscoverInternals]' 屬性，則為 'internal')
 - 它不應該是 'static'
 - 它不應該是唯讀。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotField">
-        <source>Member 'TestContext' should be a property and not a field</source>
-        <target state="translated">成員 'TestContext' 應該是屬性，而不是欄位</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotReadonly">
-        <source>Property 'TestContext' should be settable</source>
-        <target state="translated">屬性 'TestContext' 應該是可設定</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotStatic">
-        <source>Property 'TestContext' should not be 'static'</source>
-        <target state="translated">屬性 'TestContext' 不應該是 'static'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_Public">
-        <source>Property 'TestContext' should be 'public'</source>
-        <target state="translated">屬性 'TestContext' 應該是 'public'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Property 'TestContext' should be 'public' or 'internal'</source>
-        <target state="translated">屬性 'TestContext' 應該是 'public' 或 'internal'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">

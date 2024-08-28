@@ -9,7 +9,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace TestingPlatformExplorer.InProcess;
 
-internal class DisplayCompositeExtensionFactorySample : ITestSessionLifetimeHandler, IDataConsumer, IOutputDeviceDataProducer
+internal sealed class DisplayCompositeExtensionFactorySample : ITestSessionLifetimeHandler, IDataConsumer, IOutputDeviceDataProducer
 {
     private readonly IOutputDevice _outputDevice;
     private int _testNodeUpdateMessageCount;

@@ -40,4 +40,5 @@ internal static class DiagnosticIds
     public const string NonNullableReferenceNotInitializedSuppressorRuleId = "MSTEST0033";
     public const string UseClassCleanupBehaviorEndOfClassRuleId = "MSTEST0034";
     public const string UseDeploymentItemWithTestMethodOrTestClassRuleId = "MSTEST0035";
+    public const string DoNotUseShadowingRuleId = "MSTEST0036";
 }

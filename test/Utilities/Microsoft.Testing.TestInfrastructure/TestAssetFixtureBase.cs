@@ -13,10 +13,7 @@ public abstract class TestAssetFixtureBase : IDisposable, IAsyncInitializable
     private readonly TempDirectory _nugetGlobalPackagesDirectory;
     private bool _disposedValue;
 
-    protected TestAssetFixtureBase(TempDirectory nugetGlobalPackagesDirectory)
-    {
-        _nugetGlobalPackagesDirectory = nugetGlobalPackagesDirectory;
-    }
+    protected TestAssetFixtureBase(TempDirectory nugetGlobalPackagesDirectory) => _nugetGlobalPackagesDirectory = nugetGlobalPackagesDirectory;
 
     public string GetAssetPath(string assetID)
         => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)

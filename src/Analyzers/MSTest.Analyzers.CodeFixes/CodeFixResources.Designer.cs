@@ -97,11 +97,38 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fix test class signature.
+        /// </summary>
+        internal static string TestClassShouldBeValidFix {
+            get {
+                return ResourceManager.GetString("TestClassShouldBeValidFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fix test context.
+        /// </summary>
+        internal static string TestContextShouldBeValidFix {
+            get {
+                return ResourceManager.GetString("TestContextShouldBeValidFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fix test method signature.
         /// </summary>
         internal static string TestMethodShouldBeValidFix {
             get {
                 return ResourceManager.GetString("TestMethodShouldBeValidFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add &apos;[TestMethod]&apos;.
+        /// </summary>
+        internal static string UseAttributeOnTestMethodFix {
+            get {
+                return ResourceManager.GetString("UseAttributeOnTestMethodFix", resourceCulture);
             }
         }
     }

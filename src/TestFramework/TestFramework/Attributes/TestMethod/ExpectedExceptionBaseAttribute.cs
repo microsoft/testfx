@@ -16,10 +16,7 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     /// Initializes a new instance of the <see cref="ExpectedExceptionBaseAttribute"/> class with a default no-exception message.
     /// </summary>
     protected ExpectedExceptionBaseAttribute()
-        : this(string.Empty)
-    {
-        SpecifiedNoExceptionMessage = string.Empty;
-    }
+        : this(string.Empty) => SpecifiedNoExceptionMessage = string.Empty;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExpectedExceptionBaseAttribute"/> class with a no-exception message.
@@ -28,13 +25,10 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     /// Message to include in the test result if the test fails due to not throwing an
     /// exception.
     /// </param>
-    protected ExpectedExceptionBaseAttribute(string? noExceptionMessage)
-    {
-        SpecifiedNoExceptionMessage =
+    protected ExpectedExceptionBaseAttribute(string? noExceptionMessage) => SpecifiedNoExceptionMessage =
             noExceptionMessage == null
                 ? string.Empty
                 : noExceptionMessage.Trim();
-    }
 
     // TODO: Test Context needs to be put in here for source compat.
 

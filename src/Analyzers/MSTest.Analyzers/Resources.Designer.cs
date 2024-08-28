@@ -366,6 +366,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Shadowing test members could cause testing issues (such as NRE)..
+        /// </summary>
+        internal static string DoNotUseShadowingDescription {
+            get {
+                return ResourceManager.GetString("DoNotUseShadowingDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Member &apos;{0}&apos; is already exist in the base class.
+        /// </summary>
+        internal static string DoNotUseShadowingMessageFormat {
+            get {
+                return ResourceManager.GetString("DoNotUseShadowingMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not use shadowing.
+        /// </summary>
+        internal static string DoNotUseShadowingTitle {
+            get {
+                return ResourceManager.GetString("DoNotUseShadowingTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;System.ComponentModel.DescriptionAttribute&apos; has no effect in the context of tests and you likely wanted to use &apos;Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute&apos; instead..
         /// </summary>
         internal static string DoNotUseSystemDescriptionAttributeDescription {
@@ -669,29 +696,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should not be &apos;static&apos;.
+        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should be valid.
         /// </summary>
-        internal static string TestClassShouldBeValidMessageFormat_NotStatic {
+        internal static string TestClassShouldBeValidMessageFormat {
             get {
-                return ResourceManager.GetString("TestClassShouldBeValidMessageFormat_NotStatic", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should be &apos;public&apos;.
-        /// </summary>
-        internal static string TestClassShouldBeValidMessageFormat_Public {
-            get {
-                return ResourceManager.GetString("TestClassShouldBeValidMessageFormat_Public", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should be &apos;public&apos; or &apos;internal&apos;.
-        /// </summary>
-        internal static string TestClassShouldBeValidMessageFormat_PublicOrInternal {
-            get {
-                return ResourceManager.GetString("TestClassShouldBeValidMessageFormat_PublicOrInternal", resourceCulture);
+                return ResourceManager.GetString("TestClassShouldBeValidMessageFormat", resourceCulture);
             }
         }
         
@@ -784,47 +793,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Member &apos;TestContext&apos; should be a property and not a field.
+        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should be valid.
         /// </summary>
-        internal static string TestContextShouldBeValidMessageFormat_NotField {
+        internal static string TestContextShouldBeValidMessageFormat {
             get {
-                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_NotField", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should be settable.
-        /// </summary>
-        internal static string TestContextShouldBeValidMessageFormat_NotReadonly {
-            get {
-                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_NotReadonly", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should not be &apos;static&apos;.
-        /// </summary>
-        internal static string TestContextShouldBeValidMessageFormat_NotStatic {
-            get {
-                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_NotStatic", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should be &apos;public&apos;.
-        /// </summary>
-        internal static string TestContextShouldBeValidMessageFormat_Public {
-            get {
-                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_Public", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should be &apos;public&apos; or &apos;internal&apos;.
-        /// </summary>
-        internal static string TestContextShouldBeValidMessageFormat_PublicOrInternal {
-            get {
-                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_PublicOrInternal", resourceCulture);
+                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat", resourceCulture);
             }
         }
         

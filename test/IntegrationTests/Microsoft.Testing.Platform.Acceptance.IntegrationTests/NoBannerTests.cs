@@ -14,10 +14,7 @@ public class NoBannerTests : AcceptanceTestBase
     private readonly string _bannerRegexMatchPattern = @".NET Testing Platform v.+ \[.+\]";
 
     public NoBannerTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task UsingNoBanner_TheBannerDoesNotAppear(string tfm)

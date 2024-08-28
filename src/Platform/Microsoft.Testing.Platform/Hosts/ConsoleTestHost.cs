@@ -8,7 +8,6 @@ using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
@@ -22,16 +21,15 @@ internal sealed class ConsoleTestHost(
     ServiceProvider serviceProvider,
     Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
     TestFrameworkManager testFrameworkManager,
-    TestHostManager testHostManager,
-    NamedPipeClient? dotnetTestPipeClient = null)
-    : CommonTestHost(serviceProvider, dotnetTestPipeClient)
+    TestHostManager testHostManager)
+    : CommonTestHost(serviceProvider)
 {
-    private static readonly ClientInfo Client = new("testingplatform-console", AppVersion.DefaultSemVer);
+    private static readonly ClientInfo ClientInfoHost = new("testingplatform-console", AppVersion.DefaultSemVer);
+    private static readonly IClientInfo ClientInfoService = new ClientInfoService("testingplatform-console", AppVersion.DefaultSemVer);
 
     private readonly ILogger<ConsoleTestHost> _logger = serviceProvider.GetLoggerFactory().CreateLogger<ConsoleTestHost>();
     private readonly IClock _clock = serviceProvider.GetClock();
     private readonly Func<TestFrameworkBuilderData, Task<ITestFramework>> _buildTestFrameworkAsync = buildTestFrameworkAsync;
-    private readonly NamedPipeClient? _dotnetTestPipeClient = dotnetTestPipeClient;
 
     private readonly TestFrameworkManager _testFrameworkManager = testFrameworkManager;
     private readonly TestHostManager _testHostManager = testHostManager;
@@ -45,6 +43,9 @@ internal sealed class ConsoleTestHost(
 
         CancellationToken abortRun = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
         DateTimeOffset adapterLoadStart = _clock.UtcNow;
+
+        // Add the ClientInfo service to the service provider
+        ServiceProvider.TryAddService(ClientInfoService);
 
         // Use user provided filter factory or create console default one.
         ITestExecutionFilterFactory testExecutionFilterFactory = ServiceProvider.GetService<ITestExecutionFilterFactory>()
@@ -65,8 +66,7 @@ internal sealed class ConsoleTestHost(
             _testFrameworkManager,
             _testHostManager,
             new MessageBusProxy(),
-            ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
-            _dotnetTestPipeClient));
+            ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)));
 
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
@@ -87,7 +87,7 @@ internal sealed class ConsoleTestHost(
                 ServiceProvider,
                 ServiceProvider.GetBaseMessageBus(),
                 testFramework,
-                Client);
+                ClientInfoHost);
             requestExecuteStop = _clock.UtcNow;
 
             // Get the exit code service to be able to set the exit code

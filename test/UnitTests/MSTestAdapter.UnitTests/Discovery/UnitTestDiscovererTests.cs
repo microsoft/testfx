@@ -417,10 +417,7 @@ internal class TestableDiscoveryContextWithGetTestCaseFilter : IDiscoveryContext
 {
     private readonly Func<ITestCaseFilterExpression> _getFilter;
 
-    public TestableDiscoveryContextWithGetTestCaseFilter(Func<ITestCaseFilterExpression> getFilter)
-    {
-        _getFilter = getFilter;
-    }
+    public TestableDiscoveryContextWithGetTestCaseFilter(Func<ITestCaseFilterExpression> getFilter) => _getFilter = getFilter;
 
     public IRunSettings RunSettings { get; }
 
@@ -438,10 +435,7 @@ internal sealed class TestableTestCaseFilterExpression : ITestCaseFilterExpressi
 {
     private readonly Func<TestCase, bool> _matchTest;
 
-    public TestableTestCaseFilterExpression(Func<TestCase, bool> matchTestCase)
-    {
-        _matchTest = matchTestCase;
-    }
+    public TestableTestCaseFilterExpression(Func<TestCase, bool> matchTestCase) => _matchTest = matchTestCase;
 
     public string TestCaseFilterValue { get; }
 

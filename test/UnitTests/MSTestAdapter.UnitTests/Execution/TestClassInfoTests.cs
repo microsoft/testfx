@@ -608,10 +608,7 @@ public class TestClassInfoTests : TestContainer
 
     private static class FailingStaticHelper
     {
-        static FailingStaticHelper()
-        {
-            throw new InvalidOperationException("I fail.");
-        }
+        static FailingStaticHelper() => throw new InvalidOperationException("I fail.");
 
         public static void DoWork()
         {

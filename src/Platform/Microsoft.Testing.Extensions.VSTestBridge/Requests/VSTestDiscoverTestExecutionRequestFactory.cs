@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
 using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -63,17 +65,18 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
         IConfiguration configuration = serviceProvider.GetConfiguration();
         ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         IFileSystem fileSystem = serviceProvider.GetFileSystem();
-
-        ICommandLineOptions commandLineOptions = serviceProvider.GetRequiredService<ICommandLineOptions>();
-        RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, discoverTestExecutionRequest.Session.Client, loggerFactory);
-        DiscoveryContextAdapter discoveryContext = new(commandLineOptions, runSettings);
+        IClientInfo clientInfo = serviceProvider.GetClientInfo();
 
         IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
         MessageLoggerAdapter messageLogger = new(loggerFactory, outputDevice, adapterExtension);
 
+        ICommandLineOptions commandLineOptions = serviceProvider.GetRequiredService<ICommandLineOptions>();
+        RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory, messageLogger);
+        DiscoveryContextAdapter discoveryContext = new(commandLineOptions, runSettings);
+
         ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
         IMessageBus messageBus = serviceProvider.GetRequiredService<IMessageBus>();
-        TestCaseDiscoverySinkAdapter discoverySink = new(adapterExtension, discoverTestExecutionRequest.Session, testAssemblyPaths, testApplicationModuleInfo, loggerFactory, messageBus, adapterExtension.IsTrxEnabled, cancellationToken);
+        TestCaseDiscoverySinkAdapter discoverySink = new(adapterExtension, discoverTestExecutionRequest.Session, testAssemblyPaths, testApplicationModuleInfo, loggerFactory, messageBus, adapterExtension.IsTrxEnabled, clientInfo, cancellationToken);
 
         return new(discoverTestExecutionRequest.Session, new(), testAssemblyPaths, discoveryContext, messageLogger, discoverySink);
     }

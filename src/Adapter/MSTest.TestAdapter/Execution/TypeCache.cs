@@ -62,10 +62,7 @@ internal class TypeCache : MarshalByRefObject
     /// Initializes a new instance of the <see cref="TypeCache"/> class.
     /// </summary>
     /// <param name="reflectionHelper"> An instance to the <see cref="ReflectHelper"/> object. </param>
-    internal TypeCache(ReflectHelper reflectionHelper)
-    {
-        _reflectionHelper = reflectionHelper;
-    }
+    internal TypeCache(ReflectHelper reflectionHelper) => _reflectionHelper = reflectionHelper;
 
     /// <summary>
     /// Gets Class Info cache which has cleanup methods to execute.

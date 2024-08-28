@@ -36,8 +36,9 @@ internal sealed class FastFilter
 
     internal string? PropertyValueRegexReplacement { get; set; }
 
-    internal string[]? ValidForProperties(IEnumerable<string>? properties) => properties is null
-            ? (string[]?)null
+    internal string[]? ValidForProperties(IEnumerable<string>? properties)
+        => properties is null
+            ? null
             : FilterProperties.Keys.All(name => properties.Contains(name))
                 ? null
                 : FilterProperties.Keys.Where(name => !properties.Contains(name)).ToArray();
@@ -62,7 +63,7 @@ internal sealed class FastFilter
             }
             else
             {
-                IEnumerable<string?>? values = PropertyValueRegex == null ? multiValues : multiValues?.Select(value => ApplyRegex(value));
+                IEnumerable<string?>? values = PropertyValueRegex == null ? multiValues : multiValues?.Select(ApplyRegex);
                 matched = values?.Any(result => result != null && FilterProperties[name].Contains(result)) == true;
             }
 

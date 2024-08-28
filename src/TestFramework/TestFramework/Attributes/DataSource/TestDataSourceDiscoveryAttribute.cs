@@ -15,10 +15,7 @@ public class TestDataSourceDiscoveryAttribute : Attribute
     /// <param name="discoveryOption">
     /// The <see cref="TestDataSourceDiscoveryOption"/> to use when discovering <see cref="ITestDataSource"/> tests.
     /// </param>
-    public TestDataSourceDiscoveryAttribute(TestDataSourceDiscoveryOption discoveryOption)
-    {
-        DiscoveryOption = discoveryOption;
-    }
+    public TestDataSourceDiscoveryAttribute(TestDataSourceDiscoveryOption discoveryOption) => DiscoveryOption = discoveryOption;
 
     /// <summary>
     /// Gets the discovery option.

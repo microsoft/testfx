@@ -26,4 +26,9 @@ public sealed class FormattedTextOutputDeviceData : TextOutputDeviceData
     /// Gets or inits the background color of the text.
     /// </summary>
     public IColor? BackgroundColor { get; init; }
+
+    /// <summary>
+    /// Gets or inits the padding of the message.
+    /// </summary>
+    public int? Padding { get; init; }
 }

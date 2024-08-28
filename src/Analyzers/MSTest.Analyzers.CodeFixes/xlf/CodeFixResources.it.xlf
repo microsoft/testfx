@@ -22,9 +22,24 @@
         <target state="translated">Aggiungi '[TestClass]'</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldBeValidFix">
+        <source>Fix test class signature</source>
+        <target state="translated">Correggi la firma della classe di test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidFix">
+        <source>Fix test context</source>
+        <target state="translated">Correggi il contesto di test</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidFix">
         <source>Fix test method signature</source>
         <target state="translated">Correggi la firma del metodo di test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseAttributeOnTestMethodFix">
+        <source>Add '[TestMethod]'</source>
+        <target state="translated">Aggiungi '[TestMethod]'</target>
         <note />
       </trans-unit>
     </body>

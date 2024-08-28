@@ -325,15 +325,6 @@ The type declaring these methods should also respect the following rules:
 - it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</value>
   </data>
-  <data name="TestClassShouldBeValidMessageFormat_NotStatic" xml:space="preserve">
-    <value>Test class '{0}' should not be 'static'</value>
-  </data>
-  <data name="TestClassShouldBeValidMessageFormat_Public" xml:space="preserve">
-    <value>Test class '{0}' should be 'public'</value>
-  </data>
-  <data name="TestClassShouldBeValidMessageFormat_PublicOrInternal" xml:space="preserve">
-    <value>Test class '{0}' should be 'public' or 'internal'</value>
-  </data>
   <data name="TestClassShouldBeValidTitle" xml:space="preserve">
     <value>Test classes should have valid layout</value>
   </data>
@@ -376,20 +367,8 @@ The type declaring these methods should also respect the following rules:
 - it should not be 'static'
 - it should not be readonly.</value>
   </data>
-  <data name="TestContextShouldBeValidMessageFormat_NotField" xml:space="preserve">
-    <value>Member 'TestContext' should be a property and not a field</value>
-  </data>
-  <data name="TestContextShouldBeValidMessageFormat_NotReadonly" xml:space="preserve">
-    <value>Property 'TestContext' should be settable</value>
-  </data>
-  <data name="TestContextShouldBeValidMessageFormat_NotStatic" xml:space="preserve">
-    <value>Property 'TestContext' should not be 'static'</value>
-  </data>
-  <data name="TestContextShouldBeValidMessageFormat_Public" xml:space="preserve">
-    <value>Property 'TestContext' should be 'public'</value>
-  </data>
-  <data name="TestContextShouldBeValidMessageFormat_PublicOrInternal" xml:space="preserve">
-    <value>Property 'TestContext' should be 'public' or 'internal'</value>
+  <data name="TestContextShouldBeValidMessageFormat" xml:space="preserve">
+    <value>Property 'TestContext' should be valid</value>
   </data>
   <data name="TestContextShouldBeValidTitle" xml:space="preserve">
     <value>Test context property should have valid layout</value>
@@ -537,5 +516,17 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="UseDeploymentItemWithTestMethodOrTestClassMessageFormat" xml:space="preserve">
     <value>'[DeploymentItem]' can be specified only on test class or test method</value>
+  </data>
+  <data name="TestClassShouldBeValidMessageFormat" xml:space="preserve">
+    <value>Test class '{0}' should be valid</value>
+  </data>
+  <data name="DoNotUseShadowingDescription" xml:space="preserve">
+    <value>Shadowing test members could cause testing issues (such as NRE).</value>
+  </data>
+  <data name="DoNotUseShadowingMessageFormat" xml:space="preserve">
+    <value>Member '{0}' is already exist in the base class</value>
+  </data>
+  <data name="DoNotUseShadowingTitle" xml:space="preserve">
+    <value>Do not use shadowing</value>
   </data>
 </root>

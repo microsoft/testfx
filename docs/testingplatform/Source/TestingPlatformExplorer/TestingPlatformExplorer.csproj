@@ -11,13 +11,25 @@
 
   <ItemGroup>
     <!-- Update to the last version if needed -->
-    <PackageReference Include="Microsoft.Testing.Platform" Version="1.2.0" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="1.4.0-preview.24415.5" />
+
+    <!-- Needed to support the Trx capability -->
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="1.4.0-preview.24415.5" />
+
+    <!-- Add the trx extension -->
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.4.0-preview.24415.5" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="TestingPlatformExplorer.testingplatformconfig.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectCapability Include="DiagnoseCapabilities" />
+    <ProjectCapability Include="TestingPlatformServer" />
+    <ProjectCapability Include="TestContainer" />
   </ItemGroup>
 
 </Project>

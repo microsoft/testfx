@@ -84,6 +84,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="build\common\MSTest.TestAdapter.props" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' ">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="build\netfx-netcore-netstandard\MSTest.TestAdapter.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="build\uwp\MSTest.TestAdapter.props" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="build\uwp\MSTest.TestAdapter.targets" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="build\net\MSTest.TestAdapter.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="PACKAGE.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

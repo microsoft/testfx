@@ -39,8 +39,8 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
     private int? _testHostPID;
 
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, IEnvironment environment,
-        ILoggerFactory loggerFactory, IClock clock, NamedPipeClient? dotnetTestPipeClient = null)
-        : base(serviceProvider, dotnetTestPipeClient)
+        ILoggerFactory loggerFactory, IClock clock)
+        : base(serviceProvider)
     {
         _testHostsInformation = testHostsInformation;
         _environment = environment;
@@ -129,10 +129,13 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 dataConsumersBuilder.Add(dataConsumerDisplay);
             }
 
+            DotnetTestConnection? dotnetTestConnection = ServiceProvider.GetService<DotnetTestConnection>();
             // We register the DotnetTestDataConsumer as last to ensure that it will be the last one to consume the data.
-            if (DotnetTestPipeClient is not null)
+            if (DotnetTestConnection?.IsConnected == true)
             {
-                dataConsumersBuilder.Add(new DotnetTestDataConsumer(DotnetTestPipeClient, testApplicationModuleInfo));
+                RoslynDebug.Assert(dotnetTestConnection is not null);
+
+                dataConsumersBuilder.Add(new DotnetTestDataConsumer(dotnetTestConnection, ServiceProvider.GetEnvironment()));
             }
 
             AsynchronousMessageBus concreteMessageBusService = new(

@@ -2,12 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Build.Logging.StructuredLogger;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 using SL = Microsoft.Build.Logging.StructuredLogger;
 using SystemTask = System.Threading.Tasks.Task;
 
-namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestGroup]
 public class RunnerTests : AcceptanceTestBase
@@ -16,10 +17,7 @@ public class RunnerTests : AcceptanceTestBase
     private readonly AcceptanceFixture _acceptanceFixture;
 
     public RunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext)
-    {
-        _acceptanceFixture = acceptanceFixture;
-    }
+        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
     [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
     public async SystemTask EnableMSTestRunner_True_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration, Verb verb)
@@ -34,7 +32,9 @@ public class RunnerTests : AcceptanceTestBase
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
         string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         compilationResult = await DotnetCli.RunAsync(
             $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
@@ -44,7 +44,7 @@ public class RunnerTests : AcceptanceTestBase
             .Where(x => x.Title.Contains("ProjectCapability"))
             .Where(x => x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -79,7 +79,7 @@ return await app.RunAsync();
         await DotnetCli.RunAsync(
             $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -101,7 +101,7 @@ return await app.RunAsync();
         try
         {
             await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-            var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
+            var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
             TestHostResult testHostResult = await testHost.ExecuteAsync();
             Assert.AreEqual(string.Empty, testHostResult.StandardOutput);
         }

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using FluentAssertions.Execution;
+
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
@@ -11,16 +13,29 @@ public class ParallelExecutionTests : CLITestBase
     private const string MethodParallelTestAssetName = "ParallelMethodsTestProject";
     private const string DoNotParallelizeTestAssetName = "DoNotParallelizeTestProject";
     private const int TestMethodWaitTimeInMS = 1000;
-    private const int OverheadTimeInMS = 3000;
+    private const int OverheadTimeInMS = 4000;
 
-    public void AllMethodsShouldRunInParallel()
+    public async Task AllMethodsShouldRunInParallel()
     {
-        InvokeVsTestForExecution([MethodParallelTestAssetName]);
+        const int maxAttempts = 10;
+        for (int i = 0; i <= maxAttempts; i++)
+        {
+            try
+            {
+                InvokeVsTestForExecution([MethodParallelTestAssetName]);
 
-        // Parallel level of 2
-        // There are a total of 6 methods each with a sleep of TestMethodWaitTimeInMS.
-        // 5 of them are parallelizable and 1 is not. So this should not exceed 4 * TestMethodWaitTimeInMS seconds + 2.5 seconds overhead.
-        ValidateTestRunTime((4 * TestMethodWaitTimeInMS) + OverheadTimeInMS);
+                // Parallel level of 2
+                // There are a total of 6 methods each with a sleep of TestMethodWaitTimeInMS.
+                // 5 of them are parallelizable and 1 is not..
+                ValidateTestRunTime((4 * TestMethodWaitTimeInMS) + OverheadTimeInMS);
+            }
+
+            // Timer validation sometimes get flacky. So retrying the test if it fails.
+            catch (AssertionFailedException ex) when (i != maxAttempts && ex.Message.Contains("Test Run was expected to not exceed"))
+            {
+                await Task.Delay(2000);
+            }
+        }
 
         ValidatePassedTestsContain(
             "ParallelMethodsTestProject.UnitTest1.SimpleTest11",

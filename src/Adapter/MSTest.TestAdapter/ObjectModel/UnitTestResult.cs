@@ -19,10 +19,7 @@ public class UnitTestResult
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestResult"/> class.
     /// </summary>
-    internal UnitTestResult()
-    {
-        DatarowIndex = -1;
-    }
+    internal UnitTestResult() => DatarowIndex = -1;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestResult"/> class.

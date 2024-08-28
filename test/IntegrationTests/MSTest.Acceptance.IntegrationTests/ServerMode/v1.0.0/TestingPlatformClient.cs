@@ -243,10 +243,7 @@ public sealed class TestNodeUpdatesResponseListener : ResponseListener
     private readonly Func<TestNodeUpdate[], Task> _action;
 
     public TestNodeUpdatesResponseListener(Guid requestId, Func<TestNodeUpdate[], Task> action)
-    : base(requestId)
-    {
-        _action = action;
-    }
+    : base(requestId) => _action = action;
 
     public override async Task OnMessageReceive(object message)
         => await _action((TestNodeUpdate[])message);

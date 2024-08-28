@@ -15,38 +15,33 @@ public class AbortionTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public AbortionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     // We retry because sometime the Canceling the session message is not showing up.
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task AbortWithCTRLPlusC_TestHost_Succeeded(string tfm)
-        => await RetryHelper.RetryAsync(
-            async () =>
-            {
-                // We expect the same semantic for Linux, the test setup is not cross and we're using specific
-                // Windows API because this gesture is not easy xplat.
-                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    return;
-                }
+    {
+        // We expect the same semantic for Linux, the test setup is not cross and we're using specific
+        // Windows API because this gesture is not easy xplat.
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
 
-                var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
-                TestHostResult testHostResult = await testHost.ExecuteAsync();
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync();
 
-                testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
 
-                // We check only in netcore for netfx is now showing in CI every time, the same behavior in local something works sometime nope.
-                // Manual test works pretty always as expected, looks like the implementation is different, we care more on .NET Core.
-                if (TargetFrameworks.Net.Select(x => x.Arguments).Contains(tfm))
-                {
-                    testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
-                }
+        // We check only in netcore for netfx is now showing in CI every time, the same behavior in local something works sometime nope.
+        // Manual test works pretty always as expected, looks like the implementation is different, we care more on .NET Core.
+        if (TargetFrameworks.Net.Select(x => x.Arguments).Contains(tfm))
+        {
+            testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
+        }
 
-                testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 0, aborted: true);
-            }, 3, TimeSpan.FromSeconds(10));
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 0, aborted: true);
+    }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)

@@ -15,6 +15,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
 {
     public const string HelpOptionKey = "help";
     public const string HelpOptionQuestionMark = "?";
+    public const string TimeoutOptionKey = "timeout";
     public const string InfoOptionKey = "info";
     public const string DiagnosticOptionKey = "diagnostic";
     public const string DiagnosticOutputFilePrefixOptionKey = "diagnostic-output-fileprefix";
@@ -32,10 +33,11 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
 
     public const string ServerOptionKey = "server";
-    public const string PortOptionKey = "port";
     public const string ClientPortOptionKey = "client-port";
     public const string ClientHostOptionKey = "client-host";
+    public const string JsonRpcProtocolName = "jsonrpc";
     public const string DotNetTestPipeOptionKey = "dotnet-test-pipe";
+    public const string DotnetTestCliProtocolName = "dotnettestcli";
 
     private static readonly string[] VerbosityOptions = ["Trace", "Debug", "Information", "Warning", "Error", "Critical"];
 
@@ -46,6 +48,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         // Visible options
         new(HelpOptionKey, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         new(InfoOptionKey, PlatformResources.PlatformCommandLineInfoOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+        new(TimeoutOptionKey, PlatformResources.PlatformCommandLineTimeoutOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ResultDirectoryOptionKey, PlatformResources.PlatformCommandLineResultDirectoryOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(DiagnosticOptionKey, PlatformResources.PlatformCommandLineDiagnosticOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         new(DiagnosticOutputFilePrefixOptionKey, PlatformResources.PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
@@ -60,7 +63,6 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         // Hidden options
         new(HelpOptionQuestionMark, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
         new(ServerOptionKey, PlatformResources.PlatformCommandLineServerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
-        new(PortOptionKey, PlatformResources.PlatformCommandLinePortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(ClientPortOptionKey, PlatformResources.PlatformCommandLineClientPortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(ClientHostOptionKey, PlatformResources.PlatformCommandLineClientHostOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(SkipBuildersNumberCheckOptionKey, PlatformResources.PlatformCommandLineSkipBuildersNumberCheckOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
@@ -98,11 +100,6 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             }
         }
 
-        if (commandOption.Name == PortOptionKey && (!int.TryParse(arguments[0], out int _)))
-        {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, PortOptionKey));
-        }
-
         if (commandOption.Name == ClientPortOptionKey && (!int.TryParse(arguments[0], out int _)))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, ClientPortOptionKey));
@@ -113,19 +110,29 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitSingleArgument, ExitOnProcessExitOptionKey));
         }
 
+        if (commandOption.Name == TimeoutOptionKey)
+        {
+            string arg = arguments[0];
+            int size = arg.Length;
+            if ((char.ToLowerInvariant(arg[size - 1]) != 'h' && char.ToLowerInvariant(arg[size - 1]) != 'm' && char.ToLowerInvariant(arg[size - 1]) != 's') || !float.TryParse(arg[..(size - 1)], out float _))
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage);
+            }
+        }
+
         // Now validate the minimum expected tests option
         return IsMinimumExpectedTestsOptionValidAsync(commandOption, arguments);
     }
 
-    public static int GetMinimumExpectedTests(CommandLineParseResult parseResult)
+    public static int GetMinimumExpectedTests(ICommandLineOptions commandLineOptions)
     {
-        OptionRecord? minimumExpectedTests = parseResult.Options.SingleOrDefault(o => o.Option == MinimumExpectedTestsOptionKey);
-        if (minimumExpectedTests is null || !IsMinimumExpectedTestsOptionValidAsync(MinimumExpectedTests, minimumExpectedTests.Arguments).Result.IsValid)
+        bool hasMinimumExpectedTestsOptionKey = commandLineOptions.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? minimumExpectedTests);
+        if (!hasMinimumExpectedTestsOptionKey || !IsMinimumExpectedTestsOptionValidAsync(MinimumExpectedTests, minimumExpectedTests ?? Array.Empty<string>()).Result.IsValid)
         {
             return 0;
         }
 
-        ApplicationStateGuard.Ensure(parseResult.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? arguments));
+        ApplicationStateGuard.Ensure(commandLineOptions.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? arguments));
         return int.Parse(arguments[0], CultureInfo.InvariantCulture);
     }
 

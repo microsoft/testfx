@@ -13,10 +13,7 @@ public sealed class DescriptionAttribute : Attribute
     /// Initializes a new instance of the <see cref="DescriptionAttribute"/> class to describe a test.
     /// </summary>
     /// <param name="description">The description.</param>
-    public DescriptionAttribute(string? description)
-    {
-        Description = description;
-    }
+    public DescriptionAttribute(string? description) => Description = description;
 
     /// <summary>
     /// Gets the description of a test.

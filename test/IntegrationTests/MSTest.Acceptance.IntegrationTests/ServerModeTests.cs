@@ -4,7 +4,9 @@
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
-namespace MSTest.Acceptance.IntegrationTests.Messages.V100;
+using MSTest.Acceptance.IntegrationTests.Messages.V100;
+
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestGroup]
 public sealed class ServerModeTests : ServerModeTestsBase
@@ -12,10 +14,7 @@ public sealed class ServerModeTests : ServerModeTestsBase
     private readonly TestAssetFixture _fixture;
 
     public ServerModeTests(ITestExecutionContext testExecutionContext, TestAssetFixture fixture)
-        : base(testExecutionContext)
-    {
-        _fixture = fixture;
-    }
+        : base(testExecutionContext) => _fixture = fixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task DiscoverAndRun(string tfm)

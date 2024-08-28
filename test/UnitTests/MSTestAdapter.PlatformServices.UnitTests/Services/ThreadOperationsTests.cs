@@ -12,10 +12,7 @@ public class ThreadOperationsTests : TestContainer
 {
     private readonly ThreadOperations _asyncOperations;
 
-    public ThreadOperationsTests()
-    {
-        _asyncOperations = new ThreadOperations();
-    }
+    public ThreadOperationsTests() => _asyncOperations = new ThreadOperations();
 
     public void ExecuteShouldStartTheActionOnANewThread()
     {

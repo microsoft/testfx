@@ -15,10 +15,7 @@ internal class FileUtility
 {
     private readonly AssemblyUtility _assemblyUtility;
 
-    public FileUtility()
-    {
-        _assemblyUtility = new AssemblyUtility();
-    }
+    public FileUtility() => _assemblyUtility = new AssemblyUtility();
 
     public virtual void CreateDirectoryIfNotExists(string directory)
     {

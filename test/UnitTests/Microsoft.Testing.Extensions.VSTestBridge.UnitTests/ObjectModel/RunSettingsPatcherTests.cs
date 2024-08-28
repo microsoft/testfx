@@ -8,7 +8,7 @@ using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.Services;
 
 using Moq;
 
@@ -24,7 +24,7 @@ public class RunSettingsPatcherTests(ITestExecutionContext testExecutionContext)
     {
         _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
         XDocument runSettingsDocument = RunSettingsPatcher.Patch(null, _configuration.Object,
-            new ClientInfo(string.Empty, string.Empty), _commandLineOptions.Object);
+            new ClientInfoService(string.Empty, string.Empty), _commandLineOptions.Object);
         Assert.AreEqual(
             "/PlatformResultDirectory",
             runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/ResultsDirectory")!.Value);
@@ -42,7 +42,7 @@ public class RunSettingsPatcherTests(ITestExecutionContext testExecutionContext)
 
         _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
 
-        XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettings, _configuration.Object, new ClientInfo(string.Empty, string.Empty), _commandLineOptions.Object);
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettings, _configuration.Object, new ClientInfoService(string.Empty, string.Empty), _commandLineOptions.Object);
         Assert.AreEqual(
             "/PlatformResultDirectory",
             runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/ResultsDirectory")!.Value);
@@ -62,7 +62,7 @@ $"""
 """;
 
         _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
-        XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettings, _configuration.Object, new ClientInfo(string.Empty, string.Empty), _commandLineOptions.Object);
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettings, _configuration.Object, new ClientInfoService(string.Empty, string.Empty), _commandLineOptions.Object);
         Assert.AreEqual(
             "/PlatformResultDirectoryFromFile",
             runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/ResultsDirectory")!.Value);
@@ -90,7 +90,7 @@ $"""
             });
 
         _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
-        XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettings, _configuration.Object, new ClientInfo(string.Empty, string.Empty),
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettings, _configuration.Object, new ClientInfoService(string.Empty, string.Empty),
             _commandLineOptions.Object);
 
         XElement[] testRunParameters = runSettingsDocument.XPathSelectElements("RunSettings/TestRunParameters/Parameter").ToArray();
@@ -113,7 +113,7 @@ $"""
             });
 
         _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
-        XDocument runSettingsDocument = RunSettingsPatcher.Patch(null, _configuration.Object, new ClientInfo(string.Empty, string.Empty),
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(null, _configuration.Object, new ClientInfoService(string.Empty, string.Empty),
             _commandLineOptions.Object);
 
         XElement[] testRunParameters = runSettingsDocument.XPathSelectElements("RunSettings/TestRunParameters/Parameter").ToArray();

@@ -21,10 +21,7 @@ public class RunConfigurationSettings
     /// <summary>
     /// Initializes a new instance of the <see cref="RunConfigurationSettings"/> class.
     /// </summary>
-    public RunConfigurationSettings()
-    {
-        CollectSourceInformation = true;
-    }
+    public RunConfigurationSettings() => CollectSourceInformation = true;
 
     /// <summary>
     /// Gets a value indicating whether source information needs to be collected or not.

@@ -223,7 +223,7 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Option &apos;--{0}&apos; is declared by multiple extensions: &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Option &apos;--{0}&apos; is declared by multiple extensions: &apos;{1}&apos;.
         /// </summary>
         internal static string CommandLineOptionIsDeclaredByMultipleProviders {
             get {
@@ -255,6 +255,15 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string CommandLineOptionIsUsingReservedPrefix {
             get {
                 return ResourceManager.GetString("CommandLineOptionIsUsingReservedPrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ICommandLineOptions has not been built yet..
+        /// </summary>
+        internal static string CommandLineOptionsNotReady {
+            get {
+                return ResourceManager.GetString("CommandLineOptionsNotReady", resourceCulture);
             }
         }
         
@@ -629,11 +638,38 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The ILoggerFactory has not been built yet..
+        /// </summary>
+        internal static string LoggerFactoryNotReady {
+            get {
+                return ResourceManager.GetString("LoggerFactoryNotReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The message bus has not been built yet or is no more usable at this stage..
+        /// </summary>
+        internal static string MessageBusNotReady {
+            get {
+                return ResourceManager.GetString("MessageBusNotReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Minimum expected tests policy violation, tests ran {0}, minimum expected {1}.
         /// </summary>
         internal static string MinimumExpectedTestsPolicyViolation {
             get {
                 return ResourceManager.GetString("MinimumExpectedTestsPolicyViolation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected --client-port when jsonRpc protocol is used..
+        /// </summary>
+        internal static string MissingClientPortFoJsonRpc {
+            get {
+                return ResourceManager.GetString("MissingClientPortFoJsonRpc", resourceCulture);
             }
         }
         
@@ -719,7 +755,9 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Force the built-in file logger to write the log synchronously. Useful for scenario where you don&apos;t want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution..
+        ///   Looks up a localized string similar to Force the built-in file logger to write the log synchronously.
+        ///Useful for scenario where you don&apos;t want to lose any log (i.e. in case of crash).
+        ///Note that this is slowing down the test execution..
         /// </summary>
         internal static string PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription {
             get {
@@ -728,7 +766,8 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enable the diagnostic logging. The default log level is &apos;Trace&apos;. The file will be written in the output directory with the name log_[MMddHHssfff].diag.
+        ///   Looks up a localized string similar to Enable the diagnostic logging. The default log level is &apos;Trace&apos;.
+        ///The file will be written in the output directory with the name log_[MMddHHssfff].diag.
         /// </summary>
         internal static string PlatformCommandLineDiagnosticOptionDescription {
             get {
@@ -755,7 +794,8 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Output directory of the diagnostic logging, if not specified the file will be generated inside the default &apos;TestResults&apos; directory..
+        ///   Looks up a localized string similar to Output directory of the diagnostic logging.
+        ///If not specified the file will be generated inside the default &apos;TestResults&apos; directory..
         /// </summary>
         internal static string PlatformCommandLineDiagnosticOutputDirectoryOptionDescription {
             get {
@@ -773,7 +813,8 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Define the level of the verbosity for the --diagnostic. The available values are &apos;Trace&apos;, &apos;Debug&apos;, &apos;Information&apos;, &apos;Warning&apos;, &apos;Error&apos;, and &apos;Critical&apos;.
+        ///   Looks up a localized string similar to Define the level of the verbosity for the --diagnostic.
+        ///The available values are &apos;Trace&apos;, &apos;Debug&apos;, &apos;Information&apos;, &apos;Warning&apos;, &apos;Error&apos;, and &apos;Critical&apos;..
         /// </summary>
         internal static string PlatformCommandLineDiagnosticVerbosityOptionDescription {
             get {
@@ -837,7 +878,8 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do not report non successful exit value for specific exit codes (e.g. &apos;--ignore-exit-code 8;9&apos; ignore exit code 8 and 9 and will return 0 in these case).
+        ///   Looks up a localized string similar to Do not report non successful exit value for specific exit codes
+        ///(e.g. &apos;--ignore-exit-code 8;9&apos; ignore exit code 8 and 9 and will return 0 in these case).
         /// </summary>
         internal static string PlatformCommandLineIgnoreExitCodeOptionDescription {
             get {
@@ -864,7 +906,8 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;--minimum-expected-tests&apos; expects a single non-zero positive integer value (e.g. &apos;--minimum-expected-tests 10&apos;).
+        ///   Looks up a localized string similar to &apos;--minimum-expected-tests&apos; expects a single non-zero positive integer value
+        ///(e.g. &apos;--minimum-expected-tests 10&apos;).
         /// </summary>
         internal static string PlatformCommandLineMinimumExpectedTestsOptionSingleArgument {
             get {
@@ -918,7 +961,9 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The directory where the test results are going to be placed. If the specified directory doesn&apos;t exist, it&apos;s created. The default is TestResults in the directory that contains the test application..
+        ///   Looks up a localized string similar to The directory where the test results are going to be placed.
+        ///If the specified directory doesn&apos;t exist, it&apos;s created.
+        ///The default is TestResults in the directory that contains the test application..
         /// </summary>
         internal static string PlatformCommandLineResultDirectoryOptionDescription {
             get {
@@ -950,6 +995,25 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string PlatformCommandLineTestHostControllerPIDOptionDescription {
             get {
                 return ResourceManager.GetString("PlatformCommandLineTestHostControllerPIDOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;timeout&apos; option should have one argument as string in the format &lt;value&gt;[h|m|s] where &apos;value&apos; is float.
+        /// </summary>
+        internal static string PlatformCommandLineTimeoutArgumentErrorMessage {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineTimeoutArgumentErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A global test execution timeout.
+        ///Takes one argument as string in the format &lt;value&gt;[h|m|s] where &apos;value&apos; is float..
+        /// </summary>
+        internal static string PlatformCommandLineTimeoutOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineTimeoutOptionDescription", resourceCulture);
             }
         }
         
@@ -1126,6 +1190,61 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string TelemetryProviderAlreadySetErrorMessage {
             get {
                 return ResourceManager.GetString("TelemetryProviderAlreadySetErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Disable outputting ANSI escape characters to screen..
+        /// </summary>
+        internal static string TerminalNoAnsiOptionDescription {
+            get {
+                return ResourceManager.GetString("TerminalNoAnsiOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Disable reporting progress to screen..
+        /// </summary>
+        internal static string TerminalNoProgressOptionDescription {
+            get {
+                return ResourceManager.GetString("TerminalNoProgressOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Output verbosity when reporting tests.
+        ///Valid values are &apos;Normal&apos;, &apos;Detailed&apos;. Default is &apos;Normal&apos;..
+        /// </summary>
+        internal static string TerminalOutputOptionDescription {
+            get {
+                return ResourceManager.GetString("TerminalOutputOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to --output expects a single parameter with value &apos;Normal&apos; or &apos;Detailed&apos;..
+        /// </summary>
+        internal static string TerminalOutputOptionInvalidArgument {
+            get {
+                return ResourceManager.GetString("TerminalOutputOptionInvalidArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Writes test results to terminal..
+        /// </summary>
+        internal static string TerminalTestReporterDescription {
+            get {
+                return ResourceManager.GetString("TerminalTestReporterDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Terminal test reporter.
+        /// </summary>
+        internal static string TerminalTestReporterDisplayName {
+            get {
+                return ResourceManager.GetString("TerminalTestReporterDisplayName", resourceCulture);
             }
         }
         

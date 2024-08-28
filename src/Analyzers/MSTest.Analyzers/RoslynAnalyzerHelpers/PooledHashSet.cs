@@ -14,10 +14,7 @@ internal sealed class PooledHashSet<T> : HashSet<T>, IDisposable
     private readonly ObjectPool<PooledHashSet<T>>? _pool;
 
     private PooledHashSet(ObjectPool<PooledHashSet<T>>? pool, IEqualityComparer<T>? comparer)
-        : base(comparer)
-    {
-        _pool = pool;
-    }
+        : base(comparer) => _pool = pool;
 
     public void Dispose() => Free(CancellationToken.None);
 

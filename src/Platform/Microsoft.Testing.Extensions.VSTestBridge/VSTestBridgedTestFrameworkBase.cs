@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
@@ -104,7 +106,8 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
         // both the original (VSTest) sink and our own.
         ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
         ILoggerFactory loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
-        TestCaseDiscoverySinkAdapter testCaseDiscoverySinkAdapter = new(this, discoverRequest.Session, discoverRequest.AssemblyPaths, testApplicationModuleInfo, loggerFactory, messageBus, IsTrxEnabled, cancellationToken, discoverRequest.DiscoverySink);
+        IClientInfo clientInfo = ServiceProvider.GetRequiredService<IClientInfo>();
+        TestCaseDiscoverySinkAdapter testCaseDiscoverySinkAdapter = new(this, discoverRequest.Session, discoverRequest.AssemblyPaths, testApplicationModuleInfo, loggerFactory, messageBus, IsTrxEnabled, clientInfo, cancellationToken, discoverRequest.DiscoverySink);
 
         return new(discoverRequest.Session, discoverRequest.VSTestFilter, discoverRequest.AssemblyPaths, discoverRequest.DiscoveryContext,
             discoverRequest.MessageLogger, testCaseDiscoverySinkAdapter);
@@ -118,7 +121,8 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
         ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
         ILoggerFactory loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
         IOutputDevice outputDevice = ServiceProvider.GetOutputDevice();
-        FrameworkHandlerAdapter frameworkHandlerAdapter = new(this, runRequest.Session, runRequest.AssemblyPaths, testApplicationModuleInfo,
+        IClientInfo clientInfo = ServiceProvider.GetClientInfo();
+        FrameworkHandlerAdapter frameworkHandlerAdapter = new(this, runRequest.Session, clientInfo, runRequest.AssemblyPaths, testApplicationModuleInfo,
             loggerFactory, messageBus, outputDevice, IsTrxEnabled, cancellationToken, runRequest.FrameworkHandle);
 
         return new(runRequest.Session, runRequest.VSTestFilter, runRequest.AssemblyPaths, runRequest.RunContext,

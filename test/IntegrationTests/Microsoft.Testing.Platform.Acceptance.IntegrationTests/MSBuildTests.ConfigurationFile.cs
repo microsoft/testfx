@@ -9,10 +9,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public class MSBuildTests : AcceptanceTestBase
 {
     public MSBuildTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext)
-    {
-        _acceptanceFixture = acceptanceFixture;
-    }
+        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
     [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
     public async Task ConfigFileGeneration_CorrectlyCreateAndCacheAndCleaned(string tfm, BuildConfiguration compilationMode, Verb verb)
@@ -28,7 +25,7 @@ public class MSBuildTests : AcceptanceTestBase
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:normal -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, "MSBuildTests", tfm, verb: verb, buildConfiguration: compilationMode);
-        string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildTests.testingplatformconfig.json");
+        string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildTests.testconfig.json");
         Assert.IsTrue(File.Exists(generatedConfigurationFile));
         Assert.AreEqual(ConfigurationContent.Trim(), File.ReadAllText(generatedConfigurationFile).Trim());
         Assert.IsTrue(compilationResult.StandardOutput.Contains("Microsoft Testing Platform configuration file written"));
@@ -63,19 +60,19 @@ public class MSBuildTests : AcceptanceTestBase
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
 
-        File.Delete(Path.Combine(testAsset.TargetAssetPath, "testingplatformconfig.json"));
+        File.Delete(Path.Combine(testAsset.TargetAssetPath, "testconfig.json"));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:diagnostic -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, "MSBuildTests", tfm, verb: verb, buildConfiguration: compilationMode);
         Assert.IsTrue(compilationResult.StandardOutput.Contains("Target \"GenerateTestingPlatformConfigurationFile\" skipped, due to false condition;"));
-        string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildTests.testingplatformconfig.json");
+        string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildTests.testconfig.json");
         Assert.IsFalse(File.Exists(generatedConfigurationFile));
     }
 
     private const string ConfigurationContent = """
 {
-  "testingplatform": {
+  "platformOptions": {
     "exitProcessOnUnhandledException": true
   }
 }
@@ -103,7 +100,7 @@ public class MSBuildTests : AcceptanceTestBase
     </ItemGroup>
 </Project>
 
-#file testingplatformconfig.json
+#file testconfig.json
 $JsonContent$
 
 #file Program.cs

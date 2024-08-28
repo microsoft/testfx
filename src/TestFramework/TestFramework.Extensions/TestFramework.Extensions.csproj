@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
 
   <!-- SDK top import -->
   <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
@@ -80,6 +80,12 @@
 
   <ItemGroup>
     <Using Include="Polyfills" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="build\winui\MSTest.TestFramework.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <!-- SDK bottom import -->

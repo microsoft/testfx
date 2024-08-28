@@ -281,6 +281,21 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Neukládejte TestContext ve statickém členu</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotUseShadowingDescription">
+        <source>Shadowing test members could cause testing issues (such as NRE).</source>
+        <target state="translated">Členové testů stínového provozu (vzdáleného řízení) by mohli způsobovat problémy s testováním (například NRE).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingMessageFormat">
+        <source>Member '{0}' is already exist in the base class</source>
+        <target state="translated">Člen {0} už v základní (kořenové) třídě existuje.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseShadowingTitle">
+        <source>Do not use shadowing</source>
+        <target state="translated">Nepoužívat stínový provoz (vzdálené řízení)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
         <target state="translated">System.ComponentModel.DescriptionAttribute nemá v kontextu testů žádný účinek a pravděpodobně jste místo toho chtěli použít Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute.</target>
@@ -447,6 +462,16 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Veřejné typy by měly být testovací třídy.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat">
+        <source>Test class '{0}' should be valid</source>
+        <target state="translated">Testovací třída {0} by měla být platná.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat">
+        <source>Property 'TestContext' should be valid</source>
+        <target state="translated">Vlastnost TestContext by měla být platná.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">Signatura {0} metody Test je neplatná.</target>
@@ -476,21 +501,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 – musí být public (nebo internal, pokud je nastaven atribut [assembly: DiscoverInternals]),
 – nesmí být static (s výjimkou případů, kdy obsahuje pouze metody AssemblyInitialize nebo AssemblyCleanup),
 – nesmí být obecné.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
-        <source>Test class '{0}' should not be 'static'</source>
-        <target state="translated">Testovací třída {0} by neměla být static.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_Public">
-        <source>Test class '{0}' should be 'public'</source>
-        <target state="translated">Testovací třída {0} by měla být public.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Test class '{0}' should be 'public' or 'internal'</source>
-        <target state="translated">Testovací třída {0} by měla být public nebo internal.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidTitle">
@@ -567,31 +577,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 – musí být public (nebo internal, pokud je nastaven atribut [assembly: DiscoverInternals]),
 – musí být static,
 – nemělo by být jen pro čtení.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotField">
-        <source>Member 'TestContext' should be a property and not a field</source>
-        <target state="translated">Člen TestContext by měl být vlastnost, nikoli pole.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotReadonly">
-        <source>Property 'TestContext' should be settable</source>
-        <target state="translated">Vlastnost TestContext by měla být nastavitelná.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_NotStatic">
-        <source>Property 'TestContext' should not be 'static'</source>
-        <target state="translated">Vlastnost TestContext by neměla být static.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_Public">
-        <source>Property 'TestContext' should be 'public'</source>
-        <target state="translated">Vlastnost TestContext by měla být public.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestContextShouldBeValidMessageFormat_PublicOrInternal">
-        <source>Property 'TestContext' should be 'public' or 'internal'</source>
-        <target state="translated">Vlastnost TestContext by měla být public nebo internal.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">

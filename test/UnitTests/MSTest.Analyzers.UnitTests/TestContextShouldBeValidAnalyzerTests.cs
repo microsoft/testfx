@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.TestContextShouldBeValidAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.TestContextShouldBeValidFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -37,10 +37,19 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
                 {{accessibility}} TestContext {|#0:{{fieldName}}|};
             }
             """;
+        string fixedCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext {{fieldName}} { get; set; }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.NotFieldRule).WithLocation(0));
+            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule).WithLocation(0),
+            fixedCode);
     }
 
     [Arguments("TestContext", "private")]
@@ -62,11 +71,20 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
                 {{accessibility}} TestContext {|#0:{{propertyName}}|} { get; set; }
             }
             """;
+        string fixedCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext {{propertyName}} { get; set; }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.PublicRule)
-                .WithLocation(0));
+            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
+                .WithLocation(0),
+            fixedCode);
     }
 
     public async Task WhenTestContextPropertyIsValid_NoDiagnostic()
@@ -81,7 +99,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     public async Task WhenDiscoverInternalsTestContextPropertyIsPrivate_Diagnostic()
@@ -97,11 +115,23 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
                 private TestContext {|#0:TestContext|} { get; set; }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                internal TestContext TestContext { get; set; }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.PublicOrInternalRule)
-                .WithLocation(0));
+            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
+                .WithLocation(0),
+            fixedCode);
     }
 
     [Arguments("public")]
@@ -120,7 +150,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     public async Task WhenTestContextPropertyIsStatic_Diagnostic()
@@ -134,11 +164,21 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
                 public static TestContext {|#0:TestContext|} { get; set; }
             }
             """;
+        string fixedCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.NotStaticRule)
-                .WithLocation(0));
+            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
+                .WithLocation(0),
+            fixedCode);
     }
 
     public async Task WhenTestContextPropertyIsReadonly_Diagnostic()
@@ -152,11 +192,21 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
                 public TestContext {|#0:TestContext|} { get; }
             }
             """;
+        string fixedCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.NotReadonlyRule)
-                .WithLocation(0));
+            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
+                .WithLocation(0),
+            fixedCode);
     }
 
     [Arguments("TestContext", "private")]
@@ -186,6 +236,6 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 }

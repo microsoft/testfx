@@ -80,10 +80,7 @@ public class ReflectionUtilityTests : TestContainer
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = true)]
     public sealed class DummyAAttribute : Attribute
     {
-        public DummyAAttribute(string foo)
-        {
-            Value = foo;
-        }
+        public DummyAAttribute(string foo) => Value = foo;
 
         public string Value { get; set; }
     }
@@ -91,10 +88,7 @@ public class ReflectionUtilityTests : TestContainer
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = false)]
     public class DummySingleAAttribute : Attribute
     {
-        public DummySingleAAttribute(string foo)
-        {
-            Value = foo;
-        }
+        public DummySingleAAttribute(string foo) => Value = foo;
 
         public string Value { get; set; }
     }

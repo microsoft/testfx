@@ -20,9 +20,9 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.TestClassShouldBeValidTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.TestClassShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestClassShouldBeValidMessageFormat_Public), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestClassShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor PublicRule = DiagnosticDescriptorHelper.Create(
+    internal static readonly DiagnosticDescriptor TestClassShouldBeValidRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestClassShouldBeValidRuleId,
         Title,
         MessageFormat,
@@ -31,11 +31,8 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    internal static readonly DiagnosticDescriptor PublicOrInternalRule = PublicRule.WithMessage(new(nameof(Resources.TestClassShouldBeValidMessageFormat_PublicOrInternal), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor NotStaticRule = PublicRule.WithMessage(new(nameof(Resources.TestClassShouldBeValidMessageFormat_NotStatic), Resources.ResourceManager, typeof(Resources)));
-
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(PublicRule);
+        = ImmutableArray.Create(TestClassShouldBeValidRule);
 
     public override void Initialize(AnalysisContext context)
     {
@@ -75,11 +72,13 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
         {
             if (!canDiscoverInternals && resultantVisibility != SymbolVisibility.Public)
             {
-                context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(PublicRule, namedTypeSymbol.Name));
+                context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassShouldBeValidRule, namedTypeSymbol.Name));
+                return;
             }
             else if (canDiscoverInternals && resultantVisibility == SymbolVisibility.Private)
             {
-                context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(PublicOrInternalRule, namedTypeSymbol.Name));
+                context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassShouldBeValidRule, namedTypeSymbol.Name));
+                return;
             }
         }
 
@@ -106,10 +105,10 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
                         || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, classCleanupAttributeSymbol)
                         || attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
                     {
-                        context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(NotStaticRule, namedTypeSymbol.Name));
+                        context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassShouldBeValidRule, namedTypeSymbol.Name));
 
                         // We only need to report once per class.
-                        break;
+                        return;
                     }
                 }
             }

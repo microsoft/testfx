@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="es" original="../ExtensionResources.resx">
     <body>
+      <trans-unit id="MissingRunSettingsAttribute">
+        <source>Invalid .runsettings file, '&lt;RunSettings&gt;' attribute is missing</source>
+        <target state="translated">Archivo .runsettings no válido, falta el atributo "&lt;RunSettings&gt;"</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RunSettingsOptionDescription">
         <source>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</source>
         <target state="translated">Ruta de acceso, relativa o absoluta, al archivo .runsettings. Para obtener más información y ejemplos sobre cómo configurar la serie de pruebas, consulte https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</target>
@@ -30,6 +35,21 @@
       <trans-unit id="TestRunParameterOptionDescription">
         <source>Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</source>
         <target state="translated">Especifique o invalide un parámetro de par clave-valor. Para más información y ejemplos, consulte https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnsupportedRunconfigurationSetting">
+        <source>Runsettings attribute '{0}' is not supported by Microsoft.Testing.Platform and will be ignored</source>
+        <target state="translated">Microsoft.Testing.Platform no admite el atributo "{0}" de Runsettings y se omitirá</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnsupportedRunsettingsDatacollectors">
+        <source>Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored</source>
+        <target state="translated">Microsoft.Testing.Platform no admite los recopiladores de datos de Runsettings y se omitirán</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnsupportedRunsettingsLoggers">
+        <source>Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</source>
+        <target state="translated">Microsoft.Testing.Platform no admite los registradores de Runsettings y se omitirán</target>
         <note />
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">

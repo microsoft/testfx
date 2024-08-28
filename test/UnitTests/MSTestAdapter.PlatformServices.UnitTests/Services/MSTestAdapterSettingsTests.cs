@@ -318,10 +318,7 @@ public class TestableMSTestAdapterSettings : MSTestAdapterSettings
     {
     }
 
-    public TestableMSTestAdapterSettings(List<RecursiveDirectoryPath> expectedResult)
-    {
-        SearchDirectories.AddRange(expectedResult);
-    }
+    public TestableMSTestAdapterSettings(List<RecursiveDirectoryPath> expectedResult) => SearchDirectories.AddRange(expectedResult);
 
     public Func<string, bool> DoesDirectoryExistSetter { get; set; }
 

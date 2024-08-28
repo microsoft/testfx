@@ -11,10 +11,7 @@ internal class TestHostProcessInformation : ITestHostProcessInformation
     private readonly int? _exitCode;
     private readonly bool? _hasExitedGracefully;
 
-    public TestHostProcessInformation(int pid)
-    {
-        PID = pid;
-    }
+    public TestHostProcessInformation(int pid) => PID = pid;
 
     public TestHostProcessInformation(int pid, int exitCode, bool hasExitedGracefully)
     {

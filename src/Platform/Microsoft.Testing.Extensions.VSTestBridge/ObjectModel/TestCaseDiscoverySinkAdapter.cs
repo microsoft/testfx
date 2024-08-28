@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
 using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Logging;
@@ -25,13 +27,19 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
     private readonly ILogger<TestCaseDiscoverySinkAdapter> _logger;
     private readonly IMessageBus _messageBus;
     private readonly bool _isTrxEnabled;
+    private readonly IClientInfo _clientInfo;
     private readonly VSTestBridgedTestFrameworkBase _adapterExtension;
     private readonly TestSessionContext _session;
     private readonly CancellationToken _cancellationToken;
     private readonly string? _testAssemblyPath;
 
     public TestCaseDiscoverySinkAdapter(VSTestBridgedTestFrameworkBase adapterExtension, TestSessionContext session, string[] testAssemblyPaths,
-        ITestApplicationModuleInfo testApplicationModuleInfo, ILoggerFactory loggerFactory, IMessageBus messageBus, bool isTrxEnabled, CancellationToken cancellationToken, ITestCaseDiscoverySink? testCaseDiscoverySink = null)
+        ITestApplicationModuleInfo testApplicationModuleInfo,
+        ILoggerFactory loggerFactory,
+        IMessageBus messageBus, bool isTrxEnabled,
+        IClientInfo clientInfo,
+        CancellationToken cancellationToken,
+        ITestCaseDiscoverySink? testCaseDiscoverySink = null)
     {
         if (testAssemblyPaths.Length == 0)
         {
@@ -55,6 +63,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
         _logger = loggerFactory.CreateLogger<TestCaseDiscoverySinkAdapter>();
         _messageBus = messageBus;
         _isTrxEnabled = isTrxEnabled;
+        _clientInfo = clientInfo;
         _adapterExtension = adapterExtension;
         _session = session;
         _cancellationToken = cancellationToken;
@@ -73,7 +82,7 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
         _testCaseDiscoverySink?.SendTestCase(discoveredTest);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = discoveredTest.ToTestNode(_isTrxEnabled, _session.Client);
+        var testNode = discoveredTest.ToTestNode(_isTrxEnabled, _clientInfo);
         testNode.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
 

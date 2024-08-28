@@ -421,10 +421,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
 
     private sealed class MemoryFileStream : IFileStream
     {
-        public MemoryFileStream()
-        {
-            Stream = new MemoryStream();
-        }
+        public MemoryFileStream() => Stream = new MemoryStream();
 
         public MemoryStream Stream { get; }
 

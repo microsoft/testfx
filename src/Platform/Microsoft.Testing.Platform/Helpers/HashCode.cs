@@ -9,10 +9,7 @@ internal struct HashCode
 {
     private int _hash;
 
-    public HashCode()
-    {
-        _hash = 17;
-    }
+    public HashCode() => _hash = 17;
 
     public void Add(string value)
     {

@@ -1,9 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
-namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestGroup]
 public class MSBuildRunnerTests : AcceptanceTestBase
@@ -13,10 +14,7 @@ public class MSBuildRunnerTests : AcceptanceTestBase
     private readonly AcceptanceFixture _acceptanceFixture;
 
     public MSBuildRunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext)
-    {
-        _acceptanceFixture = acceptanceFixture;
-    }
+        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
     internal static IEnumerable<TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)>> GetBuildMatrix()
     {

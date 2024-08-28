@@ -12,56 +12,49 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public CrashPlusHangDumpTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     public async Task CrashPlusHangDump_InCaseOfCrash_CreateCrashDump()
-        => await RetryHelper.RetryAsync(
-            async () =>
+    {
+        string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--hangdump --hangdump-timeout 5m --crashdump --results-directory {resultDirectory}",
+            new Dictionary<string, string>
             {
-                string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent.Arguments);
-                var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent.Arguments);
-                TestHostResult testHostResult = await testHost.ExecuteAsync(
-                    $"--hangdump --hangdump-timeout 5m --crashdump --results-directory {resultDirectory}",
-                    new Dictionary<string, string>
-                    {
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
                         { "SHOULDCRASH", "true" },
-                    });
+            });
 
-                testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
-                testHostResult.AssertOutputMatchesRegex(@"Test host process with PID \'.+\' crashed, a dump file was generated");
-                testHostResult.AssertOutputDoesNotContain(@"Hang dump timeout '00:00:08' expired");
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertOutputMatchesRegex(@"Test host process with PID \'.+\' crashed, a dump file was generated");
+        testHostResult.AssertOutputDoesNotContain(@"Hang dump timeout '00:00:08' expired");
 
-                Assert.IsTrue(Directory.GetFiles(resultDirectory, "CrashPlusHangDump.dll*_crash.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
-                Assert.IsFalse(Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
-            }, 3, TimeSpan.FromSeconds(3), CrashDumpTests.RetryPolicy);
+        Assert.IsTrue(Directory.GetFiles(resultDirectory, "CrashPlusHangDump.dll*_crash.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+        Assert.IsFalse(Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+    }
 
     public async Task CrashPlusHangDump_InCaseOfHang_CreateHangDump()
-        => await RetryHelper.RetryAsync(
-            async () =>
+    {
+        string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--hangdump --hangdump-timeout 8s --crashdump --results-directory {resultDirectory}",
+            new Dictionary<string, string>
             {
-                string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent.Arguments);
-                var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent.Arguments);
-                TestHostResult testHostResult = await testHost.ExecuteAsync(
-                    $"--hangdump --hangdump-timeout 8s --crashdump --results-directory {resultDirectory}",
-                    new Dictionary<string, string>
-                    {
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
                         { "SHOULDCRASH", "false" },
-                    });
+            });
 
-                testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
-                testHostResult.AssertOutputDoesNotMatchRegex(@"Test host process with PID '.+' crashed, a dump file was generated");
-                testHostResult.AssertOutputContains(@"Hang dump timeout of '00:00:08' expired");
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertOutputDoesNotMatchRegex(@"Test host process with PID '.+' crashed, a dump file was generated");
+        testHostResult.AssertOutputContains(@"Hang dump timeout of '00:00:08' expired");
 
-                Assert.IsFalse(Directory.GetFiles(resultDirectory, "CrashPlusHangDump.dll*_crash.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
-                Assert.IsTrue(Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
-            }, 3, TimeSpan.FromSeconds(3), CrashDumpTests.RetryPolicy);
+        Assert.IsFalse(Directory.GetFiles(resultDirectory, "CrashPlusHangDump.dll*_crash.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+        Assert.IsTrue(Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+    }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)

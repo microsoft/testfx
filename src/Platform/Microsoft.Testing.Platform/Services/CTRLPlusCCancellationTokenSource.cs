@@ -21,6 +21,8 @@ internal class CTRLPlusCCancellationTokenSource : ITestApplicationCancellationTo
         _logger = logger;
     }
 
+    public void CancelAfter(TimeSpan timeout) => _cancellationTokenSource.CancelAfter(timeout);
+
     public CancellationToken CancellationToken
         => _cancellationTokenSource.Token;
 

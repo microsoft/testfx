@@ -54,7 +54,10 @@ public static class DotnetCli
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
         int timeoutInSeconds = 50,
-        bool disableCodeCoverage = true)
+        int retryCount = 5,
+        bool disableCodeCoverage = true,
+        bool warnAsError = true,
+        bool suppressPreviewDotNetMessage = true)
     {
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
@@ -88,13 +91,24 @@ public static class DotnetCli
 
             environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
 
+            string extraArgs = warnAsError ? " /warnaserror" : string.Empty;
+            extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
+            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
+            {
+                args = args.Insert(platformArgsIndex, extraArgs + " ");
+            }
+            else
+            {
+                args += extraArgs;
+            }
+
             if (DoNotRetry)
             {
                 return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero);
             }
             else
             {
-                IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 1.5);
+                IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount, factor: 1.5);
                 return await Policy
                     .Handle<Exception>()
                     .WaitAndRetryAsync(delay)
@@ -117,8 +131,18 @@ public static class DotnetCli
         using DotnetMuxer dotnet = new(environmentVariables);
         int exitCode = await dotnet.ExecuteAsync(args, workingDirectory, timeoutInSeconds);
 
-        return exitCode != 0 && failIfReturnValueIsNotZero
-            ? throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}")
-            : new DotnetMuxerResult(args, exitCode, dotnet.StandardOutput, dotnet.StandardOutputLines, dotnet.StandardError, dotnet.StandardErrorLines);
+        if (exitCode != 0 && failIfReturnValueIsNotZero)
+        {
+            throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}");
+        }
+
+        if (dotnet.StandardOutput.Contains("error MSB4166: Child node")
+            && dotnet.StandardOutput.Contains("exited prematurely. Shutting down."))
+        {
+            throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}");
+        }
+
+        // Return a result object and let caller decide what to do with it.
+        return new DotnetMuxerResult(args, exitCode, dotnet.StandardOutput, dotnet.StandardOutputLines, dotnet.StandardError, dotnet.StandardErrorLines);
     }
 }

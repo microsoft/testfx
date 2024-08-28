@@ -16,10 +16,7 @@ public class HelpInfoTests : AcceptanceTestBase
     // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
     public HelpInfoTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
         AcceptanceFixture globalFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Help_WhenMSTestExtensionRegistered_OutputHelpContentOfRegisteredExtension(string tfm)
@@ -34,25 +31,58 @@ MSTest v{MSTestVersion} (UTC *) [* - *]
 Usage {AssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
-  --diagnostic                             Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag
-  --diagnostic-filelogger-synchronouswrite Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.
-  --diagnostic-output-directory            Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.
-  --diagnostic-output-fileprefix           Prefix for the log file name that will replace '[log]_.'
-  --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
-  --exit-on-process-exit                   Exit the test process if dependent process exits. PID must be provided.
-  --help                                   Show the command line help.
-  --ignore-exit-code                       Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)
-  --info                                   Display .NET test application information.
-  --list-tests                             List available tests.
-  --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run.
-  --results-directory                      The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.
+    --diagnostic
+        Enable the diagnostic logging. The default log level is 'Trace'.
+        The file will be written in the output directory with the name log_[MMddHHssfff].diag
+    --diagnostic-filelogger-synchronouswrite
+        Force the built-in file logger to write the log synchronously.
+        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+        Note that this is slowing down the test execution.
+    --diagnostic-output-directory
+        Output directory of the diagnostic logging.
+        If not specified the file will be generated inside the default 'TestResults' directory.
+    --diagnostic-output-fileprefix
+        Prefix for the log file name that will replace '[log]_.'
+    --diagnostic-verbosity
+        Define the level of the verbosity for the --diagnostic.
+        The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
+    --exit-on-process-exit
+        Exit the test process if dependent process exits. PID must be provided.
+    --help
+        Show the command line help.
+    --ignore-exit-code
+        Do not report non successful exit value for specific exit codes
+        (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)
+    --info
+        Display .NET test application information.
+    --list-tests
+        List available tests.
+    --minimum-expected-tests
+        Specifies the minimum number of tests that are expected to run.
+    --results-directory
+        The directory where the test results are going to be placed.
+        If the specified directory doesn't exist, it's created.
+        The default is TestResults in the directory that contains the test application.
+    --timeout
+        A global test execution timeout.
+        Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Extension options:
-  --filter         Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
-  --settings       The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
-  --test-parameter Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters
+    --filter
+        Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
+    --no-ansi
+        Disable outputting ANSI escape characters to screen.
+    --no-progress
+        Disable reporting progress to screen.
+    --output
+        Output verbosity when reporting tests.
+        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+    --settings
+        The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
+    --test-parameter
+        Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters
 """;
 
-        testHostResult.AssertOutputMatches(wildcardMatchPattern);
+        testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -81,8 +111,6 @@ Extension options:
         Arity: 1..N
         Hidden: False
         Description: Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters
-Registered tools:
-  There are no registered tools.
 """;
 
         testHostResult.AssertOutputContains(output);

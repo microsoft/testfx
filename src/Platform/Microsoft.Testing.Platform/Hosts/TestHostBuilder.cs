@@ -12,7 +12,6 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
@@ -23,6 +22,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
@@ -35,8 +35,6 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
 {
-    private const string DotnetTestCliProtocol = "dotnettestcli";
-
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
 
@@ -119,6 +117,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         if (loggingState.FileLoggerProvider is not null)
         {
             logger = loggingState.FileLoggerProvider.CreateLogger(GetType().ToString());
+            FileLoggerInformation fileLoggerInformation = new(loggingState.FileLoggerProvider.SyncFlush, new(loggingState.FileLoggerProvider.FileLogger.FileName), loggingState.LogLevel);
+            serviceProvider.TryAddService(fileLoggerInformation);
         }
 
         if (logger is not null)
@@ -188,44 +188,27 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             loggingState.FileLoggerProvider?.CreateLogger(nameof(CTRLPlusCCancellationTokenSource)));
         serviceProvider.AddService(testApplicationCancellationTokenSource, throwIfSameInstanceExit: true);
 
+        // Create command line proxy and add to the service provider.
+        CommandLineOptionsProxy commandLineOptionsProxy = new();
+        serviceProvider.TryAddService(commandLineOptionsProxy);
+
+        // Add the logger factory proxy to the service provider.
+        LoggerFactoryProxy loggerFactoryProxy = new();
+        serviceProvider.TryAddService(loggerFactoryProxy);
+
         // Add output display proxy, needed by command line manager.
         // We don't add to the service right now because we need special treatment between console/server mode.
-        IPlatformOutputDevice platformOutputDevice = await ((PlatformOutputDeviceManager)OutputDisplay).BuildAsync(serviceProvider, loggingState);
+        IPlatformOutputDevice platformOutputDevice = ((PlatformOutputDeviceManager)OutputDisplay).Build(serviceProvider);
 
-        // Add the platform output device to the service provider for both modes.
-        serviceProvider.TryAddService(platformOutputDevice);
+        // Add Terminal options provider
+        CommandLine.AddProvider(() => new TerminalTestReporterCommandLineOptionsProvider());
 
         // Build the command line service - we need special treatment because is possible that an extension query it during the creation.
         // Add Retry default argument commandlines
-        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(platformOutputDevice, loggingState.CommandLineParseResult);
+        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(loggingState.CommandLineParseResult);
 
-        // Create the test framework capabilities
-        ITestFrameworkCapabilities testFrameworkCapabilities = TestFramework.TestFrameworkCapabilitiesFactory(serviceProvider);
-        if (testFrameworkCapabilities is IAsyncInitializableExtension testFrameworkCapabilitiesAsyncInitializable)
-        {
-            await testFrameworkCapabilitiesAsyncInitializable.InitializeAsync();
-        }
-
-        // Register the test framework capabilities to be used by services
-        serviceProvider.AddService(testFrameworkCapabilities);
-
-        // If command line is not valid we return immediately.
-        ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(
-            loggingState.CommandLineParseResult,
-            commandLineHandler.SystemCommandLineOptionsProviders,
-            commandLineHandler.ExtensionsCommandLineOptionsProviders,
-            commandLineHandler);
-
-        if (!loggingState.CommandLineParseResult.HasTool && !commandLineValidationResult.IsValid)
-        {
-            await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice, testFrameworkCapabilities);
-            await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(commandLineValidationResult.ErrorMessage));
-            await commandLineHandler.PrintHelpAsync();
-            return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine);
-        }
-
-        // Register as ICommandLineOptions.
-        serviceProvider.TryAddService(commandLineHandler);
+        // Set the concrete command line options to the proxy.
+        commandLineOptionsProxy.SetCommandLineOptions(commandLineHandler);
 
         // Add FileLoggerProvider if needed
         if (loggingState.FileLoggerProvider is not null)
@@ -233,9 +216,13 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             Logging.AddProvider((_, _) => loggingState.FileLoggerProvider);
         }
 
-        // Register the server mode log forwarder if needed. We follow the console --diagnostic behavior.
+        // Get the command line options
         ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
-        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && loggingState.FileLoggerProvider is not null)
+
+        // Register the server mode log forwarder if needed. We follow the console --diagnostic behavior.
+        bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
+        bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
+        if (hasServerFlag && isJsonRpcProtocol)
         {
             ServerLoggerForwarderProvider serverLoggerProxy = new(loggingState.LogLevel, serviceProvider);
             serviceProvider.AddService(serverLoggerProxy);
@@ -244,11 +231,77 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Build the logger factory.
         ILoggerFactory loggerFactory = await ((LoggingManager)Logging).BuildAsync(serviceProvider, loggingState.LogLevel, systemMonitor);
-        serviceProvider.TryAddService(loggerFactory);
+
+        // Set the concrete logger factory
+        loggerFactoryProxy.SetLoggerFactory(loggerFactory);
+
+        // Initialize the output device if needed.
+        if (await platformOutputDevice.IsEnabledAsync())
+        {
+            await platformOutputDevice.TryInitializeAsync();
+        }
+        else
+        {
+            // If for some reason the custom output is not enabled we opt-in the default terminal output device.
+            platformOutputDevice = PlatformOutputDeviceManager.GetDefaultTerminalOutputDevice(serviceProvider);
+            await platformOutputDevice.TryInitializeAsync();
+        }
+
+        // Add the platform output device to the service provider for both modes.
+        serviceProvider.TryAddService(platformOutputDevice);
+
+        // Create the test framework capabilities
+        ITestFrameworkCapabilities testFrameworkCapabilities = TestFramework.TestFrameworkCapabilitiesFactory(serviceProvider);
+        if (testFrameworkCapabilities is IAsyncInitializableExtension testFrameworkCapabilitiesAsyncInitializable)
+        {
+            await testFrameworkCapabilitiesAsyncInitializable.InitializeAsync();
+        }
+
+        // If command line is not valid we return immediately.
+        ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(
+            loggingState.CommandLineParseResult,
+            commandLineHandler.SystemCommandLineOptionsProviders,
+            commandLineHandler.ExtensionsCommandLineOptionsProviders,
+            commandLineHandler);
+
+        // Register the test framework capabilities to be used by services
+        serviceProvider.AddService(testFrameworkCapabilities);
+
+        if (!loggingState.CommandLineParseResult.HasTool && !commandLineValidationResult.IsValid)
+        {
+            await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice, testFrameworkCapabilities);
+            await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(commandLineValidationResult.ErrorMessage));
+            await commandLineHandler.PrintHelpAsync(platformOutputDevice);
+            return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine, serviceProvider);
+        }
+
+        // Register as ICommandLineOptions.
+        serviceProvider.TryAddService(commandLineHandler);
+
+        // setting the timeout
+        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey) && commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
+        {
+            string arg = args[0];
+            int size = arg.Length;
+            if (!float.TryParse(arg[..(size - 1)], out float value))
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
+            TimeSpan timeout = char.ToLowerInvariant(arg[size - 1]) switch
+            {
+                'h' => TimeSpan.FromHours(value),
+                'm' => TimeSpan.FromMinutes(value),
+                's' => TimeSpan.FromSeconds(value),
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
+
+            testApplicationCancellationTokenSource.CancelAfter(timeout);
+        }
 
         // At this point we start to build extensions so we need to have all the information complete for the usage,
         // here we ensure to override the result directory if user passed the argument --results-directory in command line.
-        // After this check users can get the result directory using IConfiguration["testingPlatform:resultDirectory"] or the
+        // After this check users can get the result directory using IConfiguration["platformOptions:resultDirectory"] or the
         // extension method helper serviceProvider.GetConfiguration()
         await configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(commandLineOptions, loggingState.FileLoggerProvider);
 
@@ -296,28 +349,33 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return toolsTestHost;
         }
 
-        NamedPipeClient? dotnetTestPipeClient = await ConnectToDotnetTestPipeIfAvailableAsync(commandLineHandler, testApplicationCancellationTokenSource);
+        DotnetTestConnection dotnetTestConnection = new(commandLineHandler, processHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
+        bool isConnectedToDotnetTest = await dotnetTestConnection.TryConnectToDotnetTestPipeIfAvailableAsync();
+        if (isConnectedToDotnetTest)
+        {
+            serviceProvider.AddService(dotnetTestConnection);
+        }
 
         // If --help is invoked we return
         if (commandLineHandler.IsHelpInvoked())
         {
-            if (dotnetTestPipeClient is not null)
+            if (isConnectedToDotnetTest)
             {
-                await SendCommandLineOptionsToDotnetTestPipeAsync(dotnetTestPipeClient, commandLineHandler, testApplicationCancellationTokenSource.CancellationToken);
+                await dotnetTestConnection.SendCommandLineOptionsToDotnetTestPipeAsync();
             }
             else
             {
-                await commandLineHandler.PrintHelpAsync(toolsInformation);
+                await commandLineHandler.PrintHelpAsync(platformOutputDevice, toolsInformation);
             }
 
-            return new InformativeCommandLineTestHost(0, dotnetTestPipeClient);
+            return new InformativeCommandLineTestHost(0, serviceProvider);
         }
 
         // If --info is invoked we return
         if (commandLineHandler.IsInfoInvoked())
         {
-            await commandLineHandler.PrintInfoAsync(toolsInformation);
-            return new InformativeCommandLineTestHost(0, dotnetTestPipeClient);
+            await commandLineHandler.PrintInfoAsync(platformOutputDevice, toolsInformation);
+            return new InformativeCommandLineTestHost(0, serviceProvider);
         }
 
         // ======= TEST HOST ORCHESTRATOR ======== //
@@ -345,7 +403,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             if (testHostControllers.RequireProcessRestart)
             {
                 testHostControllerInfo.IsCurrentProcessTestHostController = true;
-                TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, systemEnvironment, loggerFactory, systemClock, dotnetTestPipeClient);
+                TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, systemEnvironment, loggerFactory, systemClock);
 
                 await LogTestHostCreatedAsync(
                     serviceProvider,
@@ -383,7 +441,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AddServices(testApplicationLifecycleCallback);
 
         // ServerMode and Console mode uses different host
-        if (commandLineHandler.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && !HasDotnetTestServerOption(commandLineHandler))
+        if (hasServerFlag && isJsonRpcProtocol)
         {
             // Build the server mode with the user preferences
             IMessageHandlerFactory messageHandlerFactory = ((ServerModeManager)ServerMode).Build(serviceProvider);
@@ -437,7 +495,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 BuildTestFrameworkAsync,
                 (TestFrameworkManager)TestFramework,
                 (TestHostManager)TestHost,
-                dotnetTestPipeClient,
                 _testApplicationModuleInfo);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
@@ -459,47 +516,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return actualTestHost;
         }
     }
-
-    private async Task SendCommandLineOptionsToDotnetTestPipeAsync(NamedPipeClient namedPipeClient, CommandLineHandler commandLineHandler, CancellationToken cancellationToken)
-    {
-        List<CommandLineOptionMessage> commandLineHelpOptions = new();
-        foreach (ICommandLineOptionsProvider commandLineOptionProvider in commandLineHandler.CommandLineOptionsProviders)
-        {
-            foreach (CommandLineOption commandLineOption in commandLineOptionProvider.GetCommandLineOptions())
-            {
-                commandLineHelpOptions.Add(new CommandLineOptionMessage(
-                    commandLineOption.Name,
-                    commandLineOption.Description,
-                    commandLineOption.IsHidden,
-                    commandLineOption.IsBuiltIn));
-            }
-        }
-
-        await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), cancellationToken);
-    }
-
-    private static async Task<NamedPipeClient?> ConnectToDotnetTestPipeIfAvailableAsync(CommandLineHandler commandLineHandler, CTRLPlusCCancellationTokenSource cancellationTokenSource)
-    {
-        NamedPipeClient? namedPipeClient = null;
-
-        // If we are in server mode and the pipe name is provided
-        // then, we need to connect to the pipe server.
-        if (HasDotnetTestServerOption(commandLineHandler) &&
-            commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
-        {
-            namedPipeClient = new(arguments[0]);
-            namedPipeClient.RegisterAllSerializers();
-
-            await namedPipeClient.ConnectAsync(cancellationTokenSource.CancellationToken);
-        }
-
-        return namedPipeClient;
-    }
-
-    private static bool HasDotnetTestServerOption(CommandLineHandler commandLineHandler) =>
-        commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
-        serverArgs.Length == 1 &&
-        serverArgs[0].Equals(DotnetTestCliProtocol, StringComparison.Ordinal);
 
     private static async Task<NamedPipeClient?> ConnectToTestHostProcessMonitorIfAvailableAsync(
         IProcessHandler processHandler,
@@ -609,9 +625,11 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Check if we're connected to the dotnet test pipe
         DotnetTestDataConsumer? dotnetTestDataConsumer = null;
-        if (testFrameworkBuilderData.DotnetTestPipeClient is not null)
+        DotnetTestConnection? dotnetTestConnection = serviceProvider.GetService<DotnetTestConnection>();
+
+        if (dotnetTestConnection?.IsConnected == true)
         {
-            dotnetTestDataConsumer = new DotnetTestDataConsumer(testFrameworkBuilderData.DotnetTestPipeClient, _testApplicationModuleInfo);
+            dotnetTestDataConsumer = new DotnetTestDataConsumer(dotnetTestConnection, serviceProvider.GetEnvironment());
         }
 
         // Build and register "common non special" services - we need special treatment because extensions can start to log during the
@@ -744,9 +762,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
         TestFrameworkManager testFrameworkManager,
         TestHostManager testHostManager,
-        NamedPipeClient? dotnetTestPipeClient,
         ITestApplicationModuleInfo testApplicationModuleInfo)
-        => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager, dotnetTestPipeClient);
+        => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager);
 
     protected virtual bool SkipAddingService(object service) => false;
 

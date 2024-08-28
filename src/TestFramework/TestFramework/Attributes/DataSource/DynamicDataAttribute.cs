@@ -70,10 +70,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     /// Specifies whether the data is stored as property or in method.
     /// </param>
     public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType = DynamicDataSourceType.Property)
-        : this(dynamicDataSourceName, dynamicDataSourceType)
-    {
-        _dynamicDataDeclaringType = dynamicDataDeclaringType;
-    }
+        : this(dynamicDataSourceName, dynamicDataSourceType) => _dynamicDataDeclaringType = dynamicDataDeclaringType;
 
     internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; set; }
 

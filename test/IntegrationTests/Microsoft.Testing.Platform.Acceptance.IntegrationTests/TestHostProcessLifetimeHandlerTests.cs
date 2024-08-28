@@ -13,10 +13,7 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public TestHostProcessLifetimeHandlerTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task All_Interface_Methods_ShouldBe_Invoked(string currentTfm)

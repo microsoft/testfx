@@ -93,8 +93,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
-        <source>Option '--{0}' is declared by multiple extensions: '{0}'</source>
-        <target state="translated">オプション '--{0}' は複数の拡張機能によって宣言されています: '{0}'</target>
+        <source>Option '--{0}' is declared by multiple extensions: '{1}'</source>
+        <target state="translated">オプション '--{0}' は複数の拡張機能によって宣言されています: '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
@@ -110,6 +110,11 @@
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">プロバイダー '{1}' のオプション '--{0}' (UID:{2}) は予約済みプレフィックス '--internal' を 使用しています</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionsNotReady">
+        <source>The ICommandLineOptions has not been built yet.</source>
+        <target state="translated">ICommandLineOptions はまだ構築されていません。</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
@@ -321,10 +326,25 @@
         <target state="translated">テスト プラットフォーム プロトコル仕様に基づく JsonRpc サーバーからクライアント ハンドシェイクへの実装。</target>
         <note />
       </trans-unit>
+      <trans-unit id="LoggerFactoryNotReady">
+        <source>The ILoggerFactory has not been built yet.</source>
+        <target state="translated">ILoggerFactory はまだ構築されていません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MessageBusNotReady">
+        <source>The message bus has not been built yet or is no more usable at this stage.</source>
+        <target state="translated">メッセージ バスはまだ構築されていないか、この段階ではこれ以上使用できません。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
         <target state="translated">予想されるテストの最小ポリシー違反、テストの実行数 {0} 件、予想される最小数 {1} 件</target>
         <note>{0}, {1} number of tests</note>
+      </trans-unit>
+      <trans-unit id="MissingClientPortFoJsonRpc">
+        <source>Expected --client-port when jsonRpc protocol is used.</source>
+        <target state="new">Expected --client-port when jsonRpc protocol is used.</target>
+        <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
         <source>No serializer registered with ID '{0}'</source>
@@ -372,13 +392,19 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
-        <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
-        <target state="translated">組み込みのファイル ロガーでログを同期的に書き込むことを強制します。ログを失わないシナリオ (クラッシュした場合など) に役立ちます。これにより、テストの実行速度が低下していることに注意してください。</target>
+        <source>Force the built-in file logger to write the log synchronously.
+Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+Note that this is slowing down the test execution.</source>
+        <target state="translated">組み込みのファイル ロガーでログを同期的に書き込むことを強制します。
+ログを失わないシナリオ (クラッシュした場合など) に役立ちます。
+これにより、テストの実行速度が低下していることに注意してください。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <source>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">診断ログを有効にします。既定のログ レベルは 'Trace' です。ファイルは、出力ディレクトリに log_[MMddHHssfff].diag という名前で書き込まれます。</target>
+        <source>Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+        <target state="translated">診断ログを有効にします。既定のログ レベルは 'Trace' です。
+ファイルは、出力ディレクトリに log_[MMddHHssfff].diag という名前で書き込まれます。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -392,8 +418,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
-        <source>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">診断ログの出力ディレクトリ。指定しない場合ファイルは既定の 'TestResults' ディレクトリ内に生成されます。</target>
+        <source>Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</source>
+        <target state="translated">診断ログの出力ディレクトリ。
+指定しない場合、ファイルは既定の 'TestResults' ディレクトリ内に生成されます。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
@@ -402,8 +430,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
-        <source>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</source>
-        <target state="translated">--diagnostic の詳細レベルを定義します。使用可能な値は、'Trace'、'Debug'、'Information'、'Warning'、'Error'、'Critical' です。</target>
+        <source>Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
+        <target state="translated">--diagnostic の詳細レベルを定義します。
+使用可能な値は、'Trace'、'Debug'、'Information'、'Warning'、'Error'、'Critical' です。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
@@ -440,8 +470,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="translated">特定の終了コードの成功しなかった終了値を報告しない (例: '--ignore-exit-code 8;9' は終了コード 8 と 9 を無視し、この場合は 0 を返します)</target>
+        <source>Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="translated">特定の終了コードの成功しなかった終了値を報告しない
+(例: '--ignore-exit-code 8;9' は終了コード 8 および 9 を無視し、これらの場合は 0 を返します)</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -455,8 +487,10 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <source>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">'--minimum-expected-tests' には、0 以外の正の整数値が 1 つ必要です (例: '--minimum-expected-tests 10')</target>
+        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</source>
+        <target state="translated">'--minimum-expected-tests' には、0 以外の正の整数値が 1 つ必要です
+(例: '--minimum-expected-tests 10')</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
@@ -485,8 +519,12 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
-        <source>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</source>
-        <target state="translated">テスト結果を配置するディレクトリ。指定したディレクトリが存在しない場合は、作成されます。既定値は、テスト アプリケーションを含むディレクトリ内の TestResults です。</target>
+        <source>The directory where the test results are going to be placed.
+If the specified directory doesn't exist, it's created.
+The default is TestResults in the directory that contains the test application.</source>
+        <target state="translated">テスト結果を配置するディレクトリ。
+指定したディレクトリが存在しない場合は、作成されます。
+既定値は、テスト アプリケーションを含むディレクトリ内の TestResults です。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -502,6 +540,18 @@
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
         <source>Eventual parent test host controller PID.</source>
         <target state="translated">最終的な親テスト ホスト コントローラー PID。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
+        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
+        <target state="translated">'timeout' オプションには、1 つの引数を文字列として &lt;value&gt;[h|m|s] の形式で指定する必要があります。この場合、'value' は float です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
+        <source>A global test execution timeout.
+Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
+        <target state="translated">グローバル テスト実行のタイムアウト。
+1 つの引数を文字列として &lt;value&gt;[h|m|s] の形式で使用します。この場合、'value' は float です。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
@@ -612,6 +662,38 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">
         <source>Telemetry provider is already set</source>
         <target state="translated">テレメトリ プロバイダーは既に設定されています</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalNoAnsiOptionDescription">
+        <source>Disable outputting ANSI escape characters to screen.</source>
+        <target state="translated">画面への ANSI エスケープ文字の出力を無効にします。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalNoProgressOptionDescription">
+        <source>Disable reporting progress to screen.</source>
+        <target state="translated">画面への進行状況の報告を無効にします。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalOutputOptionDescription">
+        <source>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
+        <target state="translated">テストを報告する際の出力の詳細。
+有効な値は 'Normal'、'Detailed' です。既定値は 'Normal' です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalOutputOptionInvalidArgument">
+        <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
+        <target state="translated">--output には、値が 'Normal' または 'Detailed' の単一のパラメーターが必要です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDescription">
+        <source>Writes test results to terminal.</source>
+        <target state="translated">テスト結果をターミナルに書き込みます。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDisplayName">
+        <source>Terminal test reporter</source>
+        <target state="translated">ターミナル テストの報告者</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">

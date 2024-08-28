@@ -29,10 +29,7 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
     }
 
     public RunContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, TestNodeUid[] testNodeUids)
-        : this(commandLineOptions, runSettings)
-    {
-        FilterExpressionWrapper = new(CreateFilter(testNodeUids));
-    }
+        : this(commandLineOptions, runSettings) => FilterExpressionWrapper = new(CreateFilter(testNodeUids));
 
     // NOTE: Always false as it's TPv2 oriented and so not applicable to TA.
 

@@ -12,29 +12,24 @@ public sealed class HangDumpTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public HangDumpTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task HangDump_DefaultSetting_CreateDump(string tfm)
-        => await RetryHelper.RetryAsync(
-            async () =>
+    {
+        string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "HangDump", tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--hangdump --hangdump-timeout 8s --results-directory {resultDirectory}",
+            new Dictionary<string, string>
             {
-                string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
-                var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "HangDump", tfm);
-                TestHostResult testHostResult = await testHost.ExecuteAsync(
-                    $"--hangdump --hangdump-timeout 8s --results-directory {resultDirectory}",
-                    new Dictionary<string, string>
-                    {
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
-                    });
-                testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
-                string? dumpFile = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories).SingleOrDefault();
-                Assert.IsTrue(dumpFile is not null, $"Dump file not found '{tfm}'\n{testHostResult}'");
-            }, 3, TimeSpan.FromSeconds(3), CrashDumpTests.RetryPolicy);
+            });
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        string? dumpFile = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories).SingleOrDefault();
+        Assert.IsTrue(dumpFile is not null, $"Dump file not found '{tfm}'\n{testHostResult}'");
+    }
 
     public async Task HangDump_CustomFileName_CreateDump()
     {
@@ -57,22 +52,20 @@ public sealed class HangDumpTests : AcceptanceTestBase
     [Arguments("Triage")]
     [Arguments("Full")]
     public async Task HangDump_Formats_CreateDump(string format)
-        => await RetryHelper.RetryAsync(
-            async () =>
+    {
+        string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), format);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--hangdump --hangdump-timeout 8s --hangdump-type {format} --results-directory {resultDirectory}",
+            new Dictionary<string, string>
             {
-                string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), format);
-                var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent.Arguments);
-                TestHostResult testHostResult = await testHost.ExecuteAsync(
-                    $"--hangdump --hangdump-timeout 8s --hangdump-type {format} --results-directory {resultDirectory}",
-                    new Dictionary<string, string>
-                    {
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
-                    });
-                testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
-                string? dumpFile = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories).SingleOrDefault();
-                Assert.IsTrue(dumpFile is not null, $"Dump file not found '{format}'\n{testHostResult}'");
-            }, 3, TimeSpan.FromSeconds(3), CrashDumpTests.RetryPolicy);
+            });
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        string? dumpFile = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories).SingleOrDefault();
+        Assert.IsTrue(dumpFile is not null, $"Dump file not found '{format}'\n{testHostResult}'");
+    }
 
     public async Task HangDump_InvalidFormat_ShouldFail()
     {
@@ -86,7 +79,10 @@ public sealed class HangDumpTests : AcceptanceTestBase
                 { "SLEEPTIMEMS2", "600000" },
             });
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
-        testHostResult.AssertOutputContains("Option '--hangdump-type' has invalid arguments: 'invalid' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'");
+        testHostResult.AssertOutputContains("""
+            Option '--hangdump-type' has invalid arguments: 'invalid' is not a valid dump type.
+            Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'
+            """);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]

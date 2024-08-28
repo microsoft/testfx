@@ -35,17 +35,12 @@ public sealed class TestApplication : ITestApplication
     private static int s_numberOfBuilders;
     private static UnhandledExceptionHandler? s_unhandledExceptionHandler;
 
-    static TestApplication()
-    {
+    static TestApplication() =>
         // Capture system console soon as possible to avoid any other code from changing it.
         // This is important for the console display system to work properly.
         _ = new SystemConsole();
-    }
 
-    internal TestApplication(ITestHost testHost)
-    {
-        _testHost = testHost;
-    }
+    internal TestApplication(ITestHost testHost) => _testHost = testHost;
 
     internal IServiceProvider ServiceProvider => ((CommonTestHost)_testHost).ServiceProvider;
 

@@ -140,7 +140,7 @@ internal sealed partial class AppInsightsProvider :
         }
 
         DateTimeOffset? lastLoggedError = null;
-        _testApplicationCancellationTokenSource.CancellationToken.Register(() => _flushTimeoutOrStop.Cancel());
+        _testApplicationCancellationTokenSource.CancellationToken.Register(_flushTimeoutOrStop.Cancel);
         try
         {
 #if NETCOREAPP

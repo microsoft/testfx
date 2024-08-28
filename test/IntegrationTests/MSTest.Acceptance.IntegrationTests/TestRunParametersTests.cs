@@ -12,10 +12,7 @@ public sealed class TestRunParametersTests : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     public TestRunParametersTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext)
-    {
-        _testAssetFixture = testAssetFixture;
-    }
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task TestRunParameters_WhenProvidingMultipleArgumentsToTheOption(string tfm)

@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Text;
 
+using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -14,6 +15,8 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
+
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TestingPlatformExplorer.TestingFramework;
 
@@ -109,6 +112,15 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                 Properties = new PropertyBag(DiscoveredTestNodeStateProperty.CachedInstance),
                             };
 
+                            TestMethodIdentifierProperty testMethodIdentifierProperty = new(test.DeclaringType!.Assembly!.FullName!,
+                            test.DeclaringType!.Namespace!,
+                            test.DeclaringType.Name!,
+                            test.Name,
+                            test.GetParameters().Select(x => x.ParameterType.FullName).ToArray()!,
+                            test.ReturnType.FullName!);
+
+                            testNode.Properties.Add(testMethodIdentifierProperty);
+
                             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(discoverTestExecutionRequest.Session.SessionUid, testNode));
                         }
                     }
@@ -132,6 +144,14 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                         List<Task> results = new();
                         foreach (MethodInfo test in tests)
                         {
+                            if (runTestExecutionRequest.Filter is TestNodeUidListFilter filter)
+                            {
+                                if (!filter.TestNodeUids.Any(testId => testId == $"{test.DeclaringType!.FullName}.{test.Name}"))
+                                {
+                                    continue;
+                                }
+                            }
+
                             if (test.GetCustomAttribute<SkipAttribute>() != null)
                             {
                                 var skippedTestNode = new TestNode()
@@ -140,6 +160,11 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                     DisplayName = test.Name,
                                     Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
                                 };
+
+                                if (_capabilities.TrxCapability.IsTrxEnabled)
+                                {
+                                    FillTrxProperties(skippedTestNode, test);
+                                }
 
                                 await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, skippedTestNode));
 
@@ -168,6 +193,11 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                             Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
                                         };
 
+                                        if (_capabilities.TrxCapability.IsTrxEnabled)
+                                        {
+                                            FillTrxProperties(successfulTestNode, test);
+                                        }
+
                                         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, successfulTestNode));
 
                                         lock (reportBody)
@@ -184,6 +214,11 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                             Properties = new PropertyBag(new FailedTestNodeStateProperty(assertionException)),
                                         };
 
+                                        if (_capabilities.TrxCapability.IsTrxEnabled)
+                                        {
+                                            FillTrxProperties(assertionFailedTestNode, test, assertionException);
+                                        }
+
                                         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, assertionFailedTestNode));
 
                                         reportBody.AppendLine(CultureInfo.InvariantCulture, $"Test {assertionFailedTestNode.Uid} failed");
@@ -196,6 +231,11 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                             DisplayName = test.Name,
                                             Properties = new PropertyBag(new ErrorTestNodeStateProperty(ex.InnerException!)),
                                         };
+
+                                        if (_capabilities.TrxCapability.IsTrxEnabled)
+                                        {
+                                            FillTrxProperties(failedTestNode, test, ex);
+                                        }
 
                                         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, failedTestNode));
 
@@ -234,6 +274,15 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
         }
     }
 
+    private void FillTrxProperties(TestNode testNode, MethodInfo test, Exception? ex = null)
+    {
+        testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(test.DeclaringType!.FullName!));
+
+        if (ex is not null)
+        {
+            testNode.Properties.Add(new TrxExceptionProperty(ex.Message, ex.StackTrace));
+        }
+    }
     private MethodInfo[] GetTestsMethodFromAssemblies()
         => _assemblies
             .SelectMany(x => x.GetTypes())
@@ -243,7 +292,5 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
     public void Dispose()
-    {
-        _dop.Dispose();
-    }
+        => _dop.Dispose();
 }

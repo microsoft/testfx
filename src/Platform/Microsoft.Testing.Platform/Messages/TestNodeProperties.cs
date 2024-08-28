@@ -93,10 +93,7 @@ public sealed record FailedTestNodeStateProperty : TestNodeStateProperty
     /// <param name="exception">Failure exception.</param>
     /// <param name="explanation">Failure explanation.</param>
     public FailedTestNodeStateProperty(Exception exception, string? explanation = null)
-        : base(explanation ?? exception.Message)
-    {
-        Exception = exception;
-    }
+        : base(explanation ?? exception.Message) => Exception = exception;
 
     /// <summary>
     /// Gets the failure exception.
@@ -132,10 +129,7 @@ public sealed record ErrorTestNodeStateProperty : TestNodeStateProperty
     /// <param name="exception">Error exception.</param>
     /// <param name="explanation">Error explanation.</param>
     public ErrorTestNodeStateProperty(Exception exception, string? explanation = null)
-        : base(explanation ?? exception.Message)
-    {
-        Exception = exception;
-    }
+        : base(explanation ?? exception.Message) => Exception = exception;
 
     /// <summary>
     /// Gets the error exception.
@@ -171,10 +165,7 @@ public sealed record TimeoutTestNodeStateProperty : TestNodeStateProperty
     /// <param name="exception">Timeout exception.</param>
     /// <param name="explanation">Timeout explanation.</param>
     public TimeoutTestNodeStateProperty(Exception exception, string? explanation = null)
-        : base(explanation ?? exception.Message)
-    {
-        Exception = exception;
-    }
+        : base(explanation ?? exception.Message) => Exception = exception;
 
     /// <summary>
     /// Gets get the timeout exception.
@@ -215,10 +206,7 @@ public sealed record CancelledTestNodeStateProperty : TestNodeStateProperty
     /// <param name="exception">Cancellation exception.</param>
     /// <param name="explanation">Cancellation explanation.</param>
     public CancelledTestNodeStateProperty(Exception exception, string? explanation = null)
-        : base(explanation ?? exception.Message)
-    {
-        Exception = exception;
-    }
+        : base(explanation ?? exception.Message) => Exception = exception;
 
     /// <summary>
     /// Gets the cancellation exception.
