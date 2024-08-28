@@ -67,6 +67,7 @@
     <PackageVersion Include="NuGet.Packaging" Version="6.10.0" />
     <PackageVersion Include="Polly" Version="8.4.1" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
+    <PackageVersion Include="ReportGenerator" Version="4.3.6" />
     <PackageVersion Include="StreamJsonRpc" Version="2.18.48" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />

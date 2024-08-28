@@ -108,8 +108,13 @@ stages:
             name: Test
             displayName: Test
 
-          - script: dotnet msbuild -binaryLogger:artifacts\log\$(_configuration)\uploadCodeCov.binlog;ProjectImports=Embed -restore eng/CodeCoverage.proj
+          # Upload code coverage data
+          - script: $(Build.SourcesDirectory)/.dotnet/dotnet msbuild -restore
+              eng/CodeCoverage.proj
+              /p:Configuration=$(_BuildConfig)
+              /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\CodeCoverage.binlog
             displayName: Upload coverage to codecov.io
+            condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
 
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx
