@@ -47,9 +47,9 @@ internal class UnitTestRunner : MarshalByRefObject
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
-
+#if NETFRAMEWORK
         PlatformServiceProvider.Instance.TestRunCancellationToken ??= new TestRunCancellationToken();
-
+#endif
         _reflectHelper = reflectHelper;
         _typeCache = new TypeCache(reflectHelper);
 
