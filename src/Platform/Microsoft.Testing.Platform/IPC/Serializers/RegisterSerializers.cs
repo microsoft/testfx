@@ -18,6 +18,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
  * FileArtifactInfoSerializer: 7
  * TestSessionEventSerializer: 8
  * HandshakeInfoSerializer: 9
+ * DiscoveredTestMessageSerializer: 10
 */
 
 internal static class RegisterSerializers
@@ -33,5 +34,6 @@ internal static class RegisterSerializers
         namedPipeBase.RegisterSerializer(new FileArtifactInfoSerializer(), typeof(FileArtifactInfo));
         namedPipeBase.RegisterSerializer(new TestSessionEventSerializer(), typeof(TestSessionEvent));
         namedPipeBase.RegisterSerializer(new HandshakeInfoSerializer(), typeof(HandshakeInfo));
+        namedPipeBase.RegisterSerializer(new DiscoveredTestMessageSerializer(), typeof(DiscoveredTestMessage));
     }
 }

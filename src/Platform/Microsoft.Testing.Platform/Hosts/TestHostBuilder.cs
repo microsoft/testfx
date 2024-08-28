@@ -738,7 +738,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetAsyncMonitorFactory(),
                 serviceProvider.GetEnvironment(),
-                serviceProvider.GetTestApplicationProcessExitCode());
+                serviceProvider.GetTestApplicationProcessExitCode(),
+                dotnetTestConnection,
+                dotnetTestDataConsumer);
             await concreteMessageBusService.InitAsync();
             testFrameworkBuilderData.MessageBusProxy.SetBuiltMessageBus(concreteMessageBusService);
         }

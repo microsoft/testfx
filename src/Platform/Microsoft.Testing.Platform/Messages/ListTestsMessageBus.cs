@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
@@ -19,13 +20,17 @@ internal sealed class ListTestsMessageBus(
     IOutputDevice outputDisplay,
     IAsyncMonitorFactory asyncMonitorFactory,
     IEnvironment environment,
-    ITestApplicationProcessExitCode testApplicationProcessExitCode) : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
+    ITestApplicationProcessExitCode testApplicationProcessExitCode,
+    DotnetTestConnection? dotnetTestConnection,
+    DotnetTestDataConsumer? dotnetTestDataConsumer) : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
 {
     private readonly ITestFramework _testFramework = testFramework;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     private readonly IOutputDevice _outputDisplay = outputDisplay;
     private readonly IEnvironment _environment = environment;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode = testApplicationProcessExitCode;
+    private readonly DotnetTestConnection? _dotnetTestConnection = dotnetTestConnection;
+    private readonly DotnetTestDataConsumer? _dotnetTestDataConsumer = dotnetTestDataConsumer;
     private readonly ILogger<ListTestsMessageBus> _logger = loggerFactory.CreateLogger<ListTestsMessageBus>();
     private readonly IAsyncMonitor _asyncMonitor = asyncMonitorFactory.Create();
     private bool _printTitle = true;
@@ -68,6 +73,11 @@ internal sealed class ListTestsMessageBus(
             }
 
             return;
+        }
+
+        if (_dotnetTestConnection?.IsConnected == true && _dotnetTestDataConsumer is not null)
+        {
+            await _dotnetTestDataConsumer.ConsumeAsync(dataProducer, data, _testApplicationCancellationTokenSource.CancellationToken);
         }
 
         // Send the information to the ITestApplicationProcessExitCode to correctly handle the ZeroTest case.
