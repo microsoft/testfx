@@ -55,6 +55,7 @@
     <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup Label="Test dependencies">
+    <PackageVersion Include="Codecov" Version="1.12.3" />
     <PackageVersion Include="FluentAssertions" Version="6.12.0" />
     <PackageVersion Include="FSharp.Core" Version="8.0.200" />
     <!-- Pinned to 4.18.4 for security -->
@@ -66,9 +67,11 @@
     <PackageVersion Include="NuGet.Packaging" Version="6.10.0" />
     <PackageVersion Include="Polly" Version="8.4.1" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
+    <PackageVersion Include="ReportGenerator" Version="4.3.6" />
     <PackageVersion Include="StreamJsonRpc" Version="2.18.48" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.Management" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
   </ItemGroup>
 </Project>
