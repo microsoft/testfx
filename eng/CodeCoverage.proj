@@ -3,6 +3,7 @@
   <PropertyGroup>
     <!-- We need to specify a framework in order for the Restore target to work -->
     <TargetFramework>$(NetCurrent)</TargetFramework>
+    <ArtifactsCoverageDir>$(ArtifactsDir)coverage\</ArtifactsCoverageDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,7 +18,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <_CoverageReports Include="$(ArtifactsDir)TestResults\$(Configuration)\*.coverage" />
+      <_CoverageReports Include="$(ArtifactsTestResultsDir)\*.coverage" />
       <_UnitCoverageReports Include="@(_CoverageReports)" Condition="$([System.String]::Copy('%(Identity)').Contains('.UnitTests_'))" />
       <_IntegrationCoverageReports Include="@(_CoverageReports)" Condition="$([System.String]::Copy('%(Identity)').Contains('.IntegrationTests_'))" />
     </ItemGroup>
@@ -26,26 +27,26 @@
   <Target Name="MergeCoverage" DependsOnTargets="GatherCoverageInputs">
     <!-- Merge multiple coverlet reports into a single Cobertura report before uploading to codecov.io, in order to
       reduce upload size and load on the codecov.io processing servers. -->
-    <Message Importance="high" Text="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_CoverageReports)&quot; -targetdir:$(BaseOutputPath)coverage/full -reporttypes:Cobertura -filefilters:-*.g.cs" />
-    <Exec Condition="'@(_CoverageReports)' != ''" Command="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_CoverageReports)&quot; -targetdir:$(BaseOutputPath)coverage/full -reporttypes:Cobertura -filefilters:-*.g.cs" />
+    <Message Importance="high" Text="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_CoverageReports)&quot; -targetdir:$(ArtifactsCoverageDir)full -reporttypes:Cobertura -filefilters:-*.g.cs" />
+    <Exec Condition="'@(_CoverageReports)' != ''" Command="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_CoverageReports)&quot; -targetdir:$(ArtifactsCoverageDir)/full -reporttypes:Cobertura -filefilters:-*.g.cs" />
 
     <!-- Merge multiple coverlet reports into a single Cobertura report before uploading to codecov.io, in order to
       reduce upload size and load on the codecov.io processing servers. -->
-    <Message Importance="high" Text="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_UnitCoverageReports)&quot; -targetdir:$(BaseOutputPath)coverage/unit -reporttypes:Cobertura -filefilters:-*.g.cs" />
-    <Exec Condition="'@(_UnitCoverageReports)' != ''" Command="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_UnitCoverageReports)&quot; -targetdir:$(BaseOutputPath)coverage/unit -reporttypes:Cobertura -filefilters:-*.g.cs" />
+    <Message Importance="high" Text="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_UnitCoverageReports)&quot; -targetdir:$(ArtifactsCoverageDir)unit -reporttypes:Cobertura -filefilters:-*.g.cs" />
+    <Exec Condition="'@(_UnitCoverageReports)' != ''" Command="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_UnitCoverageReports)&quot; -targetdir:$(ArtifactsCoverageDir)/unit -reporttypes:Cobertura -filefilters:-*.g.cs" />
 
     <!-- Merge multiple coverlet reports into a single Cobertura report before uploading to codecov.io, in order to
       reduce upload size and load on the codecov.io processing servers. -->
-    <Message Importance="high" Text="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_IntegrationCoverageReports)&quot; -targetdir:$(BaseOutputPath)coverage/integration -reporttypes:Cobertura -filefilters:-*.g.cs" />
-    <Exec Condition="'@(_IntegrationCoverageReports)' != ''" Command="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_IntegrationCoverageReports)&quot; -targetdir:$(BaseOutputPath)coverage/integration -reporttypes:Cobertura -filefilters:-*.g.cs" />
+    <Message Importance="high" Text="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_IntegrationCoverageReports)&quot; -targetdir:$(ArtifactsCoverageDir)integration -reporttypes:Cobertura -filefilters:-*.g.cs" />
+    <Exec Condition="'@(_IntegrationCoverageReports)' != ''" Command="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_IntegrationCoverageReports)&quot; -targetdir:$(ArtifactsCoverageDir)/integration -reporttypes:Cobertura -filefilters:-*.g.cs" />
   </Target>
 
   <Target Name="Codecov" DependsOnTargets="MergeCoverage">
 
     <ItemGroup>
-      <_CodecovFullArgs Include="-f;$(BaseOutputPath)coverage\full\Cobertura.xml" />
-      <_CodecovUnitArgs Include="-f;$(BaseOutputPath)coverage\unit\Cobertura.xml" />
-      <_CodecovIntegrationArgs Include="-f;$(BaseOutputPath)coverage\integration\Cobertura.xml" />
+      <_CodecovFullArgs Include="-f;$(ArtifactsCoverageDir)full\Cobertura.xml" />
+      <_CodecovUnitArgs Include="-f;$(ArtifactsCoverageDir)unit\Cobertura.xml" />
+      <_CodecovIntegrationArgs Include="-f;$(ArtifactsCoverageDir)integration\Cobertura.xml" />
 
       <!-- Report an error if the upload fails -->
       <_CodecovArgs Include="--required" />
