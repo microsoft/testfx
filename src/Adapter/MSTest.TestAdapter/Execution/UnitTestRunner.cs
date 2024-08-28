@@ -48,6 +48,8 @@ internal class UnitTestRunner : MarshalByRefObject
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
 
+        PlatformServiceProvider.Instance.TestRunCancellationToken ??= new TestRunCancellationToken();
+
         _reflectHelper = reflectHelper;
         _typeCache = new TypeCache(reflectHelper);
 

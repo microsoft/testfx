@@ -295,7 +295,7 @@ public class TestExecutionManager
             typeof(UnitTestRunner),
             [MSTestSettings.CurrentSettings, unitTestElements, (int)sourceSettings.ClassCleanupLifecycle])!;
 
-        PlatformServiceProvider.Instance.TestRunCancellationToken?.Register(testRunner.Cancel);
+        _cancellationToken?.Register(testRunner.Cancel);
 
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
         {
