@@ -161,4 +161,23 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    public async Task WhenClassAndBaseClassHaveStaticCtor_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                static BaseClass() { }
+            }
+
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                static DerivedClass() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

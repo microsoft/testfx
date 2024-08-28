@@ -59,10 +59,10 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        Dictionary<string, List<ISymbol>> symbolGroups = GetBaseMembers(namedTypeSymbol);
+        Dictionary<string, List<ISymbol>> membersByName = GetBaseMembers(namedTypeSymbol);
         foreach (ISymbol member in namedTypeSymbol.GetMembers())
         {
-            foreach (ISymbol baseMember in symbolGroups.GetValueOrDefault(member.Name, new List<ISymbol>()))
+            foreach (ISymbol baseMember in membersByName.GetValueOrDefault(member.Name, new List<ISymbol>()))
             {
                 // Check if the member is shadowing a base class member
                 if (IsMemberShadowing(member, baseMember))
@@ -75,22 +75,22 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
 
     private static Dictionary<string, List<ISymbol>> GetBaseMembers(INamedTypeSymbol namedTypeSymbol)
     {
-        Dictionary<string, List<ISymbol>> symbolGroups = new();
+        Dictionary<string, List<ISymbol>> membersByName = new();
         INamedTypeSymbol? currentType = namedTypeSymbol.BaseType;
         while (currentType is not null)
         {
             foreach (ISymbol member in currentType.GetMembers())
             {
-                if ((member is IMethodSymbol methodSymbol && (methodSymbol.MethodKind == MethodKind.PropertyGet || methodSymbol.MethodKind == MethodKind.PropertySet))
-                    || member.IsOverride || member.Name == ".ctor")
+                if ((member is IMethodSymbol methodSymbol && methodSymbol.MethodKind != MethodKind.Ordinary)
+                    || member.IsOverride)
                 {
                     continue;
                 }
 
-                if (!symbolGroups.TryGetValue(member.Name, out List<ISymbol>? members))
+                if (!membersByName.TryGetValue(member.Name, out List<ISymbol>? members))
                 {
                     members = new List<ISymbol>();
-                    symbolGroups[member.Name] = members;
+                    membersByName[member.Name] = members;
                 }
 
                 // Add the member to the list
@@ -100,7 +100,7 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
             currentType = currentType.BaseType;
         }
 
-        return symbolGroups;
+        return membersByName;
     }
 
     private static bool IsMemberShadowing(ISymbol member, ISymbol baseMember)
