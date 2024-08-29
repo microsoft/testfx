@@ -8,7 +8,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
 #pragma warning disable SA1313 // Parameter names should begin with lower-case letter
 internal sealed class VoidResponseSerializer : INamedPipeSerializer
 {
-    public int Id => SerializerIds.VoidResponseSerializerId;
+    public int Id => VoidResponseFieldsId.MessagesSerializerId;
 
     public object Deserialize(Stream _)
         => new VoidResponse();

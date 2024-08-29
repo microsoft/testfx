@@ -23,7 +23,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 internal sealed class TestSessionEventSerializer : BaseSerializer, INamedPipeSerializer
 {
-    public int Id => SerializerIds.TestSessionEventSerializerId;
+    public int Id => TestSessionEventFieldsId.MessagesSerializerId;
 
     public object Deserialize(Stream stream)
     {

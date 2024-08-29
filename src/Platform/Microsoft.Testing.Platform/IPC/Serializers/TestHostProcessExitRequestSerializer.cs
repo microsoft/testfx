@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 internal sealed class TestHostProcessExitRequestSerializer : BaseSerializer, INamedPipeSerializer
 {
-    public int Id => SerializerIds.TestHostProcessExitRequestSerializerId;
+    public int Id => TestHostProcessExitRequestFieldsId.MessagesSerializerId;
 
     public object Deserialize(Stream stream)
     {
