@@ -125,6 +125,8 @@ internal static class SerializerUtilities
             [JsonRpcStrings.SupportsDiscovery] = capabilities.SupportsDiscovery,
             [JsonRpcStrings.MultiRequestSupport] = capabilities.MultiRequestSupport,
             [JsonRpcStrings.VSTestProviderSupport] = capabilities.VSTestProviderSupport,
+            [JsonRpcStrings.AttachmentsSupport] = capabilities.SupportsAttachments,
+            [JsonRpcStrings.MultiConnectionProvider] = capabilities.MultiConnectionProvider,
         });
 
         Serializers[typeof(Artifact)] = new ObjectSerializer<Artifact>(res => new Dictionary<string, object?>
@@ -555,11 +557,15 @@ internal static class SerializerUtilities
             bool supportsDiscovery = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.SupportsDiscovery);
             bool multiRequestSupport = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.MultiRequestSupport);
             bool vstestProviderSupport = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.VSTestProviderSupport);
+            bool attachmentsSupport = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.AttachmentsSupport);
+            bool multiConnectionProvider = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.MultiConnectionProvider);
 
             return new ServerCapabilities(new ServerTestingCapabilities(
                 SupportsDiscovery: supportsDiscovery,
                 MultiRequestSupport: multiRequestSupport,
-                VSTestProviderSupport: vstestProviderSupport));
+                VSTestProviderSupport: vstestProviderSupport,
+                SupportsAttachments: attachmentsSupport,
+                MultiConnectionProvider: multiConnectionProvider));
         });
 
         Deserializers[typeof(DiscoverRequestArgs)] = new ObjectDeserializer<DiscoverRequestArgs>(properties =>

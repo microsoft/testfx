@@ -44,6 +44,8 @@ internal static class JsonRpcStrings
     public const string SupportsDiscovery = "supportsDiscovery";
     public const string MultiRequestSupport = "experimental_multiRequestSupport";
     public const string VSTestProviderSupport = "vstestProvider";
+    public const string AttachmentsSupport = "attachmentsSupport";
+    public const string MultiConnectionProvider = "multipleConnectionProvider";
 
     // Discovery and run
     public const string RunId = "runId";

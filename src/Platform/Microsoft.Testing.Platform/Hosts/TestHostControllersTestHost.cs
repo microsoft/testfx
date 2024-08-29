@@ -29,6 +29,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, IDisposable, IOutputDeviceDataProducer
 {
     private readonly TestHostControllerConfiguration _testHostsInformation;
+    private readonly PassiveNode? _passiveNode;
     private readonly IEnvironment _environment;
     private readonly IClock _clock;
     private readonly ILoggerFactory _loggerFactory;
@@ -39,11 +40,12 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
     private int? _testHostExitCode;
     private int? _testHostPID;
 
-    public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, IEnvironment environment,
+    public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, PassiveNode? passiveNode, IEnvironment environment,
         ILoggerFactory loggerFactory, IClock clock)
         : base(serviceProvider)
     {
         _testHostsInformation = testHostsInformation;
+        _passiveNode = passiveNode;
         _environment = environment;
         _clock = clock;
         _loggerFactory = loggerFactory;
@@ -79,6 +81,12 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         IConfiguration configuration = ServiceProvider.GetConfiguration();
         try
         {
+            // Connect the passive node if it's available
+            if (_passiveNode is not null)
+            {
+                await _passiveNode.ConnectAsync();
+            }
+
             using IProcess currentProcess = process.GetCurrentProcess();
             int currentPID = currentProcess.Id;
             string processIdString = currentPID.ToString(CultureInfo.InvariantCulture);

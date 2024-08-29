@@ -72,7 +72,9 @@ internal record ServerCapabilities(ServerTestingCapabilities TestingCapabilities
 internal record ServerTestingCapabilities(
     bool SupportsDiscovery,
     bool MultiRequestSupport,
-    bool VSTestProviderSupport);
+    bool VSTestProviderSupport,
+    bool SupportsAttachments,
+    bool MultiConnectionProvider);
 
 internal record TestNodeStateChangedEventArgs(Guid RunId, TestNodeUpdateMessage[]? Changes);
 

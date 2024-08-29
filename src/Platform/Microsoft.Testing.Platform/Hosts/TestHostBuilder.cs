@@ -392,6 +392,19 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             systemEnvironment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{testHostControllerInfo.GetTestHostControllerPID(true)}") != "1")
             && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
+            PassiveNode? passiveNode = null;
+            if (hasServerFlag && isJsonRpcProtocol)
+            {
+                // Build the server mode with the user preferences
+                IMessageHandlerFactory messageHandlerFactory = ((ServerModeManager)ServerMode).Build(serviceProvider);
+                passiveNode = new PassiveNode(
+                    messageHandlerFactory,
+                    testApplicationCancellationTokenSource,
+                    processHandler,
+                    systemMonitorAsyncFactory,
+                    loggerFactory.CreateLogger<PassiveNode>());
+            }
+
             // Clone the service provider to avoid to add the message bus proxy to the main service provider.
             var testHostControllersServiceProvider = (ServiceProvider)serviceProvider.Clone();
 
@@ -404,7 +417,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             if (testHostControllers.RequireProcessRestart)
             {
                 testHostControllerInfo.IsCurrentProcessTestHostController = true;
-                TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, systemEnvironment, loggerFactory, systemClock);
+                TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, passiveNode, systemEnvironment, loggerFactory, systemClock);
 
                 await LogTestHostCreatedAsync(
                     serviceProvider,
@@ -451,7 +464,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             // note that we pass the BuildTestFrameworkAsync as callback because server mode will call it per-request
             // this is not needed in console mode where we have only 1 request.
             ServerTestHost serverTestHost =
-                new(serviceProvider, BuildTestFrameworkAsync, messageHandlerFactory, (TestFrameworkManager)TestFramework, (TestHostManager)TestHost);
+                new(serviceProvider, BuildTestFrameworkAsync, messageHandlerFactory, (TestFrameworkManager)TestFramework, (TestHostManager)TestHost, testControllerConnection);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
             ITestHost actualTestHost = testControllerConnection is not null

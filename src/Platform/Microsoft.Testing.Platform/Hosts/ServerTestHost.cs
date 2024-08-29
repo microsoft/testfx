@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
@@ -22,13 +23,14 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, IDisposable
 {
-    private const string ProtocolVersion = "1.0.0";
+    public const string ProtocolVersion = "1.0.0";
     private readonly Func<TestFrameworkBuilderData, Task<ITestFramework>> _buildTestFrameworkAsync;
 
     private readonly IMessageHandlerFactory _messageHandlerFactory;
     private readonly TestFrameworkManager _testFrameworkManager;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly TestHostManager _testSessionManager;
+    private readonly NamedPipeClient? _testHostControllerConnection;
     private readonly ServerTelemetry _telemetryService;
     private readonly IAsyncMonitor _messageMonitor;
     private readonly IEnvironment _environment;
@@ -60,7 +62,8 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
         IMessageHandlerFactory messageHandlerFactory,
         TestFrameworkManager testFrameworkManager,
-        TestHostManager testSessionManager)
+        TestHostManager testSessionManager,
+        NamedPipeClient? testHostControllerConnection)
         : base(serviceProvider)
     {
         _buildTestFrameworkAsync = buildTestFrameworkAsync;
@@ -68,6 +71,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         _testFrameworkManager = testFrameworkManager;
         _testApplicationCancellationTokenSource = serviceProvider.GetTestApplicationCancellationTokenSource();
         _testSessionManager = testSessionManager;
+        _testHostControllerConnection = testHostControllerConnection;
         _telemetryService = new ServerTelemetry(this);
         _clientToServerRequests = new();
         _serverToClientRequests = new();
@@ -390,7 +394,9 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                             new ServerTestingCapabilities(
                                 SupportsDiscovery: true,
                                 MultiRequestSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.MultiRequestSupport) == true,
-                                VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true)));
+                                VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true,
+                                SupportsAttachments: true,
+                                MultiConnectionProvider: false)));
                 }
 
             case (JsonRpcMethods.TestingDiscoverTests, DiscoverRequestArgs args):
@@ -630,8 +636,18 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         // We could consider creating a stateful engine that has the lifetime == server connection UP.
     }
 
-    internal Task SendTestUpdateCompleteAsync(Guid runId)
-        => SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, Changes: null));
+    internal async Task SendTestUpdateCompleteAsync(Guid runId)
+    {
+        if (_testHostControllerConnection is null)
+        {
+            
+        }else
+        {
+
+        }
+
+        await SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, Changes: null));
+    }
 
     public async Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update)
         => await SendMessageAsync(
