@@ -283,17 +283,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DoNotUseShadowingDescription">
         <source>Shadowing test members could cause testing issues (such as NRE).</source>
-        <target state="new">Shadowing test members could cause testing issues (such as NRE).</target>
+        <target state="translated">シャドウ処理テスト メンバーは、テストの問題 (NRE など) を引き起こす可能性があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
         <source>Member '{0}' is already exist in the base class</source>
-        <target state="new">Member '{0}' is already exist in the base class</target>
+        <target state="translated">メンバー '{0}' は既に基本クラスに存在します</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">
         <source>Do not use shadowing</source>
-        <target state="new">Do not use shadowing</target>
+        <target state="translated">シャドウ処理を使用しない</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">

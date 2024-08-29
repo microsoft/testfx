@@ -91,8 +91,6 @@ public class UnitTest1
 
     public async Task NativeAotTests_WillRunWithExitCodeZero()
     {
-        // The publish native AOT is not always working on Linux,
-        // see https://github.com/dotnet/sdk/issues/34049
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             return;
@@ -108,15 +106,22 @@ public class UnitTest1
            .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion),
            addPublicFeeds: true);
 
-        await DotnetCli.RunAsync(
-            $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
-            _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-            $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
-            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            // Can fail on CI because of some linker error, so we increase the retry count
-            retryCount: 10);
-        compilationResult.AssertOutputContains("Generating native code");
+        // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
+        // or sometimes doesn't fail but the native code generation is not done.
+        // So, we retry the publication a few times.
+        await RetryHelper.RetryAsync(
+            async () =>
+            {
+                await DotnetCli.RunAsync(
+                    $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
+                    _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+                    retryCount: 0);
+                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+                    $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
+                    _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+                    retryCount: 0);
+                compilationResult.AssertOutputContains("Generating native code");
+            }, times: 15, every: TimeSpan.FromSeconds(5));
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent.Arguments, RID, Verb.publish);
 

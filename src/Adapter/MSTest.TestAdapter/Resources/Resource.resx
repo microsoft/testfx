@@ -289,7 +289,7 @@ Error: {1}</value>
     <value>[MSTest][Discovery][{0}] {1}</value>
   </data>
   <data name="TestParallelizationBanner" xml:space="preserve">
-    <value>MSTest Executor: Test Parallelization enabled for {0} (Workers: {1}, Scope: {2}).</value>
+    <value>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</value>
   </data>
   <data name="InvalidParallelScopeValue" xml:space="preserve">
     <value>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</value>

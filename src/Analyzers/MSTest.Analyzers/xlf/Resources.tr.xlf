@@ -283,17 +283,17 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="DoNotUseShadowingDescription">
         <source>Shadowing test members could cause testing issues (such as NRE).</source>
-        <target state="new">Shadowing test members could cause testing issues (such as NRE).</target>
+        <target state="translated">Gölge test üyeleri test sorunlarına (NRE gibi) neden olabilir.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
         <source>Member '{0}' is already exist in the base class</source>
-        <target state="new">Member '{0}' is already exist in the base class</target>
+        <target state="translated">Üye '{0}' zaten temel sınıfta var</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">
         <source>Do not use shadowing</source>
-        <target state="new">Do not use shadowing</target>
+        <target state="translated">Gölgeleme kullanma</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">

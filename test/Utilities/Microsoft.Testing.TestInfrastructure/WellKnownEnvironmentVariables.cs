@@ -39,6 +39,9 @@ public static class WellKnownEnvironmentVariables
         // Diagnostics
         "TESTINGPLATFORM_DIAGNOSTIC",
 
+        // dotnet test
+        "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID",
+
         // Isolate from the skip banner in case of parent, children tests
         "TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER"
     ];

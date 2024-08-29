@@ -94,7 +94,7 @@
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
         <source>Option '--{0}' is declared by multiple extensions: '{1}'</source>
-        <target state="new">Option '--{0}' is declared by multiple extensions: '{1}'</target>
+        <target state="translated">옵션 '--{0}'이(가) 여러 확장에 의해 선언되었습니다. '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
@@ -114,7 +114,7 @@
       </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
         <source>The ICommandLineOptions has not been built yet.</source>
-        <target state="new">The ICommandLineOptions has not been built yet.</target>
+        <target state="translated">ICommandLineOptions가 아직 빌드되지 않았습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
@@ -328,18 +328,23 @@
       </trans-unit>
       <trans-unit id="LoggerFactoryNotReady">
         <source>The ILoggerFactory has not been built yet.</source>
-        <target state="new">The ILoggerFactory has not been built yet.</target>
+        <target state="translated">ILoggerFactory가 아직 빌드되지 않았습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
         <source>The message bus has not been built yet or is no more usable at this stage.</source>
-        <target state="new">The message bus has not been built yet or is no more usable at this stage.</target>
+        <target state="translated">메시지 버스가 아직 빌드되지 않았거나 이 단계에서 더 이상 사용할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
         <target state="translated">예상되는 최소 테스트 정책 위반, 테스트 실행 {0}, 필요한 최소 {1}</target>
         <note>{0}, {1} number of tests</note>
+      </trans-unit>
+      <trans-unit id="MissingClientPortFoJsonRpc">
+        <source>Expected --client-port when jsonRpc protocol is used.</source>
+        <target state="translated">jsonRpc 프로토콜을 사용하는 경우 --client-port가 필요합니다.</target>
+        <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
         <source>No serializer registered with ID '{0}'</source>
@@ -390,16 +395,16 @@
         <source>Force the built-in file logger to write the log synchronously.
 Useful for scenario where you don't want to lose any log (i.e. in case of crash).
 Note that this is slowing down the test execution.</source>
-        <target state="new">Force the built-in file logger to write the log synchronously.
-Useful for scenario where you don't want to lose any log (i.e. in case of crash).
-Note that this is slowing down the test execution.</target>
+        <target state="translated">기본 제공 파일 로거가 로그를 동기적으로 쓰도록 강제합니다.
+로그를 잃지 않으려는 시나리오(예: 충돌하는 경우)에 유용합니다.
+이로 인해 테스트 실행 속도가 느려집니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[MMddHHssfff].diag</target>
+        <target state="translated">진단 로깅을 사용합니다. 기본 로그 수준은 'Trace'입니다.
+파일은 log_[MMddHHssfff].diag라는 이름으로 출력 디렉터리에 쓰여집니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -415,8 +420,8 @@ The file will be written in the output directory with the name log_[MMddHHssfff]
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
         <source>Output directory of the diagnostic logging.
 If not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="new">Output directory of the diagnostic logging.
-If not specified the file will be generated inside the default 'TestResults' directory.</target>
+        <target state="translated">진단 로깅의 출력 디렉터리입니다.
+지정하지 않으면 파일이 기본 'TestResults' 디렉터리 내에 생성됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
@@ -427,8 +432,8 @@ If not specified the file will be generated inside the default 'TestResults' dir
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
         <source>Define the level of the verbosity for the --diagnostic.
 The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
-        <target state="new">Define the level of the verbosity for the --diagnostic.
-The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</target>
+        <target state="translated">--diagnostic에 대한 세부 정보 표시 수준을 정의합니다.
+사용 가능한 값은 'Trace', 'Debug', 'Information', 'Warning', 'Error' 및 'Critical'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
@@ -466,8 +471,8 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
         <source>Do not report non successful exit value for specific exit codes
 (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="new">Do not report non successful exit value for specific exit codes
-(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</target>
+        <target state="translated">특정 종료 코드에 대해 실패한 종료 값을 보고하지 마세요.
+(예: '--ignore-exit-code 8;9'는 종료 코드 8 및 9를 무시하고 이 경우 0을 반환합니다.)</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -483,8 +488,8 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
         <source>'--minimum-expected-tests' expects a single non-zero positive integer value
 (e.g. '--minimum-expected-tests 10')</source>
-        <target state="new">'--minimum-expected-tests' expects a single non-zero positive integer value
-(e.g. '--minimum-expected-tests 10')</target>
+        <target state="translated">'--minimum-expected-tests'에는 0이 아닌 단일 양의 정수 값이 필요합니다.
+(예: '--minimum-expected-tests 10')</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
@@ -516,9 +521,9 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
         <source>The directory where the test results are going to be placed.
 If the specified directory doesn't exist, it's created.
 The default is TestResults in the directory that contains the test application.</source>
-        <target state="new">The directory where the test results are going to be placed.
-If the specified directory doesn't exist, it's created.
-The default is TestResults in the directory that contains the test application.</target>
+        <target state="translated">테스트 결과를 배치할 디렉터리입니다.
+지정한 디렉터리가 없으면 만들어집니다.
+기본값은 테스트 애플리케이션을 포함하는 디렉터리의 TestResults입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -538,14 +543,14 @@ The default is TestResults in the directory that contains the test application.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
-        <target state="new">'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</target>
+        <target state="translated">'timeout' 옵션에는 'value'가 float인 &lt;value&gt;[h|m|s] 형식의 문자열로 인수가 하나 있어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
 Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
-        <target state="new">A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</target>
+        <target state="translated">전역 테스트 실행 시간 제한입니다.
+'value'가 float인 &lt;value&gt;[h|m|s] 형식의 문자열로 인수 하나를 사용합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
@@ -671,8 +676,8 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests.
 Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="new">Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
+        <target state="translated">테스트를 보고할 때 세부 정보 표시를 출력합니다.
+유효한 값은 'Normal', 'Detailed'입니다. 기본값은 'Normal'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">

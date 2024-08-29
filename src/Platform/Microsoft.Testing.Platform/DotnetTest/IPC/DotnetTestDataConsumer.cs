@@ -11,10 +11,14 @@ namespace Microsoft.Testing.Platform.IPC;
 
 internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
-    private readonly NamedPipeClient _dotnetTestPipeClient;
+    private readonly DotnetTestConnection? _dotnetTestConnection;
+    private readonly IEnvironment _environment;
 
-    public DotnetTestDataConsumer(NamedPipeClient dotnetTestPipeClient)
-        => _dotnetTestPipeClient = dotnetTestPipeClient;
+    public DotnetTestDataConsumer(DotnetTestConnection dotnetTestConnection, IEnvironment environment)
+    {
+        _dotnetTestConnection = dotnetTestConnection;
+        _environment = environment;
+    }
 
     public Type[] DataTypesConsumed => new[]
     {
@@ -33,8 +37,12 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
     public string Description => "Send back information to the dotnet test";
 
+    private string? ExecutionId => _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
+
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
+        RoslynDebug.Assert(_dotnetTestConnection is not null);
+
         switch (value)
         {
             case TestNodeUpdateMessage testNodeUpdateMessage:
@@ -43,6 +51,15 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
                 switch (state)
                 {
+                    case TestStates.Discovered:
+                        DiscoveredTestMessage discoveredTestMessage = new(
+                            testNodeUpdateMessage.TestNode.Uid.Value,
+                            testNodeUpdateMessage.TestNode.DisplayName,
+                            ExecutionId);
+
+                        await _dotnetTestConnection.SendMessageAsync(discoveredTestMessage);
+                        break;
+
                     case TestStates.Passed:
                     case TestStates.Skipped:
                         SuccessfulTestResultMessage successfulTestResultMessage = new(
@@ -51,9 +68,9 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
                            state,
                            reason ?? string.Empty,
                            testNodeUpdateMessage.SessionUid.Value,
-                           string.Empty);
+                           ExecutionId);
 
-                        await _dotnetTestPipeClient.RequestReplyAsync<SuccessfulTestResultMessage, VoidResponse>(successfulTestResultMessage, cancellationToken);
+                        await _dotnetTestConnection.SendMessageAsync(successfulTestResultMessage);
                         break;
 
                     case TestStates.Failed:
@@ -65,9 +82,9 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
                            errorMessage ?? string.Empty,
                            errorStackTrace ?? string.Empty,
                            testNodeUpdateMessage.SessionUid.Value,
-                           string.Empty);
+                           ExecutionId);
 
-                        await _dotnetTestPipeClient.RequestReplyAsync<FailedTestResultMessage, VoidResponse>(testResultMessage, cancellationToken);
+                        await _dotnetTestConnection.SendMessageAsync(testResultMessage);
                         break;
                 }
 
@@ -81,9 +98,9 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
                     testNodeFileArtifact.TestNode.Uid.Value,
                     testNodeFileArtifact.TestNode.DisplayName,
                     testNodeFileArtifact.SessionUid.Value,
-                    string.Empty);
+                    ExecutionId);
 
-                await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactInfo, VoidResponse>(fileArtifactInfo, cancellationToken);
+                await _dotnetTestConnection.SendMessageAsync(fileArtifactInfo);
                 break;
 
             case SessionFileArtifact sessionFileArtifact:
@@ -94,9 +111,9 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
                     string.Empty,
                     string.Empty,
                     sessionFileArtifact.SessionUid.Value,
-                    string.Empty);
+                    ExecutionId);
 
-                await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactInfo, VoidResponse>(fileArtifactInfo, cancellationToken);
+                await _dotnetTestConnection.SendMessageAsync(fileArtifactInfo);
                 break;
 
             case FileArtifact fileArtifact:
@@ -107,9 +124,9 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
                    string.Empty,
                    string.Empty,
                    string.Empty,
-                   string.Empty);
+                   ExecutionId);
 
-                await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactInfo, VoidResponse>(fileArtifactInfo, cancellationToken);
+                await _dotnetTestConnection.SendMessageAsync(fileArtifactInfo);
                 break;
         }
 
@@ -126,6 +143,10 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
         switch (nodeState)
         {
+            case DiscoveredTestNodeStateProperty:
+                state = TestStates.Discovered;
+                break;
+
             case PassedTestNodeStateProperty:
                 state = TestStates.Passed;
                 reason = nodeState.Explanation;
@@ -170,21 +191,25 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
     public async Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
     {
+        RoslynDebug.Assert(_dotnetTestConnection is not null);
+
         TestSessionEvent sessionStartEvent = new(
             SessionEventTypes.TestSessionStart,
             sessionUid.Value,
-            string.Empty);
+            ExecutionId);
 
-        await _dotnetTestPipeClient.RequestReplyAsync<TestSessionEvent, VoidResponse>(sessionStartEvent, cancellationToken);
+        await _dotnetTestConnection.SendMessageAsync(sessionStartEvent);
     }
 
     public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
     {
+        RoslynDebug.Assert(_dotnetTestConnection is not null);
+
         TestSessionEvent sessionEndEvent = new(
             SessionEventTypes.TestSessionEnd,
             sessionUid.Value,
-            string.Empty);
+            ExecutionId);
 
-        await _dotnetTestPipeClient.RequestReplyAsync<TestSessionEvent, VoidResponse>(sessionEndEvent, cancellationToken);
+        await _dotnetTestConnection.SendMessageAsync(sessionEndEvent);
     }
 }

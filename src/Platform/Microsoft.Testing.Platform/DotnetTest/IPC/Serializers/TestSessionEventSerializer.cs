@@ -8,22 +8,22 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
 /*
     |---FieldCount---| 2 bytes
 
-    |---Type Id---| 1 (2 bytes)
+    |---Type Id---| (2 bytes)
     |---Type Size---| (4 bytes)
     |---Type Value---| (n bytes)
 
-    |---SessionUid Id---| 1 (2 bytes)
+    |---SessionUid Id---| (2 bytes)
     |---SessionUid Size---| (4 bytes)
     |---SessionUid Value---| (n bytes)
 
-    |---ExecutionId Id---| 1 (2 bytes)
+    |---ExecutionId Id---| (2 bytes)
     |---ExecutionId Size---| (4 bytes)
     |---ExecutionId Value---| (n bytes)
 */
 
 internal sealed class TestSessionEventSerializer : BaseSerializer, INamedPipeSerializer
 {
-    public int Id => 8;
+    public int Id => TestSessionEventFieldsId.MessagesSerializerId;
 
     public object Deserialize(Stream stream)
     {

@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Win32.Registry" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>

@@ -283,17 +283,17 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="DoNotUseShadowingDescription">
         <source>Shadowing test members could cause testing issues (such as NRE).</source>
-        <target state="new">Shadowing test members could cause testing issues (such as NRE).</target>
+        <target state="translated">Membros de teste de sombreamento podem causar problemas de teste (como NRE).</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
         <source>Member '{0}' is already exist in the base class</source>
-        <target state="new">Member '{0}' is already exist in the base class</target>
+        <target state="translated">O membro "{0}" já existe na classe base</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">
         <source>Do not use shadowing</source>
-        <target state="new">Do not use shadowing</target>
+        <target state="translated">Não usar sombreamento</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">

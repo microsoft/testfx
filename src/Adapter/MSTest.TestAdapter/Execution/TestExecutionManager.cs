@@ -299,6 +299,9 @@ public class TestExecutionManager
             typeof(UnitTestRunner),
             [MSTestSettings.CurrentSettings, unitTestElements, (int)sourceSettings.ClassCleanupLifecycle])!;
 
+        // Ensures that the cancellation token gets through AppDomain boundary.
+        _testRunCancellationToken?.Register(testRunner.Cancel);
+
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
         {
             // The runsettings value takes precedence over an assembly level setting. Reset the level.

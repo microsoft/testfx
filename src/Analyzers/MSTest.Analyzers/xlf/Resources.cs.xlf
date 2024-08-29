@@ -283,17 +283,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DoNotUseShadowingDescription">
         <source>Shadowing test members could cause testing issues (such as NRE).</source>
-        <target state="new">Shadowing test members could cause testing issues (such as NRE).</target>
+        <target state="translated">Členové testů stínového provozu (vzdáleného řízení) by mohli způsobovat problémy s testováním (například NRE).</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
         <source>Member '{0}' is already exist in the base class</source>
-        <target state="new">Member '{0}' is already exist in the base class</target>
+        <target state="translated">Člen {0} už v základní (kořenové) třídě existuje.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">
         <source>Do not use shadowing</source>
-        <target state="new">Do not use shadowing</target>
+        <target state="translated">Nepoužívat stínový provoz (vzdálené řízení)</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
