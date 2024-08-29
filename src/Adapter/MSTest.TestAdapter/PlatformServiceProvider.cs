@@ -71,6 +71,12 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     public IReflectionOperations ReflectionOperations => _reflectionOperations ??= new ReflectionOperations();
 
     /// <summary>
+    /// Gets or sets an instance to the platform service for cancellation token supporting cancellation of a test run.
+    /// </summary>.
+    /// </summary>
+    public TestRunCancellationToken? TestRunCancellationToken { get; set; }
+
+    /// <summary>
     /// Gets or sets the instance for the platform service.
     /// </summary>
     internal static IPlatformServiceProvider Instance
@@ -156,6 +162,4 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
         TestRunCancellationToken?.Register(context.CancellationTokenSource.Cancel);
         return context;
     }
-
-    public TestRunCancellationToken? TestRunCancellationToken { get; set; }
 }

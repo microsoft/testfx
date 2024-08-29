@@ -52,6 +52,11 @@ internal interface IPlatformServiceProvider
     IReflectionOperations ReflectionOperations { get; }
 
     /// <summary>
+    /// Gets or sets an instance to the platform service for cancellation token supporting cancellation of a test run.
+    /// </summary>
+    TestRunCancellationToken? TestRunCancellationToken { get; set; }
+
+    /// <summary>
     /// Creates an instance to the platform service for a test source host.
     /// </summary>
     /// <param name="source">
@@ -117,6 +122,4 @@ internal interface IPlatformServiceProvider
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
     ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties);
-
-    TestRunCancellationToken? TestRunCancellationToken { get; set; }
 }
