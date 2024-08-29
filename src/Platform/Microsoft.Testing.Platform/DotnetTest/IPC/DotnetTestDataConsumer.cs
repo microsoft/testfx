@@ -51,6 +51,15 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
                 switch (state)
                 {
+                    case TestStates.Discovered:
+                        DiscoveredTestMessage discoveredTestMessage = new(
+                            testNodeUpdateMessage.TestNode.Uid.Value,
+                            testNodeUpdateMessage.TestNode.DisplayName,
+                            ExecutionId);
+
+                        await _dotnetTestConnection.SendMessageAsync(discoveredTestMessage);
+                        break;
+
                     case TestStates.Passed:
                     case TestStates.Skipped:
                         SuccessfulTestResultMessage successfulTestResultMessage = new(
@@ -134,6 +143,10 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
         switch (nodeState)
         {
+            case DiscoveredTestNodeStateProperty:
+                state = TestStates.Discovered;
+                break;
+
             case PassedTestNodeStateProperty:
                 state = TestStates.Passed;
                 reason = nodeState.Explanation;

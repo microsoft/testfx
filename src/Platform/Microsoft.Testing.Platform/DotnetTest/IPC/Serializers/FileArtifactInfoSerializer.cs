@@ -39,7 +39,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 internal sealed class FileArtifactInfoSerializer : BaseSerializer, INamedPipeSerializer
 {
-    public int Id => 7;
+    public int Id => FileArtifactInfoFieldsId.MessagesSerializerId;
 
     public object Deserialize(Stream stream)
     {
