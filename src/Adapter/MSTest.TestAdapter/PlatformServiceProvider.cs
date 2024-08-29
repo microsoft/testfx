@@ -12,7 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// </summary>
 internal class PlatformServiceProvider : IPlatformServiceProvider
 {
-    private static PlatformServiceProvider? s_instance;
+    private static IPlatformServiceProvider? s_instance;
 
     private ITestSource? _testSource;
     private IFileOperations? _fileOperations;
@@ -78,13 +78,11 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets or sets the instance for the platform service.
     /// </summary>
-    internal static PlatformServiceProvider Instance
+    internal static IPlatformServiceProvider Instance
     {
         get => s_instance ??= new PlatformServiceProvider();
         set => s_instance = value;
     }
-
-    public TestRunCancellationToken? TestRunCancellationToken { get; internal set; }
 
     /// <summary>
     /// Creates an instance to the platform service for a test source host.
