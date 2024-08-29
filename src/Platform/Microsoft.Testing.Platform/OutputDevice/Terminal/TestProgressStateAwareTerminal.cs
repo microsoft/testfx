@@ -135,9 +135,12 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         }
         else
         {
-            _terminal.StartUpdate();
-            write(_terminal);
-            _terminal.StopUpdate();
+            lock (_lock)
+            {
+                _terminal.StartUpdate();
+                write(_terminal);
+                _terminal.StopUpdate();
+            }
         }
     }
 
