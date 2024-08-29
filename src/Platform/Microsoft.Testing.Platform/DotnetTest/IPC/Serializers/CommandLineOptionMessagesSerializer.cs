@@ -38,7 +38,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INamedPipeSerializer
 {
-    public int Id => 3;
+    public int Id => CommandLineOptionMessagesFieldsId.MessagesSerializerId;
 
     public object Deserialize(Stream stream)
     {
@@ -54,7 +54,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
 
             switch (fieldId)
             {
-                case CommandLineOptionMessagesFieldsId.ModuleName:
+                case CommandLineOptionMessagesFieldsId.ModulePath:
                     moduleName = ReadString(stream);
                     break;
 
@@ -127,7 +127,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
 
         WriteShort(stream, GetFieldCount(commandLineOptionMessages));
 
-        WriteField(stream, CommandLineOptionMessagesFieldsId.ModuleName, commandLineOptionMessages.ModulePath);
+        WriteField(stream, CommandLineOptionMessagesFieldsId.ModulePath, commandLineOptionMessages.ModulePath);
         WriteCommandLineOptionMessagesPayload(stream, commandLineOptionMessages.CommandLineOptionMessageList);
     }
 
