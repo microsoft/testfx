@@ -384,7 +384,7 @@ Erro: {1}</target>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="needs-review-translation">MSTest Executor: paralelização de teste habilitada para {0} (Workers: {1}, Scope: {2}).</target>
+        <target state="new">Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">

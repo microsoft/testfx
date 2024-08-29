@@ -385,7 +385,7 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="needs-review-translation">MSTest 実行プログラム: {0} でテスト並列処理が有効にされています (Workers: {1}、Scope: {2})。</target>
+        <target state="new">Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
