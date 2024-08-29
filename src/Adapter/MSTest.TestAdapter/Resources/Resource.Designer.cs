@@ -486,7 +486,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MSTest Executor: Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})..
+        ///   Looks up a localized string similar to Test Parallelization enabled for {0} (Workers: {1}, Scope: {2}).
         /// </summary>
         internal static string TestParallelizationBanner {
             get {
