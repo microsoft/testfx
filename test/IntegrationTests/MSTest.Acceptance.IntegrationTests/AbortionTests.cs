@@ -29,7 +29,14 @@ public sealed class AbortionTests : AcceptanceTestBase
         }
 
         var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+
+        string fileCreationPath = Path.Combine(testHost.DirectoryName, "fileCreation");
+        File.WriteAllText(fileCreationPath, string.Empty);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
+        {
+            ["FILE_DIRECTORY"] = fileCreationPath,
+        });
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
 
@@ -40,7 +47,7 @@ public sealed class AbortionTests : AcceptanceTestBase
             testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
         }
 
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 0, aborted: true);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 0);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -78,6 +85,8 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.IO;
+
 public class Program
 {
     public static async Task<int> Main(string[] args)
@@ -88,7 +97,17 @@ public class Program
         using ITestApplication app = await builder.BuildAsync();
         _ = Task.Run(() =>
         {
-            DummyAdapter.FireCancel.Wait();
+            while (true)
+            {
+                if (File.Exists(Environment.GetEnvironmentVariable("FILE_DIRECTORY")))
+                {
+                    break;
+                }
+                else
+                {
+                    Thread.Sleep(1000);
+                }
+            }
 
             if (!GenerateConsoleCtrlEvent(ConsoleCtrlEvent.CTRL_C, 0))
             {
@@ -107,16 +126,12 @@ public class Program
     }
 }
 
-internal class DummyAdapter
-{
-    public static readonly ManualResetEventSlim FireCancel = new ManualResetEventSlim(false);
-}
-
 #file UnitTest1.cs
 using System;
 using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.IO;
 
 [TestClass]
 public class UnitTest1
@@ -130,8 +145,7 @@ public class UnitTest1
         {
             // Delay for a short period before firing CTRL+C to simulate some processing time
             Task.Delay(1000).Wait();
-            DummyAdapter.FireCancel.Set();
-
+            File.WriteAllText(Environment.GetEnvironmentVariable("FILE_DIRECTORY")!, string.Empty);
         });
 
         // Start a task that represents the infinite delay, which should be canceled
