@@ -49,6 +49,7 @@ internal sealed class MessageLoggerAdapter : IMessageLogger, IOutputDeviceDataPr
         {
             case TestMessageLevel.Informational:
                 _logger.LogInformation(message);
+                _outputDevice.DisplayAsync(this, new TextOutputDeviceData(message)).Await();
                 break;
             case TestMessageLevel.Warning:
                 _logger.LogWarning(message);
