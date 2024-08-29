@@ -10,7 +10,7 @@ using Microsoft.Testing.Platform.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestGroup]
-public class AbortionTests : AcceptanceTestBase
+public sealed class AbortionTests : AcceptanceTestBase
 {
     private const string AssetName = "Abort";
     private readonly TestAssetFixture _testAssetFixture;
