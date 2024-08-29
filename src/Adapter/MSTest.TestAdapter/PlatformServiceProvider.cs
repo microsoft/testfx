@@ -72,7 +72,6 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
 
     /// <summary>
     /// Gets or sets an instance to the platform service for cancellation token supporting cancellation of a test run.
-    /// </summary>.
     /// </summary>
     public TestRunCancellationToken? TestRunCancellationToken { get; set; }
 
