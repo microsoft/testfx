@@ -383,9 +383,9 @@ Error: {1}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
-        <source>MSTest Executor: Test Parallelization enabled for {0} (Workers: {1}, Scope: {2}).</source>
-        <target state="translated">Исполнитель MSTest: включена параллелизация тестов для {0} (рабочие роли: {1}, область: {2}).</target>
-        <note></note>
+        <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
+        <target state="needs-review-translation">Исполнитель MSTest: включена параллелизация тестов для {0} (рабочие роли: {1}, область: {2}).</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
