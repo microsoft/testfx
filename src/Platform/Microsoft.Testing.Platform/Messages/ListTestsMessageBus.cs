@@ -75,8 +75,10 @@ internal sealed class ListTestsMessageBus(
             return;
         }
 
-        if (_dotnetTestConnection?.IsConnected == true && _dotnetTestDataConsumer is not null)
+        if (_dotnetTestConnection?.IsConnected == true)
         {
+            RoslynDebug.Assert(_dotnetTestDataConsumer is not null);
+
             await _dotnetTestDataConsumer.ConsumeAsync(dataProducer, data, _testApplicationCancellationTokenSource.CancellationToken);
         }
 

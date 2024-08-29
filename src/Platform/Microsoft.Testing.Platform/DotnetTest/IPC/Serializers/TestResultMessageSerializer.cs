@@ -35,7 +35,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 internal sealed class SuccessfulTestResultMessageSerializer : BaseSerializer, INamedPipeSerializer
 {
-    public int Id => 5;
+    public int Id => SerializerIds.SuccessfulTestResultMessageSerializerId;
 
     public object Deserialize(Stream stream)
     {
@@ -152,7 +152,7 @@ internal sealed class SuccessfulTestResultMessageSerializer : BaseSerializer, IN
 
 internal sealed class FailedTestResultMessageSerializer : BaseSerializer, INamedPipeSerializer
 {
-    public int Id => 6;
+    public int Id => SerializerIds.FailedTestResultMessageSerializerId;
 
     public object Deserialize(Stream stream)
     {

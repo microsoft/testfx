@@ -23,7 +23,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 internal sealed class DiscoveredTestMessageSerializer : BaseSerializer, INamedPipeSerializer
 {
-    public int Id => 10;
+    public int Id => SerializerIds.DiscoveredTestMessageSerializerId;
 
     public object Deserialize(Stream stream)
     {

@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 internal sealed class HandshakeInfoSerializer : BaseSerializer, INamedPipeSerializer
 {
-    public int Id => 9;
+    public int Id => SerializerIds.HandshakeInfoSerializerId;
 
     public object Deserialize(Stream stream)
     {

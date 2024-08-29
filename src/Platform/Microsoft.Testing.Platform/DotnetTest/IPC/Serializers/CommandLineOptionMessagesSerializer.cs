@@ -38,7 +38,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INamedPipeSerializer
 {
-    public int Id => 3;
+    public int Id => SerializerIds.CommandLineOptionMessagesSerializer;
 
     public object Deserialize(Stream stream)
     {

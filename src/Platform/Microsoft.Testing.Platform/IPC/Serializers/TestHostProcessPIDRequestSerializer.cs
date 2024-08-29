@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 internal sealed class TestHostProcessPIDRequestSerializer : BaseSerializer, INamedPipeSerializer
 {
-    public int Id => 2;
+    public int Id => SerializerIds.TestHostProcessPIDRequestSerializerId;
 
     public object Deserialize(Stream stream)
     {
