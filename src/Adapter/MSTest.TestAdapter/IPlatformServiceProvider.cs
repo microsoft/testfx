@@ -52,6 +52,11 @@ internal interface IPlatformServiceProvider
     IReflectionOperations ReflectionOperations { get; }
 
     /// <summary>
+    /// Gets or sets an instance to the platform service for cancellation token supporting cancellation of a test run.
+    /// </summary>
+    TestRunCancellationToken? TestRunCancellationToken { get; set; }
+
+    /// <summary>
     /// Creates an instance to the platform service for a test source host.
     /// </summary>
     /// <param name="source">
