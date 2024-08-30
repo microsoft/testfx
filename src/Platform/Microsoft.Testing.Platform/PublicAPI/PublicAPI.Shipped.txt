@@ -1,11 +1,20 @@
 #nullable enable
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability.GetBannerMessageAsync() -> System.Threading.Tasks.Task<string?>!
+[TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilitiesExtensions
+[TPEXP]Microsoft.Testing.Platform.Requests.IExecuteRequestCompletionNotifier
+[TPEXP]Microsoft.Testing.Platform.Requests.IExecuteRequestCompletionNotifier.Complete() -> void
+[TPEXP]Microsoft.Testing.Platform.Services.IClientInfo
+[TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Id.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Version.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation
 [TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.BuildDate.get -> System.DateTimeOffset?
 [TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.CommitHash.get -> string?
 [TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.Name.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.Version.get -> string?
+[TPEXP]static Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilitiesExtensions.GetCapability<T>(this Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities! capabilities) -> T?
+[TPEXP]static Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilitiesExtensions.HasCapability<T>(this Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities! capabilities) -> bool
+[TPEXP]static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetClientInfo(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Services.IClientInfo!
 Microsoft.Testing.Platform.Builder.ConfigurationOptions
 Microsoft.Testing.Platform.Builder.ConfigurationOptions.ConfigurationOptions() -> void
 Microsoft.Testing.Platform.Builder.ConfigurationOptions.ConfigurationSources.get -> Microsoft.Testing.Platform.Builder.ConfigurationSourcesOptions!
@@ -330,6 +339,8 @@ Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.Background
 Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.ForegroundColor.get -> Microsoft.Testing.Platform.OutputDevice.IColor?
 Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.ForegroundColor.init -> void
 Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.FormattedTextOutputDeviceData(string! text) -> void
+Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.Padding.get -> int?
+Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.Padding.init -> void
 Microsoft.Testing.Platform.OutputDevice.IColor
 Microsoft.Testing.Platform.OutputDevice.IOutputDevice
 Microsoft.Testing.Platform.OutputDevice.IOutputDevice.DisplayAsync(Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! producer, Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData! data) -> System.Threading.Tasks.Task!
