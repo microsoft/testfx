@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal sealed class SemaphoreSlimRequestCompleteNotifier : IRequestCompleteNotifier
+internal sealed class SemaphoreSlimRequestCompleteNotifier : IExecuteRequestCompletionNotifier
 {
     private readonly SemaphoreSlim _semaphore;
 

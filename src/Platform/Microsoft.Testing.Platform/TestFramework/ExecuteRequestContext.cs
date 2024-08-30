@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable RS0016 // Add public types and members to the declared API
+
+using System.Diagnostics.CodeAnalysis;
+
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
 
@@ -14,14 +18,15 @@ namespace Microsoft.Testing.Platform.Extensions.TestFramework;
 /// </remarks>
 public sealed class ExecuteRequestContext
 {
-    private readonly IRequestCompleteNotifier _requestCompleteNotifier;
+    private readonly IExecuteRequestCompletionNotifier _executeRequestCompletionNotifier;
 
-    public ExecuteRequestContext(IRequest request, IMessageBus messageBus, IRequestCompleteNotifier requestCompleteNotifier,
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public ExecuteRequestContext(IRequest request, IMessageBus messageBus, IExecuteRequestCompletionNotifier executeRequestCompletionNotifier,
         CancellationToken cancellationToken)
     {
         Request = request;
         MessageBus = messageBus;
-        _requestCompleteNotifier = requestCompleteNotifier;
+        _executeRequestCompletionNotifier = executeRequestCompletionNotifier;
         CancellationToken = cancellationToken;
     }
 
@@ -44,5 +49,5 @@ public sealed class ExecuteRequestContext
     /// Completes the execution request.
     /// </summary>
     public void Complete()
-        => _requestCompleteNotifier.Complete();
+        => _executeRequestCompletionNotifier.Complete();
 }
