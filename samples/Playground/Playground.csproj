@@ -12,16 +12,6 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj"
-                      PrivateAssets="all"
-                      ReferenceOutputAssembly="false"
-                      OutputItemType="Analyzer" />
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers\MSTest.Analyzers.csproj"
-                      PrivateAssets="all"
-                      ReferenceOutputAssembly="false"
-                      OutputItemType="Analyzer" />
-    <PackageReference Include="StreamJsonRpc" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" />
   </ItemGroup>
 
   <ItemGroup>
