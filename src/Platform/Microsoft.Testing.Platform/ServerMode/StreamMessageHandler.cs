@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text;
-
 #if !NET8_0_OR_GREATER
 using Microsoft.Testing.Platform.Helpers;
 #endif
@@ -125,7 +123,7 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
     public async Task WriteRequestAsync(RpcMessage message, CancellationToken cancellationToken)
     {
         string messageStr = await _formatter.SerializeAsync(message);
-        await _writer.WriteLineAsync($"Content-Length: {Encoding.UTF8.GetByteCount(messageStr)}");
+        await _writer.WriteLineAsync($"Content-Length: {messageStr.Length}");
         await _writer.WriteLineAsync("Content-Type: application/testingplatform");
         await _writer.WriteLineAsync();
         await _writer.WriteAsync(messageStr);
