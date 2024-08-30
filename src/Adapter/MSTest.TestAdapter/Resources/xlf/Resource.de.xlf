@@ -384,7 +384,7 @@ Fehler: {1}</target>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="new">Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</target>
+        <target state="translated">Testparallelisierung aktiviert für {0} (Worker: {1}, Bereich: {2})</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
