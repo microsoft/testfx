@@ -220,22 +220,4 @@ public class DataRowTests_Regular
     [TestMethod]
     [DataRow(1, 2, 3, 4, 5)]
     public void MultipleIntegersWrappedWithParams(params int[] integers) => Assert.AreEqual(5, integers.Length);
-
-    [TestMethod]
-    [DataRow("a")]
-    [DataRow("b")]
-    public void MethodWithOverload(string s)
-    {
-    }
-
-    [TestMethod]
-    [DataRow(1)]
-    [DataRow(2)]
-    public void MethodWithOverload(int i)
-    {
-    }
-
-    [TestMethod]
-    [DataRow(null)]
-    public void NullValueOnObjectArray(object[] o) => Assert.IsNull(o);
 }
