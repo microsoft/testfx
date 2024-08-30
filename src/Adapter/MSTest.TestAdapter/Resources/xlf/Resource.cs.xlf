@@ -384,7 +384,7 @@ Chyba: {1}</target>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="new">Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</target>
+        <target state="translated">Je povolená paralelizace testu pro {0} (pracovní procesy: {1}, obor: {2}).</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
