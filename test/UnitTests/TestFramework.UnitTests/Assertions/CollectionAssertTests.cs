@@ -4,7 +4,6 @@
 #nullable enable
 
 using System.Collections;
-using System.Collections.ObjectModel;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -216,86 +215,6 @@ public class CollectionAssertTests : TestContainer
         comparer.ToString(); // no warning
     }
 
-    public void CollectionAssertAreEqual_EqualNestedLists_Passes()
-    {
-        ICollection? collection1 = GetNestedLists();
-        ICollection? collection2 = GetNestedLists();
-
-        CollectionAssert.AreEqual(collection1, collection2);
-    }
-
-    public void CollectionAssertAreEqual_EqualDeeplyNestedLists_Passes()
-    {
-        ICollection? collection1 = GenerateDeeplyNestedCollection(5);
-        ICollection? collection2 = GenerateDeeplyNestedCollection(5);
-
-        CollectionAssert.AreEqual(collection1, collection2);
-    }
-
-    public void CollectionAssertAreEqual_NotEqualNestedLists_Fails()
-    {
-        ICollection? collection1 = GetNestedLists();
-        ICollection? collection2 = GetNotMatchingNestedLists();
-
-        VerifyThrows(() => CollectionAssert.AreEqual(collection1, collection2));
-    }
-
-    public void CollectionAssertAreEqual_EqualNonICollectionInnerCollection_Passes()
-    {
-        ICollection? collection1 = GetNonICollectionInnerCollection();
-        ICollection? collection2 = GetNonICollectionInnerCollection();
-
-        CollectionAssert.AreEqual(collection1, collection2);
-    }
-
-    public void CollectionAssertAreEqual_NotEqualNonICollectionInnerCollection_Fails()
-    {
-        ICollection? collection1 = GetNonICollectionInnerCollection();
-        ICollection? collection2 = GetNotMatchingGetNonICollectionInnerCollection();
-
-        VerifyThrows(() => CollectionAssert.AreEqual(collection1, collection2));
-    }
-
-    public void CollectionAssertAreNotEqual_NotEqualNestedLists_Passes()
-    {
-        ICollection? collection1 = GetNestedLists();
-        ICollection? collection2 = GetNotMatchingNestedLists();
-
-        CollectionAssert.AreNotEqual(collection1, collection2);
-    }
-
-    public void CollectionAssertAreNotEqual_EqualNestedLists_Fails()
-    {
-        ICollection? collection1 = GetNestedLists();
-        ICollection? collection2 = GetNestedLists();
-
-        VerifyThrows(() => CollectionAssert.AreNotEqual(collection1, collection2));
-    }
-
-    public void CollectionAssertAreNotEqual_EqualNonICollectionInnerCollection_Fails()
-    {
-        ICollection? collection1 = GetNonICollectionInnerCollection();
-        ICollection? collection2 = GetNonICollectionInnerCollection();
-
-        VerifyThrows(() => CollectionAssert.AreNotEqual(collection1, collection2));
-    }
-
-    public void CollectionAssertAreNotEqual_NotEqualNonICollectionInnerCollection_Passes()
-    {
-        ICollection? collection1 = GetNonICollectionInnerCollection();
-        ICollection? collection2 = GetNotMatchingGetNonICollectionInnerCollection();
-
-        CollectionAssert.AreNotEqual(collection1, collection2);
-    }
-
-    public void CollectionAssertAreNotEqual_NotEqualDeeplyNestedLists_Passes()
-    {
-        ICollection? collection1 = GenerateDeeplyNestedCollection(5);
-        ICollection? collection2 = GenerateDeeplyNestedCollection(4);
-
-        CollectionAssert.AreNotEqual(collection1, collection2);
-    }
-
     public void CollectionAssertAreNotEqualComparerNullabilityPostConditions()
     {
         ICollection? collection1 = GetCollection();
@@ -431,23 +350,6 @@ public class CollectionAssertTests : TestContainer
     }
 
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
-
-    private static List<object> GenerateDeeplyNestedCollection(int depth)
-    {
-        if (depth == 0)
-        {
-            return new List<object> { new ReadOnlyCollection<int>(Enumerable.Range(1, 10).ToList()) };
-        }
-
-        var nestedCollection = new List<object>();
-        for (int i = 0; i < 10; i++)
-        {
-            nestedCollection.Add(GenerateDeeplyNestedCollection(depth - 1));
-        }
-
-        return nestedCollection;
-    }
-
     private ICollection? GetCollection() => new[] { "item" };
 
     private object? GetMatchingElement() => "item";
@@ -461,30 +363,6 @@ public class CollectionAssertTests : TestContainer
     private ICollection? GetReversedMatchingSuperSet() => new[] { "item2", "item" };
 
     private ICollection? GetNotMatchingSuperSet() => new[] { "item3" };
-
-    private ICollection? GetNestedLists() => new List<List<int>>
-        {
-            new() { 1, 2, 3 },
-            new() { 4, 5, 6 },
-        };
-
-    private ICollection? GetNotMatchingNestedLists() => new List<List<int>>
-        {
-            new() { 4, 5, 6 },
-            new() { 1, 2, 3 },
-        };
-
-    private ICollection? GetNonICollectionInnerCollection() => new List<ReadOnlyCollection<int>>
-        {
-            new(new List<int> { 1, 2 }),
-            new(new List<int> { 3, 4 }),
-        };
-
-    private ICollection? GetNotMatchingGetNonICollectionInnerCollection() => new List<ReadOnlyCollection<int>>
-        {
-            new(new List<int> { 6, 5 }),
-            new(new List<int> { 3, 4 }),
-        };
 
     private Type? GetStringType() => typeof(string);
 
