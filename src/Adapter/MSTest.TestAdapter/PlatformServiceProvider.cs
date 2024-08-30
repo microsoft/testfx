@@ -157,8 +157,8 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// </remarks>
     public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties)
     {
-        var context = new TestContextImplementation(testMethod, writer, properties);
-        TestRunCancellationToken?.Register(context.CancellationTokenSource.Cancel);
-        return context;
+        var testContextImplementation = new TestContextImplementation(testMethod, writer, properties);
+        TestRunCancellationToken?.Register(testContextImplementation.Context.CancellationTokenSource.Cancel);
+        return testContextImplementation;
     }
 }
