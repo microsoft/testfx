@@ -66,6 +66,7 @@ public class MSTestSettings
         TestCleanupTimeout = 0;
         TreatClassAndAssemblyCleanupWarningsAsErrors = false;
         CooperativeCancellationTimeout = false;
+        OrderTestsByNameInClass = false;
     }
 
     /// <summary>
@@ -205,6 +206,11 @@ public class MSTestSettings
     internal bool CooperativeCancellationTimeout { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether tests should be ordered by name in the class.
+    /// </summary>
+    internal bool OrderTestsByNameInClass { get; private set; }
+
+    /// <summary>
     /// Populate settings based on existing settings object.
     /// </summary>
     /// <param name="settings">The existing settings object.</param>
@@ -215,28 +221,29 @@ public class MSTestSettings
             return;
         }
 
-        CurrentSettings.CaptureDebugTraces = settings.CaptureDebugTraces;
-        CurrentSettings.ForcedLegacyMode = settings.ForcedLegacyMode;
-        CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
-        CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
-        CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
-        CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
-        CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
-        CurrentSettings.ClassCleanupLifecycle = settings.ClassCleanupLifecycle;
-        CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
-        CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
-        CurrentSettings.DisableParallelization = settings.DisableParallelization;
-        CurrentSettings.TestTimeout = settings.TestTimeout;
-        CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors = settings.TreatClassAndAssemblyCleanupWarningsAsErrors;
-        CurrentSettings.AssemblyInitializeTimeout = settings.AssemblyInitializeTimeout;
         CurrentSettings.AssemblyCleanupTimeout = settings.AssemblyCleanupTimeout;
-        CurrentSettings.ConsiderEmptyDataSourceAsInconclusive = settings.ConsiderEmptyDataSourceAsInconclusive;
-        CurrentSettings.ClassInitializeTimeout = settings.ClassInitializeTimeout;
+        CurrentSettings.AssemblyInitializeTimeout = settings.AssemblyInitializeTimeout;
+        CurrentSettings.CaptureDebugTraces = settings.CaptureDebugTraces;
+        CurrentSettings.ClassCleanupLifecycle = settings.ClassCleanupLifecycle;
         CurrentSettings.ClassCleanupTimeout = settings.ClassCleanupTimeout;
-        CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
-        CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
+        CurrentSettings.ClassInitializeTimeout = settings.ClassInitializeTimeout;
+        CurrentSettings.ConsiderEmptyDataSourceAsInconclusive = settings.ConsiderEmptyDataSourceAsInconclusive;
         CurrentSettings.ConsiderFixturesAsSpecialTests = settings.ConsiderFixturesAsSpecialTests;
         CurrentSettings.CooperativeCancellationTimeout = settings.CooperativeCancellationTimeout;
+        CurrentSettings.DisableParallelization = settings.DisableParallelization;
+        CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
+        CurrentSettings.ForcedLegacyMode = settings.ForcedLegacyMode;
+        CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
+        CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
+        CurrentSettings.OrderTestsByNameInClass = settings.OrderTestsByNameInClass;
+        CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
+        CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
+        CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
+        CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
+        CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
+        CurrentSettings.TestTimeout = settings.TestTimeout;
+        CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors = settings.TreatClassAndAssemblyCleanupWarningsAsErrors;
+        CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
     }
 
     /// <summary>
@@ -688,6 +695,21 @@ public class MSTestSettings
                             else
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "CooperativeCancellationTimeout"));
+                            }
+
+                            break;
+                        }
+
+                    case "ORDERTESTSBYNAMEINCLASS":
+                        {
+                            string value = reader.ReadInnerXml();
+                            if (bool.TryParse(value, out result))
+                            {
+                                settings.OrderTestsByNameInClass = result;
+                            }
+                            else
+                            {
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "OrderTestsByNameInClass"));
                             }
 
                             break;

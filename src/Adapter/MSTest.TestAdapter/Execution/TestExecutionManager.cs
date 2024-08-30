@@ -407,7 +407,11 @@ public class TestExecutionManager
         bool hasAnyRunnableTests = false;
         var fixtureTests = new List<TestCase>();
 
-        foreach (TestCase currentTest in tests)
+        IEnumerable<TestCase> orderedTests = MSTestSettings.CurrentSettings.OrderTestsByNameInClass
+            ? tests.OrderBy(t => t.GetManagedType()).ThenBy(t => t.GetManagedMethod())
+            : tests;
+
+        foreach (TestCase currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
 
