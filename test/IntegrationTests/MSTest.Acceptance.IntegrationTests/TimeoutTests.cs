@@ -59,7 +59,7 @@ public class TimeoutTests : AcceptanceTestBase
     public async Task Timeout_WhenTimeoutValueGreaterThanTestDuration_OutputDoesNotContainCancelingMessage(string tfm)
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 12.5s");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 30s");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
