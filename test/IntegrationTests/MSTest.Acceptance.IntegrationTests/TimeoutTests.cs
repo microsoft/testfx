@@ -22,7 +22,7 @@ public class TimeoutTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
-        testHostResult.AssertStandardErrorContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -32,7 +32,7 @@ public class TimeoutTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5y");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
-        testHostResult.AssertStandardErrorContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -42,7 +42,7 @@ public class TimeoutTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5h6m");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
-        testHostResult.AssertStandardErrorContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
