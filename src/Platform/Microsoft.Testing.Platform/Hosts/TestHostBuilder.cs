@@ -380,7 +380,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // ======= TEST HOST ORCHESTRATOR ======== //
         TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await TestHostOrchestratorManager.BuildAsync(serviceProvider);
-        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 0)
+        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 0 && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, serviceProvider);
         }
@@ -388,8 +388,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // ======= TEST HOST CONTROLLER MODE ======== //
         // Check if we're in the test host or we should check test controllers extensions
         // Environment variable check should not be needed but in case we will rollback to use only env var we will need it.
-        if (!testHostControllerInfo.HasTestHostController ||
+        if ((!testHostControllerInfo.HasTestHostController ||
             systemEnvironment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{testHostControllerInfo.GetTestHostControllerPID(true)}") != "1")
+            && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             // Clone the service provider to avoid to add the message bus proxy to the main service provider.
             var testHostControllersServiceProvider = (ServiceProvider)serviceProvider.Clone();
@@ -738,7 +739,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetAsyncMonitorFactory(),
                 serviceProvider.GetEnvironment(),
-                serviceProvider.GetTestApplicationProcessExitCode());
+                serviceProvider.GetTestApplicationProcessExitCode(),
+                dotnetTestConnection,
+                dotnetTestDataConsumer);
             await concreteMessageBusService.InitAsync();
             testFrameworkBuilderData.MessageBusProxy.SetBuiltMessageBus(concreteMessageBusService);
         }

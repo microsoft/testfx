@@ -120,6 +120,10 @@ internal sealed class DotnetTestConnection :
 
         switch (message)
         {
+            case DiscoveredTestMessage discoveredTestMessage:
+                await _dotnetTestPipeClient.RequestReplyAsync<DiscoveredTestMessage, VoidResponse>(discoveredTestMessage, _cancellationTokenSource.CancellationToken);
+                break;
+
             case SuccessfulTestResultMessage successfulTestResultMessage:
                 await _dotnetTestPipeClient.RequestReplyAsync<SuccessfulTestResultMessage, VoidResponse>(successfulTestResultMessage, _cancellationTokenSource.CancellationToken);
                 break;

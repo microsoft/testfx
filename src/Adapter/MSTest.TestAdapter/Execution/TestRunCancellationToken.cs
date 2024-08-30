@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 /// <summary>
@@ -11,14 +9,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 public class TestRunCancellationToken
 {
     /// <summary>
+    /// Callback to be invoked when canceled.
+    /// </summary>
+    private readonly List<Action> _registeredCallback = new();
+
+    /// <summary>
     /// Stores whether the test run is canceled or not.
     /// </summary>
     private bool _canceled;
-
-    /// <summary>
-    /// Callback to be invoked when canceled.
-    /// </summary>
-    private Action? _registeredCallback;
 
     public TestRunCancellationToken()
         : this(CancellationToken.None)
@@ -38,10 +36,15 @@ public class TestRunCancellationToken
 
         private set
         {
+            bool previousValue = _canceled;
             _canceled = value;
-            if (_canceled)
+
+            if (!previousValue && value)
             {
-                _registeredCallback?.Invoke();
+                foreach (Action callBack in _registeredCallback)
+                {
+                    callBack.Invoke();
+                }
             }
         }
     }
@@ -55,15 +58,10 @@ public class TestRunCancellationToken
     /// Registers a callback method to be invoked when canceled.
     /// </summary>
     /// <param name="callback">Callback delegate for handling cancellation.</param>
-    public void Register(Action callback)
-    {
-        DebugEx.Assert(_registeredCallback == null, "Callback delegate is already registered, use a new cancellationToken");
-
-        _registeredCallback = Guard.NotNull(callback);
-    }
+    public void Register(Action callback) => _registeredCallback.Add(callback);
 
     /// <summary>
     /// Unregister the callback method.
     /// </summary>
-    public void Unregister() => _registeredCallback = null;
+    public void Unregister() => _registeredCallback.Clear();
 }
