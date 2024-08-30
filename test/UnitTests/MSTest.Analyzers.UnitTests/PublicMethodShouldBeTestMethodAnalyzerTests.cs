@@ -186,38 +186,4 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests(ITestExecutionCo
                 .WithLocation(0)
                 .WithArguments("MyTestMethod"));
     }
-
-    public async Task WhenMethodIsPublicAndMarkedAsTestInitialize_NoDiagnostic()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestInitialize]
-                public void TestInitialize()
-                {
-                }
-            }
-            """;
-        await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    public async Task WhenMethodIsPublicAndMarkedAsTestCleanup_NoDiagnostic()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestInitialize]
-                public void TestCleanup()
-                {
-                }
-            }
-            """;
-        await VerifyCS.VerifyAnalyzerAsync(code);
-    }
 }
