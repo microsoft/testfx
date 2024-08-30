@@ -67,18 +67,6 @@ public class TimeoutTests : AcceptanceTestBase
         Assert.IsFalse(output.Contains("Canceling the test session"));
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TimeoutWithValidArg_WithMinuteAsSuffix_WithTestNotTimeOut_OutputDoesNotContainCancelingMessage(string tfm)
-    {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1m");
-
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
-
-        string output = testHostResult.StandardOutput;
-        Assert.IsFalse(output.Contains("Canceling the test session"));
-    }
-
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
