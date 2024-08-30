@@ -80,11 +80,9 @@ public class TimeoutTests : AcceptanceTestBase
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
-    <GenerateProgramFile>false</GenerateProgramFile>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     <PackageReference Include="MSTest" Version="$MSTestVersion$" />
   </ItemGroup>
 </Project>
@@ -106,7 +104,6 @@ public class UnitTest1
         Thread.Sleep(10000);
     }
 }
-
 """;
 
         public string NoExtensionTargetAssetPath => GetAssetPath(AssetName);
