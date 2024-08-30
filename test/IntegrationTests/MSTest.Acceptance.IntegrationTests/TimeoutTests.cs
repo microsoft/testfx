@@ -22,7 +22,7 @@ public class TimeoutTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
-        testHostResult.StandardError.Contains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
+        testHostResult.AssertStandardErrorContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -32,7 +32,7 @@ public class TimeoutTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5y");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
-        testHostResult.StandardError.Contains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
+        testHostResult.AssertStandardErrorContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -42,7 +42,7 @@ public class TimeoutTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5h6m");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
-        testHostResult.StandardError.Contains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
+        testHostResult.AssertStandardErrorContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -52,7 +52,7 @@ public class TimeoutTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1s");
 
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
-        testHostResult.StandardOutput.Contains("Canceling the test session");
+        testHostResult.AssertOutputContains("Canceling the test session");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -63,8 +63,7 @@ public class TimeoutTests : AcceptanceTestBase
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
-        string output = testHostResult.StandardOutput;
-        Assert.IsFalse(output.Contains("Canceling the test session"));
+        testHostResult.AssertOutputDoesNotContain("Canceling the test session");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
