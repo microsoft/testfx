@@ -295,13 +295,8 @@ namespace MSTestSdkTest
         compilationResult.AssertOutputContains("Invalid value for property TestingExtensionsProfile. Valid values are 'Default', 'AllMicrosoft' and 'None'.");
     }
 
-    public async Task NativeAot_Smoke_Test_Windows()
+    public async Task NativeAot_Smoke_Test()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
             SingleTestSourceCode
@@ -313,20 +308,13 @@ namespace MSTestSdkTest
         """),
             addPublicFeeds: true);
 
-        // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
-        // or sometimes doesn't fail but the native code generation is not done.
-        // So, we retry the publication a few times.
-        await RetryHelper.RetryAsync(
-            async () =>
-            {
-                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-                    $"publish -r {RID} -f {TargetFrameworks.NetCurrent.Arguments} {testAsset.TargetAssetPath}",
-                    _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
-                    // We prefer to use the outer retry mechanism as we need some extra checks
-                    retryCount: 0);
-                compilationResult.AssertOutputContains("Generating native code");
-                compilationResult.AssertOutputNotContains("warning");
-            }, times: 15, every: TimeSpan.FromSeconds(5));
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"publish -r {RID} -f {TargetFrameworks.NetCurrent.Arguments} {testAsset.TargetAssetPath}",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            // We prefer to use the outer retry mechanism as we need some extra checks
+            retryCount: 0);
+        compilationResult.AssertOutputContains("Generating native code");
+        compilationResult.AssertOutputNotContains("warning");
 
         var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments, verb: Verb.publish);
         TestHostResult testHostResult = await testHost.ExecuteAsync();

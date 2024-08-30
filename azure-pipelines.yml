@@ -116,6 +116,13 @@ stages:
             displayName: Upload coverage to codecov.io
             condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
 
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish test assets temp folders'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/tmp/$(_BuildConfig)/testsuite'
+              ArtifactName: TmpArtifacts_Windows_$(_BuildConfig)
+            condition: failed()
+
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx
           - task: PublishBuildArtifacts@1
@@ -153,3 +160,10 @@ stages:
               ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
             name: Test
             displayName: Tests
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish test assets temp folders'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/tmp/$(_BuildConfig)/testsuite'
+              ArtifactName: TmpArtifacts_Linux_$(_BuildConfig)
+            condition: failed()
