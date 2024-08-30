@@ -79,7 +79,7 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.Contains("Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'", result.ErrorMessage);
+        Assert.Contains("Option '--userOption' is declared by multiple extensions: 'userOption'", result.ErrorMessage);
     }
 
     public async Task ParseAndValidateAsync_InvalidOption_ReturnsFalse()

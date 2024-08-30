@@ -93,8 +93,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
-        <source>Option '--{0}' is declared by multiple extensions: '{1}'</source>
-        <target state="new">Option '--{0}' is declared by multiple extensions: '{1}'</target>
+        <source>Option '--{0}' is declared by multiple extensions: '{0}'</source>
+        <target state="translated">选项“--{0}”由多个扩展:“{0}”声明</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
