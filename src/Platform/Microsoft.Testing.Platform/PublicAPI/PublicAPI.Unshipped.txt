@@ -2,6 +2,8 @@
 Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.Padding.get -> int?
 Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.Padding.init -> void
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilitiesExtensions
+[TPEXP]Microsoft.Testing.Platform.Requests.IExecuteRequestCompletionNotifier
+[TPEXP]Microsoft.Testing.Platform.Requests.IExecuteRequestCompletionNotifier.Complete() -> void
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Id.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Version.get -> string!
