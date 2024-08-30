@@ -412,7 +412,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}.
+        ///   Looks up a localized string similar to No exception thrown. {1} exception was expected. {0}.
         /// </summary>
         internal static string NoExceptionThrown {
             get {
@@ -528,7 +528,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}.
+        ///   Looks up a localized string similar to Threw exception {2}, but exception {1} was expected. {0}
+        ///Exception Message: {3}
+        ///Stack Trace: {4}.
         /// </summary>
         internal static string WrongExceptionThrown {
             get {

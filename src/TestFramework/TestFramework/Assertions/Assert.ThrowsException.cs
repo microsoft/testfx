@@ -188,8 +188,10 @@ public sealed partial class Assert
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.WrongExceptionThrown,
                     userMessage,
-                    typeof(T),
-                    ex.GetType());
+                    typeof(T).Name,
+                    ex.GetType().Name,
+                    ex.Message,
+                    ex.StackTrace);
                 ThrowAssertFailed("Assert.ThrowsException", finalMessage);
             }
 
@@ -201,7 +203,7 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.NoExceptionThrown,
             userMessage,
-            typeof(T));
+            typeof(T).Name);
         ThrowAssertFailed("Assert.ThrowsException", finalMessage);
 
         // This will not hit, but need it for compiler.
@@ -299,8 +301,10 @@ public sealed partial class Assert
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.WrongExceptionThrown,
                     userMessage,
-                    typeof(T),
-                    ex.GetType());
+                    typeof(T).Name,
+                    ex.GetType().Name,
+                    ex.Message,
+                    ex.StackTrace);
                 ThrowAssertFailed("Assert.ThrowsException", finalMessage);
             }
 
@@ -312,7 +316,7 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.NoExceptionThrown,
             userMessage,
-            typeof(T));
+            typeof(T).Name);
         ThrowAssertFailed("Assert.ThrowsException", finalMessage);
 
         // This will not hit, but need it for compiler.

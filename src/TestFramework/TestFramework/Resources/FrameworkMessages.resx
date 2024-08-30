@@ -246,10 +246,12 @@
     <value>(Failed to get the message for an exception of type {0} due to an exception.)</value>
   </data>
   <data name="NoExceptionThrown" xml:space="preserve">
-    <value>Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</value>
+    <value>No exception thrown. {1} exception was expected. {0}</value>
   </data>
   <data name="WrongExceptionThrown" xml:space="preserve">
-    <value>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</value>
+    <value>Threw exception {2}, but exception {1} was expected. {0}
+Exception Message: {3}
+Stack Trace: {4}</value>
   </data>
   <data name="DataDrivenResultDisplayName" xml:space="preserve">
     <value>{0} ({1})</value>
