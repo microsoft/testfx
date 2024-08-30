@@ -296,29 +296,28 @@ namespace MSTestSdkTest
     }
 
     public async Task NativeAot_Smoke_Test_Windows()
-    {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
-        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
-            AssetName,
-            SingleTestSourceCode
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent.Arguments)
-            .PatchCodeWithReplace("$ExtraProperties$", $"""
-        <PublishAot>true</PublishAot>
-        <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
-        """),
-            addPublicFeeds: true);
-
         // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
         // or sometimes doesn't fail but the native code generation is not done.
-        // So, we retry the publication a few times.
-        await RetryHelper.RetryAsync(
+        // Retrying the restore/publish on fresh asset seems to be more effective than retrying on the same asset.
+        => await RetryHelper.RetryAsync(
             async () =>
             {
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    return;
+                }
+
+                using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+                    AssetName,
+                    SingleTestSourceCode
+                    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                    .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent.Arguments)
+                    .PatchCodeWithReplace("$ExtraProperties$", $"""
+                <PublishAot>true</PublishAot>
+                <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
+                """),
+                    addPublicFeeds: true);
+
                 DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
                     $"publish -r {RID} -f {TargetFrameworks.NetCurrent.Arguments} {testAsset.TargetAssetPath}",
                     _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
@@ -326,14 +325,13 @@ namespace MSTestSdkTest
                     retryCount: 0);
                 compilationResult.AssertOutputContains("Generating native code");
                 compilationResult.AssertOutputNotContains("warning");
+
+                var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments, verb: Verb.publish);
+                TestHostResult testHostResult = await testHost.ExecuteAsync();
+
+                testHostResult.AssertExitCodeIs(ExitCodes.Success);
+                testHostResult.AssertOutputContainsSummary(0, 1, 0);
             }, times: 15, every: TimeSpan.FromSeconds(5));
-
-        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments, verb: Verb.publish);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
-
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContainsSummary(0, 1, 0);
-    }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task EnablePlaywrightProperty_WhenUsingRunner_AllowsToRunPlaywrightTests(string tfm)
