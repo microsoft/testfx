@@ -7,19 +7,17 @@
     <Nullable>enable</Nullable>
     <RootNamespace>TestingPlatformExplorer</RootNamespace>
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
-    <Version>1.5.0-dev</Version>
-    <!--<Version>1.4.0-preview.24415.5</Version>-->
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Update to the last version if needed -->
-    <PackageReference Include="Microsoft.Testing.Platform" Version="$(Version)" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="1.4.0-preview.24415.5" />
 
     <!-- Needed to support the Trx capability -->
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="$(Version)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="1.4.0-preview.24415.5" />
 
     <!-- Add the trx extension -->
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(Version)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.4.0-preview.24415.5" />
   </ItemGroup>
 
   <ItemGroup>
