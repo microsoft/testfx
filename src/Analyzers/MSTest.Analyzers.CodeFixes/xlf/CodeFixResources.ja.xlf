@@ -17,6 +17,11 @@
         <target state="translated">署名の修正</target>
         <note />
       </trans-unit>
+      <trans-unit id="PublicMethodShouldBeTestMethodFix">
+        <source>Add '[TestMethod]'</source>
+        <target state="new">Add '[TestMethod]'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassFix">
         <source>Add '[TestClass]'</source>
         <target state="translated">'[TestClass]' の追加</target>

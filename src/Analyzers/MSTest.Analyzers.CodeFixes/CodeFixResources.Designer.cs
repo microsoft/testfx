@@ -88,6 +88,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add &apos;[TestMethod]&apos;.
+        /// </summary>
+        internal static string PublicMethodShouldBeTestMethodFix {
+            get {
+                return ResourceManager.GetString("PublicMethodShouldBeTestMethodFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add &apos;[TestClass]&apos;.
         /// </summary>
         internal static string PublicTypeShouldBeTestClassFix {

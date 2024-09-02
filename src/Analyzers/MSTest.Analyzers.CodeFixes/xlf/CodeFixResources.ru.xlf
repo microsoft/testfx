@@ -17,6 +17,11 @@
         <target state="translated">Исправить подпись</target>
         <note />
       </trans-unit>
+      <trans-unit id="PublicMethodShouldBeTestMethodFix">
+        <source>Add '[TestMethod]'</source>
+        <target state="new">Add '[TestMethod]'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassFix">
         <source>Add '[TestClass]'</source>
         <target state="translated">Добавить '[TestClass]'</target>

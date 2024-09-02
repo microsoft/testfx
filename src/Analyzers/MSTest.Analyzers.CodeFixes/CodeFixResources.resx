@@ -141,4 +141,7 @@
   <data name="TestContextShouldBeValidFix" xml:space="preserve">
     <value>Fix test context</value>
   </data>
+  <data name="PublicMethodShouldBeTestMethodFix" xml:space="preserve">
+    <value>Add '[TestMethod]'</value>
+  </data>
 </root>
