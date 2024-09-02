@@ -43,16 +43,17 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzer : DiagnosticAnalyz
         {
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute, out INamedTypeSymbol? classCleanupAttributeSymbol)
                  && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol)
-                 && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupBehavior, out INamedTypeSymbol? classCleanupBehaviorSymbol))
+                 && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupBehavior, out INamedTypeSymbol? classCleanupBehaviorSymbol)
+                 && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupBehavior, out INamedTypeSymbol? classCleanupExecutionAttributeSymbol))
             {
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, classCleanupAttributeSymbol, testClassAttributeSymbol, classCleanupBehaviorSymbol),
+                    context => AnalyzeSymbol(context, classCleanupAttributeSymbol, testClassAttributeSymbol, classCleanupBehaviorSymbol, classCleanupExecutionAttributeSymbol),
                     SymbolKind.Method);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol classCleanupAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol classCleanupBehaviorSymbol)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol classCleanupAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol classCleanupBehaviorSymbol, INamedTypeSymbol classCleanupExecutionAttributeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
@@ -61,9 +62,19 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzer : DiagnosticAnalyz
             return;
         }
 
+        // Check if the assembly has the ClassCleanupExecutionAttribute with EndOfClass behavior
+        bool assemblyHasEndOfClassCleanup = context.Compilation.Assembly
+            .GetAttributes()
+            .Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classCleanupExecutionAttributeSymbol)
+                && attr.ConstructorArguments.Length == 1
+                && SymbolEqualityComparer.Default.Equals(attr.ConstructorArguments[0].Type, classCleanupBehaviorSymbol)
+                && 1.Equals(attr.ConstructorArguments[0].Value));
+
         ImmutableArray<AttributeData> methodAttributes = methodSymbol.GetAttributes();
         bool hasCleanupAttr = false;
         bool hasCleanupEndOClassBehavior = false;
+        bool hasClassCleanupBehavior = false;
+
         foreach (AttributeData methodAttribute in methodAttributes)
         {
             if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, classCleanupAttributeSymbol))
@@ -71,19 +82,27 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzer : DiagnosticAnalyz
                 hasCleanupAttr = true;
                 foreach (TypedConstant arg in methodAttribute.ConstructorArguments)
                 {
-                    // one is the value for EndOFClass behavior in the CleanupBehavior enum.
-                    if (SymbolEqualityComparer.Default.Equals(arg.Type, classCleanupBehaviorSymbol)
-                        && 1.Equals(arg.Value))
+                    if (SymbolEqualityComparer.Default.Equals(arg.Type, classCleanupBehaviorSymbol))
                     {
-                        hasCleanupEndOClassBehavior = true;
+                        hasClassCleanupBehavior = true;
+
+                        // one is the value for EndOFClass behavior in the CleanupBehavior enum.
+                        if (1.Equals(arg.Value))
+                        {
+                            hasCleanupEndOClassBehavior = true;
+                        }
                     }
                 }
             }
         }
 
-        if (hasCleanupAttr && !hasCleanupEndOClassBehavior)
+        if (!hasCleanupAttr ||
+            (!hasClassCleanupBehavior && hasCleanupEndOClassBehavior)
+            || hasCleanupEndOClassBehavior)
         {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(UseClassCleanupBehaviorEndOfClassRule));
+            return;
         }
+
+        context.ReportDiagnostic(methodSymbol.CreateDiagnostic(UseClassCleanupBehaviorEndOfClassRule));
     }
 }

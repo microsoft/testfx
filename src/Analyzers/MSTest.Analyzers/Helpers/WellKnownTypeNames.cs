@@ -11,6 +11,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingAssert = "Microsoft.VisualStudio.TestTools.UnitTesting.Assert";
     public const string MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingClassCleanupBehavior = "Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingClassCleanupExecutionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert = "Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert";
     public const string MicrosoftVisualStudioTestToolsUnitTestingCssIterationAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.CssIterationAttribute";
