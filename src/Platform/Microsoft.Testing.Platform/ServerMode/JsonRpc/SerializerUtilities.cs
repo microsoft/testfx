@@ -249,6 +249,18 @@ internal static class SerializerUtilities
                         continue;
                     }
 
+                    if (property is StandardOutputProperty consoleStandardOutputProperty)
+                    {
+                        properties["standardOutput"] = consoleStandardOutputProperty.StandardOutput;
+                        continue;
+                    }
+
+                    if (property is StandardErrorProperty standardErrorProperty)
+                    {
+                        properties["standardError"] = standardErrorProperty.StandardError;
+                        continue;
+                    }
+
                     if (property is TestNodeStateProperty testNodeStateProperty)
                     {
                         properties["node-type"] = "action";

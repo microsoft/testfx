@@ -5,8 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
-#pragma warning disable SA1201 // Elements should appear in the correct order
-
 /// <summary>
 /// The interface that every test node property must implement.
 /// </summary>
@@ -315,11 +313,18 @@ public sealed record TestMethodIdentifierProperty(string AssemblyFullName, strin
 public sealed record TestMetadataProperty(string Key, string Value) : IProperty;
 
 /// <summary>
-/// Property that represents text information to associate with a test node.
+/// Property that represents standard output to associate with a test node.
 /// </summary>
-/// <param name="Text">Text information.</param>
+/// <param name="StandardOutput">The standard output.</param>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public record TextProperty(string Text) : IProperty;
+public record StandardOutputProperty(string StandardOutput) : IProperty;
+
+/// <summary>
+/// Property that represents standard output to associate with a test node.
+/// </summary>
+/// <param name="StandardError">The standard error.</param>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public record StandardErrorProperty(string StandardError) : IProperty;
 
 internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
 

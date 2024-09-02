@@ -1,16 +1,31 @@
 #nullable enable
-[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.TextProperty
-[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.TextProperty.Text.get -> string!
-[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.TextProperty.Text.init -> void
-[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.TextProperty.EqualityContract.get -> System.Type!
-[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.TextProperty.ToString() -> string!
-[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.TextProperty.PrintMembers(System.Text.StringBuilder! builder) -> bool
-[TPEXP]static Microsoft.Testing.Platform.Extensions.Messages.TextProperty.operator !=(Microsoft.Testing.Platform.Extensions.Messages.TextProperty? left, Microsoft.Testing.Platform.Extensions.Messages.TextProperty? right) -> bool
-[TPEXP]static Microsoft.Testing.Platform.Extensions.Messages.TextProperty.operator ==(Microsoft.Testing.Platform.Extensions.Messages.TextProperty? left, Microsoft.Testing.Platform.Extensions.Messages.TextProperty? right) -> bool
-[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.TextProperty.GetHashCode() -> int
-[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.TextProperty.Equals(object? obj) -> bool
-[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.TextProperty.<Clone>$() -> Microsoft.Testing.Platform.Extensions.Messages.TextProperty!
-[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.TextProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.TextProperty? other) -> bool
-[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.TextProperty.TextProperty(Microsoft.Testing.Platform.Extensions.Messages.TextProperty! original) -> void
-[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.TextProperty.Deconstruct(out string! Text) -> void
-[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.TextProperty.TextProperty(string! Text) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.init -> void
+[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.EqualityContract.get -> System.Type!
+[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.ToString() -> string!
+[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.PrintMembers(System.Text.StringBuilder! builder) -> bool
+[TPEXP]static Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.operator !=(Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? left, Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? right) -> bool
+[TPEXP]static Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.operator ==(Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? left, Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? right) -> bool
+[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.GetHashCode() -> int
+[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.Equals(object? obj) -> bool
+[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.<Clone>$() -> Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty!
+[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? other) -> bool
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutputProperty(Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty! original) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.Deconstruct(out string! StandardOutput) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutputProperty(string! StandardOutput) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardError.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardError.init -> void
+[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.EqualityContract.get -> System.Type!
+[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.ToString() -> string!
+[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.PrintMembers(System.Text.StringBuilder! builder) -> bool
+[TPEXP]static Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.operator !=(Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? left, Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? right) -> bool
+[TPEXP]static Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.operator ==(Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? left, Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? right) -> bool
+[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.GetHashCode() -> int
+[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.Equals(object? obj) -> bool
+[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.<Clone>$() -> Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty!
+[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? other) -> bool
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardErrorProperty(Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty! original) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.Deconstruct(out string! StandardError) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardErrorProperty(string! StandardError) -> void
