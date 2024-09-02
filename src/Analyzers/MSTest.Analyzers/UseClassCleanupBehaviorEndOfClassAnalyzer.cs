@@ -97,8 +97,8 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzer : DiagnosticAnalyz
         }
 
         if (!hasCleanupAttr ||
-            (!hasClassCleanupBehavior && hasCleanupEndOClassBehavior)
-            || hasCleanupEndOClassBehavior)
+            (!hasClassCleanupBehavior && assemblyHasEndOfClassCleanup)
+            || (hasClassCleanupBehavior && hasCleanupEndOClassBehavior))
         {
             return;
         }
