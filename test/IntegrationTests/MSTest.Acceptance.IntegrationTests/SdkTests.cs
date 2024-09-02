@@ -219,6 +219,7 @@ namespace MSTestSdkTest
         }
     }
 
+    [NonTest]
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
     public async Task RunTests_With_MSTestRunner_Standalone_EnableAll_Extensions(string multiTfm, BuildConfiguration buildConfiguration)
     {
