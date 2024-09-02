@@ -1,1 +1,16 @@
 #nullable enable
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.TextProperty
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.TextProperty.Text.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.TextProperty.Text.init -> void
+[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.TextProperty.EqualityContract.get -> System.Type!
+[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.TextProperty.ToString() -> string!
+[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.TextProperty.PrintMembers(System.Text.StringBuilder! builder) -> bool
+[TPEXP]static Microsoft.Testing.Platform.Extensions.Messages.TextProperty.operator !=(Microsoft.Testing.Platform.Extensions.Messages.TextProperty? left, Microsoft.Testing.Platform.Extensions.Messages.TextProperty? right) -> bool
+[TPEXP]static Microsoft.Testing.Platform.Extensions.Messages.TextProperty.operator ==(Microsoft.Testing.Platform.Extensions.Messages.TextProperty? left, Microsoft.Testing.Platform.Extensions.Messages.TextProperty? right) -> bool
+[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.TextProperty.GetHashCode() -> int
+[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.TextProperty.Equals(object? obj) -> bool
+[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.TextProperty.<Clone>$() -> Microsoft.Testing.Platform.Extensions.Messages.TextProperty!
+[TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.TextProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.TextProperty? other) -> bool
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.TextProperty.TextProperty(Microsoft.Testing.Platform.Extensions.Messages.TextProperty! original) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.TextProperty.Deconstruct(out string! Text) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.TextProperty.TextProperty(string! Text) -> void

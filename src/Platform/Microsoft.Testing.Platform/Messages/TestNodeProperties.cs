@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 #pragma warning disable SA1201 // Elements should appear in the correct order
@@ -311,6 +313,13 @@ public sealed record TestMethodIdentifierProperty(string AssemblyFullName, strin
 /// <param name="Key">Key name.</param>
 /// <param name="Value">Value name.</param>
 public sealed record TestMetadataProperty(string Key, string Value) : IProperty;
+
+/// <summary>
+/// Property that represents text information to associate with a test node.
+/// </summary>
+/// <param name="Text">Text information.</param>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public record TextProperty(string Text) : IProperty;
 
 internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
 
