@@ -2,7 +2,7 @@
   "profiles": {
     "Microsoft.Testing.Platform.UnitTests": {
       "commandName": "Project",
-      "commandLineArgs": "--treenode-filter /*/*/FormatterUtilitiesTests/**",
+      "commandLineArgs": "--treenode-filter /*/*/*/**",
       "environmentVariables": {
         //"TESTINGPLATFORM_HOTRELOAD_ENABLED": "1"
       }
