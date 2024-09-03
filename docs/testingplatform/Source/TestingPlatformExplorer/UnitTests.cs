@@ -14,13 +14,23 @@ public class SomeTests
     public static void TestMethod2() => Assert.AreEqual(1, 2);
 
     [TestMethod]
-    public static void TestMethod3()
+    public static void TestMethod3(ITestOutputHelper testOutputHelper)
     {
-        int a = 1;
-        int b = 0;
-        int c = a / b;
+        testOutputHelper.WriteLine("I'm running TestMethod3");
 
-        Assert.AreEqual(c, 2);
+        try
+        {
+            int a = 1;
+            int b = 0;
+            int c = a / b;
+
+            Assert.AreEqual(c, 2);
+        }
+        catch (Exception ex)
+        {
+            testOutputHelper.WriteErrorLine(ex.ToString());
+            throw;
+        }
     }
 
     [Skip]
