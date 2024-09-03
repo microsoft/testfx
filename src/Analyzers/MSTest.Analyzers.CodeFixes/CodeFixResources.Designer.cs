@@ -61,11 +61,29 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add &apos;[TestMethod]&apos;.
+        /// </summary>
+        internal static string AddTestMethodAttributeFix {
+            get {
+                return ResourceManager.GetString("AddTestMethodAttributeFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fix signature.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidCodeFix {
             get {
                 return ResourceManager.GetString("AssemblyInitializeShouldBeValidCodeFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change method accessibility to &apos;private&apos;.
+        /// </summary>
+        internal static string ChangeMethodAccessibilityToPrivateFix {
+            get {
+                return ResourceManager.GetString("ChangeMethodAccessibilityToPrivateFix", resourceCulture);
             }
         }
         

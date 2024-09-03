@@ -2,6 +2,16 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="cs" original="../CodeFixResources.resx">
     <body>
+      <trans-unit id="AddTestMethodAttributeFix">
+        <source>Add '[TestMethod]'</source>
+        <target state="new">Add '[TestMethod]'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
+        <source>Change method accessibility to 'private'</source>
+        <target state="new">Change method accessibility to 'private'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
         <source>Fix actual/expected arguments order</source>
         <target state="translated">Opravit pořadí skutečných/očekávaných argumentů</target>
