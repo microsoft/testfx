@@ -152,13 +152,14 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                 }
                             }
 
-                            if (test.GetCustomAttribute<SkipAttribute>() != null)
+                            SkipAttribute? skipAttribute = test.GetCustomAttribute<SkipAttribute>();
+                            if (skipAttribute != null)
                             {
                                 var skippedTestNode = new TestNode()
                                 {
                                     Uid = $"{test.DeclaringType!.FullName}.{test.Name}",
                                     DisplayName = test.Name,
-                                    Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
+                                    Properties = new PropertyBag(new SkippedTestNodeStateProperty(skipAttribute.Reason)),
                                 };
 
                                 if (_capabilities.TrxCapability.IsTrxEnabled)

@@ -33,7 +33,7 @@ public class SomeTests
         }
     }
 
-    [Skip]
+    [Skip("Temporary disabled")]
     [TestMethod]
     public static void TestMethod4() => Assert.AreEqual(1, 1);
 }
