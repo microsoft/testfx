@@ -48,14 +48,14 @@ public sealed class PublicMethodShouldBeTestMethodFixer : CodeFixProvider
             CodeAction.Create(
                 title: CodeFixResources.AddTestMethodAttributeFix,
                 createChangedDocument: c => AddTestMethodAttributeAsync(context.Document, methodDeclaration, c),
-                equivalenceKey: nameof(PublicMethodShouldBeTestMethodFixer) + "_AddTestMethod"),
+                equivalenceKey: nameof(PublicMethodShouldBeTestMethodFixer) + $"_{CodeFixResources.AddTestMethodAttributeFix}"),
             diagnostic);
 
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.ChangeMethodAccessibilityToPrivateFix,
                 createChangedDocument: c => ChangeMethodVisibilityAsync(context.Document, methodDeclaration, c),
-                equivalenceKey: nameof(PublicMethodShouldBeTestMethodFixer) + "_ChangeVisibility"),
+                equivalenceKey: nameof(PublicMethodShouldBeTestMethodFixer) + $"_{CodeFixResources.ChangeMethodAccessibilityToPrivateFix}"),
             diagnostic);
     }
 
@@ -64,7 +64,6 @@ public sealed class PublicMethodShouldBeTestMethodFixer : CodeFixProvider
         cancellationToken.ThrowIfCancellationRequested();
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-
         SyntaxNode testMethodAttribute = editor.Generator.Attribute("TestMethod");
 
         // Add the TestMethod attribute to the method.
@@ -80,6 +79,8 @@ public sealed class PublicMethodShouldBeTestMethodFixer : CodeFixProvider
         SyntaxNode updatedMethodDeclaration = editor.Generator.WithAccessibility(methodDeclaration, Accessibility.Private);
 
         editor.ReplaceNode(methodDeclaration, updatedMethodDeclaration);
+
+        // Apply the changes and return the updated document.
         return editor.GetChangedDocument();
     }
 }
