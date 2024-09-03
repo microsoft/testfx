@@ -176,6 +176,16 @@ internal sealed class Json
                     continue;
                 }
 
+                if (property is StandardOutputProperty standardOutputProperty)
+                {
+                    properties.Add(("standardOutput", standardOutputProperty.StandardOutput));
+                }
+
+                if (property is StandardErrorProperty standardErrorProperty)
+                {
+                    properties.Add(("standardError", standardErrorProperty.StandardError));
+                }
+
                 if (property is TestNodeStateProperty testNodeStateProperty)
                 {
                     properties.Add(("node-type", "action"));
