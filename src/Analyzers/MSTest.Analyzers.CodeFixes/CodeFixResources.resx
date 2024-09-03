@@ -141,7 +141,10 @@
   <data name="TestContextShouldBeValidFix" xml:space="preserve">
     <value>Fix test context</value>
   </data>
-  <data name="PublicMethodShouldBeTestMethodFix" xml:space="preserve">
+  <data name="AddTestMethodAttributeFix" xml:space="preserve">
     <value>Add '[TestMethod]'</value>
+  </data>
+  <data name="ChangeMethodAccessibilityToPrivateFix" xml:space="preserve">
+    <value>Change method accessibility to 'private'</value>
   </data>
 </root>
