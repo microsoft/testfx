@@ -17,43 +17,43 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class TestMethodFilterTests : TestContainer
 {
-    public TestMethodFilterTests() => TestMethodFilter = new TestMethodFilter();
+    public TestMethodFilterTests() => _testMethodFilter = new TestMethodFilter();
 
-    private TestMethodFilter TestMethodFilter { get; set; }
+    readonly TestMethodFilter _testMethodFilter;
 
     public void PropertyProviderForFullyQualifiedNamePropertyReturnFullyQualifiedNameTestProperty()
     {
-        TestProperty property = TestMethodFilter.PropertyProvider("FullyQualifiedName");
+        TestProperty property = _testMethodFilter.PropertyProvider("FullyQualifiedName");
         Verify(property.Label == "FullyQualifiedName");
     }
 
     public void PropertyProviderForClassNamePropertyReturnClassNameTestProperty()
     {
-        TestProperty property = TestMethodFilter.PropertyProvider("ClassName");
+        TestProperty property = _testMethodFilter.PropertyProvider("ClassName");
         Verify(property.Label == "ClassName");
     }
 
     public void PropertyProviderForNamePropertyReturnNameTestProperty()
     {
-        TestProperty property = TestMethodFilter.PropertyProvider("Name");
+        TestProperty property = _testMethodFilter.PropertyProvider("Name");
         Verify(property.Label == "Name");
     }
 
     public void PropertyProviderForTestCategoryPropertyReturnTestCategoryTestProperty()
     {
-        TestProperty property = TestMethodFilter.PropertyProvider("TestCategory");
+        TestProperty property = _testMethodFilter.PropertyProvider("TestCategory");
         Verify(property.Label == "TestCategory");
     }
 
     public void PropertyProviderForPriorityPropertyReturnPriorityTestProperty()
     {
-        TestProperty property = TestMethodFilter.PropertyProvider("Priority");
+        TestProperty property = _testMethodFilter.PropertyProvider("Priority");
         Verify(property.Label == "Priority");
     }
 
     public void PropertyProviderValueForInvalidTestCaseReturnsNull()
     {
-        object result = TestMethodFilter.PropertyValueProvider(null, "Hello");
+        object result = _testMethodFilter.PropertyValueProvider(null, "Hello");
         Verify(result is null);
     }
 
@@ -63,7 +63,7 @@ public class TestMethodFilterTests : TestContainer
         string fullName = $"{type.FullName}.{"TestMethod"}";
         TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
 
-        object result = TestMethodFilter.PropertyValueProvider(testCase, null);
+        object result = _testMethodFilter.PropertyValueProvider(testCase, null);
         Verify(result is null);
     }
 
@@ -73,7 +73,7 @@ public class TestMethodFilterTests : TestContainer
         string fullName = $"{type.FullName}.{"TestMethod"}";
 
         TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
-        object result = TestMethodFilter.PropertyValueProvider(testCase, "Priority");
+        object result = _testMethodFilter.PropertyValueProvider(testCase, "Priority");
         Verify(result is null);
     }
 
@@ -84,14 +84,14 @@ public class TestMethodFilterTests : TestContainer
 
         TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
 
-        object result = TestMethodFilter.PropertyValueProvider(testCase, "FullyQualifiedName");
+        object result = _testMethodFilter.PropertyValueProvider(testCase, "FullyQualifiedName");
         Verify(fullName.Equals(result));
     }
 
     public void GetFilterExpressionForNullRunContextReturnsNull()
     {
         TestableTestExecutionRecorder recorder = new();
-        ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(null, recorder, out bool filterHasError);
+        ITestCaseFilterExpression filterExpression = _testMethodFilter.GetFilterExpression(null, recorder, out bool filterHasError);
 
         Verify(filterExpression is null);
         Verify(!filterHasError);
@@ -102,7 +102,7 @@ public class TestMethodFilterTests : TestContainer
         TestableTestExecutionRecorder recorder = new();
         var dummyFilterExpression = new TestableTestCaseFilterExpression();
         TestableRunContext runContext = new(() => dummyFilterExpression);
-        ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(runContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression filterExpression = _testMethodFilter.GetFilterExpression(runContext, recorder, out bool filterHasError);
 
         Verify(dummyFilterExpression == filterExpression);
         Verify(!filterHasError);
@@ -116,7 +116,7 @@ public class TestMethodFilterTests : TestContainer
         TestableTestExecutionRecorder recorder = new();
         var dummyFilterExpression = new TestableTestCaseFilterExpression();
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => dummyFilterExpression);
-        ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
 
         Verify(dummyFilterExpression == filterExpression);
         Verify(!filterHasError);
@@ -129,7 +129,7 @@ public class TestMethodFilterTests : TestContainer
     {
         TestableTestExecutionRecorder recorder = new();
         TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new();
-        ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
 
         Verify(filterExpression is null);
         Verify(!filterHasError);
@@ -139,7 +139,7 @@ public class TestMethodFilterTests : TestContainer
     {
         TestableTestExecutionRecorder recorder = new();
         TestableRunContext runContext = new(() => throw new TestPlatformFormatException("DummyException"));
-        ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(runContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression filterExpression = _testMethodFilter.GetFilterExpression(runContext, recorder, out bool filterHasError);
 
         Verify(filterExpression is null);
         Verify(filterHasError);
@@ -154,7 +154,7 @@ public class TestMethodFilterTests : TestContainer
     {
         TestableTestExecutionRecorder recorder = new();
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => throw new TestPlatformFormatException("DummyException"));
-        ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
 
         Verify(filterExpression is null);
         Verify(filterHasError);

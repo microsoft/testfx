@@ -40,7 +40,7 @@ public class TestExecutionManager
 
     internal TestExecutionManager(IEnvironment environment, Func<Action, Task>? taskFactory = null)
     {
-        TestMethodFilter = new TestMethodFilter();
+        _testMethodFilter = new TestMethodFilter();
         _sessionParameters = new Dictionary<string, object>();
         _environment = environment;
         _taskFactory = taskFactory ?? DefaultFactoryAsync;
@@ -78,12 +78,12 @@ public class TestExecutionManager
     /// <summary>
     /// Gets or sets method filter for filtering tests.
     /// </summary>
-    private TestMethodFilter TestMethodFilter { get; set; }
+    private readonly TestMethodFilter _testMethodFilter;
 
     /// <summary>
     /// Gets or sets a value indicating whether any test executed has failed.
     /// </summary>
-    private bool HasAnyTestFailed { get; set; }
+    private bool _hasAnyTestFailed;
 
     /// <summary>
     /// Runs the tests.
@@ -110,7 +110,7 @@ public class TestExecutionManager
         // Execute the tests
         ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
 
-        if (!HasAnyTestFailed)
+        if (!_hasAnyTestFailed)
         {
             PlatformServiceProvider.Instance.TestDeployment.Cleanup();
         }
@@ -148,7 +148,7 @@ public class TestExecutionManager
         // Run tests.
         ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
 
-        if (!HasAnyTestFailed)
+        if (!_hasAnyTestFailed)
         {
             PlatformServiceProvider.Instance.TestDeployment.Cleanup();
         }
@@ -200,7 +200,7 @@ public class TestExecutionManager
             if (testResult.Outcome == TestOutcome.Failed)
             {
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor:Test {0} failed. ErrorMessage:{1}, ErrorStackTrace:{2}.", testResult.TestCase.FullyQualifiedName, testResult.ErrorMessage, testResult.ErrorStackTrace);
-                HasAnyTestFailed = true;
+                _hasAnyTestFailed = true;
             }
 
             try
@@ -258,7 +258,7 @@ public class TestExecutionManager
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
         // Default test set is filtered tests based on user provided filter criteria
-        ITestCaseFilterExpression? filterExpression = TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, frameworkHandle, out bool filterHasError);
         if (filterHasError)
         {
             // Bail out without processing everything else below.
@@ -292,7 +292,7 @@ public class TestExecutionManager
         TestAssemblySettings sourceSettings = (sourceSettingsProvider != null) ? TestAssemblySettingsProvider.GetSettings(source) : new TestAssemblySettings();
         int parallelWorkers = sourceSettings.Workers;
         ExecutionScope parallelScope = sourceSettings.Scope;
-        TestCase[] testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, TestMethodFilter)).ToArray();
+        TestCase[] testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, _testMethodFilter)).ToArray();
         UnitTestElement[] unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source)).ToArray();
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
