@@ -75,6 +75,8 @@ public sealed class PublicMethodShouldBeTestMethodFixer : CodeFixProvider
 
     private static async Task<Document> ChangeMethodVisibilityAsync(Document document, MethodDeclarationSyntax methodDeclaration, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         SyntaxNode updatedMethodDeclaration = editor.Generator.WithAccessibility(methodDeclaration, Accessibility.Private);
 
