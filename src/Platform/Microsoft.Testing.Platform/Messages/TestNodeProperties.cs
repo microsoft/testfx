@@ -320,7 +320,7 @@ public sealed record TestMetadataProperty(string Key, string Value) : IProperty;
 public record StandardOutputProperty(string StandardOutput) : IProperty;
 
 /// <summary>
-/// Property that represents standard output to associate with a test node.
+/// Property that represents standard error to associate with a test node.
 /// </summary>
 /// <param name="StandardError">The standard error.</param>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
