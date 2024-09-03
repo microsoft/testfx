@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 
@@ -168,7 +170,7 @@ public class FormatterUtilitiesTests : TestBase
 
         if (type == typeof(TestNode))
         {
-            Assert.AreEqual("""{"uid":"uid","display-name":"DisplayName","tuples-key":[{"a":"1"},{"b":"2"}],"array-key":["1","2"],"time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","time.duration-ms":0,"location.namespace":"namespace","location.type":"typeName","location.method":"methodName(param1,param2)","location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"uid":"uid","display-name":"DisplayName","tuples-key":[{"a":"1"},{"b":"2"}],"array-key":["1","2"],"standardError":"textProperty2","standardOutput":"textProperty","time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","time.duration-ms":0,"location.namespace":"namespace","location.type":"typeName","location.method":"methodName(param1,param2)","location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
@@ -180,7 +182,7 @@ public class FormatterUtilitiesTests : TestBase
 
         if (type == typeof(TestNodeUpdateMessage))
         {
-            Assert.AreEqual("""{"node":{"uid":"uid","display-name":"DisplayName","tuples-key":[{"a":"1"},{"b":"2"}],"array-key":["1","2"],"time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","time.duration-ms":0,"location.namespace":"namespace","location.type":"typeName","location.method":"methodName(param1,param2)","location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""},"parent":"parent-uid"}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"node":{"uid":"uid","display-name":"DisplayName","tuples-key":[{"a":"1"},{"b":"2"}],"array-key":["1","2"],"standardError":"textProperty2","standardOutput":"textProperty","time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","time.duration-ms":0,"location.namespace":"namespace","location.type":"typeName","location.method":"methodName(param1,param2)","location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""},"parent":"parent-uid"}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
@@ -430,6 +432,8 @@ public class FormatterUtilitiesTests : TestBase
             testNode.Properties.Add(new TestMethodIdentifierProperty("assemblyFullName", "namespace", "typeName", "methodName", ["param1", "param2"], "returnTypeFullName"));
             testNode.Properties.Add(new TimingProperty(new TimingInfo(new DateTimeOffset(2023, 01, 01, 01, 01, 01, TimeSpan.Zero), new DateTimeOffset(2023, 01, 01, 01, 01, 01, TimeSpan.Zero), TimeSpan.Zero)));
             testNode.Properties.Add(new FailedTestNodeStateProperty(new InvalidOperationException("sample")));
+            testNode.Properties.Add(new StandardOutputProperty("textProperty"));
+            testNode.Properties.Add(new StandardErrorProperty("textProperty2"));
             testNode.Properties.Add(new SerializableNamedArrayStringProperty("array-key", ["1", "2"]));
             testNode.Properties.Add(new SerializableNamedKeyValuePairsStringProperty("tuples-key", [new KeyValuePair<string, string>("a", "1"), new KeyValuePair<string, string>("b", "2"),]));
 
