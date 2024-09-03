@@ -284,9 +284,15 @@ internal static class SerializerUtilities
                                     break;
                                 }
 
-                            case SkippedTestNodeStateProperty:
+                            case SkippedTestNodeStateProperty skippedTestNodeStateProperty:
                                 {
                                     properties["execution-state"] = "skipped";
+
+                                    if (!RoslynString.IsNullOrEmpty(skippedTestNodeStateProperty.Explanation))
+                                    {
+                                        properties["error.message"] = skippedTestNodeStateProperty.Explanation;
+                                    }
+
                                     break;
                                 }
 
