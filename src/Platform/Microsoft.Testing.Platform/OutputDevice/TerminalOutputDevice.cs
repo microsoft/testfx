@@ -260,11 +260,11 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             {
                 if (_fileLoggerInformation.SyncronousWrite)
                 {
-                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
+                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
                 }
                 else
                 {
-                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
+                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
                 }
             }
         }
@@ -277,7 +277,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         // Start test execution here, rather than in ShowBanner, because then we know
         // if we are a testHost controller or not, and if we should show progress bar.
         _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1);
-        _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _shortArchitecture);
+        _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _shortArchitecture, executionId: null);
         if (_logger is not null && _logger.IsEnabled(LogLevel.Trace))
         {
             await _logger.LogTraceAsync("DisplayBeforeSessionStartAsync");
@@ -297,7 +297,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         {
             if (!_firstCallTo_OnSessionStartingAsync)
             {
-                _terminalTestReporter.AssemblyRunCompleted(_assemblyName, _targetFramework, _shortArchitecture);
+                _terminalTestReporter.AssemblyRunCompleted(_assemblyName, _targetFramework, _shortArchitecture, executionId: null);
                 _terminalTestReporter.TestExecutionCompleted(_clock.UtcNow);
             }
         }
@@ -347,10 +347,10 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         switch (color.ConsoleColor)
                         {
                             case ConsoleColor.Red:
-                                _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
+                                _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
                                 break;
                             case ConsoleColor.Yellow:
-                                _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
+                                _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
                                 break;
                             default:
                                 _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text, color, formattedTextOutputDeviceData.Padding);
@@ -374,7 +374,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
                     {
                         await LogDebugAsync(exceptionOutputDeviceData.Exception.ToString());
-                        _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, exceptionOutputDeviceData.Exception);
+                        _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, exceptionOutputDeviceData.Exception);
 
                         break;
                     }
@@ -408,6 +408,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             _assemblyName,
                             _targetFramework,
                             _shortArchitecture,
+                            executionId: null,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Error,
                             duration,
@@ -422,6 +423,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              _assemblyName,
                              _targetFramework,
                              _shortArchitecture,
+                             executionId: null,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Fail,
                              duration,
@@ -436,6 +438,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              _assemblyName,
                              _targetFramework,
                              _shortArchitecture,
+                             executionId: null,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Timeout,
                              duration,
@@ -450,6 +453,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              _assemblyName,
                              _targetFramework,
                              _shortArchitecture,
+                             executionId: null,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Canceled,
                              duration,
@@ -464,6 +468,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             _assemblyName,
                             _targetFramework,
                             _shortArchitecture,
+                            executionId: null,
                             testNodeStateChanged.TestNode.DisplayName,
                             outcome: TestOutcome.Passed,
                             duration: duration,
@@ -478,6 +483,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             _assemblyName,
                             _targetFramework,
                             _shortArchitecture,
+                            executionId: null,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Skipped,
                             duration,
@@ -498,6 +504,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         _assemblyName,
                         _targetFramework,
                         _shortArchitecture,
+                        executionId: null,
                         artifact.TestNode.DisplayName,
                         artifact.FileInfo.FullName);
                 }
@@ -512,6 +519,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         _assemblyName,
                         _targetFramework,
                         _shortArchitecture,
+                        executionId: null,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }
@@ -525,6 +533,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         _assemblyName,
                         _targetFramework,
                         _shortArchitecture,
+                        executionId: null,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }

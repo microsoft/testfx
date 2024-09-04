@@ -68,20 +68,20 @@ public sealed class TerminalTestReporterTests : TestBase
         string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
         string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
-        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture);
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, executionId: null);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
             errorMessage: null, errorStackTrace: null, expected: null, actual: null);
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
             errorMessage: null, errorStackTrace: null, expected: null, actual: null);
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
             errorMessage: null, errorStackTrace: null, expected: null, actual: null);
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
             errorMessage: null, errorStackTrace: null, expected: null, actual: null);
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
             errorMessage: "Tests failed", errorStackTrace: @$"   at FailingTest() in {folder}codefile.cs:line 10", expected: "ABC", actual: "DEF");
-        terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact1.txt");
-        terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact2.txt");
-        terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture);
+        terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact1.txt");
+        terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact2.txt");
+        terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture, executionId: null);
         terminalReporter.TestExecutionCompleted(endTime);
 
         string output = stringBuilderConsole.Output;

@@ -138,7 +138,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _terminalWithProgress.StartShowingProgress(workerCount);
     }
 
-    public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture)
+    public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture, string? executionId)
     {
         if (_options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
         {
@@ -151,12 +151,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
             });
         }
 
-        GetOrAddAssemblyRun(assembly, targetFramework, architecture);
+        GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
     }
 
-    private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture)
+    private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture, string? executionId)
     {
-        string key = $"{assembly}|{targetFramework}|{architecture}";
+        string key = $"{assembly}|{targetFramework}|{architecture}|{executionId}";
         if (_assemblies.TryGetValue(key, out TestProgressState? asm))
         {
             return asm;
@@ -369,6 +369,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string assembly,
         string? targetFramework,
         string? architecture,
+        string? executionId,
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
@@ -377,7 +378,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? expected,
         string? actual)
     {
-        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}"];
+        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
 
         switch (outcome)
         {
@@ -630,9 +631,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
-    internal void AssemblyRunCompleted(string assembly, string? targetFramework, string? architecture)
+    internal void AssemblyRunCompleted(string assembly, string? targetFramework, string? architecture, string? executionId)
     {
-        TestProgressState assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
+        TestProgressState assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
         assemblyRun.Stopwatch.Stop();
 
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
@@ -653,6 +654,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         AppendAssemblyResult(terminal, assemblyRun.FailedTests == 0, failedTests, warnings);
         terminal.Append(' ');
         AppendLongDuration(terminal, assemblyRun.Stopwatch.Elapsed);
+        terminal.AppendLine();
     }
 
     /// <summary>
@@ -675,8 +677,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     public void Dispose() => _terminalWithProgress.Dispose();
 
-    public void ArtifactAdded(bool outOfProcess, string? assembly, string? targetFramework, string? architecture, string? testName, string path)
-        => _artifacts.Add(new TestRunArtifact(outOfProcess, assembly, targetFramework, architecture, testName, path));
+    public void ArtifactAdded(bool outOfProcess, string? assembly, string? targetFramework, string? architecture, string? executionId, string? testName, string path)
+        => _artifacts.Add(new TestRunArtifact(outOfProcess, assembly, targetFramework, architecture, executionId, testName, path));
 
     /// <summary>
     /// Let the user know that cancellation was triggered.
@@ -692,9 +694,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         });
     }
 
-    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string text, int? padding)
+    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string? executionId, string text, int? padding)
     {
-        TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
+        TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
         asm.AddError(text);
 
         _terminalWithProgress.WriteToTerminal(terminal =>
@@ -713,9 +715,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         });
     }
 
-    internal void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string text, int? padding)
+    internal void WriteWarningMessage(string assembly, string? targetFramework, string? architecture, string? executionId, string text, int? padding)
     {
-        TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture);
+        TestProgressState asm = GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
         asm.AddWarning(text);
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
@@ -733,8 +735,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         });
     }
 
-    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, Exception exception)
-        => WriteErrorMessage(assembly, targetFramework, architecture, exception.ToString(), padding: null);
+    internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string? executionId, Exception exception)
+        => WriteErrorMessage(assembly, targetFramework, architecture, executionId, exception.ToString(), padding: null);
 
     internal void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
     {
