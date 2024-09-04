@@ -176,6 +176,16 @@ internal sealed class Json
                     continue;
                 }
 
+                if (property is StandardOutputProperty standardOutputProperty)
+                {
+                    properties.Add(("standardOutput", standardOutputProperty.StandardOutput));
+                }
+
+                if (property is StandardErrorProperty standardErrorProperty)
+                {
+                    properties.Add(("standardError", standardErrorProperty.StandardError));
+                }
+
                 if (property is TestNodeStateProperty testNodeStateProperty)
                 {
                     properties.Add(("node-type", "action"));
@@ -200,9 +210,14 @@ internal sealed class Json
                                 break;
                             }
 
-                        case SkippedTestNodeStateProperty:
+                        case SkippedTestNodeStateProperty skippedTestNodeStateProperty:
                             {
                                 properties.Add(("execution-state", "skipped"));
+                                if (!RoslynString.IsNullOrEmpty(skippedTestNodeStateProperty.Explanation))
+                                {
+                                    properties.Add(("error.message", skippedTestNodeStateProperty.Explanation));
+                                }
+
                                 break;
                             }
 
