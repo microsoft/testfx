@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -174,7 +175,9 @@ internal sealed class AnsiTerminal : ITerminal
 
     public void StopUpdate()
     {
-        _console.Write(_stringBuilder.ToString());
+        string text = _stringBuilder.ToString();
+        _console.Write(text);
+        Debug.WriteLine(text + "\n" + Environment.StackTrace);
         _isBatching = false;
     }
 

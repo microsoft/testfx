@@ -19,6 +19,7 @@ public class CrashDumpTests(ITestExecutionContext testExecutionContext) : TestBa
     [Arguments("Full")]
     public async Task IsValid_If_CrashDumpType_Has_CorrectValue(string crashDumpType)
     {
+        Thread.Sleep(10000);
         var provider = new CrashDumpCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == CrashDumpCommandLineOptions.CrashDumpTypeOptionName);
 
@@ -29,6 +30,7 @@ public class CrashDumpTests(ITestExecutionContext testExecutionContext) : TestBa
 
     public async Task IsInvValid_If_CrashDumpType_Has_IncorrectValue()
     {
+        Assert.AreEqual(1, 2);
         var provider = new CrashDumpCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == CrashDumpCommandLineOptions.CrashDumpTypeOptionName);
 
