@@ -66,7 +66,6 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
                     case TestStates.Passed:
                     case TestStates.Skipped:
-
                         TestResultMessages testResultMessages = new(
                             ExecutionId,
                             new[]
@@ -84,7 +83,6 @@ internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandl
                         break;
 
                     case TestStates.Failed:
-
                         testResultMessages = new(
                             ExecutionId,
                             Array.Empty<SuccessfulTestResultMessage>(),
