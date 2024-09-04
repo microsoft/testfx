@@ -147,4 +147,7 @@
   <data name="ChangeMethodAccessibilityToPrivateFix" xml:space="preserve">
     <value>Change method accessibility to 'private'</value>
   </data>
+  <data name="ReplaceWithFailAssertionFix" xml:space="preserve">
+    <value>Replace the assertion wit 'Assert.Fail()'</value>
+  </data>
 </root>

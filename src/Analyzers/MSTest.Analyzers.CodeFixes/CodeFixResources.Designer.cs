@@ -115,6 +115,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replace the assertion wit &apos;Assert.Fail()&apos;.
+        /// </summary>
+        internal static string ReplaceWithFailAssertionFix {
+            get {
+                return ResourceManager.GetString("ReplaceWithFailAssertionFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fix test class signature.
         /// </summary>
         internal static string TestClassShouldBeValidFix {

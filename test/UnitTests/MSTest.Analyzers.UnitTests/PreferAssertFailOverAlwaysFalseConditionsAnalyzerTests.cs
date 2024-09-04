@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -27,7 +27,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     public async Task WhenIsNullAssertion_ValueParameterIsNotNullable_Diagnostic()
@@ -46,8 +46,22 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            #nullable enable
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int var = 3;
+                    Assert.Fail();
+                }
+            }
+            """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenIsNullAssertion_ValueParameterAsPropertySymbolIsNotNullable_Diagnostic()
@@ -67,8 +81,22 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            #nullable enable
+            [TestClass]
+            public class MyTestClass
+            {
+                private int var = 3;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+                [TestMethod]
+                public void Test()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenIsNullAssertion_ValueParameterAsPropertySymbolIsNullable_NoDiagnostic()
@@ -89,7 +117,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     public async Task WhenIsNullAssertion_ValueParameterAsReferenceObjectIsNotNullable_Diagnostic()
@@ -113,8 +141,26 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
 
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            #nullable enable
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void Test()
+                {
+                    ObjectClass obj = new ObjectClass();
+                    Assert.Fail();
+                }
+            }
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+            public class ObjectClass
+            {
+
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenIsNullAssertion_ValueParameterAsReferenceObjectIsNotNullable_WithoutEnableNullable_NoDiagnostic()
@@ -138,7 +184,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     public async Task WhenIsNullAssertion_ValueParameterAsReferenceObjectIsNullable_NoDiagnostic()
@@ -164,7 +210,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     public async Task WhenAssertIsTrueIsPassedTrue_NoDiagnostic()
@@ -239,8 +285,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertIsTrueIsPassedFalse_WithMessage_Diagnostic()
@@ -258,8 +317,20 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertIsTrueIsPassedFalse_WithMessageFirst_Diagnostic()
@@ -277,8 +348,20 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertIsTrueIsPassedUnknown_NoDiagnostic()
@@ -359,8 +442,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertIsFalseIsPassedTrue_WithMessage_Diagnostic()
@@ -378,8 +474,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertIsFalseIsPassedTrue_WithMessageFirst_Diagnostic()
@@ -397,8 +506,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertIsFalseIsPassedFalse_NoDiagnostic()
@@ -536,8 +658,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertIsNotNullIsPassedNull_WithMessage_Diagnostic()
@@ -555,8 +690,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertIsNotNullIsPassedNull_WithMessageFirst_Diagnostic()
@@ -574,8 +722,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertIsNotNullIsPassedUnknown_NoDiagnostic()
@@ -732,8 +893,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertAreEqualIsPassedNonEqual_WithMessage_Diagnostic()
@@ -751,8 +925,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertAreEqualIsPassedNonEqual_WithMessageFirst_Diagnostic()
@@ -770,8 +957,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertAreEqualIsPassedNonEqual_WithMessageSecond_Diagnostic()
@@ -789,8 +989,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertAreEqualIsPassedUnknown_NoDiagnostic()
@@ -892,8 +1105,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertAreNotEqualIsPassedEqual_WithMessage_Diagnostic()
@@ -911,8 +1137,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertAreNotEqualIsPassedEqual_WithMessageFirst_Diagnostic()
@@ -930,8 +1169,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertAreNotEqualIsPassedEqual_WithMessageSecond_Diagnostic()
@@ -949,8 +1201,21 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenAssertAreNotEqualIsPassedNonEqual_NoDiagnostic()
