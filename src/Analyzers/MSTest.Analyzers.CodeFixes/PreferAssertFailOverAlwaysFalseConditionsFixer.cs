@@ -9,8 +9,8 @@ using Analyzer.Utilities;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Text;
 
 using MSTest.Analyzers.Helpers;
@@ -50,14 +50,18 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsFixer : CodeFixProv
         }
     }
 
-    private static Task<Document> SwapArgumentsAsync(Document document, SyntaxNode root, InvocationExpressionSyntax invocationExpr, CancellationToken cancellationToken)
+    private static async Task<Document> SwapArgumentsAsync(Document document, SyntaxNode root, InvocationExpressionSyntax invocationExpr, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        SyntaxNode newInvocationExpr = SyntaxFactory.ParseExpression("Assert.Fail()");
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        SyntaxGenerator generator = editor.Generator;
 
-        SyntaxNode newRoot = root.ReplaceNode(invocationExpr, newInvocationExpr);
+        SyntaxNode newInvocationExpr = generator.InvocationExpression(
+            generator.MemberAccessExpression(generator.IdentifierName("Assert"), "Fail"));
 
-        return Task.FromResult(document.WithSyntaxRoot(newRoot));
+        editor.ReplaceNode(invocationExpr, newInvocationExpr);
+
+        return editor.GetChangedDocument();
     }
 }
