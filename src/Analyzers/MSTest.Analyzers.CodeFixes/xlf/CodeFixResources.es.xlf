@@ -32,6 +32,11 @@
         <target state="translated">Agregar '[TestClass]'</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceWithFailAssertionFix">
+        <source>Replace the assertion wit 'Assert.Fail()'</source>
+        <target state="new">Replace the assertion wit 'Assert.Fail()'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
         <target state="translated">Corregir firma de clase de prueba</target>
