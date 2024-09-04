@@ -55,7 +55,6 @@ internal sealed class TestSessionEventSerializer : BaseSerializer, INamedPipeSer
                 default:
                     // If we don't recognize the field id, skip the payload corresponding to that field
                     SetPosition(stream, stream.Position + fieldSize);
-
                     break;
             }
         }

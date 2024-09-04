@@ -13,12 +13,11 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
  * TestHostProcessPIDRequestSerializer: 2
  * CommandLineOptionMessagesSerializer: 3
  * ModuleSerializer: 4
- * SuccessfulTestResultMessageSerializer: 5
- * FailedTestResultMessageSerializer: 6
- * FileArtifactInfoSerializer: 7
+ * DiscoveredTestMessageSerializer: 5
+ * TestResultMessageSerializer: 6
+ * FileArtifactMessageSerializer: 7
  * TestSessionEventSerializer: 8
- * HandshakeInfoSerializer: 9
- * DiscoveredTestMessageSerializer: 10
+ * HandshakeMessageSerializer: 9
 */
 
 internal static class RegisterSerializers
@@ -29,11 +28,10 @@ internal static class RegisterSerializers
         namedPipeBase.RegisterSerializer(new TestHostProcessExitRequestSerializer(), typeof(TestHostProcessExitRequest));
         namedPipeBase.RegisterSerializer(new TestHostProcessPIDRequestSerializer(), typeof(TestHostProcessPIDRequest));
         namedPipeBase.RegisterSerializer(new CommandLineOptionMessagesSerializer(), typeof(CommandLineOptionMessages));
-        namedPipeBase.RegisterSerializer(new SuccessfulTestResultMessageSerializer(), typeof(SuccessfulTestResultMessage));
-        namedPipeBase.RegisterSerializer(new FailedTestResultMessageSerializer(), typeof(FailedTestResultMessage));
-        namedPipeBase.RegisterSerializer(new FileArtifactInfoSerializer(), typeof(FileArtifactInfo));
+        namedPipeBase.RegisterSerializer(new DiscoveredTestMessagesSerializer(), typeof(DiscoveredTestMessages));
+        namedPipeBase.RegisterSerializer(new TestResultMessagesSerializer(), typeof(TestResultMessages));
+        namedPipeBase.RegisterSerializer(new FileArtifactMessagesSerializer(), typeof(FileArtifactMessages));
         namedPipeBase.RegisterSerializer(new TestSessionEventSerializer(), typeof(TestSessionEvent));
-        namedPipeBase.RegisterSerializer(new HandshakeInfoSerializer(), typeof(HandshakeInfo));
-        namedPipeBase.RegisterSerializer(new DiscoveredTestMessageSerializer(), typeof(DiscoveredTestMessage));
+        namedPipeBase.RegisterSerializer(new HandshakeMessageSerializer(), typeof(HandshakeMessage));
     }
 }

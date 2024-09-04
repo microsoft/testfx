@@ -3,4 +3,6 @@
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
-internal sealed record DiscoveredTestMessage(string? Uid, string? DisplayName, string? ExecutionId) : IRequest;
+internal sealed record DiscoveredTestMessage(string? Uid, string? DisplayName);
+
+internal sealed record DiscoveredTestMessages(string? ExecutionId, DiscoveredTestMessage[] DiscoveredMessages) : IRequest;
