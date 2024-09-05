@@ -124,6 +124,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replace &apos;Dispose()&apos; with a TesCleanup method.
+        /// </summary>
+        internal static string ReplaceWithTestCleanuFix {
+            get {
+                return ResourceManager.GetString("ReplaceWithTestCleanuFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fix test class signature.
         /// </summary>
         internal static string TestClassShouldBeValidFix {
