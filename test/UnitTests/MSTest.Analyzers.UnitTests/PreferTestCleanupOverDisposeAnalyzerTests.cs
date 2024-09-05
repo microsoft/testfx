@@ -65,8 +65,7 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests(ITestExecutionCont
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
-            public class MyTestClass
-            {
+            public class MyTestClass {
                 [TestCleanup]
                 public ValueTask TestCleanup()
                 {
