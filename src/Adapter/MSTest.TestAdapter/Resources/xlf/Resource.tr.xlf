@@ -384,7 +384,7 @@ Hata: {1}</target>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="new">Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</target>
+        <target state="translated">{0} için Test Paralelleştirme etkin (Çalışanlar: {1}, Kapsam: {2}).</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
