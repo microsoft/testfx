@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.PreferTestCleanupOverDisposeAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.PreferTestCleanupOverDisposeFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -17,15 +17,30 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests(ITestExecutionCont
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
-            public class MyTestClass : IDisposable
+            public class MyTestClass : IDisposable, IMyInterface
             {
                 public void [|Dispose|]()
                 {
                 }
             }
+            public interface IMyInterface { }
+            """;
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass : IMyInterface
+            {
+                [TestCleanup]
+                public void TestCleanup()
+                {
+                }
+            }
+            public interface IMyInterface { }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenTestClassHasDisposeAsync_Diagnostic()
@@ -44,8 +59,23 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests(ITestExecutionCont
                 }
             }
             """;
+        string fixedCode = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestCleanup]
+                public ValueTask TestCleanup()
+                {
+                    return ValueTask.CompletedTask;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenTestClassHasTestCleanup_NoDiagnostic()
@@ -84,6 +114,6 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests(ITestExecutionCont
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 }
