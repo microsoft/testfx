@@ -14,7 +14,7 @@ internal sealed class ClassCleanupManager
     private readonly ClassCleanupBehavior? _lifecycleFromMsTest;
     private readonly ClassCleanupBehavior _lifecycleFromAssembly;
     private readonly ReflectHelper _reflectHelper;
-    private readonly ConcurrentDictionary<string, HashSet<string>> _remainingTestsByClass;
+    private readonly ConcurrentDictionary<string, List<string>> _remainingTestsByClass;
 
     public ClassCleanupManager(
         IEnumerable<UnitTestElement> testsToRun,
@@ -27,7 +27,7 @@ internal sealed class ClassCleanupManager
             new(runnableTests.GroupBy(t => t.TestMethod.FullClassName)
                 .ToDictionary(
                     g => g.Key,
-                    g => new HashSet<string>(g.Select(t => t.TestMethod.UniqueName))));
+                    g => new List<string>(g.Select(t => t.TestMethod.UniqueName))));
         _lifecycleFromMsTest = lifecycleFromMsTest;
         _lifecycleFromAssembly = lifecycleFromAssembly;
         _reflectHelper = reflectHelper;
@@ -38,7 +38,7 @@ internal sealed class ClassCleanupManager
     public void MarkTestComplete(TestMethodInfo testMethodInfo, TestMethod testMethod, out bool shouldRunEndOfClassCleanup)
     {
         shouldRunEndOfClassCleanup = false;
-        if (!_remainingTestsByClass.TryGetValue(testMethodInfo.TestClassName, out HashSet<string>? testsByClass))
+        if (!_remainingTestsByClass.TryGetValue(testMethodInfo.TestClassName, out List<string>? testsByClass))
         {
             return;
         }
