@@ -57,19 +57,44 @@ public sealed class PreferTestCleanupOverDisposeFixer : CodeFixProvider
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
+        if (methodDeclaration.Parent is not TypeDeclarationSyntax newParent)
+        {
+            return editor.OriginalDocument;
+        }
+
+        TypeDeclarationSyntax parentClass = newParent;
+
         // Create a new method with the same body but named "TestCleanup"
         MethodDeclarationSyntax newMethodDeclaration = methodDeclaration
             .WithIdentifier(SyntaxFactory.Identifier("TestCleanup"))
             .WithAttributeLists(SyntaxFactory.SingletonList(CreateTestCleanupAttribute()));
 
-        // Remove IDisposable / IAsyncDisposable interface implementation
-        editor.RemoveNode(methodDeclaration);
+        newParent = newParent.ReplaceNode(methodDeclaration, newMethodDeclaration);
 
-        // Insert the new TestCleanup method into the class
-        var parentClass = methodDeclaration.Parent as TypeDeclarationSyntax;
-        editor.AddMember(parentClass, newMethodDeclaration);
+        var newBaseTypes = newParent.BaseList?.Types
+            .Where(type => !IsDisposableInterface(type))
+            .ToList();
+
+        if (newBaseTypes?.Count != 0)
+        {
+            // If other interfaces remain, replace the base list with updated interfaces
+            newParent = newParent.WithBaseList(SyntaxFactory.BaseList(SyntaxFactory.SeparatedList(newBaseTypes)));
+        }
+        else
+        {
+            // If no interfaces left, remove the base list entirely
+            newParent = newParent.WithBaseList(null);
+        }
+
+        editor.ReplaceNode(parentClass, newParent);
 
         return editor.GetChangedDocument();
+    }
+
+    private static bool IsDisposableInterface(BaseTypeSyntax baseTypeSyntax)
+    {
+        string typeName = baseTypeSyntax.Type.ToString();
+        return typeName is "IDisposable" or "IAsyncDisposable";
     }
 
     private static AttributeListSyntax CreateTestCleanupAttribute() =>
