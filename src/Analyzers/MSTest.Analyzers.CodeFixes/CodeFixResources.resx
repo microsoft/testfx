@@ -151,6 +151,6 @@
     <value>Replace the assertion wit 'Assert.Fail()'</value>
   </data>
   <data name="ReplaceWithTestCleanuFix" xml:space="preserve">
-    <value>Replace 'Dispose()' with a TesCleanup method</value>
+    <value>Replace 'Dispose()' with a TestCleanup method</value>
   </data>
 </root>

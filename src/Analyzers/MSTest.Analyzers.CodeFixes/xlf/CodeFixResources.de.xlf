@@ -38,8 +38,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ReplaceWithTestCleanuFix">
-        <source>Replace 'Dispose()' with a TesCleanup method</source>
-        <target state="new">Replace 'Dispose()' with a TesCleanup method</target>
+        <source>Replace 'Dispose()' with a TestCleanup method</source>
+        <target state="new">Replace 'Dispose()' with a TestCleanup method</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">

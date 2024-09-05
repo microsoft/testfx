@@ -124,7 +124,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Replace &apos;Dispose()&apos; with a TesCleanup method.
+        ///   Looks up a localized string similar to Replace &apos;Dispose()&apos; with a TestCleanup method.
         /// </summary>
         internal static string ReplaceWithTestCleanuFix {
             get {
