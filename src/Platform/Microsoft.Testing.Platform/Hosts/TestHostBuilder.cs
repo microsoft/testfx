@@ -349,9 +349,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return toolsTestHost;
         }
 
-#pragma warning disable CA1859 // Use concrete types when possible for improved performance
-        IPushOnlyProtocol pushOnlyProtocol = new DotnetTestConnection(commandLineHandler, processHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
-#pragma warning restore CA1859 // Use concrete types when possible for improved performance
+        var pushOnlyProtocol = new DotnetTestConnection(commandLineHandler, processHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
         await pushOnlyProtocol.AfterCommonServiceSetupAsync();
         if (pushOnlyProtocol.IsServerMode)
         {
