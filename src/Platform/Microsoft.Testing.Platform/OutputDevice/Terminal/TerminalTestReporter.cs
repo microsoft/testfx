@@ -218,7 +218,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
 
         int totalTests = _assemblies.Values.Sum(a => a.TotalTests);
-        int totalFailedTests = _assemblies.Values.Sum(a => a.FailedTests + a.CanceledTests + a.TimedOutTests);
+        int totalFailedTests = _assemblies.Values.Sum(a => a.FailedTests);
         int totalSkippedTests = _assemblies.Values.Sum(a => a.SkippedTests);
 
         bool notEnoughTests = totalTests < _options.MinimumExpectedTests;
@@ -382,9 +382,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         switch (outcome)
         {
             case TestOutcome.Error:
-                asm.FailedTests++;
-                asm.TotalTests++;
-                break;
+            case TestOutcome.Timeout:
+            case TestOutcome.Canceled:
             case TestOutcome.Fail:
                 asm.FailedTests++;
                 asm.TotalTests++;
@@ -395,14 +394,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 break;
             case TestOutcome.Skipped:
                 asm.SkippedTests++;
-                asm.TotalTests++;
-                break;
-            case TestOutcome.Timeout:
-                asm.TimedOutTests++;
-                asm.TotalTests++;
-                break;
-            case TestOutcome.Canceled:
-                asm.CanceledTests++;
                 asm.TotalTests++;
                 break;
         }
@@ -645,7 +636,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private static void AppendAssemblySummary(TestProgressState assemblyRun, ITerminal terminal)
     {
-        int failedTests = assemblyRun.FailedTests + assemblyRun.CanceledTests + assemblyRun.TimedOutTests;
+        int failedTests = assemblyRun.FailedTests;
         int warnings = 0;
 
         AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture);

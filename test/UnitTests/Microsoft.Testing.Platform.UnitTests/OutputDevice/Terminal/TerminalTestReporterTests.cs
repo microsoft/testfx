@@ -73,6 +73,7 @@ public sealed class TerminalTestReporterTests : TestBase
             errorMessage: null, errorStackTrace: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
             errorMessage: null, errorStackTrace: null, expected: null, actual: null);
+        // timed out + cancelled + failed should all report as failed in summar
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
             errorMessage: null, errorStackTrace: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
@@ -107,7 +108,7 @@ public sealed class TerminalTestReporterTests : TestBase
                 - ␛[90;1m␛]8;;file:///{folderLink}artifact2.txt␛\{folder}artifact2.txt␛]8;;␛\␛[m
             ␛[91;1mTest run summary: Failed!␛[90;1m - ␛[m␛[90;1m␛]8;;file:///{folderLinkNoSlash}␛\{folder}assembly.dll␛]8;;␛\␛[m (net8.0|x64)
             ␛[m  total: 5
-            ␛[91;1m  failed: 1
+            ␛[91;1m  failed: 3
             ␛[m  succeeded: 1
               skipped: 1
               duration: 3652058d 23h 59m 59s 999ms
