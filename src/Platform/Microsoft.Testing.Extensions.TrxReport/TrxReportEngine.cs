@@ -105,28 +105,7 @@ internal sealed partial class TrxReportEngine
     private readonly IFileSystem _fileSystem;
     private readonly bool _isCopyingFileAllowed;
 
-    public TrxReportEngine(ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, Dictionary<TestNodeUid, List<SessionFileArtifact>> artifactsByTestNode, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, CancellationToken cancellationToken)
-        : this(
-            new SystemFileSystem(),
-            testApplicationModuleInfo,
-            environment,
-            commandLineOptionsService,
-            configuration,
-            clock,
-            testNodeUpdatedMessages,
-            failedTestsCount,
-            passedTestsCount,
-            0,
-            artifactsByExtension,
-            artifactsByTestNode,
-            adapterSupportTrxCapability,
-            testFrameworkAdapter,
-            testStartTime,
-            cancellationToken)
-    {
-    }
-
-    internal TrxReportEngine(ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, Dictionary<TestNodeUid, List<SessionFileArtifact>> artifactsByTestNode, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, CancellationToken cancellationToken)
+    public TrxReportEngine(ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, Dictionary<TestNodeUid, List<SessionFileArtifact>> artifactsByTestNode, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, CancellationToken cancellationToken)
     : this(
         new SystemFileSystem(),
         testApplicationModuleInfo,
