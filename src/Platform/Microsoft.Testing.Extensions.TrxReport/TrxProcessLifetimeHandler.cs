@@ -188,7 +188,7 @@ internal sealed class TrxProcessLifetimeHandler :
         if (_fileArtifacts.Count > 0)
         {
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
-               _clock, [], 0, 0,
+               _clock, [], 0, 0, 0,
                artifacts,
                new Dictionary<TestNodeUid, List<SessionFileArtifact>>(),
                false,
