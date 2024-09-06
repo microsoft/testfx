@@ -369,6 +369,12 @@ interface TestNode {
     // Example: "location.line-end": 9,
     'location.line-end'?: number;
 
+    // Standard output associated with the test node
+    'standardOutput'?: string;
+
+    // Standard error associated with the test node
+    'standardError'?: string;
+
     // Result properties:
 
     // Example: "execution-state": "failed",

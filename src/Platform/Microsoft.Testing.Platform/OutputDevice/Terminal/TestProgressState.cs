@@ -38,10 +38,6 @@ internal sealed class TestProgressState
 
     public int TotalTests { get; internal set; }
 
-    public int TimedOutTests { get; internal set; }
-
-    public int CanceledTests { get; internal set; }
-
     public string? Detail { get; internal set; }
 
     public int SlotIndex { get; internal set; }

@@ -27,7 +27,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase
     private void CheckPatch()
     {
         // https://github.com/dotnet/sdk/issues/37712
-        if (DateTime.UtcNow.Date > new DateTime(2024, 9, 1))
+        if (DateTime.UtcNow.Date > new DateTime(2024, 12, 1))
         {
             throw new InvalidOperationException("Check if we can remove the patch!");
         }

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
 using System.Globalization;
 using System.Reflection;
 using System.Text;
@@ -15,8 +17,6 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
-
-using static System.Net.Mime.MediaTypeNames;
 
 namespace TestingPlatformExplorer.TestingFramework;
 
@@ -152,13 +152,14 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                 }
                             }
 
-                            if (test.GetCustomAttribute<SkipAttribute>() != null)
+                            SkipAttribute? skipAttribute = test.GetCustomAttribute<SkipAttribute>();
+                            if (skipAttribute != null)
                             {
                                 var skippedTestNode = new TestNode()
                                 {
                                     Uid = $"{test.DeclaringType!.FullName}.{test.Name}",
                                     DisplayName = test.Name,
-                                    Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
+                                    Properties = new PropertyBag(new SkippedTestNodeStateProperty(skipAttribute.Reason)),
                                 };
 
                                 if (_capabilities.TrxCapability.IsTrxEnabled)
@@ -181,10 +182,19 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                 await _dop.WaitAsync();
                                 try
                                 {
+                                    var testOutputHelper = new TestOutputHelper();
                                     object? instance = Activator.CreateInstance(test.DeclaringType!);
                                     try
                                     {
-                                        test.Invoke(instance, null);
+                                        if (test.GetParameters().Length == 1 && test.GetParameters()[0].ParameterType == typeof(ITestOutputHelper))
+                                        {
+                                            test.Invoke(instance, new object[] { testOutputHelper });
+
+                                        }
+                                        else
+                                        {
+                                            test.Invoke(instance, null);
+                                        }
 
                                         var successfulTestNode = new TestNode()
                                         {
@@ -196,6 +206,16 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                         if (_capabilities.TrxCapability.IsTrxEnabled)
                                         {
                                             FillTrxProperties(successfulTestNode, test);
+                                        }
+
+                                        if (testOutputHelper.Output.Length > 0)
+                                        {
+                                            successfulTestNode.Properties.Add(new StandardOutputProperty(testOutputHelper.Output.ToString()));
+                                        }
+
+                                        if (testOutputHelper.Error.Length > 0)
+                                        {
+                                            successfulTestNode.Properties.Add(new StandardErrorProperty(testOutputHelper.Error.ToString()));
                                         }
 
                                         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, successfulTestNode));
@@ -219,6 +239,16 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                             FillTrxProperties(assertionFailedTestNode, test, assertionException);
                                         }
 
+                                        if (testOutputHelper.Output.Length > 0)
+                                        {
+                                            assertionFailedTestNode.Properties.Add(new StandardOutputProperty(testOutputHelper.Output.ToString()));
+                                        }
+
+                                        if (testOutputHelper.Error.Length > 0)
+                                        {
+                                            assertionFailedTestNode.Properties.Add(new StandardErrorProperty(testOutputHelper.Error.ToString()));
+                                        }
+
                                         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, assertionFailedTestNode));
 
                                         reportBody.AppendLine(CultureInfo.InvariantCulture, $"Test {assertionFailedTestNode.Uid} failed");
@@ -235,6 +265,16 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                         if (_capabilities.TrxCapability.IsTrxEnabled)
                                         {
                                             FillTrxProperties(failedTestNode, test, ex);
+                                        }
+
+                                        if (testOutputHelper.Output.Length > 0)
+                                        {
+                                            failedTestNode.Properties.Add(new StandardOutputProperty(testOutputHelper.Output.ToString()));
+                                        }
+
+                                        if (testOutputHelper.Error.Length > 0)
+                                        {
+                                            failedTestNode.Properties.Add(new StandardErrorProperty(testOutputHelper.Error.ToString()));
                                         }
 
                                         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, failedTestNode));

@@ -179,7 +179,9 @@ public class TestExecutionManagerTests : TestContainer
 
         // Cancel the test run
         _cancellationToken.Cancel();
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
+        Exception exception = VerifyThrows(() => _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken));
+
+        Verify(exception is OperationCanceledException);
 
         // No Results
         Verify(_frameworkHandle.TestCaseStartList.Count == 0);

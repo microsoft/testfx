@@ -152,4 +152,80 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    public async Task UsingClassCleanup_InsideTestClass_WithClassCleanupExecutionWithEndOfClassBehavior_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: ClassCleanupExecutionAttribute(ClassCleanupBehavior.EndOfClass)]
+            
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassCleanup]
+                public static void ClassCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task UsingClassCleanup_InsideTestClass_WithClassCleanupExecutionWithEndOfAsseblyBehavior_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: ClassCleanupExecutionAttribute(ClassCleanupBehavior.EndOfAssembly)]
+            
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassCleanup]
+                public static void [|ClassCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task UsingClassCleanup_InsideTestClass_WithClassCleanupExecutionWithEndOfClassBehavior_WithCleanupBehaviorEndOfAssembly_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: ClassCleanupExecutionAttribute(ClassCleanupBehavior.EndOfClass)]
+            
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassCleanup(ClassCleanupBehavior.EndOfAssembly)]
+                public static void [|ClassCleanup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task UsingClassCleanup_InsideTestClass_WithClassCleanupExecutionWithEndOfAssemblyBehavior_WithCleanupBehaviorEndOfClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [assembly: ClassCleanupExecutionAttribute(ClassCleanupBehavior.EndOfAssembly)]
+            
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+                public static void ClassCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

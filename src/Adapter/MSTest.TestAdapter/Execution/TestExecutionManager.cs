@@ -31,7 +31,7 @@ public class TestExecutionManager
     /// <summary>
     /// Specifies whether the test run is canceled or not.
     /// </summary>
-    private TestRunCancellationToken? _cancellationToken;
+    private TestRunCancellationToken? _testRunCancellationToken;
 
     public TestExecutionManager()
         : this(new EnvironmentWrapper())
@@ -99,7 +99,8 @@ public class TestExecutionManager
         DebugEx.Assert(frameworkHandle != null, "frameworkHandle");
         DebugEx.Assert(runCancellationToken != null, "runCancellationToken");
 
-        _cancellationToken = runCancellationToken;
+        _testRunCancellationToken = runCancellationToken;
+        PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
 
         bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
 
@@ -117,7 +118,8 @@ public class TestExecutionManager
 
     public void RunTests(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
     {
-        _cancellationToken = cancellationToken;
+        _testRunCancellationToken = cancellationToken;
+        PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
 
         var discoverySink = new TestCaseDiscoverySink();
 
@@ -126,10 +128,7 @@ public class TestExecutionManager
         // deploy everything first.
         foreach (string source in sources)
         {
-            if (_cancellationToken.Canceled)
-            {
-                break;
-            }
+            _testRunCancellationToken?.ThrowIfCancellationRequested();
 
             var logger = (IMessageLogger)frameworkHandle;
 
@@ -170,6 +169,7 @@ public class TestExecutionManager
 
         foreach (var group in testsBySource)
         {
+            _testRunCancellationToken?.ThrowIfCancellationRequested();
             ExecuteTestsInSource(group.Tests, runContext, frameworkHandle, group.Source, isDeploymentDone);
         }
     }
@@ -181,6 +181,8 @@ public class TestExecutionManager
     {
         foreach (UnitTestResult unitTestResult in unitTestResults)
         {
+            _testRunCancellationToken?.ThrowIfCancellationRequested();
+
             if (test == null)
             {
                 continue;
@@ -272,6 +274,8 @@ public class TestExecutionManager
             sourceLevelParameters = _sessionParameters.ConcatWithOverwrites(sourceLevelParameters);
         }
 
+        _testRunCancellationToken?.ThrowIfCancellationRequested();
+
         TestAssemblySettingsProvider? sourceSettingsProvider = null;
 
         try
@@ -294,6 +298,9 @@ public class TestExecutionManager
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
             typeof(UnitTestRunner),
             [MSTestSettings.CurrentSettings, unitTestElements, (int)sourceSettings.ClassCleanupLifecycle])!;
+
+        // Ensures that the cancellation token gets through AppDomain boundary.
+        _testRunCancellationToken?.Register(testRunner.Cancel);
 
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
         {
@@ -341,20 +348,24 @@ public class TestExecutionManager
 
                 for (int i = 0; i < parallelWorkers; i++)
                 {
+                    _testRunCancellationToken?.ThrowIfCancellationRequested();
+
                     tasks.Add(_taskFactory(() =>
                     {
-                        while (!queue!.IsEmpty)
+                        try
                         {
-                            if (_cancellationToken is { Canceled: true })
+                            while (!queue!.IsEmpty)
                             {
-                                // if a cancellation has been requested, do not queue any more test runs.
-                                break;
-                            }
+                                _testRunCancellationToken?.ThrowIfCancellationRequested();
 
-                            if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
-                            {
-                                ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
+                                if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
+                                {
+                                    ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
+                                }
                             }
+                        }
+                        catch (OperationCanceledException) when (_testRunCancellationToken?.Canceled == true)
+                        {
                         }
                     }));
                 }
@@ -398,10 +409,7 @@ public class TestExecutionManager
 
         foreach (TestCase currentTest in tests)
         {
-            if (_cancellationToken is { Canceled: true })
-            {
-                break;
-            }
+            _testRunCancellationToken?.ThrowIfCancellationRequested();
 
             // If it is a fixture test, add it to the list of fixture tests and do not execute it.
             // It is executed by test itself.
@@ -435,6 +443,8 @@ public class TestExecutionManager
         // Once all tests have been executed, update the status of fixture tests.
         foreach (TestCase currentTest in fixtureTests)
         {
+            _testRunCancellationToken?.ThrowIfCancellationRequested();
+
             testExecutionRecorder.RecordStart(currentTest);
 
             // If there were only fixture tests, send an inconclusive result.

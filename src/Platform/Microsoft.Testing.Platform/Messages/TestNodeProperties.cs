@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Testing.Platform.Extensions.Messages;
+using System.Diagnostics.CodeAnalysis;
 
-#pragma warning disable SA1201 // Elements should appear in the correct order
+namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 /// <summary>
 /// The interface that every test node property must implement.
@@ -311,6 +311,20 @@ public sealed record TestMethodIdentifierProperty(string AssemblyFullName, strin
 /// <param name="Key">Key name.</param>
 /// <param name="Value">Value name.</param>
 public sealed record TestMetadataProperty(string Key, string Value) : IProperty;
+
+/// <summary>
+/// Property that represents standard output to associate with a test node.
+/// </summary>
+/// <param name="StandardOutput">The standard output.</param>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public record StandardOutputProperty(string StandardOutput) : IProperty;
+
+/// <summary>
+/// Property that represents standard error to associate with a test node.
+/// </summary>
+/// <param name="StandardError">The standard error.</param>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public record StandardErrorProperty(string StandardError) : IProperty;
 
 internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
 

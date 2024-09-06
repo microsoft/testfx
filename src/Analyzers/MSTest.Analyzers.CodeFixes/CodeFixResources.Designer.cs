@@ -61,11 +61,29 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add &apos;[TestMethod]&apos;.
+        /// </summary>
+        internal static string AddTestMethodAttributeFix {
+            get {
+                return ResourceManager.GetString("AddTestMethodAttributeFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fix signature.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidCodeFix {
             get {
                 return ResourceManager.GetString("AssemblyInitializeShouldBeValidCodeFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change method accessibility to &apos;private&apos;.
+        /// </summary>
+        internal static string ChangeMethodAccessibilityToPrivateFix {
+            get {
+                return ResourceManager.GetString("ChangeMethodAccessibilityToPrivateFix", resourceCulture);
             }
         }
         
@@ -93,6 +111,24 @@ namespace MSTest.Analyzers {
         internal static string PublicTypeShouldBeTestClassFix {
             get {
                 return ResourceManager.GetString("PublicTypeShouldBeTestClassFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replace the assertion wit &apos;Assert.Fail()&apos;.
+        /// </summary>
+        internal static string ReplaceWithFailAssertionFix {
+            get {
+                return ResourceManager.GetString("ReplaceWithFailAssertionFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replace &apos;Dispose&apos; with a TestCleanup method.
+        /// </summary>
+        internal static string ReplaceWithTestCleanuFix {
+            get {
+                return ResourceManager.GetString("ReplaceWithTestCleanuFix", resourceCulture);
             }
         }
         

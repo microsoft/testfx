@@ -249,6 +249,18 @@ internal static class SerializerUtilities
                         continue;
                     }
 
+                    if (property is StandardOutputProperty consoleStandardOutputProperty)
+                    {
+                        properties["standardOutput"] = consoleStandardOutputProperty.StandardOutput;
+                        continue;
+                    }
+
+                    if (property is StandardErrorProperty standardErrorProperty)
+                    {
+                        properties["standardError"] = standardErrorProperty.StandardError;
+                        continue;
+                    }
+
                     if (property is TestNodeStateProperty testNodeStateProperty)
                     {
                         properties["node-type"] = "action";
@@ -272,9 +284,15 @@ internal static class SerializerUtilities
                                     break;
                                 }
 
-                            case SkippedTestNodeStateProperty:
+                            case SkippedTestNodeStateProperty skippedTestNodeStateProperty:
                                 {
                                     properties["execution-state"] = "skipped";
+
+                                    if (!RoslynString.IsNullOrEmpty(skippedTestNodeStateProperty.Explanation))
+                                    {
+                                        properties["error.message"] = skippedTestNodeStateProperty.Explanation;
+                                    }
+
                                     break;
                                 }
 
