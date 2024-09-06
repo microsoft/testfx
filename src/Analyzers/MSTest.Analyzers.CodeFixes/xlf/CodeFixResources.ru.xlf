@@ -4,12 +4,12 @@
     <body>
       <trans-unit id="AddTestMethodAttributeFix">
         <source>Add '[TestMethod]'</source>
-        <target state="new">Add '[TestMethod]'</target>
+        <target state="translated">Добавить "[TestMethod]"</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
-        <target state="new">Change method accessibility to 'private'</target>
+        <target state="translated">Изменить доступность метода на "private"</target>
         <note />
       </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
