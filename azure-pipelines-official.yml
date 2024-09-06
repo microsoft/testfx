@@ -91,7 +91,7 @@ extends:
           enableTelemetry: true
           jobs:
           - job: Windows
-            timeoutInMinutes: 150
+            timeoutInMinutes: 240
             pool:
               name: $(DncEngInternalBuildPool)
               image: windows.vs2022.amd64
@@ -164,7 +164,7 @@ extends:
                 publishVstsFeed: 'public/test-tools'
 
           - job: Linux
-            timeoutInMinutes: 150
+            timeoutInMinutes: 240
             pool:
               name: $(DncEngInternalBuildPool)
               image: 1es-ubuntu-2204
