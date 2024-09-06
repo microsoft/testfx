@@ -69,7 +69,6 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         Assert.IsTrue(trxContent.Contains(@"notExecuted=""1"""));
     }
 
-
     public async Task TrxReportEngine_GenerateReportAsync_WithArgumentTrxReportFileName_FileIsCorrectlyGenerated()
     {
         // Arrange
