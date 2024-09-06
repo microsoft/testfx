@@ -17,9 +17,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class TestMethodFilterTests : TestContainer
 {
-    public TestMethodFilterTests() => _testMethodFilter = new TestMethodFilter();
+    private readonly TestMethodFilter _testMethodFilter;
 
-    readonly TestMethodFilter _testMethodFilter;
+    public TestMethodFilterTests() => _testMethodFilter = new TestMethodFilter();
 
     public void PropertyProviderForFullyQualifiedNamePropertyReturnFullyQualifiedNameTestProperty()
     {
