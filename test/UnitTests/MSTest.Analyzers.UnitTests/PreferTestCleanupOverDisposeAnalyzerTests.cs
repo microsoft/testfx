@@ -22,6 +22,9 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests(ITestExecutionCont
                 public void [|Dispose|]()
                 {
                 }
+
+                [TestMethod]
+                public void Test() {}
             }
             public interface IMyInterface { }
             """;
@@ -36,6 +39,9 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests(ITestExecutionCont
                 public void TestCleanup()
                 {
                 }
+
+                [TestMethod]
+                public void Test() {}
             }
             public interface IMyInterface { }
             """;
