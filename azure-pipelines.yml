@@ -52,7 +52,7 @@ stages:
       enableTelemetry: true
       jobs:
       - job: Windows
-        timeoutInMinutes: 90
+        timeoutInMinutes: 240
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals windows.vs2022preview.amd64.open
@@ -115,7 +115,7 @@ stages:
             condition: failed()
 
       - job: Linux
-        timeoutInMinutes: 90
+        timeoutInMinutes: 240
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals build.ubuntu.2004.amd64.open
