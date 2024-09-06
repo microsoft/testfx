@@ -349,19 +349,21 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return toolsTestHost;
         }
 
-        DotnetTestConnection dotnetTestConnection = new(commandLineHandler, processHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
-        bool isConnectedToDotnetTest = await dotnetTestConnection.TryConnectToDotnetTestPipeIfAvailableAsync();
-        if (isConnectedToDotnetTest)
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
+        IPushOnlyProtocol pushOnlyProtocol = new DotnetTestConnection(commandLineHandler, processHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
+        await pushOnlyProtocol.AfterCommonServiceSetup();
+        if (pushOnlyProtocol.IsServerMode)
         {
-            serviceProvider.AddService(dotnetTestConnection);
+            serviceProvider.AddService(pushOnlyProtocol);
         }
 
         // If --help is invoked we return
         if (commandLineHandler.IsHelpInvoked())
         {
-            if (isConnectedToDotnetTest)
+            if (pushOnlyProtocol.IsServerMode)
             {
-                await dotnetTestConnection.SendCommandLineOptionsToDotnetTestPipeAsync();
+                await pushOnlyProtocol.HelpInvoked();
             }
             else
             {
@@ -626,11 +628,11 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Check if we're connected to the dotnet test pipe
         DotnetTestDataConsumer? dotnetTestDataConsumer = null;
-        DotnetTestConnection? dotnetTestConnection = serviceProvider.GetService<DotnetTestConnection>();
+        IPushOnlyProtocol? pushOnlyProtocol = serviceProvider.GetService<IPushOnlyProtocol>();
 
-        if (dotnetTestConnection?.IsConnected == true)
+        if (pushOnlyProtocol?.IsServerMode == true && pushOnlyProtocol.Name == PlatformCommandLineProvider.DotnetTestCliProtocolName)
         {
-            dotnetTestDataConsumer = new DotnetTestDataConsumer(dotnetTestConnection, serviceProvider.GetEnvironment());
+            dotnetTestDataConsumer = new DotnetTestDataConsumer((DotnetTestConnection)pushOnlyProtocol, serviceProvider.GetEnvironment());
         }
 
         // Build and register "common non special" services - we need special treatment because extensions can start to log during the
@@ -740,7 +742,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 serviceProvider.GetAsyncMonitorFactory(),
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetTestApplicationProcessExitCode(),
-                dotnetTestConnection,
+                pushOnlyProtocol,
                 dotnetTestDataConsumer);
             await concreteMessageBusService.InitAsync();
             testFrameworkBuilderData.MessageBusProxy.SetBuiltMessageBus(concreteMessageBusService);

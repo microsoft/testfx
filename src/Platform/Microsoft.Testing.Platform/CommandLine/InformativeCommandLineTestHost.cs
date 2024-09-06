@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Hosts;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.CommandLine;
@@ -15,18 +16,18 @@ internal sealed class InformativeCommandLineTestHost(int returnValue, IServicePr
 {
     private readonly int _returnValue = returnValue;
 
-    private DotnetTestConnection? DotnetTestConnection => serviceProvider.GetService<DotnetTestConnection>();
+    private IPushOnlyProtocol? PushOnlyProtocol => serviceProvider.GetService<IPushOnlyProtocol>();
 
     public Task<int> RunAsync() => Task.FromResult(_returnValue);
 
-    public void Dispose() => DotnetTestConnection?.Dispose();
+    public void Dispose() => PushOnlyProtocol?.Dispose();
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        if (DotnetTestConnection is not null)
+        if (PushOnlyProtocol is not null)
         {
-            await DotnetTestConnection.DisposeAsync();
+            await PushOnlyProtocol.DisposeAsync();
         }
     }
 #endif

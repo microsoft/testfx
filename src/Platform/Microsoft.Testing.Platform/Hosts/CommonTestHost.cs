@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
@@ -17,7 +18,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 {
     public ServiceProvider ServiceProvider => serviceProvider;
 
-    protected DotnetTestConnection? DotnetTestConnection => ServiceProvider.GetService<DotnetTestConnection>();
+    protected IPushOnlyProtocol? PushOnlyProtocol => ServiceProvider.GetService<IPushOnlyProtocol>();
 
     protected abstract bool RunTestApplicationLifeCycleCallbacks { get; }
 
@@ -28,18 +29,18 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         int exitCode;
         try
         {
-            if (DotnetTestConnection is null || DotnetTestConnection?.IsConnected == false)
+            if (PushOnlyProtocol is null || PushOnlyProtocol?.IsServerMode == false)
             {
                 exitCode = await RunTestAppAsync(testApplicationCancellationToken);
                 return exitCode;
             }
 
-            RoslynDebug.Assert(DotnetTestConnection is not null);
+            RoslynDebug.Assert(PushOnlyProtocol is not null);
 
             ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
-            bool isDotnetTestHandshakeSuccessful = await DotnetTestConnection.DoHandshakeAsync(GetHostType());
+            bool isValidProtocol = await PushOnlyProtocol.IsValidProtocol(GetHostType());
 
-            exitCode = isDotnetTestHandshakeSuccessful
+            exitCode = isValidProtocol
                 ? await RunTestAppAsync(testApplicationCancellationToken)
                 : ExitCodes.IncompatibleProtocolVersion;
         }
@@ -52,7 +53,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         {
             await DisposeServiceProviderAsync(ServiceProvider, isProcessShutdown: true);
             await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>());
-            await DisposeHelper.DisposeAsync(DotnetTestConnection);
+            await DisposeHelper.DisposeAsync(PushOnlyProtocol);
             await DisposeHelper.DisposeAsync(ServiceProvider.GetTestApplicationCancellationTokenSource());
         }
 
@@ -99,7 +100,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
     protected abstract Task<int> InternalRunAsync();
 
     protected static async Task ExecuteRequestAsync(IPlatformOutputDevice outputDevice, ITestSessionContext testSessionInfo,
-        ServiceProvider serviceProvider, BaseMessageBus baseMessageBus, ITestFramework testFramework, ClientInfo client)
+        ServiceProvider serviceProvider, BaseMessageBus baseMessageBus, ITestFramework testFramework, TestHost.ClientInfo client)
     {
         CancellationToken testSessionCancellationToken = serviceProvider.GetTestSessionContext().CancellationToken;
 

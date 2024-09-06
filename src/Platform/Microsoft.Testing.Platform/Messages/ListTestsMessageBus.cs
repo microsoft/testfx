@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -9,6 +10,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Messages;
@@ -21,7 +23,7 @@ internal sealed class ListTestsMessageBus(
     IAsyncMonitorFactory asyncMonitorFactory,
     IEnvironment environment,
     ITestApplicationProcessExitCode testApplicationProcessExitCode,
-    DotnetTestConnection? dotnetTestConnection,
+    IPushOnlyProtocol? pushOnlyProtocol,
     DotnetTestDataConsumer? dotnetTestDataConsumer) : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
 {
     private readonly ITestFramework _testFramework = testFramework;
@@ -29,7 +31,7 @@ internal sealed class ListTestsMessageBus(
     private readonly IOutputDevice _outputDisplay = outputDisplay;
     private readonly IEnvironment _environment = environment;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode = testApplicationProcessExitCode;
-    private readonly DotnetTestConnection? _dotnetTestConnection = dotnetTestConnection;
+    private readonly IPushOnlyProtocol? _pushOnlyProtocol = pushOnlyProtocol;
     private readonly DotnetTestDataConsumer? _dotnetTestDataConsumer = dotnetTestDataConsumer;
     private readonly ILogger<ListTestsMessageBus> _logger = loggerFactory.CreateLogger<ListTestsMessageBus>();
     private readonly IAsyncMonitor _asyncMonitor = asyncMonitorFactory.Create();
@@ -75,7 +77,7 @@ internal sealed class ListTestsMessageBus(
             return;
         }
 
-        if (_dotnetTestConnection?.IsConnected == true)
+        if (pushOnlyProtocol?.IsServerMode == true && pushOnlyProtocol.Name == PlatformCommandLineProvider.DotnetTestCliProtocolName)
         {
             RoslynDebug.Assert(_dotnetTestDataConsumer is not null);
 
