@@ -218,7 +218,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
 
         int totalTests = _assemblies.Values.Sum(a => a.TotalTests);
-        int totalFailedTests = _assemblies.Values.Sum(a => a.FailedTests);
+        int totalFailedTests = _assemblies.Values.Sum(a => a.FailedTests + a.CanceledTests + a.TimedOutTests);
         int totalSkippedTests = _assemblies.Values.Sum(a => a.SkippedTests);
 
         bool notEnoughTests = totalTests < _options.MinimumExpectedTests;
