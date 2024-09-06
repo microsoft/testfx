@@ -158,7 +158,7 @@ internal sealed class TrxProcessLifetimeHandler :
         if (!testHostProcessInformation.HasExitedGracefully)
         {
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
-                _clock, [], 0, 0,
+                _clock, [], 0, 0, 0,
                 artifacts,
                 new Dictionary<TestNodeUid, List<SessionFileArtifact>>(),
                 adapterSupportTrxCapability: null,
