@@ -349,19 +349,19 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return toolsTestHost;
         }
 
-        DotnetTestConnection dotnetTestConnection = new(commandLineHandler, processHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
-        bool isConnectedToDotnetTest = await dotnetTestConnection.TryConnectToDotnetTestPipeIfAvailableAsync();
-        if (isConnectedToDotnetTest)
+        var pushOnlyProtocol = new DotnetTestConnection(commandLineHandler, processHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
+        await pushOnlyProtocol.AfterCommonServiceSetupAsync();
+        if (pushOnlyProtocol.IsServerMode)
         {
-            serviceProvider.AddService(dotnetTestConnection);
+            serviceProvider.AddService(pushOnlyProtocol);
         }
 
         // If --help is invoked we return
         if (commandLineHandler.IsHelpInvoked())
         {
-            if (isConnectedToDotnetTest)
+            if (pushOnlyProtocol.IsServerMode)
             {
-                await dotnetTestConnection.SendCommandLineOptionsToDotnetTestPipeAsync();
+                await pushOnlyProtocol.HelpInvokedAsync();
             }
             else
             {
@@ -625,12 +625,12 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AddService(testFrameworkBuilderData.MessageBusProxy);
 
         // Check if we're connected to the dotnet test pipe
-        DotnetTestDataConsumer? dotnetTestDataConsumer = null;
-        DotnetTestConnection? dotnetTestConnection = serviceProvider.GetService<DotnetTestConnection>();
+        IPushOnlyProtocolConsumer? pushOnlyProtocolDataConsumer = null;
+        IPushOnlyProtocol? pushOnlyProtocol = serviceProvider.GetService<IPushOnlyProtocol>();
 
-        if (dotnetTestConnection?.IsConnected == true)
+        if (pushOnlyProtocol?.IsServerMode == true)
         {
-            dotnetTestDataConsumer = new DotnetTestDataConsumer(dotnetTestConnection, serviceProvider.GetEnvironment());
+            pushOnlyProtocolDataConsumer = await pushOnlyProtocol.GetDataConsumerAsync();
         }
 
         // Build and register "common non special" services - we need special treatment because extensions can start to log during the
@@ -703,9 +703,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Register the test session lifetime handlers container
 
         // We register the lifetime handler if we're connected to the dotnet test pipe
-        if (dotnetTestDataConsumer is not null)
+        if (pushOnlyProtocolDataConsumer is not null)
         {
-            testSessionLifetimeHandlers.Add(dotnetTestDataConsumer);
+            testSessionLifetimeHandlers.Add(pushOnlyProtocolDataConsumer);
         }
 
         TestSessionLifetimeHandlersContainer testSessionLifetimeHandlersContainer = new(testSessionLifetimeHandlers);
@@ -720,9 +720,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder);
 
         // We register the data consumer handler if we're connected to the dotnet test pipe
-        if (dotnetTestDataConsumer is not null)
+        if (pushOnlyProtocolDataConsumer is not null)
         {
-            dataConsumersBuilder.Add(dotnetTestDataConsumer);
+            dataConsumersBuilder.Add(pushOnlyProtocolDataConsumer);
         }
 
         IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();
@@ -740,8 +740,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 serviceProvider.GetAsyncMonitorFactory(),
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetTestApplicationProcessExitCode(),
-                dotnetTestConnection,
-                dotnetTestDataConsumer);
+                pushOnlyProtocol,
+                pushOnlyProtocolDataConsumer);
             await concreteMessageBusService.InitAsync();
             testFrameworkBuilderData.MessageBusProxy.SetBuiltMessageBus(concreteMessageBusService);
         }
