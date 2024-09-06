@@ -359,7 +359,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("MachineName");
         _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("TestAppPath");
         TrxReportEngine trxReportEngine = new(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
-            _configurationMock.Object, _clockMock.Object, [], 0, 0,
+            _configurationMock.Object, _clockMock.Object, [], 0, 0, 0,
             _artifactsByExtension, _artifactsByTestNode, true, _testFrameworkMock.Object, DateTime.UtcNow, CancellationToken.None,
             isCopyingFileAllowed: false);
 
@@ -414,7 +414,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("TestAppPath");
 
         return new TrxReportEngine(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
-                   _configurationMock.Object, _clockMock.Object, testNodeUpdatedMessages, failedTestsCount, passedTestsCount,
+                   _configurationMock.Object, _clockMock.Object, testNodeUpdatedMessages, failedTestsCount, passedTestsCount, 0,
                    _artifactsByExtension, _artifactsByTestNode, adapterSupportTrxCapability, _testFrameworkMock.Object, testStartTime, cancellationToken,
                    isCopyingFileAllowed: false);
     }
