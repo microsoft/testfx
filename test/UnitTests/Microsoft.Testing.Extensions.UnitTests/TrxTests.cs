@@ -51,6 +51,25 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         Assert.IsFalse(trxContent.Contains(@"className="));
     }
 
+    public async Task TrxReportEngine_GenerateReportAsyncWithNotExecutedTests_TrxExecutedTestsCountHasIt()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream, notExecutedTestsCount: 1);
+
+        // Act
+        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+
+        // Assert
+        AssertExpectedTrxFileName(fileName);
+        XDocument xml = GetTrxContent(memoryStream);
+        AssertTrxOutcome(xml, "Completed");
+        string trxContent = xml.ToString();
+        Assert.IsTrue(trxContent.Contains(@"notExecuted=""1"""));
+    }
+
+
     public async Task TrxReportEngine_GenerateReportAsync_WithArgumentTrxReportFileName_FileIsCorrectlyGenerated()
     {
         // Arrange
@@ -394,7 +413,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
            => Assert.IsTrue(fileName.Equals("_MachineName_0001-01-01_00_00_00.000.trx", StringComparison.Ordinal));
 
     private TrxReportEngine GenerateTrxReportEngine(int passedTestsCount, int failedTestsCount, PropertyBag propertyBag, MemoryFileStream memoryStream,
-           bool? adapterSupportTrxCapability = null)
+           bool? adapterSupportTrxCapability = null, int notExecutedTestsCount = 0)
     {
         var testNode = new TestNodeUpdateMessage(
             new SessionUid("1"),
@@ -414,7 +433,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("TestAppPath");
 
         return new TrxReportEngine(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
-                   _configurationMock.Object, _clockMock.Object, testNodeUpdatedMessages, failedTestsCount, passedTestsCount, 0,
+                   _configurationMock.Object, _clockMock.Object, testNodeUpdatedMessages, failedTestsCount, passedTestsCount, notExecutedTestsCount,
                    _artifactsByExtension, _artifactsByTestNode, adapterSupportTrxCapability, _testFrameworkMock.Object, testStartTime, cancellationToken,
                    isCopyingFileAllowed: false);
     }
