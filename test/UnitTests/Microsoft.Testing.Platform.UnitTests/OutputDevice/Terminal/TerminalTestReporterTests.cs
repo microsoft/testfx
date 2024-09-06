@@ -73,7 +73,7 @@ public sealed class TerminalTestReporterTests : TestBase
             errorMessage: null, errorStackTrace: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
             errorMessage: null, errorStackTrace: null, expected: null, actual: null);
-        // timed out + cancelled + failed should all report as failed in summar
+        // timed out + cancelled + failed should all report as failed in summary
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
             errorMessage: null, errorStackTrace: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
