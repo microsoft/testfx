@@ -132,11 +132,11 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
             IPushOnlyProtocol? pushOnlyProtocol = ServiceProvider.GetService<IPushOnlyProtocol>();
             // We register the DotnetTestDataConsumer as last to ensure that it will be the last one to consume the data.
-            if (pushOnlyProtocol?.IsServerMode == true && pushOnlyProtocol.Name == PlatformCommandLineProvider.DotnetTestCliProtocolName)
+            if (pushOnlyProtocol?.IsServerMode == true)
             {
                 RoslynDebug.Assert(pushOnlyProtocol is not null);
 
-                dataConsumersBuilder.Add(new DotnetTestDataConsumer((DotnetTestConnection)pushOnlyProtocol, ServiceProvider.GetEnvironment()));
+                dataConsumersBuilder.Add(await pushOnlyProtocol.GetDataConsumerAsync());
             }
 
             AsynchronousMessageBus concreteMessageBusService = new(

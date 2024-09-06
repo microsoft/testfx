@@ -13,9 +13,11 @@ internal interface IPushOnlyProtocol :
 
     bool IsServerMode { get; }
 
-    Task AfterCommonServiceSetup();
+    Task AfterCommonServiceSetupAsync();
 
-    Task HelpInvoked();
+    Task HelpInvokedAsync();
 
-    Task<bool> IsValidProtocol(string testHostType);
+    Task<bool> IsCompatibleProtocolAsync(string testHostType);
+
+    Task<IPushOnlyProtocolConsumer> GetDataConsumerAsync();
 }

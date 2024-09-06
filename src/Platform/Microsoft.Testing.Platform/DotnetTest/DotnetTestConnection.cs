@@ -43,7 +43,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
 
     public string Name => PlatformCommandLineProvider.DotnetTestCliProtocolName;
 
-    public async Task AfterCommonServiceSetup()
+    public Task<IPushOnlyProtocolConsumer> GetDataConsumerAsync()
+        => Task.FromResult((IPushOnlyProtocolConsumer)new DotnetTestDataConsumer(this, _environment));
+
+    public async Task AfterCommonServiceSetupAsync()
     {
         // If we are in server mode and the pipe name is provided
         // then, we need to connect to the pipe server.
@@ -65,7 +68,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
         }
     }
 
-    public async Task HelpInvoked()
+    public async Task HelpInvokedAsync()
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
@@ -90,7 +93,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
         await _dotnetTestPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), _cancellationTokenSource.CancellationToken);
     }
 
-    public async Task<bool> IsValidProtocol(string hostType)
+    public async Task<bool> IsCompatibleProtocolAsync(string hostType)
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 

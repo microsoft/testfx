@@ -1,13 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.ServerMode;
@@ -24,7 +22,7 @@ internal sealed class ListTestsMessageBus(
     IEnvironment environment,
     ITestApplicationProcessExitCode testApplicationProcessExitCode,
     IPushOnlyProtocol? pushOnlyProtocol,
-    DotnetTestDataConsumer? dotnetTestDataConsumer) : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
+    IPushOnlyProtocolConsumer? pushOnlyProtocolConsumer) : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
 {
     private readonly ITestFramework _testFramework = testFramework;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
@@ -32,7 +30,7 @@ internal sealed class ListTestsMessageBus(
     private readonly IEnvironment _environment = environment;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode = testApplicationProcessExitCode;
     private readonly IPushOnlyProtocol? _pushOnlyProtocol = pushOnlyProtocol;
-    private readonly DotnetTestDataConsumer? _dotnetTestDataConsumer = dotnetTestDataConsumer;
+    private readonly IPushOnlyProtocolConsumer? _pushOnlyProtocolConsumer = pushOnlyProtocolConsumer;
     private readonly ILogger<ListTestsMessageBus> _logger = loggerFactory.CreateLogger<ListTestsMessageBus>();
     private readonly IAsyncMonitor _asyncMonitor = asyncMonitorFactory.Create();
     private bool _printTitle = true;
@@ -77,11 +75,11 @@ internal sealed class ListTestsMessageBus(
             return;
         }
 
-        if (pushOnlyProtocol?.IsServerMode == true && pushOnlyProtocol.Name == PlatformCommandLineProvider.DotnetTestCliProtocolName)
+        if (_pushOnlyProtocol?.IsServerMode == true)
         {
-            RoslynDebug.Assert(_dotnetTestDataConsumer is not null);
+            RoslynDebug.Assert(_pushOnlyProtocolConsumer is not null);
 
-            await _dotnetTestDataConsumer.ConsumeAsync(dataProducer, data, _testApplicationCancellationTokenSource.CancellationToken);
+            await _pushOnlyProtocolConsumer.ConsumeAsync(dataProducer, data, _testApplicationCancellationTokenSource.CancellationToken);
         }
 
         // Send the information to the ITestApplicationProcessExitCode to correctly handle the ZeroTest case.
