@@ -94,6 +94,7 @@ internal sealed partial class TrxReportEngine
     private readonly TestNodeUpdateMessage[] _testNodeUpdatedMessages;
     private readonly int _failedTestsCount;
     private readonly int _passedTestsCount;
+    private readonly int _notExecutedTestsCount;
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension;
     private readonly Dictionary<TestNodeUid, List<SessionFileArtifact>> _artifactsByTestNode;
     private readonly bool? _adapterSupportTrxCapability;
@@ -115,6 +116,7 @@ internal sealed partial class TrxReportEngine
             testNodeUpdatedMessages,
             failedTestsCount,
             passedTestsCount,
+            0,
             artifactsByExtension,
             artifactsByTestNode,
             adapterSupportTrxCapability,
@@ -124,7 +126,28 @@ internal sealed partial class TrxReportEngine
     {
     }
 
-    internal TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, Dictionary<TestNodeUid, List<SessionFileArtifact>> artifactsByTestNode, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
+    internal TrxReportEngine(ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, Dictionary<TestNodeUid, List<SessionFileArtifact>> artifactsByTestNode, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, CancellationToken cancellationToken)
+    : this(
+        new SystemFileSystem(),
+        testApplicationModuleInfo,
+        environment,
+        commandLineOptionsService,
+        configuration,
+        clock,
+        testNodeUpdatedMessages,
+        failedTestsCount,
+        passedTestsCount,
+        notExecutedTestsCount,
+        artifactsByExtension,
+        artifactsByTestNode,
+        adapterSupportTrxCapability,
+        testFrameworkAdapter,
+        testStartTime,
+        cancellationToken)
+    {
+    }
+
+    internal TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, Dictionary<TestNodeUid, List<SessionFileArtifact>> artifactsByTestNode, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
     {
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _environment = environment;
@@ -134,6 +157,7 @@ internal sealed partial class TrxReportEngine
         _testNodeUpdatedMessages = testNodeUpdatedMessages;
         _failedTestsCount = failedTestsCount;
         _passedTestsCount = passedTestsCount;
+        _notExecutedTestsCount = notExecutedTestsCount;
         _artifactsByExtension = artifactsByExtension;
         _artifactsByTestNode = artifactsByTestNode;
         _adapterSupportTrxCapability = adapterSupportTrxCapability;
@@ -302,7 +326,7 @@ internal sealed partial class TrxReportEngine
             new XAttribute("inconclusive", 0),
             new XAttribute("passedButRunAborted", 0),
             new XAttribute("notRunnable", 0),
-            new XAttribute("notExecuted", 0),
+            new XAttribute("notExecuted", _notExecutedTestsCount),
             new XAttribute("disconnected", 0),
             new XAttribute("warning", 0),
             new XAttribute("completed", 0),
