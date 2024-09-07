@@ -392,6 +392,10 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             return;
         }
 
+        Exception[] exceptions = [];
+        IEnumerable<string> exceptionMessages = [];
+        IEnumerable<string> exceptionStacktraces = [];
+
         switch (value)
         {
             case TestNodeUpdateMessage testNodeStateChanged:
@@ -404,6 +408,10 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         break;
 
                     case ErrorTestNodeStateProperty errorState:
+                        exceptions = GetExceptionsInThrownOrder(errorState.Exception);
+                        exceptionMessages = GetExceptionMessages(exceptions, errorState.Explanation);
+                        exceptionStacktraces = GetExceptionStackTraces(exceptions);
+
                         _terminalTestReporter.TestCompleted(
                             _assemblyName,
                             _targetFramework,
@@ -411,13 +419,17 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Error,
                             duration,
-                            errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
-                            errorState.Exception?.StackTrace,
+                            errorMessages: exceptionMessages,
+                            errorStackTraces: exceptionStacktraces,
                             expected: null,
                             actual: null);
                         break;
 
                     case FailedTestNodeStateProperty failedState:
+                        exceptions = GetExceptionsInThrownOrder(failedState.Exception);
+                        exceptionMessages = GetExceptionMessages(exceptions, failedState.Explanation);
+                        exceptionStacktraces = GetExceptionStackTraces(exceptions);
+
                         _terminalTestReporter.TestCompleted(
                              _assemblyName,
                              _targetFramework,
@@ -425,13 +437,17 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Fail,
                              duration,
-                             errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
-                             failedState.Exception?.StackTrace,
+                             errorMessages: exceptionMessages,
+                             errorStackTraces: exceptionStacktraces,
                              expected: failedState.Exception?.Data["assert.expected"] as string,
                              actual: failedState.Exception?.Data["assert.actual"] as string);
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
+                        exceptions = GetExceptionsInThrownOrder(timeoutState.Exception);
+                        exceptionMessages = GetExceptionMessages(exceptions, timeoutState.Explanation);
+                        exceptionStacktraces = GetExceptionStackTraces(exceptions);
+
                         _terminalTestReporter.TestCompleted(
                              _assemblyName,
                              _targetFramework,
@@ -439,13 +455,17 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Timeout,
                              duration,
-                             errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
-                             timeoutState.Exception?.StackTrace,
+                             errorMessages: exceptionMessages,
+                             errorStackTraces: exceptionStacktraces,
                              expected: null,
                              actual: null);
                         break;
 
                     case CancelledTestNodeStateProperty cancelledState:
+                        exceptions = GetExceptionsInThrownOrder(cancelledState.Exception);
+                        exceptionMessages = GetExceptionMessages(exceptions, cancelledState.Explanation);
+                        exceptionStacktraces = GetExceptionStackTraces(exceptions);
+
                         _terminalTestReporter.TestCompleted(
                              _assemblyName,
                              _targetFramework,
@@ -453,8 +473,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Canceled,
                              duration,
-                             errorMessage: cancelledState.Exception?.Message ?? cancelledState.Explanation,
-                             cancelledState.Exception?.StackTrace,
+                             errorMessages: exceptionMessages,
+                             errorStackTraces: exceptionStacktraces,
                              expected: null,
                              actual: null);
                         break;
@@ -467,8 +487,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             testNodeStateChanged.TestNode.DisplayName,
                             outcome: TestOutcome.Passed,
                             duration: duration,
-                            errorMessage: null,
-                            errorStackTrace: null,
+                            errorMessages: null,
+                            errorStackTraces: null,
                             expected: null,
                             actual: null);
                         break;
@@ -481,8 +501,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Skipped,
                             duration,
-                            errorMessage: null,
-                            errorStackTrace: null,
+                            errorMessages: null,
+                            errorStackTraces: null,
                             expected: null,
                             actual: null);
                         break;
@@ -533,6 +553,51 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             case TestRequestExecutionTimeInfo testRequestExecutionTimeInfo:
                 _testRequestExecutionTimeInfo = testRequestExecutionTimeInfo;
                 break;
+        }
+    }
+
+    private static IEnumerable<string> GetExceptionMessages(Exception[] exceptions, string? fallback)
+    {
+        bool hasExceptionMessage = false;
+
+        foreach (Exception exception in exceptions)
+        {
+            hasExceptionMessage = true;
+            yield return exception.Message;
+        }
+
+        if (!hasExceptionMessage && fallback != null)
+        {
+            yield return fallback;
+        }
+    }
+
+    private static IEnumerable<string> GetExceptionStackTraces(Exception[] exceptions)
+    {
+        for (int index = 0; index < exceptions.Length; index++)
+        {
+            Exception exception = exceptions[index];
+
+            if (exception.StackTrace != null)
+            {
+                yield return exception.StackTrace;
+
+                if (index != exceptions.Length - 1)
+                {
+                    yield return "   --- End of inner exception stack trace ---";
+                }
+            }
+        }
+    }
+
+    private static Exception[] GetExceptionsInThrownOrder(Exception? exception) => GetExceptions(exception).Reverse().ToArray();
+
+    private static IEnumerable<Exception> GetExceptions(Exception? exception)
+    {
+        while (exception is not null)
+        {
+            yield return exception;
+            exception = exception.InnerException;
         }
     }
 

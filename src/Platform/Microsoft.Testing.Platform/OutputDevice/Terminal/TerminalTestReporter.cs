@@ -190,8 +190,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
     {
         terminal.AppendLine();
 
-        IEnumerable<IGrouping<bool, TestRunArtifact>> artifactGroups = _artifacts.GroupBy(a => a.OutOfProcess);
-        if (artifactGroups.Any())
+        IGrouping<bool, TestRunArtifact>[] artifactGroups = _artifacts.GroupBy(a => a.OutOfProcess).ToArray();
+        if (artifactGroups.Length != 0)
         {
             terminal.AppendLine();
         }
@@ -372,8 +372,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
-        string? errorMessage,
-        string? errorStackTrace,
+        IEnumerable<string> errorMessages,
+        IEnumerable<string> errorStackTraces,
         string? expected,
         string? actual)
     {
@@ -409,8 +409,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 displayName,
                 outcome,
                 duration,
-                errorMessage,
-                errorStackTrace,
+                errorMessages,
+                errorStackTraces,
                 expected,
                 actual));
         }
@@ -424,8 +424,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
-        string? errorMessage,
-        string? errorStackTrace,
+        IEnumerable<string> errorMessages,
+        IEnumerable<string> errorStackTraces,
         string? expected,
         string? actual)
     {
@@ -469,9 +469,17 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         terminal.AppendLine();
 
-        FormatErrorMessage(terminal, errorMessage);
+        foreach (string errorMessage in errorMessages)
+        {
+            FormatErrorMessage(terminal, errorMessage);
+        }
+
         FormatExpectedAndActual(terminal, expected, actual);
-        FormatStackTrace(terminal, errorStackTrace);
+
+        foreach (string errorStackTrace in errorStackTraces)
+        {
+            FormatStackTrace(terminal, errorStackTrace);
+        }
     }
 
     private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture)

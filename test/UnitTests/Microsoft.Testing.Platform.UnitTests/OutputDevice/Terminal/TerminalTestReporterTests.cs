@@ -70,16 +70,16 @@ public sealed class TerminalTestReporterTests : TestBase
 
         terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
+            errorMessages: null, errorStackTraces: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
+            errorMessages: null, errorStackTraces: null, expected: null, actual: null);
         // timed out + cancelled + failed should all report as failed in summary
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
+            errorMessages: null, errorStackTraces: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
+            errorMessages: null, errorStackTraces: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
-            errorMessage: "Tests failed", errorStackTrace: @$"   at FailingTest() in {folder}codefile.cs:line 10", expected: "ABC", actual: "DEF");
+            errorMessages: ["Tests failed"], errorStackTraces: [@$"   at FailingTest() in {folder}codefile.cs:line 10"], expected: "ABC", actual: "DEF");
         terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact1.txt");
         terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact2.txt");
         terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture);
@@ -107,6 +107,88 @@ public sealed class TerminalTestReporterTests : TestBase
               In process file artifacts produced:
                 - ␛[90;1m␛]8;;file:///{folderLink}artifact2.txt␛\{folder}artifact2.txt␛]8;;␛\␛[m
             ␛[91;1mTest run summary: Failed!␛[90;1m - ␛[m␛[90;1m␛]8;;file:///{folderLinkNoSlash}␛\{folder}assembly.dll␛]8;;␛\␛[m (net8.0|x64)
+            ␛[m  total: 5
+            ␛[91;1m  failed: 3
+            ␛[m  succeeded: 1
+              skipped: 1
+              duration: 3652058d 23h 59m 59s 999ms
+
+            """;
+
+        EnsureAnsiMatch(expected, output);
+    }
+
+    public void OutputFormattingIsCorrectWithMultipleExceptions()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = true,
+            UseAnsi = true,
+            ForceAnsi = true,
+
+            ShowAssembly = false,
+            ShowAssemblyStartAndComplete = false,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+        terminalReporter.TestExecutionStarted(startTime, 1);
+
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+        string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
+        string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
+        string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
+        string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
+
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+            errorMessages: null, errorStackTraces: null, expected: null, actual: null);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
+            errorMessages: null, errorStackTraces: null, expected: null, actual: null);
+        // timed out + cancelled + failed should all report as failed in summary
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
+            errorMessages: null, errorStackTraces: null, expected: null, actual: null);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
+            errorMessages: null, errorStackTraces: null, expected: null, actual: null);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
+            errorMessages: ["Tests failed", "Nested error 1", "Nested error 2"], errorStackTraces: [@$"   at FailingTest() in {folder}codefile.cs:line 10", @$"   at NestedMethod() in {folder}codefile.cs:line 42", @$"   at NestedMethod2() in {folder}codefile.cs:line 100"], expected: "ABC", actual: "DEF");
+        terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact1.txt");
+        terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact2.txt");
+        terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture);
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        string expected = $$"""
+            ␛[32;1mpassed␛[m PassedTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
+            ␛[33;1mskipped␛[m SkippedTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
+            ␛[31;1mfailed (canceled)␛[m TimedoutTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
+            ␛[31;1mfailed (canceled)␛[m CanceledTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
+            ␛[31;1mfailed␛[m FailedTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
+            ␛[91;1m  Nested error 2
+            ␛[91;1m  ---> Nested error 1
+            ␛[91;1m  ---> Tests failed
+            ␛[m␛[91;1m  Expected
+                ABC
+              Actual
+                DEF
+            ␛[m␛[31;1m  Stack Trace:
+                ␛[90;1mat ␛[m␛[91;NestedMethod()␛[90;1m in ␛[90;1m␛]8;;file:///{{folderLink}}codefile.cs␛\{{folder}}codefile.cs:42␛]8;;␛\␛[m
+                --- End of inner exception stack trace ---
+                ␛[90;1mat ␛[m␛[91;NethodMethod2()␛[90;1m in ␛[90;1m␛]8;;file:///{{folderLink}}codefile.cs␛\{{folder}}codefile.cs:100␛]8;;␛\␛[m
+                --- End of inner exception stack trace ---
+                ␛[90;1mat ␛[m␛[91;1mFailingTest()␛[90;1m in ␛[90;1m␛]8;;file:///{{folderLink}}codefile.cs␛\{{folder}}codefile.cs:10␛]8;;␛\␛[m
+
+
+              Out of process file artifacts produced:
+                - ␛[90;1m␛]8;;file:///{{folderLink}}artifact1.txt␛\{{folder}}artifact1.txt␛]8;;␛\␛[m
+              In process file artifacts produced:
+                - ␛[90;1m␛]8;;file:///{{folderLink}}artifact2.txt␛\{{folder}}artifact2.txt␛]8;;␛\␛[m
+            ␛[91;1mTest run summary: Failed!␛[90;1m - ␛[m␛[90;1m␛]8;;file:///{{folderLinkNoSlash}}␛\{{folder}}assembly.dll␛]8;;␛\␛[m (net8.0|x64)
             ␛[m  total: 5
             ␛[91;1m  failed: 3
             ␛[m  succeeded: 1
