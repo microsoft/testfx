@@ -424,8 +424,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
-        IEnumerable<string> errorMessages,
-        IEnumerable<string> errorStackTraces,
+        IEnumerable<string>? errorMessages,
+        IEnumerable<string>? errorStackTraces,
         string? expected,
         string? actual)
     {
@@ -469,14 +469,14 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         terminal.AppendLine();
 
-        foreach (string errorMessage in errorMessages)
+        foreach (string errorMessage in errorMessages ?? Array.Empty<string>)
         {
             FormatErrorMessage(terminal, errorMessage);
         }
 
         FormatExpectedAndActual(terminal, expected, actual);
 
-        foreach (string errorStackTrace in errorStackTraces)
+        foreach (string errorStackTrace in errorStackTraces ?? Array.Empty<string>)
         {
             FormatStackTrace(terminal, errorStackTrace);
         }
