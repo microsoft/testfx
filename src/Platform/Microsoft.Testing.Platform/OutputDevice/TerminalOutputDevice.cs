@@ -558,17 +558,26 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
 
     private static IEnumerable<string> GetExceptionMessages(Exception[] exceptions, string? fallback)
     {
-        bool hasExceptionMessage = false;
-
-        foreach (Exception exception in exceptions)
+        if (exceptions.Length == 0)
         {
-            hasExceptionMessage = true;
-            yield return exception.Message;
+            if (fallback != null)
+            {
+                yield return fallback;
+            }
+
+            yield break;
         }
 
-        if (!hasExceptionMessage && fallback != null)
+
+        for (int index = 0; index < exceptions.Length; index++)
         {
-            yield return fallback;
+            Exception exception = exceptions[index];
+
+            if (exception.StackTrace != null)
+            {
+                string prefix = index == 0 ? string.Empty : " ---> ";
+                yield return $"{prefix}{exception.StackTrace}";
+            }
         }
     }
 
