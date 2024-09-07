@@ -372,8 +372,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
-        IEnumerable<string> errorMessages,
-        IEnumerable<string> errorStackTraces,
+        IEnumerable<string>? errorMessages,
+        IEnumerable<string>? errorStackTraces,
         string? expected,
         string? actual)
     {
