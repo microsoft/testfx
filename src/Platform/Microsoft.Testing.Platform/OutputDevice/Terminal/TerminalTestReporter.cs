@@ -469,14 +469,14 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         terminal.AppendLine();
 
-        foreach (string errorMessage in errorMessages ?? Array.Empty<string>)
+        foreach (string errorMessage in errorMessages ?? Array.Empty<string>())
         {
             FormatErrorMessage(terminal, errorMessage);
         }
 
         FormatExpectedAndActual(terminal, expected, actual);
 
-        foreach (string errorStackTrace in errorStackTraces ?? Array.Empty<string>)
+        foreach (string errorStackTrace in errorStackTraces ?? Array.Empty<string>())
         {
             FormatStackTrace(terminal, errorStackTrace);
         }
