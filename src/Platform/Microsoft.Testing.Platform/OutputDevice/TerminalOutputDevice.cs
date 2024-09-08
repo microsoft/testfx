@@ -597,7 +597,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                 ? $"{_environment.NewLine}   --- End of inner exception stack trace ---"
                 : string.Empty;
 
-            yield return $"{exception.StackTrace}{suffix}";
+            yield return $"{exception.StackTrace.Trim()}{suffix}";
         }
     }
 

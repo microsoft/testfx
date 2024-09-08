@@ -51,7 +51,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private bool _wasCancelled;
 
 #if NET7_0_OR_GREATER
-    [GeneratedRegex(@$"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture, 1000)]
+    [GeneratedRegex(@$"^\s*at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture, 1000)]
     private static partial Regex GetFrameRegex();
 #else
     private static Regex? s_regex;
