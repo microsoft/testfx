@@ -70,16 +70,16 @@ public sealed class TerminalTestReporterTests : TestBase
 
         terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
-            errorMessages: null, errorStackTraces: null, expected: null, actual: null);
+            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
-            errorMessages: null, errorStackTraces: null, expected: null, actual: null);
+            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
         // timed out + cancelled + failed should all report as failed in summary
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
-            errorMessages: null, errorStackTraces: null, expected: null, actual: null);
+            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
-            errorMessages: null, errorStackTraces: null, expected: null, actual: null);
+            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
-            errorMessages: ["Tests failed"], errorStackTraces: [@$"   at FailingTest() in {folder}codefile.cs:line 10"], expected: "ABC", actual: "DEF");
+            errorMessage: ["Tests failed"], errorStackTrace: [@$"   at FailingTest() in {folder}codefile.cs:line 10"], expected: "ABC", actual: "DEF");
         terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact1.txt");
         terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact2.txt");
         terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture);
@@ -145,7 +145,7 @@ public sealed class TerminalTestReporterTests : TestBase
 
         terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
-            errorMessages: ["System.Exception: Nested error 2", "  ---> System.Exception: Nested error 1", "  ---> System.Exception: Tests failed"], errorStackTraces: [@$"   at NestedMethod2() in {folder}codefile.cs:line 100{Environment.NewLine}   --- End of inner exception stack trace ---", @$"   at NestedMethod() in {folder}codefile.cs:line 42{Environment.NewLine}   --- End of inner exception stack trace ---", @$"   at FailingTest() in {folder}codefile.cs:line 10"], expected: "ABC", actual: "DEF");
+            errorMessage: ["System.Exception: Nested error 2", "  ---> System.Exception: Nested error 1", "  ---> System.Exception: Tests failed"], errorStackTrace: [@$"   at NestedMethod2() in {folder}codefile.cs:line 100{Environment.NewLine}   --- End of inner exception stack trace ---", @$"   at NestedMethod() in {folder}codefile.cs:line 42{Environment.NewLine}   --- End of inner exception stack trace ---", @$"   at FailingTest() in {folder}codefile.cs:line 10"], expected: "ABC", actual: "DEF");
         terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture);
         terminalReporter.TestExecutionCompleted(endTime);
 
@@ -154,8 +154,8 @@ public sealed class TerminalTestReporterTests : TestBase
         string expected = $$$"""
             ␛[31;1mfailed␛[m FailedTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
             ␛[91;1m  System.Exception: Nested error 2
-            ␛[91;1m    ---> System.Exception: Nested error 1
-            ␛[91;1m    ---> System.Exception: Tests failed
+            ␛[m␛[91;1m    ---> System.Exception: Nested error 1
+            ␛[m␛[91;1m    ---> System.Exception: Tests failed
             ␛[m␛[91;1m  Expected
                 ABC
               Actual

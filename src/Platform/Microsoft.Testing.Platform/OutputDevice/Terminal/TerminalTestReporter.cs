@@ -372,8 +372,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
-        IEnumerable<string>? errorMessages,
-        IEnumerable<string>? errorStackTraces,
+        string? errorMessage,
+        string? errorStackTrace,
         string? expected,
         string? actual)
     {
@@ -409,8 +409,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 displayName,
                 outcome,
                 duration,
-                errorMessages,
-                errorStackTraces,
+                errorMessage,
+                errorStackTrace,
                 expected,
                 actual));
         }
@@ -424,8 +424,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
-        IEnumerable<string>? errorMessages,
-        IEnumerable<string>? errorStackTraces,
+        string? errorMessage,
+        string? errorStackTrace,
         string? expected,
         string? actual)
     {
@@ -469,17 +469,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         terminal.AppendLine();
 
-        foreach (string errorMessage in errorMessages ?? Array.Empty<string>())
-        {
-            FormatErrorMessage(terminal, errorMessage);
-        }
-
+        FormatErrorMessage(terminal, errorMessage);
         FormatExpectedAndActual(terminal, expected, actual);
-
-        foreach (string errorStackTrace in errorStackTraces ?? Array.Empty<string>())
-        {
-            FormatStackTrace(terminal, errorStackTrace);
-        }
+        FormatStackTrace(terminal, errorStackTrace);
     }
 
     private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture)
