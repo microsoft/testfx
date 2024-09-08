@@ -568,7 +568,6 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             yield break;
         }
 
-
         for (int index = 0; index < exceptions.Length; index++)
         {
             Exception exception = exceptions[index];
@@ -583,7 +582,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         }
     }
 
-    private static IEnumerable<string> GetExceptionStackTraces(Exception[] exceptions)
+    private IEnumerable<string> GetExceptionStackTraces(Exception[] exceptions)
     {
         for (int index = 0; index < exceptions.Length; index++)
         {
@@ -594,17 +593,11 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                 continue;
             }
 
-            if (index != exceptions.Length - 1)
-            {
-                yield return $"""
-                              {exception.StackTrace}
-                                 --- End of inner exception stack trace ---
-                              """;
-            }
-            else
-            {
-                yield return exception.StackTrace;
-            }
+            string suffix = index != exceptions.Length - 1
+                ? $"{_environment.NewLine}   --- End of inner exception stack trace ---"
+                : string.Empty;
+
+            yield return $"{exception.StackTrace}{suffix}";
         }
     }
 
