@@ -145,7 +145,7 @@ public sealed class TerminalTestReporterTests : TestBase
 
         terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
-            errorMessages: ["Tests failed", "Nested error 1", "Nested error 2"], errorStackTraces: [@$"   at FailingTest() in {folder}codefile.cs:line 10", @$"   at NestedMethod() in {folder}codefile.cs:line 42", @$"   at NestedMethod2() in {folder}codefile.cs:line 100"], expected: "ABC", actual: "DEF");
+            errorMessages: ["Nested error 2", "  ---> Nested error 1", "  ---> Tests failed"], errorStackTraces: [@$"   at NestedMethod2() in {folder}codefile.cs:line 100{Environment.NewLine}   --- End of inner exception stack trace ---", @$"   at NestedMethod() in {folder}codefile.cs:line 42{Environment.NewLine}   --- End of inner exception stack trace ---", @$"   at FailingTest() in {folder}codefile.cs:line 10"], expected: "ABC", actual: "DEF");
         terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture);
         terminalReporter.TestExecutionCompleted(endTime);
 

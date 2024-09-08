@@ -578,7 +578,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             }
 
             string prefix = index == 0 ? string.Empty : " ---> ";
-            yield return $"{prefix}{exception.StackTrace}";
+            yield return $"{prefix}{exception.GetType().FullName}: {exception.Message}";
         }
     }
 
