@@ -573,11 +573,13 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         {
             Exception exception = exceptions[index];
 
-            if (exception.StackTrace != null)
+            if (exception.StackTrace == null)
             {
-                string prefix = index == 0 ? string.Empty : " ---> ";
-                yield return $"{prefix}{exception.StackTrace}";
+                continue;
             }
+
+            string prefix = index == 0 ? string.Empty : " ---> ";
+            yield return $"{prefix}{exception.StackTrace}";
         }
     }
 
@@ -587,14 +589,21 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         {
             Exception exception = exceptions[index];
 
-            if (exception.StackTrace != null)
+            if (exception.StackTrace == null)
+            {
+                continue;
+            }
+
+            if (index != exceptions.Length - 1)
+            {
+                yield return $"""
+                              {exception.StackTrace}
+                                 --- End of inner exception stack trace ---
+                              """;
+            }
+            else
             {
                 yield return exception.StackTrace;
-
-                if (index != exceptions.Length - 1)
-                {
-                    yield return "   --- End of inner exception stack trace ---";
-                }
             }
         }
     }
