@@ -161,7 +161,7 @@ public sealed class TerminalTestReporterTests : TestBase
               Actual
                 DEF
             ␛[m␛[31;1m  Stack Trace:
-                ␛[90;1mat ␛[m␛[91;NethodMethod2()␛[90;1m in ␛[90;1m␛]8;;file:///{{folderLink}}codefile.cs␛\{{folder}}codefile.cs:100␛]8;;␛\␛[m
+                ␛[90;1mat ␛[m␛[91;NethodMethod2()␛[90;1m in ␛[90;1m␛]8;;file:///{{{folderLink}}}codefile.cs␛\{{{folder}}}codefile.cs:100␛]8;;␛\␛[m
                 --- End of inner exception stack trace ---
                 ␛[90;1mat ␛[m␛[91;NestedMethod()␛[90;1m in ␛[90;1m␛]8;;file:///{{{folderLink}}}codefile.cs␛\{{{folder}}}codefile.cs:42␛]8;;␛\␛[m
                 --- End of inner exception stack trace ---
