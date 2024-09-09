@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Native;
+#if !WINDOWS_UWP
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration;
+#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
@@ -33,9 +35,10 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         if (
 #if NET8_0_OR_GREATER
-            System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported == false ||
+
+        !System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported ||
 #endif
-    Environment.GetEnvironmentVariable("MSTEST_NATIVE") == "1")
+        Environment.GetEnvironmentVariable("MSTEST_SOURCEGENERATION") == "1")
         {
             _useNativeProvider = true;
         }
@@ -58,7 +61,12 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets an instance to the platform service for file operations.
     /// </summary>
-    public IFileOperations FileOperations => _fileOperations ??= _useNativeProvider ? new NativeFileOperations() : new FileOperations();
+    public IFileOperations FileOperations => _fileOperations ??=
+#if !WINDOWS_UWP
+        _useNativeProvider ? new SourceGeneratedFileOperations() : new FileOperations();
+#else
+        new FileOperations();
+#endif
 
     /// <summary>
     /// Gets an instance to the platform service for trace logging.
@@ -83,7 +91,12 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets an instance to the platform service for reflection operations specific to a platform.
     /// </summary>
-    public IReflectionOperations2 ReflectionOperations => _reflectionOperations ??= _useNativeProvider ? new NativeReflectionOperations() : new ReflectionOperations2();
+    public IReflectionOperations2 ReflectionOperations => _reflectionOperations ??=
+#if !WINDOWS_UWP
+        _useNativeProvider ? new SourceGeneratedReflectionOperations() : new ReflectionOperations2();
+#else
+        new ReflectionOperations2();
+#endif
 
     /// <summary>
     /// Gets or sets an instance to the platform service for cancellation token supporting cancellation of a test run.

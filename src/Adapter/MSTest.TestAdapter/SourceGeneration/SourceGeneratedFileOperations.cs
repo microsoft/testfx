@@ -1,15 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !WINDOWS_UWP
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Native;
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration;
 
 #pragma warning disable RS0016 // Add public types and members to the declared API
-public class NativeFileOperations : IFileOperations
+public class SourceGeneratedFileOperations : IFileOperations
 {
     // Not great, but the inner class does some complicated stuff on checking if files exist, better would be to extract the functionality to a class that provides it to both these implementations.
     private readonly FileOperations _fileOperationsInner = new(skipNativeCheck: true);
@@ -42,3 +43,4 @@ public class NativeFileOperations : IFileOperations
             : ReflectionDataProvider!.GetAssembly(assemblyName);
 }
 #pragma warning restore RS0016 // Add public types and members to the declared API
+#endif

@@ -49,7 +49,7 @@ public class MSTestExecutor : ITestExecutor
         ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
         ValidateArg.NotNullOrEmpty(tests, "tests");
 
-        foreach (var test in tests)
+        foreach (TestCase test in tests)
         {
             Console.WriteLine(test.Source + "---" + test.FullyQualifiedName);
         }

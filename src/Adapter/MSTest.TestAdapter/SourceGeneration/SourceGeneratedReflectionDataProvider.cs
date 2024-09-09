@@ -1,11 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !WINDOWS_UWP
 using System.Reflection;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Native;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Native;
 
-#pragma warning disable RS0016 // Add public types and members to the declared API
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration;
+
+/// <summary>
+/// This type is used by MSTest SourceGenerator, its shape can change at any time. Do NOT depend on the shape of this API.
+/// </summary>
 public class SourceGeneratedReflectionDataProvider
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
@@ -42,4 +47,4 @@ public class SourceGeneratedReflectionDataProvider
             : Assembly;
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 }
-#pragma warning restore RS0016 // Add public types and members to the declared API
+#endif

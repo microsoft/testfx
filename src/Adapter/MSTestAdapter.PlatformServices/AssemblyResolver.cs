@@ -115,7 +115,7 @@ class AssemblyResolver :
 #if NET8_0_OR_GREATER
             System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported ||
 #endif
-            Environment.GetEnvironmentVariable("MSTEST_NATIVE") != "1")
+            Environment.GetEnvironmentVariable("MSTEST_SOURCEGENERATION") != "1")
         {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
 #if NETFRAMEWORK

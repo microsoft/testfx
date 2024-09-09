@@ -21,9 +21,10 @@ internal static class DiaSessionOperations
     {
         if (
 #if NET8_0_OR_GREATER
-            System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported == false ||
+
+            !System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported ||
 #endif
-            Environment.GetEnvironmentVariable("MSTEST_NATIVE") == "1")
+            Environment.GetEnvironmentVariable("MSTEST_SOURCEGENERATION") == "1")
         {
             throw new NotSupportedException("Dia is not allowed when dynamic code is not supported");
         }

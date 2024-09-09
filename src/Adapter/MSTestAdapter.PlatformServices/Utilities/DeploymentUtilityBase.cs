@@ -130,9 +130,10 @@ internal abstract class DeploymentUtilityBase
     {
         if (
 #if NET8_0_OR_GREATER
-            System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported == false ||
+
+            !System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported ||
 #endif
-    Environment.GetEnvironmentVariable("MSTEST_NATIVE") == "1")
+            Environment.GetEnvironmentVariable("MSTEST_SOURCEGENERATION") == "1")
         {
             throw new InvalidOperationException("Deployment is not supported in source gen mode");
         }

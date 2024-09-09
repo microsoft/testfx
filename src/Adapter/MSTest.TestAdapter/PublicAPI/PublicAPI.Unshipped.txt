@@ -1,1 +1,29 @@
 ﻿#nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.ReflectionMetadataHook
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.Assembly.get -> System.Reflection.Assembly!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.Assembly.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.AssemblyAttributes.get -> object![]!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.AssemblyAttributes.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.AssemblyName.get -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.AssemblyName.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.SourceGeneratedReflectionDataProvider() -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeAttributes.get -> System.Collections.Generic.Dictionary<System.Type!, System.Attribute![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeAttributes.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeConstructors.get -> System.Collections.Generic.Dictionary<System.Type!, System.Reflection.ConstructorInfo![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeConstructors.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeConstructorsInvoker.get -> System.Collections.Generic.Dictionary<System.Type!, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Native.MyConstructorInfo![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeConstructorsInvoker.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeMethodAttributes.get -> System.Collections.Generic.Dictionary<System.Type!, System.Collections.Generic.Dictionary<string!, System.Attribute![]!>!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeMethodAttributes.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeMethods.get -> System.Collections.Generic.Dictionary<System.Type!, System.Reflection.MethodInfo![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeMethods.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeProperties.get -> System.Collections.Generic.Dictionary<System.Type!, System.Reflection.PropertyInfo![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeProperties.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypePropertiesByName.get -> System.Collections.Generic.Dictionary<System.Type!, System.Collections.Generic.Dictionary<string!, System.Reflection.PropertyInfo!>!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypePropertiesByName.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.Types.get -> System.Type![]!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.Types.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypesByName.get -> System.Collections.Generic.Dictionary<string!, System.Type!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider.TypesByName.init -> void
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.ReflectionMetadataHook.SetMetadata(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration.SourceGeneratedReflectionDataProvider! metadata) -> void
