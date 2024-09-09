@@ -49,6 +49,7 @@ internal sealed class TrxReportGenerator :
     private int _failedTestsCount;
     private int _passedTestsCount;
     private int _notExecutedTestsCount;
+    private int _timeoutTestsCount;
     private bool _adapterSupportTrxCapability;
 
     public TrxReportGenerator(
@@ -120,6 +121,11 @@ internal sealed class TrxReportGenerator :
                     {
                         _tests.Add(nodeChangedMessage);
                         _passedTestsCount++;
+                    }
+                    else if (nodeState is TimeoutTestNodeStateProperty)
+                    {
+                        _tests.Add(nodeChangedMessage);
+                        _timeoutTestsCount++;
                     }
                     else if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, nodeState.GetType()) != -1)
                     {
@@ -227,7 +233,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
             ApplicationStateGuard.Ensure(_testStartTime is not null);
 
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
-            _clock, _tests.ToArray(), _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _artifactsByExtension, _artifactsByTestNode,
+            _clock, _tests.ToArray(), _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension, _artifactsByTestNode,
             _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, cancellationToken);
             string reportFileName = await trxReportGeneratorEngine.GenerateReportAsync();
 
