@@ -19,6 +19,7 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHostControllers;
@@ -129,13 +130,13 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 dataConsumersBuilder.Add(dataConsumerDisplay);
             }
 
-            DotnetTestConnection? dotnetTestConnection = ServiceProvider.GetService<DotnetTestConnection>();
+            IPushOnlyProtocol? pushOnlyProtocol = ServiceProvider.GetService<IPushOnlyProtocol>();
             // We register the DotnetTestDataConsumer as last to ensure that it will be the last one to consume the data.
-            if (DotnetTestConnection?.IsConnected == true)
+            if (pushOnlyProtocol?.IsServerMode == true)
             {
-                RoslynDebug.Assert(dotnetTestConnection is not null);
+                RoslynDebug.Assert(pushOnlyProtocol is not null);
 
-                dataConsumersBuilder.Add(new DotnetTestDataConsumer(dotnetTestConnection, ServiceProvider.GetEnvironment()));
+                dataConsumersBuilder.Add(await pushOnlyProtocol.GetDataConsumerAsync());
             }
 
             AsynchronousMessageBus concreteMessageBusService = new(

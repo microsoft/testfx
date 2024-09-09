@@ -2,14 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.IPC;
 
-internal class DotnetTestDataConsumer : IDataConsumer, ITestSessionLifetimeHandler
+internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 {
     private readonly DotnetTestConnection? _dotnetTestConnection;
     private readonly IEnvironment _environment;
