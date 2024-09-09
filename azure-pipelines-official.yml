@@ -32,8 +32,6 @@ variables:
   # Cannot use key:value syntax in root defined variables
   - name: _TeamName
     value: MSTest
-  - name: Codeql.Enabled
-    value: true
   - name: _RunAsInternal
     value: True
   - name: _RunAsPublic
@@ -91,7 +89,7 @@ extends:
           enableTelemetry: true
           jobs:
           - job: Windows
-            timeoutInMinutes: 240
+            timeoutInMinutes: 90
             pool:
               name: $(DncEngInternalBuildPool)
               image: windows.vs2022.amd64
@@ -164,7 +162,7 @@ extends:
                 publishVstsFeed: 'public/test-tools'
 
           - job: Linux
-            timeoutInMinutes: 240
+            timeoutInMinutes: 90
             pool:
               name: $(DncEngInternalBuildPool)
               image: 1es-ubuntu-2204
