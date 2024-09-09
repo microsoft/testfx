@@ -32,6 +32,11 @@
         <target state="translated">Добавить '[TestClass]'</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceWithConstructorFix">
+        <source>Replace TestInitialize method with constructor</source>
+        <target state="new">Replace TestInitialize method with constructor</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
         <source>Replace the assertion wit 'Assert.Fail()'</source>
         <target state="translated">Заменить утверждение на "Assert.Fail()"</target>
