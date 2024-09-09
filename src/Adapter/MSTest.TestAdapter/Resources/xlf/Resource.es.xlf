@@ -27,7 +27,7 @@
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">No se puede ejecutar el método de prueba "{0}.{1}": los datos de prueba no coinciden con los parámetros del método. El recuento o los tipos son diferentes.
-La prueba esperaba recibir {2} parámetro(s), con los tipos "{3}", 
+La prueba esperaba recibir {2} parámetro(s), con los tipos "{3}",
 pero recibió {4} argumento(s), con los tipos "{5}".</target>
         <note />
       </trans-unit>
@@ -314,9 +314,9 @@ Error: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestMethodThrows">
-        <source>Test method {0}.{1} threw exception: 
+        <source>Test method {0}.{1} threw exception:
 {2}</source>
-        <target state="translated">Excepción método de prueba {0}.{1}: 
+        <target state="translated">Excepción método de prueba {0}.{1}:
 {2}</target>
         <note></note>
       </trans-unit>
@@ -384,7 +384,7 @@ Error: {1}</target>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="new">Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</target>
+        <target state="translated">Probar paralelización habilitada para {0} (Trabajos: {1}, Ámbito: {2})</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
@@ -459,7 +459,7 @@ Error: {1}</target>
       <trans-unit id="CannotExpandIDataSourceAttribute">
         <source>Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</source>
         <target state="translated">Se produjo una excepción al expandir las filas de IDataSource del atributo en "{0}.{1}": {2}</target>
-        <note>{0}: TypeName with namespace, 
+        <note>{0}: TypeName with namespace,
 {1}: Method name,
 {2}: CannotExpandIDataSourceAttribute_DuplicateDisplayName or CannotExpandIDataSourceAttribute_CannotSerialize</note>
       </trans-unit>
