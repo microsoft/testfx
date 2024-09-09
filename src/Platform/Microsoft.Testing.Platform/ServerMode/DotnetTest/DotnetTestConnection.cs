@@ -10,12 +10,13 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform;
 
-internal sealed class DotnetTestConnection :
+internal sealed class DotnetTestConnection : IPushOnlyProtocol,
 #if NETCOREAPP
     IAsyncDisposable,
 #endif
@@ -38,7 +39,14 @@ internal sealed class DotnetTestConnection :
         _cancellationTokenSource = cancellationTokenSource;
     }
 
-    public async Task<bool> TryConnectToDotnetTestPipeIfAvailableAsync()
+    public bool IsServerMode => _dotnetTestPipeClient?.IsConnected == true;
+
+    public string Name => PlatformCommandLineProvider.DotnetTestCliProtocolName;
+
+    public Task<IPushOnlyProtocolConsumer> GetDataConsumerAsync()
+        => Task.FromResult((IPushOnlyProtocolConsumer)new DotnetTestDataConsumer(this, _environment));
+
+    public async Task AfterCommonServiceSetupAsync()
     {
         // If we are in server mode and the pipe name is provided
         // then, we need to connect to the pipe server.
@@ -57,14 +65,10 @@ internal sealed class DotnetTestConnection :
             _dotnetTestPipeClient.RegisterAllSerializers();
 
             await _dotnetTestPipeClient.ConnectAsync(_cancellationTokenSource.CancellationToken);
-
-            return _dotnetTestPipeClient.IsConnected;
         }
-
-        return false;
     }
 
-    public async Task SendCommandLineOptionsToDotnetTestPipeAsync()
+    public async Task HelpInvokedAsync()
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
@@ -89,7 +93,7 @@ internal sealed class DotnetTestConnection :
         await _dotnetTestPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), _cancellationTokenSource.CancellationToken);
     }
 
-    public async Task<bool> DoHandshakeAsync(string hostType)
+    public async Task<bool> IsCompatibleProtocolAsync(string hostType)
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
@@ -137,8 +141,6 @@ internal sealed class DotnetTestConnection :
                 break;
         }
     }
-
-    public bool IsConnected => _dotnetTestPipeClient?.IsConnected ?? false;
 
     public void Dispose() => _dotnetTestPipeClient?.Dispose();
 
