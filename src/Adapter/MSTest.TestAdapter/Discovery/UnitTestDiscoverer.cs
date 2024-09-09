@@ -19,13 +19,10 @@ internal class UnitTestDiscoverer
     internal UnitTestDiscoverer()
     {
         _assemblyEnumeratorWrapper = new AssemblyEnumeratorWrapper();
-        TestMethodFilter = new TestMethodFilter();
+        _testMethodFilter = new TestMethodFilter();
     }
 
-    /// <summary>
-    /// Gets or sets method filter for filtering tests.
-    /// </summary>
-    private TestMethodFilter TestMethodFilter { get; set; }
+    private readonly TestMethodFilter _testMethodFilter;
 
     /// <summary>
     /// Discovers the tests available from the provided sources.
@@ -103,7 +100,7 @@ internal class UnitTestDiscoverer
             }
 
             // Get filter expression and skip discovery in case filter expression has parsing error.
-            ITestCaseFilterExpression? filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, logger, out bool filterHasError);
+            ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, logger, out bool filterHasError);
             if (filterHasError)
             {
                 return;
@@ -115,7 +112,7 @@ internal class UnitTestDiscoverer
                 bool hasFixtureTraits = testCase.Traits.Any(t => t.Name == Constants.FixturesTestTrait);
 
                 // Filter tests based on test case filters
-                if (filterExpression != null && !filterExpression.MatchTestCase(testCase, (p) => TestMethodFilter.PropertyValueProvider(testCase, p)))
+                if (filterExpression != null && !filterExpression.MatchTestCase(testCase, (p) => _testMethodFilter.PropertyValueProvider(testCase, p)))
                 {
                     // If test is a fixture test, add it to the list of fixture tests.
                     if (hasFixtureTraits)
