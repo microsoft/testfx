@@ -81,7 +81,7 @@ Out of process file artifacts produced:
         Assert.That(trxContent.Contains(@"<UnitTest name=""TestMethod1"), trxContent);
         Assert.That(trxContent.Contains(@"<TestEntry "), trxContent);
         Assert.That(trxContent.Contains("""<ResultSummary outcome="Completed">"""), trxContent);
-        Assert.That(trxContent.Contains("""<Counters total="2" executed="0" passed="0" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />"""), trxContent);
+        Assert.That(trxContent.Contains("""<Counters total="2" executed="0" passed="0" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="2" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />"""), trxContent);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
