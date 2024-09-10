@@ -115,7 +115,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Replace the assertion wit &apos;Assert.Fail()&apos;.
+        ///   Looks up a localized string similar to Replace the assertion with &apos;Assert.Fail()&apos;.
         /// </summary>
         internal static string ReplaceWithFailAssertionFix {
             get {
