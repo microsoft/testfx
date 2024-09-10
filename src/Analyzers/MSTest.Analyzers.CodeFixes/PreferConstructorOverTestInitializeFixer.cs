@@ -43,7 +43,7 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
         }
 
         // Find the method declaration identified by the diagnostic.
-        MethodDeclarationSyntax methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().First();
+        MethodDeclarationSyntax methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
 
         context.RegisterCodeFix(
             CodeAction.Create(
