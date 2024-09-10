@@ -118,9 +118,10 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests(ITestExecut
             [TestClass]
             public class MyTestClass
             {
-                int x;
+                int x, y;
                 public MyTestClass()
                 {
+                    y=1;
                 }
 
                 [TestInitialize]
@@ -136,14 +137,104 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests(ITestExecut
             [TestClass]
             public class MyTestClass
             {
-                int x;
+                int x, y;
                 public MyTestClass()
                 {
+                    y=1;
                     x=1;
                 }
             }
             """
         ;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    public async Task WhenTestClassHasTestInitializeAndCtorWithBothHavingBody_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                int x, y;
+                public MyTestClass()
+                {
+                    y=1;
+                }
+
+                [TestInitialize]
+                public void [|MyTestInit|]()
+                {
+                    x=1;
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                int x, y;
+                public MyTestClass()
+                {
+                    y=1;
+                    x=1;
+                }
+            }
+            """
+        ;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    public async Task WhenTestClassHasTestInitializeAndTwoCtor_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                int _x, _y;
+                public MyTestClass()
+                {
+                    _y=1;
+                }
+
+                public MyTestClass(int y)
+                {
+                    _y=y;
+                }
+
+                [TestInitialize]
+                public void [|MyTestInit|]()
+                {
+                    _x=1;
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                int _x, _y;
+                public MyTestClass()
+                {
+                    _y=1;
+                    _x=1;
+                }
+
+                public MyTestClass(int y)
+                {
+                    _y=y;
+                }
+            }
+            """;
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
