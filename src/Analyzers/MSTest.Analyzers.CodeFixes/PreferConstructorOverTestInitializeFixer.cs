@@ -60,17 +60,45 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
         // Find the class containing the method
         if (testInitializeMethod.Parent is ClassDeclarationSyntax containingClass)
         {
-            // Create a public constructor for the class
-            ConstructorDeclarationSyntax constructor = SyntaxFactory.ConstructorDeclaration(containingClass.Identifier)
-                .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
-                .WithBody(testInitializeMethod.Body);
+            ConstructorDeclarationSyntax existingConstructor = containingClass.Members
+                 .OfType<ConstructorDeclarationSyntax>()
+                 .FirstOrDefault();
 
-            // Remove the [TestInitialize] method and add the constructor
+            // Move the body of the TestInitialize method
+            BlockSyntax? testInitializeBody = testInitializeMethod.Body;
+
+            if (existingConstructor != null)
+            {
+                StatementSyntax[]? testInitializeStatements = testInitializeBody?.Statements.ToArray();
+                ConstructorDeclarationSyntax newConstructor;
+
+                // If a constructor already exists, append the body of the TestInitialize method to it
+                if (existingConstructor.Body != null)
+                {
+                    BlockSyntax newConstructorBody = existingConstructor.Body.AddStatements(testInitializeStatements ?? Array.Empty<StatementSyntax>());
+                    newConstructor = existingConstructor.WithBody(newConstructorBody);
+                }
+                else
+                {
+                    newConstructor = existingConstructor.WithBody(testInitializeBody);
+                }
+
+                editor.ReplaceNode(existingConstructor, newConstructor);
+            }
+            else
+            {
+                // Create a new constructor with the TestInitialize body if one doesn't exist
+                ConstructorDeclarationSyntax constructor = SyntaxFactory.ConstructorDeclaration(containingClass.Identifier)
+                    .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
+                    .WithBody(testInitializeBody);
+
+                editor.AddMember(containingClass, constructor);
+            }
+
+            // Remove the TestInitialize method
             editor.RemoveNode(testInitializeMethod);
-            editor.AddMember(containingClass, constructor);
         }
 
-        // Return the updated document
         return editor.GetChangedDocument();
     }
 }
