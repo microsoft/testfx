@@ -167,7 +167,10 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests(ITestExecut
                 [TestInitialize]
                 public void [|MyTestInit|]()
                 {
-                    x=1;
+                    if(y == 1)
+                    {
+                        x = 2;
+                    }
                 }
             }
             """;
@@ -181,7 +184,10 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests(ITestExecut
                 public MyTestClass()
                 {
                     y=1;
-                    x=1;
+                    if(y == 1)
+                    {
+                        x = 2;
+                    }
                 }
             }
             """
