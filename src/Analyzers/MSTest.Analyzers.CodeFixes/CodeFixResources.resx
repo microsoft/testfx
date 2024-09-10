@@ -148,7 +148,7 @@
     <value>Change method accessibility to 'private'</value>
   </data>
   <data name="ReplaceWithFailAssertionFix" xml:space="preserve">
-    <value>Replace the assertion wit 'Assert.Fail()'</value>
+    <value>Replace the assertion with 'Assert.Fail()'</value>
   </data>
   <data name="ReplaceWithTestCleanuFix" xml:space="preserve">
     <value>Replace 'Dispose' with a TestCleanup method</value>
