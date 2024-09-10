@@ -28,8 +28,6 @@ variables:
   # Cannot use key:value syntax in root defined variables
   - name: _TeamName
     value: MSTest
-  - name: Codeql.Enabled
-    value: true
   - name: _RunAsInternal
     value: False
   - name: _RunAsPublic
@@ -52,7 +50,7 @@ stages:
       enableTelemetry: true
       jobs:
       - job: Windows
-        timeoutInMinutes: 240
+        timeoutInMinutes: 90
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals windows.vs2022preview.amd64.open
@@ -115,7 +113,7 @@ stages:
             condition: failed()
 
       - job: Linux
-        timeoutInMinutes: 240
+        timeoutInMinutes: 90
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals build.ubuntu.2004.amd64.open
