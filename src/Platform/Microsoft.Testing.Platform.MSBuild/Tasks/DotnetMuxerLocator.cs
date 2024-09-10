@@ -72,17 +72,15 @@ internal class DotnetMuxerLocator
         bool isWinOs = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Searching for muxer named '{_muxerName}'");
 
-        string? envKey = null;
-        string? envVar = null;
         // Try to search using env vars in the order
         // DOTNET_ROOT_{arch}
         // DOTNET_ROOT(x86) if X86 on Win (here we cannot check if current process is WOW64 because this is SDK process arch and not real host arch so it's irrelevant)
         //                  "DOTNET_ROOT(x86) is used instead when running a 32-bit executable on a 64-bit OS."
         // DOTNET_ROOT
-        envKey = $"DOTNET_ROOT_{targetArchitecture.ToString().ToUpperInvariant()}";
+        string? envKey = $"DOTNET_ROOT_{targetArchitecture.ToString().ToUpperInvariant()}";
 
         // Try on arch specific env var
-        envVar = Environment.GetEnvironmentVariable(envKey);
+        string? envVar = Environment.GetEnvironmentVariable(envKey);
 
         // Try on non virtualized x86 var(should happen only on non-x86 architecture)
         if ((envVar == null || !Directory.Exists(envVar)) &&
