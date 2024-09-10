@@ -6,7 +6,6 @@ parameters:
   default: true
 
 variables:
-- template: /eng/common-variables.yml
 - template: /eng/common/templates/variables/pool-providers.yml
   # CG is handled in the primary CI pipeline
 - name: skipComponentGovernanceDetection
@@ -20,6 +19,9 @@ variables:
   # CodeQL needs this plumbed along as a variable to enable TSA
 - name: Codeql.TSAEnabled
   value: ${{ parameters.TSAEnabled }}
+# Default expects tsaoptions.json under SourceRoot.
+- name: Codeql.TSAOptionsPath
+  value: '$(Build.SourcesDirectory)/.config/tsaoptions.json'
 
   # Build variables
 - name: _BuildConfig
