@@ -153,4 +153,7 @@
   <data name="ReplaceWithTestCleanuFix" xml:space="preserve">
     <value>Replace 'Dispose' with a TestCleanup method</value>
   </data>
+  <data name="ReplaceWithConstructorFix" xml:space="preserve">
+    <value>Replace TestInitialize method with constructor</value>
+  </data>
 </root>
