@@ -41,7 +41,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests(ITestExecut
                 }
             }
             """;
-        string fixeCode = """
+        string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -53,7 +53,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests(ITestExecut
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixeCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenTestClassHasTestInitializeAsync_NoDiagnostic()
@@ -94,7 +94,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests(ITestExecut
                 }
             }
             """;
-        string fixeCode = """
+        string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -107,7 +107,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests(ITestExecut
             """
         ;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixeCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenTestClassHasTestInitializeAndCtorWithBody_Diagnostic()
@@ -130,7 +130,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests(ITestExecut
                 }
             }
             """;
-        string fixeCode = """
+        string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -145,6 +145,6 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests(ITestExecut
             """
         ;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixeCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }
