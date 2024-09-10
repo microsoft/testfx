@@ -13,7 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneratio
 public class SourceGeneratedFileOperations : IFileOperations
 {
     // Not great, but the inner class does some complicated stuff on checking if files exist, better would be to extract the functionality to a class that provides it to both these implementations.
-    private readonly FileOperations _fileOperationsInner = new(skipNativeCheck: true);
+    private readonly FileOperations _fileOperationsInner = new(skipSourceGeneratorCheck: true);
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public SourceGeneratedReflectionDataProvider ReflectionDataProvider { get; set; }

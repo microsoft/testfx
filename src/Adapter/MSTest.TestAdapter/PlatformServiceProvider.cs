@@ -17,8 +17,6 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
 {
     private static IPlatformServiceProvider? s_instance;
 
-    private readonly bool _useNativeProvider;
-
     private ITestSource? _testSource;
     private IFileOperations? _fileOperations;
     private IAdapterTraceLogger? _traceLogger;
@@ -31,22 +29,14 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
     /// </summary>
-    private PlatformServiceProvider()
-    {
-        if (
-#if NET8_0_OR_GREATER
-
-        !System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported ||
-#endif
-        Environment.GetEnvironmentVariable("MSTEST_SOURCEGENERATION") == "1")
-        {
-            _useNativeProvider = true;
-        }
-
+    private PlatformServiceProvider() =>
+#if !WINDOWS_UWP
         // Set the provider that is used by DynamicDataAttribute when generating data, to allow substituting functionality
         // in TestFramework without having to put all the stuff in that library.
-        TestTools.UnitTesting.DynamicDataProvider.Instance = _useNativeProvider ? new NativeDynamicDataOperations() : new DynamicDataOperations();
-    }
+        TestTools.UnitTesting.DynamicDataProvider.Instance = SourceGeneratorToggle.UseSourceGenerator ? new SourceGeneratedDynamicDataOperations() : new DynamicDataOperations();
+#else
+        TestTools.UnitTesting.DynamicDataProvider.Instance = new DynamicDataOperations();
+#endif
 
     /// <summary>
     /// Gets an instance to the platform service validator for test sources.
@@ -63,7 +53,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     public IFileOperations FileOperations => _fileOperations ??=
 #if !WINDOWS_UWP
-        _useNativeProvider ? new SourceGeneratedFileOperations() : new FileOperations();
+        SourceGeneratorToggle.UseSourceGenerator ? new SourceGeneratedFileOperations() : new FileOperations();
 #else
         new FileOperations();
 #endif
@@ -93,7 +83,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     public IReflectionOperations2 ReflectionOperations => _reflectionOperations ??=
 #if !WINDOWS_UWP
-        _useNativeProvider ? new SourceGeneratedReflectionOperations() : new ReflectionOperations2();
+         SourceGeneratorToggle.UseSourceGenerator ? new SourceGeneratedReflectionOperations() : new ReflectionOperations2();
 #else
         new ReflectionOperations2();
 #endif

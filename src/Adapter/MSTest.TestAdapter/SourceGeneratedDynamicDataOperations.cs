@@ -3,6 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
-internal class NativeDynamicDataOperations : DynamicDataOperations
+internal class SourceGeneratedDynamicDataOperations : DynamicDataOperations
 {
 }

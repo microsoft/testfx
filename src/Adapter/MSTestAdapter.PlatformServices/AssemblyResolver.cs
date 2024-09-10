@@ -111,11 +111,7 @@ class AssemblyResolver :
 
         // In source gen mode don't register any custom resolver. We can still resolve in the same folder,
         // but nothing more.
-        if (
-#if NET8_0_OR_GREATER
-            System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported ||
-#endif
-            Environment.GetEnvironmentVariable("MSTEST_SOURCEGENERATION") != "1")
+        if (!SourceGeneratorToggle.UseSourceGenerator)
         {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
 #if NETFRAMEWORK

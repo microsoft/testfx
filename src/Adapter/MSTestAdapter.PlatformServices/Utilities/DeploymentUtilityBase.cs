@@ -128,15 +128,7 @@ internal abstract class DeploymentUtilityBase
     /// <returns>Returns a list of deployment warnings.</returns>
     protected IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, string resultsDirectory)
     {
-        if (
-#if NET8_0_OR_GREATER
-
-            !System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported ||
-#endif
-            Environment.GetEnvironmentVariable("MSTEST_SOURCEGENERATION") == "1")
-        {
-            throw new InvalidOperationException("Deployment is not supported in source gen mode");
-        }
+        ApplicationStateGuard.Ensure(!SourceGeneratorToggle.UseSourceGenerator, "Deployment is not supported in source generator mode.");
 
         Validate.IsFalse(StringEx.IsNullOrWhiteSpace(deploymentDirectory), "Deployment directory is null or empty");
         Validate.IsTrue(FileUtility.DoesDirectoryExist(deploymentDirectory), $"Deployment directory {deploymentDirectory} does not exist");

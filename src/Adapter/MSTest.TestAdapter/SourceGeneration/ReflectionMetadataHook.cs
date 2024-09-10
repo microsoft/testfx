@@ -11,7 +11,7 @@ public static class ReflectionMetadataHook
 {
     public static void SetMetadata(SourceGeneratedReflectionDataProvider metadata)
     {
-        Environment.SetEnvironmentVariable("MSTEST_SOURCEGENERATION", "1");
+        SourceGeneratorToggle.UseSourceGenerator = true;
         ((SourceGeneratedFileOperations)PlatformServiceProvider.Instance.FileOperations).ReflectionDataProvider = metadata;
         ((SourceGeneratedReflectionOperations)PlatformServiceProvider.Instance.ReflectionOperations).ReflectionDataProvider = metadata;
     }

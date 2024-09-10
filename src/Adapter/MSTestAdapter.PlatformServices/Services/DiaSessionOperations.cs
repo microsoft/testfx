@@ -19,15 +19,7 @@ internal static class DiaSessionOperations
     /// <remarks>Initializes DiaSession.</remarks>
     static DiaSessionOperations()
     {
-        if (
-#if NET8_0_OR_GREATER
-
-            !System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported ||
-#endif
-            Environment.GetEnvironmentVariable("MSTEST_SOURCEGENERATION") == "1")
-        {
-            throw new NotSupportedException("Dia is not allowed when dynamic code is not supported");
-        }
+        ApplicationStateGuard.Ensure(!SourceGeneratorToggle.UseSourceGenerator, $"{nameof(DiaSessionOperations)} should not be used in source generator mode, all code location metadata should be taken from generated code via SourceGeneratedReflectionDataProvider.");
 
         const string diaSessionTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaSession, Microsoft.VisualStudio.TestPlatform.ObjectModel";
         const string diaNavigationDataTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaNavigationData,  Microsoft.VisualStudio.TestPlatform.ObjectModel";

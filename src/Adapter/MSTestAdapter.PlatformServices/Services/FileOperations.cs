@@ -26,16 +26,11 @@ public class FileOperations : IFileOperations
     private readonly bool _isPackaged;
 #endif
 
-    internal FileOperations(bool skipNativeCheck)
+    internal FileOperations(bool skipSourceGeneratorCheck)
     {
-        if (!skipNativeCheck && (
-#if NET8_0_OR_GREATER
-
-    !System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported ||
-#endif
-    Environment.GetEnvironmentVariable("MSTEST_SOURCEGENERATION") == "1"))
+        if (!skipSourceGeneratorCheck)
         {
-            throw new NotSupportedException("Dia is not allowed when dynamic code is not supported");
+            ApplicationStateGuard.Ensure(!SourceGeneratorToggle.UseSourceGenerator, $"{nameof(FileOperations)} should not be used when source generator mode is active, instead SourceGeneratedFileOperations should be used and delegate to here, with skipSourceGeneratorCheck = true, when needed.");
         }
 
 #if WIN_UI
