@@ -52,6 +52,14 @@ jobs:
     inputs:
       useGlobalJson: true
 
+  - task: PowerShell@2
+    displayName: 'Install Windows SDK'
+    inputs:
+      targetType: filePath
+      filePath: './eng/install-windows-sdk.ps1'
+      failOnStderr: true
+      showWarnings: true
+
   - task: CodeQL3000Init@0
     displayName: CodeQL Initialize
 
