@@ -33,7 +33,8 @@ public class SourceGeneratedFileOperations : IFileOperations
 
     public string GetFullFilePath(string assemblyFileName) => ((IFileOperations)_fileOperationsInner).GetFullFilePath(assemblyFileName);
 
-    public void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string? fileName) => ((IFileOperations)_fileOperationsInner).GetNavigationData(navigationSession, className, methodName, out minLineNumber, out fileName);
+    public void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string? fileName)
+        => ReflectionDataProvider!.GetNavigationData(className, methodName, out minLineNumber, out fileName);
 
     public string? GetAssemblyPath(Assembly assembly)
         => throw new NotSupportedException("Only tests within the same assembly are allowed in source gen mode");

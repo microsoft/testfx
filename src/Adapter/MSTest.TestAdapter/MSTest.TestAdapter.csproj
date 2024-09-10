@@ -152,4 +152,7 @@
     <None Remove="SourceGeneration\SourceGeneratedReflectionDataProvider.cs" />
     <None Remove="SourceGeneration\SourceGeneratedReflectionOperations.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Native\" />
+  </ItemGroup>
 </Project>
