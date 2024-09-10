@@ -67,10 +67,10 @@ public class FileOperations : IFileOperations
     /// <param name="assembly">The assembly.</param>
     /// <returns>Path to the .DLL of the assembly.</returns>
     public string? GetAssemblyPath(Assembly assembly)
-#if NETSTANDARD || NETCOREAPP || NETFRAMEWORK
-        => assembly.Location;
-#elif WINDOWS_UWP
+#if WINDOWS_UWP
         => null; // TODO: what are the options here?
+#else
+        => assembly.Location;
 #endif
 
     /// <summary>
