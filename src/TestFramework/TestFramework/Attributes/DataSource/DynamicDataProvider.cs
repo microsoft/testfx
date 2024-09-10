@@ -3,9 +3,16 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-internal abstract class DynamicDataProvider
+internal static class DynamicDataProvider
 {
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-    public static IDynamicDataOperations Instance { get; internal set; }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+    private static IDynamicDataOperations? s_dynamicDataOperations;
+
+    public static IDynamicDataOperations Instance
+    {
+        get => s_dynamicDataOperations
+            ?? throw new InvalidOperationException($"Dynamic data provider is not set, it should be set by MSTest adapter. " +
+                $"If you are seeing this error, you are using Test Framework without Test Adapter, and your adapter should set {nameof(DynamicDataProvider)}.{nameof(Instance)}. In MSTestAdapter, this happens when PlatformServiceProvider.Instance is called.");
+
+        internal set => s_dynamicDataOperations = value;
+    }
 }

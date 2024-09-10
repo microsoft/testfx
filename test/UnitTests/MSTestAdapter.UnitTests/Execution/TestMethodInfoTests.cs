@@ -1583,7 +1583,7 @@ public class TestMethodInfoTests : TestContainer
 
         public Type ExceptionType { get; private set; }
 
-        protected override void Verify(Exception exception)
+        protected internal override void Verify(Exception exception)
         {
             IsVerifyInvoked = true;
             if (exception is UTF.AssertInconclusiveException)
@@ -1609,7 +1609,7 @@ public class TestMethodInfoTests : TestContainer
 
         public new bool IsVerifyInvoked { get; set; }
 
-        protected override void Verify(Exception exception)
+        protected internal override void Verify(Exception exception)
         {
             IsVerifyInvoked = true;
             if (exception is UTF.AssertInconclusiveException)

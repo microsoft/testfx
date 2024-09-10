@@ -85,8 +85,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     public Type? DynamicDataDisplayNameDeclaringType { get; set; }
 
     /// <inheritdoc />
-    public IEnumerable<object[]> GetData(MethodInfo methodInfo)
-        => DynamicDataProvider.Instance!.GetData(_dynamicDataDeclaringType, _dynamicDataSourceType, _dynamicDataSourceName, methodInfo);
+    public IEnumerable<object[]> GetData(MethodInfo methodInfo) => DynamicDataProvider.Instance.GetData(_dynamicDataDeclaringType, _dynamicDataSourceType, _dynamicDataSourceName, methodInfo);
 
     /// <inheritdoc />
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
