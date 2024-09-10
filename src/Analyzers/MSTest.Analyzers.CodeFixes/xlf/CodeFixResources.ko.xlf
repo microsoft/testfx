@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
         <source>Replace the assertion with 'Assert.Fail()'</source>
-        <target state="needs-review-translation">'Assert.Fail()' 어설션 위트를 바꿉니다.</target>
+        <target state="new">Replace the assertion with 'Assert.Fail()'</target>
         <note />
       </trans-unit>
       <trans-unit id="ReplaceWithTestCleanuFix">
