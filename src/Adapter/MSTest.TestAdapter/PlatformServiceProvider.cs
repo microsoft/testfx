@@ -33,7 +33,9 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
 #if !WINDOWS_UWP
         // Set the provider that is used by DynamicDataAttribute when generating data, to allow substituting functionality
         // in TestFramework without having to put all the stuff in that library.
-        TestTools.UnitTesting.DynamicDataProvider.Instance = SourceGeneratorToggle.UseSourceGenerator ? new SourceGeneratedDynamicDataOperations() : new DynamicDataOperations();
+        TestTools.UnitTesting.DynamicDataProvider.Instance = SourceGeneratorToggle.UseSourceGenerator
+            ? new SourceGeneratedDynamicDataOperations() 
+            : new DynamicDataOperations();
 #else
         TestTools.UnitTesting.DynamicDataProvider.Instance = new DynamicDataOperations();
 #endif
@@ -51,11 +53,14 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets an instance to the platform service for file operations.
     /// </summary>
-    public IFileOperations FileOperations => _fileOperations ??=
+    public IFileOperations FileOperations
+        => _fileOperations ??=
 #if !WINDOWS_UWP
-        SourceGeneratorToggle.UseSourceGenerator ? new SourceGeneratedFileOperations() : new FileOperations();
+            SourceGeneratorToggle.UseSourceGenerator 
+                ? new SourceGeneratedFileOperations()
+                : new FileOperations();
 #else
-        new FileOperations();
+            new FileOperations();
 #endif
 
     /// <summary>
@@ -81,11 +86,14 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets an instance to the platform service for reflection operations specific to a platform.
     /// </summary>
-    public IReflectionOperations2 ReflectionOperations => _reflectionOperations ??=
+    public IReflectionOperations2 ReflectionOperations
+        => _reflectionOperations ??=
 #if !WINDOWS_UWP
-         SourceGeneratorToggle.UseSourceGenerator ? new SourceGeneratedReflectionOperations() : new ReflectionOperations2();
+             SourceGeneratorToggle.UseSourceGenerator
+                 ? new SourceGeneratedReflectionOperations()
+                 : new ReflectionOperations2();
 #else
-        new ReflectionOperations2();
+            new ReflectionOperations2();
 #endif
 
     /// <summary>

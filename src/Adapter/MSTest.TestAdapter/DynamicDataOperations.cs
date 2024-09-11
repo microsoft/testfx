@@ -13,7 +13,7 @@ using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
-internal class DynamicDataOperations : IDynamicDataOperations
+internal sealed class DynamicDataOperations : IDynamicDataOperations
 {
     public IEnumerable<object[]> GetData(Type? _dynamicDataDeclaringType, DynamicDataSourceType _dynamicDataSourceType, string _dynamicDataSourceName, MethodInfo methodInfo)
     {
