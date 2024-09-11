@@ -714,7 +714,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test class should have at least one test method or be &apos;static&apos; with method(s) marked by &apos;[AssemblyInitialization]&apos; and/or &apos;[AssemblyCleanup]&apos;..
+        ///   Looks up a localized string similar to Test class should have at least one test method or be &apos;static&apos; with method(s) marked by &apos;[AssemblyInitialize]&apos; and/or &apos;[AssemblyCleanup]&apos;..
         /// </summary>
         internal static string TestClassShouldHaveTestMethodDescription {
             get {
@@ -723,7 +723,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should have at least one test method or be &apos;static&apos; with method(s) marked by &apos;[AssemblyInitialization]&apos; and/or &apos;[AssemblyCleanup]&apos;.
+        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should have at least one test method or be &apos;static&apos; with method(s) marked by &apos;[AssemblyInitialize]&apos; and/or &apos;[AssemblyCleanup]&apos;.
         /// </summary>
         internal static string TestClassShouldHaveTestMethodMessageFormat {
             get {
