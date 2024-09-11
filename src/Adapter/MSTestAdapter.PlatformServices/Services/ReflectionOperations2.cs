@@ -27,7 +27,7 @@ internal class ReflectionOperations2 : ReflectionOperations, IReflectionOperatio
         => classType.GetTypeInfo().DeclaredConstructors;
 
     public MethodInfo? GetDeclaredMethod(Type type, string methodName)
-        => type.GetMethod(methodName);
+        => type.GetTypeInfo().GetDeclaredMethod(methodName);
 
     public IEnumerable<MethodInfo> GetDeclaredMethods(Type classType)
         => classType.GetTypeInfo().DeclaredMethods;
@@ -36,7 +36,7 @@ internal class ReflectionOperations2 : ReflectionOperations, IReflectionOperatio
         => type.GetTypeInfo().DeclaredProperties;
 
     public PropertyInfo? GetDeclaredProperty(Type type, string propertyName)
-        => type.GetProperty(propertyName);
+        => type.GetTypeInfo().GetDeclaredProperty(propertyName);
 
     public Type[] GetDefinedTypes(Assembly assembly)
         => assembly.DefinedTypes.ToArray();
