@@ -586,7 +586,6 @@ public class TestExecutionManagerTests : TestContainer
                 ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
                 Returns((MemberInfo memberInfo, bool inherit) => originalReflectionOperation.GetCustomAttributes(memberInfo, inherit));
 
-
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>()))
                 .Returns((Assembly asm, string m) => originalReflectionOperation.GetType(asm, m));
 
