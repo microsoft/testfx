@@ -367,7 +367,7 @@ public class DynamicDataAttributeTests : TestContainer
 /// The dummy test class.
 /// </summary>
 [TestClass]
-public class DummyTestClass
+internal class DummyTestClass
 {
     /// <summary>
     /// Gets the reusable test data property.
