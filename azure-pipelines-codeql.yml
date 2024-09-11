@@ -30,8 +30,8 @@ variables:
 trigger: none
 
 schedules:
-  - cron: 0 12 * * 1
-    displayName: Weekly Monday CodeQL run
+  - cron: 0 0 * * *
+    displayName: Daily midnight CodeQL run
     branches:
       include:
       - main
