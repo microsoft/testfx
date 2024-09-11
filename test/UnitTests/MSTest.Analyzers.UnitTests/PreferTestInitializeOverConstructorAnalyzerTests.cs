@@ -39,6 +39,64 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    public async Task WhenTestClassHas_TwoCtorandExsitesTestInitialize_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                int y, x;
+            
+                [TestInitialize]
+                public void TestInitialize()
+                {
+                    x=1;
+                }
+
+                public [|MyTestClass|]()
+                {
+                    if(y == 1)
+                    {
+                        x = 2;
+                    }
+                }
+
+                public MyTestClass(int i)
+                {
+                    x=y;
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                int y, x;
+
+                [TestInitialize]
+                public void TestInitialize()
+                {
+                    x=1;
+                    if(y == 1)
+                    {
+                        x = 2;
+                    }
+                }
+
+                public MyTestClass(int i)
+                {
+                    x=y;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
     public async Task WhenTestClassHasImplicitCtor_NoDiagnostic()
     {
         string code = """
