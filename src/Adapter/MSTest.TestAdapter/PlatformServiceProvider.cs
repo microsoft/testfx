@@ -56,7 +56,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     public IFileOperations FileOperations
         => _fileOperations ??=
 #if !WINDOWS_UWP
-            SourceGeneratorToggle.UseSourceGenerator 
+            SourceGeneratorToggle.UseSourceGenerator
                 ? new SourceGeneratedFileOperations()
                 : new FileOperations();
 #else

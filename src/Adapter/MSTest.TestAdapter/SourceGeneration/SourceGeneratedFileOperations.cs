@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration;
+
 internal sealed class SourceGeneratedFileOperations : IFileOperations
 {
     // Not great, but the inner class does some complicated stuff on checking if files exist, better would be to extract the functionality to a class that provides it to both these implementations.
