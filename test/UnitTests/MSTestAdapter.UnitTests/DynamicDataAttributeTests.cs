@@ -367,7 +367,7 @@ public class DynamicDataAttributeTests : TestContainer
 /// The dummy test class.
 /// </summary>
 [TestClass]
-internal class DummyTestClass
+public class DummyTestClass
 {
     /// <summary>
     /// Gets the reusable test data property.
@@ -571,7 +571,7 @@ public class DummyTestClass2
         => $"DynamicDataTestWithDisplayName {methodInfo.Name} with {data.Length} parameters";
 }
 
-// [TestClass]
+[TestClass]
 public class TestClassTupleData
 {
     public static IEnumerable<Tuple<int, string>> GetDataWithTuple()

@@ -49,11 +49,6 @@ public class MSTestExecutor : ITestExecutor
         ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
         ValidateArg.NotNullOrEmpty(tests, "tests");
 
-        foreach (TestCase test in tests)
-        {
-            Console.WriteLine(test.Source + "---" + test.FullyQualifiedName);
-        }
-
         if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle))
         {
             return;
