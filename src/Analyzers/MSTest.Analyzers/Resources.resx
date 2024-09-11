@@ -329,10 +329,10 @@ The type declaring these methods should also respect the following rules:
     <value>Test classes should have valid layout</value>
   </data>
   <data name="TestClassShouldHaveTestMethodDescription" xml:space="preserve">
-    <value>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</value>
+    <value>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</value>
   </data>
   <data name="TestClassShouldHaveTestMethodMessageFormat" xml:space="preserve">
-    <value>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</value>
+    <value>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</value>
   </data>
   <data name="TestClassShouldHaveTestMethodTitle" xml:space="preserve">
     <value>Test class should have test method</value>
