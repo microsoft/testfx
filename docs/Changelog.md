@@ -4,6 +4,90 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.6.0" />[3.6.0] - 2024-09-11
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.5.2...v3.6.0)
+
+### Added
+
+* Feat: Add code suppressor for CS8618 on TestContext property by @Evangelink in [#3271](https://github.com/microsoft/testfx/pull/3271)
+* Feature: add support for injecting TestContext in ctor by @Evangelink in [#3267](https://github.com/microsoft/testfx/pull/3267)
+* Feat: Add `[STATestClass]` by @Evangelink in [#3278](https://github.com/microsoft/testfx/pull/3278)
+* Feat: Add [STATestMethod] by @Evangelink in [#3286](https://github.com/microsoft/testfx/pull/3286)
+* Feat: add support for overloaded parameterized tests by @Evangelink in [#3298](https://github.com/microsoft/testfx/pull/3298)
+* Improve display name for DynamicDataAttribute by @Evangelink in [#3293](https://github.com/microsoft/testfx/pull/3293)
+* Feat: allow cooperative timeout by @Evangelink in [#3314](https://github.com/microsoft/testfx/pull/3314)
+* MSTEST0010: report when class is abstract and inheritance is not set by @engyebrahim in [#3347](https://github.com/microsoft/testfx/pull/3347)
+* MSTEST0011: report when class is abstract and inheritance is not specified by @engyebrahim in [#3352](https://github.com/microsoft/testfx/pull/3352)
+* MSTEST0010: report if InheritanceBehavior.BeforeEachDerivedClass is set on a sealed class by @engyebrahim in [#3369](https://github.com/microsoft/testfx/pull/3369)
+* MSTEST0011: report if InheritanceBehavior.BeforeEachDerivedClass is set on a sealed class by @engyebrahim in [#3370](https://github.com/microsoft/testfx/pull/3370)
+* MSTEST0018: DynamicData usage should be valid by @Evangelink in [#3374](https://github.com/microsoft/testfx/pull/3374)
+* Add analyzer for DeploymentItem by @engyebrahim in [#3387](https://github.com/microsoft/testfx/pull/3387)
+* MSTEST0004: Add code fix by @engyebrahim in [#3482](https://github.com/microsoft/testfx/pull/3482)
+* MSTEST0003: Add code fix  by @engyebrahim in [#3493](https://github.com/microsoft/testfx/pull/3493)
+* Warn on invalid DisableParallelization configuration entry by @engyebrahim in [#3526](https://github.com/microsoft/testfx/pull/3526)
+* MSTEST0007: Add code fix by @engyebrahim in [#3540](https://github.com/microsoft/testfx/pull/3540)
+* MSTEST0002: Add code fix by @engyebrahim in [#3554](https://github.com/microsoft/testfx/pull/3554)
+* MSTEST0005: Add code fix by @engyebrahim in [#3571](https://github.com/microsoft/testfx/pull/3571)
+* MSTest.Sdk handles library mode by @Evangelink in [#3581](https://github.com/microsoft/testfx/pull/3581)
+* MSTest.Sdk warn or error on invalid or untested properties by @Evangelink in [#3603](https://github.com/microsoft/testfx/pull/3603)
+* MSTEST0036: Add analyzer for when a test member is shadowing another member by @engyebrahim in [#3589](https://github.com/microsoft/testfx/pull/3589)
+* Allows to cancel at multiple points before test execution by @Evangelink in [#3723](https://github.com/microsoft/testfx/pull/3723)
+* Add option to order tests by name by @Evangelink in [#3796](https://github.com/microsoft/testfx/pull/3796)
+
+### Fixed
+
+* Fix timeout message to reflect that 0 is not allowed by @Evangelink in [#3279](https://github.com/microsoft/testfx/pull/3279)
+* Fix TestInitialize and TestCleanup analyzers to allow generic class by @Evangelink in [#3280](https://github.com/microsoft/testfx/pull/3280)
+* Fix test case id filtering for server mode by @MarcoRossignoli in [#3284](https://github.com/microsoft/testfx/pull/3284)
+* Fix collectionAssert.AreEqual fails for list of lists by @engyebrahim in [#3275](https://github.com/microsoft/testfx/pull/3275)
+* MSTEST0034: Use CleanupBehavior.EndOfClass on ClassCleanupAttribute by @engyebrahim in [#3289](https://github.com/microsoft/testfx/pull/3289)
+* Fix MSTEST0029 false positive on TestInitialize/TestCleanup by @engyebrahim in [#3318](https://github.com/microsoft/testfx/pull/3318)
+* Fix passing null to DataRow when signature is object[] by @Evangelink in [#3331](https://github.com/microsoft/testfx/pull/3331)
+* Fix spelling issues by @Evangelink in [#3330](https://github.com/microsoft/testfx/pull/3330)
+* Fix: TestCleanup is always called in case of timeout by @Evangelink in [#3334](https://github.com/microsoft/testfx/pull/3334)
+* Fix cooperative cancellation for TestInit/TestCleanup by @Evangelink in [#3333](https://github.com/microsoft/testfx/pull/3333)
+* Fix message when step is canceled through TestContext by @Evangelink in [#3335](https://github.com/microsoft/testfx/pull/3335)
+* Fix: Skip AssemblyInitialize/Cleanup when all tests are skipped by @Evangelink in [#3339](https://github.com/microsoft/testfx/pull/3339)
+* Fix XmlDataConnection by @Evangelink in [#3346](https://github.com/microsoft/testfx/pull/3346)
+* Fix class initialization/cleanup calls by @Evangelink in [#3362](https://github.com/microsoft/testfx/pull/3362)
+* Fix Assert.VerifyThrows to use standard message pattern by @Evangelink in [#3363](https://github.com/microsoft/testfx/pull/3363)
+* Refactor TestMethod DisplayName by @Evangelink in [#3365](https://github.com/microsoft/testfx/pull/3365)
+* Fix display name for parameterized tests by @Evangelink in [#3366](https://github.com/microsoft/testfx/pull/3366)
+* Fix settings parsing ignore invalid values by @engyebrahim in [#3338](https://github.com/microsoft/testfx/pull/3338)
+* use GetExceptionMessage instead of ex.Message in TestDataSource by @SimonCropp in [#3415](https://github.com/microsoft/testfx/pull/3415)
+* Fix MSTEST0036 to report only on ordinary methods by @Evangelink in [#3711](https://github.com/microsoft/testfx/pull/3711)
+* fix: TRLPlusCCancellationTokenSource doesn't cancel current TestRun by @engyebrahim in [#3672](https://github.com/microsoft/testfx/pull/3672)
+* Fix running cleanup after first test method  by @nohwnd in [#3764](https://github.com/microsoft/testfx/pull/3764)
+
+### Housekeeping
+
+* Perf: avoid creation of tasks by @Evangelink in [#3282](https://github.com/microsoft/testfx/pull/3282)
+* For fixtures in STA thread, use TCS instead of Task.Run by @Evangelink in [#3308](https://github.com/microsoft/testfx/pull/3308)
+* Fix typo in initialized by @nohwnd in [#3319](https://github.com/microsoft/testfx/pull/3319)
+* Highlight C# code in analyzer tests by @Evangelink in [#3327](https://github.com/microsoft/testfx/pull/3327)
+* MSTest.Sdk use Playwright 1.45.1 by @Evangelink in [#3380](https://github.com/microsoft/testfx/pull/3380)
+* MSTest.Sdk use aspire 8.1.0 by @Evangelink in [#3379](https://github.com/microsoft/testfx/pull/3379)
+* Update description for (init/cleanup) analyzers by @engyebrahim in [#3391](https://github.com/microsoft/testfx/pull/3391)
+* use SupportedOSPlatform from polyfill by @SimonCropp in [#3409](https://github.com/microsoft/testfx/pull/3409)
+* use Guard from Polyfill  by @SimonCropp in [#3508](https://github.com/microsoft/testfx/pull/3508)
+* Save all code files with UTF8BOM by @nohwnd in [#3536](https://github.com/microsoft/testfx/pull/3536)
+* Save all project files with UTF8 (NOBOM) by @nohwnd in [#3539](https://github.com/microsoft/testfx/pull/3539)
+* Reduce verbosity of internal test framework by @Evangelink in [#3537](https://github.com/microsoft/testfx/pull/3537)
+
+### Artifacts
+
+* MSTest: [3.6.0](https://www.nuget.org/packages/MSTest/3.6.0)
+* MSTest.TestFramework: [3.6.0](https://www.nuget.org/packages/MSTest.TestFramework/3.6.0)
+* MSTest.TestAdapter: [3.6.0](https://www.nuget.org/packages/MSTest.TestAdapter/3.6.0)
+* MSTest.Analyzers: [3.6.0](https://www.nuget.org/packages/MSTest.Analyzers/3.6.0)
+* MSTest.Sdk: [3.6.0](https://www.nuget.org/packages/MSTest.Sdk/3.6.0)
+* Microsoft.Testing.Extensions.CrashDump: [1.4.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.4.0)
+* Microsoft.Testing.Extensions.HangDump: [1.4.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.4.0)
+* Microsoft.Testing.Extensions.HotReload: [1.4.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.4.0)
+* Microsoft.Testing.Extensions.Retry: [1.4.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.4.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.4.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.4.0)
+
 ## <a name="3.5.2" />[3.5.2] - 2024-08-13
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.5.1...v3.5.2)
