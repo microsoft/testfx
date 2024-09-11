@@ -50,7 +50,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
                 int y, x;
             
                 [TestInitialize]
-                public void TestInitialize()
+                public void TestInit()
                 {
                     x=1;
                 }
@@ -78,7 +78,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
                 int y, x;
 
                 [TestInitialize]
-                public void TestInitialize()
+                public void TestInit()
                 {
                     x=1;
                     if(y == 1)
