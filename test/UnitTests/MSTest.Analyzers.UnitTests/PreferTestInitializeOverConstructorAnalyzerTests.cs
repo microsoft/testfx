@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.PreferTestInitializeOverConstructorAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.PreferTestInitializeOverConstructorFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -23,8 +23,20 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void TestInitialize()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenTestClassHasImplicitCtor_NoDiagnostic()
@@ -38,7 +50,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     public async Task WhenTestClassHasParameterizedCtor_NoDiagnostic()
@@ -55,6 +67,6 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 }
