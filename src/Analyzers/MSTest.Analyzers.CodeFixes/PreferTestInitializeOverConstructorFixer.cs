@@ -60,16 +60,20 @@ public sealed class PreferTestInitializeOverConstructorFixer : CodeFixProvider
     private static async Task<Document> ReplaceConstructorWithTestInitializeAsync(Document document, ConstructorDeclarationSyntax constructorDeclaration, CancellationToken cancellationToken)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        SemanticModel semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false)
+           ?? throw new InvalidOperationException("SemanticModel cannot be null.");
 
         // Find the class containing the constructor
         if (constructorDeclaration.Parent is ClassDeclarationSyntax containingClass)
         {
             // Check if a TestInitialize method already exists
+            INamedTypeSymbol? testInitializeAttributeSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute);
             MethodDeclarationSyntax? existingTestInitialize = containingClass.Members
                 .OfType<MethodDeclarationSyntax>()
                 .FirstOrDefault(m => m.AttributeLists
                     .SelectMany(attrList => attrList.Attributes)
-                    .Any(attr => attr.Name.ToString().Contains("TestInitialize")));
+                    .Any(attr => semanticModel.GetSymbolInfo(attr).Symbol is IMethodSymbol methodSymbol &&
+                                 SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingType, testInitializeAttributeSymbol)));
 
             // Move the body of the constructor
             BlockSyntax? constructorBody = constructorDeclaration.Body;
