@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneratio
 /// <summary>
 /// This type is used by MSTest SourceGenerator, its shape can change at any time. Do NOT depend on the shape of this API.
 /// </summary>
-public class SourceGeneratedReflectionDataProvider
+public sealed class SourceGeneratedReflectionDataProvider
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public Assembly Assembly { get; init; }

@@ -8,9 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration;
-
-#pragma warning disable RS0016 // Add public types and members to the declared API
-public class SourceGeneratedFileOperations : IFileOperations
+internal sealed class SourceGeneratedFileOperations : IFileOperations
 {
     // Not great, but the inner class does some complicated stuff on checking if files exist, better would be to extract the functionality to a class that provides it to both these implementations.
     private readonly FileOperations _fileOperationsInner = new(skipSourceGeneratorCheck: true);
@@ -43,5 +41,4 @@ public class SourceGeneratedFileOperations : IFileOperations
             ? throw new InvalidOperationException("Reflection only mode is not allowed")
             : ReflectionDataProvider!.GetAssembly(assemblyName);
 }
-#pragma warning restore RS0016 // Add public types and members to the declared API
 #endif

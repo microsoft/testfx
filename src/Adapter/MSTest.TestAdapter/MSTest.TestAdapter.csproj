@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <!-- Enable AOT analyzer warnings to make sure we don't call APIs that would fail when we use source generator mode together with NativeAOT. -->
     <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">$(EnableIotAnalyzers)</IsAotCompatible>
   </PropertyGroup>
 
@@ -147,12 +148,4 @@
   <!-- SDK bottom import -->
   <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
-  <ItemGroup>
-    <None Remove="SourceGeneration\SourceGeneratedFileOperations.cs" />
-    <None Remove="SourceGeneration\SourceGeneratedReflectionDataProvider.cs" />
-    <None Remove="SourceGeneration\SourceGeneratedReflectionOperations.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Native\" />
-  </ItemGroup>
 </Project>

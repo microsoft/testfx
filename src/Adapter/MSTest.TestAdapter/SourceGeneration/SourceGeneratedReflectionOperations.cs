@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration;
 
-internal class SourceGeneratedReflectionOperations : IReflectionOperations2
+internal sealed class SourceGeneratedReflectionOperations : IReflectionOperations2
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public SourceGeneratedReflectionDataProvider ReflectionDataProvider { get; set; }
