@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="ReplaceWithTestCleanuFix">
         <source>Replace 'Dispose' with a TestCleanup method</source>
-        <target state="new">Replace 'Dispose' with a TestCleanup method</target>
+        <target state="translated">Sostituire "Dispose" con un metodo TestCleanup</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
