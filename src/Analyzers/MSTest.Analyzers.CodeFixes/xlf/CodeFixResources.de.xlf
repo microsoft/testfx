@@ -47,6 +47,11 @@
         <target state="translated">„Dispose“ durch eine TestCleanup-Methode ersetzen</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceWithTestInitializeFix">
+        <source>Replace constructor with TestInitialize method</source>
+        <target state="new">Replace constructor with TestInitialize method</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
         <target state="translated">Testklassensignatur korrigieren</target>

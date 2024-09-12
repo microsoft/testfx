@@ -47,6 +47,11 @@
         <target state="translated">将“Dispose”替换为 TestCleanup 方法</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceWithTestInitializeFix">
+        <source>Replace constructor with TestInitialize method</source>
+        <target state="new">Replace constructor with TestInitialize method</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
         <target state="translated">修复测试类签名</target>

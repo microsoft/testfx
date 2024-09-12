@@ -156,4 +156,7 @@
   <data name="ReplaceWithConstructorFix" xml:space="preserve">
     <value>Replace TestInitialize method with constructor</value>
   </data>
+  <data name="ReplaceWithTestInitializeFix" xml:space="preserve">
+    <value>Replace constructor with TestInitialize method</value>
+  </data>
 </root>
