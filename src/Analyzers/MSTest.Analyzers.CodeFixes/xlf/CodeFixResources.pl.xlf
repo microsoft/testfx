@@ -39,7 +39,7 @@
       </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
         <source>Replace the assertion with 'Assert.Fail()'</source>
-        <target state="new">Replace the assertion with 'Assert.Fail()'</target>
+        <target state="translated">Zastąp asercję elementem „Assert.Fail()”</target>
         <note />
       </trans-unit>
       <trans-unit id="ReplaceWithTestCleanuFix">
