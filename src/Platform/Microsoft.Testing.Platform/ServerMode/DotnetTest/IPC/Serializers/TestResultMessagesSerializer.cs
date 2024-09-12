@@ -280,7 +280,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
             return;
         }
 
-        WriteShort(stream, TestResultMessagesFieldsId.SuccessfulTestMessageList);
+        WriteShort(stream, TestResultMessagesFieldsId.FailedTestMessageList);
 
         // We will reserve an int (4 bytes)
         // so that we fill the size later, once we write the payload
@@ -288,17 +288,17 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
 
         long before = stream.Position;
         WriteInt(stream, failedTestResultMessages.Length);
-        foreach (FailedTestResultMessage successfulTestResultMessage in failedTestResultMessages)
+        foreach (FailedTestResultMessage failedTestResultMessage in failedTestResultMessages)
         {
-            WriteShort(stream, GetFieldCount(successfulTestResultMessage));
+            WriteShort(stream, GetFieldCount(failedTestResultMessage));
 
-            WriteField(stream, FailedTestResultMessageFieldsId.Uid, successfulTestResultMessage.Uid);
-            WriteField(stream, FailedTestResultMessageFieldsId.DisplayName, successfulTestResultMessage.DisplayName);
-            WriteField(stream, FailedTestResultMessageFieldsId.State, successfulTestResultMessage.State);
-            WriteField(stream, FailedTestResultMessageFieldsId.Reason, successfulTestResultMessage.Reason);
-            WriteField(stream, FailedTestResultMessageFieldsId.ErrorMessage, successfulTestResultMessage.ErrorMessage);
-            WriteField(stream, FailedTestResultMessageFieldsId.ErrorStackTrace, successfulTestResultMessage.ErrorStackTrace);
-            WriteField(stream, FailedTestResultMessageFieldsId.SessionUid, successfulTestResultMessage.SessionUid);
+            WriteField(stream, FailedTestResultMessageFieldsId.Uid, failedTestResultMessage.Uid);
+            WriteField(stream, FailedTestResultMessageFieldsId.DisplayName, failedTestResultMessage.DisplayName);
+            WriteField(stream, FailedTestResultMessageFieldsId.State, failedTestResultMessage.State);
+            WriteField(stream, FailedTestResultMessageFieldsId.Reason, failedTestResultMessage.Reason);
+            WriteField(stream, FailedTestResultMessageFieldsId.ErrorMessage, failedTestResultMessage.ErrorMessage);
+            WriteField(stream, FailedTestResultMessageFieldsId.ErrorStackTrace, failedTestResultMessage.ErrorStackTrace);
+            WriteField(stream, FailedTestResultMessageFieldsId.SessionUid, failedTestResultMessage.SessionUid);
         }
 
         // NOTE: We are able to seek only if we are using a MemoryStream
@@ -308,8 +308,8 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
 
     private static ushort GetFieldCount(TestResultMessages testResultMessages) =>
         (ushort)((testResultMessages.ExecutionId is null ? 0 : 1) +
-        (testResultMessages.SuccessfulTestMessages is null ? 0 : 1) +
-        (testResultMessages.FailedTestMessages is null ? 0 : 1));
+        (IsNullOrEmpty(testResultMessages.SuccessfulTestMessages) ? 0 : 1) +
+        (IsNullOrEmpty(testResultMessages.FailedTestMessages) ? 0 : 1));
 
     private static ushort GetFieldCount(SuccessfulTestResultMessage successfulTestResultMessage) =>
         (ushort)((successfulTestResultMessage.Uid is null ? 0 : 1) +

@@ -180,7 +180,7 @@ internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPip
 
     private static ushort GetFieldCount(FileArtifactMessages fileArtifactMessages) =>
         (ushort)((fileArtifactMessages.ExecutionId is null ? 0 : 1) +
-        (fileArtifactMessages.FileArtifacts is null ? 0 : 1));
+        (IsNullOrEmpty(fileArtifactMessages.FileArtifacts) ? 0 : 1));
 
     private static ushort GetFieldCount(FileArtifactMessage fileArtifactMessage) =>
         (ushort)((fileArtifactMessage.FullPath is null ? 0 : 1) +
