@@ -122,7 +122,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
                 }
             }
             """;
-        // it addes a TestInitialize but it will use the local TestInitialize and this's wronge behavior
+        // It adds a TestInitialize but it will use the local TestInitialize and this is wrong behavior
         string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System;
