@@ -124,7 +124,16 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Replace the assertion wit &apos;Assert.Fail()&apos;.
+        ///   Looks up a localized string similar to Replace TestCleanup with Dispose method.
+        /// </summary>
+        internal static string ReplaceWithDisposeFix {
+            get {
+                return ResourceManager.GetString("ReplaceWithDisposeFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replace the assertion with &apos;Assert.Fail()&apos;.
         /// </summary>
         internal static string ReplaceWithFailAssertionFix {
             get {
