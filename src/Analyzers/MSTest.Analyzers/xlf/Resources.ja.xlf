@@ -510,12 +510,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="needs-review-translation">テスト クラスには、少なくとも 1 つのテスト メソッドがあるか、'[AssemblyInitialization]' または '[AssemblyCleanup]' によってマークされたメソッドを含む 'static' である必要があります。</target>
+        <target state="new">Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="needs-review-translation">テスト クラス '{0}' には、少なくとも 1 つのテスト メソッドがあるか、'[AssemblyInitialization]' または '[AssemblyCleanup]' によってマークされたメソッドを含む 'static' である必要があります。</target>
+        <target state="new">Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
