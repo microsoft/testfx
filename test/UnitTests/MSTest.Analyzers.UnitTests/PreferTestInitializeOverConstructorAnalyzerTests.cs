@@ -50,7 +50,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
                 int y, x;
             
                 [TestInitialize]
-                public void TestInit()
+                public void BeforeEachTest()
                 {
                     x=1;
                 }
@@ -78,7 +78,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
                 int y, x;
 
                 [TestInitialize]
-                public void TestInit()
+                public void BeforeEachTest()
                 {
                     x=1;
                     if(y == 1)
@@ -90,6 +90,60 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
                 public MyTestClass(int i)
                 {
                     x=y;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    public async Task WhenTestClass_WithLocalTestInitializeAttribute_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            
+            [AttributeUsage(AttributeTargets.Method)]
+            public class TestInitializeAttribute : Attribute { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                int x;
+            
+                [TestInitialize]
+                public void BeforeEachTest()
+                {
+                }
+
+                public [|MyTestClass|]()
+                {
+                    x=1;
+                }
+            }
+            """;
+        // it addes a TestInitialize but it will use the local TestInitialize and this's wronge behavior
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [AttributeUsage(AttributeTargets.Method)]
+            public class TestInitializeAttribute : Attribute { }
+            
+            [TestClass]
+            public class MyTestClass
+            {
+                int x;
+            
+                [TestInitialize]
+                public void BeforeEachTest()
+                {
+                }
+            
+                [TestInitialize]
+                public void TestInitialize()
+                {
+                    x=1;
                 }
             }
             """;
