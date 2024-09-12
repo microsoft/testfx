@@ -510,12 +510,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="needs-review-translation">Testovací třída by měla mít aspoň jednu testovací metodu nebo by měla být static s metodami s označením [AssemblyInitialization] a/nebo [AssemblyCleanup].</target>
+        <target state="new">Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="needs-review-translation">Testovací třída {0} by měla mít aspoň jednu testovací metodu nebo by měla být static s metodami s označením [AssemblyInitialization] a/nebo [AssemblyCleanup].</target>
+        <target state="new">Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
