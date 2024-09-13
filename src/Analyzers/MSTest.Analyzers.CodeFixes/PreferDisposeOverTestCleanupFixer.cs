@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 using System.Composition;
 
 using Analyzer.Utilities;
+using Analyzer.Utilities.Extensions;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
@@ -41,9 +42,9 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
             return;
         }
 
-        // Find the method declaration identified by the diagnostic.
-        MethodDeclarationSyntax methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
-        if (methodDeclaration == null)
+        // Find the TestCleanup method declaration identified by the diagnostic.
+        MethodDeclarationSyntax testCleanupMethod = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
+        if (testCleanupMethod == null || !IsTestCleanupMethodValid(testCleanupMethod))
         {
             return;
         }
@@ -51,59 +52,97 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 CodeFixResources.ReplaceWithDisposeFix,
-                c => ReplaceTestCleanupWithDisposeAsync(context.Document, methodDeclaration, c),
+                c => AddDisposeAndBaseClassAsync(context.Document, testCleanupMethod, root as CompilationUnitSyntax, c),
                 nameof(PreferDisposeOverTestCleanupFixer)),
             diagnostic);
     }
 
-    private static async Task<Document> ReplaceTestCleanupWithDisposeAsync(Document document, MethodDeclarationSyntax testCleanupMethod, CancellationToken cancellationToken)
+    private static bool IsTestCleanupMethodValid(MethodDeclarationSyntax methodDeclaration) =>
+        // Check if the return type is void
+        methodDeclaration.ReturnType is PredefinedTypeSyntax predefinedType &&
+               predefinedType.Keyword.IsKind(SyntaxKind.VoidKeyword);
+
+    private static async Task<Document> AddDisposeAndBaseClassAsync(Document document, MethodDeclarationSyntax testCleanupMethod, CompilationUnitSyntax? root, CancellationToken cancellationToken)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        SemanticModel semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("SemanticModel cannot be null.");
 
-        // Find the class containing the method
+        // Find the class containing the TestCleanup method
         if (testCleanupMethod.Parent is ClassDeclarationSyntax containingClass)
         {
+            INamedTypeSymbol? iDisposableSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemIDisposable);
+            INamedTypeSymbol? testCleanupAttributeSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute);
+
+            // Ensure the class implements IDisposable
+            if (iDisposableSymbol != null && !ImplementsIDisposable(containingClass, semanticModel))
+            {
+                AddIDisposable(editor, containingClass);
+            }
+
+            // Move the code from TestCleanup to Dispose method
             MethodDeclarationSyntax? existingDisposeMethod = containingClass.Members
                 .OfType<MethodDeclarationSyntax>()
-                .FirstOrDefault(m => m.Identifier.Text == "Dispose" && !m.ParameterList.Parameters.Any());
+                .FirstOrDefault(m => semanticModel.GetDeclaredSymbol(m) is IMethodSymbol methodSymbol && methodSymbol.IsDisposeImplementation(iDisposableSymbol));
 
-            // Move the body of the TestCleanup method
-            BlockSyntax? testCleanupBody = testCleanupMethod.Body;
+            BlockSyntax? cleanupBody = testCleanupMethod.Body;
 
             if (existingDisposeMethod != null)
             {
-                StatementSyntax[]? testCleanupStatements = testCleanupBody?.Statements.ToArray();
+                // Append the TestCleanup body to the existing Dispose method
+                StatementSyntax[]? cleanupStatements = cleanupBody?.Statements.ToArray();
                 MethodDeclarationSyntax newDisposeMethod;
-
-                // If a Dispose method already exists, append the body of the TestCleanup method to it
                 if (existingDisposeMethod.Body != null)
                 {
-                    BlockSyntax newDisposeBody = existingDisposeMethod.Body.AddStatements(testCleanupStatements ?? Array.Empty<StatementSyntax>());
+                    BlockSyntax newDisposeBody = existingDisposeMethod.Body.AddStatements(cleanupStatements ?? Array.Empty<StatementSyntax>());
                     newDisposeMethod = existingDisposeMethod.WithBody(newDisposeBody);
                 }
                 else
                 {
-                    newDisposeMethod = existingDisposeMethod.WithBody(testCleanupBody);
+                    newDisposeMethod = existingDisposeMethod.WithBody(cleanupBody);
                 }
 
                 editor.ReplaceNode(existingDisposeMethod, newDisposeMethod);
             }
             else
             {
-                // Create a new Dispose method with the TestCleanup body if one doesn't exist
-                MethodDeclarationSyntax disposeMethod = SyntaxFactory.MethodDeclaration(
-                        SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
-                        "Dispose")
+                // Create a new Dispose method with the TestCleanup body
+                MethodDeclarationSyntax disposeMethod = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)), "Dispose")
                     .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
-                    .WithBody(testCleanupBody);
+                    .WithBody(cleanupBody);
 
                 editor.AddMember(containingClass, disposeMethod);
             }
 
             // Remove the TestCleanup method
             editor.RemoveNode(testCleanupMethod);
+
+            if (root is not null && root.Usings.Any(u => u.Name.ToString() == "System"))
+            {
+                editor.InsertBefore(root.Members.First(), SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")));
+            }
         }
 
         return editor.GetChangedDocument();
+    }
+
+    private static bool ImplementsIDisposable(ClassDeclarationSyntax classDeclaration, SemanticModel semanticModel)
+    {
+        INamedTypeSymbol? disposableSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemIDisposable);
+        return classDeclaration.BaseList?.Types
+            .Any(t => semanticModel.GetSymbolInfo(t.Type).Symbol is INamedTypeSymbol typeSymbol &&
+                      SymbolEqualityComparer.Default.Equals(typeSymbol, disposableSymbol)) == true;
+    }
+
+    private static void AddIDisposable(DocumentEditor editor, ClassDeclarationSyntax classDeclaration)
+    {
+        SimpleBaseTypeSyntax disposableType = SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName("IDisposable"));
+
+        // If there is already a base list, add IDisposable to it, otherwise create a new one
+        ClassDeclarationSyntax newClassDeclaration = classDeclaration.BaseList != null
+            ? classDeclaration.WithBaseList(
+                classDeclaration.BaseList.AddTypes(disposableType))
+            : classDeclaration.AddBaseListTypes(disposableType);
+        editor.ReplaceNode(classDeclaration, newClassDeclaration);
     }
 }
