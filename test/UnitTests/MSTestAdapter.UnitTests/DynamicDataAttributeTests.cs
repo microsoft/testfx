@@ -572,7 +572,7 @@ public class DummyTestClass2
 }
 
 [TestClass]
-public class TestClassTupleData
+internal class TestClassTupleData
 {
     public static IEnumerable<Tuple<int, string>> GetDataWithTuple()
     {
