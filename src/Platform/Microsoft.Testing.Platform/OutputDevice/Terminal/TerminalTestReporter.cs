@@ -254,7 +254,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         if (!_options.ShowAssembly && _assemblies.Count == 1)
         {
             TestProgressState testProgressState = _assemblies.Values.Single();
-            terminal.SetColor(TerminalColor.Gray);
+            terminal.SetColor(TerminalColor.DarkGray);
             terminal.Append(" - ");
             terminal.ResetColor();
             AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, testProgressState.Assembly, testProgressState.TargetFramework, testProgressState.Architecture);
@@ -455,7 +455,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
         terminal.Append(' ');
         terminal.Append(displayName);
-        terminal.SetColor(TerminalColor.Gray);
+        terminal.SetColor(TerminalColor.DarkGray);
         terminal.Append(' ');
         AppendLongDuration(terminal, duration);
         if (_options.ShowAssembly)
@@ -529,7 +529,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         if (match.Success)
         {
             bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
-            terminal.SetColor(TerminalColor.Gray);
+            terminal.SetColor(TerminalColor.DarkGray);
             terminal.Append(PlatformResources.StackFrameAt);
             terminal.Append(' ');
             terminal.ResetColor();
@@ -545,7 +545,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
             if (weHaveFilePathAndCodeLine)
             {
-                terminal.SetColor(TerminalColor.Gray);
+                terminal.SetColor(TerminalColor.DarkGray);
                 terminal.Append(' ');
                 terminal.Append(PlatformResources.StackFrameIn);
                 terminal.Append(' ');
@@ -653,7 +653,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     {
         if (colorize)
         {
-            terminal.SetColor(TerminalColor.Gray);
+            terminal.SetColor(TerminalColor.DarkGray);
         }
 
         HumanReadableDurationFormatter.Append(terminal, duration, wrapInParentheses);
@@ -772,8 +772,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
             ConsoleColor.DarkRed => TerminalColor.DarkRed,
             ConsoleColor.DarkMagenta => TerminalColor.DarkMagenta,
             ConsoleColor.DarkYellow => TerminalColor.DarkYellow,
-            ConsoleColor.DarkGray => TerminalColor.Gray,
-            ConsoleColor.Gray => TerminalColor.DarkWhite,
+            ConsoleColor.DarkGray => TerminalColor.DarkGray,
+            ConsoleColor.Gray => TerminalColor.Gray,
             ConsoleColor.Blue => TerminalColor.Blue,
             ConsoleColor.Green => TerminalColor.Green,
             ConsoleColor.Cyan => TerminalColor.Cyan,

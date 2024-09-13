@@ -14,39 +14,39 @@ internal enum TerminalColor
     Black = 30,
 
     /// <summary>
-    /// Red.
+    /// DarkRed.
     /// </summary>
     DarkRed = 31,
 
     /// <summary>
-    /// Green.
+    /// DarkGreen.
     /// </summary>
     DarkGreen = 32,
 
     /// <summary>
-    /// Yellow.
+    /// DarkYellow.
     /// </summary>
     DarkYellow = 33,
 
     /// <summary>
-    /// Blue.
+    /// DarkBlue.
     /// </summary>
     DarkBlue = 34,
 
     /// <summary>
-    /// Magenta.
+    /// DarkMagenta.
     /// </summary>
     DarkMagenta = 35,
 
     /// <summary>
-    /// Cyan.
+    /// DarkCyan.
     /// </summary>
     DarkCyan = 36,
 
     /// <summary>
-    /// White.
+    /// Gray. This entry looks out of order, but in reality 37 is dark white, which is lighter than bright black = Dark Gray in Console colors.
     /// </summary>
-    DarkWhite = 37,
+    Gray = 37,
 
     /// <summary>
     /// Default.
@@ -54,9 +54,9 @@ internal enum TerminalColor
     Default = 39,
 
     /// <summary>
-    /// Gray.
+    /// DarkGray. This entry looks out of order, but in reality 90 is bright black, which is darker than dark white = Gray in Console colors.
     /// </summary>
-    Gray = 90,
+    DarkGray = 90,
 
     /// <summary>
     /// Red.
