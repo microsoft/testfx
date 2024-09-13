@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.PreferTestInitializeOverConstructorAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.PreferTestInitializeOverConstructorFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -23,8 +23,132 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
                 }
             }
             """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void TestInitialize()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    public async Task WhenTestClassHas_TwoCtorandExsitesTestInitialize_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                int y, x;
+            
+                [TestInitialize]
+                public void BeforeEachTest()
+                {
+                    x=1;
+                }
+
+                public [|MyTestClass|]()
+                {
+                    if(y == 1)
+                    {
+                        x = 2;
+                    }
+                }
+
+                public MyTestClass(int i)
+                {
+                    x=y;
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                int y, x;
+
+                [TestInitialize]
+                public void BeforeEachTest()
+                {
+                    x=1;
+                    if(y == 1)
+                    {
+                        x = 2;
+                    }
+                }
+
+                public MyTestClass(int i)
+                {
+                    x=y;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    public async Task WhenTestClass_WithLocalTestInitializeAttribute_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            
+            [AttributeUsage(AttributeTargets.Method)]
+            public class TestInitializeAttribute : Attribute { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                int x;
+            
+                [TestInitialize]
+                public void BeforeEachTest()
+                {
+                }
+
+                public [|MyTestClass|]()
+                {
+                    x=1;
+                }
+            }
+            """;
+        // It adds a TestInitialize but it will use the local TestInitialize and this is wrong behavior
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [AttributeUsage(AttributeTargets.Method)]
+            public class TestInitializeAttribute : Attribute { }
+            
+            [TestClass]
+            public class MyTestClass
+            {
+                int x;
+            
+                [TestInitialize]
+                public void BeforeEachTest()
+                {
+                }
+            
+                [TestInitialize]
+                public void TestInitialize()
+                {
+                    x=1;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenTestClassHasImplicitCtor_NoDiagnostic()
@@ -38,7 +162,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     public async Task WhenTestClassHasParameterizedCtor_NoDiagnostic()
@@ -55,6 +179,6 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 }

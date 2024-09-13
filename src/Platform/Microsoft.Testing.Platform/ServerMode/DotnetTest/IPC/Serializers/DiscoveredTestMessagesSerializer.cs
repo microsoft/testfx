@@ -144,7 +144,7 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
 
     private static ushort GetFieldCount(DiscoveredTestMessages discoveredTestMessages) =>
         (ushort)((discoveredTestMessages.ExecutionId is null ? 0 : 1) +
-        (discoveredTestMessages.DiscoveredMessages is null ? 0 : 1));
+        (IsNullOrEmpty(discoveredTestMessages.DiscoveredMessages) ? 0 : 1));
 
     private static ushort GetFieldCount(DiscoveredTestMessage discoveredTestMessage) =>
         (ushort)((discoveredTestMessage.Uid is null ? 0 : 1) +

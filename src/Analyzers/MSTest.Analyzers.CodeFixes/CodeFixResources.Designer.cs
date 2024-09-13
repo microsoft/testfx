@@ -151,6 +151,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replace constructor with TestInitialize method.
+        /// </summary>
+        internal static string ReplaceWithTestInitializeFix {
+            get {
+                return ResourceManager.GetString("ReplaceWithTestInitializeFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fix test class signature.
         /// </summary>
         internal static string TestClassShouldBeValidFix {

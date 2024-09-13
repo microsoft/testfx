@@ -158,5 +158,7 @@
   </data>
   <data name="ReplaceWithDisposeFix" xml:space="preserve">
     <value>Replace TestCleanup with Dispose method</value>
+  <data name="ReplaceWithTestInitializeFix" xml:space="preserve">
+    <value>Replace constructor with TestInitialize method</value>
   </data>
 </root>

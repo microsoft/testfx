@@ -44,12 +44,17 @@
       </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
         <source>Replace the assertion with 'Assert.Fail()'</source>
-        <target state="new">Replace the assertion with 'Assert.Fail()'</target>
+        <target state="translated">使用 'Assert.Fail()' 取代判斷提示</target>
         <note />
       </trans-unit>
       <trans-unit id="ReplaceWithTestCleanuFix">
         <source>Replace 'Dispose' with a TestCleanup method</source>
         <target state="translated">以 TestCleanup 方法取代 'Dispose'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReplaceWithTestInitializeFix">
+        <source>Replace constructor with TestInitialize method</source>
+        <target state="new">Replace constructor with TestInitialize method</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">

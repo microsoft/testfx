@@ -155,8 +155,6 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages);
                 break;
         }
-
-        await Task.CompletedTask;
     }
 
     private static void GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage, out byte? state, out string? reason, out string? errorMessage, out string? errorStackTrace)
