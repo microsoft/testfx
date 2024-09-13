@@ -143,6 +143,11 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute.Workers.set ->
 Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute.Priority.get -> int
 Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute.PriorityAttribute(int priority) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.STATestClassAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.STATestClassAttribute.STATestClassAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute.STATestMethodAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute.STATestMethodAttribute(string? displayName) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert
 Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute.TestCategoryAttribute(string! testCategory) -> void
@@ -208,6 +213,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.TestResult() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestTimeout
 Microsoft.VisualStudio.TestTools.UnitTesting.TestTimeout.Infinite = 2147483647 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestTimeout
 Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.CooperativeCancellation.get -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.CooperativeCancellation.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.Timeout.get -> int
 Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.TimeoutAttribute(int timeout) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.TimeoutAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.TestTimeout timeout) -> void
