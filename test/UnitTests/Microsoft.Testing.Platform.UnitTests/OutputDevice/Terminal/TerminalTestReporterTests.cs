@@ -88,27 +88,27 @@ public sealed class TerminalTestReporterTests : TestBase
         string output = stringBuilderConsole.Output;
 
         string expected = $"""
-            ␛[32;1mpassed␛[m PassedTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
-            ␛[33;1mskipped␛[m SkippedTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
-            ␛[31;1mfailed (canceled)␛[m TimedoutTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
-            ␛[31;1mfailed (canceled)␛[m CanceledTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
-            ␛[31;1mfailed␛[m FailedTest1␛[90;1m ␛[90;1m(10s 000ms)␛[m
-            ␛[91;1m  Tests failed
-            ␛[m␛[91;1m  Expected
+            ␛[92mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[93mskipped␛[m SkippedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[91mfailed (canceled)␛[m TimedoutTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[91mfailed (canceled)␛[m CanceledTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[91mfailed␛[m FailedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[91m  Tests failed
+            ␛[m␛[91m  Expected
                 ABC
               Actual
                 DEF
-            ␛[m␛[31;1m  Stack Trace:
-                ␛[90;1mat ␛[m␛[91;1mFailingTest()␛[90;1m in ␛[90;1m␛]8;;file:///{folderLink}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m
+            ␛[m␛[91m  Stack Trace:
+                ␛[90mat ␛[m␛[91mFailingTest()␛[90m in ␛[90m␛]8;;file:///{folderLink}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m
 
 
               Out of process file artifacts produced:
-                - ␛[90;1m␛]8;;file:///{folderLink}artifact1.txt␛\{folder}artifact1.txt␛]8;;␛\␛[m
+                - ␛[90m␛]8;;file:///{folderLink}artifact1.txt␛\{folder}artifact1.txt␛]8;;␛\␛[m
               In process file artifacts produced:
-                - ␛[90;1m␛]8;;file:///{folderLink}artifact2.txt␛\{folder}artifact2.txt␛]8;;␛\␛[m
-            ␛[91;1mTest run summary: Failed!␛[90;1m - ␛[m␛[90;1m␛]8;;file:///{folderLinkNoSlash}␛\{folder}assembly.dll␛]8;;␛\␛[m (net8.0|x64)
+                - ␛[90m␛]8;;file:///{folderLink}artifact2.txt␛\{folder}artifact2.txt␛]8;;␛\␛[m
+            ␛[91mTest run summary: Failed!␛[90m - ␛[m␛[90m␛]8;;file:///{folderLinkNoSlash}␛\{folder}assembly.dll␛]8;;␛\␛[m (net8.0|x64)
             ␛[m  total: 5
-            ␛[91;1m  failed: 3
+            ␛[91m  failed: 3
             ␛[m  succeeded: 1
               skipped: 1
               duration: 3652058d 23h 59m 59s 999ms

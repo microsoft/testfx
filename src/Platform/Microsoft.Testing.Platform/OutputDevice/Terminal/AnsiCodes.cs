@@ -16,7 +16,7 @@ internal static class AnsiCodes
     /// <summary>
     /// The control sequence introducer.
     /// </summary>
-    public const string CSI = "\x1b[";
+    public const string CSI = $"{Esc}[";
 
     /// <summary>
     /// Select graphic rendition.
@@ -24,7 +24,7 @@ internal static class AnsiCodes
     /// <remarks>
     /// Print <see cref="CSI"/>color-code<see cref="SetColor"/> to change text color.
     /// </remarks>
-    public const string SetColor = ";1m";
+    public const string SetColor = "m";
 
     /// <summary>
     /// Select graphic rendition - set bold mode.
@@ -45,17 +45,17 @@ internal static class AnsiCodes
     /// <remarks>
     /// Print <see cref="LinkPrefix"/>url<see cref="LinkInfix"/>text<see cref="LinkSuffix"/> to render a hyperlink.
     /// </remarks>
-    public const string LinkPrefix = "\x1b]8;;";
+    public const string LinkPrefix = $"{Esc}]8;;";
 
     /// <summary>
     /// <see cref="LinkPrefix"/>.
     /// </summary>
-    public const string LinkInfix = "\x1b\\";
+    public const string LinkInfix = $"{Esc}\\";
 
     /// <summary>
     /// <see cref="LinkPrefix"/>.
     /// </summary>
-    public const string LinkSuffix = "\x1b]8;;\x1b\\";
+    public const string LinkSuffix = $"{Esc}]8;;{Esc}\\";
 
     /// <summary>
     /// Moves up the specified number of lines and puts cursor at the beginning of the line.
@@ -100,12 +100,12 @@ internal static class AnsiCodes
     /// <summary>
     /// Hides the cursor.
     /// </summary>
-    public const string HideCursor = "\x1b[?25l";
+    public const string HideCursor = $"{Esc}[?25l";
 
     /// <summary>
     /// Shows/restores the cursor.
     /// </summary>
-    public const string ShowCursor = "\x1b[?25h";
+    public const string ShowCursor = $"{Esc}[?25h";
 
     /// <summary>
     /// Set progress state to a busy spinner. <br/>
@@ -115,7 +115,7 @@ internal static class AnsiCodes
     /// <see href="https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC">ConEmu specific OSC codes.</see><br/>
     /// <see href="https://iterm2.com/documentation-escape-codes.html">iTerm2 proprietary escape codes.</see>
     /// </remarks>
-    public const string SetBusySpinner = "\x1b]9;4;3;\x1b\\";
+    public const string SetBusySpinner = $"{Esc}]9;4;3;{Esc}\\";
 
     /// <summary>
     /// Remove progress state, restoring taskbar status to normal. <br/>
@@ -125,7 +125,7 @@ internal static class AnsiCodes
     /// <see href="https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC">ConEmu specific OSC codes.</see><br/>
     /// <see href="https://iterm2.com/documentation-escape-codes.html">iTerm2 proprietary escape codes.</see>
     /// </remarks>
-    public const string RemoveBusySpinner = "\x1b]9;4;0;\x1b\\";
+    public const string RemoveBusySpinner = $"{Esc}]9;4;0;{Esc}\\";
 
     public static string Colorize(string? s, TerminalColor color)
         => RoslynString.IsNullOrWhiteSpace(s) ? s ?? string.Empty : $"{CSI}{(int)color}{SetColor}{s}{SetDefaultColor}";
