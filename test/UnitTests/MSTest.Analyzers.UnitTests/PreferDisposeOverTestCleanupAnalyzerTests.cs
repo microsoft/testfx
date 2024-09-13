@@ -68,7 +68,8 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests(ITestExecutionCont
             using System;
             
             [TestClass]
-            public class MyTestClass : IDisposable
+            public class MyTestClass
+            : IDisposable
             {
                 public void Dispose()
                 {
@@ -78,6 +79,41 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests(ITestExecutionCont
             """;
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    public async Task WhenTestClassHasTestCleanup_WithAnotherBaseClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            
+            public class LocalBase{}
+
+            [TestClass]
+            public class MyTestClass : LocalBase
+            {
+                [TestCleanup]
+                public void [|MyTestCleanup|]()
+                {
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            public class LocalBase{}
+            
+            [TestClass]
+            public class MyTestClass : LocalBase, IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
 
     public async Task WhenTestClassHasTestCleanup_AndHasDispose_Diagnostic()
     {

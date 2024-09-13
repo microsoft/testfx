@@ -73,14 +73,9 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
         // Find the class containing the TestCleanup method
         if (testCleanupMethod.Parent is ClassDeclarationSyntax containingClass)
         {
+            ClassDeclarationSyntax? newParent = containingClass;
             INamedTypeSymbol? iDisposableSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemIDisposable);
             INamedTypeSymbol? testCleanupAttributeSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute);
-
-            // Ensure the class implements IDisposable
-            if (iDisposableSymbol != null && !ImplementsIDisposable(containingClass, semanticModel))
-            {
-                AddIDisposable(editor, containingClass);
-            }
 
             // Move the code from TestCleanup to Dispose method
             MethodDeclarationSyntax? existingDisposeMethod = containingClass.Members
@@ -105,6 +100,7 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
                 }
 
                 editor.ReplaceNode(existingDisposeMethod, newDisposeMethod);
+                editor.RemoveNode(testCleanupMethod);
             }
             else
             {
@@ -112,17 +108,15 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
                 MethodDeclarationSyntax disposeMethod = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)), "Dispose")
                     .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
                     .WithBody(cleanupBody);
+                newParent = newParent.RemoveNode(testCleanupMethod, SyntaxRemoveOptions.KeepNoTrivia);
+                newParent = newParent?.AddMembers(disposeMethod);
+                // Ensure the class implements IDisposable
+                if (iDisposableSymbol != null && !ImplementsIDisposable(containingClass, semanticModel))
+                {
+                    newParent = AddIDisposable(editor, newParent!);
+                }
 
-                editor.AddMember(containingClass, disposeMethod);
-            }
-
-            // Remove the TestCleanup method
-            editor.RemoveNode(testCleanupMethod);
-
-            UsingDirectiveSyntax systemUsingDirective = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(WellKnownTypeNames.System));
-            if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is CompilationUnitSyntax root && root.Usings.All(u => !u.Name.IsEquivalentTo(systemUsingDirective.Name)))
-            {
-                editor.InsertBefore(root.Members.First(), systemUsingDirective);
+                editor.ReplaceNode(containingClass, newParent!);
             }
         }
 
@@ -137,15 +131,14 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
                       SymbolEqualityComparer.Default.Equals(typeSymbol, disposableSymbol)) == true;
     }
 
-    private static void AddIDisposable(DocumentEditor editor, ClassDeclarationSyntax classDeclaration)
+    private static ClassDeclarationSyntax AddIDisposable(DocumentEditor editor, ClassDeclarationSyntax classDeclaration)
     {
         SimpleBaseTypeSyntax disposableType = SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName("IDisposable"));
 
         // If there is already a base list, add IDisposable to it, otherwise create a new one
-        ClassDeclarationSyntax newClassDeclaration = classDeclaration.BaseList != null
+        return classDeclaration.BaseList != null
             ? classDeclaration.WithBaseList(
                 classDeclaration.BaseList.AddTypes(disposableType))
             : classDeclaration.AddBaseListTypes(disposableType);
-        editor.ReplaceNode(classDeclaration, newClassDeclaration);
     }
 }
