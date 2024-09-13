@@ -1,8 +1,1 @@
 ﻿#nullable enable
-Microsoft.VisualStudio.TestTools.UnitTesting.STATestClassAttribute
-Microsoft.VisualStudio.TestTools.UnitTesting.STATestClassAttribute.STATestClassAttribute() -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute
-Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute.STATestMethodAttribute() -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute.STATestMethodAttribute(string? displayName) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.CooperativeCancellation.get -> bool
-Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.CooperativeCancellation.set -> void
