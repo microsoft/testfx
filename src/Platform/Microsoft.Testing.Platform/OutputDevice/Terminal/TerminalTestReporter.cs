@@ -317,7 +317,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         if (colorizeSkipped)
         {
-            terminal.SetColor(TerminalColor.DarkYellow);
+            terminal.SetColor(TerminalColor.Yellow);
         }
 
         terminal.AppendLine(skippedText);
@@ -339,7 +339,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     {
         if (!succeeded)
         {
-            terminal.SetColor(TerminalColor.DarkRed);
+            terminal.SetColor(TerminalColor.Red);
             // If the build failed, we print one of three red strings.
             string text = (countErrors > 0, countWarnings > 0) switch
             {
@@ -353,13 +353,13 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
         else if (countWarnings > 0)
         {
-            terminal.SetColor(TerminalColor.DarkYellow);
+            terminal.SetColor(TerminalColor.Yellow);
             terminal.Append($"succeeded with {countWarnings} warning(s)");
             terminal.ResetColor();
         }
         else
         {
-            terminal.SetColor(TerminalColor.DarkGreen);
+            terminal.SetColor(TerminalColor.Green);
             terminal.Append(PlatformResources.PassedLowercase);
             terminal.ResetColor();
         }
@@ -436,9 +436,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         TerminalColor color = outcome switch
         {
-            TestOutcome.Error or TestOutcome.Fail or TestOutcome.Canceled or TestOutcome.Timeout => TerminalColor.DarkRed,
-            TestOutcome.Skipped => TerminalColor.DarkYellow,
-            TestOutcome.Passed => TerminalColor.DarkGreen,
+            TestOutcome.Error or TestOutcome.Fail or TestOutcome.Canceled or TestOutcome.Timeout => TerminalColor.Red,
+            TestOutcome.Skipped => TerminalColor.Yellow,
+            TestOutcome.Passed => TerminalColor.Green,
             _ => throw new NotSupportedException(),
         };
         string outcomeText = outcome switch
@@ -502,7 +502,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             return;
         }
 
-        terminal.SetColor(TerminalColor.DarkRed);
+        terminal.SetColor(TerminalColor.Red);
         terminal.Append(SingleIndentation);
         terminal.Append(PlatformResources.StackTrace);
         terminal.AppendLine(":");
@@ -772,8 +772,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
             ConsoleColor.DarkRed => TerminalColor.DarkRed,
             ConsoleColor.DarkMagenta => TerminalColor.DarkMagenta,
             ConsoleColor.DarkYellow => TerminalColor.DarkYellow,
-            ConsoleColor.Gray => TerminalColor.Gray,
             ConsoleColor.DarkGray => TerminalColor.Gray,
+            ConsoleColor.Gray => TerminalColor.DarkWhite,
             ConsoleColor.Blue => TerminalColor.Blue,
             ConsoleColor.Green => TerminalColor.Green,
             ConsoleColor.Cyan => TerminalColor.Cyan,

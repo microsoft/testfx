@@ -53,7 +53,7 @@ internal sealed class AnsiTerminalTestProgressFrame
 
         terminal.Append('[');
         charsTaken++;
-        terminal.SetColor(TerminalColor.DarkGreen);
+        terminal.SetColor(TerminalColor.Green);
         terminal.Append('✓');
         charsTaken++;
         string passedText = passed.ToString(CultureInfo.CurrentCulture);
@@ -64,7 +64,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         terminal.Append('/');
         charsTaken++;
 
-        terminal.SetColor(TerminalColor.DarkRed);
+        terminal.SetColor(TerminalColor.Red);
         terminal.Append('x');
         charsTaken++;
         string failedText = failed.ToString(CultureInfo.CurrentCulture);
@@ -75,7 +75,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         terminal.Append('/');
         charsTaken++;
 
-        terminal.SetColor(TerminalColor.DarkYellow);
+        terminal.SetColor(TerminalColor.Yellow);
         terminal.Append('↓');
         charsTaken++;
         string skippedText = skipped.ToString(CultureInfo.CurrentCulture);
