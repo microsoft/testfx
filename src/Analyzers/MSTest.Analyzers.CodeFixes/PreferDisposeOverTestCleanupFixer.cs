@@ -57,6 +57,8 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
             diagnostic);
     }
 
+    // The fix will be onle for void TestCleanup.
+    // We can use DisposeAsync with other types but in that case we would also need to detect if the test is using multi-tfm as DisposeAsync is not available in netfx so we could only fix for netcore.
     private static bool IsTestCleanupMethodValid(MethodDeclarationSyntax methodDeclaration) =>
         // Check if the return type is void
         methodDeclaration.ReturnType is PredefinedTypeSyntax predefinedType &&
