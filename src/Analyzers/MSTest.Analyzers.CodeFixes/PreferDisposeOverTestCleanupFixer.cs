@@ -52,7 +52,7 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 CodeFixResources.ReplaceWithDisposeFix,
-                c => AddDisposeAndBaseClassAsync(context.Document, testCleanupMethod, root as CompilationUnitSyntax, c),
+                c => AddDisposeAndBaseClassAsync(context.Document, testCleanupMethod, c),
                 nameof(PreferDisposeOverTestCleanupFixer)),
             diagnostic);
     }
@@ -64,7 +64,7 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
         methodDeclaration.ReturnType is PredefinedTypeSyntax predefinedType &&
                predefinedType.Keyword.IsKind(SyntaxKind.VoidKeyword);
 
-    private static async Task<Document> AddDisposeAndBaseClassAsync(Document document, MethodDeclarationSyntax testCleanupMethod, CompilationUnitSyntax? root, CancellationToken cancellationToken)
+    private static async Task<Document> AddDisposeAndBaseClassAsync(Document document, MethodDeclarationSyntax testCleanupMethod, CancellationToken cancellationToken)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         SemanticModel semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false)
@@ -119,9 +119,10 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
             // Remove the TestCleanup method
             editor.RemoveNode(testCleanupMethod);
 
-            if (root is not null && root.Usings.Any(u => u.Name.ToString() == "System"))
+            UsingDirectiveSyntax systemUsingDirective = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(WellKnownTypeNames.System));
+            if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is CompilationUnitSyntax root && root.Usings.All(u => !u.Name.IsEquivalentTo(systemUsingDirective.Name)))
             {
-                editor.InsertBefore(root.Members.First(), SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")));
+                editor.InsertBefore(root.Members.First(), systemUsingDirective);
             }
         }
 
