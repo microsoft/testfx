@@ -3,10 +3,6 @@
 
 using System.Text;
 
-#if !NET8_0_OR_GREATER
-using Microsoft.Testing.Platform.Helpers;
-#endif
-
 #if NETCOREAPP
 using System.Buffers;
 #endif
