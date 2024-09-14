@@ -403,10 +403,8 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
+        AdapterSettingsException exception = VerifyThrows<AdapterSettingsException>(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
 
-        Verify(exception is not null);
-        Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
         Verify(exception.Message.Contains("Invalid value 'GoneFishing' specified for 'Workers'. The value should be a non-negative integer."));
     }
 
@@ -423,10 +421,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
-
-        Verify(exception is not null);
-        Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
+        AdapterSettingsException exception = VerifyThrows<AdapterSettingsException>(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
         Verify(exception.Message.Contains("Invalid value '-1' specified for 'Workers'. The value should be a non-negative integer."));
     }
 
@@ -534,10 +529,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
-
-        Verify(exception is not null);
-        Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
+        AdapterSettingsException exception = VerifyThrows<AdapterSettingsException>(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
         Verify(exception.Message.Contains("Invalid value 'JustParallelizeWillYou' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."));
     }
 
@@ -572,10 +564,7 @@ public class MSTestSettingsTests : TestContainer
             </RunSettings>
             """;
 
-        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
-
-        Verify(exception is not null);
-        Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
+        AdapterSettingsException exception = VerifyThrows<AdapterSettingsException>(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
         Verify(exception.Message.Contains("Invalid settings 'Parallelize'. Unexpected XmlElement: 'Hola'."));
     }
 

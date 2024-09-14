@@ -25,17 +25,12 @@ public class DynamicDataAttributeTests : TestContainer
         DynamicDataAttribute.TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
     }
 
-    public void GetDataShouldThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist()
-    {
-        void Action()
+    public void GetDataShouldThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist() =>
+        VerifyThrows<ArgumentNullException>(() =>
         {
             _dynamicDataAttribute = new DynamicDataAttribute("ABC");
             _dynamicDataAttribute.GetData(_testMethodInfo);
-        }
-
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is ArgumentNullException);
-    }
+        });
 
     public void GetDataShouldReadDataFromProperty()
     {
@@ -73,44 +68,29 @@ public class DynamicDataAttributeTests : TestContainer
         Verify(data.ToList().Count == 2);
     }
 
-    public void GetDataShouldThrowExceptionIfPropertyReturnsNull()
-    {
-        void Action()
+    public void GetDataShouldThrowExceptionIfPropertyReturnsNull() =>
+        VerifyThrows<ArgumentNullException>(() =>
         {
             MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod4");
             _dynamicDataAttribute = new DynamicDataAttribute("NullProperty", typeof(DummyTestClass));
             _dynamicDataAttribute.GetData(methodInfo);
-        }
+        });
 
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is ArgumentNullException);
-    }
-
-    public void GetDataShouldThrowExceptionIfPropertyReturnsEmpty()
-    {
-        void Action()
+    public void GetDataShouldThrowExceptionIfPropertyReturnsEmpty() =>
+        VerifyThrows<ArgumentException>(() =>
         {
             MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod5");
             _dynamicDataAttribute = new DynamicDataAttribute("EmptyProperty", typeof(DummyTestClass));
             _dynamicDataAttribute.GetData(methodInfo);
-        }
+        });
 
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is ArgumentException);
-    }
-
-    public void GetDataShouldThrowExceptionIfPropertyDoesNotReturnCorrectType()
-    {
-        void Action()
+    public void GetDataShouldThrowExceptionIfPropertyDoesNotReturnCorrectType() =>
+        VerifyThrows<ArgumentNullException>(() =>
         {
             MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod3");
             _dynamicDataAttribute = new DynamicDataAttribute("WrongDataTypeProperty", typeof(DummyTestClass));
             _dynamicDataAttribute.GetData(methodInfo);
-        }
-
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is ArgumentNullException);
-    }
+        });
 
     public void GetDisplayNameShouldReturnDisplayName()
     {
@@ -139,103 +119,68 @@ public class DynamicDataAttributeTests : TestContainer
         Verify(displayName == "DynamicDataTestWithDisplayName TestMethod1 with 3 parameters");
     }
 
-    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodMissingParameters()
-    {
-        void Action()
+    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodMissingParameters() =>
+        VerifyThrows<ArgumentNullException>(() =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithMissingParameters";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        }
+        });
 
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is ArgumentNullException);
-    }
-
-    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidReturnType()
-    {
-        void Action()
+    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidReturnType() =>
+        VerifyThrows<ArgumentNullException>(() =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidReturnType";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        }
+        });
 
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is ArgumentNullException);
-    }
-
-    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidFirstParameterType()
-    {
-        void Action()
+    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidFirstParameterType() =>
+        VerifyThrows<ArgumentNullException>(() =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidFirstParameterType";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        }
+        });
 
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is ArgumentNullException);
-    }
-
-    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidSecondParameterType()
-    {
-        void Action()
+    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidSecondParameterType() =>
+        VerifyThrows<ArgumentNullException>(() =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidSecondParameterType";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        }
+        });
 
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is ArgumentNullException);
-    }
-
-    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodNonStatic()
-    {
-        void Action()
+    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodNonStatic() =>
+        VerifyThrows<ArgumentNullException>(() =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameNonStatic";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        }
+        });
 
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is ArgumentNullException);
-    }
-
-    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodPrivate()
-    {
-        void Action()
+    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodPrivate() =>
+        VerifyThrows<ArgumentNullException>(() =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNamePrivate";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        }
+        });
 
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is ArgumentNullException);
-    }
-
-    public void GetDisplayNameShouldThrowExceptionWithMissingDynamicDataDisplayNameMethod()
-    {
-        void Action()
+    public void GetDisplayNameShouldThrowExceptionWithMissingDynamicDataDisplayNameMethod() =>
+        VerifyThrows<ArgumentNullException>(() =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "MissingCustomDynamicDataDisplayName";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        }
-
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is ArgumentNullException);
-    }
+        });
 
     public void GetDisplayNameShouldReturnEmptyStringIfDataIsNull()
     {
@@ -325,36 +270,30 @@ public class DynamicDataAttributeTests : TestContainer
         MethodInfo testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithTuple), typeof(TestClassTupleData), DynamicDataSourceType.Property);
 
-        Exception ex = VerifyThrows(() => dynamicDataAttribute.GetData(testMethodInfo));
-        Verify(ex is ArgumentNullException);
+        VerifyThrows<ArgumentNullException>(() => dynamicDataAttribute.GetData(testMethodInfo));
 
         dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
-        ex = VerifyThrows(() => dynamicDataAttribute.GetData(testMethodInfo));
-        Verify(ex is ArgumentNullException);
+        VerifyThrows<ArgumentNullException>(() => dynamicDataAttribute.GetData(testMethodInfo));
     }
 
     public void DynamicDataSource_WithValueTuple_Throws()
     {
         MethodInfo testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTuple), typeof(TestClassTupleData), DynamicDataSourceType.Property);
-        Exception ex = VerifyThrows(() => dynamicDataAttribute.GetData(testMethodInfo));
-        Verify(ex is ArgumentNullException);
+        VerifyThrows<ArgumentNullException>(() => dynamicDataAttribute.GetData(testMethodInfo));
 
         dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
-        ex = VerifyThrows(() => dynamicDataAttribute.GetData(testMethodInfo));
-        Verify(ex is ArgumentNullException);
+        VerifyThrows<ArgumentNullException>(() => dynamicDataAttribute.GetData(testMethodInfo));
     }
 
     public void DynamicDataSource_WithValueTupleWithTupleSyntax_Throws()
     {
         MethodInfo testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
         var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData), DynamicDataSourceType.Property);
-        Exception ex = VerifyThrows(() => dynamicDataAttribute.GetData(testMethodInfo));
-        Verify(ex is ArgumentNullException);
+        VerifyThrows<ArgumentNullException>(() => dynamicDataAttribute.GetData(testMethodInfo));
 
         dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData), DynamicDataSourceType.Method);
-        ex = VerifyThrows(() => dynamicDataAttribute.GetData(testMethodInfo));
-        Verify(ex is ArgumentNullException);
+        VerifyThrows<ArgumentNullException>(() => dynamicDataAttribute.GetData(testMethodInfo));
     }
 #endif
 }

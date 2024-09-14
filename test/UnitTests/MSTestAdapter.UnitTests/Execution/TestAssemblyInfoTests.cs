@@ -42,8 +42,7 @@ public class TestAssemblyInfoTests : TestContainer
             _testAssemblyInfo.AssemblyInitializeMethod = _dummyMethodInfo;
         }
 
-        Exception ex = VerifyThrows(Action);
-        Verify(ex.GetType() == typeof(TypeInspectionException));
+        VerifyThrows<TypeInspectionException>(Action);
     }
 
     public void TestAssemblyInfoAssemblyCleanupMethodThrowsForMultipleAssemblyCleanupMethods()
@@ -54,8 +53,7 @@ public class TestAssemblyInfoTests : TestContainer
             _testAssemblyInfo.AssemblyCleanupMethod = _dummyMethodInfo;
         }
 
-        Exception ex = VerifyThrows(Action);
-        Verify(ex.GetType() == typeof(TypeInspectionException));
+        VerifyThrows<TypeInspectionException>(Action);
     }
 
     public void TestAssemblyHasExecutableCleanupMethodShouldReturnFalseIfAssemblyHasNoCleanupMethod() => Verify(!_testAssemblyInfo.HasExecutableCleanupMethod);
@@ -97,8 +95,7 @@ public class TestAssemblyInfoTests : TestContainer
 
         void Action() => _testAssemblyInfo.RunAssemblyInitialize(null);
 
-        Exception ex = VerifyThrows(Action);
-        Verify(ex.GetType() == typeof(NullReferenceException));
+        VerifyThrows<NullReferenceException>(Action);
     }
 
     public void RunAssemblyInitializeShouldNotExecuteAssemblyInitializeIfItHasAlreadyExecuted()
@@ -151,9 +148,7 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyInitializeMethodBody = tc => UTF.Assert.Fail("Test failure");
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-        var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
-
-        Verify(exception is not null);
+        TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
         Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
             exception.Message
@@ -169,9 +164,7 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-        var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
-
-        Verify(exception is not null);
+        TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
         Verify(exception.Outcome == UnitTestOutcome.Inconclusive);
         Verify(
             exception.Message
@@ -187,9 +180,8 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyInitializeMethodBody = tc => throw new ArgumentException("Some actualErrorMessage message", new InvalidOperationException("Inner actualErrorMessage message"));
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-        var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
+        var exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
 
-        Verify(exception is not null);
         Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
             exception.Message
@@ -210,9 +202,8 @@ public class TestAssemblyInfoTests : TestContainer
             FailingStaticHelper.DoWork();
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-        var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
+        TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
 
-        Verify(exception is not null);
         Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
             exception.Message
@@ -230,9 +221,7 @@ public class TestAssemblyInfoTests : TestContainer
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
         _testAssemblyInfo.AssemblyInitializationException = new TestFailedException(UnitTestOutcome.Failed, "Cached Test failure");
 
-        var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
-
-        Verify(exception is not null);
+        TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
         Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(exception.Message == "Cached Test failure");
     }

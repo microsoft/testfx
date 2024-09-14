@@ -87,22 +87,19 @@ public class MSTestDiscovererTests : TestContainer
     public void DiscoverTestsShouldThrowIfSourcesIsNull()
     {
         void A() => _discoverer.DiscoverTests(null, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
-        Exception ex = VerifyThrows(A);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        VerifyThrows<ArgumentNullException>(A);
     }
 
     public void DiscoverTestsShouldThrowIfDiscoverySinkIsNull()
     {
         void A() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
-        Exception ex = VerifyThrows(A);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        VerifyThrows<ArgumentNullException>(A);
     }
 
     public void DiscoverTestsShouldThrowIfLoggerIsNull()
     {
         void A() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, null, _mockTestCaseDiscoverySink.Object);
-        Exception ex = VerifyThrows(A);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        VerifyThrows<ArgumentNullException>(A);
     }
 
     public void DiscoverTestsShouldThrowIfSourcesAreNotValid()
@@ -112,8 +109,7 @@ public class MSTestDiscovererTests : TestContainer
             .Returns(new List<string> { });
 
         void A() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
-        Exception ex = VerifyThrows(A);
-        Verify(ex.GetType() == typeof(NotSupportedException));
+        VerifyThrows<NotSupportedException>(A);
     }
 
     public void DiscoverTestsShouldNotThrowIfDiscoveryContextIsNull()
@@ -208,10 +204,8 @@ public class MSTestDiscovererTests : TestContainer
     public void AreValidSourcesShouldThrowIfPlatformsValidSourceExtensionsIsNull()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null);
-        Exception ex = VerifyThrows(A);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
-
-        static void A() => MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy" });
+        var sources = new List<string> { "dummy" };
+        VerifyThrows<ArgumentNullException>(() => MSTestDiscovererHelpers.AreValidSources(sources));
     }
 
     public void AreValidSourcesShouldReturnFalseIfValidSourceExtensionsIsEmpty()

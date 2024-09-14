@@ -19,24 +19,15 @@ public class FileOperationsTests : TestContainer
         string filePath = "temp<>txt";
         void A() => _fileOperations.LoadAssembly(filePath, false);
 
-        Type expectedException;
 #if NETCOREAPP
-        expectedException = typeof(FileNotFoundException);
+        VerifyThrows<FileNotFoundException>(A);
 #else
-        expectedException = typeof(ArgumentException);
+        VerifyThrows<ArgumentException>(A);
 #endif
-
-        Exception ex = VerifyThrows(A);
-        Verify(ex.GetType() == expectedException);
     }
 
-    public void LoadAssemblyShouldThrowExceptionIfFileIsNotFound()
-    {
-        string filePath = "temptxt";
-        void A() => _fileOperations.LoadAssembly(filePath, false);
-        Exception ex = VerifyThrows(A);
-        Verify(ex is FileNotFoundException);
-    }
+    public void LoadAssemblyShouldThrowExceptionIfFileIsNotFound() =>
+        VerifyThrows<FileNotFoundException>(() => _fileOperations.LoadAssembly("temptxt", false));
 
     public void LoadAssemblyShouldLoadAssemblyInCurrentContext()
     {

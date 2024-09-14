@@ -81,8 +81,7 @@ public class TestClassInfoTests : TestContainer
             _testClassInfo.ClassInitializeMethod = _testClassType.GetMethods().First();
         }
 
-        Exception ex = VerifyThrows(Action);
-        Verify(ex.GetType() == typeof(TypeInspectionException));
+        VerifyThrows<TypeInspectionException>(Action);
     }
 
     public void TestClassInfoClassCleanupMethodSetShouldThrowForMultipleClassCleanupMethods()
@@ -93,8 +92,7 @@ public class TestClassInfoTests : TestContainer
             _testClassInfo.ClassCleanupMethod = _testClassType.GetMethods().First();
         }
 
-        Exception ex = VerifyThrows(Action);
-        Verify(ex.GetType() == typeof(TypeInspectionException));
+        VerifyThrows<TypeInspectionException>(Action);
     }
 
     public void TestClassInfoClassCleanupMethodShouldNotInvokeWhenNoTestClassInitializedIsCalled()
@@ -174,10 +172,7 @@ public class TestClassInfoTests : TestContainer
 
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        void Action() => _testClassInfo.RunClassInitialize(null);
-
-        Exception ex = VerifyThrows(Action);
-        Verify(ex.GetType() == typeof(NullReferenceException));
+        VerifyThrows<NullReferenceException>(() => _testClassInfo.RunClassInitialize(null));
     }
 
     public void RunClassInitializeShouldNotExecuteClassInitializeIfItHasAlreadyExecuted()
@@ -309,9 +304,8 @@ public class TestClassInfoTests : TestContainer
 
         _testClassInfo.BaseClassInitMethods.Add(typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod"));
 
-        var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
+        TestFailedException exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
 
-        Verify(exception is not null);
         Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
             exception.Message
@@ -328,9 +322,8 @@ public class TestClassInfoTests : TestContainer
         DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Fail("Test failure");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
+        TestFailedException exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
 
-        Verify(exception is not null);
         Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
             exception.Message
@@ -346,9 +339,8 @@ public class TestClassInfoTests : TestContainer
         DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
+        TestFailedException exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
 
-        Verify(exception is not null);
         Verify(exception.Outcome == UnitTestOutcome.Inconclusive);
         Verify(
             exception.Message
@@ -364,9 +356,8 @@ public class TestClassInfoTests : TestContainer
         DummyTestClass.ClassInitializeMethodBody = tc => throw new ArgumentException("Argument exception");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
+        TestFailedException exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
 
-        Verify(exception is not null);
         Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
             exception.Message
@@ -382,9 +373,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
         _testClassInfo.ClassInitializationException = new TestFailedException(UnitTestOutcome.Failed, "Cached Test failure");
 
-        var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
-
-        Verify(exception is not null);
+        TestFailedException exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
         Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(exception.Message == "Cached Test failure");
     }
@@ -406,9 +395,8 @@ public class TestClassInfoTests : TestContainer
             FailingStaticHelper.DoWork();
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
+        var exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
 
-        Verify(exception is not null);
         Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
             exception.Message

@@ -47,8 +47,7 @@ public class ExceptionExtensionsTests : TestContainer
     {
         var exception = new DummyException(() => throw new NotImplementedException());
 
-        Exception ex = VerifyThrows(() => exception.TryGetMessage());
-        Verify(ex is NotImplementedException);
+        VerifyThrows<NotImplementedException>(() => exception.TryGetMessage());
     }
 
     #endregion
@@ -77,8 +76,7 @@ public class ExceptionExtensionsTests : TestContainer
     {
         var exception = new DummyExceptionForStackTrace(() => throw new NotImplementedException());
 
-        Exception ex = VerifyThrows(() => exception.TryGetStackTraceInformation());
-        Verify(ex is NotImplementedException);
+        VerifyThrows<NotImplementedException>(() => exception.TryGetStackTraceInformation());
     }
 
 #pragma warning disable CA1710 // Identifiers should have correct suffix
