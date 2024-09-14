@@ -87,13 +87,7 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
 
         while (true)
         {
-#if NET7_0_OR_GREATER
             string? line = await _reader.ReadLineAsync(cancellationToken);
-#elif NET6_0_OR_GREATER
-            string? line = await _reader.ReadLineAsync().WaitAsync(cancellationToken);
-#else
-            string? line = await _reader.ReadLineAsync().WithCancellationAsync(cancellationToken);
-#endif
             if (line is null || (line.Length == 0 && contentSize != -1))
             {
                 break;
