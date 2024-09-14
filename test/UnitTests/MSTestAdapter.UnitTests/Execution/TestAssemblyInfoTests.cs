@@ -93,9 +93,7 @@ public class TestAssemblyInfoTests : TestContainer
 
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-        void Action() => _testAssemblyInfo.RunAssemblyInitialize(null);
-
-        VerifyThrows<NullReferenceException>(Action);
+        VerifyThrows<NullReferenceException>(() => _testAssemblyInfo.RunAssemblyInitialize(null));
     }
 
     public void RunAssemblyInitializeShouldNotExecuteAssemblyInitializeIfItHasAlreadyExecuted()
