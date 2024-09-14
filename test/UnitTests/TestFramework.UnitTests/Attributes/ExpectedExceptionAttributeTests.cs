@@ -15,7 +15,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
     /// <summary>
     /// ExpectedExceptionAttribute constructor should throw ArgumentNullException when parameter exceptionType = null.
     /// </summary>
-    public void ExpectedExceptionAttributeConstructerShouldThrowArgumentNullExceptionWhenExceptionTypeIsNull()
+    public void ExpectedExceptionAttributeConstructorShouldThrowArgumentNullExceptionWhenExceptionTypeIsNull()
     {
         static void A() => _ = new ExpectedExceptionAttribute(null, "Dummy");
 
@@ -26,7 +26,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
     /// <summary>
     /// ExpectedExceptionAttribute constructor should throw ArgumentNullException when parameter exceptionType = typeof(AnyClassNotDerivedFromExceptionClass).
     /// </summary>
-    public void ExpectedExceptionAttributeConstructerShouldThrowArgumentException()
+    public void ExpectedExceptionAttributeConstructorShouldThrowArgumentException()
     {
         static void A() => _ = new ExpectedExceptionAttribute(typeof(ExpectedExceptionAttributeTests), "Dummy");
 
@@ -37,7 +37,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
     /// <summary>
     /// ExpectedExceptionAttribute constructor should not throw exception when parameter exceptionType = typeof(AnyClassDerivedFromExceptionClass).
     /// </summary>
-    public void ExpectedExceptionAttributeConstructerShouldNotThrowAnyException() => _ = new ExpectedExceptionAttribute(typeof(DummyTestClassDerivedFromException), "Dummy");
+    public void ExpectedExceptionAttributeConstructorShouldNotThrowAnyException() => _ = new ExpectedExceptionAttribute(typeof(DummyTestClassDerivedFromException), "Dummy");
 
     public void GetExceptionMsgShouldReturnExceptionMessage()
     {
