@@ -3,8 +3,6 @@
 
 using System.Collections.ObjectModel;
 
-using Polyfills;
-
 namespace Microsoft.Testing.TestInfrastructure;
 
 public sealed class CommandLine : IDisposable
