@@ -128,10 +128,10 @@ internal abstract class DeploymentUtilityBase
     /// <returns>Returns a list of deployment warnings.</returns>
     protected IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, string resultsDirectory)
     {
-        Validate.IsFalse(StringEx.IsNullOrWhiteSpace(deploymentDirectory), "Deployment directory is null or empty");
-        Validate.IsTrue(FileUtility.DoesDirectoryExist(deploymentDirectory), $"Deployment directory {deploymentDirectory} does not exist");
-        Validate.IsFalse(StringEx.IsNullOrWhiteSpace(testSource), "TestSource directory is null/empty");
-        Validate.IsTrue(FileUtility.DoesFileExist(testSource), $"TestSource {testSource} does not exist.");
+        Guard.NotNullOrWhiteSpace(deploymentDirectory);
+        Guard.DirectoryExists(deploymentDirectory);
+        Guard.NotNullOrWhiteSpace(testSource);
+        Guard.FileExists(testSource);
 
         testSource = Path.GetFullPath(testSource);
         var warnings = new List<string>();
