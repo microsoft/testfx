@@ -129,11 +129,7 @@ internal class StreamMessageHandler : IMessageHandler, IDisposable
         await _writer.WriteLineAsync("Content-Type: application/testingplatform");
         await _writer.WriteLineAsync();
         await _writer.WriteAsync(messageStr);
-#if NET8_0_OR_GREATER
         await _writer.FlushAsync(cancellationToken);
-#else
-        await _writer.FlushAsync().WithCancellationAsync(cancellationToken);
-#endif
     }
 
     protected virtual void Dispose(bool disposing)
