@@ -280,7 +280,7 @@ internal abstract class DeploymentUtilityBase
             {
                 return FileUtility.AddFilesFromDirectory(
                     directory!,
-                    (deployDirectory) => string.Equals(deployDirectory, resultsDirectory, StringComparison.OrdinalIgnoreCase), false);
+                    deployDirectory => string.Equals(deployDirectory, resultsDirectory, StringComparison.OrdinalIgnoreCase), false);
             }
 
             if (IsDeploymentItemSourceAFile(deploymentItem.SourcePath, testSource, out string fileName))

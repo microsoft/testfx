@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks)</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
     <UseAssemblyVersion14>true</UseAssemblyVersion14>
   </PropertyGroup>
 

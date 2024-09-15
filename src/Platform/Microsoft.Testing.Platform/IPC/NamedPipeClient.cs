@@ -202,21 +202,31 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 
     public void Dispose()
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            _namedPipeClientStream.Dispose();
-            _disposed = true;
+            return;
         }
+
+        _lock.Dispose();
+        _serializationBuffer.Dispose();
+        _messageBuffer.Dispose();
+        _namedPipeClientStream.Dispose();
+        _disposed = true;
     }
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            await _namedPipeClientStream.DisposeAsync();
-            _disposed = true;
+            return;
         }
+
+        _lock.Dispose();
+        await _serializationBuffer.DisposeAsync();
+        await _messageBuffer.DisposeAsync();
+        await _namedPipeClientStream.DisposeAsync();
+        _disposed = true;
     }
 #endif
 }

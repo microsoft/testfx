@@ -112,7 +112,7 @@ internal class UnitTestDiscoverer
                 bool hasFixtureTraits = testCase.Traits.Any(t => t.Name == Constants.FixturesTestTrait);
 
                 // Filter tests based on test case filters
-                if (filterExpression != null && !filterExpression.MatchTestCase(testCase, (p) => _testMethodFilter.PropertyValueProvider(testCase, p)))
+                if (filterExpression != null && !filterExpression.MatchTestCase(testCase, p => _testMethodFilter.PropertyValueProvider(testCase, p)))
                 {
                     // If test is a fixture test, add it to the list of fixture tests.
                     if (hasFixtureTraits)

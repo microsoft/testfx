@@ -57,7 +57,7 @@ public class TestExecutionManagerTests : TestContainer
 
     public TestExecutionManagerTests()
     {
-        _runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression((p) => true));
+        _runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression(_ => true));
         _frameworkHandle = new TestableFrameworkHandle();
         _cancellationToken = new TestRunCancellationToken();
         _mockMessageLogger = new Mock<IMessageLogger>();
@@ -110,7 +110,7 @@ public class TestExecutionManagerTests : TestContainer
         TestCase failingTestCase = GetTestCase(typeof(DummyTestClass), "FailingTest");
         TestCase[] tests = [testCase, failingTestCase];
 
-        _runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression((p) => p.DisplayName == "PassingTest"));
+        _runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression(p => p.DisplayName == "PassingTest"));
 
         _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
 

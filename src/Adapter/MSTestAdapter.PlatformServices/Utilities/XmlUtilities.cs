@@ -104,11 +104,7 @@ internal class XmlUtilities
         string fromVersion,
         string toVersion)
     {
-        DebugEx.Assert(assemblyName != null, "assemblyName should not be null.");
-        if (assemblyName == null)
-        {
-            throw new ArgumentNullException(nameof(assemblyName));
-        }
+        Guard.NotNull(assemblyName);
 
         // Convert the public key token into a string.
         StringBuilder? publicKeyTokenString = null;
