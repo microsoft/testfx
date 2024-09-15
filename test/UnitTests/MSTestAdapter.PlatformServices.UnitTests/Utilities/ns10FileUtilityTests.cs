@@ -102,16 +102,16 @@ public class FileUtilityTests : TestContainer
             "c:\\MainClock\\Folder2\\backup\\Data.csv"
         ];
 
-        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
+        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>(directory =>
         {
-            IEnumerable<string> directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select((file) => Path.GetDirectoryName(file)).Distinct();
+            IEnumerable<string> directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select(file => Path.GetDirectoryName(file)).Distinct();
             return directories.ToArray();
         });
 
-        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) => allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
+        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>(directory => allFiles.Where(file => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
 
         // Act
-        List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", (directory) => directory.Contains("Results"), false);
+        List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", directory => directory.Contains("Results"), false);
 
         // Validate
         foreach (string sourceFile in allFiles)
@@ -119,11 +119,11 @@ public class FileUtilityTests : TestContainer
             Console.WriteLine($"File to validate {sourceFile}");
             if (sourceFile.Contains("Results"))
             {
-                Verify(!files.Any((file) => file.Contains("Results")), $"{sourceFile} returned in the list from AddFilesFromDirectory");
+                Verify(!files.Any(file => file.Contains("Results")), $"{sourceFile} returned in the list from AddFilesFromDirectory");
             }
             else
             {
-                Verify(files.Any((file) => file.Equals(sourceFile, StringComparison.OrdinalIgnoreCase)), $"{sourceFile} not returned in the list from AddFilesFromDirectory");
+                Verify(files.Any(file => file.Equals(sourceFile, StringComparison.OrdinalIgnoreCase)), $"{sourceFile} not returned in the list from AddFilesFromDirectory");
             }
         }
     }
@@ -142,13 +142,13 @@ public class FileUtilityTests : TestContainer
             "c:\\MainClock\\Folder2\\backup\\Data.csv"
         ];
 
-        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
+        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>(directory =>
         {
-            IEnumerable<string> directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select((file) => Path.GetDirectoryName(file)).Distinct();
+            IEnumerable<string> directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select(file => Path.GetDirectoryName(file)).Distinct();
             return directories.ToArray();
         });
 
-        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) => allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
+        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>(directory => allFiles.Where(file => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
 
         // Act
         List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", false);
@@ -156,7 +156,7 @@ public class FileUtilityTests : TestContainer
         // Validate
         foreach (string sourceFile in allFiles)
         {
-            Verify(files.Any((file) => file.Equals(sourceFile, StringComparison.OrdinalIgnoreCase)), $"{sourceFile} not returned in the list from AddFilesFromDirectory");
+            Verify(files.Any(file => file.Equals(sourceFile, StringComparison.OrdinalIgnoreCase)), $"{sourceFile} not returned in the list from AddFilesFromDirectory");
         }
     }
 

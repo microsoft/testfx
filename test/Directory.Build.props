@@ -15,7 +15,6 @@
   <!-- Build & pack -->
   <PropertyGroup>
     <IsPackable>false</IsPackable>
-    <ImplicitUsings>true</ImplicitUsings>
     <PublishAot Condition=" '$(PublishAot)' == '' ">false</PublishAot>
   </PropertyGroup>
 
