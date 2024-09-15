@@ -67,7 +67,7 @@ internal class CIEnvironmentDetectorForTelemetry
 
         foreach (string[] variables in AllNotNullVariables)
         {
-            if (variables.All((variable) => !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable))))
+            if (variables.All(variable => !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable))))
             {
                 return true;
             }
