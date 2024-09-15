@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="ReplaceWithTestInitializeFix">
         <source>Replace constructor with TestInitialize method</source>
-        <target state="new">Replace constructor with TestInitialize method</target>
+        <target state="translated">Substitua o construtor pelo método TestInitialize.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
