@@ -101,10 +101,7 @@ class AssemblyResolver :
     /// </remarks>
     public AssemblyResolver(IList<string> directories)
     {
-        if (directories == null || directories.Count == 0)
-        {
-            throw new ArgumentNullException(nameof(directories));
-        }
+        Guard.NotNullOrEmpty(directories);
 
         _searchDirectories = [.. directories];
         _directoryList = new Queue<RecursiveDirectoryPath>();
