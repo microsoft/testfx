@@ -275,7 +275,7 @@ public class UnitTestDiscovererTests : TestContainer
     /// </summary>
     public void SendTestCasesShouldSendFilteredTestCasesIfValidFilterExpression()
     {
-        TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => new TestableTestCaseFilterExpression((p) => p.DisplayName == "M1"));
+        TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => new TestableTestCaseFilterExpression(p => p.DisplayName == "M1"));
 
         var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", false));
         var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", false));

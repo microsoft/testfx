@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="ReplaceWithConstructorFix">
         <source>Replace TestInitialize method with constructor</source>
-        <target state="new">Replace TestInitialize method with constructor</target>
+        <target state="translated">Zastąp metodę TestInitialize konstruktorem</target>
         <note />
       </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="ReplaceWithTestInitializeFix">
         <source>Replace constructor with TestInitialize method</source>
-        <target state="new">Replace constructor with TestInitialize method</target>
+        <target state="translated">Zastąp konstruktor metodą TestInitialize</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
