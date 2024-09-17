@@ -13,17 +13,17 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>9ba9980c4996a540387b9a0ef0d68accf00689c0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.12.5-preview.24463.5">
+    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.12.5-preview.24466.3">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>bddbfdac112ffddc6dfd6f2faf0aea78690f5ab8</Sha>
+      <Sha>c90d1ac2c2c33a9db49e961bf09a4e2858bb21bc</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Internal.Framework" Version="1.5.0-preview.24462.1">
+    <Dependency Name="Microsoft.Testing.Internal.Framework" Version="1.5.0-preview.24465.2">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>4fb41825198d45525ebdc0249c240b422e5742ad</Sha>
+      <Sha>8995245950e97a9114bb210d4fdfc217dd851885</Sha>
     </Dependency>
-    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24462.1">
+    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24465.2">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>4fb41825198d45525ebdc0249c240b422e5742ad</Sha>
+      <Sha>8995245950e97a9114bb210d4fdfc217dd851885</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
