@@ -10,12 +10,13 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform;
 
-internal sealed class DotnetTestConnection :
+internal sealed class DotnetTestConnection : IPushOnlyProtocol,
 #if NETCOREAPP
     IAsyncDisposable,
 #endif
@@ -38,7 +39,14 @@ internal sealed class DotnetTestConnection :
         _cancellationTokenSource = cancellationTokenSource;
     }
 
-    public async Task<bool> TryConnectToDotnetTestPipeIfAvailableAsync()
+    public bool IsServerMode => _dotnetTestPipeClient?.IsConnected == true;
+
+    public string Name => PlatformCommandLineProvider.DotnetTestCliProtocolName;
+
+    public Task<IPushOnlyProtocolConsumer> GetDataConsumerAsync()
+        => Task.FromResult((IPushOnlyProtocolConsumer)new DotnetTestDataConsumer(this, _environment));
+
+    public async Task AfterCommonServiceSetupAsync()
     {
         // If we are in server mode and the pipe name is provided
         // then, we need to connect to the pipe server.
@@ -57,14 +65,10 @@ internal sealed class DotnetTestConnection :
             _dotnetTestPipeClient.RegisterAllSerializers();
 
             await _dotnetTestPipeClient.ConnectAsync(_cancellationTokenSource.CancellationToken);
-
-            return _dotnetTestPipeClient.IsConnected;
         }
-
-        return false;
     }
 
-    public async Task SendCommandLineOptionsToDotnetTestPipeAsync()
+    public async Task HelpInvokedAsync()
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
@@ -89,26 +93,26 @@ internal sealed class DotnetTestConnection :
         await _dotnetTestPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), _cancellationTokenSource.CancellationToken);
     }
 
-    public async Task<bool> DoHandshakeAsync(string hostType)
+    public async Task<bool> IsCompatibleProtocolAsync(string hostType)
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
         string supportedProtocolVersions = ProtocolConstants.Version;
-        HandshakeInfo handshakeInfo = new(new Dictionary<byte, string>()
+        HandshakeMessage handshakeMessage = new(new Dictionary<byte, string>()
         {
-            { HandshakeInfoPropertyNames.PID, _processHandler.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) },
-            { HandshakeInfoPropertyNames.Architecture, RuntimeInformation.OSArchitecture.ToString() },
-            { HandshakeInfoPropertyNames.Framework, RuntimeInformation.FrameworkDescription },
-            { HandshakeInfoPropertyNames.OS, RuntimeInformation.OSDescription },
-            { HandshakeInfoPropertyNames.SupportedProtocolVersions, supportedProtocolVersions },
-            { HandshakeInfoPropertyNames.HostType, hostType },
-            { HandshakeInfoPropertyNames.ModulePath, _testApplicationModuleInfo?.GetCurrentTestApplicationFullPath() ?? string.Empty },
-            { HandshakeInfoPropertyNames.ExecutionId,  _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID) ?? string.Empty },
+            { HandshakeMessagePropertyNames.PID, _processHandler.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture) },
+            { HandshakeMessagePropertyNames.Architecture, RuntimeInformation.ProcessArchitecture.ToString() },
+            { HandshakeMessagePropertyNames.Framework, RuntimeInformation.FrameworkDescription },
+            { HandshakeMessagePropertyNames.OS, RuntimeInformation.OSDescription },
+            { HandshakeMessagePropertyNames.SupportedProtocolVersions, supportedProtocolVersions },
+            { HandshakeMessagePropertyNames.HostType, hostType },
+            { HandshakeMessagePropertyNames.ModulePath, _testApplicationModuleInfo?.GetCurrentTestApplicationFullPath() ?? string.Empty },
+            { HandshakeMessagePropertyNames.ExecutionId,  _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID) ?? string.Empty },
         });
 
-        HandshakeInfo response = await _dotnetTestPipeClient.RequestReplyAsync<HandshakeInfo, HandshakeInfo>(handshakeInfo, _cancellationTokenSource.CancellationToken);
+        HandshakeMessage response = await _dotnetTestPipeClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken);
 
-        return response.Properties?.TryGetValue(HandshakeInfoPropertyNames.SupportedProtocolVersions, out string? protocolVersion) == true &&
+        return response.Properties?.TryGetValue(HandshakeMessagePropertyNames.SupportedProtocolVersions, out string? protocolVersion) == true &&
             IsVersionCompatible(protocolVersion, supportedProtocolVersions);
     }
 
@@ -120,20 +124,16 @@ internal sealed class DotnetTestConnection :
 
         switch (message)
         {
-            case DiscoveredTestMessage discoveredTestMessage:
-                await _dotnetTestPipeClient.RequestReplyAsync<DiscoveredTestMessage, VoidResponse>(discoveredTestMessage, _cancellationTokenSource.CancellationToken);
+            case DiscoveredTestMessages discoveredTestMessages:
+                await _dotnetTestPipeClient.RequestReplyAsync<DiscoveredTestMessages, VoidResponse>(discoveredTestMessages, _cancellationTokenSource.CancellationToken);
                 break;
 
-            case SuccessfulTestResultMessage successfulTestResultMessage:
-                await _dotnetTestPipeClient.RequestReplyAsync<SuccessfulTestResultMessage, VoidResponse>(successfulTestResultMessage, _cancellationTokenSource.CancellationToken);
+            case TestResultMessages testResultMessages:
+                await _dotnetTestPipeClient.RequestReplyAsync<TestResultMessages, VoidResponse>(testResultMessages, _cancellationTokenSource.CancellationToken);
                 break;
 
-            case FailedTestResultMessage failedTestResultMessage:
-                await _dotnetTestPipeClient.RequestReplyAsync<FailedTestResultMessage, VoidResponse>(failedTestResultMessage, _cancellationTokenSource.CancellationToken);
-                break;
-
-            case FileArtifactInfo fileArtifactInfo:
-                await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactInfo, VoidResponse>(fileArtifactInfo, _cancellationTokenSource.CancellationToken);
+            case FileArtifactMessages fileArtifactMessages:
+                await _dotnetTestPipeClient.RequestReplyAsync<FileArtifactMessages, VoidResponse>(fileArtifactMessages, _cancellationTokenSource.CancellationToken);
                 break;
 
             case TestSessionEvent testSessionEvent:
@@ -142,7 +142,7 @@ internal sealed class DotnetTestConnection :
         }
     }
 
-    public bool IsConnected => _dotnetTestPipeClient?.IsConnected ?? false;
+    public Task OnExitAsync() => Task.CompletedTask;
 
     public void Dispose() => _dotnetTestPipeClient?.Dispose();
 

@@ -1,0 +1,10 @@
+{
+    "instanceUrl": "https://devdiv.visualstudio.com/",
+    "template": "TFSDEVDIV",
+    "projectName": "DEVDIV",
+    "areaPath": "DevDiv\\Testing Platforms\\MSTest Framework",
+    "iterationPath": "DevDiv",
+    "notificationAliases": [ "dotnetdevexprague@microsoft.com" ],
+    "repositoryName":"testfx",
+    "codebaseName": "testfx"
+}

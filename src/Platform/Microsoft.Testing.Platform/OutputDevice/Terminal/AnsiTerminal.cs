@@ -238,7 +238,7 @@ internal sealed class AnsiTerminal : ITerminal
             urlString = uri.ToString();
         }
 
-        SetColor(TerminalColor.Gray);
+        SetColor(TerminalColor.DarkGray);
         Append(AnsiCodes.LinkPrefix);
         Append(urlString);
         Append(AnsiCodes.LinkInfix);

@@ -28,8 +28,6 @@ variables:
   # Cannot use key:value syntax in root defined variables
   - name: _TeamName
     value: MSTest
-  - name: Codeql.Enabled
-    value: true
   - name: _RunAsInternal
     value: False
   - name: _RunAsPublic

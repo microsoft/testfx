@@ -4,12 +4,12 @@
     <body>
       <trans-unit id="AddTestMethodAttributeFix">
         <source>Add '[TestMethod]'</source>
-        <target state="new">Add '[TestMethod]'</target>
+        <target state="translated">„[TestMethod]“ hinzufügen</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
-        <target state="new">Change method accessibility to 'private'</target>
+        <target state="translated">Methodenzugriff auf „privat“ ändern</target>
         <note />
       </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
@@ -30,6 +30,26 @@
       <trans-unit id="PublicTypeShouldBeTestClassFix">
         <source>Add '[TestClass]'</source>
         <target state="translated">„[TestClass]“ hinzufügen</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReplaceWithConstructorFix">
+        <source>Replace TestInitialize method with constructor</source>
+        <target state="translated">TestInitialize-Methode durch Konstruktor ersetzen</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReplaceWithFailAssertionFix">
+        <source>Replace the assertion with 'Assert.Fail()'</source>
+        <target state="translated">Ersetzen Sie die Assertion durch „Assert.Fail()“.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReplaceWithTestCleanuFix">
+        <source>Replace 'Dispose' with a TestCleanup method</source>
+        <target state="translated">„Dispose“ durch eine TestCleanup-Methode ersetzen</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReplaceWithTestInitializeFix">
+        <source>Replace constructor with TestInitialize method</source>
+        <target state="translated">Konstruktor durch TestInitialize-Methode ersetzen</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">

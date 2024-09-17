@@ -147,4 +147,16 @@
   <data name="ChangeMethodAccessibilityToPrivateFix" xml:space="preserve">
     <value>Change method accessibility to 'private'</value>
   </data>
+  <data name="ReplaceWithFailAssertionFix" xml:space="preserve">
+    <value>Replace the assertion with 'Assert.Fail()'</value>
+  </data>
+  <data name="ReplaceWithTestCleanuFix" xml:space="preserve">
+    <value>Replace 'Dispose' with a TestCleanup method</value>
+  </data>
+  <data name="ReplaceWithConstructorFix" xml:space="preserve">
+    <value>Replace TestInitialize method with constructor</value>
+  </data>
+  <data name="ReplaceWithTestInitializeFix" xml:space="preserve">
+    <value>Replace constructor with TestInitialize method</value>
+  </data>
 </root>

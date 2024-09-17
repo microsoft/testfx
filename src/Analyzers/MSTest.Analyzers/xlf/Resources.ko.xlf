@@ -509,13 +509,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
-        <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</source>
-        <target state="translated">테스트 클래스에는 하나 이상의 테스트 메서드가 있거나 '[AssemblyInitialization]' 및/또는 '[AssemblyCleanup]'으로 표시된 메서드가 있는 'static'이어야 합니다.</target>
+        <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
+        <target state="translated">테스트 클래스에는 하나 이상의 테스트 메서드가 있거나 '[AssemblyInitialize]' 및/또는 '[AssemblyCleanup]'으로 표시된 메서드가 있는 'static'이어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
-        <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">테스트 클래스 '{0}'에 하나 이상의 테스트 메서드가 있거나 '[AssemblyInitialization]' 및/또는 '[AssemblyCleanup]'으로 표시된 메서드가 있는 'static'이어야 합니다.</target>
+        <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
+        <target state="translated">테스트 클래스 '{0}'에는 하나 이상의 테스트 메서드가 있거나 '[AssemblyInitialize]' 및/또는 '[AssemblyCleanup]'으로 표시된 메서드가 있는 'static'이어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">

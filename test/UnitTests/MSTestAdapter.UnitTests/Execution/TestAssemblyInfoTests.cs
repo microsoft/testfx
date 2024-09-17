@@ -80,7 +80,7 @@ public class TestAssemblyInfoTests : TestContainer
     public void RunAssemblyInitializeShouldNotInvokeIfAssemblyInitializeIsNull()
     {
         int assemblyInitCallCount = 0;
-        DummyTestClass.AssemblyInitializeMethodBody = (tc) => assemblyInitCallCount++;
+        DummyTestClass.AssemblyInitializeMethodBody = _ => assemblyInitCallCount++;
 
         _testAssemblyInfo.AssemblyInitializeMethod = null;
 
@@ -91,7 +91,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldThrowIfTestContextIsNull()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = (tc) => { };
+        DummyTestClass.AssemblyInitializeMethodBody = _ => { };
 
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
@@ -104,7 +104,7 @@ public class TestAssemblyInfoTests : TestContainer
     public void RunAssemblyInitializeShouldNotExecuteAssemblyInitializeIfItHasAlreadyExecuted()
     {
         int assemblyInitCallCount = 0;
-        DummyTestClass.AssemblyInitializeMethodBody = (tc) => assemblyInitCallCount++;
+        DummyTestClass.AssemblyInitializeMethodBody = _ => assemblyInitCallCount++;
 
         _testAssemblyInfo.IsAssemblyInitializeExecuted = true;
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
@@ -117,7 +117,7 @@ public class TestAssemblyInfoTests : TestContainer
     public void RunAssemblyInitializeShouldExecuteAssemblyInitialize()
     {
         int assemblyInitCallCount = 0;
-        DummyTestClass.AssemblyInitializeMethodBody = (tc) => assemblyInitCallCount++;
+        DummyTestClass.AssemblyInitializeMethodBody = _ => assemblyInitCallCount++;
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
         _testAssemblyInfo.RunAssemblyInitialize(_testContext);
@@ -127,7 +127,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldSetAssemblyInitializeExecutedFlag()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = (tc) => { };
+        DummyTestClass.AssemblyInitializeMethodBody = _ => { };
 
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
@@ -138,7 +138,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldSetAssemblyInitializationExceptionOnException()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = (tc) => UTF.Assert.Inconclusive("Test Inconclusive");
+        DummyTestClass.AssemblyInitializeMethodBody = _ => UTF.Assert.Inconclusive("Test Inconclusive");
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
         Exception exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
@@ -225,7 +225,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldThrowForAlreadyExecutedTestAssemblyInitWithException()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = (tc) => { };
+        DummyTestClass.AssemblyInitializeMethodBody = _ => { };
         _testAssemblyInfo.IsAssemblyInitializeExecuted = true;
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
         _testAssemblyInfo.AssemblyInitializationException = new TestFailedException(UnitTestOutcome.Failed, "Cached Test failure");
@@ -239,7 +239,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldPassOnTheTestContextToAssemblyInitMethod()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = (tc) => Verify(tc == _testContext);
+        DummyTestClass.AssemblyInitializeMethodBody = tc => Verify(tc == _testContext);
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
         _testAssemblyInfo.RunAssemblyInitialize(_testContext);

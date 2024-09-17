@@ -8,9 +8,7 @@ internal sealed class SemaphoreSlimRequestCompleteNotifier : IExecuteRequestComp
     private readonly SemaphoreSlim _semaphore;
 
     public SemaphoreSlimRequestCompleteNotifier(SemaphoreSlim semaphore)
-    {
-        _semaphore = semaphore;
-    }
+        => _semaphore = semaphore;
 
     public void Complete()
         => _semaphore.Release();

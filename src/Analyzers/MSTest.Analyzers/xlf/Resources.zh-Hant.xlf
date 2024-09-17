@@ -509,13 +509,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
-        <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</source>
-        <target state="translated">測試類別至少應有一個測試方法，或是方法以 '[AssemblyInitialization]' 和/或 '[AssemblyCleanup]' 標示的 'static'。</target>
+        <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
+        <target state="translated">測試類別至少應有一個測試方法或是 'static'，而其方法是以 '[AssemblyInitialization]' 和/或 '[AssemblyCleanup]'標示。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
-        <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">測試類別 '{0}' 至少應有一個測試方法，或是方法以 '[AssemblyInitialization]' 和/或 '[AssemblyCleanup]' 標示的 'static'。</target>
+        <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
+        <target state="translated">測試類別 '{0}' 至少應有一個測試方法或是 'static'，而其方法是以 '[AssemblyInitialization]' 和/或 '[AssemblyCleanup]'標示。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
