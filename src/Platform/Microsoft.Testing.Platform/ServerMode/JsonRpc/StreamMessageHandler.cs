@@ -5,6 +5,8 @@ using System.Text;
 
 #if NETCOREAPP
 using System.Buffers;
+#else
+using Microsoft.Testing.Platform.Helpers;
 #endif
 
 namespace Microsoft.Testing.Platform.ServerMode;
