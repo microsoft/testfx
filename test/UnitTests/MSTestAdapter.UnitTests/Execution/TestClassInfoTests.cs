@@ -395,7 +395,7 @@ public class TestClassInfoTests : TestContainer
             FailingStaticHelper.DoWork();
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        var exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
+        TestFailedException exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
 
         Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(

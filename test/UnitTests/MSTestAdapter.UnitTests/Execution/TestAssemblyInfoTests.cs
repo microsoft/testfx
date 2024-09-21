@@ -178,7 +178,7 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyInitializeMethodBody = tc => throw new ArgumentException("Some actualErrorMessage message", new InvalidOperationException("Inner actualErrorMessage message"));
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-        var exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
+        TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
 
         Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
