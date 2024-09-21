@@ -129,9 +129,9 @@ internal abstract class DeploymentUtilityBase
     protected IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, string resultsDirectory)
     {
         Guard.NotNullOrWhiteSpace(deploymentDirectory);
-        Guard.DirectoryExists(deploymentDirectory);
         Guard.NotNullOrWhiteSpace(testSource);
-        Guard.FileExists(testSource);
+        ApplicationStateGuard.Ensure(FileUtility.DoesDirectoryExist(deploymentDirectory), $"Deployment directory {deploymentDirectory} does not exist");
+        ApplicationStateGuard.Ensure(FileUtility.DoesFileExist(testSource), $"TestSource {testSource} does not exist.");
 
         testSource = Path.GetFullPath(testSource);
         var warnings = new List<string>();
