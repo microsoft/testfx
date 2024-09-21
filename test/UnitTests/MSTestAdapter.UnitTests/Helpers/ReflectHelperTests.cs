@@ -286,7 +286,7 @@ public class ReflectHelperTests : TestContainer
 
     internal class AttributeMockingHelper
     {
-        public AttributeMockingHelper(Mock<IReflectionOperations> mockReflectionOperations) => _mockReflectionOperations = mockReflectionOperations;
+        public AttributeMockingHelper(Mock<IReflectionOperations2> mockReflectionOperations) => _mockReflectionOperations = mockReflectionOperations;
 
         /// <summary>
         /// A collection to hold mock custom attributes.
@@ -294,8 +294,8 @@ public class ReflectHelperTests : TestContainer
         /// MemberTypes.TypeInfo for class level
         /// MemberTypes.Method for method level.
         /// </summary>
-        private readonly List<(Type Type, Attribute Attribute, MemberTypes MemberType)> _data = [];
-        private readonly Mock<IReflectionOperations> _mockReflectionOperations;
+        private readonly List<(Type Type, Attribute Attribute, MemberTypes MemberType)> _data = new();
+        private readonly Mock<IReflectionOperations2> _mockReflectionOperations;
 
         public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)
         {

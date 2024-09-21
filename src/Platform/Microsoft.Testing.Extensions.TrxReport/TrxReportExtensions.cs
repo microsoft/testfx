@@ -77,7 +77,7 @@ public static class TrxReportExtensions
         TrxCompareToolCommandLine createTrxCompareToolCommandLine = toolTrxCompareFactory.CreateTrxCompareToolCommandLine();
         builder.CommandLine.AddProvider(() => createTrxCompareToolCommandLine);
 
-        testApplicationBuilder.Tools.AddTool((serviceProvider) => toolTrxCompareFactory.CreateTrxCompareTool(
+        testApplicationBuilder.Tools.AddTool(serviceProvider => toolTrxCompareFactory.CreateTrxCompareTool(
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetOutputDevice(),
             serviceProvider.GetRequiredService<ITask>()));

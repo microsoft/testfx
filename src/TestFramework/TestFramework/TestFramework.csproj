@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks)</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
     <UseAssemblyVersion14>true</UseAssemblyVersion14>
   </PropertyGroup>
 
@@ -23,6 +22,16 @@
 
   <ItemGroup>
     <PackageReference Include="Polyfill" PrivateAssets="all" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Enable AOT analyzer warnings to make sure we don't call APIs that would fail when we use source generator mode together with NativeAOT. -->
+    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">$(EnableIotAnalyzers)</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <ItemGroup>

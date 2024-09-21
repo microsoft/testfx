@@ -42,15 +42,8 @@ EndGlobal
     public VSSolution(string? solutionFolder, string? solutionName)
         : base(solutionFolder)
     {
-        if (string.IsNullOrEmpty(solutionFolder))
-        {
-            throw new ArgumentNullException(nameof(solutionFolder));
-        }
-
-        if (string.IsNullOrEmpty(solutionName))
-        {
-            throw new ArgumentNullException(nameof(solutionName));
-        }
+        Guard.NotNullOrWhiteSpace(solutionFolder);
+        Guard.NotNullOrWhiteSpace(solutionName);
 
         _solutionFileName = $"{solutionName}.sln";
         SolutionFile = Path.Combine(FolderPath, _solutionFileName);
@@ -93,20 +86,9 @@ public class CSharpProject : Project
     public CSharpProject(string solutionFolder, string projectName, params string[]? tfms)
        : base(Path.Combine(solutionFolder, projectName))
     {
-        if (string.IsNullOrEmpty(solutionFolder))
-        {
-            throw new ArgumentNullException(nameof(solutionFolder));
-        }
-
-        if (string.IsNullOrEmpty(projectName))
-        {
-            throw new ArgumentNullException(nameof(projectName));
-        }
-
-        if (tfms is null || tfms.Length == 0)
-        {
-            throw new ArgumentException("Invalid tfm", nameof(tfms));
-        }
+        Guard.NotNullOrWhiteSpace(solutionFolder);
+        Guard.NotNullOrWhiteSpace(projectName);
+        Guard.NotEmpty(tfms);
 
         _projectFileName = $"{projectName}.csproj";
         ProjectFile = Path.Combine(FolderPath, _projectFileName);
