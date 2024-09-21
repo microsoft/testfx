@@ -83,6 +83,28 @@ public abstract class TestContainer : IDisposable
         return null;
     }
 
+    public static T VerifyThrows<T>(
+        Action action,
+        [CallerArgumentExpression(nameof(action))]
+        string? expression = default,
+        [CallerMemberName] string? caller = default,
+        [CallerFilePath] string? filePath = default,
+        [CallerLineNumber] int lineNumber = default)
+        where T : Exception
+    {
+        try
+        {
+            action();
+        }
+        catch (T ex)
+        {
+            return ex;
+        }
+
+        Throw(expression, caller, filePath, lineNumber);
+        return null;
+    }
+
     public static void Fail(
         [CallerMemberName] string? caller = default,
         [CallerFilePath] string? filePath = default,

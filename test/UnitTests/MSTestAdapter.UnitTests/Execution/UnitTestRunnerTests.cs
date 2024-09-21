@@ -84,19 +84,13 @@ public class UnitTestRunnerTests : TestContainer
 
     #region RunSingleTest tests
 
-    public void RunSingleTestShouldThrowIfTestMethodIsNull()
-    {
-        void A() => _unitTestRunner.RunSingleTest(null, null);
-        Exception ex = VerifyThrows(A);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
-    }
+    public void RunSingleTestShouldThrowIfTestMethodIsNull() =>
+        VerifyThrows<ArgumentNullException>(() => _unitTestRunner.RunSingleTest(null, null));
 
     public void RunSingleTestShouldThrowIfTestRunParametersIsNull()
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
-        void A() => _unitTestRunner.RunSingleTest(testMethod, null);
-        Exception ex = VerifyThrows(A);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        VerifyThrows<ArgumentNullException>(() => _unitTestRunner.RunSingleTest(testMethod, null));
     }
 
     public void RunSingleTestShouldReturnTestResultIndicateATestNotFoundIfTestMethodCannotBeFound()

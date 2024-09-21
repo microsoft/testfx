@@ -11,8 +11,7 @@ public partial class AssertTests
     // See https://github.com/dotnet/sdk/issues/25373
     public void ThrowAssertFailedDoesNotThrowIfMessageContainsInvalidStringFormatComposite()
     {
-        Exception ex = VerifyThrows(() => Assert.ThrowAssertFailed("name", "{"));
-        Verify(typeof(AssertFailedException) == ex.GetType());
+        Exception ex = VerifyThrows<AssertFailedException>(() => Assert.ThrowAssertFailed("name", "{"));
         Verify(ex.Message.Contains("name failed. {"));
     }
     #endregion
@@ -20,36 +19,31 @@ public partial class AssertTests
     #region ThrowsException tests
     public void ThrowsExceptionWithLambdaExpressionsShouldThrowAssertionOnNoException()
     {
-        Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => { }));
-        Verify(typeof(AssertFailedException) == ex.GetType());
+        Exception ex = VerifyThrows<AssertFailedException>(() => Assert.ThrowsException<ArgumentException>(() => { }));
         Verify(ex.Message.Equals("Assert.ThrowsException failed. Expected exception type:<System.ArgumentException> but no exception was thrown. ", StringComparison.Ordinal));
     }
 
     public void ThrowsExceptionWithLambdaExpressionsShouldThrowAssertionOnWrongException()
     {
-        Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => throw new FormatException()));
-        Verify(typeof(AssertFailedException) == ex.GetType());
+        Exception ex = VerifyThrows<AssertFailedException>(() => Assert.ThrowsException<ArgumentException>(() => throw new FormatException()));
         Verify(ex.Message.Equals("Assert.ThrowsException failed. Expected exception type:<System.ArgumentException>. Actual exception type:<System.FormatException>. ", StringComparison.Ordinal));
     }
 
     public void ThrowsException_FuncArgument_AllowsToReturnNull()
     {
-        Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null));
-        Verify(typeof(AssertFailedException) == ex.GetType());
+        Exception ex = VerifyThrows<AssertFailedException>(() => Assert.ThrowsException<ArgumentException>(() => null));
         Verify(ex.Message.Equals("Assert.ThrowsException failed. Expected exception type:<System.ArgumentException> but no exception was thrown. ", StringComparison.Ordinal));
     }
 
     public void ThrowsException_FuncArgumentOverloadWithMessage_AllowsToReturnNull()
     {
-        Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null, "message"));
-        Verify(typeof(AssertFailedException) == ex.GetType());
+        Exception ex = VerifyThrows<AssertFailedException>(() => Assert.ThrowsException<ArgumentException>(() => null, "message"));
         Verify(ex.Message.Equals("Assert.ThrowsException failed. Expected exception type:<System.ArgumentException> but no exception was thrown. message", StringComparison.Ordinal));
     }
 
     public void ThrowsException_FuncArgumentOverloadWithMessagesAndParameters_AllowsToReturnNull()
     {
-        Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null, "message {0}", 1));
-        Verify(typeof(AssertFailedException) == ex.GetType());
+        Exception ex = VerifyThrows<AssertFailedException>(() => Assert.ThrowsException<ArgumentException>(() => null, "message {0}", 1));
         Verify(ex.Message.Equals("Assert.ThrowsException failed. Expected exception type:<System.ArgumentException> but no exception was thrown. message 1", StringComparison.Ordinal));
     }
     #endregion
