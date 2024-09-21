@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !WINDOWS_UWP
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration;
+#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
@@ -21,14 +24,21 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     private ISettingsProvider? _settingsProvider;
     private ITestDataSource? _testDataSource;
     private IThreadOperations? _threadOperations;
-    private IReflectionOperations? _reflectionOperations;
+    private IReflectionOperations2? _reflectionOperations;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
     /// </summary>
-    private PlatformServiceProvider()
-    {
-    }
+    private PlatformServiceProvider() =>
+#if !WINDOWS_UWP
+        // Set the provider that is used by DynamicDataAttribute when generating data, to allow substituting functionality
+        // in TestFramework without having to put all the stuff in that library.
+        TestTools.UnitTesting.DynamicDataProvider.Instance = SourceGeneratorToggle.UseSourceGenerator
+            ? new SourceGeneratedDynamicDataOperations()
+            : new DynamicDataOperations();
+#else
+        TestTools.UnitTesting.DynamicDataProvider.Instance = new DynamicDataOperations();
+#endif
 
     /// <summary>
     /// Gets an instance to the platform service validator for test sources.
@@ -43,7 +53,15 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets an instance to the platform service for file operations.
     /// </summary>
-    public IFileOperations FileOperations => _fileOperations ??= new FileOperations();
+    public IFileOperations FileOperations
+        => _fileOperations ??=
+#if !WINDOWS_UWP
+            SourceGeneratorToggle.UseSourceGenerator
+                ? new SourceGeneratedFileOperations()
+                : new FileOperations();
+#else
+            new FileOperations();
+#endif
 
     /// <summary>
     /// Gets an instance to the platform service for trace logging.
@@ -68,7 +86,15 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets an instance to the platform service for reflection operations specific to a platform.
     /// </summary>
-    public IReflectionOperations ReflectionOperations => _reflectionOperations ??= new ReflectionOperations();
+    public IReflectionOperations2 ReflectionOperations
+        => _reflectionOperations ??=
+#if !WINDOWS_UWP
+             SourceGeneratorToggle.UseSourceGenerator
+                 ? new SourceGeneratedReflectionOperations()
+                 : new ReflectionOperations2();
+#else
+            new ReflectionOperations2();
+#endif
 
     /// <summary>
     /// Gets or sets an instance to the platform service for cancellation token supporting cancellation of a test run.

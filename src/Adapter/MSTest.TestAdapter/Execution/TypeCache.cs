@@ -225,7 +225,7 @@ internal class TypeCache : MarshalByRefObject
             // found in (i.e. GAC, current directory, path)
             // If this fails, we will try to load the type from the assembly
             // location in the Out directory.
-            var t = Type.GetType(typeName);
+            Type? t = PlatformServiceProvider.Instance.ReflectionOperations.GetType(typeName);
 
             if (t == null)
             {
@@ -233,7 +233,7 @@ internal class TypeCache : MarshalByRefObject
 
                 // Attempt to load the type from the test assembly.
                 // Allow this call to throw if the type can't be loaded.
-                t = assembly.GetType(typeName);
+                t = PlatformServiceProvider.Instance.ReflectionOperations.GetType(assembly, typeName);
             }
 
             return t;
@@ -259,8 +259,9 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
     private TestClassInfo CreateClassInfo(Type classType, TestMethod testMethod)
     {
+        IEnumerable<ConstructorInfo> constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
+        ConstructorInfo? constructor = constructors.FirstOrDefault(ctor => ctor.GetParameters().Length == 0 && ctor.IsPublic);
         bool isParameterLessConstructor;
-        ConstructorInfo constructor;
 
         if (classType.GetConstructor([typeof(TestContext)]) is { } testContextCtor)
         {
@@ -295,7 +296,7 @@ internal class TypeCache : MarshalByRefObject
         // the method is overridden in the derived type.
         var instanceMethods = new Dictionary<string, string?>();
 
-        foreach (MethodInfo methodInfo in classType.GetTypeInfo().DeclaredMethods)
+        foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(classType))
         {
             UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, false, instanceMethods);
 
@@ -306,7 +307,7 @@ internal class TypeCache : MarshalByRefObject
         // PERF: Don't inspect object, no test methods or setups can be defined on it.
         while (baseType != null && baseType != typeof(object))
         {
-            foreach (MethodInfo methodInfo in baseType.GetTypeInfo().DeclaredMethods)
+            foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(baseType))
             {
                 if (methodInfo is { IsPublic: true, IsStatic: false })
                 {
@@ -336,7 +337,7 @@ internal class TypeCache : MarshalByRefObject
     {
         try
         {
-            PropertyInfo? testContextProperty = classType.GetRuntimeProperty(TestContextPropertyName);
+            PropertyInfo? testContextProperty = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(classType, TestContextPropertyName);
             if (testContextProperty == null)
             {
                 // that's okay may be the property was not defined
@@ -408,7 +409,7 @@ internal class TypeCache : MarshalByRefObject
             }
 
             // Enumerate through all methods and identify the Assembly Init and cleanup methods.
-            foreach (MethodInfo methodInfo in t.GetTypeInfo().DeclaredMethods)
+            foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(t))
             {
                 if (IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
                 {
@@ -831,7 +832,7 @@ internal class TypeCache : MarshalByRefObject
         else if (methodBase != null)
         {
             Type[] parameters = methodBase.GetParameters().Select(i => i.ParameterType).ToArray();
-            testMethodInfo = methodBase.DeclaringType!.GetRuntimeMethod(methodBase.Name, parameters);
+            testMethodInfo = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethod(methodBase.DeclaringType!, methodBase.Name, parameters);
         }
 
         return testMethodInfo is null
@@ -842,9 +843,7 @@ internal class TypeCache : MarshalByRefObject
 
     private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
-        IEnumerable<MethodInfo> methods = testClassInfo
-            .ClassType
-            .GetRuntimeMethods()
+        IEnumerable<MethodInfo> methods = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(testClassInfo.ClassType)
             .Where(method => method.Name == testMethod.Name &&
                              method.HasCorrectTestMethodSignature(true, discoverInternals));
 
