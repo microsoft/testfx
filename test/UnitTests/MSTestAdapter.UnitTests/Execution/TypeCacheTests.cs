@@ -59,22 +59,15 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldThrowIfTestMethodIsNull()
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
-        void A() => _typeCache.GetTestMethodInfo(
-            null,
-            new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
-            false);
 
-        Exception ex = VerifyThrows(A);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        var context = new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>());
+        VerifyThrows<ArgumentNullException>(() => _typeCache.GetTestMethodInfo(null, context, false));
     }
 
     public void GetTestMethodInfoShouldThrowIfTestContextIsNull()
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
-        void A() => _typeCache.GetTestMethodInfo(testMethod, null, false);
-
-        Exception ex = VerifyThrows(A);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        VerifyThrows<ArgumentNullException>(() => _typeCache.GetTestMethodInfo(testMethod, null, false));
     }
 
     public void GetTestMethodInfoShouldReturnNullIfClassInfoForTheMethodIsNull()
@@ -112,10 +105,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Exception exception = VerifyThrows(Action);
+        TypeInspectionException exception = VerifyThrows<TypeInspectionException>(Action);
 
-        Verify(exception is not null);
-        Verify(exception is TypeInspectionException);
         Verify(exception.Message.StartsWith("Unable to get type C. Error: System.Exception: Load failure", StringComparison.Ordinal));
     }
 
@@ -130,10 +121,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Exception exception = VerifyThrows(Action);
-
-        Verify(exception is not null);
-        Verify(exception is TypeInspectionException);
+        TypeInspectionException exception = VerifyThrows<TypeInspectionException>(Action);
         Verify(exception.Message.StartsWith("Cannot find a valid constructor for test class 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TypeCacheTests+DummyTestClassWithNoDefaultConstructor'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.", StringComparison.Ordinal));
     }
 
@@ -148,10 +136,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Exception exception = VerifyThrows(Action);
-
-        Verify(exception is not null);
-        Verify(exception is TypeInspectionException);
+        TypeInspectionException exception = VerifyThrows<TypeInspectionException>(Action);
         Verify(exception.Message.StartsWith($"The {className}.TestContext has incorrect type.", StringComparison.Ordinal));
     }
 
@@ -166,10 +151,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Exception exception = VerifyThrows(Action);
-
-        Verify(exception is not null);
-        Verify(exception is TypeInspectionException);
+        TypeInspectionException exception = VerifyThrows<TypeInspectionException>(Action);
         Verify(exception.Message.StartsWith(string.Format(CultureInfo.InvariantCulture, "Unable to find property {0}.TestContext. Error:{1}.", className, "Ambiguous match found."), StringComparison.Ordinal));
     }
 
@@ -328,9 +310,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Exception exception = VerifyThrows(A);
-        Verify(exception is not null);
-        Verify(exception is TypeInspectionException);
+        Exception exception = VerifyThrows<TypeInspectionException>(A);
 
         MethodInfo methodInfo = type.GetMethod("AssemblyInit");
         string expectedMessage =
@@ -360,9 +340,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Exception exception = VerifyThrows(A);
-        Verify(exception is not null);
-        Verify(exception is TypeInspectionException);
+        Exception exception = VerifyThrows<TypeInspectionException>(A);
 
         MethodInfo methodInfo = type.GetMethod("AssemblyCleanup");
         string expectedMessage =
@@ -659,9 +637,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Exception exception = VerifyThrows(A);
-        Verify(exception is not null);
-        Verify(exception is TypeInspectionException);
+        Exception exception = VerifyThrows<TypeInspectionException>(A);
 
         MethodInfo methodInfo = type.GetMethod("AssemblyInit");
         string expectedMessage =
@@ -691,9 +667,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Exception exception = VerifyThrows(A);
-        Verify(exception is not null);
-        Verify(exception is TypeInspectionException);
+        Exception exception = VerifyThrows<TypeInspectionException>(A);
 
         MethodInfo methodInfo = type.GetMethod("AssemblyCleanup");
         string expectedMessage =
@@ -763,10 +737,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Exception exception = VerifyThrows(A);
-
-        Verify(exception is not null);
-        Verify(exception is TypeInspectionException);
+        TypeInspectionException exception = VerifyThrows<TypeInspectionException>(A);
 
         MethodInfo methodInfo = type.GetMethod("TestInit");
         string expectedMessage =
@@ -860,10 +831,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Exception exception = VerifyThrows(A);
-
-        Verify(exception is not null);
-        Verify(exception is TypeInspectionException);
+        Exception exception = VerifyThrows<TypeInspectionException>(A);
 
         string expectedMessage = string.Format(
             CultureInfo.InvariantCulture,
@@ -926,10 +894,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Exception exception = VerifyThrows(A);
-
-        Verify(exception is not null);
-        Verify(exception is TypeInspectionException);
+        Exception exception = VerifyThrows<TypeInspectionException>(A);
 
         string expectedMessage =
             string.Format(
@@ -955,10 +920,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Exception exception = VerifyThrows(A);
-
-        Verify(exception is not null);
-        Verify(exception is TypeInspectionException);
+        TypeInspectionException exception = VerifyThrows<TypeInspectionException>(A);
 
         string expectedMessage =
             string.Format(

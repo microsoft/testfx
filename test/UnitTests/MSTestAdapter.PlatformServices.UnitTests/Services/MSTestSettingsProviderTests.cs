@@ -55,11 +55,8 @@ public class DesktopSettingsProviderTests : TestContainer
         Verify(!MSTestSettingsProvider.Settings.DeploymentEnabled);
     }
 
-    public void LoadShouldThrowIfReaderIsNull()
-    {
-        Exception exception = VerifyThrows(() => _settingsProvider.Load(null));
-        Verify(exception is ArgumentNullException);
-    }
+    public void LoadShouldThrowIfReaderIsNull() =>
+        VerifyThrows<ArgumentNullException>(() => _settingsProvider.Load(null));
 
     public void LoadShouldReadAndFillInSettings()
     {

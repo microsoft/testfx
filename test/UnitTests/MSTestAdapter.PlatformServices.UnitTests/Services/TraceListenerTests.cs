@@ -30,8 +30,7 @@ public class TraceListenerTests : TestContainer
 
         // Trying to write after disposing textWriter should throw exception
         void ShouldThrowException() => writer.WriteLine("Try to write something");
-        Exception ex = VerifyThrows(ShouldThrowException);
-        Verify(ex is ObjectDisposedException);
+        VerifyThrows<ObjectDisposedException>(ShouldThrowException);
     }
 }
 
