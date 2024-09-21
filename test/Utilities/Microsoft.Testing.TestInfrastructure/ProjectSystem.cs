@@ -5,8 +5,6 @@ using System.Globalization;
 using System.Text;
 using System.Xml.Linq;
 
-using Polyfills;
-
 namespace Microsoft.Testing.TestInfrastructure;
 
 public class VSSolution : Folder

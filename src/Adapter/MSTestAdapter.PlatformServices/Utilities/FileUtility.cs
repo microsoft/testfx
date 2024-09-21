@@ -234,7 +234,7 @@ internal class FileUtility
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public virtual void DeleteDirectories(string filePath)
     {
-        Validate.IsFalse(StringEx.IsNullOrWhiteSpace(filePath), "Invalid filePath provided");
+        Guard.NotNullOrWhiteSpace(filePath);
         try
         {
             var root = new DirectoryInfo(filePath);

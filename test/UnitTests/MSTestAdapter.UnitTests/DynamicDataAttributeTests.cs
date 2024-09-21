@@ -5,6 +5,7 @@ using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using TestFramework.ForTestingMSTest;
@@ -22,6 +23,9 @@ public class DynamicDataAttributeTests : TestContainer
         _dummyTestClass = new DummyTestClass();
         _testMethodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
+
+        // Initializes DynamicDataProvider. Normally this happens automatically but we are running outside of test adapter.
+        _ = PlatformServiceProvider.Instance;
         DynamicDataAttribute.TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
     }
 
@@ -363,7 +367,7 @@ public class DynamicDataAttributeTests : TestContainer
 /// The dummy test class.
 /// </summary>
 [TestClass]
-public class DummyTestClass
+internal class DummyTestClass
 {
     /// <summary>
     /// Gets the reusable test data property.
@@ -568,7 +572,7 @@ public class DummyTestClass2
 }
 
 [TestClass]
-public class TestClassTupleData
+internal class TestClassTupleData
 {
     public static IEnumerable<Tuple<int, string>> GetDataWithTuple()
     {

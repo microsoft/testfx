@@ -573,7 +573,8 @@ public class TestExecutionManagerTests : TestContainer
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
-            var originalReflectionOperation = new ReflectionOperations();
+            var originalReflectionOperation = new ReflectionOperations2();
+            var originalFileOperation = new FileOperations();
 
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
@@ -584,6 +585,15 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
                 Returns((MemberInfo memberInfo, bool inherit) => originalReflectionOperation.GetCustomAttributes(memberInfo, inherit));
+
+            testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>()))
+                .Returns((Assembly asm, string m) => originalReflectionOperation.GetType(asm, m));
+
+            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
+                .Returns((string assemblyName, bool reflectionOnly) => originalFileOperation.LoadAssembly(assemblyName, reflectionOnly));
+
+            testablePlatformService.MockReflectionOperations.Setup(fo => fo.GetRuntimeMethods(It.IsAny<Type>()))
+                .Returns((Type t) => originalReflectionOperation.GetRuntimeMethods(t));
 
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
@@ -619,7 +629,8 @@ public class TestExecutionManagerTests : TestContainer
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
-            var originalReflectionOperation = new ReflectionOperations();
+            var originalReflectionOperation = new ReflectionOperations2();
+            var originalFileOperation = new FileOperations();
 
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
@@ -630,6 +641,15 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
                 Returns((MemberInfo memberInfo, bool inherit) => originalReflectionOperation.GetCustomAttributes(memberInfo, inherit));
+
+            testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>()))
+                .Returns((Assembly asm, string m) => originalReflectionOperation.GetType(asm, m));
+
+            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
+                .Returns((string assemblyName, bool reflectionOnly) => originalFileOperation.LoadAssembly(assemblyName, reflectionOnly));
+
+            testablePlatformService.MockReflectionOperations.Setup(fo => fo.GetRuntimeMethods(It.IsAny<Type>()))
+                .Returns((Type t) => originalReflectionOperation.GetRuntimeMethods(t));
 
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
@@ -707,7 +727,8 @@ public class TestExecutionManagerTests : TestContainer
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
-            var originalReflectionOperation = new ReflectionOperations();
+            var originalReflectionOperation = new ReflectionOperations2();
+            var originalFileOperation = new FileOperations();
 
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
@@ -718,6 +739,19 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
                 Returns((MemberInfo memberInfo, bool inherit) => originalReflectionOperation.GetCustomAttributes(memberInfo, inherit));
+
+            testablePlatformService.MockReflectionOperations.Setup(
+                ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>())).
+                Returns(typeof(DummyTestClassForParallelize));
+
+            testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>()))
+                .Returns((Assembly asm, string m) => originalReflectionOperation.GetType(asm, m));
+
+            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
+                .Returns((string assemblyName, bool reflectionOnly) => originalFileOperation.LoadAssembly(assemblyName, reflectionOnly));
+
+            testablePlatformService.MockReflectionOperations.Setup(fo => fo.GetRuntimeMethods(It.IsAny<Type>()))
+                .Returns((Type t) => originalReflectionOperation.GetRuntimeMethods(t));
 
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
