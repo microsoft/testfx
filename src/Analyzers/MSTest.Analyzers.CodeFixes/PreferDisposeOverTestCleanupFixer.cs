@@ -117,10 +117,24 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
                 }
 
                 editor.ReplaceNode(containingClass, newParent!);
+                AddUsingDirectiveIfMissing(editor, "System");
             }
         }
 
         return editor.GetChangedDocument();
+    }
+
+    private static void AddUsingDirectiveIfMissing(DocumentEditor editor, string namespaceName)
+    {
+        SyntaxNode root = editor.OriginalRoot;
+        IEnumerable<UsingDirectiveSyntax> usingDirectives = root.DescendantNodes().OfType<UsingDirectiveSyntax>();
+        bool hasSystemUsing = usingDirectives.Any(u => u.Name.ToString() == namespaceName);
+
+        if (!hasSystemUsing)
+        {
+            UsingDirectiveSyntax systemUsing = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(namespaceName));
+            editor.InsertBefore(root.ChildNodes().First(), systemUsing);
+        }
     }
 
     private static bool ImplementsIDisposable(ClassDeclarationSyntax classDeclaration, SemanticModel semanticModel)
