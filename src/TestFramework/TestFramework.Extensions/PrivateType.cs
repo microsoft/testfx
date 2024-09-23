@@ -407,7 +407,7 @@ public class PrivateType
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetStaticProperty(string name, BindingFlags bindingFlags, object value, Type[]? parameterTypes, object?[]? args)
     {
-        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Guard.NotNull(name);
 
         if (parameterTypes != null)
         {
