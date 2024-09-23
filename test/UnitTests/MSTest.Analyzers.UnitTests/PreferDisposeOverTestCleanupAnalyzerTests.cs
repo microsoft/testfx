@@ -64,8 +64,8 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests(ITestExecutionCont
             }
             """;
         string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
             
             [TestClass]
             public class MyTestClass
@@ -113,7 +113,6 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests(ITestExecutionCont
             """;
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
-
 
     public async Task WhenTestClassHasTestCleanup_AndHasDispose_Diagnostic()
     {
