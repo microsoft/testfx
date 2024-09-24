@@ -389,7 +389,8 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                         Capabilities: new ServerCapabilities(
                             new ServerTestingCapabilities(
                                 SupportsDiscovery: true,
-                                MultiRequestSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.MultiRequestSupport) == true,
+                                // Current implementation of testing platform and VS doesn't allow multi-request.
+                                MultiRequestSupport: false,
                                 VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true,
                                 SupportsAttachments: true,
                                 MultiConnectionProvider: false)));
@@ -580,7 +581,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         using (await _messageMonitor.LockAsync(cancellationToken))
         {
-            await _messageHandler!.WriteRequestAsync(error, cancellationToken);
+            await _messageHandler.WriteRequestAsync(error, cancellationToken);
         }
     }
 
@@ -591,7 +592,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         using (await _messageMonitor.LockAsync(cancellationToken))
         {
-            await _messageHandler!.WriteRequestAsync(response, cancellationToken);
+            await _messageHandler.WriteRequestAsync(response, cancellationToken);
         }
     }
 
