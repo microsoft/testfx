@@ -90,7 +90,7 @@ public class OutOfProc : ITestHostProcessLifetimeHandler, IDataProducer
         => _messageBus = messageBus;
 
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
-        => await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(@"C:\Users\mrossignoli\Downloads\SEL1.txt"), "Sample", "sample description"));
+        => await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(@"C:\sample"), "Sample", "sample description"));
 
     public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
         => Task.CompletedTask;
