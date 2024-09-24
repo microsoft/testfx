@@ -16,6 +16,7 @@ internal static class JsonRpcMethods
     public const string ClientLog = "client/log";
     public const string Exit = "exit";
     public const string CancelRequest = "$/cancelRequest";
+    public const string TestingTestUpdatesAttachments = "testing/testUpdates/attachments";
 }
 
 internal static class JsonRpcStrings

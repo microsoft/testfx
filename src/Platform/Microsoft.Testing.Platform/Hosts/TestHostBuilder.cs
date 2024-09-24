@@ -464,7 +464,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             // note that we pass the BuildTestFrameworkAsync as callback because server mode will call it per-request
             // this is not needed in console mode where we have only 1 request.
             ServerTestHost serverTestHost =
-                new(serviceProvider, BuildTestFrameworkAsync, messageHandlerFactory, (TestFrameworkManager)TestFramework, (TestHostManager)TestHost, testControllerConnection);
+                new(serviceProvider, BuildTestFrameworkAsync, messageHandlerFactory, (TestFrameworkManager)TestFramework, (TestHostManager)TestHost);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
             ITestHost actualTestHost = testControllerConnection is not null

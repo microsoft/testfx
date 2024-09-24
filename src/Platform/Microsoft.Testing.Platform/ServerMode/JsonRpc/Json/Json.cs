@@ -336,6 +336,22 @@ internal sealed class Json
                 (JsonRpcStrings.ProcessId, info.ProcessId),
             });
 
+        _serializers[typeof(TestsAttachments)] = new JsonObjectSerializer<TestsAttachments>(info =>
+            new (string, object?)[]
+            {
+                 (JsonRpcStrings.Attachments, info.Attachments),
+            });
+
+        _serializers[typeof(RunTestAttachment)] = new JsonObjectSerializer<RunTestAttachment>(info =>
+            new (string, object?)[]
+            {
+                    (JsonRpcStrings.Uri, info.Uri),
+                    (JsonRpcStrings.Producer, info.Producer),
+                    (JsonRpcStrings.Type, info.Type),
+                    (JsonRpcStrings.DisplayName, info.DisplayName),
+                    (JsonRpcStrings.Description, info.Description),
+            });
+
         // Serializers
         _serializers[typeof(string)] = new JsonValueSerializer<string>((w, v) => w.WriteStringValue(v));
         _serializers[typeof(bool)] = new JsonValueSerializer<bool>((w, v) => w.WriteBooleanValue(v));

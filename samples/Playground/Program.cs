@@ -4,8 +4,11 @@
 using System.Reflection;
 
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using MSTest.Acceptance.IntegrationTests.Messages.V100;
@@ -25,7 +28,7 @@ public class Program
             Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
-            testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(_ => new OutOfProc());
+            testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
             // Enable Trx
             // testApplicationBuilder.AddTrxReportProvider();
 
@@ -58,21 +61,37 @@ public class Program
     }
 }
 
-public class OutOfProc : ITestHostProcessLifetimeHandler
+public class OutOfProc : ITestHostProcessLifetimeHandler, IDataProducer
 {
-    public string Uid => nameof(OutOfProc);
+    private readonly IMessageBus _messageBus;
 
-    public string Version => "1.0.0";
+    public string Uid
+        => nameof(OutOfProc);
 
-    public string DisplayName => nameof(OutOfProc);
+    public string Version
+        => "1.0.0";
 
-    public string Description => nameof(OutOfProc);
+    public string DisplayName
+        => nameof(OutOfProc);
 
-    public Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public string Description
+        => nameof(OutOfProc);
 
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    public Type[] DataTypesProduced
+        => [typeof(FileArtifact)];
 
-    public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => Task.CompletedTask;
+    public Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken)
+        => Task.CompletedTask;
 
-    public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => Task.CompletedTask;
+    public Task<bool> IsEnabledAsync()
+        => Task.FromResult(true);
+
+    public OutOfProc(IMessageBus messageBus)
+        => _messageBus = messageBus;
+
+    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+        => await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(@"C:\Users\mrossignoli\Downloads\SEL1.txt"), "Sample", "sample description"));
+
+    public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+        => Task.CompletedTask;
 }

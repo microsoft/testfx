@@ -446,6 +446,30 @@ internal static class SerializerUtilities
             return values;
         });
 
+        Serializers[typeof(TestsAttachments)] = new ObjectSerializer<TestsAttachments>(ev =>
+        {
+            Dictionary<string, object?> values = new()
+            {
+                [JsonRpcStrings.Attachments] = ev.Attachments.Select(x => Serialize(x)).ToArray(),
+            };
+
+            return values;
+        });
+
+        Serializers[typeof(RunTestAttachment)] = new ObjectSerializer<RunTestAttachment>(ev =>
+        {
+            Dictionary<string, object?> values = new()
+            {
+                [JsonRpcStrings.Uri] = ev.Uri,
+                [JsonRpcStrings.Producer] = ev.Producer,
+                [JsonRpcStrings.Type] = ev.Type,
+                [JsonRpcStrings.DisplayName] = ev.DisplayName,
+                [JsonRpcStrings.Description] = ev.Description,
+            };
+
+            return values;
+        });
+
         // Deserialize a generic JSON-RPC message
         Deserializers[typeof(RpcMessage)] = new ObjectDeserializer<RpcMessage>(properties =>
         {

@@ -71,7 +71,9 @@ internal class PassiveNode
                                 SupportsDiscovery: false,
                                 MultiRequestSupport: false,
                                 VSTestProviderSupport: false,
+                                // This means we push attachments
                                 SupportsAttachments: true,
+                                // This means we're a push node
                                 MultiConnectionProvider: true)));
 
         await SendResponseAsync(requestMessage.Id, responseObject, _testApplicationCancellationTokenSource.CancellationToken);
@@ -85,7 +87,17 @@ internal class PassiveNode
 
         using (await _messageMonitor.LockAsync(cancellationToken))
         {
-            await _messageHandler!.WriteRequestAsync(response, cancellationToken);
+            await _messageHandler.WriteRequestAsync(response, cancellationToken);
+        }
+    }
+
+    public async Task SendAttachmentsAsync(TestsAttachments testsAttachments, CancellationToken cancellationToken)
+    {
+        AssertInitialized();
+        NotificationMessage notification = new(JsonRpcMethods.TestingTestUpdatesAttachments, testsAttachments);
+        using (await _messageMonitor.LockAsync(cancellationToken))
+        {
+            await _messageHandler.WriteRequestAsync(notification, cancellationToken);
         }
     }
 }

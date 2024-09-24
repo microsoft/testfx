@@ -85,3 +85,7 @@ internal record TelemetryEventArgs(string EventName, IDictionary<string, object>
 internal record ProcessInfoArgs(string Program, string? Args, string? WorkingDirectory, IDictionary<string, string?>? EnvironmentVariables);
 
 internal record AttachDebuggerInfoArgs(int ProcessId);
+
+internal record class TestsAttachments(RunTestAttachment[] Attachments);
+
+internal record class RunTestAttachment(string? Uri, string? Producer, string? Type, string? DisplayName, string? Description);

@@ -10,7 +10,6 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
@@ -30,7 +29,6 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     private readonly TestFrameworkManager _testFrameworkManager;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly TestHostManager _testSessionManager;
-    private readonly NamedPipeClient? _testHostControllerConnection;
     private readonly ServerTelemetry _telemetryService;
     private readonly IAsyncMonitor _messageMonitor;
     private readonly IEnvironment _environment;
@@ -62,8 +60,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
         IMessageHandlerFactory messageHandlerFactory,
         TestFrameworkManager testFrameworkManager,
-        TestHostManager testSessionManager,
-        NamedPipeClient? testHostControllerConnection)
+        TestHostManager testSessionManager)
         : base(serviceProvider)
     {
         _buildTestFrameworkAsync = buildTestFrameworkAsync;
@@ -71,7 +68,6 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         _testFrameworkManager = testFrameworkManager;
         _testApplicationCancellationTokenSource = serviceProvider.GetTestApplicationCancellationTokenSource();
         _testSessionManager = testSessionManager;
-        _testHostControllerConnection = testHostControllerConnection;
         _telemetryService = new ServerTelemetry(this);
         _clientToServerRequests = new();
         _serverToClientRequests = new();
@@ -637,17 +633,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     }
 
     internal async Task SendTestUpdateCompleteAsync(Guid runId)
-    {
-        if (_testHostControllerConnection is null)
-        {
-            
-        }else
-        {
-
-        }
-
-        await SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, Changes: null));
-    }
+        => await SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, Changes: null));
 
     public async Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update)
         => await SendMessageAsync(

@@ -131,6 +131,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             };
 
             List<IDataConsumer> dataConsumersBuilder = [.. _testHostsInformation.DataConsumer];
+            dataConsumersBuilder.Add(new PassiveNodeDataConsumer(_passiveNode));
 
             IPlatformOutputDevice? display = ServiceProvider.GetServiceInternal<IPlatformOutputDevice>();
             if (display is IDataConsumer dataConsumerDisplay)
