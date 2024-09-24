@@ -7,6 +7,9 @@ using FluentAssertions;
 
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
 namespace MSTest.IntegrationTests;
 
@@ -14,8 +17,10 @@ public class OutputTests : CLITestBase
 {
     private const string TestAssetName = "OutputTestProject";
 
+    [TestMethod]
     public void OutputIsNotMixedWhenTestsRunInParallel() => ValidateOutputForClass("UnitTest1");
 
+    [TestMethod]
     public void OutputIsNotMixedWhenAsyncTestsRunInParallel() => ValidateOutputForClass("UnitTest2");
 
     private void ValidateOutputForClass(string className)

@@ -2,9 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class DataExtensibilityTests : CLITestBase
 {
     private const string TestAssetName = "FxExtensibilityTestProject";
@@ -15,6 +17,7 @@ public class DataExtensibilityTests : CLITestBase
          - Ignored tests are not expanded (DataRow, DataSource, etc)
      */
 
+    [TestMethod]
     public void CustomTestDataSourceTests()
     {
         // Arrange
@@ -28,6 +31,7 @@ public class DataExtensibilityTests : CLITestBase
         VerifyE2E.ContainsTestsPassed(testResults, "CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
     }
 
+    [TestMethod]
     public void AssertExtensibilityTests()
     {
         // Arrange
@@ -42,6 +46,7 @@ public class DataExtensibilityTests : CLITestBase
         VerifyE2E.ContainsTestsFailed(testResults, "BasicFailingAssertExtensionTest", "ChainedFailingAssertExtensionTest");
     }
 
+    [TestMethod]
     public void ExecuteCustomTestExtensibilityTests()
     {
         // Arrange
@@ -69,6 +74,7 @@ public class DataExtensibilityTests : CLITestBase
             "CustomTestClass1 - Execution number 3");
     }
 
+    [TestMethod]
     public void ExecuteCustomTestExtensibilityWithTestDataTests()
     {
         // Arrange

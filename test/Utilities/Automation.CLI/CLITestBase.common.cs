@@ -5,11 +5,9 @@ using System.Xml;
 
 using FluentAssertions;
 
-using TestFramework.ForTestingMSTest;
-
 namespace Microsoft.MSTestV2.CLIAutomation;
 
-public partial class CLITestBase : TestContainer
+public partial class CLITestBase
 {
     private const string Configuration =
 #if DEBUG

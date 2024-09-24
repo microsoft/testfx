@@ -6,6 +6,7 @@ using System.Collections.Immutable;
 using FluentAssertions;
 
 using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.IntegrationTests;
 
@@ -13,6 +14,7 @@ public partial class TestId : CLITestBase
 {
     private const string FullyQualifiedStrategyDll = "TestIdProject.FullyQualifiedStrategy";
 
+    [TestMethod]
     public void TestIdUniqueness_DataRowArray_FullyQualifiedStrategy()
     {
         // Arrange
@@ -34,6 +36,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DataRowString_FullyQualifiedStrategy()
     {
         // Arrange
@@ -56,6 +59,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DynamicDataArrays_FullyQualifiedStrategy()
     {
         // Arrange
@@ -77,6 +81,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DynamicDataTuple_FullyQualifiedStrategy()
     {
         // Arrange
@@ -97,6 +102,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DynamicDataGenericCollections_FullyQualifiedStrategy()
     {
         // Arrange
@@ -119,6 +125,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_TestDataSourceArrays_FullyQualifiedStrategy()
     {
         // Arrange
@@ -140,6 +147,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_TestDataSourceTuples_FullyQualifiedStrategy()
     {
         // Arrange
@@ -160,6 +168,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_TestDataSourceGenericCollections_FullyQualifiedStrategy()
     {
         // Arrange
