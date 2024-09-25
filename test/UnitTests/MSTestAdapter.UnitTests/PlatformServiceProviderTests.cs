@@ -44,7 +44,7 @@ public class PlatformServiceProviderTests : TestContainer
         Verify(testSourceInstance == PlatformServiceProvider.Instance.TestSource);
     }
 
-    public void ReflectionOperationsShouldReturnAValidInstance() => Verify(PlatformServiceProvider.Instance.ReflectionOperations.GetType() == typeof(ReflectionOperations));
+    public void ReflectionOperationsShouldReturnAValidInstance() => Verify(PlatformServiceProvider.Instance.ReflectionOperations.GetType() == typeof(ReflectionOperations2));
 
     public void ReflectionOperationsShouldBeCached()
     {

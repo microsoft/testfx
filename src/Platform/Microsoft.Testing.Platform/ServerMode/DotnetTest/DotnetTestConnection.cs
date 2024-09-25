@@ -142,6 +142,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
         }
     }
 
+    public Task OnExitAsync() => Task.CompletedTask;
+
     public void Dispose() => _dotnetTestPipeClient?.Dispose();
 
 #if NETCOREAPP

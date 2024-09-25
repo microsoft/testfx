@@ -57,9 +57,7 @@ public class TraceListenerManagerTests : TestContainer
         traceListenerManager.Dispose(traceListener);
 
         // Trying to write after closing textWriter should throw exception
-        void ShouldThrowException() => writer.WriteLine("Try to write something");
-        Exception ex = VerifyThrows(ShouldThrowException);
-        Verify(ex is ObjectDisposedException);
+        VerifyThrows<ObjectDisposedException>(() => writer.WriteLine("Try to write something"));
     }
 }
 

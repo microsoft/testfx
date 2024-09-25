@@ -101,21 +101,23 @@ class AssemblyResolver :
     /// </remarks>
     public AssemblyResolver(IList<string> directories)
     {
-        if (directories == null || directories.Count == 0)
-        {
-            throw new ArgumentNullException(nameof(directories));
-        }
+        Guard.NotNullOrEmpty(directories);
 
         _searchDirectories = [.. directories];
         _directoryList = new Queue<RecursiveDirectoryPath>();
 
-        AppDomain.CurrentDomain.AssemblyResolve += OnResolve;
+        // In source gen mode don't register any custom resolver. We can still resolve in the same folder,
+        // but nothing more.
+        if (!SourceGeneratorToggle.UseSourceGenerator)
+        {
+            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
 #if NETFRAMEWORK
-        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += ReflectionOnlyOnResolve;
+            AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
 
-        // This is required for winmd resolution for arm built sources discovery on desktop.
-        WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve += WindowsRuntimeMetadataReflectionOnlyNamespaceResolve;
+            // This is required for winmd resolution for arm built sources discovery on desktop.
+            WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve += new EventHandler<NamespaceResolveEventArgs>(WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
 #endif
+        }
     }
 
     /// <summary>
@@ -294,7 +296,11 @@ class AssemblyResolver :
 #else
     private static
 #endif
+
+    // This whole class is not used in source generator mode.
+#pragma warning disable IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
     Assembly LoadAssemblyFrom(string path) => Assembly.LoadFrom(path);
+#pragma warning restore IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
 
 #if NETFRAMEWORK
     protected virtual Assembly ReflectionOnlyLoadAssemblyFrom(string path) => Assembly.ReflectionOnlyLoadFrom(path);

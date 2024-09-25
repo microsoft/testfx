@@ -13,15 +13,15 @@ public sealed class LoggerTests : TestContainer
     public void LogMessageWhenFormatIsNullShouldThrow()
     {
         Logger.OnLogMessage += message => { };
-        Exception ex = VerifyThrows(() => Logger.LogMessage(null!, "arg1"));
-        Verify(ex is ArgumentNullException && ex.Message.Contains("format"));
+        ArgumentNullException ex = VerifyThrows<ArgumentNullException>(() => Logger.LogMessage(null!, "arg1"));
+        Verify(ex.Message.Contains("format"));
     }
 
     public void LogMessageWhenArgsIsNullShouldThrow()
     {
         Logger.OnLogMessage += message => { };
-        Exception ex = VerifyThrows(() => Logger.LogMessage("foo", null!));
-        Verify(ex is ArgumentNullException && ex.Message.Contains("args"));
+        ArgumentNullException ex = VerifyThrows<ArgumentNullException>(() => Logger.LogMessage("foo", null!));
+        Verify(ex.Message.Contains("args"));
     }
 
     public void LogMessageWhenFormatIsSimpleMessageAndNoArgsShouldCallEvent()

@@ -20,4 +20,6 @@ internal interface IPushOnlyProtocol :
     Task<bool> IsCompatibleProtocolAsync(string testHostType);
 
     Task<IPushOnlyProtocolConsumer> GetDataConsumerAsync();
+
+    Task OnExitAsync();
 }

@@ -12,19 +12,11 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 [SuppressMessage("Usage", "CA2263:Prefer generic overload when type is known", Justification = "We want to test also the non-generic API")]
 public partial class AssertTests
 {
-    public void InstanceOfTypeShouldFailWhenValueIsNull()
-    {
-        static void Action() => Assert.IsInstanceOfType(null, typeof(AssertTests));
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is AssertFailedException);
-    }
+    public void InstanceOfTypeShouldFailWhenValueIsNull() =>
+        VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType(null, typeof(AssertTests)));
 
-    public void InstanceOfTypeShouldFailWhenTypeIsNull()
-    {
-        static void Action() => Assert.IsInstanceOfType(5, null);
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is AssertFailedException);
-    }
+    public void InstanceOfTypeShouldFailWhenTypeIsNull() =>
+        VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType(5, null));
 
     public void InstanceOfTypeShouldPassOnSameInstance() => Assert.IsInstanceOfType(5, typeof(int));
 
@@ -32,32 +24,22 @@ public partial class AssertTests
 
     public void InstanceNotOfTypeShouldFailWhenValueIsNull() => Assert.IsNotInstanceOfType(null, typeof(object));
 
-    public void InstanceNotOfTypeShouldFailWhenTypeIsNull()
-    {
-        static void Action() => Assert.IsNotInstanceOfType(5, null);
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is AssertFailedException);
-    }
+    public void InstanceNotOfTypeShouldFailWhenTypeIsNull() =>
+        VerifyThrows<AssertFailedException>(() => Assert.IsNotInstanceOfType(5, null));
 
     public void InstanceNotOfTypeShouldPassOnWrongInstance() => Assert.IsNotInstanceOfType(5L, typeof(int));
 
     public void InstanceNotOfTypeShouldPassOnSubInstance() => Assert.IsNotInstanceOfType(new object(), typeof(int));
 
     [TestMethod]
-    public void IsInstanceOfTypeUsingGenericType_WhenValueIsNull_Fails()
-    {
-        static void Action() => Assert.IsInstanceOfType<AssertTests>(null);
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is AssertFailedException);
-    }
+    public void IsInstanceOfTypeUsingGenericType_WhenValueIsNull_Fails() =>
+        VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType<AssertTests>(null));
 
     [TestMethod]
     public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_WhenValueIsNull_Fails()
     {
         AssertTests? assertTests = null;
-        void Action() => Assert.IsInstanceOfType<AssertTests>(null, out assertTests);
-        Exception ex = VerifyThrows(Action);
-        Verify(ex is AssertFailedException);
+        VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType<AssertTests>(null, out assertTests));
         Verify(assertTests is null);
     }
 
