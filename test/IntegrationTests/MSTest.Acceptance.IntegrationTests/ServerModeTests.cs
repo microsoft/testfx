@@ -28,7 +28,7 @@ public sealed class ServerModeTests : ServerModeTestsBase
         InitializeResponse initializeResponseArgs = await jsonClient.Initialize();
 
         Assert.IsTrue(initializeResponseArgs.Capabilities.Testing.VSTestProvider);
-        Assert.IsTrue(initializeResponseArgs.Capabilities.Testing.MultiRequestSupport);
+        Assert.IsFalse(initializeResponseArgs.Capabilities.Testing.MultiRequestSupport);
         Assert.IsTrue(initializeResponseArgs.Capabilities.Testing.SupportsDiscovery);
 
         TestNodeUpdateCollector discoveryCollector = new();
@@ -57,7 +57,7 @@ public sealed class ServerModeTests : ServerModeTestsBase
         jsonClient.RegisterTelemetryListener(telemetry);
 
         InitializeResponse initializeResponseArgs = await jsonClient.Initialize();
-        Assert.IsTrue(initializeResponseArgs.Capabilities.Testing.MultiRequestSupport);
+        Assert.IsFalse(initializeResponseArgs.Capabilities.Testing.MultiRequestSupport);
 
         TestNodeUpdateCollector discoveryCollector = new();
 

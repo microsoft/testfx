@@ -115,7 +115,7 @@ public class ServerTests : TestBase
         InitializeResponseArgs expectedResponse = new(
                    1,
                    new ServerInfo("test-anywhere", "this is dynamic"),
-                   new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false)));
+                   new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false, SupportsAttachments: true, MultiConnectionProvider: false)));
 
         Assert.AreEqual(expectedResponse.Capabilities, resultJson.Capabilities);
         Assert.AreEqual(expectedResponse.ServerInfo.Name, resultJson.ServerInfo.Name);
