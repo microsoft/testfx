@@ -83,8 +83,8 @@ internal class PassiveNode : IDisposable
     private async Task SendResponseAsync(int reqId, object result, CancellationToken cancellationToken)
     {
         AssertInitialized();
-        ResponseMessage response = new(reqId, result);
 
+        ResponseMessage response = new(reqId, result);
         using (await _messageMonitor.LockAsync(cancellationToken))
         {
             await _messageHandler.WriteRequestAsync(response, cancellationToken);
@@ -94,6 +94,7 @@ internal class PassiveNode : IDisposable
     public async Task SendAttachmentsAsync(TestsAttachments testsAttachments, CancellationToken cancellationToken)
     {
         AssertInitialized();
+
         NotificationMessage notification = new(JsonRpcMethods.TestingTestUpdatesAttachments, testsAttachments);
         using (await _messageMonitor.LockAsync(cancellationToken))
         {

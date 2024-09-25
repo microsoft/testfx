@@ -395,7 +395,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             PassiveNode? passiveNode = null;
             if (hasServerFlag && isJsonRpcProtocol)
             {
-                // Build the server mode with the user preferences
+                // Build the IMessageHandlerFactory for the PassiveNode
                 IMessageHandlerFactory messageHandlerFactory = ((ServerModeManager)ServerMode).Build(serviceProvider);
                 passiveNode = new PassiveNode(
                     messageHandlerFactory,

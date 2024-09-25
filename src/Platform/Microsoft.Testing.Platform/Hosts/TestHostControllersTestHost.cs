@@ -81,12 +81,6 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         IConfiguration configuration = ServiceProvider.GetConfiguration();
         try
         {
-            // Connect the passive node if it's available
-            if (_passiveNode is not null)
-            {
-                await _passiveNode.ConnectAsync();
-            }
-
             using IProcess currentProcess = process.GetCurrentProcess();
             int currentPID = currentProcess.Id;
             string processIdString = currentPID.ToString(CultureInfo.InvariantCulture);
@@ -147,9 +141,17 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             }
 
             // If we're in server mode jsonrpc we add as last consumer the PassiveNodeDataConsumer for the attachments.
+            // Connect the passive node if it's available
             if (_passiveNode is not null)
             {
-                dataConsumersBuilder.Add(new PassiveNodeDataConsumer(_passiveNode));
+                if (await _passiveNode.ConnectAsync())
+                {
+                    dataConsumersBuilder.Add(new PassiveNodeDataConsumer(_passiveNode));
+                }
+                else
+                {
+                    await _logger.LogWarningAsync("PassiveNode was expected to connect but failed");
+                }
             }
 
             AsynchronousMessageBus concreteMessageBusService = new(
