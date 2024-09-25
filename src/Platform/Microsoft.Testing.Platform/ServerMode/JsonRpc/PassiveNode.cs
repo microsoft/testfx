@@ -10,7 +10,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal class PassiveNode
+internal class PassiveNode : IDisposable
 {
     private readonly IMessageHandlerFactory _messageHandlerFactory;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
@@ -98,6 +98,17 @@ internal class PassiveNode
         using (await _messageMonitor.LockAsync(cancellationToken))
         {
             await _messageHandler.WriteRequestAsync(notification, cancellationToken);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_messageHandler != null)
+        {
+            if (_messageHandler is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
         }
     }
 }

@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.ServerMode;
 
 namespace Microsoft.Testing.Platform.TestHostControllers;
 
-internal class PassiveNodeDataConsumer : IDataConsumer
+internal class PassiveNodeDataConsumer : IDataConsumer, IDisposable
 {
     private const string FileType = "file";
     private readonly PassiveNode? _passiveNode;
@@ -45,21 +45,21 @@ internal class PassiveNodeDataConsumer : IDataConsumer
         {
             case TestNodeFileArtifact testNodeFileArtifact:
                 {
-                    RunTestAttachment runTestAttachment = new($"file://{testNodeFileArtifact.FileInfo.FullName}", dataProducer.Uid, FileType, testNodeFileArtifact.DisplayName, testNodeFileArtifact.Description);
+                    RunTestAttachment runTestAttachment = new(testNodeFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, testNodeFileArtifact.DisplayName, testNodeFileArtifact.Description);
                     await _passiveNode.SendAttachmentsAsync(new TestsAttachments([runTestAttachment]), cancellationToken);
                     break;
                 }
 
             case SessionFileArtifact sessionFileArtifact:
                 {
-                    RunTestAttachment runTestAttachment = new($"file://{sessionFileArtifact.FileInfo.FullName}", dataProducer.Uid, FileType, sessionFileArtifact.DisplayName, sessionFileArtifact.Description);
+                    RunTestAttachment runTestAttachment = new(sessionFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, sessionFileArtifact.DisplayName, sessionFileArtifact.Description);
                     await _passiveNode.SendAttachmentsAsync(new TestsAttachments([runTestAttachment]), cancellationToken);
                     break;
                 }
 
             case FileArtifact fileArtifact:
                 {
-                    RunTestAttachment runTestAttachment = new($"file://{fileArtifact.FileInfo.FullName}", dataProducer.Uid, FileType, fileArtifact.DisplayName, fileArtifact.Description);
+                    RunTestAttachment runTestAttachment = new(fileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, fileArtifact.DisplayName, fileArtifact.Description);
                     await _passiveNode.SendAttachmentsAsync(new TestsAttachments([runTestAttachment]), cancellationToken);
                     break;
                 }
@@ -68,4 +68,7 @@ internal class PassiveNodeDataConsumer : IDataConsumer
                 break;
         }
     }
+
+    public void Dispose()
+        => _passiveNode?.Dispose();
 }

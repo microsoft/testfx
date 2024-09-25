@@ -21,6 +21,7 @@ namespace Microsoft.Testing.Platform.ServerMode;
 internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvider, IServerTestHost serverTestHost, Guid runId, ITask task) : IDataConsumer, ITestSessionLifetimeHandler, IDisposable
 {
     private const int TestNodeUpdateDelayInMs = 200;
+    private const string FileType = "file";
 
     private readonly ConcurrentDictionary<TestNodeUid, TestNodeStateStatistics> _testNodeUidToStateStatistics = new();
     private readonly ConcurrentDictionary<TestNodeUid, byte> _discoveredTestNodeUids = new();
@@ -224,15 +225,15 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         }
         else if (value is SessionFileArtifact sessionFileArtifact)
         {
-            Artifacts.Add(new Artifact(sessionFileArtifact.FileInfo.FullName, dataProducer.Uid, "file", sessionFileArtifact.DisplayName, sessionFileArtifact.Description));
+            Artifacts.Add(new Artifact(sessionFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, sessionFileArtifact.DisplayName, sessionFileArtifact.Description));
         }
         else if (value is FileArtifact file)
         {
-            Artifacts.Add(new Artifact(file.FileInfo.FullName, dataProducer.Uid, "file", file.DisplayName, file.Description));
+            Artifacts.Add(new Artifact(file.FileInfo.FullName, dataProducer.Uid, FileType, file.DisplayName, file.Description));
         }
         else if (value is TestNodeFileArtifact testNodeFileArtifact)
         {
-            Artifacts.Add(new Artifact(testNodeFileArtifact.FileInfo.FullName, dataProducer.Uid, "file", testNodeFileArtifact.DisplayName, testNodeFileArtifact.Description));
+            Artifacts.Add(new Artifact(testNodeFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, testNodeFileArtifact.DisplayName, testNodeFileArtifact.Description));
         }
     }
 

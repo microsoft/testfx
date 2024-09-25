@@ -131,21 +131,25 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             };
 
             List<IDataConsumer> dataConsumersBuilder = [.. _testHostsInformation.DataConsumer];
-            dataConsumersBuilder.Add(new PassiveNodeDataConsumer(_passiveNode));
 
+            // We add the IPlatformOutputDevice after all users extensions.
             IPlatformOutputDevice? display = ServiceProvider.GetServiceInternal<IPlatformOutputDevice>();
             if (display is IDataConsumer dataConsumerDisplay)
             {
                 dataConsumersBuilder.Add(dataConsumerDisplay);
             }
 
-            IPushOnlyProtocol? pushOnlyProtocol = ServiceProvider.GetService<IPushOnlyProtocol>();
             // We register the DotnetTestDataConsumer as last to ensure that it will be the last one to consume the data.
+            IPushOnlyProtocol? pushOnlyProtocol = ServiceProvider.GetService<IPushOnlyProtocol>();
             if (pushOnlyProtocol?.IsServerMode == true)
             {
-                RoslynDebug.Assert(pushOnlyProtocol is not null);
-
                 dataConsumersBuilder.Add(await pushOnlyProtocol.GetDataConsumerAsync());
+            }
+
+            // If we're in server mode jsonrpc we add as last consumer the PassiveNodeDataConsumer for the attachments.
+            if (_passiveNode is not null)
+            {
+                dataConsumersBuilder.Add(new PassiveNodeDataConsumer(_passiveNode));
             }
 
             AsynchronousMessageBus concreteMessageBusService = new(
