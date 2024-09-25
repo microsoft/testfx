@@ -12,6 +12,9 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
+/// <summary>
+/// MSTEST0018: <inheritdoc cref="Resources.DynamicDataShouldBeValidTitle"/>.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
@@ -202,8 +205,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (!member.IsStatic
-            || member.DeclaredAccessibility != Accessibility.Public)
+        if (!member.IsStatic)
         {
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(DataMemberSignatureRule, declaringType.Name, memberName));
             return;
