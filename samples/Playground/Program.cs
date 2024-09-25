@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
-using Microsoft.Testing.Platform.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using MSTest.Acceptance.IntegrationTests.Messages.V100;
