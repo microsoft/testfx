@@ -18,7 +18,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [FileExtension(".exe")]
 public class MSTestDiscoverer : ITestDiscoverer
 {
-
     internal static IConfiguration? Configuration { get; private set; }
 
     /// <summary>
