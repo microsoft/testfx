@@ -384,7 +384,7 @@ Erreur : {1}</target>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="needs-review-translation">Parallélisation des tests activée pour {0} (Workers : {1}, Étendue : {2}).</target>
+        <target state="translated">Parallélisation des tests activée pour {0} (Workers : {1}, Étendue : {2}).</target>
         <note>`Workers` is a setting name that shouldn't be localized. 'Scope' is a setting name that shouldn't be localized.</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
