@@ -384,8 +384,8 @@ Hata: {1}</target>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="translated">{0} için Test Paralelleştirme etkin (Çalışanlar: {1}, Kapsam: {2}).</target>
-        <note />
+        <target state="needs-review-translation">{0} için Test Paralelleştirme etkin (Çalışanlar: {1}, Kapsam: {2}).</target>
+        <note>`Workers` is a setting name that shouldn't be localized. 'Scope' is a setting name that shouldn't be localized.</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
