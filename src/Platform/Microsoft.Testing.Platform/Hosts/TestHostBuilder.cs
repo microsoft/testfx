@@ -392,6 +392,19 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             systemEnvironment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{testHostControllerInfo.GetTestHostControllerPID(true)}") != "1")
             && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
+            PassiveNode? passiveNode = null;
+            if (hasServerFlag && isJsonRpcProtocol)
+            {
+                // Build the IMessageHandlerFactory for the PassiveNode
+                IMessageHandlerFactory messageHandlerFactory = ((ServerModeManager)ServerMode).Build(serviceProvider);
+                passiveNode = new PassiveNode(
+                    messageHandlerFactory,
+                    testApplicationCancellationTokenSource,
+                    processHandler,
+                    systemMonitorAsyncFactory,
+                    loggerFactory.CreateLogger<PassiveNode>());
+            }
+
             // Clone the service provider to avoid to add the message bus proxy to the main service provider.
             var testHostControllersServiceProvider = (ServiceProvider)serviceProvider.Clone();
 
@@ -404,7 +417,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             if (testHostControllers.RequireProcessRestart)
             {
                 testHostControllerInfo.IsCurrentProcessTestHostController = true;
-                TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, systemEnvironment, loggerFactory, systemClock);
+                TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, passiveNode, systemEnvironment, loggerFactory, systemClock);
 
                 await LogTestHostCreatedAsync(
                     serviceProvider,
