@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Xml;
 using System.Xml.Linq;
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -265,6 +266,11 @@ public class MSTestSettings
     internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger)
     {
         RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
+        IConfiguration? testConfig = MSTestDiscoverer.Configuration ?? MSTestExecutor.Configuration;
+        if (testConfig != null && context?.RunSettings == null)
+        {
+            // throw;
+        }
 
         if (context?.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
         {

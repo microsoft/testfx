@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -17,6 +18,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [FileExtension(".exe")]
 public class MSTestDiscoverer : ITestDiscoverer
 {
+
+    internal static IConfiguration? Configuration { get; private set; }
+
     /// <summary>
     /// Discovers the tests available from the provided source. Not supported for .xap source.
     /// </summary>
@@ -26,12 +30,15 @@ public class MSTestDiscoverer : ITestDiscoverer
     /// <param name="discoverySink">Used to send testcases and discovery related events back to Discoverer manager.</param>
     [System.Security.SecurityCritical]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "Discovery context can be null.")]
-    public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
+    public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) => MSTestDiscoverer.DiscoverTests(sources, discoveryContext, logger, discoverySink, null);
+
+    internal static void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration)
     {
         ValidateArg.NotNull(sources, "sources");
         ValidateArg.NotNull(logger, "logger");
         ValidateArg.NotNull(discoverySink, "discoverySink");
 
+        Configuration = configuration;
         if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger))
         {
             new UnitTestDiscoverer().DiscoverTests(sources, logger, discoverySink, discoveryContext);
