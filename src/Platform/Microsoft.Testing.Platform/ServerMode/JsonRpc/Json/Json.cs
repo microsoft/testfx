@@ -88,6 +88,8 @@ internal sealed class Json
                 (JsonRpcStrings.SupportsDiscovery, capabilities.SupportsDiscovery),
                 (JsonRpcStrings.MultiRequestSupport, capabilities.MultiRequestSupport),
                 (JsonRpcStrings.VSTestProviderSupport, capabilities.VSTestProviderSupport),
+                (JsonRpcStrings.AttachmentsSupport, capabilities.SupportsAttachments),
+                (JsonRpcStrings.MultiConnectionProvider, capabilities.MultiConnectionProvider),
             });
 
         _serializers[typeof(Artifact)] = new JsonObjectSerializer<Artifact>(artifact =>
@@ -334,6 +336,22 @@ internal sealed class Json
                 (JsonRpcStrings.ProcessId, info.ProcessId),
             });
 
+        _serializers[typeof(TestsAttachments)] = new JsonObjectSerializer<TestsAttachments>(info =>
+            new (string, object?)[]
+            {
+                 (JsonRpcStrings.Attachments, info.Attachments),
+            });
+
+        _serializers[typeof(RunTestAttachment)] = new JsonObjectSerializer<RunTestAttachment>(info =>
+            new (string, object?)[]
+            {
+                    (JsonRpcStrings.Uri, info.Uri),
+                    (JsonRpcStrings.Producer, info.Producer),
+                    (JsonRpcStrings.Type, info.Type),
+                    (JsonRpcStrings.DisplayName, info.DisplayName),
+                    (JsonRpcStrings.Description, info.Description),
+            });
+
         // Serializers
         _serializers[typeof(string)] = new JsonValueSerializer<string>((w, v) => w.WriteStringValue(v));
         _serializers[typeof(bool)] = new JsonValueSerializer<bool>((w, v) => w.WriteBooleanValue(v));
@@ -474,7 +492,9 @@ internal sealed class Json
           (json, jsonElement) => new ServerTestingCapabilities(
                         SupportsDiscovery: json.Bind<bool>(jsonElement, JsonRpcStrings.SupportsDiscovery),
                         MultiRequestSupport: json.Bind<bool>(jsonElement, JsonRpcStrings.MultiRequestSupport),
-                        VSTestProviderSupport: json.Bind<bool>(jsonElement, JsonRpcStrings.VSTestProviderSupport)));
+                        VSTestProviderSupport: json.Bind<bool>(jsonElement, JsonRpcStrings.VSTestProviderSupport),
+                        SupportsAttachments: json.Bind<bool>(jsonElement, JsonRpcStrings.AttachmentsSupport),
+                        MultiConnectionProvider: json.Bind<bool>(jsonElement, JsonRpcStrings.MultiConnectionProvider)));
 
         _deserializers[typeof(DiscoverRequestArgs)] = new JsonElementDeserializer<DiscoverRequestArgs>((json, jsonElement) =>
         {

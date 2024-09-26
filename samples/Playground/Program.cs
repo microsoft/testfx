@@ -4,6 +4,9 @@
 using System.Reflection;
 
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -24,6 +27,9 @@ public class Program
             // Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
+
+            // Custom test host controller extension
+            // testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
 
             // Enable Trx
             // testApplicationBuilder.AddTrxReportProvider();
@@ -55,4 +61,39 @@ public class Program
             return 0;
         }
     }
+}
+
+public class OutOfProc : ITestHostProcessLifetimeHandler, IDataProducer
+{
+    private readonly IMessageBus _messageBus;
+
+    public string Uid
+        => nameof(OutOfProc);
+
+    public string Version
+        => "1.0.0";
+
+    public string DisplayName
+        => nameof(OutOfProc);
+
+    public string Description
+        => nameof(OutOfProc);
+
+    public Type[] DataTypesProduced
+        => [typeof(FileArtifact)];
+
+    public Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken)
+        => Task.CompletedTask;
+
+    public Task<bool> IsEnabledAsync()
+        => Task.FromResult(true);
+
+    public OutOfProc(IMessageBus messageBus)
+        => _messageBus = messageBus;
+
+    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+        => await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(@"C:\sampleFile"), "Sample", "sample description"));
+
+    public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+        => Task.CompletedTask;
 }
