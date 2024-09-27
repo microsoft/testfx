@@ -271,28 +271,34 @@ public class MSTestSettings
             throw new InvalidOperationException(Resource.DuplicateConfigurationError);
         }
 
-        if (context?.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
+        if (context?.RunSettings != null && !StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
         {
-            // This will contain default adapter settings
-            CurrentSettings = new MSTestSettings();
+            MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias, logger);
+
+            // If a user specifies MSTestV2 in the runsettings, then prefer that over the v1 settings.
+            if (aliasSettings != null)
+            {
+                CurrentSettings = aliasSettings;
+            }
+            else
+            {
+                MSTestSettings? settings = GetSettings(context.RunSettings.SettingsXml, SettingsName, logger);
+
+                CurrentSettings = settings ?? new MSTestSettings();
+            }
+
+            SetGlobalSettings(context.RunSettings.SettingsXml, CurrentSettings, logger);
             return;
         }
 
-        MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias, logger);
-
-        // If a user specifies MSTestV2 in the runsettings, then prefer that over the v1 settings.
-        if (aliasSettings != null)
+        if (configuration is not null)
         {
-            CurrentSettings = aliasSettings;
-        }
-        else
-        {
-            MSTestSettings? settings = GetSettings(context.RunSettings.SettingsXml, SettingsName, logger);
-
-            CurrentSettings = settings ?? new MSTestSettings();
+            return;
         }
 
-        SetGlobalSettings(context.RunSettings.SettingsXml, CurrentSettings, logger);
+        // This will contain default adapter settings
+        CurrentSettings = new MSTestSettings();
+        return;
     }
 
     /// <summary>
