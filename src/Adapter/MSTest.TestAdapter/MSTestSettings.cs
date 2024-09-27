@@ -254,7 +254,7 @@ public class MSTestSettings
     /// The discovery context that contains the runsettings.
     /// </param>
     [Obsolete("this function will be removed in v4.0.0")]
-    public static void PopulateSettings(IDiscoveryContext? context) => PopulateSettings(context, null);
+    public static void PopulateSettings(IDiscoveryContext? context) => PopulateSettings(context, null, null);
 
     /// <summary>
     /// Populate adapter settings from the context.
@@ -263,11 +263,10 @@ public class MSTestSettings
     /// <param name="logger"> The logger for messages. </param>
     /// The discovery context that contains the runsettings.
     /// </param>
-    internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger)
+    internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger, IConfiguration? configuration)
     {
         RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
-        IConfiguration? testConfig = MSTestDiscoverer.Configuration ?? MSTestExecutor.Configuration;
-        if (testConfig != null && context?.RunSettings == null)
+        if (configuration != null && context?.RunSettings == null)
         {
             // throw;
         }

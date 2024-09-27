@@ -17,8 +17,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [ExtensionUri(Constants.ExecutorUriString)]
 public class MSTestExecutor : ITestExecutor
 {
-    internal static IConfiguration? Configuration { get; private set; }
-
     private readonly CancellationToken _cancellationToken;
 
     /// <summary>
@@ -56,8 +54,7 @@ public class MSTestExecutor : ITestExecutor
         ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
         ValidateArg.NotNullOrEmpty(tests, "tests");
 
-        Configuration = configuration;
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle))
+        if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration))
         {
             return;
         }
@@ -70,8 +67,7 @@ public class MSTestExecutor : ITestExecutor
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from sources.");
         ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
         ValidateArg.NotNullOrEmpty(sources, "sources");
-        Configuration = configuration;
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle))
+        if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration))
         {
             return;
         }

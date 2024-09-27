@@ -18,8 +18,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [FileExtension(".exe")]
 public class MSTestDiscoverer : ITestDiscoverer
 {
-    internal static IConfiguration? Configuration { get; private set; }
-
     /// <summary>
     /// Discovers the tests available from the provided source. Not supported for .xap source.
     /// </summary>
@@ -37,8 +35,7 @@ public class MSTestDiscoverer : ITestDiscoverer
         ValidateArg.NotNull(logger, "logger");
         ValidateArg.NotNull(discoverySink, "discoverySink");
 
-        Configuration = configuration;
-        if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger))
+        if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger, configuration))
         {
             new UnitTestDiscoverer().DiscoverTests(sources, logger, discoverySink, discoveryContext);
         }
