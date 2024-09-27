@@ -740,10 +740,12 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();
 
-        // Build the message hub
+        // Build the message bus
         // If we're running discovery command line we don't want to process any messages coming from the adapter so we filter out all extensions
         // adding a custom message bus that will simply forward to the output display for better performance
-        if (serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
+        if (serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+            // In case of server mode the discovery is handled by the ServerHost using the standard message bus
+            && !testFrameworkBuilderData.IsJsonRpcProtocol)
         {
             ListTestsMessageBus concreteMessageBusService = new(
                 serviceProvider.GetTestFramework(),
