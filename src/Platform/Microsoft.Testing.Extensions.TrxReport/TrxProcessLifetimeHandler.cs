@@ -91,9 +91,7 @@ internal sealed class TrxProcessLifetimeHandler :
            // TrxReportGenerator is enabled only when trx report is enabled
            _commandLineOptions.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)
            // TestController is not used when we run in server mode
-           && !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey)
-           // If crash dump is not enabled we run trx in-process only
-           && _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName));
+           && !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey));
 #pragma warning restore SA1114 // Parameter list should follow declaration
 
     public Task BeforeTestHostProcessStartAsync(CancellationToken cancellation)
@@ -164,6 +162,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 adapterSupportTrxCapability: null,
                 new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
                 _startTime,
+                testHostProcessInformation.ExitCode,
                 cancellation);
 
             await _messageBus.PublishAsync(
@@ -194,6 +193,7 @@ internal sealed class TrxProcessLifetimeHandler :
                false,
                new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
                _startTime,
+               testHostProcessInformation.ExitCode,
                cancellation);
 
             await trxReportGeneratorEngine.AddArtifactsAsync(trxFile, artifacts);

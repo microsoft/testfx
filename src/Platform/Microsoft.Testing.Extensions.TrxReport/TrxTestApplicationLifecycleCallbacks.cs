@@ -29,10 +29,7 @@ internal class TrxTestApplicationLifecycleCallbacks : ITestApplicationLifecycleC
            commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName) &&
 
            // TestController is not used when we run in server mode
-           !commandLineOptionsService.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) &&
-
-           // If crash dump is not enabled we run trx in-process only
-           commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
+           !commandLineOptionsService.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
 
         _environment = environment;
     }

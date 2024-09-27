@@ -38,6 +38,7 @@ internal sealed class TrxReportGenerator :
     private readonly IOutputDevice _outputDisplay;
     private readonly ITestFramework _testFramework;
     private readonly ITestFrameworkCapabilities _testFrameworkCapabilities;
+    private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly TrxTestApplicationLifecycleCallbacks? _trxTestApplicationLifecycleCallbacks;
     private readonly ILogger<TrxReportGenerator> _logger;
     private readonly List<TestNodeUpdateMessage> _tests = [];
@@ -62,6 +63,7 @@ internal sealed class TrxReportGenerator :
         IOutputDevice outputDisplay,
         ITestFramework testFramework,
         ITestFrameworkCapabilities testFrameworkCapabilities,
+        ITestApplicationProcessExitCode testApplicationProcessExitCode,
         // Can be null in case of server mode
         TrxTestApplicationLifecycleCallbacks? trxTestApplicationLifecycleCallbacks,
         ILogger<TrxReportGenerator> logger)
@@ -75,6 +77,7 @@ internal sealed class TrxReportGenerator :
         _outputDisplay = outputDisplay;
         _testFramework = testFramework;
         _testFrameworkCapabilities = testFrameworkCapabilities;
+        _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _trxTestApplicationLifecycleCallbacks = trxTestApplicationLifecycleCallbacks;
         _logger = logger;
         _isEnabled = commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName);
@@ -184,13 +187,11 @@ internal sealed class TrxReportGenerator :
         {
             await _logger.LogDebugAsync($"""
 PlatformCommandLineProvider.ServerOption: {_commandLineOptionsService.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey)}
-CrashDumpCommandLineOptions.CrashDumpOptionName: {_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)}
 TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)}
 """);
         }
 
-        if (!_commandLineOptionsService.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) &&
-            _commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName))
+        if (!_commandLineOptionsService.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey))
         {
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
@@ -232,28 +233,14 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
 
             ApplicationStateGuard.Ensure(_testStartTime is not null);
 
+            int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
             _clock, _tests.ToArray(), _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension, _artifactsByTestNode,
-            _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, cancellationToken);
+            _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, exitCode, cancellationToken);
             string reportFileName = await trxReportGeneratorEngine.GenerateReportAsync();
-
-            if (
-
-                // TestController is not used when we run in server mode
-                _commandLineOptionsService.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) ||
-
-                // If crash dump is not enabled we run trx in-process only
-                !_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName))
-            {
-                // In server mode we report the trx in-process
-                await _messageBus.PublishAsync(this, new SessionFileArtifact(sessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription));
-            }
-            else
-            {
-                ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
-                ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
-                await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<ReportFileNameRequest, VoidResponse>(new ReportFileNameRequest(reportFileName), cancellationToken);
-            }
+            ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
+            ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
+            await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<ReportFileNameRequest, VoidResponse>(new ReportFileNameRequest(reportFileName), cancellationToken);
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
         {

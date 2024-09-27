@@ -38,9 +38,7 @@ internal sealed class TrxEnvironmentVariableProvider : ITestHostEnvironmentVaria
             // TrxReportGenerator is enabled only when trx report is enabled
             _commandLineOptions.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)
             // TestController is not used when we run in server mode
-            && !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey)
-            // If crash dump is not enabled we run trx in-process only
-            && _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName));
+            && !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey));
 #pragma warning restore SA1114 // Parameter list should follow declaration
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)

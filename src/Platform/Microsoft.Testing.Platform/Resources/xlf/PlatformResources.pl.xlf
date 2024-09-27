@@ -730,6 +730,11 @@ Prawidłowe wartości to „Normalne”, „Szczegółowe”. Wartość domyśln
         <target state="translated">Wynik aplikacji testowej</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestApplicationResultNotReady">
+        <source>The ITestApplicationResult has not been built yet.</source>
+        <target state="new">The ITestApplicationResult has not been built yet.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
         <target state="translated">Tryb VSTest obsługuje tylko jeden element TestApplicationBuilder na proces</target>

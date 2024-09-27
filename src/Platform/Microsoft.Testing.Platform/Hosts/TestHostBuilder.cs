@@ -324,6 +324,10 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             serviceProvider.AddService(nonCooperativeParentProcessListener);
         }
 
+        // Add TestApplicationResultProxy
+        TestApplicationResultProxy testApplicationResultProxy = new();
+        serviceProvider.AddService(testApplicationResultProxy);
+
         // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
 
         // ============= SELECT AND RUN THE ACTUAL MODE ===============//
@@ -730,7 +734,11 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetEnvironment());
-        await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder);
+
+        // Set the concrete TestApplicationResult
+        TestApplicationResultProxy testApplicationResultProxy = serviceProvider.GetRequiredService<TestApplicationResultProxy>();
+        testApplicationResultProxy.SetTestApplicationProcessExitCode(testApplicationResult);
+        await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResultProxy, serviceProvider, dataConsumersBuilder);
 
         // We register the data consumer handler if we're connected to the dotnet test pipe
         if (pushOnlyProtocolDataConsumer is not null)
