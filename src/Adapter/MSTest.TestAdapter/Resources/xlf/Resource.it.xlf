@@ -56,6 +56,11 @@ ma ha ricevuto {4} argomenti, con tipi "{5}".</target>
         <target state="translated">Il metodo di inizializzazione della classe "{0}.{1}" è stato annullato</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateConfigurationError">
+        <source>You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.</source>
+        <target state="new">You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
         <target state="translated">'[DynamicData]' membro di riferimento '{0}.{1}' deve restituire 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;' o 'IEnumerable&lt;ValueTuple&gt;'</target>

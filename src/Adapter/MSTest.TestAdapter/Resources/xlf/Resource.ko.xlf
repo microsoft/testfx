@@ -56,6 +56,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">'클래스 초기화 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateConfigurationError">
+        <source>You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.</source>
+        <target state="new">You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
         <target state="translated">'[DynamicData]'이(가) '{0} 멤버를 참조했습니다.{1}'은(는) 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;' 또는 'IEnumerable&lt;ValueTuple&gt;'을 반환해야 합니다.</target>

@@ -56,6 +56,11 @@ ale liczba odebranych argumentów to {4} z typami „{5}”.</target>
         <target state="translated">Anulowano metodę inicjowania klasy „{0}.{1}”</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateConfigurationError">
+        <source>You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.</source>
+        <target state="new">You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
         <target state="translated">Przywołany element członkowski „{0}.{1}” „[DynamicData]” powinien zwrócić „IEnumerable&lt;object[]&gt;”, „IEnumerable&lt;Tuple&gt;” lub „IEnumerable&lt;ValueTuple&gt;”</target>

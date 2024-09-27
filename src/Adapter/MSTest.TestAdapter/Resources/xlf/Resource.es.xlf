@@ -56,6 +56,11 @@ pero recibió {4} argumento(s), con los tipos "{5}".</target>
         <target state="translated">Método de inicialización de clase "{0}.{1}" se canceló</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateConfigurationError">
+        <source>You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.</source>
+        <target state="new">You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
         <target state="translated">El miembro ''{0}.{1}'' de '[DynamicData]' al que se hace referencia debe devolver ''IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;'' o ''IEnumerable&lt;ValueTuple&gt;''</target>

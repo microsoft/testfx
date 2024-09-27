@@ -266,9 +266,9 @@ public class MSTestSettings
     internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger, IConfiguration? configuration)
     {
         RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
-        if (configuration != null && context?.RunSettings == null)
+        if (configuration != null && context?.RunSettings != null)
         {
-            // throw;
+            throw new InvalidOperationException(Resource.DuplicateConfigurationError);
         }
 
         if (context?.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))

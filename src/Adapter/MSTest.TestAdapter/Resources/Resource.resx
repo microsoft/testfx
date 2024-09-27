@@ -414,4 +414,7 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="DynamicDataShouldBeValidMessageFormat_MemberType" xml:space="preserve">
     <value>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</value>
   </data>
+  <data name="DuplicateConfigurationError" xml:space="preserve">
+    <value>You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.</value>
+  </data>
 </root>
