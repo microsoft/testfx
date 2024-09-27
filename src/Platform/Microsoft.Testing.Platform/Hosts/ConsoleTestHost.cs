@@ -66,7 +66,8 @@ internal sealed class ConsoleTestHost(
             _testFrameworkManager,
             _testHostManager,
             new MessageBusProxy(),
-            ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)));
+            ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
+            false));
 
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
