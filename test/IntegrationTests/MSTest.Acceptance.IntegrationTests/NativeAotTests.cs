@@ -23,9 +23,9 @@ public class NativeAotTests : AcceptanceTestBase
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="MSTest.Engine" Version="$MSTestEngineVersion$" />
-        <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestEngineVersion$" />
+        <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestSourceGenerationVersion$" />
         <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+        <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     </ItemGroup>
 </Project>
 
@@ -101,7 +101,7 @@ public class UnitTest1
                     .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
                     .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent.Arguments)
                     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                    .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion),
+                    .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
                     addPublicFeeds: true);
 
                 await DotnetCli.RunAsync(

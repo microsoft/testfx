@@ -11,6 +11,6 @@
     <MicrosoftTestingExtensionsCodeCoverageVersion>17.12.5-preview.24475.1</MicrosoftTestingExtensionsCodeCoverageVersion>
     <!-- comment to facilitate merge conflicts -->
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24475.2</MicrosoftTestingInternalFrameworkVersion>
-    <MSTestEngineVersion>1.0.0-alpha.24473.2</MSTestEngineVersion>
+    <MSTestSourceGenerationVersion>1.0.0-alpha.24477.1</MSTestSourceGenerationVersion>
   </PropertyGroup>
 </Project>

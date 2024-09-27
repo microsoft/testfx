@@ -19,10 +19,10 @@
                       Version="$(MicrosoftTestingPlatformVersion)" VersionOverride="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="MSTest.TestFramework" Sdk="MSTest"
                       Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.Engine" Sdk="MSTest"
-                      Version="$(MSTestEngineVersion)" VersionOverride="$(MSTestEngineVersion)" />
+    <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest"
+                      Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
     <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest"
-                      Version="$(MSTestEngineVersion)" VersionOverride="$(MSTestEngineVersion)" />
+                      Version="$(MSTestSourceGenerationVersion)" VersionOverride="$(MSTestSourceGenerationVersion)" />
     <!--
       Most of the times this dependency is not required but we leave the opportunity to align the version of the platform being used.
       At the moment this is mainly used for our acceptance tests because the locally/CI built version ends with -dev or -ci which is
