@@ -94,7 +94,7 @@
 
     <!-- Localization -->
     <!-- All TFMs share the same resx + TestAdapter depends on PlatformServices + TestFramework so all resources are available -->
-    <file src="net462\**\*.resources.dll" target="\build\_localization\" />
+    <file src="net462\**\Microsoft.VisualStudio.TestPlatform.*.resources.dll" target="\build\_localization\" />
 
     <!-- Source code -->
     <file src="$srcroot$\**\*.cs" target="src" />
