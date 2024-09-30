@@ -198,6 +198,20 @@ public class CollectionAssertTests : TestContainer
         comparer.ToString(); // no warning
     }
 
+    public void CollectionAssertAreEqual_WithIgnoreCaseComparer_DoesNotThrow()
+    {
+        List<string> expected = ["one", "two"];
+        List<string> actual = ["ONE", "tWo"];
+        CollectionAssert.AreEqual(expected, actual, StringComparer.OrdinalIgnoreCase);
+    }
+
+    public void CollectionAssertAreEqual_WithCaseSensetiveComparer_Fails()
+    {
+        List<string> expected = ["one", "two"];
+        List<string> actual = ["ONE", "tWo"];
+        VerifyThrows(() => CollectionAssert.AreEqual(expected, actual, StringComparer.Ordinal));
+    }
+
     public void CollectionAssertAreEqualComparerMessageNullabilityPostConditions()
     {
         ICollection? collection1 = GetCollection();
@@ -262,6 +276,20 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection2 = GetNotMatchingNestedLists();
 
         CollectionAssert.AreNotEqual(collection1, collection2);
+    }
+
+    public void CollectionAssertAreNotEqual_WithIgnoreCaseComparer_Fails()
+    {
+        List<string> expected = ["one", "two"];
+        List<string> actual = ["ONE", "tWo"];
+        VerifyThrows(() => CollectionAssert.AreNotEqual(expected, actual, StringComparer.OrdinalIgnoreCase));
+    }
+
+    public void CollectionAssertAreNotEqual_WithCaseSensitiveComparer_Passes()
+    {
+        List<string> expected = ["one", "two"];
+        List<string> actual = ["ONE", "tWo"];
+        CollectionAssert.AreNotEqual(expected, actual, StringComparer.Ordinal);
     }
 
     public void CollectionAssertAreNotEqual_EqualNestedLists_Fails()
