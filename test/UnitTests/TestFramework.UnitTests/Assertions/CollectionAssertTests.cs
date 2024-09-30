@@ -205,6 +205,13 @@ public class CollectionAssertTests : TestContainer
         CollectionAssert.AreEqual(expected, actual, StringComparer.OrdinalIgnoreCase);
     }
 
+    public void CollectionAssertAreEqual_WithNestedDiffSizedArrays_Fails()
+    {
+        int[][] expected = [[1, 2], [3, 4], [5, 6], [7, 8], [9]];
+        int[][] actual = [[1, 2], [999, 999, 999, 999, 999], [5, 6], [], [9]];
+        VerifyThrows(() => CollectionAssert.AreEqual(expected, actual));
+    }
+
     public void CollectionAssertAreEqual_WithCaseSensetiveComparer_Fails()
     {
         List<string> expected = ["one", "two"];
