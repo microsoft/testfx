@@ -287,8 +287,8 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
-        <source>Member '{0}' is already exist in the base class</source>
-        <target state="translated">Üye '{0}' zaten temel sınıfta var</target>
+        <source>Member '{0}' already exists in the base class</source>
+        <target state="needs-review-translation">Üye '{0}' zaten temel sınıfta var</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">
