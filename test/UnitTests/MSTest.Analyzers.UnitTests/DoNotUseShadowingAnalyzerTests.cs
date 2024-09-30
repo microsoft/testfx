@@ -48,6 +48,37 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButOneIsGeneric_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            [TestClass]
+            public class BaseTest
+            {
+                protected TObject CreateObject<TObject>()
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            [TestClass]
+            public class ExtendedTest : BaseTest
+            {
+                private SomeType CreateObject()
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public class SomeType
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_WithParameters_Diagnostic()
     {
         string code = """
