@@ -33,22 +33,37 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
+internal class TestHostBuilder : ITestHostBuilder
 {
-    private readonly IFileSystem _fileSystem = fileSystem;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
+    private readonly IFileSystem _fileSystem;
+    private readonly IRuntimeFeature _runtimeFeature;
+    private readonly IProcessHandler _processHandler;
+    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
+    private readonly ConfigurationManager _configurationManager;
+
+    public TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo)
+    {
+        _fileSystem = fileSystem;
+        _runtimeFeature = runtimeFeature;
+        _processHandler = processHandler;
+        _testApplicationModuleInfo = testApplicationModuleInfo;
+        _configurationManager = new(fileSystem, testApplicationModuleInfo);
+
+        Configuration = _configurationManager;
+        CommandLine = new CommandLineManager(runtimeFeature, testApplicationModuleInfo);
+    }
 
     public ITestFrameworkManager? TestFramework { get; set; }
 
     public ITestHostManager TestHost { get; } = new TestHostManager();
 
-    public IConfigurationManager Configuration { get; } = new ConfigurationManager(fileSystem, testApplicationModuleInfo);
+    public IConfigurationManager Configuration { get; }
 
     public ILoggingManager Logging { get; } = new LoggingManager();
 
     public IPlatformOutputDeviceManager OutputDisplay { get; } = new PlatformOutputDeviceManager();
 
-    public ICommandLineManager CommandLine { get; } = new CommandLineManager(runtimeFeature, testApplicationModuleInfo);
+    public ICommandLineManager CommandLine { get; }
 
     public ITelemetryManager Telemetry { get; } = new TelemetryManager();
 
@@ -97,8 +112,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.TryAddService(systemConsole);
         SystemTask systemTask = new();
         serviceProvider.TryAddService(systemTask);
-        serviceProvider.TryAddService(runtimeFeature);
-        serviceProvider.TryAddService(processHandler);
+        serviceProvider.TryAddService(_runtimeFeature);
+        serviceProvider.TryAddService(_processHandler);
         serviceProvider.TryAddService(_fileSystem);
         serviceProvider.TryAddService(_testApplicationModuleInfo);
         TestHostControllerInfo testHostControllerInfo = new(loggingState.CommandLineParseResult);
@@ -126,17 +141,17 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             await logger.LogInformationAsync($"Setting RegisterEnvironmentVariablesConfigurationSource: '{testApplicationOptions.Configuration.ConfigurationSources.RegisterEnvironmentVariablesConfigurationSource}'");
         }
 
+        // Add the default json configuration source in 2nd place. This source will read the standard test platform json configuration file.
+        _configurationManager.PrependConfigurationSource(() => new JsonConfigurationSource(_testApplicationModuleInfo, _fileSystem, loggingState.FileLoggerProvider));
+
         // By default the env var configuration source is enabled, check if we have to disable it.
         if (testApplicationOptions.Configuration.ConfigurationSources.RegisterEnvironmentVariablesConfigurationSource)
         {
-            Configuration.AddConfigurationSource(() => new EnvironmentVariablesConfigurationSource(systemEnvironment));
+            _configurationManager.PrependConfigurationSource(() => new EnvironmentVariablesConfigurationSource(systemEnvironment));
         }
 
-        // Add the default json configuration source, this will read the standard test platform json configuration file.
-        Configuration.AddConfigurationSource(() => new JsonConfigurationSource(_testApplicationModuleInfo, _fileSystem, loggingState.FileLoggerProvider));
-
         // Build the IConfiguration - we need special treatment because the configuration is needed by extensions.
-        var configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(loggingState.FileLoggerProvider);
+        var configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(loggingState.FileLoggerProvider, loggingState.CommandLineParseResult);
         serviceProvider.TryAddService(configuration);
 
         // Current test platform is picky on unhandled exception, we will tear down the process in that case.
@@ -353,7 +368,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return toolsTestHost;
         }
 
-        var pushOnlyProtocol = new DotnetTestConnection(commandLineHandler, processHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
+        var pushOnlyProtocol = new DotnetTestConnection(commandLineHandler, _processHandler, environment, _testApplicationModuleInfo, testApplicationCancellationTokenSource);
         await pushOnlyProtocol.AfterCommonServiceSetupAsync();
         if (pushOnlyProtocol.IsServerMode)
         {
@@ -446,7 +461,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // If we're under test controllers and currently we're inside the started test host we connect to the out of process
         // test controller manager.
         NamedPipeClient? testControllerConnection = await ConnectToTestHostProcessMonitorIfAvailableAsync(
-            processHandler,
+            _processHandler,
             testApplicationCancellationTokenSource,
             loggerFactory.CreateLogger(nameof(ConnectToTestHostProcessMonitorIfAvailableAsync)),
             testHostControllerInfo,

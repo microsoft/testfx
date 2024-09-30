@@ -3,38 +3,58 @@
 
 using System.Xml.Linq;
 
+using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.Configurations;
 
 internal sealed class RunSettingsConfigurationProvider : IConfigurationSource, IConfigurationProvider
 {
-    private readonly string _runsettings;
+    private string? _runSettingsFilePath;
+    private string? _resultsDirectory;
 
-    public RunSettingsConfigurationProvider(string runSettings) => _runsettings = runSettings;
-
-    /// <inheritdoc />
-    public string Uid { get; } = nameof(RunSettingsConfigurationProvider);
-
-    /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
-
-    /// <inheritdoc />
-    public string DisplayName { get; } = "VSTest Helpers: runsettings configuration";
+    public RunSettingsConfigurationProvider(IExtension extension)
+    {
+        Uid = extension.Uid;
+        Version = extension.Version;
+        DisplayName = extension.DisplayName;
+        Description = extension.Description;
+    }
 
     /// <inheritdoc />
-    public string Description { get; } = "Configuration source to bridge VSTest xml runsettings configuration into Microsoft Testing Platform configuration model.";
+    public string Uid { get; }
+
+    /// <inheritdoc />
+    public string Version { get; }
+
+    /// <inheritdoc />
+    public string DisplayName { get; }
+
+    /// <inheritdoc />
+    public string Description { get; }
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     /// <inheritdoc />
-    public Task LoadAsync() => Task.CompletedTask;
+    public Task LoadAsync()
+    {
+        var document = XDocument.Parse(_runsettings);
+        value = document.Element("RunSettings")?.Element("RunConfiguration")?.Element("ResultsDirectory")?.Value;
+    }
 
     /// <inheritdoc />
     public bool TryGet(string key, out string? value)
     {
+        if (_runSettingsFilePath is null)
+        {
+            value = null;
+            return false;
+        }
+
         if (key == PlatformConfigurationConstants.PlatformResultDirectory)
         {
             var document = XDocument.Parse(_runsettings);
@@ -50,6 +70,13 @@ internal sealed class RunSettingsConfigurationProvider : IConfigurationSource, I
     }
 
     /// <inheritdoc />
-    public IConfigurationProvider Build()
-        => new RunSettingsConfigurationProvider(_runsettings);
+    public IConfigurationProvider Build(CommandLineParseResult commandLineParseResult)
+    {
+        if (commandLineParseResult.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? runSettingsFilePath))
+        {
+            _runSettingsFilePath = runSettingsFilePath[0];
+        }
+
+        return this;
+    }
 }

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -19,7 +20,9 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
 
     public void AddConfigurationSource(Func<IConfigurationSource> source) => _configurationSources.Add(source);
 
-    internal async Task<IConfiguration> BuildAsync(IFileLoggerProvider? syncFileLoggerProvider)
+    public void PrependConfigurationSource(Func<IConfigurationSource> source) => _configurationSources.Insert(0, source);
+
+    internal async Task<IConfiguration> BuildAsync(IFileLoggerProvider? syncFileLoggerProvider, CommandLineParseResult commandLineParseResult)
     {
         List<IConfigurationProvider> configurationProviders = [];
         JsonConfigurationProvider? defaultJsonConfiguration = null;
@@ -33,7 +36,7 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
 
             await serviceInstance.TryInitializeAsync();
 
-            IConfigurationProvider configurationProvider = serviceInstance.Build();
+            IConfigurationProvider configurationProvider = serviceInstance.Build(commandLineParseResult);
             await configurationProvider.LoadAsync();
             if (configurationProvider is JsonConfigurationProvider configuration)
             {
