@@ -21,7 +21,7 @@
       <Uri>https://github.com/microsoft/testanywhere</Uri>
       <Sha>c13e51348015685e1ec9a71377c6e7a2ef52cfd2</Sha>
     </Dependency>
-    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24473.2">
+    <Dependency Name="MSTest.SourceGeneration" Version="1.0.0-alpha.24480.1">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
       <Sha>aa2fcc8616d988b234bc1d218465b20c56d0b82f</Sha>
     </Dependency>
