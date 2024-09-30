@@ -402,8 +402,8 @@ Note that this is slowing down the test execution.</source>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">진단 로깅을 사용합니다. 기본 로그 수준은 'Trace'입니다.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
+        <target state="needs-review-translation">진단 로깅을 사용합니다. 기본 로그 수준은 'Trace'입니다.
 파일은 log_[MMddHHssfff].diag라는 이름으로 출력 디렉터리에 쓰여집니다.</target>
         <note />
       </trans-unit>
