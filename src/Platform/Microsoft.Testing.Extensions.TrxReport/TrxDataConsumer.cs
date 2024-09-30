@@ -187,11 +187,13 @@ internal sealed class TrxReportGenerator :
         {
             await _logger.LogDebugAsync($"""
 PlatformCommandLineProvider.ServerOption: {_commandLineOptionsService.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey)}
+CrashDumpCommandLineOptions.CrashDumpOptionName: {_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)}
 TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)}
 """);
         }
 
-        if (!_commandLineOptionsService.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey))
+        if (!_commandLineOptionsService.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) &&
+            _commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName))
         {
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
