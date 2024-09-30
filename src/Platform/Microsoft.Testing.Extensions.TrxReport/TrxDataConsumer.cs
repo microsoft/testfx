@@ -238,9 +238,22 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
             _clock, _tests.ToArray(), _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension, _artifactsByTestNode,
             _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, exitCode, cancellationToken);
             string reportFileName = await trxReportGeneratorEngine.GenerateReportAsync();
-            ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
-            ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
-            await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<ReportFileNameRequest, VoidResponse>(new ReportFileNameRequest(reportFileName), cancellationToken);
+
+            if (
+                // TestController is not used when we run in server mode
+                _commandLineOptionsService.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) ||
+                // If crash dump is not enabled we run trx in-process only
+                !_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName))
+            {
+                // In server mode we report the trx in-process
+                await _messageBus.PublishAsync(this, new SessionFileArtifact(sessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription));
+            }
+            else
+            {
+                ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
+                ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
+                await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<ReportFileNameRequest, VoidResponse>(new ReportFileNameRequest(reportFileName), cancellationToken);
+            }
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
         {
