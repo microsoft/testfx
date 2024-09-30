@@ -1641,8 +1641,11 @@ public sealed class CollectionAssert
 
                 object? curExpected = expectedEnum.Current;
                 object? curActual = actualEnum.Current;
-
-                if (curExpected is IEnumerable curExpectedEnum && curActual is IEnumerable curActualEnum)
+                if (comparer.Compare(curExpected, curActual) == 0)
+                {
+                    position++;
+                }
+                else if (curExpected is IEnumerable curExpectedEnum && curActual is IEnumerable curActualEnum)
                 {
                     stack.Push(new(expectedEnum, actualEnum, position + 1));
                     stack.Push(new(curExpectedEnum.GetEnumerator(), curActualEnum.GetEnumerator(), 0));
@@ -1656,8 +1659,6 @@ public sealed class CollectionAssert
                         position);
                     return false;
                 }
-
-                position++;
             }
 
             if (actualEnum.MoveNext() && !expectedEnum.MoveNext())
