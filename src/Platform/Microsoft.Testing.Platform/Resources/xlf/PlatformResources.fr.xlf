@@ -730,6 +730,11 @@ Les valeurs valides sont « Normal » et « Détaillé ». La valeur par dé
         <target state="translated">Résultat de l’application de test</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestApplicationResultNotReady">
+        <source>The ITestApplicationResult has not been built yet.</source>
+        <target state="new">The ITestApplicationResult has not been built yet.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
         <target state="translated">Le mode VSTest ne prend en charge qu’un seul TestApplicationBuilder par processus</target>

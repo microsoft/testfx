@@ -730,6 +730,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">测试应用程序结果</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestApplicationResultNotReady">
+        <source>The ITestApplicationResult has not been built yet.</source>
+        <target state="new">The ITestApplicationResult has not been built yet.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
         <target state="translated">VSTest 模式仅支持每个进程一个 TestApplicationBuilder</target>
