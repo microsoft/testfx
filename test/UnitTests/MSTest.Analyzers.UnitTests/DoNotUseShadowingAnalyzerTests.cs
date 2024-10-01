@@ -67,7 +67,7 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButBaseIsPrivate_Diagnostic()
+    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButBaseMethodIsPrivate_NoDiagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -79,14 +79,14 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
             [TestClass]
             public class DerivedClass : BaseClass
             {
-                public void [|Method|]() { }
+                public void Method() { }
             }
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButDerivedClassIsPrivate_Diagnostic()
+    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButDerivedMethodIsPrivate_Diagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -99,6 +99,101 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
             public class DerivedClass : BaseClass
             {
                 private void [|Method|]() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButDerivedMethodIsProtected_AndBaseMethodIsInternal_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                internal void Method() { }
+            }
+
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                protected void [|Method|]() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassHaveSamePropertyAsBaseClassMethod__ButBasePropertyIsProtected_AndDerivedPropertyIsInternal_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                protected int Property { get; }
+            }
+
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                internal int [|Property|] { get; }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassHaveSamePropertyAsBaseClassMethod_ButBothArePrivate_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                private int Property { get; }
+            }
+
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                private int Property { get; }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassHaveSamePropertyAsBaseClassMethod_ButBasePropertyIsPrivate_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                private int Property { get; }
+            }
+            
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                public int Property { get; }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassHaveSamePropertyAsBaseClassMethod_ButDerivedPropertyIsPrivate_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                public int Property { get; }
+            }
+            
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                private int [|Property|] { get; }
             }
             """;
 
