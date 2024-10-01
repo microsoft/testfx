@@ -29,7 +29,7 @@ Execute a .NET Test Application.
 Options:
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
-        The file will be written in the output directory with the name log_[MMddHHssfff].diag
+        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
     --diagnostic-filelogger-synchronouswrite
         Force the built-in file logger to write the log synchronously.
         Useful for scenario where you don't want to lose any log (i.e. in case of crash).
@@ -285,7 +285,7 @@ Execute a .NET Test Application.
 Options:
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
-        The file will be written in the output directory with the name log_[MMddHHssfff].diag
+        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
     --diagnostic-filelogger-synchronouswrite
         Force the built-in file logger to write the log synchronously.
         Useful for scenario where you don't want to lose any log (i.e. in case of crash).
@@ -422,7 +422,7 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Enable the diagnostic logging. The default log level is 'Trace'.
-        The file will be written in the output directory with the name log_[MMddHHssfff].diag
+        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
       --diagnostic-filelogger-synchronouswrite
         Arity: 0
         Hidden: False
