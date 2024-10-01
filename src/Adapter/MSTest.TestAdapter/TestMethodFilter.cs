@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -118,6 +119,7 @@ internal class TestMethodFilter
     /// <param name="context">Discovery context.</param>
     /// <param name="logger">The logger to log exception messages too.</param>
     /// <returns>Filter expression.</returns>
+    [UnconditionalSuppressMessage("Aot", "IL2072:DoNotUseDynamicMembers", Justification = "Tested it, it works.")]
     private ITestCaseFilterExpression? GetTestCaseFilterFromDiscoveryContext(IDiscoveryContext context, IMessageLogger logger)
     {
         try
