@@ -293,6 +293,10 @@ public class MSTestSettings
 
         if (configuration is not null)
         {
+            MSTestSettings? settings = GetSettingsFromConfig(configuration, logger);
+
+            CurrentSettings = settings ?? new MSTestSettings();
+
             return;
         }
 
@@ -841,5 +845,162 @@ public class MSTestSettings
         {
             logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, disableParallelizationString, "DisableParallelization"));
         }
+    }
+
+    private static void ParseBooleanSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<bool> setSetting)
+    {
+        if (configuration[key] is string value)
+        {
+            if (bool.TryParse(value, out bool result))
+            {
+                setSetting(result);
+            }
+            else
+            {
+                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+            }
+        }
+    }
+
+    private static void ParseIntegerSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<int> setSetting)
+    {
+        if (configuration[key] is string value)
+        {
+            if (int.TryParse(value, out int result) && result > 0)
+            {
+                setSetting(result);
+            }
+            else
+            {
+                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+            }
+        }
+    }
+
+    private static void ParseStringSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<string> setSetting)
+    {
+        if (configuration[key] is string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                setSetting(value);
+            }
+            else
+            {
+                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Convert the parameter xml to TestSettings.
+    /// </summary>
+    /// <param name="configuration">Configuration to load the settings from.</param>
+    /// <param name="logger"> The logger for messages. </param>
+    /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
+    private static MSTestSettings GetSettingsFromConfig(IConfiguration configuration, IMessageLogger? logger)
+    {
+        // Expected format of the json is: -
+        //
+        // "mstest" : {
+        //  "timeout" : {
+        //      "assemblyInitialize" : strictly positive int,
+        //      "assemblyCleanup" : strictly positive int,
+        //      "classInitialize" : strictly positive int,
+        //      "classCleanup" : strictly positive int,
+        //      "testInitialize" : strictly positive int,
+        //      "testCleanup" : strictly positive int,
+        //      "test" : strictly positive int
+        //  },
+        //  "parallelism" : {
+        //      "enabled": true/false,
+        //      "workers": positive int,
+        //      "scope": method/class,
+        //  },
+        //  ... remaining settings
+        // }
+        MSTestSettings settings = new();
+
+        ParseBooleanSetting(configuration, "captureTraceOutput", logger, result => settings.CaptureDebugTraces = result);
+        ParseBooleanSetting(configuration, "enableBaseClassTestMethodsFromOtherAssemblies", logger, result => settings.EnableBaseClassTestMethodsFromOtherAssemblies = result);
+        ParseBooleanSetting(configuration, "forcedLegacyMode", logger, result => settings.ForcedLegacyMode = result);
+        ParseBooleanSetting(configuration, "mapInconclusiveToFailed", logger, result => settings.MapInconclusiveToFailed = result);
+        ParseBooleanSetting(configuration, "mapNotRunnableToFailed", logger, result => settings.MapNotRunnableToFailed = result);
+        ParseBooleanSetting(configuration, "treatDiscoveryWarningsAsErrors", logger, result => settings.TreatDiscoveryWarningsAsErrors = result);
+        ParseBooleanSetting(configuration, "considerEmptyDataSourceAsInconclusive", logger, result => settings.ConsiderEmptyDataSourceAsInconclusive = result);
+        ParseBooleanSetting(configuration, "treatClassAndAssemblyCleanupWarningsAsErrors", logger, result => settings.TreatClassAndAssemblyCleanupWarningsAsErrors = result);
+        ParseBooleanSetting(configuration, "considerFixturesAsSpecialTests", logger, result => settings.ConsiderFixturesAsSpecialTests = result);
+        ParseBooleanSetting(configuration, "cooperativeCancellationTimeout", logger, result => settings.CooperativeCancellationTimeout = result);
+        ParseBooleanSetting(configuration, "orderTestsByNameInClass", logger, result => settings.OrderTestsByNameInClass = result);
+        ParseBooleanSetting(configuration, "parallelism:enabled", logger, result => settings.OrderTestsByNameInClass = result);
+
+        ParseIntegerSetting(configuration, "timeout:test", logger, result => settings.TestTimeout = result);
+        ParseIntegerSetting(configuration, "timeout:assemblyCleanup", logger, result => settings.AssemblyCleanupTimeout = result);
+        ParseIntegerSetting(configuration, "timeout:assemblyInitialize", logger, result => settings.AssemblyInitializeTimeout = result);
+        ParseIntegerSetting(configuration, "timeout:classInitialize", logger, result => settings.ClassInitializeTimeout = result);
+        ParseIntegerSetting(configuration, "timeout:classCleanup", logger, result => settings.ClassCleanupTimeout = result);
+        ParseIntegerSetting(configuration, "timeout:testInitialize", logger, result => settings.TestInitializeTimeout = result);
+        ParseIntegerSetting(configuration, "timeout:testCleanup", logger, result => settings.TestCleanupTimeout = result);
+
+        ParseStringSetting(configuration, "settingsFile", logger, fileName => settings.TestSettingsFile = fileName);
+
+        if (configuration["classCleanupLifecycle"] is string classCleanupLifecycle)
+        {
+            if (TryParseEnum(classCleanupLifecycle, out ClassCleanupBehavior lifecycle))
+            {
+                settings.ClassCleanupLifecycle = lifecycle;
+            }
+            else
+            {
+                throw new AdapterSettingsException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.InvalidClassCleanupLifecycleValue,
+                    classCleanupLifecycle,
+#if NET
+                    string.Join(", ", Enum.GetNames<ClassCleanupBehavior>())));
+#else
+                    string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
+#endif
+            }
+        }
+
+        if (configuration["parallelism:workers"] is string workers)
+        {
+            settings.ParallelizationWorkers = int.TryParse(workers, out int parallelWorkers)
+                ? parallelWorkers == 0
+                    ? Environment.ProcessorCount
+                    : parallelWorkers > 0
+                        ? parallelWorkers
+                        : throw new AdapterSettingsException(string.Format(
+                                                CultureInfo.CurrentCulture,
+                                                Resource.InvalidParallelWorkersValue,
+                                                workers))
+                : throw new AdapterSettingsException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.InvalidParallelWorkersValue,
+                    workers));
+        }
+
+        if (configuration["parallelism:scope"] is string value)
+        {
+            if (TryParseEnum(value, out ExecutionScope scope))
+            {
+                settings.ParallelizationScope = scope;
+            }
+            else
+            {
+                throw new AdapterSettingsException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.InvalidParallelScopeValue,
+                    value,
+#if NET
+                    string.Join(", ", Enum.GetNames<ExecutionScope>())));
+#else
+                    string.Join(", ", EnumPolyfill.GetNames<ExecutionScope>())));
+#endif
+            }
+        }
+
+        return settings;
     }
 }
