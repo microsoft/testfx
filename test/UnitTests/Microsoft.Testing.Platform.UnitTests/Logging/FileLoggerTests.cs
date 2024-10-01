@@ -72,7 +72,7 @@ public class FileLoggerTests : TestBase, IDisposable
             .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 16)))
             .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)));
 
-        string expectedFileName = $"{LogPrefix}_{_mockClock.Object.UtcNow.ToString("MMddHHssfff", CultureInfo.InvariantCulture)}.diag";
+        string expectedFileName = $"{LogPrefix}_{_mockClock.Object.UtcNow.ToString("yyMMddHHmmssfff", CultureInfo.InvariantCulture)}.diag";
         _mockStream.Setup(x => x.Name).Returns(expectedFileName);
         _mockFileStreamFactory
             .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
