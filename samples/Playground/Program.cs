@@ -25,7 +25,7 @@ public class Program
         if (Environment.GetEnvironmentVariable("TESTSERVERMODE") != "1")
         {
             // To attach to the children
-            Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
+            // Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 

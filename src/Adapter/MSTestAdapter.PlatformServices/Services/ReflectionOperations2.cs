@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -38,6 +39,8 @@ internal class ReflectionOperations2 : ReflectionOperations, IReflectionOperatio
     public PropertyInfo? GetDeclaredProperty(Type type, string propertyName)
         => type.GetTypeInfo().GetDeclaredProperty(propertyName);
 
+    [UnconditionalSuppressMessage("Aot", "IL2026:DoNotUseGetDefinedTypes", Justification = "We access all the types we need in metadata, so this is preserved and works.")]
+
     public Type[] GetDefinedTypes(Assembly assembly)
         => assembly.DefinedTypes.ToArray();
 
@@ -50,9 +53,11 @@ internal class ReflectionOperations2 : ReflectionOperations, IReflectionOperatio
     public PropertyInfo? GetRuntimeProperty(Type classType, string testContextPropertyName)
         => classType.GetProperty(testContextPropertyName);
 
+    [UnconditionalSuppressMessage("Aot", "IL2026:DoNotUseGetDefinedTypes", Justification = "We access all the types we need in metadata, so this is preserved and works.")]
     public Type? GetType(string typeName)
         => Type.GetType(typeName);
 
+    [UnconditionalSuppressMessage("Aot", "IL2026:DoNotUseGetDefinedTypes", Justification = "We access all the types we need in metadata, so this is preserved and works.")]
     public Type? GetType(Assembly assembly, string typeName)
         => assembly.GetType(typeName);
 

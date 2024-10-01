@@ -20,6 +20,11 @@ public class NativeAotTests : AcceptanceTestBase
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <PublishAot>true</PublishAot>
+        <!--
+            This makes sure that the project is referencing MSTest.TestAdapter.dll when MSTest.TestAdapter nuget is imported,
+            without this the dll is just copied into the output folder.
+        -->
+        <EnableMSTestRunner>true</EnableMSTestRunner>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
@@ -28,26 +33,6 @@ public class NativeAotTests : AcceptanceTestBase
         <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     </ItemGroup>
 </Project>
-
-#file Program.cs
-using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.InteropServices;
-
-using Microsoft.Testing.Framework;
-using Microsoft.Testing.Internal.Framework;
-using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Capabilities;
-using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
-
-using NativeAotTests;
-
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.AddTestFramework(new SourceGeneratedTestNodesBuilder());
-using ITestApplication app = await builder.BuildAsync();
-return await app.RunAsync();
 
 #file TestClass1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;

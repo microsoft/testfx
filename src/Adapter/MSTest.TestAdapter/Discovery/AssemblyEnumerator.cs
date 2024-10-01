@@ -11,6 +11,9 @@ using System.Text;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+#if NET8_0_OR_GREATER
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter;
+#endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
@@ -300,8 +303,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return testMethodInfo.Value != null && TryProcessTestDataSourceTests(test, testMethodInfo.Value, tests);
     }
 
+    [UnconditionalSuppressMessage("Aot", "IL3000:DoNotUseLocation", Justification = "Fixture tests are not supported in NativeAOT mode.")]
+
     private static void AddFixtureTests(TestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> fixtureTests)
     {
+#if NET8_0_OR_GREATER
+        ApplicationStateGuard.Ensure(System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported, "Fixture tests are not supported in NativeAOT mode.");
+#endif
         string assemblyName = testMethodInfo.Parent.Parent.Assembly.GetName().Name!;
         string assemblyLocation = testMethodInfo.Parent.Parent.Assembly.Location;
         string className = testMethodInfo.Parent.ClassType.Name;
