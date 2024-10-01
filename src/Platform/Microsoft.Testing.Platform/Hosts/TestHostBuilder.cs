@@ -324,6 +324,10 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             serviceProvider.AddService(nonCooperativeParentProcessListener);
         }
 
+        // Add TestApplicationResultProxy
+        TestApplicationResultProxy testApplicationResultProxy = new();
+        serviceProvider.AddService(testApplicationResultProxy);
+
         // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
 
         // ============= SELECT AND RUN THE ACTUAL MODE ===============//
@@ -730,7 +734,11 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetEnvironment());
-        await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder);
+
+        // Set the concrete TestApplicationResult
+        TestApplicationResultProxy testApplicationResultProxy = serviceProvider.GetRequiredService<TestApplicationResultProxy>();
+        testApplicationResultProxy.SetTestApplicationProcessExitCode(testApplicationResult);
+        await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResultProxy, serviceProvider, dataConsumersBuilder);
 
         // We register the data consumer handler if we're connected to the dotnet test pipe
         if (pushOnlyProtocolDataConsumer is not null)
@@ -740,10 +748,12 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();
 
-        // Build the message hub
+        // Build the message bus
         // If we're running discovery command line we don't want to process any messages coming from the adapter so we filter out all extensions
         // adding a custom message bus that will simply forward to the output display for better performance
-        if (serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
+        if (serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+            // In case of server mode the discovery is handled by the ServerHost using the standard message bus
+            && !testFrameworkBuilderData.IsJsonRpcProtocol)
         {
             ListTestsMessageBus concreteMessageBusService = new(
                 serviceProvider.GetTestFramework(),

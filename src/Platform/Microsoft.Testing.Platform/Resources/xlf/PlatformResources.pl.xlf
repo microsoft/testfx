@@ -402,9 +402,9 @@ Pamiętaj, że to spowalnia wykonywanie testu.</target>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">Włącz rejestrowanie diagnostyczne. Domyślny poziom dziennika to „Śledzenie”.
-Plik zostanie zapisany w katalogu wyjściowym o nazwie log_[MMddHHssfff].diag</target>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -728,6 +728,11 @@ Prawidłowe wartości to „Normalne”, „Szczegółowe”. Wartość domyśln
       <trans-unit id="TestApplicationResultDisplayName">
         <source>Test application result</source>
         <target state="translated">Wynik aplikacji testowej</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationResultNotReady">
+        <source>The ITestApplicationResult has not been built yet.</source>
+        <target state="new">The ITestApplicationResult has not been built yet.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">

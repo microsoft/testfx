@@ -174,7 +174,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 //------------------------------------------------------------------------------
 
 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-public static class SelfRegisteredExtensions
+internal static class SelfRegisteredExtensions
 {
     public static void AddSelfRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
     {
@@ -193,7 +193,7 @@ public static class SelfRegisteredExtensions
 '------------------------------------------------------------------------------
 
 <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
-Public Module SelfRegisteredExtensions
+Friend Module SelfRegisteredExtensions
 
     <System.Runtime.CompilerServices.Extension>
     Public Sub AddSelfRegisteredExtensions(ByVal builder As Global.Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, ByVal args As Global.System.String())

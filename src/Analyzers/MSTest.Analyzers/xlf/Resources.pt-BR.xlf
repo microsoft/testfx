@@ -287,8 +287,8 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
-        <source>Member '{0}' is already exist in the base class</source>
-        <target state="translated">O membro "{0}" já existe na classe base</target>
+        <source>Member '{0}' already exists in the base class</source>
+        <target state="new">Member '{0}' already exists in the base class</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">

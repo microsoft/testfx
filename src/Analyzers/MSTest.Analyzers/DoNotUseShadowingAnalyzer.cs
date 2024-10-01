@@ -112,7 +112,8 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
         }
 
         // Compare methods
-        if (member is IMethodSymbol methodSymbol && baseMember is IMethodSymbol baseMethodSymbol)
+        if (member is IMethodSymbol methodSymbol && baseMember is IMethodSymbol baseMethodSymbol && methodSymbol.IsGenericMethod == baseMethodSymbol.IsGenericMethod
+            && !(methodSymbol.DeclaredAccessibility == Accessibility.Private && baseMethodSymbol.DeclaredAccessibility == Accessibility.Private))
         {
             return methodSymbol.Name == baseMethodSymbol.Name &&
                    methodSymbol.Parameters.Length == baseMethodSymbol.Parameters.Length &&

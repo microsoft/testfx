@@ -48,6 +48,94 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButBothArePrivate_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                private void Method() { }
+            }
+
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                private void Method() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButBaseIsPrivate_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                private void Method() { }
+            }
+
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                public void [|Method|]() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButDerivedClassIsPrivate_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                public void Method() { }
+            }
+
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                private void [|Method|]() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButOneIsGeneric_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            [TestClass]
+            public class BaseTest
+            {
+                protected TObject CreateObject<TObject>()
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            [TestClass]
+            public class ExtendedTest : BaseTest
+            {
+                private SomeType CreateObject()
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public class SomeType
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_WithParameters_Diagnostic()
     {
         string code = """

@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using MSTest.Acceptance.IntegrationTests.Messages.V100;
@@ -24,12 +25,12 @@ public class Program
         if (Environment.GetEnvironmentVariable("TESTSERVERMODE") != "1")
         {
             // To attach to the children
-            // Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
+            Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
             // Custom test host controller extension
-            // testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
+            testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
 
             // Enable Trx
             // testApplicationBuilder.AddTrxReportProvider();

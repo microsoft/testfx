@@ -402,9 +402,9 @@ Note that this is slowing down the test execution.</source>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">診断ログを有効にします。既定のログ レベルは 'Trace' です。
-ファイルは、出力ディレクトリに log_[MMddHHssfff].diag という名前で書き込まれます。</target>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -729,6 +729,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="TestApplicationResultDisplayName">
         <source>Test application result</source>
         <target state="translated">テスト アプリケーションの結果</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationResultNotReady">
+        <source>The ITestApplicationResult has not been built yet.</source>
+        <target state="new">The ITestApplicationResult has not been built yet.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">

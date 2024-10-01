@@ -767,7 +767,7 @@ namespace Microsoft.Testing.Platform.Resources {
         
         /// <summary>
         ///   Looks up a localized string similar to Enable the diagnostic logging. The default log level is &apos;Trace&apos;.
-        ///The file will be written in the output directory with the name log_[MMddHHssfff].diag.
+        ///The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.
         /// </summary>
         internal static string PlatformCommandLineDiagnosticOptionDescription {
             get {
@@ -1308,6 +1308,15 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string TestApplicationResultDisplayName {
             get {
                 return ResourceManager.GetString("TestApplicationResultDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ITestApplicationResult has not been built yet..
+        /// </summary>
+        internal static string TestApplicationResultNotReady {
+            get {
+                return ResourceManager.GetString("TestApplicationResultNotReady", resourceCulture);
             }
         }
         

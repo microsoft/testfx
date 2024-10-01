@@ -402,9 +402,9 @@ Bunun test yürütmesini yavaşlatacağını unutmayın.</target>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">Tanılama günlük kaydını etkinleştirir. Varsayılan günlük düzeyi: 'İzleme'.
-Dosya, çıkış dizinine log_[MMddHHssfff].diag adıyla yazılır</target>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -728,6 +728,11 @@ Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Nor
       <trans-unit id="TestApplicationResultDisplayName">
         <source>Test application result</source>
         <target state="translated">Test uygulaması sonucu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationResultNotReady">
+        <source>The ITestApplicationResult has not been built yet.</source>
+        <target state="new">The ITestApplicationResult has not been built yet.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">

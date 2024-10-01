@@ -13,7 +13,8 @@ internal interface ITestApplicationProcessExitCode : IDataConsumer
 
     Task SetTestAdapterTestSessionFailureAsync(string errorMessage);
 
-    Task<int> GetProcessExitCodeAsync();
+    // If we decide to open this extension we should make it Task<int> GetProcessExitCodeAsync();
+    int GetProcessExitCode();
 
     Statistics GetStatistics();
 }
