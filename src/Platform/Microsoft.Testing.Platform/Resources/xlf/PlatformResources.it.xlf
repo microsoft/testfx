@@ -402,8 +402,8 @@ Tenere presente ciò rallenta l'esecuzione del test.</target>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">Abilitare la registrazione diagnostica. Il livello di log predefinito è ‘Trace’.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
+        <target state="needs-review-translation">Abilitare la registrazione diagnostica. Il livello di log predefinito è ‘Trace’.
 Il file verrà scritto nella directory di output con il nome log_[MMddHHssfff].diag</target>
         <note />
       </trans-unit>
