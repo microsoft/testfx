@@ -67,7 +67,7 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButBaseIsPrivate_Diagnostic()
+    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButBaseMethodIsPrivate_Diagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -79,14 +79,14 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
             [TestClass]
             public class DerivedClass : BaseClass
             {
-                public void [|Method|]() { }
+                public void Method() { }
             }
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButDerivedClassIsPrivate_Diagnostic()
+    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButDerivedMethodIsPrivate_Diagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -99,6 +99,63 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
             public class DerivedClass : BaseClass
             {
                 private void [|Method|]() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassHaveSamePropertyAsBaseClassMethod_ButBothArePrivate_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                private int Method { get; }
+            }
+
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                private int Method { get; }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassHaveSamePropertyAsBaseClassMethod_ButBasePropertyIsPrivate_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                private int Method { get; }
+            }
+            
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                public int Method { get; }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassHaveSamePropertyAsBaseClassMethod_ButDerivedPropertyIsPrivate_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                public int Method { get; }
+            }
+            
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                private int [|Method|] { get; }
             }
             """;
 
