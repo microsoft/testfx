@@ -67,7 +67,7 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButBaseMethodIsPrivate_Diagnostic()
+    public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButBaseMethodIsPrivate_NoDiagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -111,32 +111,32 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             public class BaseClass
             {
-                private int Method { get; }
+                private int Property { get; }
             }
 
             [TestClass]
             public class DerivedClass : BaseClass
             {
-                private int Method { get; }
+                private int Property { get; }
             }
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenTestClassHaveSamePropertyAsBaseClassMethod_ButBasePropertyIsPrivate_Diagnostic()
+    public async Task WhenTestClassHaveSamePropertyAsBaseClassMethod_ButBasePropertyIsPrivate_NoDiagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             public class BaseClass
             {
-                private int Method { get; }
+                private int Property { get; }
             }
             
             [TestClass]
             public class DerivedClass : BaseClass
             {
-                public int Method { get; }
+                public int Property { get; }
             }
             """;
 
@@ -149,13 +149,13 @@ public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExe
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             public class BaseClass
             {
-                public int Method { get; }
+                public int Property { get; }
             }
             
             [TestClass]
             public class DerivedClass : BaseClass
             {
-                private int [|Method|] { get; }
+                private int [|Property|] { get; }
             }
             """;
 
