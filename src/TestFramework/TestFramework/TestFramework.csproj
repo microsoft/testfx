@@ -26,7 +26,7 @@
 
   <PropertyGroup>
     <!-- Enable AOT analyzer warnings to make sure we don't call APIs that would fail when we use source generator mode together with NativeAOT. -->
-    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">$(EnableIotAnalyzers)</IsAotCompatible>
+    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>

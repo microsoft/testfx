@@ -88,6 +88,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     public IEnumerable<object[]> GetData(MethodInfo methodInfo) => DynamicDataProvider.Instance.GetData(_dynamicDataDeclaringType, _dynamicDataSourceType, _dynamicDataSourceName, methodInfo);
 
     /// <inheritdoc />
+    [UnconditionalSuppressMessage("Aot", "IL2075:DoNotUseGetDefinedMethod", Justification = "We access all the types we need in metadata, so this is preserved and works.")]
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
     {
         if (DynamicDataDisplayName != null)
