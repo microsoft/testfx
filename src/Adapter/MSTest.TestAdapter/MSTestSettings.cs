@@ -849,7 +849,7 @@ public class MSTestSettings
 
     private static void ParseBooleanSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<bool> setSetting)
     {
-        if (configuration[key] is string value)
+        if (configuration[$"mstest:{key}"] is string value)
         {
             if (bool.TryParse(value, out bool result))
             {
@@ -864,7 +864,7 @@ public class MSTestSettings
 
     private static void ParseIntegerSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<int> setSetting)
     {
-        if (configuration[key] is string value)
+        if (configuration[$"mstest:{key}"] is string value)
         {
             if (int.TryParse(value, out int result) && result > 0)
             {
@@ -879,7 +879,7 @@ public class MSTestSettings
 
     private static void ParseStringSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<string> setSetting)
     {
-        if (configuration[key] is string value)
+        if (configuration[$"mstest:{key}"] is string value)
         {
             if (!string.IsNullOrEmpty(value))
             {
@@ -944,7 +944,7 @@ public class MSTestSettings
 
         ParseStringSetting(configuration, "settingsFile", logger, fileName => settings.TestSettingsFile = fileName);
 
-        if (configuration["classCleanupLifecycle"] is string classCleanupLifecycle)
+        if (configuration["mstest:classCleanupLifecycle"] is string classCleanupLifecycle)
         {
             if (TryParseEnum(classCleanupLifecycle, out ClassCleanupBehavior lifecycle))
             {
@@ -964,7 +964,7 @@ public class MSTestSettings
             }
         }
 
-        if (configuration["parallelism:workers"] is string workers)
+        if (configuration["mstest:parallelism:workers"] is string workers)
         {
             settings.ParallelizationWorkers = int.TryParse(workers, out int parallelWorkers)
                 ? parallelWorkers == 0
@@ -981,7 +981,7 @@ public class MSTestSettings
                     workers));
         }
 
-        if (configuration["parallelism:scope"] is string value)
+        if (configuration["mstest:parallelism:scope"] is string value)
         {
             if (TryParseEnum(value, out ExecutionScope scope))
             {
