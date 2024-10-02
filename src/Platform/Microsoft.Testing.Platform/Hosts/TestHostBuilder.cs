@@ -136,7 +136,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         Configuration.AddConfigurationSource(() => new JsonConfigurationSource(_testApplicationModuleInfo, _fileSystem, loggingState.FileLoggerProvider));
 
         // Build the IConfiguration - we need special treatment because the configuration is needed by extensions.
-        var configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(loggingState.FileLoggerProvider);
+        var configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(loggingState.FileLoggerProvider, loggingState.CommandLineParseResult);
         serviceProvider.TryAddService(configuration);
 
         // Current test platform is picky on unhandled exception, we will tear down the process in that case.
