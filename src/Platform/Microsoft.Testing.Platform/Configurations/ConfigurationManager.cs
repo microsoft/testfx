@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -19,9 +20,9 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
 
     public void AddConfigurationSource(Func<IConfigurationSource> source) => _configurationSources.Add(source);
 
-    internal async Task<IConfiguration> BuildAsync(IFileLoggerProvider? syncFileLoggerProvider)
+    internal async Task<IConfiguration> BuildAsync(IFileLoggerProvider? syncFileLoggerProvider, CommandLineParseResult commandLineParseResult)
     {
-        List<IConfigurationProvider> configurationProviders = [];
+        List<(IConfigurationProvider ConfigurationProvider, int Order)> configurationProviders = [];
         JsonConfigurationProvider? defaultJsonConfiguration = null;
         foreach (Func<IConfigurationSource> configurationSource in _configurationSources)
         {
@@ -33,14 +34,14 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
 
             await serviceInstance.TryInitializeAsync();
 
-            IConfigurationProvider configurationProvider = serviceInstance.Build();
+            IConfigurationProvider configurationProvider = await serviceInstance.BuildAsync(commandLineParseResult);
             await configurationProvider.LoadAsync();
             if (configurationProvider is JsonConfigurationProvider configuration)
             {
                 defaultJsonConfiguration = configuration;
             }
 
-            configurationProviders.Add(configurationProvider);
+            configurationProviders.Add((configurationProvider, serviceInstance.Order));
         }
 
         if (syncFileLoggerProvider is not null)
@@ -57,6 +58,6 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
 
         return defaultJsonConfiguration is null
             ? throw new InvalidOperationException(PlatformResources.ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage)
-            : new AggregatedConfiguration(configurationProviders.ToArray(), _testApplicationModuleInfo, _fileSystem);
+            : new AggregatedConfiguration(configurationProviders.OrderBy(x => x.Order).Select(x => x.ConfigurationProvider).ToArray(), _testApplicationModuleInfo, _fileSystem);
     }
 }
