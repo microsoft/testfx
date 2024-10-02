@@ -732,7 +732,7 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       </trans-unit>
       <trans-unit id="TestApplicationResultNotReady">
         <source>The ITestApplicationResult has not been built yet.</source>
-        <target state="new">The ITestApplicationResult has not been built yet.</target>
+        <target state="translated">尚未生成 ITestApplicationResult。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
