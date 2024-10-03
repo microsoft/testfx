@@ -148,16 +148,6 @@ public class MSTestAdapterSettings
         //       "deployTestSourceDependencies": true / false,
         //       "deleteDeploymentDirectoryAfterTestRunIsComplete": true / false
         //  },
-        // "assemblyResolution" : {
-        //     "directory" : {
-        //        "path" : "% HOMEDRIVE %\directory
-        //        "includeSubDirectories:  "true" // by default includeSubDirectories is false
-        //     },
-        //     "directory" : {
-        //        "path" : "% HOMEDRIVE %\directory
-        //        // by default includeSubDirectories is false
-        //      }
-        // },
         //  ... remaining settings
         // }
         MSTestAdapterSettings settings = new();
@@ -352,16 +342,28 @@ public class MSTestAdapterSettings
 
     private void ReadAssemblyResolutionPath(IConfiguration configuration)
     {
-        string? directorySection = configuration["mstest:assemblyResolution:directory"];
-        string? path = configuration["mstest:assemblyResolution:directory:path"];
-
-        if (!StringEx.IsNullOrEmpty(path))
+        // Expected format of the json is: -
+        //
+        // "mstest" : {
+        //    mstest: assemblyResolution [
+        //        { "path" : "..." , includeSub: "true" } ,
+        //        { "path" : "..." , includeSub: "true" } ,
+        //        { "path" : "..." , includeSub: "true" } ,
+        //        ...
+        //     ]
+        //  ... remaining settings
+        // }
+        int indx = 0;
+        while (configuration[$"mstest:assemblyResolution:{indx}:path"] is string path)
         {
-            // Default includeSubDirectories to false if not provided
-            bool includeSubDirectories = false;
-            ParseBooleanSetting(configuration, "mstest:assemblyResolution:directory:includeSubDirectories", result => includeSubDirectories = result);
+            if (!StringEx.IsNullOrEmpty(path))
+            {
+                // Default includeSubDirectories to false if not provided
+                bool includeSubDirectories = false;
+                ParseBooleanSetting(configuration, $"mstest:assemblyResolution:{indx}:includeSubDirectories", result => includeSubDirectories = result);
 
-            SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
+                SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
+            }
         }
     }
 }
