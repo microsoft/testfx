@@ -732,7 +732,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         TestSessionLifetimeHandlersContainer testSessionLifetimeHandlersContainer = new(testSessionLifetimeHandlers);
         serviceProvider.AddService(testSessionLifetimeHandlersContainer);
 
-        // Set the concrete TestApplicationResult
+        // Allow the ITestApplicationProcessExitCode to subscribe as IDataConsumer
         ITestApplicationProcessExitCode testApplicationResult = serviceProvider.GetRequiredService<ITestApplicationProcessExitCode>();
         await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder);
 
