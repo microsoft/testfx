@@ -732,7 +732,7 @@ Prawidłowe wartości to „Normalne”, „Szczegółowe”. Wartość domyśln
       </trans-unit>
       <trans-unit id="TestApplicationResultNotReady">
         <source>The ITestApplicationResult has not been built yet.</source>
-        <target state="new">The ITestApplicationResult has not been built yet.</target>
+        <target state="translated">Obiekt ITestApplicationResult nie został jeszcze skompilowany.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">

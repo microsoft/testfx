@@ -290,7 +290,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
         <source>Member '{0}' already exists in the base class</source>
-        <target state="new">Member '{0}' already exists in the base class</target>
+        <target state="translated">Das Element „{0}“ ist bereits in der Basisklasse vorhanden.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">

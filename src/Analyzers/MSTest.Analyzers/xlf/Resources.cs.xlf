@@ -288,7 +288,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
         <source>Member '{0}' already exists in the base class</source>
-        <target state="new">Member '{0}' already exists in the base class</target>
+        <target state="translated">Člen {0} už v základní (kořenové) třídě existuje.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">
