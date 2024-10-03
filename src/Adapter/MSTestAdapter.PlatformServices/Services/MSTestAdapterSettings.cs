@@ -345,7 +345,7 @@ public class MSTestAdapterSettings
         // Expected format of the json is: -
         //
         // "mstest" : {
-        //    mstest: assemblyResolution [
+        //    assemblyResolution [
         //        { "path" : "..." , includeSub: "true" } ,
         //        { "path" : "..." , includeSub: "true" } ,
         //        { "path" : "..." , includeSub: "true" } ,
