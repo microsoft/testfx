@@ -5,6 +5,7 @@
 using System.Globalization;
 using System.Xml;
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -122,6 +123,50 @@ public class MSTestAdapterSettings
                 }
             }
         }
+
+        return settings;
+    }
+
+    private static void ParseBooleanSetting(IConfiguration configuration, string key, Action<bool> setSetting)
+    {
+        if (configuration[$"mstest:{key}"] is string value)
+        {
+            if (bool.TryParse(value, out bool result))
+            {
+                setSetting(result);
+            }
+        }
+    }
+
+    internal static MSTestAdapterSettings ToSettings(IConfiguration configuration)
+    {
+        // Expected format of the json is: -
+        //
+        // "mstest" : {
+        //  "deployment" : {
+        //       "enabled": true / false,
+        //       "deployTestSourceDependencies": true / false,
+        //       "deleteDeploymentDirectoryAfterTestRunIsComplete": true / false
+        //  },
+        // "assemblyResolution" : {
+        //     "directory" : {
+        //        "path" : "% HOMEDRIVE %\directory
+        //        "includeSubDirectories:  "true" // by default includeSubDirectories is false
+        //     },
+        //     "directory" : {
+        //        "path" : "% HOMEDRIVE %\directory
+        //        // by default includeSubDirectories is false
+        //      }
+        // },
+        //  ... remaining settings
+        // }
+        MSTestAdapterSettings settings = new();
+
+        ParseBooleanSetting(configuration, "deployment:enabled", result => settings.DeploymentEnabled = result);
+        ParseBooleanSetting(configuration, "deployment:deployTestSourceDependencies", result => settings.DeployTestSourceDependencies = result);
+        ParseBooleanSetting(configuration, "deployment:deleteDeploymentDirectoryAfterTestRunIsComplete", result => settings.DeleteDeploymentDirectoryAfterTestRunIsComplete = result);
+
+        settings.ReadAssemblyResolutionPath(configuration);
 
         return settings;
     }
@@ -303,6 +348,21 @@ public class MSTestAdapterSettings
 
         // go to the end of the element.
         reader.ReadEndElement();
+    }
+
+    private void ReadAssemblyResolutionPath(IConfiguration configuration)
+    {
+        string? directorySection = configuration["mstest:assemblyResolution:directory"];
+        string? path = configuration["mstest:assemblyResolution:directory:path"];
+
+        if (!StringEx.IsNullOrEmpty(path))
+        {
+            // Default includeSubDirectories to false if not provided
+            bool includeSubDirectories = false;
+            ParseBooleanSetting(configuration, "mstest:assemblyResolution:directory:includeSubDirectories", result => includeSubDirectories = result);
+
+            SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
+        }
     }
 }
 #endif

@@ -183,4 +183,7 @@
   <data name="WrongNumberOfObjects" xml:space="preserve">
     <value>Wrong number of objects for permutation. Should be greater than zero.</value>
   </data>
+  <data name="InvalidValue" xml:space="preserve">
+    <value>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</value>
+  </data>
 </root>

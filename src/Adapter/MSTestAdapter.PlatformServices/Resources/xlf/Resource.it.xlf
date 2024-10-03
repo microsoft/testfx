@@ -82,6 +82,11 @@
         <target state="translated">MSTestAdapter ha rilevato un elemento imprevisto '{0}' nelle impostazioni '{1}'. Rimuovere l'elemento e riprovare.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="InvalidValue">
+        <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
+        <target state="new">Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MissingDeploymentDependency">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</source>
         <target state="translated">Problema di distribuzione dell'esecuzione dei test: l'assembly o il modulo '{0}' non è stato trovato. Motivo: {1}</target>

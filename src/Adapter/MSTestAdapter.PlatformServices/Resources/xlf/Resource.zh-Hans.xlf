@@ -82,6 +82,11 @@
         <target state="translated">MSTestAdapter 在其设置“{1}”中遇到意外的元素“{0}”。删除此元素，然后再试一次。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="InvalidValue">
+        <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
+        <target state="new">Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MissingDeploymentDependency">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</source>
         <target state="translated">测试运行部署问题: 找不到程序集或模块“{0}”。原因: {1}</target>
