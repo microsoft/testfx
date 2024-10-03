@@ -324,9 +324,13 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             serviceProvider.AddService(nonCooperativeParentProcessListener);
         }
 
-        // Add TestApplicationResultProxy
-        TestApplicationResultProxy testApplicationResultProxy = new();
-        serviceProvider.AddService(testApplicationResultProxy);
+        // Register the ITestApplicationResult
+        TestApplicationResult testApplicationResult = new(
+            platformOutputDevice,
+            serviceProvider.GetTestApplicationCancellationTokenSource(),
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetEnvironment());
+        serviceProvider.AddService(testApplicationResult);
 
         // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
 
@@ -728,17 +732,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         TestSessionLifetimeHandlersContainer testSessionLifetimeHandlersContainer = new(testSessionLifetimeHandlers);
         serviceProvider.AddService(testSessionLifetimeHandlersContainer);
 
-        // Register the ITestApplicationResult
-        TestApplicationResult testApplicationResult = new(
-            testFrameworkBuilderData.PlatformOutputDisplayService,
-            serviceProvider.GetTestApplicationCancellationTokenSource(),
-            serviceProvider.GetCommandLineOptions(),
-            serviceProvider.GetEnvironment());
-
         // Set the concrete TestApplicationResult
-        TestApplicationResultProxy testApplicationResultProxy = serviceProvider.GetRequiredService<TestApplicationResultProxy>();
-        testApplicationResultProxy.SetTestApplicationProcessExitCode(testApplicationResult);
-        await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResultProxy, serviceProvider, dataConsumersBuilder);
+        ITestApplicationProcessExitCode testApplicationResult = serviceProvider.GetRequiredService<ITestApplicationProcessExitCode>();
+        await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder);
 
         // We register the data consumer handler if we're connected to the dotnet test pipe
         if (pushOnlyProtocolDataConsumer is not null)
