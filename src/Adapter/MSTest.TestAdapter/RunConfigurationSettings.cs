@@ -162,7 +162,7 @@ public class RunConfigurationSettings
 
     private static RunConfigurationSettings ToSettings(IConfiguration configuration)
     {
-        // Expected format of the xml is: -
+        // Expected format of the json is: -
         // "mstest" : {
         //  "runConfiguration": {
         //    "collectSourceInformation": true,
