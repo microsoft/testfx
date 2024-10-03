@@ -730,11 +730,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">테스트 애플리케이션 결과</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestApplicationResultNotReady">
-        <source>The ITestApplicationResult has not been built yet.</source>
-        <target state="translated">ITestApplicationResult가 아직 빌드되지 않았습니다.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
         <target state="translated">VSTest 모드는 프로세스당 단일 TestApplicationBuilder만 지원합니다.</target>
