@@ -266,7 +266,6 @@ public class MSTestSettings
     /// </param>
     internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger, IConfiguration? configuration)
     {
-        RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
         if (configuration != null && context?.RunSettings != null)
         {
             throw new InvalidOperationException(Resource.DuplicateConfigurationError);
@@ -274,6 +273,8 @@ public class MSTestSettings
 
         if (context?.RunSettings != null && !StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
         {
+            RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
+
             MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias, logger);
 
             // If a user specifies MSTestV2 in the runsettings, then prefer that over the v1 settings.
@@ -294,6 +295,8 @@ public class MSTestSettings
 
         if (configuration is not null)
         {
+            RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(configuration);
+
             MSTestSettings? settings = GetSettingsFromConfig(configuration, logger);
 
             CurrentSettings = settings ?? new MSTestSettings();

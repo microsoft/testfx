@@ -4,6 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Xml;
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions;
@@ -53,6 +54,8 @@ public class RunConfigurationSettings
         return settings ?? new RunConfigurationSettings();
     }
 
+    internal static RunConfigurationSettings PopulateSettings(IConfiguration configuration) => ToSettings(configuration) ?? new RunConfigurationSettings();
+
     /// <summary>
     /// Gets the configuration settings from the xml.
     /// </summary>
@@ -100,6 +103,7 @@ public class RunConfigurationSettings
         // <Runsettings>
         // <RunConfiguration>
         // <CollectSourceInformation>true</CollectSourceInformation>
+        // <ExecutionApartmentState>STA/MTA</ExecutionApartmentState>
         // </RunConfiguration>
         // </Runsettings>
         RunConfigurationSettings settings = new();
@@ -151,6 +155,41 @@ public class RunConfigurationSettings
                         }
                 }
             }
+        }
+
+        return settings;
+    }
+
+    private static RunConfigurationSettings ToSettings(IConfiguration configuration)
+    {
+        // Expected format of the xml is: -
+        // "mstest" : {
+        //  "runConfiguration": {
+        //    "collectSourceInformation": true,
+        //    "executionApartmentState": "STA"
+        //  }
+        // }
+
+        // Initialize settings object
+        RunConfigurationSettings settings = new();
+
+        if (bool.TryParse(configuration["mstest:runConfiguration:collectSourceInformation"], out bool collectSourceInformation))
+        {
+            settings.CollectSourceInformation = collectSourceInformation;
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                "CollectSourceInformation value Found : {0}", collectSourceInformation);
+        }
+
+        string? apartmentStateValue = configuration["mstest:runConfiguration:executionApartmentState"];
+        if (!string.IsNullOrEmpty(apartmentStateValue) &&
+            Enum.TryParse(apartmentStateValue, out PlatformApartmentState platformApartmentState))
+        {
+            settings.ExecutionApartmentState = platformApartmentState switch
+            {
+                PlatformApartmentState.STA => ApartmentState.STA,
+                PlatformApartmentState.MTA => ApartmentState.MTA,
+                _ => throw new NotSupportedException($"Platform apartment state '{platformApartmentState}' is not supported."),
+            };
         }
 
         return settings;
