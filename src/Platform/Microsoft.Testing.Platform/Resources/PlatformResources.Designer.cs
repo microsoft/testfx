@@ -1312,15 +1312,6 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The ITestApplicationResult has not been built yet..
-        /// </summary>
-        internal static string TestApplicationResultNotReady {
-            get {
-                return ResourceManager.GetString("TestApplicationResultNotReady", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to VSTest mode only supports a single TestApplicationBuilder per process.
         /// </summary>
         internal static string TestApplicationVSTestModeTooManyBuilders {
