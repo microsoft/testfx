@@ -33,6 +33,8 @@ public class MSTestSettings
     /// </summary>
     public const string SettingsNameAlias = "MSTestV2";
 
+    private const string ConfigurationName = "RunConfiguration";
+
     private const string ParallelizeSettingsName = "Parallelize";
 
     /// <summary>
@@ -257,6 +259,60 @@ public class MSTestSettings
     [Obsolete("this function will be removed in v4.0.0")]
     public static void PopulateSettings(IDiscoveryContext? context) => PopulateSettings(context, null, null);
 
+    private static bool IsRunSettingsFileHesMSTestSettings(string? runSettingsXml) => IsRunSettingsFileHasSettingName(runSettingsXml, SettingsName, out _) || IsRunSettingsFileHasSettingName(runSettingsXml, SettingsNameAlias, out _)
+                    || (IsRunSettingsFileHasSettingName(runSettingsXml, ConfigurationName, out XmlReader? runConfigrationReader) && HasRelevantKeys(runConfigrationReader));
+
+    private static bool HasRelevantKeys(XmlReader? reader)
+    {
+        ValidateArg.NotNull(reader, "reader");
+
+        reader.ReadToNextElement();
+
+        while (reader.NodeType == XmlNodeType.Element)
+        {
+            string elementName = reader.Name.ToUpperInvariant();
+            if (elementName is "COLLECTSOURCEINFORMATION" or "EXECUTIONAPARTMENTSTATE")
+            {
+                return true;
+            }
+
+            reader.SkipToNextElement();
+        }
+
+        return false;
+    }
+
+    private static bool IsRunSettingsFileHasSettingName(string? runSettingsXml, string SettingName, out XmlReader? result)
+    {
+        result = null;
+        if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
+        {
+            return false;
+        }
+
+        using var stringReader = new StringReader(runSettingsXml);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+
+        // read to the fist child
+        XmlReaderUtilities.ReadToRootNode(reader);
+        reader.ReadToNextElement();
+
+        // Read till we reach nodeName element or reach EOF
+        while (!string.Equals(reader.Name, SettingName, StringComparison.OrdinalIgnoreCase)
+                && !reader.EOF)
+        {
+            reader.SkipToNextElement();
+        }
+
+        if (!reader.EOF)
+        {
+            result = reader;
+            return true;
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// Populate adapter settings from the context.
     /// </summary>
@@ -266,7 +322,7 @@ public class MSTestSettings
     /// </param>
     internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger, IConfiguration? configuration)
     {
-        if (configuration != null && context?.RunSettings != null)
+        if (configuration != null && context?.RunSettings != null && IsRunSettingsFileHesMSTestSettings(context?.RunSettings.SettingsXml))
         {
             throw new InvalidOperationException(Resource.DuplicateConfigurationError);
         }
