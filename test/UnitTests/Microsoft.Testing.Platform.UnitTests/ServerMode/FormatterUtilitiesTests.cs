@@ -152,7 +152,7 @@ public class FormatterUtilitiesTests : TestBase
 
         if (type == typeof(TelemetryEventArgs))
         {
-            Assert.AreEqual("""{"EventName":"eventName","metrics":{"key":1}}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"eventName":"eventName","metrics":{"key":1}}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
