@@ -925,26 +925,26 @@ public class MSTestSettings
         // }
         MSTestSettings settings = new();
 
-        ParseBooleanSetting(configuration, "captureTraceOutput", logger, result => settings.CaptureDebugTraces = result);
-        ParseBooleanSetting(configuration, "enableBaseClassTestMethodsFromOtherAssemblies", logger, result => settings.EnableBaseClassTestMethodsFromOtherAssemblies = result);
-        ParseBooleanSetting(configuration, "forcedLegacyMode", logger, result => settings.ForcedLegacyMode = result);
-        ParseBooleanSetting(configuration, "mapInconclusiveToFailed", logger, result => settings.MapInconclusiveToFailed = result);
-        ParseBooleanSetting(configuration, "mapNotRunnableToFailed", logger, result => settings.MapNotRunnableToFailed = result);
-        ParseBooleanSetting(configuration, "treatDiscoveryWarningsAsErrors", logger, result => settings.TreatDiscoveryWarningsAsErrors = result);
-        ParseBooleanSetting(configuration, "considerEmptyDataSourceAsInconclusive", logger, result => settings.ConsiderEmptyDataSourceAsInconclusive = result);
-        ParseBooleanSetting(configuration, "treatClassAndAssemblyCleanupWarningsAsErrors", logger, result => settings.TreatClassAndAssemblyCleanupWarningsAsErrors = result);
-        ParseBooleanSetting(configuration, "considerFixturesAsSpecialTests", logger, result => settings.ConsiderFixturesAsSpecialTests = result);
-        ParseBooleanSetting(configuration, "cooperativeCancellationTimeout", logger, result => settings.CooperativeCancellationTimeout = result);
-        ParseBooleanSetting(configuration, "orderTestsByNameInClass", logger, result => settings.OrderTestsByNameInClass = result);
-        ParseBooleanSetting(configuration, "parallelism:enabled", logger, result => settings.OrderTestsByNameInClass = result);
+        ParseBooleanSetting(configuration, "captureTraceOutput", logger, value => settings.CaptureDebugTraces = value);
+        ParseBooleanSetting(configuration, "enableBaseClassTestMethodsFromOtherAssemblies", logger, value => settings.EnableBaseClassTestMethodsFromOtherAssemblies = value);
+        ParseBooleanSetting(configuration, "forcedLegacyMode", logger, value => settings.ForcedLegacyMode = value);
+        ParseBooleanSetting(configuration, "mapInconclusiveToFailed", logger, value => settings.MapInconclusiveToFailed = value);
+        ParseBooleanSetting(configuration, "mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);
+        ParseBooleanSetting(configuration, "treatDiscoveryWarningsAsErrors", logger, value => settings.TreatDiscoveryWarningsAsErrors = value);
+        ParseBooleanSetting(configuration, "considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
+        ParseBooleanSetting(configuration, "treatClassAndAssemblyCleanupWarningsAsErrors", logger, value => settings.TreatClassAndAssemblyCleanupWarningsAsErrors = value);
+        ParseBooleanSetting(configuration, "considerFixturesAsSpecialTests", logger, value => settings.ConsiderFixturesAsSpecialTests = value);
+        ParseBooleanSetting(configuration, "cooperativeCancellationTimeout", logger, value => settings.CooperativeCancellationTimeout = value);
+        ParseBooleanSetting(configuration, "orderTestsByNameInClass", logger, value => settings.OrderTestsByNameInClass = value);
+        ParseBooleanSetting(configuration, "parallelism:enabled", logger, value => settings.OrderTestsByNameInClass = value);
 
-        ParseIntegerSetting(configuration, "timeout:test", logger, result => settings.TestTimeout = result);
-        ParseIntegerSetting(configuration, "timeout:assemblyCleanup", logger, result => settings.AssemblyCleanupTimeout = result);
-        ParseIntegerSetting(configuration, "timeout:assemblyInitialize", logger, result => settings.AssemblyInitializeTimeout = result);
-        ParseIntegerSetting(configuration, "timeout:classInitialize", logger, result => settings.ClassInitializeTimeout = result);
-        ParseIntegerSetting(configuration, "timeout:classCleanup", logger, result => settings.ClassCleanupTimeout = result);
-        ParseIntegerSetting(configuration, "timeout:testInitialize", logger, result => settings.TestInitializeTimeout = result);
-        ParseIntegerSetting(configuration, "timeout:testCleanup", logger, result => settings.TestCleanupTimeout = result);
+        ParseIntegerSetting(configuration, "timeout:test", logger, value => settings.TestTimeout = value);
+        ParseIntegerSetting(configuration, "timeout:assemblyCleanup", logger, value => settings.AssemblyCleanupTimeout = value);
+        ParseIntegerSetting(configuration, "timeout:assemblyInitialize", logger, value => settings.AssemblyInitializeTimeout = value);
+        ParseIntegerSetting(configuration, "timeout:classInitialize", logger, value => settings.ClassInitializeTimeout = value);
+        ParseIntegerSetting(configuration, "timeout:classCleanup", logger, value => settings.ClassCleanupTimeout = value);
+        ParseIntegerSetting(configuration, "timeout:testInitialize", logger, value => settings.TestInitializeTimeout = value);
+        ParseIntegerSetting(configuration, "timeout:testCleanup", logger, value => settings.TestCleanupTimeout = value);
 
         ParseStringSetting(configuration, "settingsFile", logger, fileName => settings.TestSettingsFile = fileName);
 
