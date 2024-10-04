@@ -126,7 +126,7 @@ public class RunConfigurationSettings
                             {
                                 settings.CollectSourceInformation = result;
                                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                                "CollectSourceInformation value Found : {0} ",
+                                "CollectSourceInformation value found : {0} ",
                                 result);
                             }
 
@@ -177,7 +177,7 @@ public class RunConfigurationSettings
         {
             settings.CollectSourceInformation = collectSourceInformation;
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                "CollectSourceInformation value Found : {0}", collectSourceInformation);
+                "CollectSourceInformation value found : {0}", collectSourceInformation);
         }
 
         string? apartmentStateValue = configuration["mstest:runConfiguration:executionApartmentState"];
