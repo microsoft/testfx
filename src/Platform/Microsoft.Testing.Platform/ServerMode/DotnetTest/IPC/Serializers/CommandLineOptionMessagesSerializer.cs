@@ -55,7 +55,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
             switch (fieldId)
             {
                 case CommandLineOptionMessagesFieldsId.ModulePath:
-                    moduleName = ReadString(stream);
+                    moduleName = ReadStringValue(stream, fieldSize);
                     break;
 
                 case CommandLineOptionMessagesFieldsId.CommandLineOptionMessageList:
@@ -92,11 +92,11 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
                 switch (fieldId)
                 {
                     case CommandLineOptionMessageFieldsId.Name:
-                        name = ReadString(stream);
+                        name = ReadStringValue(stream, fieldSize);
                         break;
 
                     case CommandLineOptionMessageFieldsId.Description:
-                        description = ReadString(stream);
+                        description = ReadStringValue(stream, fieldSize);
                         break;
 
                     case CommandLineOptionMessageFieldsId.IsHidden:

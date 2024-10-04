@@ -42,6 +42,24 @@ internal abstract class BaseSerializer
         }
     }
 
+    protected static string ReadStringValue(Stream stream, int size)
+    {
+        byte[] bytes = ArrayPool<byte>.Shared.Rent(size);
+        try
+        {
+#if NET7_0_OR_GREATER
+            stream.ReadExactly(bytes, 0, size);
+#else
+            _ = stream.Read(bytes, 0, size);
+#endif
+            return Encoding.UTF8.GetString(bytes, 0, size);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
+    }
+
     protected static void WriteString(Stream stream, string str)
     {
         int stringutf8TotalBytes = Encoding.UTF8.GetByteCount(str);
@@ -61,6 +79,21 @@ internal abstract class BaseSerializer
         }
     }
 
+    protected static void WriteStringValue(Stream stream, string str)
+    {
+        int stringutf8TotalBytes = Encoding.UTF8.GetByteCount(str);
+        byte[] bytes = ArrayPool<byte>.Shared.Rent(stringutf8TotalBytes);
+        try
+        {
+            Encoding.UTF8.GetBytes(str, bytes);
+            stream.Write(bytes, 0, stringutf8TotalBytes);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
+    }
+
     protected static void WriteStringSize(Stream stream, string str)
     {
         int stringutf8TotalBytes = Encoding.UTF8.GetByteCount(str);
@@ -71,9 +104,10 @@ internal abstract class BaseSerializer
         stream.Write(len);
     }
 
-    protected static void WriteSize(Stream stream)
+    protected static void WriteSize<T>(Stream stream)
+        where T : struct
     {
-        int sizeInBytes = GetSize<int>();
+        int sizeInBytes = GetSize<T>();
         Span<byte> len = stackalloc byte[sizeof(int)];
 
         ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(len, sizeInBytes), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
@@ -169,11 +203,25 @@ internal abstract class BaseSerializer
         return Encoding.UTF8.GetString(bytes);
     }
 
+    protected static string ReadStringValue(Stream stream, int size)
+    {
+        byte[] bytes = new byte[size];
+        _ = stream.Read(bytes, 0, bytes.Length);
+
+        return Encoding.UTF8.GetString(bytes);
+    }
+
     protected static void WriteString(Stream stream, string str)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(str);
         byte[] len = BitConverter.GetBytes(bytes.Length);
         stream.Write(len, 0, len.Length);
+        stream.Write(bytes, 0, bytes.Length);
+    }
+
+    protected static void WriteStringValue(Stream stream, string str)
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes(str);
         stream.Write(bytes, 0, bytes.Length);
     }
 
@@ -184,11 +232,12 @@ internal abstract class BaseSerializer
         stream.Write(len, 0, len.Length);
     }
 
-    protected static void WriteSize(Stream stream)
+    protected static void WriteSize<T>(Stream stream)
+        where T : struct
     {
-        int sizeInBytes = GetSize<int>();
+        int sizeInBytes = GetSize<T>();
         byte[] len = BitConverter.GetBytes(sizeInBytes);
-        stream.Write(len, 0, sizeInBytes);
+        stream.Write(len, 0, len.Length);
     }
 
     protected static void WriteInt(Stream stream, int value)
@@ -257,7 +306,7 @@ internal abstract class BaseSerializer
 
         WriteShort(stream, id);
         WriteStringSize(stream, value);
-        WriteString(stream, value);
+        WriteStringValue(stream, value);
     }
 
     protected static void WriteField(Stream stream, string? value)
@@ -288,7 +337,7 @@ internal abstract class BaseSerializer
         }
 
         WriteShort(stream, id);
-        WriteSize(stream);
+        WriteSize<bool>(stream);
         WriteBool(stream, value.Value);
     }
 
@@ -300,7 +349,7 @@ internal abstract class BaseSerializer
         }
 
         WriteShort(stream, id);
-        WriteSize(stream);
+        WriteSize<byte>(stream);
         WriteByte(stream, value.Value);
     }
 
@@ -320,6 +369,7 @@ internal abstract class BaseSerializer
         Type type when type == typeof(long) => sizeof(long),
         Type type when type == typeof(short) => sizeof(short),
         Type type when type == typeof(bool) => sizeof(bool),
+        Type type when type == typeof(byte) => sizeof(byte),
         _ => 0,
     };
 

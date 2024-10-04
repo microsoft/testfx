@@ -95,7 +95,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
             switch (fieldId)
             {
                 case TestResultMessagesFieldsId.ExecutionId:
-                    executionId = ReadString(stream);
+                    executionId = ReadStringValue(stream, fieldSize);
                     break;
 
                 case TestResultMessagesFieldsId.SuccessfulTestMessageList:
@@ -139,11 +139,11 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
                 switch (fieldId)
                 {
                     case SuccessfulTestResultMessageFieldsId.Uid:
-                        uid = ReadString(stream);
+                        uid = ReadStringValue(stream, fieldSize);
                         break;
 
                     case SuccessfulTestResultMessageFieldsId.DisplayName:
-                        displayName = ReadString(stream);
+                        displayName = ReadStringValue(stream, fieldSize);
                         break;
 
                     case SuccessfulTestResultMessageFieldsId.State:
@@ -151,11 +151,11 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
                         break;
 
                     case SuccessfulTestResultMessageFieldsId.Reason:
-                        reason = ReadString(stream);
+                        reason = ReadStringValue(stream, fieldSize);
                         break;
 
                     case SuccessfulTestResultMessageFieldsId.SessionUid:
-                        sessionUid = ReadString(stream);
+                        sessionUid = ReadStringValue(stream, fieldSize);
                         break;
 
                     default:
@@ -190,11 +190,11 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
                 switch (fieldId)
                 {
                     case FailedTestResultMessageFieldsId.Uid:
-                        uid = ReadString(stream);
+                        uid = ReadStringValue(stream, fieldSize);
                         break;
 
                     case FailedTestResultMessageFieldsId.DisplayName:
-                        displayName = ReadString(stream);
+                        displayName = ReadStringValue(stream, fieldSize);
                         break;
 
                     case FailedTestResultMessageFieldsId.State:
@@ -202,19 +202,19 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
                         break;
 
                     case FailedTestResultMessageFieldsId.Reason:
-                        reason = ReadString(stream);
+                        reason = ReadStringValue(stream, fieldSize);
                         break;
 
                     case FailedTestResultMessageFieldsId.ErrorMessage:
-                        errorMessage = ReadString(stream);
+                        errorMessage = ReadStringValue(stream, fieldSize);
                         break;
 
                     case FailedTestResultMessageFieldsId.ErrorStackTrace:
-                        errorStackTrace = ReadString(stream);
+                        errorStackTrace = ReadStringValue(stream, fieldSize);
                         break;
 
                     case FailedTestResultMessageFieldsId.SessionUid:
-                        sessionUid = ReadString(stream);
+                        sessionUid = ReadStringValue(stream, fieldSize);
                         break;
 
                     default:
