@@ -20,6 +20,7 @@ public static class TestApplicationBuilderExtensions
         testApplicationBuilder.AddRunSettingsService(extension);
         testApplicationBuilder.AddTestCaseFilterService(extension);
         testApplicationBuilder.AddTestRunParametersService(extension);
+        testApplicationBuilder.AddEnvironmentVariableProvider(extension);
         testApplicationBuilder.RegisterTestFramework(
             serviceProvider => new TestFrameworkCapabilities(
                 new VSTestBridgeExtensionBaseCapabilities(),

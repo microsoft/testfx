@@ -38,4 +38,24 @@
     <ProjectToBuild Include="$(RepoRoot)Microsoft.Testing.Platform.slnf" />
   </ItemGroup>
 
+  <Target Name="_SetRuntimeVersion" BeforeTargets="ProcessFrameworkReferences">
+    <ItemGroup>
+      <KnownFrameworkReference Update="@(KnownFrameworkReference)">
+        <LatestRuntimeFrameworkVersion Condition="'%(TargetFramework)' == 'net6.0'">6.0.33</LatestRuntimeFrameworkVersion>
+        <TargetingPackVersion Condition="'%(TargetFramework)' == 'net6.0'">6.0.33</TargetingPackVersion >
+      </KnownFrameworkReference>
+      <KnownAppHostPack Update="@(KnownAppHostPack)">
+        <AppHostPackVersion Condition="'%(TargetFramework)' == 'net6.0'">6.0.33</AppHostPackVersion>
+      </KnownAppHostPack>
+    </ItemGroup>
+    <ItemGroup>
+      <KnownFrameworkReference Update="@(KnownFrameworkReference)">
+        <LatestRuntimeFrameworkVersion Condition="'%(TargetFramework)' == 'net8.0'">8.0.8</LatestRuntimeFrameworkVersion>
+        <TargetingPackVersion Condition="'%(TargetFramework)' == 'net8.0'">8.0.8</TargetingPackVersion >
+      </KnownFrameworkReference>
+      <KnownAppHostPack Update="@(KnownAppHostPack)">
+        <AppHostPackVersion Condition="'%(TargetFramework)' == 'net8.0'">8.0.8</AppHostPackVersion>
+      </KnownAppHostPack>
+    </ItemGroup>
+  </Target>
 </Project>
