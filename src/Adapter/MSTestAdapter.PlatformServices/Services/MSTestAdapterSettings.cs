@@ -152,9 +152,9 @@ public class MSTestAdapterSettings
         // }
         MSTestAdapterSettings settings = new();
 
-        ParseBooleanSetting(configuration, "deployment:enabled", result => settings.DeploymentEnabled = result);
-        ParseBooleanSetting(configuration, "deployment:deployTestSourceDependencies", result => settings.DeployTestSourceDependencies = result);
-        ParseBooleanSetting(configuration, "deployment:deleteDeploymentDirectoryAfterTestRunIsComplete", result => settings.DeleteDeploymentDirectoryAfterTestRunIsComplete = result);
+        ParseBooleanSetting(configuration, "deployment:enabled", value => settings.DeploymentEnabled = value);
+        ParseBooleanSetting(configuration, "deployment:deployTestSourceDependencies", value => settings.DeployTestSourceDependencies = value);
+        ParseBooleanSetting(configuration, "deployment:deleteDeploymentDirectoryAfterTestRunIsComplete", value => settings.DeleteDeploymentDirectoryAfterTestRunIsComplete = value);
 
         settings.ReadAssemblyResolutionPath(configuration);
 
@@ -360,7 +360,7 @@ public class MSTestAdapterSettings
             {
                 // Default includeSubDirectories to false if not provided
                 bool includeSubDirectories = false;
-                ParseBooleanSetting(configuration, $"mstest:assemblyResolution:{indx}:includeSubDirectories", result => includeSubDirectories = result);
+                ParseBooleanSetting(configuration, $"mstest:assemblyResolution:{indx}:includeSubDirectories", value => includeSubDirectories = value);
 
                 SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
             }
