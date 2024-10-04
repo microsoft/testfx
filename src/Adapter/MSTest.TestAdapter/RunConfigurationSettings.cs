@@ -181,7 +181,8 @@ public class RunConfigurationSettings
         }
 
         string? apartmentStateValue = configuration["mstest:runConfiguration:executionApartmentState"];
-        if (Enum.TryParse(apartmentStateValue, out PlatformApartmentState platformApartmentState))
+        if (!string.IsNullOrEmpty(apartmentStateValue) &&
+            Enum.TryParse(apartmentStateValue, out PlatformApartmentState platformApartmentState)
         {
             settings.ExecutionApartmentState = platformApartmentState switch
             {
