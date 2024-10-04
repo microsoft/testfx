@@ -47,7 +47,7 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
             switch (fieldId)
             {
                 case DiscoveredTestMessagesFieldsId.ExecutionId:
-                    executionId = ReadString(stream);
+                    executionId = ReadStringValue(stream, fieldSize);
                     break;
 
                 case DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList:
@@ -83,11 +83,11 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
                 switch (fieldId)
                 {
                     case DiscoveredTestMessageFieldsId.Uid:
-                        uid = ReadString(stream);
+                        uid = ReadStringValue(stream, fieldSize);
                         break;
 
                     case DiscoveredTestMessageFieldsId.DisplayName:
-                        displayName = ReadString(stream);
+                        displayName = ReadStringValue(stream, fieldSize);
                         break;
 
                     default:
