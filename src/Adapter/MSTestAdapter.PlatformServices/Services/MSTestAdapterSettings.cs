@@ -346,9 +346,9 @@ public class MSTestAdapterSettings
         //
         // "mstest" : {
         //    "assemblyResolution" : [
-        //        { "path" : "..." , includeSub: "true" } ,
-        //        { "path" : "..." , includeSub: "true" } ,
-        //        { "path" : "..." , includeSub: "true" } ,
+        //        { "path" : "..." , includeSubDirectories: "true" } ,
+        //        { "path" : "..." , includeSubDirectories: "true" } ,
+        //        { "path" : "..." , includeSubDirectories: "true" } ,
         //        ...
         //     ]
         //  ... remaining settings
