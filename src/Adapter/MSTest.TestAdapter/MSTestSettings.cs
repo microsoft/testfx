@@ -970,30 +970,44 @@ public class MSTestSettings
         //      "classCleanup" : strictly positive int,
         //      "testInitialize" : strictly positive int,
         //      "testCleanup" : strictly positive int,
-        //      "test" : strictly positive int
+        //      "test" : strictly positive int,
+        //      "useCooperativeCancellation" : true/false
         //  },
         //  "parallelism" : {
         //      "enabled": true/false,
         //      "workers": positive int,
         //      "scope": method/class,
         //  },
+        //  "output" : {
+        //      "captureTrace" : true/false
+        //  },
+        //  "execution" : {
+        //      "mapInconclusiveToFailed" : true/false
+        //      "mapNotRunnableToFailed" : true/false
+        //      "treatDiscoveryWarningsAsErrors" : true/false
+        //      "considerEmptyDataSourceAsInconclusive" : true/false
+        //      "treatClassAndAssemblyCleanupWarningsAsErrors" : true/false
+        //      "considerFixturesAsSpecialTests" : true/false
+        //  }
         //  ... remaining settings
         // }
         MSTestSettings settings = new();
 
-        ParseBooleanSetting(configuration, "captureTraceOutput", logger, value => settings.CaptureDebugTraces = value);
         ParseBooleanSetting(configuration, "enableBaseClassTestMethodsFromOtherAssemblies", logger, value => settings.EnableBaseClassTestMethodsFromOtherAssemblies = value);
-        ParseBooleanSetting(configuration, "forcedLegacyMode", logger, value => settings.ForcedLegacyMode = value);
-        ParseBooleanSetting(configuration, "mapInconclusiveToFailed", logger, value => settings.MapInconclusiveToFailed = value);
-        ParseBooleanSetting(configuration, "mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);
-        ParseBooleanSetting(configuration, "treatDiscoveryWarningsAsErrors", logger, value => settings.TreatDiscoveryWarningsAsErrors = value);
-        ParseBooleanSetting(configuration, "considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
-        ParseBooleanSetting(configuration, "treatClassAndAssemblyCleanupWarningsAsErrors", logger, value => settings.TreatClassAndAssemblyCleanupWarningsAsErrors = value);
-        ParseBooleanSetting(configuration, "considerFixturesAsSpecialTests", logger, value => settings.ConsiderFixturesAsSpecialTests = value);
-        ParseBooleanSetting(configuration, "cooperativeCancellationTimeout", logger, value => settings.CooperativeCancellationTimeout = value);
         ParseBooleanSetting(configuration, "orderTestsByNameInClass", logger, value => settings.OrderTestsByNameInClass = value);
+
+        ParseBooleanSetting(configuration, "output:captureTrace", logger, value => settings.CaptureDebugTraces = value);
+
         ParseBooleanSetting(configuration, "parallelism:enabled", logger, value => settings.OrderTestsByNameInClass = value);
 
+        ParseBooleanSetting(configuration, "execution:mapInconclusiveToFailed", logger, value => settings.MapInconclusiveToFailed = value);
+        ParseBooleanSetting(configuration, "execution:mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);
+        ParseBooleanSetting(configuration, "execution:treatDiscoveryWarningsAsErrors", logger, value => settings.TreatDiscoveryWarningsAsErrors = value);
+        ParseBooleanSetting(configuration, "execution:considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
+        ParseBooleanSetting(configuration, "execution:treatClassAndAssemblyCleanupWarningsAsErrors", logger, value => settings.TreatClassAndAssemblyCleanupWarningsAsErrors = value);
+        ParseBooleanSetting(configuration, "execution:considerFixturesAsSpecialTests", logger, value => settings.ConsiderFixturesAsSpecialTests = value);
+
+        ParseBooleanSetting(configuration, "timeout:useCooperativeCancellation", logger, value => settings.CooperativeCancellationTimeout = value);
         ParseIntegerSetting(configuration, "timeout:test", logger, value => settings.TestTimeout = value);
         ParseIntegerSetting(configuration, "timeout:assemblyCleanup", logger, value => settings.AssemblyCleanupTimeout = value);
         ParseIntegerSetting(configuration, "timeout:assemblyInitialize", logger, value => settings.AssemblyInitializeTimeout = value);
@@ -1001,8 +1015,6 @@ public class MSTestSettings
         ParseIntegerSetting(configuration, "timeout:classCleanup", logger, value => settings.ClassCleanupTimeout = value);
         ParseIntegerSetting(configuration, "timeout:testInitialize", logger, value => settings.TestInitializeTimeout = value);
         ParseIntegerSetting(configuration, "timeout:testCleanup", logger, value => settings.TestCleanupTimeout = value);
-
-        ParseStringSetting(configuration, "settingsFile", logger, fileName => settings.TestSettingsFile = fileName);
 
         if (configuration["mstest:classCleanupLifecycle"] is string classCleanupLifecycle)
         {
