@@ -39,11 +39,12 @@ internal class VSBridgeEnvironmentVariableProvider : ITestHostEnvironmentVariabl
         {
             if (_fileSystem.Exists(runsettings[0]))
             {
-#if NETCOREAPP
                 using IFileStream fileStream = _fileSystem.NewFileStream(runsettings[0], FileMode.Open);
+#if NETCOREAPP
                 _runSettings = await XDocument.LoadAsync(fileStream.Stream, LoadOptions.None, CancellationToken.None);
 #else
-                _runSettings = XDocument.Load(runsettings[0]);
+                using StreamReader streamReader = new(fileStream.Stream);
+                _runSettings = XDocument.Parse(await streamReader.ReadToEndAsync());
 #endif
                 return _runSettings.Element("RunSettings")?.Element("RunConfiguration")?.Element("EnvironmentVariables") is not null;
             }
@@ -54,10 +55,9 @@ internal class VSBridgeEnvironmentVariableProvider : ITestHostEnvironmentVariabl
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
-
         foreach (XElement element in _runSettings!.Element("RunSettings")!.Element("RunConfiguration")!.Element("EnvironmentVariables")!.Elements())
         {
-
+            environmentVariables.SetVariable(new(element.Name.ToString(), element.Value, true, true));
         }
 
         return Task.CompletedTask;

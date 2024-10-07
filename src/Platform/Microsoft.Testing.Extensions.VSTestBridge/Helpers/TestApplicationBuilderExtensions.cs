@@ -48,7 +48,7 @@ public static class TestApplicationBuilderExtensions
         => builder.CommandLine.AddProvider(() => new TestRunParametersCommandLineOptionsProvider(extension));
 
     /// <summary>
-    /// Register the environment variable provider
+    /// Register the environment variable provider.
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     /// <param name="extension">The extension that will be used as the source of registration for this helper service.</param>
