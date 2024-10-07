@@ -54,8 +54,6 @@ public class RunConfigurationSettings
         return settings ?? new RunConfigurationSettings();
     }
 
-    internal static RunConfigurationSettings PopulateSettings(IConfiguration configuration) => ToSettings(configuration) ?? new RunConfigurationSettings();
-
     /// <summary>
     /// Gets the configuration settings from the xml.
     /// </summary>
@@ -160,7 +158,7 @@ public class RunConfigurationSettings
         return settings;
     }
 
-    private static RunConfigurationSettings ToSettings(IConfiguration configuration)
+    internal static RunConfigurationSettings SetRunConfigurationSettingsFromConfig(IConfiguration configuration, RunConfigurationSettings settings)
     {
         // Expected format of the json is: -
         // "mstest" : {
@@ -169,10 +167,6 @@ public class RunConfigurationSettings
         //    "executionApartmentState": "STA"
         //  }
         // }
-
-        // Initialize settings object
-        RunConfigurationSettings settings = new();
-
         if (bool.TryParse(configuration["mstest:runConfiguration:collectSourceInformation"], out bool collectSourceInformation))
         {
             settings.CollectSourceInformation = collectSourceInformation;

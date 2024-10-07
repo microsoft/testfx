@@ -33,8 +33,6 @@ public class MSTestSettings
     /// </summary>
     public const string SettingsNameAlias = "MSTestV2";
 
-    private const string ConfigurationName = "RunConfiguration";
-
     private const string ParallelizeSettingsName = "Parallelize";
 
     /// <summary>
@@ -282,12 +280,7 @@ public class MSTestSettings
             reader.SkipToNextElement();
         }
 
-        if (!reader.EOF)
-        {
-            return true;
-        }
-
-        return false;
+        return !reader.EOF;
     }
 
     /// <summary>
@@ -304,42 +297,39 @@ public class MSTestSettings
             throw new InvalidOperationException(Resource.DuplicateConfigurationError);
         }
 
+        // This will contain default adapter settings
+        var settings = new MSTestSettings();
+        var runConfigurationSettings = new RunConfigurationSettings();
+
         if (context?.RunSettings != null && !StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
         {
-            RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
+            runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
             MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias, logger);
 
             // If a user specifies MSTestV2 in the runsettings, then prefer that over the v1 settings.
             if (aliasSettings != null)
             {
-                CurrentSettings = aliasSettings;
+                settings = aliasSettings;
             }
             else
             {
-                MSTestSettings? settings = GetSettings(context.RunSettings.SettingsXml, SettingsName, logger);
+                MSTestSettings? mSTestSettings = GetSettings(context.RunSettings.SettingsXml, SettingsName, logger);
 
-                CurrentSettings = settings ?? new MSTestSettings();
+                settings = mSTestSettings ?? new MSTestSettings();
             }
 
-            SetGlobalSettings(context.RunSettings.SettingsXml, CurrentSettings, logger);
-            return;
+            SetGlobalSettings(context.RunSettings.SettingsXml, settings, logger);
         }
 
         if (configuration is not null)
         {
-            RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(configuration);
-
-            MSTestSettings? settings = GetSettingsFromConfig(configuration, logger);
-
-            CurrentSettings = settings ?? new MSTestSettings();
-
-            return;
+            RunConfigurationSettings.SetRunConfigurationSettingsFromConfig(configuration, runConfigurationSettings);
+            SetSettingsFromConfig(configuration, logger, settings);
         }
 
-        // This will contain default adapter settings
-        CurrentSettings = new MSTestSettings();
-        return;
+        CurrentSettings = settings;
+        RunConfigurationSettings = runConfigurationSettings;
     }
 
     /// <summary>
@@ -914,28 +904,12 @@ public class MSTestSettings
         }
     }
 
-    private static void ParseStringSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<string> setSetting)
-    {
-        if (configuration[$"mstest:{key}"] is string value)
-        {
-            if (!string.IsNullOrEmpty(value))
-            {
-                setSetting(value);
-            }
-            else
-            {
-                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
-            }
-        }
-    }
-
     /// <summary>
     /// Convert the parameter xml to TestSettings.
     /// </summary>
     /// <param name="configuration">Configuration to load the settings from.</param>
     /// <param name="logger"> The logger for messages. </param>
-    /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
-    private static MSTestSettings GetSettingsFromConfig(IConfiguration configuration, IMessageLogger? logger)
+    private static void SetSettingsFromConfig(IConfiguration configuration, IMessageLogger? logger, MSTestSettings settings)
     {
         // Expected format of the json is: -
         //
@@ -968,8 +942,6 @@ public class MSTestSettings
         //  }
         //  ... remaining settings
         // }
-        MSTestSettings settings = new();
-
         ParseBooleanSetting(configuration, "enableBaseClassTestMethodsFromOtherAssemblies", logger, value => settings.EnableBaseClassTestMethodsFromOtherAssemblies = value);
         ParseBooleanSetting(configuration, "orderTestsByNameInClass", logger, value => settings.OrderTestsByNameInClass = value);
 
@@ -1051,6 +1023,5 @@ public class MSTestSettings
         }
 
         MSTestSettingsProvider.Load(configuration);
-        return settings;
     }
 }
