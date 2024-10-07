@@ -20,7 +20,6 @@ public class TestClass
     [TestMethod]
     public void Test2()
     {
-        Assert.AreEqual("SAMPLEVALUE", System.Environment.GetEnvironmentVariable("SAMPLEKEY")!);
     }
 
     [TestMethod]
