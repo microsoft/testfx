@@ -45,7 +45,7 @@ internal sealed class RunSettingsEnvironmentVariableProvider : ITestHostEnvironm
             return false;
         }
 
-        using IFileStream fileStream = _fileSystem.NewFileStream(runsettings[0], FileMode.Open);
+        using IFileStream fileStream = _fileSystem.NewFileStream(runsettings[0], FileMode.Open, FileAccess.Read);
 #if NETCOREAPP
         _runSettings = await XDocument.LoadAsync(fileStream.Stream, LoadOptions.None, CancellationToken.None);
 #else
