@@ -1,2 +1,2 @@
 #nullable enable
-static Microsoft.Testing.Extensions.VSTestBridge.Helpers.TestApplicationBuilderExtensions.AddEnvironmentVariableProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
+static Microsoft.Testing.Extensions.VSTestBridge.Helpers.TestApplicationBuilderExtensions.AddRunSettingsEnvironmentVariableProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void

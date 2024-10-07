@@ -11,14 +11,14 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.TestHostControllers;
 
-internal class VSBridgeEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider
+internal sealed class RunSettingsEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider
 {
     private readonly IExtension _extension;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IFileSystem _fileSystem;
     private XDocument? _runSettings;
 
-    public VSBridgeEnvironmentVariableProvider(IExtension extension, ICommandLineOptions commandLineOptions, IFileSystem fileSystem)
+    public RunSettingsEnvironmentVariableProvider(IExtension extension, ICommandLineOptions commandLineOptions, IFileSystem fileSystem)
     {
         _extension = extension;
         _commandLineOptions = commandLineOptions;
@@ -35,22 +35,24 @@ internal class VSBridgeEnvironmentVariableProvider : ITestHostEnvironmentVariabl
 
     public async Task<bool> IsEnabledAsync()
     {
-        if (_commandLineOptions.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? runsettings))
+        if (!_commandLineOptions.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? runsettings))
         {
-            if (_fileSystem.Exists(runsettings[0]))
-            {
-                using IFileStream fileStream = _fileSystem.NewFileStream(runsettings[0], FileMode.Open);
-#if NETCOREAPP
-                _runSettings = await XDocument.LoadAsync(fileStream.Stream, LoadOptions.None, CancellationToken.None);
-#else
-                using StreamReader streamReader = new(fileStream.Stream);
-                _runSettings = XDocument.Parse(await streamReader.ReadToEndAsync());
-#endif
-                return _runSettings.Element("RunSettings")?.Element("RunConfiguration")?.Element("EnvironmentVariables") is not null;
-            }
+            return false;
         }
 
-        return false;
+        if (!_fileSystem.Exists(runsettings[0]))
+        {
+            return false;
+        }
+
+        using IFileStream fileStream = _fileSystem.NewFileStream(runsettings[0], FileMode.Open);
+#if NETCOREAPP
+        _runSettings = await XDocument.LoadAsync(fileStream.Stream, LoadOptions.None, CancellationToken.None);
+#else
+        using StreamReader streamReader = new(fileStream.Stream);
+        _runSettings = XDocument.Parse(await streamReader.ReadToEndAsync());
+#endif
+        return _runSettings.Element("RunSettings")?.Element("RunConfiguration")?.Element("EnvironmentVariables") is not null;
     }
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)

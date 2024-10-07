@@ -52,7 +52,7 @@ public static class TestApplicationBuilderExtensions
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     /// <param name="extension">The extension that will be used as the source of registration for this helper service.</param>
-    public static void AddEnvironmentVariableProvider(this ITestApplicationBuilder builder, IExtension extension)
+    public static void AddRunSettingsEnvironmentVariableProvider(this ITestApplicationBuilder builder, IExtension extension)
         => builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider
-            => new VSBridgeEnvironmentVariableProvider(extension, serviceProvider.GetCommandLineOptions(), serviceProvider.GetFileSystem()));
+            => new RunSettingsEnvironmentVariableProvider(extension, serviceProvider.GetCommandLineOptions(), serviceProvider.GetFileSystem()));
 }
