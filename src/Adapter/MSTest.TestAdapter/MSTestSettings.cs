@@ -259,32 +259,10 @@ public class MSTestSettings
     [Obsolete("this function will be removed in v4.0.0")]
     public static void PopulateSettings(IDiscoveryContext? context) => PopulateSettings(context, null, null);
 
-    private static bool IsRunSettingsFileHesMSTestSettings(string? runSettingsXml) => IsRunSettingsFileHasSettingName(runSettingsXml, SettingsName, out _) || IsRunSettingsFileHasSettingName(runSettingsXml, SettingsNameAlias, out _)
-                    || (IsRunSettingsFileHasSettingName(runSettingsXml, ConfigurationName, out XmlReader? runConfigrationReader) && HasRelevantKeys(runConfigrationReader));
+    private static bool IsRunSettingsFileHesMSTestSettings(string? runSettingsXml) => IsRunSettingsFileHasSettingName(runSettingsXml, SettingsName) || IsRunSettingsFileHasSettingName(runSettingsXml, SettingsNameAlias);
 
-    private static bool HasRelevantKeys(XmlReader? reader)
+    private static bool IsRunSettingsFileHasSettingName(string? runSettingsXml, string SettingName)
     {
-        ValidateArg.NotNull(reader, "reader");
-
-        reader.ReadToNextElement();
-
-        while (reader.NodeType == XmlNodeType.Element)
-        {
-            string elementName = reader.Name.ToUpperInvariant();
-            if (elementName is "COLLECTSOURCEINFORMATION" or "EXECUTIONAPARTMENTSTATE")
-            {
-                return true;
-            }
-
-            reader.SkipToNextElement();
-        }
-
-        return false;
-    }
-
-    private static bool IsRunSettingsFileHasSettingName(string? runSettingsXml, string SettingName, out XmlReader? result)
-    {
-        result = null;
         if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
         {
             return false;
@@ -306,7 +284,6 @@ public class MSTestSettings
 
         if (!reader.EOF)
         {
-            result = reader;
             return true;
         }
 
