@@ -18,4 +18,8 @@
     <ProjectCapability Remove="TestingPlatformServer" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="Polyfills" />
+  </ItemGroup>
+
 </Project>

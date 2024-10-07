@@ -22,7 +22,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, IDisposable
 {
-    private const string ProtocolVersion = "1.0.0";
+    public const string ProtocolVersion = "1.0.0";
     private readonly Func<TestFrameworkBuilderData, Task<ITestFramework>> _buildTestFrameworkAsync;
 
     private readonly IMessageHandlerFactory _messageHandlerFactory;
@@ -389,8 +389,11 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                         Capabilities: new ServerCapabilities(
                             new ServerTestingCapabilities(
                                 SupportsDiscovery: true,
-                                MultiRequestSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.MultiRequestSupport) == true,
-                                VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true)));
+                                // Current implementation of testing platform and VS doesn't allow multi-request.
+                                MultiRequestSupport: false,
+                                VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true,
+                                SupportsAttachments: true,
+                                MultiConnectionProvider: false)));
                 }
 
             case (JsonRpcMethods.TestingDiscoverTests, DiscoverRequestArgs args):
@@ -458,7 +461,8 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             _testFrameworkManager,
             _testSessionManager,
             new MessageBusProxy(),
-            method == JsonRpcMethods.TestingDiscoverTests));
+            method == JsonRpcMethods.TestingDiscoverTests,
+            true));
 
         DateTimeOffset adapterLoadStop = _clock.UtcNow;
 
@@ -578,7 +582,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         using (await _messageMonitor.LockAsync(cancellationToken))
         {
-            await _messageHandler!.WriteRequestAsync(error, cancellationToken);
+            await _messageHandler.WriteRequestAsync(error, cancellationToken);
         }
     }
 
@@ -589,7 +593,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         using (await _messageMonitor.LockAsync(cancellationToken))
         {
-            await _messageHandler!.WriteRequestAsync(response, cancellationToken);
+            await _messageHandler.WriteRequestAsync(response, cancellationToken);
         }
     }
 
@@ -630,8 +634,8 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         // We could consider creating a stateful engine that has the lifetime == server connection UP.
     }
 
-    internal Task SendTestUpdateCompleteAsync(Guid runId)
-        => SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, Changes: null));
+    internal async Task SendTestUpdateCompleteAsync(Guid runId)
+        => await SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, Changes: null));
 
     public async Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update)
         => await SendMessageAsync(

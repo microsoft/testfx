@@ -29,6 +29,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, IDisposable, IOutputDeviceDataProducer
 {
     private readonly TestHostControllerConfiguration _testHostsInformation;
+    private readonly PassiveNode? _passiveNode;
     private readonly IEnvironment _environment;
     private readonly IClock _clock;
     private readonly ILoggerFactory _loggerFactory;
@@ -39,11 +40,12 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
     private int? _testHostExitCode;
     private int? _testHostPID;
 
-    public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, IEnvironment environment,
+    public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, PassiveNode? passiveNode, IEnvironment environment,
         ILoggerFactory loggerFactory, IClock clock)
         : base(serviceProvider)
     {
         _testHostsInformation = testHostsInformation;
+        _passiveNode = passiveNode;
         _environment = environment;
         _clock = clock;
         _loggerFactory = loggerFactory;
@@ -124,19 +126,32 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
             List<IDataConsumer> dataConsumersBuilder = [.. _testHostsInformation.DataConsumer];
 
+            // We add the IPlatformOutputDevice after all users extensions.
             IPlatformOutputDevice? display = ServiceProvider.GetServiceInternal<IPlatformOutputDevice>();
             if (display is IDataConsumer dataConsumerDisplay)
             {
                 dataConsumersBuilder.Add(dataConsumerDisplay);
             }
 
-            IPushOnlyProtocol? pushOnlyProtocol = ServiceProvider.GetService<IPushOnlyProtocol>();
             // We register the DotnetTestDataConsumer as last to ensure that it will be the last one to consume the data.
+            IPushOnlyProtocol? pushOnlyProtocol = ServiceProvider.GetService<IPushOnlyProtocol>();
             if (pushOnlyProtocol?.IsServerMode == true)
             {
-                RoslynDebug.Assert(pushOnlyProtocol is not null);
-
                 dataConsumersBuilder.Add(await pushOnlyProtocol.GetDataConsumerAsync());
+            }
+
+            // If we're in server mode jsonrpc we add as last consumer the PassiveNodeDataConsumer for the attachments.
+            // Connect the passive node if it's available
+            if (_passiveNode is not null)
+            {
+                if (await _passiveNode.ConnectAsync())
+                {
+                    dataConsumersBuilder.Add(new PassiveNodeDataConsumer(_passiveNode));
+                }
+                else
+                {
+                    await _logger.LogWarningAsync("PassiveNode was expected to connect but failed");
+                }
             }
 
             AsynchronousMessageBus concreteMessageBusService = new(

@@ -224,8 +224,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         void ShouldThrowException() => MSTestAdapterSettings.ToSettings(reader);
 
-        Exception ex = VerifyThrows(ShouldThrowException);
-        Verify(ex is SettingsException);
+        VerifyThrows<SettingsException>(ShouldThrowException);
     }
 
     #endregion

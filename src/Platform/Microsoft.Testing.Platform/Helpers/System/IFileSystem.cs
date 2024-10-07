@@ -16,4 +16,6 @@ internal interface IFileSystem
     IFileStream NewFileStream(string path, FileMode mode, FileAccess access);
 
     string ReadAllText(string path);
+
+    Task<string> ReadAllTextAsync(string path);
 }

@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24463.4">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24504.4">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>9ba9980c4996a540387b9a0ef0d68accf00689c0</Sha>
+      <Sha>f209a925b15bc66ecb9a8825bd9595937bbe3aa1</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.24463.4">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.24504.4">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>9ba9980c4996a540387b9a0ef0d68accf00689c0</Sha>
+      <Sha>f209a925b15bc66ecb9a8825bd9595937bbe3aa1</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="10.0.0-beta.24463.4">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="10.0.0-beta.24504.4">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>9ba9980c4996a540387b9a0ef0d68accf00689c0</Sha>
+      <Sha>f209a925b15bc66ecb9a8825bd9595937bbe3aa1</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.12.5-preview.24466.3">
+    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.13.0-preview.24504.1">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>c90d1ac2c2c33a9db49e961bf09a4e2858bb21bc</Sha>
+      <Sha>e6279e42b58581d1c36d6ff873a7724542991dc9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Internal.Framework" Version="1.5.0-preview.24465.2">
+    <Dependency Name="Microsoft.Testing.Internal.Framework" Version="1.5.0-preview.24504.4">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>8995245950e97a9114bb210d4fdfc217dd851885</Sha>
+      <Sha>c426606df05c734180bb1fbeaa5b52b87f1ef8ac</Sha>
     </Dependency>
-    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24465.2">
+    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24473.2">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>8995245950e97a9114bb210d4fdfc217dd851885</Sha>
+      <Sha>aa2fcc8616d988b234bc1d218465b20c56d0b82f</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

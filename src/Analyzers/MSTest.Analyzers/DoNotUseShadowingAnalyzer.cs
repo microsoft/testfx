@@ -112,7 +112,7 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
         }
 
         // Compare methods
-        if (member is IMethodSymbol methodSymbol && baseMember is IMethodSymbol baseMethodSymbol)
+        if (member is IMethodSymbol methodSymbol && baseMember is IMethodSymbol baseMethodSymbol && methodSymbol.IsGenericMethod == baseMethodSymbol.IsGenericMethod && baseMethodSymbol.DeclaredAccessibility != Accessibility.Private)
         {
             return methodSymbol.Name == baseMethodSymbol.Name &&
                    methodSymbol.Parameters.Length == baseMethodSymbol.Parameters.Length &&
@@ -121,7 +121,7 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
         }
 
         // Compare properties
-        else if (member is IPropertySymbol propertySymbol && baseMember is IPropertySymbol basePropertySymbol)
+        else if (member is IPropertySymbol propertySymbol && baseMember is IPropertySymbol basePropertySymbol && basePropertySymbol.DeclaredAccessibility != Accessibility.Private)
         {
             return propertySymbol.Name == basePropertySymbol.Name &&
                    SymbolEqualityComparer.Default.Equals(propertySymbol.Type, basePropertySymbol.Type);

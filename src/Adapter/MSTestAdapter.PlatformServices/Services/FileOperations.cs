@@ -24,9 +24,24 @@ public class FileOperations : IFileOperations
 
 #if WIN_UI
     private readonly bool _isPackaged;
-
-    public FileOperations() => _isPackaged = AppModel.IsPackagedProcess();
 #endif
+
+    internal FileOperations(bool skipSourceGeneratorCheck)
+    {
+        if (!skipSourceGeneratorCheck)
+        {
+            ApplicationStateGuard.Ensure(!SourceGeneratorToggle.UseSourceGenerator, $"{nameof(FileOperations)} should not be used when source generator mode is active, instead SourceGeneratedFileOperations should be used and delegate to here, with skipSourceGeneratorCheck = true, when needed.");
+        }
+
+#if WIN_UI
+        _isPackaged = AppModel.IsPackagedProcess();
+#endif
+    }
+
+    public FileOperations()
+        : this(false)
+    {
+    }
 
     /// <summary>
     /// Loads an assembly.
@@ -67,10 +82,13 @@ public class FileOperations : IFileOperations
     /// <param name="assembly">The assembly.</param>
     /// <returns>Path to the .DLL of the assembly.</returns>
     public string? GetAssemblyPath(Assembly assembly)
-#if WINDOWS_UWP
-        => null; // TODO: what are the options here?
-#else
+#if NETSTANDARD || NETCOREAPP || NETFRAMEWORK
+        // This method will never be called in source generator mode, we are providing a different provider for file operations.
+#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
         => assembly.Location;
+#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
+#elif WINDOWS_UWP
+        => null; // TODO: what are the options here?
 #endif
 
     /// <summary>

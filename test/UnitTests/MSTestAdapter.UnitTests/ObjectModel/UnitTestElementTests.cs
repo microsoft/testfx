@@ -24,11 +24,8 @@ public class UnitTestElementTests : TestContainer
 
     #region Ctor tests
 
-    public void UnitTestElementConstructorShouldThrowIfTestMethodIsNull()
-    {
-        Exception ex = VerifyThrows(() => _ = new UnitTestElement(null));
-        Verify(ex.GetType() == typeof(ArgumentNullException));
-    }
+    public void UnitTestElementConstructorShouldThrowIfTestMethodIsNull() =>
+        VerifyThrows<ArgumentNullException>(() => _ = new UnitTestElement(null));
 
     #endregion
 

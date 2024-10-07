@@ -26,13 +26,8 @@ public class ExpectedExceptionAttributeTests : TestContainer
     /// <summary>
     /// ExpectedExceptionAttribute constructor should throw ArgumentNullException when parameter exceptionType = typeof(AnyClassNotDerivedFromExceptionClass).
     /// </summary>
-    public void ExpectedExceptionAttributeConstructorShouldThrowArgumentException()
-    {
-        static void A() => _ = new ExpectedExceptionAttribute(typeof(ExpectedExceptionAttributeTests), "Dummy");
-
-        Exception ex = VerifyThrows(A);
-        Verify(ex is ArgumentException);
-    }
+    public void ExpectedExceptionAttributeConstructerShouldThrowArgumentException() =>
+        VerifyThrows<ArgumentException>(() => _ = new ExpectedExceptionAttribute(typeof(ExpectedExceptionAttributeTests), "Dummy"));
 
     /// <summary>
     /// ExpectedExceptionAttribute constructor should not throw exception when parameter exceptionType = typeof(AnyClassDerivedFromExceptionClass).

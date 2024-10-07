@@ -38,6 +38,15 @@
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " />
   </ItemGroup>
 
+  <PropertyGroup>
+    <!-- Enable AOT analyzer warnings to make sure we don't call APIs that would fail when we use source generator mode together with NativeAOT. -->
+    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
   <ItemGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(WinUiMinimum)' ">
     <!-- CVE-2019-0981, CVE-2019-0980, CVE-2019-0657 -->
     <PackageReference Include="System.Private.Uri" />

@@ -35,8 +35,6 @@ public class TelemetryTests : AcceptanceTestBase
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TestApplicationOptions.EnableTelemetry: True
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TESTINGPLATFORM_TELEMETRY_OPTOUT environment variable: ''
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG DOTNET_CLI_TELEMETRY_OPTOUT environment variable: ''
-.+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TESTINGPLATFORM_NOBANNER environment variable: ''
-.+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG DOTNET_NOLOGO environment variable: ''
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG Telemetry is 'ENABLED'
 """;
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
@@ -64,8 +62,6 @@ public class TelemetryTests : AcceptanceTestBase
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TestApplicationOptions.EnableTelemetry: True
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TESTINGPLATFORM_TELEMETRY_OPTOUT environment variable: '1'
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG DOTNET_CLI_TELEMETRY_OPTOUT environment variable: ''
-.+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TESTINGPLATFORM_NOBANNER environment variable: ''
-.+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG DOTNET_NOLOGO environment variable: ''
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG Telemetry is 'DISABLED'
 """;
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
@@ -93,8 +89,6 @@ public class TelemetryTests : AcceptanceTestBase
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TestApplicationOptions.EnableTelemetry: True
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TESTINGPLATFORM_TELEMETRY_OPTOUT environment variable: ''
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG DOTNET_CLI_TELEMETRY_OPTOUT environment variable: '1'
-.+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TESTINGPLATFORM_NOBANNER environment variable: ''
-.+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG DOTNET_NOLOGO environment variable: ''
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG Telemetry is 'DISABLED'
 """;
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
@@ -116,8 +110,6 @@ public class TelemetryTests : AcceptanceTestBase
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TestApplicationOptions.EnableTelemetry: False
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TESTINGPLATFORM_TELEMETRY_OPTOUT environment variable: ''
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG DOTNET_CLI_TELEMETRY_OPTOUT environment variable: ''
-.+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TESTINGPLATFORM_NOBANNER environment variable: ''
-.+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG DOTNET_NOLOGO environment variable: ''
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG Telemetry is 'DISABLED'
 """;
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);

@@ -55,6 +55,7 @@ public sealed class TelemetryManagerTests : TestBase
         loggerFactoryMock.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
         TelemetryManager telemetryManager = new();
+        telemetryManager.AddTelemetryCollectorProvider(_ => new NopTelemetryService(false));
 
         // Act
         environmentMock.Setup(e => e.GetEnvironmentVariable(variable)).Returns(value);
@@ -107,6 +108,7 @@ public sealed class TelemetryManagerTests : TestBase
         loggerFactoryMock.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
         TelemetryManager telemetryManager = new();
+        telemetryManager.AddTelemetryCollectorProvider(_ => new NopTelemetryService(false));
 
         // Act
         environmentMock.Setup(e => e.GetEnvironmentVariable(variable)).Returns(value);
@@ -156,6 +158,7 @@ public sealed class TelemetryManagerTests : TestBase
         loggerFactoryMock.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
         TelemetryManager telemetryManager = new();
+        telemetryManager.AddTelemetryCollectorProvider(_ => new NopTelemetryService(false));
 
         // Act
         await telemetryManager.BuildAsync(serviceProvider, loggerFactoryMock.Object, options);
@@ -217,6 +220,7 @@ public sealed class TelemetryManagerTests : TestBase
         loggerFactoryMock.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
         TelemetryManager telemetryManager = new();
+        telemetryManager.AddTelemetryCollectorProvider(_ => new NopTelemetryService(false));
 
         // Act
         // Disable showing the telemetry message.

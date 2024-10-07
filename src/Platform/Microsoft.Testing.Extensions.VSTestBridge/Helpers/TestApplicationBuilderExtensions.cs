@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
+using Microsoft.Testing.Extensions.VSTestBridge.Configurations;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 
@@ -26,7 +28,14 @@ public static class TestApplicationBuilderExtensions
     /// <param name="builder">The test application builder.</param>
     /// <param name="extension">The extension that will be used as the source of registration for this helper service.</param>
     public static void AddRunSettingsService(this ITestApplicationBuilder builder, IExtension extension)
-        => builder.CommandLine.AddProvider(() => new RunSettingsCommandLineOptionsProvider(extension));
+    {
+        if (builder is TestApplicationBuilder testApplicationBuilder)
+        {
+            testApplicationBuilder.Configuration.AddConfigurationSource(() => new RunSettingsConfigurationProvider(new SystemFileSystem()));
+        }
+
+        builder.CommandLine.AddProvider(() => new RunSettingsCommandLineOptionsProvider(extension));
+    }
 
     /// <summary>
     /// Allows to register the VSTest TestRunParameters service.

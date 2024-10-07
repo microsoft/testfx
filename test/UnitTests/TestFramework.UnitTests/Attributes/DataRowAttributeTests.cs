@@ -213,3 +213,21 @@ public class DataRowAttributeTests : TestContainer
         public override string GetDisplayName(MethodInfo methodInfo, object[] data) => "Overridden DisplayName";
     }
 }
+
+/// <summary>
+/// The dummy test class.
+/// </summary>
+[TestClass]
+public class DummyTestClass
+{
+    /// <summary>
+    /// DataRow test method 1.
+    /// </summary>
+    [DataRow("First", "Second", null)]
+    [DataRow(null, "First", "Second")]
+    [DataRow("First", null, "Second")]
+    [TestMethod]
+    public void DataRowTestMethod()
+    {
+    }
+}

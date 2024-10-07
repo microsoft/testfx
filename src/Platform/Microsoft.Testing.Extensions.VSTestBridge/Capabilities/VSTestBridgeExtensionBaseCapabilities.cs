@@ -8,7 +8,6 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 
 public sealed class VSTestBridgeExtensionBaseCapabilities : ITrxReportCapability, IVSTestFlattenedTestNodesReportCapability, INamedFeatureCapability
 {
-    private const string MultiRequestSupport = "experimental_multiRequestSupport";
     private const string VSTestProviderSupport = "vstestProvider";
 
     /// <inheritdoc />
@@ -25,5 +24,5 @@ public sealed class VSTestBridgeExtensionBaseCapabilities : ITrxReportCapability
     /// <inheritdoc />
     void ITrxReportCapability.Enable() => IsTrxEnabled = true;
 
-    bool INamedFeatureCapability.IsSupported(string featureName) => featureName is MultiRequestSupport or VSTestProviderSupport;
+    bool INamedFeatureCapability.IsSupported(string featureName) => featureName is VSTestProviderSupport;
 }

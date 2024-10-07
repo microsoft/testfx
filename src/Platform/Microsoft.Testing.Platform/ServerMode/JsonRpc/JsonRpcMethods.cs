@@ -16,6 +16,7 @@ internal static class JsonRpcMethods
     public const string ClientLog = "client/log";
     public const string Exit = "exit";
     public const string CancelRequest = "$/cancelRequest";
+    public const string TestingTestUpdatesAttachments = "testing/testUpdates/attachments";
 }
 
 internal static class JsonRpcStrings
@@ -44,6 +45,8 @@ internal static class JsonRpcStrings
     public const string SupportsDiscovery = "supportsDiscovery";
     public const string MultiRequestSupport = "experimental_multiRequestSupport";
     public const string VSTestProviderSupport = "vstestProvider";
+    public const string AttachmentsSupport = "attachmentsSupport";
+    public const string MultiConnectionProvider = "multipleConnectionProvider";
 
     // Discovery and run
     public const string RunId = "runId";
@@ -60,7 +63,7 @@ internal static class JsonRpcStrings
     public const string Message = "message";
 
     // Telemetry
-    public const string EventName = "EventName";
+    public const string EventName = "eventName";
     public const string Metrics = "metrics";
 
     // Process

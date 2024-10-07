@@ -547,7 +547,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DataMemberSignatureRule).WithLocation(1).WithArguments("MyTestClass", "GetData"));
     }
 
-    public async Task MemberIsNotPublic_Diagnostic()
+    public async Task MemberIsNotPublic_NoDiagnostic()
     {
         string code = """
             using System;
@@ -557,13 +557,13 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             [TestClass]
             public class MyTestClass
             {
-                [{|#0:DynamicData("Data")|}]
+                [DynamicData("Data")]
                 [TestMethod]
                 public void TestMethod1(object[] o)
                 {
                 }
 
-                [{|#1:DynamicData("GetData", DynamicDataSourceType.Method)|}]
+                [DynamicData("GetData", DynamicDataSourceType.Method)]
                 [TestMethod]
                 public void TestMethod2(object[] o)
                 {
@@ -574,10 +574,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DataMemberSignatureRule).WithLocation(0).WithArguments("MyTestClass", "Data"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DataMemberSignatureRule).WithLocation(1).WithArguments("MyTestClass", "GetData"));
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     public async Task MethodHasParameters_Diagnostic()

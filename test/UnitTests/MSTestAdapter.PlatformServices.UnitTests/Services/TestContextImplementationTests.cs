@@ -140,10 +140,7 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Exception exception =
-            VerifyThrows(() => _testContextImplementation.AddResultFile(null));
-
-        Verify(typeof(ArgumentException) == exception.GetType());
+        ArgumentException exception = VerifyThrows<ArgumentException>(() => _testContextImplementation.AddResultFile(null));
         Verify(exception.Message.Contains(Resource.Common_CannotBeNullOrEmpty));
     }
 
@@ -151,10 +148,7 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Exception exception =
-            VerifyThrows(() => _testContextImplementation.AddResultFile(string.Empty));
-
-        Verify(typeof(ArgumentException) == exception.GetType());
+        ArgumentException exception = VerifyThrows<ArgumentException>(() => _testContextImplementation.AddResultFile(string.Empty));
         Verify(exception.Message.Contains(Resource.Common_CannotBeNullOrEmpty));
     }
 

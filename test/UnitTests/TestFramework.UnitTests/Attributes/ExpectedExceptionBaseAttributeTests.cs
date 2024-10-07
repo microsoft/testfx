@@ -30,13 +30,8 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
     /// <summary>
     /// RethrowIfAssertException function will throw AssertFailedException if we pass AssertInconclusiveException as parameter in it.
     /// </summary>
-    public void RethrowIfAssertExceptionThrowsExceptionOnAssertInconclusive()
-    {
-        void A() => _sut.RethrowIfAssertException(new AssertInconclusiveException());
-
-        Exception ex = VerifyThrows(A);
-        Verify(ex is AssertInconclusiveException);
-    }
+    public void RethrowIfAssertExceptionThrowsExceptionOnAssertInconclusive() =>
+        VerifyThrows<AssertInconclusiveException>(() => _sut.RethrowIfAssertException(new AssertInconclusiveException()));
 
     public void VerifyCorrectMessageIsGettingSetInVariablenoExceptionMessage()
     {

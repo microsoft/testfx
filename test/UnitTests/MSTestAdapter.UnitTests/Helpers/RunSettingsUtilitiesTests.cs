@@ -130,8 +130,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             </RunSettings>
             """;
 
-        Exception ex = VerifyThrows(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
-        Verify(ex.GetType() == typeof(SettingsException));
+        VerifyThrows<SettingsException>(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
     }
 
     public void GetTestRunParametersThrowsWhenTRPNodeHasNonParameterTypeChildNodes()
@@ -152,8 +151,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             </RunSettings>
             """;
 
-        Exception ex = VerifyThrows(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
-        Verify(ex.GetType() == typeof(SettingsException));
+        VerifyThrows<SettingsException>(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
     }
 
     public void GetTestRunParametersIgnoresMalformedKeyValues()
