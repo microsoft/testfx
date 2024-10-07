@@ -257,7 +257,7 @@ public class MSTestSettings
     [Obsolete("this function will be removed in v4.0.0")]
     public static void PopulateSettings(IDiscoveryContext? context) => PopulateSettings(context, null, null);
 
-    private static bool IsRunSettingsFileHesMSTestSettings(string? runSettingsXml) => IsRunSettingsFileHasSettingName(runSettingsXml, SettingsName) || IsRunSettingsFileHasSettingName(runSettingsXml, SettingsNameAlias);
+    private static bool IsRunSettingsFileHasMSTestSettings(string? runSettingsXml) => IsRunSettingsFileHasSettingName(runSettingsXml, SettingsName) || IsRunSettingsFileHasSettingName(runSettingsXml, SettingsNameAlias);
 
     private static bool IsRunSettingsFileHasSettingName(string? runSettingsXml, string SettingName)
     {
@@ -292,7 +292,7 @@ public class MSTestSettings
     /// </param>
     internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger, IConfiguration? configuration)
     {
-        if (configuration != null && context?.RunSettings != null && IsRunSettingsFileHesMSTestSettings(context?.RunSettings.SettingsXml))
+        if (configuration != null && context?.RunSettings != null && IsRunSettingsFileHasMSTestSettings(context?.RunSettings.SettingsXml))
         {
             throw new InvalidOperationException(Resource.DuplicateConfigurationError);
         }
