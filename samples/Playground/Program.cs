@@ -3,7 +3,6 @@
 
 using System.Reflection;
 
-using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
@@ -26,16 +25,15 @@ public class Program
         if (Environment.GetEnvironmentVariable("TESTSERVERMODE") != "1")
         {
             // To attach to the children
-            // Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
+            Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
             // Custom test host controller extension
-            // testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
+            testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
 
             // Enable Trx
             // testApplicationBuilder.AddTrxReportProvider();
-            testApplicationBuilder.AddAppInsightsTelemetryProvider();
 
             // Enable Telemetry
             // testApplicationBuilder.AddAppInsightsTelemetryProvider();
