@@ -876,31 +876,35 @@ public class MSTestSettings
 
     private static void ParseBooleanSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<bool> setSetting)
     {
-        if (configuration[$"mstest:{key}"] is string value)
+        if (configuration[$"mstest:{key}"] is not string value)
         {
-            if (bool.TryParse(value, out bool result))
-            {
-                setSetting(result);
-            }
-            else
-            {
-                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
-            }
+            return;
+        }
+
+        if (bool.TryParse(value, out bool result))
+        {
+            setSetting(result);
+        }
+        else
+        {
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
         }
     }
 
     private static void ParseIntegerSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<int> setSetting)
     {
-        if (configuration[$"mstest:{key}"] is string value)
+        if (configuration[$"mstest:{key}"] is not string value)
         {
-            if (int.TryParse(value, out int result) && result > 0)
-            {
-                setSetting(result);
-            }
-            else
-            {
-                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
-            }
+            return;
+        }
+
+        if (int.TryParse(value, out int result) && result > 0)
+        {
+            setSetting(result);
+        }
+        else
+        {
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
         }
     }
 

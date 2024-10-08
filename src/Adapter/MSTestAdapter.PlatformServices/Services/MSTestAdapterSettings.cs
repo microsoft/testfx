@@ -129,12 +129,14 @@ public class MSTestAdapterSettings
 
     private static void ParseBooleanSetting(IConfiguration configuration, string key, Action<bool> setSetting)
     {
-        if (configuration[$"mstest:{key}"] is string value)
+        if (configuration[$"mstest:{key}"] is not string value)
         {
-            if (bool.TryParse(value, out bool result))
-            {
-                setSetting(result);
-            }
+            return;
+        }
+
+        if (bool.TryParse(value, out bool result))
+        {
+            setSetting(result);
         }
     }
 
