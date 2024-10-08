@@ -162,19 +162,19 @@ public class RunConfigurationSettings
     {
         // Expected format of the json is: -
         // "mstest" : {
-        //  "runConfiguration": {
+        //  "execution": {
         //    "collectSourceInformation": true,
         //    "executionApartmentState": "STA"
         //  }
         // }
-        if (bool.TryParse(configuration["mstest:runConfiguration:collectSourceInformation"], out bool collectSourceInformation))
+        if (bool.TryParse(configuration["mstest:execution:collectSourceInformation"], out bool collectSourceInformation))
         {
             settings.CollectSourceInformation = collectSourceInformation;
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                 "CollectSourceInformation value found : {0}", collectSourceInformation);
         }
 
-        string? apartmentStateValue = configuration["mstest:runConfiguration:executionApartmentState"];
+        string? apartmentStateValue = configuration["mstest:execution:executionApartmentState"];
         if (Enum.TryParse(apartmentStateValue, out PlatformApartmentState platformApartmentState))
         {
             settings.ExecutionApartmentState = platformApartmentState switch

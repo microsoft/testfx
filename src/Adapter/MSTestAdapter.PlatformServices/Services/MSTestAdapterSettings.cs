@@ -183,7 +183,7 @@ public class MSTestAdapterSettings
 
         if (s_configuration is not null)
         {
-            string? isAppDomainDisabled = s_configuration["DisableAppDomain"];
+            string? isAppDomainDisabled = s_configuration["mstest:execution:disableAppDomain"];
             disableAppDomain = disableAppDomain || (bool.TryParse(isAppDomainDisabled, out bool result)
             && result);
         }
