@@ -24,11 +24,15 @@ internal sealed partial class TerminalTestReporter : IDisposable
     /// </summary>
     private static readonly string[] NewLineStrings = { "\r\n", "\n" };
 
-    internal const string SingleIndentation = "  ";
+    internal const string HalfIndentation = " ";
+
+    internal const string SingleIndentation = $"{HalfIndentation}{HalfIndentation}";
+
+    internal const string SingleAndHalfIndentation = $"{SingleIndentation}{HalfIndentation}";
 
     internal const string DoubleIndentation = $"{SingleIndentation}{SingleIndentation}";
 
-    internal const string TripleIndentation = $"{SingleIndentation}{SingleIndentation}{SingleIndentation}";
+    internal const string TripleIndentation = $"{DoubleIndentation}{SingleIndentation}";
 
     internal Func<IStopwatch> CreateStopwatch { get; set; } = SystemStopwatch.StartNew;
 
@@ -373,7 +377,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         TestOutcome outcome,
         TimeSpan duration,
         string? errorMessage,
-        string? errorStackTrace,
+        Exception? exception,
         string? expected,
         string? actual)
     {
@@ -410,7 +414,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 outcome,
                 duration,
                 errorMessage,
-                errorStackTrace,
+                exception,
                 expected,
                 actual));
         }
@@ -425,7 +429,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         TestOutcome outcome,
         TimeSpan duration,
         string? errorMessage,
-        string? errorStackTrace,
+        Exception? exception,
         string? expected,
         string? actual)
     {
@@ -469,9 +473,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         terminal.AppendLine();
 
-        FormatErrorMessage(terminal, errorMessage);
+        FormatErrorMessage(terminal, errorMessage, exception);
         FormatExpectedAndActual(terminal, expected, actual);
-        FormatStackTrace(terminal, errorStackTrace);
+        FormatExceptionStack(terminal, exception);
     }
 
     private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture)
@@ -495,73 +499,32 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
-    private static void FormatStackTrace(ITerminal terminal, string? errorStackTrace)
+    private static void FormatErrorMessage(ITerminal terminal, string? errorMessage, Exception? exception)
     {
-        if (RoslynString.IsNullOrWhiteSpace(errorStackTrace))
+        if (RoslynString.IsNullOrWhiteSpace(errorMessage))
         {
             return;
         }
 
         terminal.SetColor(TerminalColor.Red);
-        terminal.Append(SingleIndentation);
-        terminal.Append(PlatformResources.StackTrace);
-        terminal.AppendLine(":");
 
-        if (!errorStackTrace.Contains('\n'))
+        if (exception is null)
         {
-            AppendStackFrame(terminal, errorStackTrace);
-            return;
-        }
-
-        string[] lines = errorStackTrace.Split(NewLineStrings, StringSplitOptions.None);
-        foreach (string line in lines)
-        {
-            AppendStackFrame(terminal, line);
-        }
-
-        terminal.ResetColor();
-    }
-
-    internal /*for testing */ static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
-    {
-        terminal.Append(DoubleIndentation);
-        Match match = GetFrameRegex().Match(stackTraceLine);
-        if (match.Success)
-        {
-            bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
-            terminal.SetColor(TerminalColor.DarkGray);
-            terminal.Append(PlatformResources.StackFrameAt);
-            terminal.Append(' ');
-            terminal.ResetColor();
-            terminal.SetColor(TerminalColor.Red);
-            if (weHaveFilePathAndCodeLine)
-            {
-                terminal.Append(match.Groups["code"].Value);
-            }
-            else
-            {
-                terminal.Append(match.Groups["code1"].Value);
-            }
-
-            if (weHaveFilePathAndCodeLine)
-            {
-                terminal.SetColor(TerminalColor.DarkGray);
-                terminal.Append(' ');
-                terminal.Append(PlatformResources.StackFrameIn);
-                terminal.Append(' ');
-                if (!RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
-                {
-                    int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
-                    terminal.AppendLink(match.Groups["file"].Value, line);
-                }
-            }
-
-            terminal.AppendLine();
+            AppendIndentedLine(terminal, errorMessage, SingleIndentation);
         }
         else
         {
-            terminal.AppendLine(stackTraceLine);
+            AppendIndentedLine(terminal, $"{exception.GetType().FullName}: {errorMessage}", SingleIndentation);
         }
+
+        Exception? innerException = exception?.InnerException;
+        while (innerException is not null)
+        {
+            AppendIndentedLine(terminal, $"---> {innerException.GetType().FullName}: {innerException.Message}", SingleAndHalfIndentation);
+            innerException = innerException?.InnerException;
+        }
+
+        terminal.ResetColor();
     }
 
     private static void FormatExpectedAndActual(ITerminal terminal, string? expected, string? actual)
@@ -581,16 +544,83 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
     }
 
-    private static void FormatErrorMessage(ITerminal terminal, string? errorMessage)
+    private static void FormatExceptionStack(ITerminal terminal, Exception? exception)
     {
-        if (RoslynString.IsNullOrWhiteSpace(errorMessage))
+        if (exception is null)
         {
             return;
         }
 
-        terminal.SetColor(TerminalColor.Red);
-        AppendIndentedLine(terminal, errorMessage, SingleIndentation);
+        terminal.SetColor(TerminalColor.DarkGray);
+
+        Stack<string?> stackTraces = new();
+        stackTraces.Push(exception.StackTrace);
+
+        Exception? innerException = exception?.InnerException;
+        while (innerException is not null)
+        {
+            stackTraces.Push(innerException.StackTrace);
+            innerException = innerException?.InnerException;
+        }
+
+        while (stackTraces.Count > 0)
+        {
+            string? currentStack = stackTraces.Pop();
+
+            if (currentStack is not null)
+            {
+                string[] lines = currentStack.Split(NewLineStrings, StringSplitOptions.None);
+                foreach (string line in lines)
+                {
+                    AppendStackFrame(terminal, line);
+                    terminal.SetColor(TerminalColor.DarkGray);
+                }
+            }
+
+            if (stackTraces.Count > 0)
+            {
+                AppendIndentedLine(terminal, "--- End of inner exception stack trace ---", DoubleIndentation);
+            }
+        }
+
         terminal.ResetColor();
+    }
+
+    internal /*for testing */ static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
+    {
+        terminal.Append(DoubleIndentation);
+        Match match = GetFrameRegex().Match(stackTraceLine);
+        if (!match.Success)
+        {
+            terminal.AppendLine(stackTraceLine);
+            return;
+        }
+
+        bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
+        terminal.Append(PlatformResources.StackFrameAt);
+        terminal.Append(' ');
+        if (weHaveFilePathAndCodeLine)
+        {
+            terminal.Append(match.Groups["code"].Value);
+        }
+        else
+        {
+            terminal.Append(match.Groups["code1"].Value);
+        }
+
+        if (weHaveFilePathAndCodeLine)
+        {
+            terminal.Append(' ');
+            terminal.Append(PlatformResources.StackFrameIn);
+            terminal.Append(' ');
+            if (!RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
+            {
+                int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
+                terminal.AppendLink(match.Groups["file"].Value, line);
+            }
+        }
+
+        terminal.AppendLine();
     }
 
     private static void AppendIndentedLine(ITerminal terminal, string? message, string indent)
