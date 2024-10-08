@@ -299,12 +299,10 @@ public class MSTestSettings
 
         // This will contain default adapter settings
         var settings = new MSTestSettings();
-        var runConfigurationSettings = new RunConfigurationSettings();
+        var runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
-        if (!StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml))
+        if (!StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml) && configuration is null)
         {
-            runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
-
             MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias, logger);
 
             // If a user specifies MSTestV2 in the runsettings, then prefer that over the v1 settings.
@@ -321,8 +319,7 @@ public class MSTestSettings
 
             SetGlobalSettings(context.RunSettings.SettingsXml, settings, logger);
         }
-
-        if (configuration is not null)
+        else if (configuration is not null)
         {
             RunConfigurationSettings.SetRunConfigurationSettingsFromConfig(configuration, runConfigurationSettings);
             SetSettingsFromConfig(configuration, logger, settings);
