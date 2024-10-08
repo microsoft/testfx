@@ -166,6 +166,12 @@ public class MSTestAdapterSettings
 
     public static bool IsAppDomainCreationDisabled(string? settingsXml)
     {
+        // Expected format of the json is: -
+        // "mstest" : {
+        //  "execution": {
+        //    "disableAppDomain": true,
+        //  }
+        // }
         if (StringEx.IsNullOrEmpty(settingsXml) && s_configuration is null)
         {
             return false;
