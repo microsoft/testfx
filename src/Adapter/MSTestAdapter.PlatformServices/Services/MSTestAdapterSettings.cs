@@ -45,6 +45,8 @@ public class MSTestAdapterSettings
     /// </summary>
     protected List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
 
+    private static IConfiguration? s_configuration;
+
     /// <summary>
     /// Convert the parameter xml to TestSettings.
     /// </summary>
@@ -152,6 +154,7 @@ public class MSTestAdapterSettings
         //  },
         //  ... remaining settings
         // }
+        s_configuration = configuration;
         ParseBooleanSetting(configuration, "deployment:enabled", value => settings.DeploymentEnabled = value);
         ParseBooleanSetting(configuration, "deployment:deployTestSourceDependencies", value => settings.DeployTestSourceDependencies = value);
         ParseBooleanSetting(configuration, "deployment:deleteDeploymentDirectoryAfterTestRunIsComplete", value => settings.DeleteDeploymentDirectoryAfterTestRunIsComplete = value);
@@ -163,17 +166,29 @@ public class MSTestAdapterSettings
 
     public static bool IsAppDomainCreationDisabled(string? settingsXml)
     {
-        if (StringEx.IsNullOrEmpty(settingsXml))
+        if (StringEx.IsNullOrEmpty(settingsXml) && s_configuration is null)
         {
             return false;
         }
 
-        StringReader stringReader = new(settingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        bool disableAppDomain = false;
 
-        return reader.ReadToFollowing("DisableAppDomain")
-            && bool.TryParse(reader.ReadInnerXml(), out bool disableAppDomain)
-            && disableAppDomain;
+        if (!StringEx.IsNullOrEmpty(settingsXml))
+        {
+            StringReader stringReader = new(settingsXml);
+            var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+            disableAppDomain = reader.ReadToFollowing("DisableAppDomain") &&
+                bool.TryParse(reader.ReadInnerXml(), out bool result) && result;
+        }
+
+        if (s_configuration is not null)
+        {
+            string? isAppDomainDisabled = s_configuration["DisableAppDomain"];
+            disableAppDomain = disableAppDomain || (bool.TryParse(isAppDomainDisabled, out bool result)
+            && result);
+        }
+
+        return disableAppDomain;
     }
 
     /// <summary>
