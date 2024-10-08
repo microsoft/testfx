@@ -292,7 +292,7 @@ public class MSTestSettings
     /// </param>
     internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger, IConfiguration? configuration)
     {
-        if (configuration != null && context?.RunSettings != null && IsRunSettingsFileHasMSTestSettings(context?.RunSettings.SettingsXml))
+        if (configuration != null && context?.RunSettings != null && IsRunSettingsFileHasMSTestSettings(context.RunSettings.SettingsXml))
         {
             throw new InvalidOperationException(Resource.DuplicateConfigurationError);
         }
@@ -301,7 +301,7 @@ public class MSTestSettings
         var settings = new MSTestSettings();
         var runConfigurationSettings = new RunConfigurationSettings();
 
-        if (context?.RunSettings != null && !StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
+        if (!StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml))
         {
             runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
