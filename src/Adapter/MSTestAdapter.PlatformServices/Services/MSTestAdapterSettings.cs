@@ -380,7 +380,7 @@ public class MSTestAdapterSettings
             {
                 // Default includeSubDirectories to false if not provided
                 bool includeSubDirectories = false;
-                ParseBooleanSetting(configuration, $"mstest:assemblyResolution:{indx}:includeSubDirectories", value => includeSubDirectories = value);
+                ParseBooleanSetting(configuration, $"mstest:assemblyResolution:{indx++}:includeSubDirectories", value => includeSubDirectories = value);
 
                 SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
             }
