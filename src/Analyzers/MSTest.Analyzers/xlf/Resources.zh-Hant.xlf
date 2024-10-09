@@ -288,7 +288,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
         <source>Member '{0}' already exists in the base class</source>
-        <target state="new">Member '{0}' already exists in the base class</target>
+        <target state="translated">成員 '{0}' 已經存在於基底類別中</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">
