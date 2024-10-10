@@ -3,9 +3,12 @@
 
 using System.Xml;
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -306,6 +309,43 @@ public class MSTestAdapterSettingsTests : TestContainer
         reader.Read();
         var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
         Verify(adapterSettings.DeployTestSourceDependencies);
+    }
+
+    #endregion
+
+    #region ConfigJson
+    public void ToSettings_ShouldInitializeDeploymentAndAssemblyResolutionSettingsCorrectly()
+    {
+        // Arrange
+        var configDictionary = new Dictionary<string, string>
+    {
+        { "mstest:deployment:enabled", "true" },
+        { "mstest:deployment:deployTestSourceDependencies", "true" },
+        { "mstest:deployment:deleteDeploymentDirectoryAfterTestRunIsComplete", "false" },
+        { "mstest:assemblyResolution:0:path", "C:\\project\\dependencies" },
+        { "mstest:assemblyResolution:0:includeSubDirectories", "true" },
+        { "mstest:assemblyResolution:1:path", "C:\\project\\libs" },
+        { "mstest:assemblyResolution:1:includeSubDirectories", "false" },
+        { "mstest:assemblyResolution:2:path", "C:\\project\\plugins" },
+    };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string value) ? value : null);
+
+        // Act
+        var settings = MSTestAdapterSettings.ToSettings(mockConfig.Object);
+
+        // Assert
+        Verify(settings.DeploymentEnabled);
+        Verify(settings.DeployTestSourceDependencies);
+        Verify(!settings.DeleteDeploymentDirectoryAfterTestRunIsComplete);
+
+        // Assert
+        Verify(settings.SearchDirectories.Count == 3);
+        Verify(settings.SearchDirectories[0].DirectoryPath == "C:\\project\\dependencies" && settings.SearchDirectories[0].IncludeSubDirectories);
+        Verify(settings.SearchDirectories[1].DirectoryPath == "C:\\project\\libs" && !settings.SearchDirectories[1].IncludeSubDirectories);
+        Verify(settings.SearchDirectories[2].DirectoryPath == "C:\\project\\plugins" && !settings.SearchDirectories[2].IncludeSubDirectories);
     }
 
     #endregion
