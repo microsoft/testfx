@@ -43,7 +43,7 @@ public class MSTestAdapterSettings
     /// <summary>
     ///  Gets list of paths recursive or non recursive paths.
     /// </summary>
-    protected List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
+    internal List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
 
     private static IConfiguration? s_configuration;
 
@@ -381,7 +381,7 @@ public class MSTestAdapterSettings
             {
                 // Default includeSubDirectories to false if not provided
                 bool includeSubDirectories = false;
-                ParseBooleanSetting(configuration, $"mstest:assemblyResolution:{indx++}:includeSubDirectories", value => includeSubDirectories = value);
+                ParseBooleanSetting(configuration, $"assemblyResolution:{indx++}:includeSubDirectories", value => includeSubDirectories = value);
 
                 SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
             }
