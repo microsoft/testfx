@@ -910,7 +910,7 @@ public class MSTestSettings
     /// </summary>
     /// <param name="configuration">Configuration to load the settings from.</param>
     /// <param name="logger"> The logger for messages. </param>
-    private static void SetSettingsFromConfig(IConfiguration configuration, IMessageLogger? logger, MSTestSettings settings)
+    internal static void SetSettingsFromConfig(IConfiguration configuration, IMessageLogger? logger, MSTestSettings settings)
     {
         // Expected format of the json is: -
         //
