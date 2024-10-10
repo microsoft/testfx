@@ -47,15 +47,13 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public const string ProjectName = "ConfigrationSettings";
+        public const string ProjectName = "ConfigurationSettings";
+        public const string ProjectNameWithMSTestRunSettings = "ConfigurationMSTestSettings";
+        public const string ProjectNameWithMSTestV2RunSettings = "ConfigurationMSTestV2Settings";
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
-        public const string ProjectNameWithMSTestRunSettings = "ConfigrationSettings";
-
         public string ProjectPathWithMSTestRunSettings => GetAssetPath(ProjectNameWithMSTestRunSettings);
-
-        public const string ProjectNameWithMSTestV2RunSettings = "ConfigrationSettings";
 
         public string ProjectPathWithMSTestV2RunSettings => GetAssetPath(ProjectNameWithMSTestV2RunSettings);
 
@@ -64,18 +62,21 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
             yield return (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$ProjectName$", ProjectName)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$AppendSettings$", string.Empty));
 
             yield return (ProjectNameWithMSTestRunSettings, ProjectNameWithMSTestRunSettings,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$ProjectName$", ProjectNameWithMSTestRunSettings)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$AppendSettings$", MSTestSettings));
 
             yield return (ProjectNameWithMSTestV2RunSettings, ProjectNameWithMSTestV2RunSettings,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$ProjectName$", ProjectNameWithMSTestV2RunSettings)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$AppendSettings$", MSTestV2Settings));
         }
@@ -91,7 +92,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
 """;
 
         private const string SourceCode = """
-#file ConfigrationSettings.csproj
+#file $ProjectName$.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -129,7 +130,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
     $AppendSettings$
 </RunSettings>
 
-#file ConfigrationSettings.testconfig.json
+#file ConfigurationSettings.testconfig.json
 {
   "mstest": {
     "timeout": {
