@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -157,6 +158,33 @@ public class RunConfigurationSettingsTests : TestContainer
 
         // Validating the default value of a random setting.
         Verify(!settings.CollectSourceInformation);
+    }
+
+    #endregion
+
+    #region ConfigJson
+    public void PopulateRunConfigurationSettingsFromJson_ShouldInitializeSettingsCorrectly()
+    {
+        // Arrange
+        var configDictionary = new Dictionary<string, string>
+    {
+        { "mstest:execution:collectSourceInformation", "true" },
+        { "mstest:execution:executionApartmentState", "STA" },
+    };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string value) ? value : null);
+
+        var settings = new RunConfigurationSettings();
+
+        // Act
+        RunConfigurationSettings.SetRunConfigurationSettingsFromConfig(mockConfig.Object, settings);
+
+        // Assert
+        Verify(settings is not null);
+        Verify(settings.CollectSourceInformation);
+        Verify(settings.ExecutionApartmentState == ApartmentState.STA);
     }
 
     #endregion
