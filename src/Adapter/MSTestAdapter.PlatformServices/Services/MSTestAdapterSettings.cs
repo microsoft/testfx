@@ -45,7 +45,7 @@ public class MSTestAdapterSettings
     /// </summary>
     internal List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
 
-    private static IConfiguration? s_configuration;
+    internal static IConfiguration? Configuration { get; set; }
 
     /// <summary>
     /// Convert the parameter xml to TestSettings.
@@ -155,7 +155,7 @@ public class MSTestAdapterSettings
         //  ... remaining settings
         // }
         var settings = new MSTestAdapterSettings();
-        s_configuration = configuration;
+        Configuration = configuration;
         ParseBooleanSetting(configuration, "deployment:enabled", value => settings.DeploymentEnabled = value);
         ParseBooleanSetting(configuration, "deployment:deployTestSourceDependencies", value => settings.DeployTestSourceDependencies = value);
         ParseBooleanSetting(configuration, "deployment:deleteDeploymentDirectoryAfterTestRunIsComplete", value => settings.DeleteDeploymentDirectoryAfterTestRunIsComplete = value);
@@ -173,7 +173,7 @@ public class MSTestAdapterSettings
         //    "disableAppDomain": true,
         //  }
         // }
-        if (StringEx.IsNullOrEmpty(settingsXml) && s_configuration is null)
+        if (StringEx.IsNullOrEmpty(settingsXml) && Configuration is null)
         {
             return false;
         }
@@ -188,9 +188,9 @@ public class MSTestAdapterSettings
                 bool.TryParse(reader.ReadInnerXml(), out bool result) && result;
         }
 
-        if (s_configuration is not null)
+        if (Configuration is not null)
         {
-            string? isAppDomainDisabled = s_configuration["mstest:execution:disableAppDomain"];
+            string? isAppDomainDisabled = Configuration["mstest:execution:disableAppDomain"];
             disableAppDomain = bool.TryParse(isAppDomainDisabled, out bool result) && result;
         }
 
