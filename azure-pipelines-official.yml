@@ -67,8 +67,8 @@ extends:
     sdl:
       policheck:
         enabled: true
-    tsa:
-      enabled: true
+      tsa:
+        enabled: true
     featureFlags:
       autoBaseline: true
     pool:
