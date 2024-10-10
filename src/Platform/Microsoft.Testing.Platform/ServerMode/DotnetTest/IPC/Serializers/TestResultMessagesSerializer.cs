@@ -28,8 +28,12 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
       |---SuccessfulTestMessageList[0].DisplayName Value---| (n bytes)
 
       |---SuccessfulTestMessageList[0].State Id---| (2 bytes)
-      |---SuccessfulTestMessageList[0].State Size---| (4 bytes)
+      |---SuccessfulTestMessageList[0].State Size---| (1 byte)
       |---SuccessfulTestMessageList[0].State Value---| (n bytes)
+
+      |---SuccessfulTestMessageList[0].Duration Id---| (2 bytes)
+      |---SuccessfulTestMessageList[0].Duration Size---| (8 bytes)
+      |---SuccessfulTestMessageList[0].Duration Value---| (n bytes)
 
       |---SuccessfulTestMessageList[0].Reason Id---| (2 bytes)
       |---SuccessfulTestMessageList[0].Reason Size---| (4 bytes)
@@ -55,8 +59,12 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
       |---FailedTestMessageList[0].DisplayName Value---| (n bytes)
 
       |---FailedTestMessageList[0].State Id---| (2 bytes)
-      |---FailedTestMessageList[0].State Size---| (4 bytes)
+      |---FailedTestMessageList[0].State Size---| (1 byte)
       |---FailedTestMessageList[0].State Value---| (n bytes)
+
+      |---SuccessfulTestMessageList[0].Duration Id---| (2 bytes)
+      |---SuccessfulTestMessageList[0].Duration Size---| (8 bytes)
+      |---SuccessfulTestMessageList[0].Duration Value---| (n bytes)
 
       |---FailedTestMessageList[0].Reason Id---| (2 bytes)
       |---FailedTestMessageList[0].Reason Size---| (4 bytes)
@@ -128,6 +136,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
         {
             string? uid = null, displayName = null, reason = null, sessionUid = null;
             byte? state = null;
+            long? duration = null;
 
             int fieldCount = ReadShort(stream);
 
@@ -150,6 +159,10 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
                         state = ReadByte(stream);
                         break;
 
+                    case SuccessfulTestResultMessageFieldsId.Duration:
+                        duration = ReadLong(stream);
+                        break;
+
                     case SuccessfulTestResultMessageFieldsId.Reason:
                         reason = ReadStringValue(stream, fieldSize);
                         break;
@@ -164,7 +177,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
                 }
             }
 
-            successfulTestResultMessages.Add(new SuccessfulTestResultMessage(uid, displayName, state, reason, sessionUid));
+            successfulTestResultMessages.Add(new SuccessfulTestResultMessage(uid, displayName, state, duration, reason, sessionUid));
         }
 
         return successfulTestResultMessages;
@@ -179,6 +192,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
         {
             string? uid = null, displayName = null, reason = null, sessionUid = null, errorMessage = null, errorStackTrace = null;
             byte? state = null;
+            long? duration = null;
 
             int fieldCount = ReadShort(stream);
 
@@ -199,6 +213,10 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
 
                     case FailedTestResultMessageFieldsId.State:
                         state = ReadByte(stream);
+                        break;
+
+                    case FailedTestResultMessageFieldsId.Duration:
+                        duration = ReadLong(stream);
                         break;
 
                     case FailedTestResultMessageFieldsId.Reason:
@@ -223,7 +241,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
                 }
             }
 
-            failedTestResultMessages.Add(new FailedTestResultMessage(uid, displayName, state, reason, errorMessage, errorStackTrace, sessionUid));
+            failedTestResultMessages.Add(new FailedTestResultMessage(uid, displayName, state, duration, reason, errorMessage, errorStackTrace, sessionUid));
         }
 
         return failedTestResultMessages;
@@ -264,6 +282,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
             WriteField(stream, SuccessfulTestResultMessageFieldsId.Uid, successfulTestResultMessage.Uid);
             WriteField(stream, SuccessfulTestResultMessageFieldsId.DisplayName, successfulTestResultMessage.DisplayName);
             WriteField(stream, SuccessfulTestResultMessageFieldsId.State, successfulTestResultMessage.State);
+            WriteField(stream, SuccessfulTestResultMessageFieldsId.Duration, successfulTestResultMessage.Duration);
             WriteField(stream, SuccessfulTestResultMessageFieldsId.Reason, successfulTestResultMessage.Reason);
             WriteField(stream, SuccessfulTestResultMessageFieldsId.SessionUid, successfulTestResultMessage.SessionUid);
         }
@@ -295,6 +314,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
             WriteField(stream, FailedTestResultMessageFieldsId.Uid, failedTestResultMessage.Uid);
             WriteField(stream, FailedTestResultMessageFieldsId.DisplayName, failedTestResultMessage.DisplayName);
             WriteField(stream, FailedTestResultMessageFieldsId.State, failedTestResultMessage.State);
+            WriteField(stream, FailedTestResultMessageFieldsId.Duration, failedTestResultMessage.Duration);
             WriteField(stream, FailedTestResultMessageFieldsId.Reason, failedTestResultMessage.Reason);
             WriteField(stream, FailedTestResultMessageFieldsId.ErrorMessage, failedTestResultMessage.ErrorMessage);
             WriteField(stream, FailedTestResultMessageFieldsId.ErrorStackTrace, failedTestResultMessage.ErrorStackTrace);
@@ -315,6 +335,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
         (ushort)((successfulTestResultMessage.Uid is null ? 0 : 1) +
         (successfulTestResultMessage.DisplayName is null ? 0 : 1) +
         (successfulTestResultMessage.State is null ? 0 : 1) +
+        (successfulTestResultMessage.Duration is null ? 0 : 1) +
         (successfulTestResultMessage.Reason is null ? 0 : 1) +
         (successfulTestResultMessage.SessionUid is null ? 0 : 1));
 
@@ -322,6 +343,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
         (ushort)((failedTestResultMessage.Uid is null ? 0 : 1) +
         (failedTestResultMessage.DisplayName is null ? 0 : 1) +
         (failedTestResultMessage.State is null ? 0 : 1) +
+        (failedTestResultMessage.Duration is null ? 0 : 1) +
         (failedTestResultMessage.Reason is null ? 0 : 1) +
         (failedTestResultMessage.ErrorMessage is null ? 0 : 1) +
         (failedTestResultMessage.ErrorStackTrace is null ? 0 : 1) +
