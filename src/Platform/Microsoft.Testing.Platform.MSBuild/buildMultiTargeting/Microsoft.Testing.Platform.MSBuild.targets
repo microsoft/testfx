@@ -330,4 +330,18 @@
   </Target>
 
   <Target Name="_TestRunStart" />
+
+  <Target Name="_SetTestingPlatformDefaultsForContainerBuild" BeforeTargets="ComputeContainerConfig"
+	Condition="'$(IsPublishable)' == 'true' AND '$(EnableSdkContainerSupport)' == 'true' AND !$(RuntimeIdentifier.StartsWith('win'))">
+    <!--
+		When PublishContainer target is used to create a docker image for the test project, it will try to write /app/TestResults folder
+		which is a non-writable folder. The environment variable below (notice double underscore) is used to override option defaults, and is picked up
+		EnvironmentVariablesConfigurationProvider.
+		
+		ComputeContainerConfig is target that PublishContainer depends on to figure out the configuration for the container.
+	  -->
+    <ItemGroup>
+      <ContainerEnvironmentVariable Include="platformOptions__resultDirectory" Value="/tmp/TestResults"></ContainerEnvironmentVariable>
+    </ItemGroup>
+  </Target>
 </Project>
