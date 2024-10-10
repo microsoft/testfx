@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
@@ -21,7 +22,8 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
 
         // Assert
-        testHostResult.AssertOutputContains("You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.");
+        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
+        testHostResult.AssertStandardErrorContains("You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -31,7 +33,8 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
 
         // Assert
-        testHostResult.AssertOutputContains("You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.");
+        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
+        testHostResult.AssertStandardErrorContains("You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -41,7 +44,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
 
         // Assert
-        testHostResult.AssertOutputDoesNotContain("You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.");
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -130,7 +133,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
     $AppendSettings$
 </RunSettings>
 
-#file ConfigurationSettings.testconfig.json
+#file $ProjectName$.testconfig.json
 {
   "mstest": {
     "timeout": {
