@@ -142,7 +142,7 @@ public class MSTestAdapterSettings
         }
     }
 
-    internal static MSTestAdapterSettings ToSettings(IConfiguration configuration, MSTestAdapterSettings settings)
+    internal static MSTestAdapterSettings ToSettings(IConfiguration configuration)
     {
         // Expected format of the json is: -
         //
@@ -154,6 +154,7 @@ public class MSTestAdapterSettings
         //  },
         //  ... remaining settings
         // }
+        MSTestAdapterSettings settings = new MSTestAdapterSettings();
         s_configuration = configuration;
         ParseBooleanSetting(configuration, "deployment:enabled", value => settings.DeploymentEnabled = value);
         ParseBooleanSetting(configuration, "deployment:deployTestSourceDependencies", value => settings.DeployTestSourceDependencies = value);

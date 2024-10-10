@@ -45,8 +45,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     {
 #if !WINDOWS_UWP
 #pragma warning disable IDE0022 // Use expression body for method
-        MSTestAdapterSettings? settings = s_settings ?? new MSTestAdapterSettings();
-        s_settings = MSTestAdapterSettings.ToSettings(configuration, settings);
+        var settings = MSTestAdapterSettings.ToSettings(configuration);
 #pragma warning restore IDE0022 // Use expression body for method
 #endif
     }
