@@ -154,7 +154,7 @@ public class MSTestAdapterSettings
         //  },
         //  ... remaining settings
         // }
-        MSTestAdapterSettings settings = new MSTestAdapterSettings();
+        var settings = new MSTestAdapterSettings();
         s_configuration = configuration;
         ParseBooleanSetting(configuration, "deployment:enabled", value => settings.DeploymentEnabled = value);
         ParseBooleanSetting(configuration, "deployment:deployTestSourceDependencies", value => settings.DeployTestSourceDependencies = value);
