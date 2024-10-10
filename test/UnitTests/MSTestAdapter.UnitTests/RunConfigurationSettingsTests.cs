@@ -167,10 +167,10 @@ public class RunConfigurationSettingsTests : TestContainer
     {
         // Arrange
         var configDictionary = new Dictionary<string, string>
-    {
-        { "mstest:execution:collectSourceInformation", "true" },
-        { "mstest:execution:executionApartmentState", "STA" },
-    };
+        {
+            { "mstest:execution:collectSourceInformation", "true" },
+            { "mstest:execution:executionApartmentState", "STA" },
+        };
 
         var mockConfig = new Mock<IConfiguration>();
         mockConfig.Setup(config => config[It.IsAny<string>()])
