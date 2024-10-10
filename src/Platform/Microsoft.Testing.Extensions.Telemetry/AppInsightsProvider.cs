@@ -56,7 +56,7 @@ internal sealed partial class AppInsightsProvider :
 #endif
 #if DEBUG
     // Telemetry properties that are allowed to contain unhashed information.
-    private static readonly HashSet<string> StringWhitelist =
+    private static readonly HashSet<string> KnownUnhashedProperties =
     [
         TelemetryProperties.VersionPropertyName,
         TelemetryProperties.ReporterIdPropertyName,
@@ -111,7 +111,7 @@ internal sealed partial class AppInsightsProvider :
         _telemetryTask = task.Run(IngestLoopAsync, _testApplicationCancellationTokenSource.CancellationToken);
 #else
         // Keep the custom thread to avoid to waste one from thread pool.
-        // We have some await but we should stay on custom one if not for special needs like trace log or exception.
+        // We have some await but we should stay on the custom thread if not for special cases like trace log or exception.
         _payloads = new();
         _telemetryTask = _task.RunLongRunning(IngestLoopAsync, "Telemetry AppInsightsProvider", _testApplicationCancellationTokenSource.CancellationToken);
 #endif
@@ -256,7 +256,7 @@ internal sealed partial class AppInsightsProvider :
             return;
         }
 
-        if (StringWhitelist.Contains(key))
+        if (KnownUnhashedProperties.Contains(key))
         {
             return;
         }
