@@ -82,12 +82,12 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
 
         private const string MSTestSettings = """
 <mstest>
-<mstest>
+</mstest>
 """;
 
         private const string MSTestV2Settings = """
-<mstest>
-<mstest>
+<mstestv2>
+</mstestv2>
 """;
 
         private const string SourceCode = """
