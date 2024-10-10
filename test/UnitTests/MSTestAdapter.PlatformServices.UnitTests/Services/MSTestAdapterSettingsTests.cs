@@ -348,6 +348,34 @@ public class MSTestAdapterSettingsTests : TestContainer
         Verify(settings.SearchDirectories[2].DirectoryPath == "C:\\project\\plugins" && !settings.SearchDirectories[2].IncludeSubDirectories);
     }
 
+    public void IsAppDomainCreationDisabled_ShouldPreferJsonConfigurationOverSettingsXml()
+    {
+        // Arrange
+        string settingsXml =
+            """
+        <RunSettings>
+            <MSTest>
+                <DisableAppDomain>false</DisableAppDomain>
+            </MSTest>
+        </RunSettings>
+        """;
+
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:execution:disableAppDomain", "true" },
+        };
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string value) ? value : null);
+
+        // Act
+        MSTestAdapterSettings.Configuration = mockConfig.Object;
+        bool result = MSTestAdapterSettings.IsAppDomainCreationDisabled(settingsXml);
+
+        // Assert
+        Verify(result);
+    }
+
     #endregion
 }
 
