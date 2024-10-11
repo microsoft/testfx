@@ -376,7 +376,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? errorMessage,
         string? errorStackTrace,
         string? expected,
-        string? actual)
+        string? actual,
+        string? standardOutput,
+        string? errorOutput)
     {
         TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
 
@@ -413,7 +415,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 errorMessage,
                 errorStackTrace,
                 expected,
-                actual));
+                actual,
+                standardOutput,
+                errorOutput));
         }
     }
 
@@ -428,7 +432,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? errorMessage,
         string? errorStackTrace,
         string? expected,
-        string? actual)
+        string? actual,
+        string? standardOutput,
+        string? errorOutput)
     {
         if (outcome == TestOutcome.Passed && !_options.ShowPassedTests)
         {
@@ -473,6 +479,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         FormatErrorMessage(terminal, errorMessage);
         FormatExpectedAndActual(terminal, expected, actual);
         FormatStackTrace(terminal, errorStackTrace);
+        FormatStandardAndErrorOutput(terminal, standardOutput, errorOutput);
     }
 
     private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture)
@@ -634,6 +641,30 @@ internal sealed partial class TerminalTestReporter : IDisposable
             _terminalWithProgress.WriteToTerminal(terminal => AppendAssemblySummary(assemblyRun, terminal));
         }
     }
+
+    private static void FormatStandardAndErrorOutput(ITerminal terminal, string? standardOutput, string? standardError)
+    {
+        if (RoslynString.IsNullOrWhiteSpace(standardOutput) && RoslynString.IsNullOrWhiteSpace(standardError))
+        {
+            return;
+        }
+
+        terminal.SetColor(TerminalColor.DarkGray);
+        terminal.Append(SingleIndentation);
+        terminal.AppendLine(PlatformResources.StandardOutput);
+        string? standardOutputWithoutSpecialChars = NormalizeSpecialCharacters(standardOutput);
+        AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
+        terminal.Append(SingleIndentation);
+        terminal.AppendLine(PlatformResources.StandardError);
+        string? standardErrorWithoutSpecialChars = NormalizeSpecialCharacters(standardError);
+        AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
+        terminal.ResetColor();
+    }
+
+    private static string? NormalizeSpecialCharacters(string? text)
+        => text?.Replace('\0', '\x2400')
+            // escape char
+            .Replace('\x001b', '\x241b');
 
     private static void AppendAssemblySummary(TestProgressState assemblyRun, ITerminal terminal)
     {

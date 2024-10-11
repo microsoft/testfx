@@ -397,6 +397,9 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             case TestNodeUpdateMessage testNodeStateChanged:
 
                 TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
+                string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
+                string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
+
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case InProgressTestNodeStateProperty:
@@ -415,7 +418,9 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
                             errorState.Exception?.StackTrace,
                             expected: null,
-                            actual: null);
+                            actual: null,
+                            standardOutput,
+                            standardError);
                         break;
 
                     case FailedTestNodeStateProperty failedState:
@@ -430,7 +435,9 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
                              failedState.Exception?.StackTrace,
                              expected: failedState.Exception?.Data["assert.expected"] as string,
-                             actual: failedState.Exception?.Data["assert.actual"] as string);
+                             actual: failedState.Exception?.Data["assert.actual"] as string,
+                             standardOutput,
+                             standardError);
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
@@ -445,7 +452,9 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
                              timeoutState.Exception?.StackTrace,
                              expected: null,
-                             actual: null);
+                             actual: null,
+                             standardOutput,
+                             standardError);
                         break;
 
                     case CancelledTestNodeStateProperty cancelledState:
@@ -460,7 +469,9 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              errorMessage: cancelledState.Exception?.Message ?? cancelledState.Explanation,
                              cancelledState.Exception?.StackTrace,
                              expected: null,
-                             actual: null);
+                             actual: null,
+                             standardOutput,
+                             standardError);
                         break;
 
                     case PassedTestNodeStateProperty:
@@ -475,7 +486,9 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             errorMessage: null,
                             errorStackTrace: null,
                             expected: null,
-                            actual: null);
+                            actual: null,
+                            standardOutput,
+                            standardError);
                         break;
 
                     case SkippedTestNodeStateProperty:
@@ -490,7 +503,9 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             errorMessage: null,
                             errorStackTrace: null,
                             expected: null,
-                            actual: null);
+                            actual: null,
+                            standardOutput,
+                            standardError);
                         break;
                 }
 

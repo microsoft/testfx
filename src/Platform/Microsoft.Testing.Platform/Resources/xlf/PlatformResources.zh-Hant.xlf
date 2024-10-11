@@ -633,6 +633,16 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">堆疊追蹤</target>
         <note />
       </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="new">Error output</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="new">Standard output</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
         <target state="translated">正在啟動伺服器。正在連接埠 '{0}' 上聆聽</target>

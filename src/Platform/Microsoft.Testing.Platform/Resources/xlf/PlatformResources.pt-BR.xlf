@@ -633,6 +633,16 @@ Recebe um argumento como cadeia de caracteres no formato &lt;valor&gt;[h|m|s] em
         <target state="translated">Rastreamento de Pilha</target>
         <note />
       </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="new">Error output</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="new">Standard output</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
         <target state="translated">Iniciando servidor. Escutando na porta “{0}”</target>

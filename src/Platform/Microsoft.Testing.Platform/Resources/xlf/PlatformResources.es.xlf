@@ -633,6 +633,16 @@ Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' 
         <target state="translated">Seguimiento de la pila</target>
         <note />
       </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="new">Error output</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="new">Standard output</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
         <target state="translated">Iniciando el servidor. Escuchando en el puerto '{0}'</target>

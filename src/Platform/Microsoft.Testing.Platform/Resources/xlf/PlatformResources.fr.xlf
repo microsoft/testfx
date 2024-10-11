@@ -633,6 +633,16 @@ Prend un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « v
         <target state="translated">Rapport des appels de procédure</target>
         <note />
       </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="new">Error output</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="new">Standard output</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
         <target state="translated">Démarrage du serveur. Écoute sur le port « {0} »</target>
