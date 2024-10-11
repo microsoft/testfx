@@ -140,13 +140,11 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             // The test host controller info is not setup and populated until after this constructor, because it writes banner and then after it figures out if
             // the runner is a testHost controller, so we would always have it as null if we capture it directly. Instead we need to check it via
             // func.
-            : () => _isVSTestMode
+            : () => _isVSTestMode || _isListTests || _isServerMode
                 ? false
-                : _isListTests
-                    ? false
-                    : _testHostControllerInfo.IsCurrentProcessTestHostController == null
-                        ? null
-                        : !_testHostControllerInfo.IsCurrentProcessTestHostController;
+                : _testHostControllerInfo.IsCurrentProcessTestHostController == null
+                    ? null
+                    : !_testHostControllerInfo.IsCurrentProcessTestHostController;
 
         // This is single exe run, don't show all the details of assemblies and their summaries.
         _terminalTestReporter = new TerminalTestReporter(_console, new()
@@ -272,6 +270,11 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
 
     public async Task DisplayBeforeSessionStartAsync()
     {
+        if (_isServerMode)
+        {
+            return;
+        }
+
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
         // Start test execution here, rather than in ShowBanner, because then we know
@@ -307,7 +310,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
 
     public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
+        if (_isServerMode || cancellationToken.IsCancellationRequested)
         {
             return Task.CompletedTask;
         }
@@ -385,6 +388,11 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
+
+        if (_isServerMode)
+        {
+            return;
+        }
 
         await Task.CompletedTask;
         if (cancellationToken.IsCancellationRequested)
