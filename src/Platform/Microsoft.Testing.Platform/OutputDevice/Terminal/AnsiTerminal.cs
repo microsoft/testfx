@@ -174,8 +174,7 @@ internal sealed class AnsiTerminal : ITerminal
 
     public void StopUpdate()
     {
-        string text = _stringBuilder.ToString();
-        _console.Write(text);
+        _console.Write(_stringBuilder.ToString());
         _isBatching = false;
     }
 
