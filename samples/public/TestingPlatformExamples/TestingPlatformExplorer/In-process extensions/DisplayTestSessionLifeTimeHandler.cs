@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.TestHost;
 
 namespace TestingPlatformExplorer.InProcess;
-internal class DisplayTestSessionLifeTimeHandler : ITestSessionLifetimeHandler,
+internal sealed class DisplayTestSessionLifeTimeHandler : ITestSessionLifetimeHandler,
     IOutputDeviceDataProducer,
     IAsyncInitializableExtension,
     IAsyncCleanableExtension,
