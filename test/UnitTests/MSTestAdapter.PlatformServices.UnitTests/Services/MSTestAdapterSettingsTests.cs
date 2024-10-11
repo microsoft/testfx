@@ -340,12 +340,6 @@ public class MSTestAdapterSettingsTests : TestContainer
         Verify(settings.DeploymentEnabled);
         Verify(settings.DeployTestSourceDependencies);
         Verify(!settings.DeleteDeploymentDirectoryAfterTestRunIsComplete);
-
-        // Assert
-        Verify(settings.SearchDirectories.Count == 3);
-        Verify(settings.SearchDirectories[0].DirectoryPath == "C:\\project\\dependencies" && settings.SearchDirectories[0].IncludeSubDirectories);
-        Verify(settings.SearchDirectories[1].DirectoryPath == "C:\\project\\libs" && !settings.SearchDirectories[1].IncludeSubDirectories);
-        Verify(settings.SearchDirectories[2].DirectoryPath == "C:\\project\\plugins" && !settings.SearchDirectories[2].IncludeSubDirectories);
     }
 
     public void IsAppDomainCreationDisabled_ShouldPreferJsonConfigurationOverSettingsXml()

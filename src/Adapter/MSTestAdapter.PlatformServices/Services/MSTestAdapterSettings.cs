@@ -43,7 +43,7 @@ public class MSTestAdapterSettings
     /// <summary>
     ///  Gets list of paths recursive or non recursive paths.
     /// </summary>
-    internal List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
+    protected List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
 
     internal static IConfiguration? Configuration { get; set; }
 
