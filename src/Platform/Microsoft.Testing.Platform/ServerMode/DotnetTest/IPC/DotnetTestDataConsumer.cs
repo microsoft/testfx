@@ -47,9 +47,9 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         {
             case TestNodeUpdateMessage testNodeUpdateMessage:
 
-                GetTestNodeDetails(testNodeUpdateMessage, out byte? state, out long? duration, out string? reason, out string? errorMessage, out string? errorStackTrace);
+                TestNodeDetails testNodeDetails = GetTestNodeDetails(testNodeUpdateMessage);
 
-                switch (state)
+                switch (testNodeDetails.State)
                 {
                     case TestStates.Discovered:
                         DiscoveredTestMessages discoveredTestMessages = new(
@@ -73,9 +73,11 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                 new SuccessfulTestResultMessage(
                                    testNodeUpdateMessage.TestNode.Uid.Value,
                                    testNodeUpdateMessage.TestNode.DisplayName,
-                                   state,
-                                   duration,
-                                   reason ?? string.Empty,
+                                   testNodeDetails.State,
+                                   testNodeDetails.Duration,
+                                   testNodeDetails.Reason ?? string.Empty,
+                                   testNodeDetails.StandardOutput ?? string.Empty,
+                                   testNodeDetails.StandardError ?? string.Empty,
                                    testNodeUpdateMessage.SessionUid.Value),
                             },
                             Array.Empty<FailedTestResultMessage>());
@@ -92,11 +94,13 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                 new FailedTestResultMessage(
                                    testNodeUpdateMessage.TestNode.Uid.Value,
                                    testNodeUpdateMessage.TestNode.DisplayName,
-                                   state,
-                                   duration,
-                                   reason ?? string.Empty,
-                                   errorMessage ?? string.Empty,
-                                   errorStackTrace ?? string.Empty,
+                                   testNodeDetails.State,
+                                   testNodeDetails.Duration,
+                                   testNodeDetails.Reason ?? string.Empty,
+                                   testNodeDetails.ErrorMessage ?? string.Empty,
+                                   testNodeDetails.ErrorStackTrace ?? string.Empty,
+                                   testNodeDetails.StandardOutput ?? string.Empty,
+                                   testNodeDetails.StandardError ?? string.Empty,
                                    testNodeUpdateMessage.SessionUid.Value),
                             });
 
@@ -159,14 +163,17 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         }
     }
 
-    private static void GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage, out byte? state, out long? duration, out string? reason, out string? errorMessage, out string? errorStackTrace)
+    private static TestNodeDetails GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage)
     {
-        state = null;
-        duration = null;
-        reason = string.Empty;
-        errorMessage = string.Empty;
-        errorStackTrace = string.Empty;
+        byte? state = null;
+        long? duration = null;
+        string? reason = string.Empty;
+        string? errorMessage = string.Empty;
+        string? errorStackTrace = string.Empty;
+
         TestNodeStateProperty nodeState = testNodeUpdateMessage.TestNode.Properties.Single<TestNodeStateProperty>();
+        string? standardOutput = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
+        string? standardError = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
         switch (nodeState)
         {
@@ -176,8 +183,8 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
             case PassedTestNodeStateProperty:
                 state = TestStates.Passed;
-                reason = nodeState.Explanation;
                 duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                reason = nodeState.Explanation;
                 break;
 
             case SkippedTestNodeStateProperty:
@@ -217,7 +224,11 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 errorStackTrace = cancelledTestNodeStateProperty.Exception?.StackTrace;
                 break;
         }
+
+        return new TestNodeDetails(state, duration, reason, errorMessage, errorStackTrace, standardOutput, standardError);
     }
+
+    public record TestNodeDetails(byte? State, long? Duration, string? Reason, string? ErrorMessage, string? ErrorStackTrace, string? StandardOutput, string? StandardError);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
