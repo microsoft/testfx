@@ -177,7 +177,12 @@ internal sealed class AnsiTerminalTestProgressFrame
             terminal.MoveCursorUp(previousFrame.ProgressCount + 2);
         }
 
-        terminal.AppendLine();
+        // When there is nothing to render, don't write empty lines, e.g. when we start the test run, and then we kick off build
+        // in dotnet test, there is a long pause where we have no assemblies and no test results (yet).
+        if (ProgressCount > 0)
+        {
+            terminal.AppendLine();
+        }
 
         int i = 0;
         for (; i < ProgressCount; i++)

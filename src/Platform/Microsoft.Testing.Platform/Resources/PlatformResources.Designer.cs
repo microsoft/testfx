@@ -1162,6 +1162,24 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error output.
+        /// </summary>
+        internal static string StandardError {
+            get {
+                return ResourceManager.GetString("StandardError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standard output.
+        /// </summary>
+        internal static string StandardOutput {
+            get {
+                return ResourceManager.GetString("StandardOutput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Starting server. Listening on port &apos;{0}&apos;.
         /// </summary>
         internal static string StartingServer {

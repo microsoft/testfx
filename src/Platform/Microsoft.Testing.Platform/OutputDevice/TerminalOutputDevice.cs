@@ -140,13 +140,11 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             // The test host controller info is not setup and populated until after this constructor, because it writes banner and then after it figures out if
             // the runner is a testHost controller, so we would always have it as null if we capture it directly. Instead we need to check it via
             // func.
-            : () => _isVSTestMode
+            : () => _isVSTestMode || _isListTests || _isServerMode
                 ? false
-                : _isListTests
-                    ? false
-                    : _testHostControllerInfo.IsCurrentProcessTestHostController == null
-                        ? null
-                        : !_testHostControllerInfo.IsCurrentProcessTestHostController;
+                : _testHostControllerInfo.IsCurrentProcessTestHostController == null
+                    ? null
+                    : !_testHostControllerInfo.IsCurrentProcessTestHostController;
 
         // This is single exe run, don't show all the details of assemblies and their summaries.
         _terminalTestReporter = new TerminalTestReporter(_console, new()
@@ -260,11 +258,11 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             {
                 if (_fileLoggerInformation.SyncronousWrite)
                 {
-                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
+                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
                 }
                 else
                 {
-                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
+                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
                 }
             }
         }
@@ -272,12 +270,17 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
 
     public async Task DisplayBeforeSessionStartAsync()
     {
+        if (_isServerMode)
+        {
+            return;
+        }
+
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
         // Start test execution here, rather than in ShowBanner, because then we know
         // if we are a testHost controller or not, and if we should show progress bar.
         _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1);
-        _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _shortArchitecture);
+        _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _shortArchitecture, executionId: null);
         if (_logger is not null && _logger.IsEnabled(LogLevel.Trace))
         {
             await _logger.LogTraceAsync("DisplayBeforeSessionStartAsync");
@@ -297,7 +300,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         {
             if (!_firstCallTo_OnSessionStartingAsync)
             {
-                _terminalTestReporter.AssemblyRunCompleted(_assemblyName, _targetFramework, _shortArchitecture);
+                _terminalTestReporter.AssemblyRunCompleted(_assemblyName, _targetFramework, _shortArchitecture, executionId: null);
                 _terminalTestReporter.TestExecutionCompleted(_clock.UtcNow);
             }
         }
@@ -307,7 +310,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
 
     public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
+        if (_isServerMode || cancellationToken.IsCancellationRequested)
         {
             return Task.CompletedTask;
         }
@@ -347,10 +350,10 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         switch (color.ConsoleColor)
                         {
                             case ConsoleColor.Red:
-                                _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
+                                _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
                                 break;
                             case ConsoleColor.Yellow:
-                                _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
+                                _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
                                 break;
                             default:
                                 _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text, color, formattedTextOutputDeviceData.Padding);
@@ -374,7 +377,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
                     {
                         await LogDebugAsync(exceptionOutputDeviceData.Exception.ToString());
-                        _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, exceptionOutputDeviceData.Exception);
+                        _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, exceptionOutputDeviceData.Exception);
 
                         break;
                     }
@@ -385,6 +388,11 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
+
+        if (_isServerMode)
+        {
+            return;
+        }
 
         await Task.CompletedTask;
         if (cancellationToken.IsCancellationRequested)
@@ -397,6 +405,9 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
             case TestNodeUpdateMessage testNodeStateChanged:
 
                 TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
+                string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
+                string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
+
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case InProgressTestNodeStateProperty:
@@ -408,13 +419,16 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             _assemblyName,
                             _targetFramework,
                             _shortArchitecture,
+                            executionId: null,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Error,
                             duration,
                             errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
                             errorState.Exception?.StackTrace,
                             expected: null,
-                            actual: null);
+                            actual: null,
+                            standardOutput,
+                            standardError);
                         break;
 
                     case FailedTestNodeStateProperty failedState:
@@ -422,13 +436,16 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              _assemblyName,
                              _targetFramework,
                              _shortArchitecture,
+                             executionId: null,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Fail,
                              duration,
                              errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
                              failedState.Exception?.StackTrace,
                              expected: failedState.Exception?.Data["assert.expected"] as string,
-                             actual: failedState.Exception?.Data["assert.actual"] as string);
+                             actual: failedState.Exception?.Data["assert.actual"] as string,
+                             standardOutput,
+                             standardError);
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
@@ -436,13 +453,16 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              _assemblyName,
                              _targetFramework,
                              _shortArchitecture,
+                             executionId: null,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Timeout,
                              duration,
                              errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
                              timeoutState.Exception?.StackTrace,
                              expected: null,
-                             actual: null);
+                             actual: null,
+                             standardOutput,
+                             standardError);
                         break;
 
                     case CancelledTestNodeStateProperty cancelledState:
@@ -450,13 +470,16 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              _assemblyName,
                              _targetFramework,
                              _shortArchitecture,
+                             executionId: null,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Canceled,
                              duration,
                              errorMessage: cancelledState.Exception?.Message ?? cancelledState.Explanation,
                              cancelledState.Exception?.StackTrace,
                              expected: null,
-                             actual: null);
+                             actual: null,
+                             standardOutput,
+                             standardError);
                         break;
 
                     case PassedTestNodeStateProperty:
@@ -464,13 +487,16 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             _assemblyName,
                             _targetFramework,
                             _shortArchitecture,
+                            executionId: null,
                             testNodeStateChanged.TestNode.DisplayName,
                             outcome: TestOutcome.Passed,
                             duration: duration,
                             errorMessage: null,
                             errorStackTrace: null,
                             expected: null,
-                            actual: null);
+                            actual: null,
+                            standardOutput,
+                            standardError);
                         break;
 
                     case SkippedTestNodeStateProperty:
@@ -478,13 +504,16 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             _assemblyName,
                             _targetFramework,
                             _shortArchitecture,
+                            executionId: null,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Skipped,
                             duration,
                             errorMessage: null,
                             errorStackTrace: null,
                             expected: null,
-                            actual: null);
+                            actual: null,
+                            standardOutput,
+                            standardError);
                         break;
                 }
 
@@ -498,6 +527,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         _assemblyName,
                         _targetFramework,
                         _shortArchitecture,
+                        executionId: null,
                         artifact.TestNode.DisplayName,
                         artifact.FileInfo.FullName);
                 }
@@ -512,6 +542,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         _assemblyName,
                         _targetFramework,
                         _shortArchitecture,
+                        executionId: null,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }
@@ -525,6 +556,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                         _assemblyName,
                         _targetFramework,
                         _shortArchitecture,
+                        executionId: null,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }
