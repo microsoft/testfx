@@ -23,7 +23,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
-        testHostResult.AssertStandardErrorContains("You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.");
+        testHostResult.AssertStandardErrorContains("Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -34,7 +34,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
-        testHostResult.AssertStandardErrorContains("You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.");
+        testHostResult.AssertStandardErrorContains("Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
