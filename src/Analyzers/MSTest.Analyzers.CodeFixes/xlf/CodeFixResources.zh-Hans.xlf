@@ -37,6 +37,11 @@
         <target state="translated">将 TestInitialize 方法替换为构造函数</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceWithDisposeFix">
+        <source>Replace TestCleanup with Dispose method</source>
+        <target state="new">Replace TestCleanup with Dispose method</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
         <source>Replace the assertion with 'Assert.Fail()'</source>
         <target state="translated">将断言替换为 "Assert.Fail()"</target>
