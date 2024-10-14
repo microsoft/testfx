@@ -48,6 +48,7 @@ This package provides the core platform and the .NET implementation of the proto
   <!-- end netstandard2.0 polyfill -->
 
   <ItemGroup>
+    <InternalsVisibleTo Include="dotnet" Key="$(MicrosoftAspNetCorePublicKey)" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.CrashDump" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Experimental" Key="$(VsPublicKey)" />
