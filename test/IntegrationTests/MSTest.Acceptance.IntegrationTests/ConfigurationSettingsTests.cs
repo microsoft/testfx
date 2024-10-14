@@ -47,6 +47,16 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task TestConfigJson_WithoutRunSettings_BuildSuccess(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync();
+
+        // Assert
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+    }
+
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
