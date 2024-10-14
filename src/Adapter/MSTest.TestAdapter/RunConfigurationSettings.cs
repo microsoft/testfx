@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Xml;
 
 using Microsoft.Testing.Platform.Configurations;
@@ -181,7 +182,7 @@ public class RunConfigurationSettings
             {
                 PlatformApartmentState.STA => ApartmentState.STA,
                 PlatformApartmentState.MTA => ApartmentState.MTA,
-                _ => throw new NotSupportedException($"Platform apartment state '{platformApartmentState}' is not supported."),
+                _ => throw new NotSupportedException(string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, platformApartmentState, "execution:executionApartmentState")),
             };
         }
 
