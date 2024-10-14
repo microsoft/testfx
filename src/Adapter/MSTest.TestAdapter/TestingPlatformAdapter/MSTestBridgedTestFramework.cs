@@ -23,9 +23,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
         IServiceProvider serviceProvider, ITestFrameworkCapabilities capabilities)
         : base(mstestExtension, getTestAssemblies, serviceProvider, capabilities)
     {
-        // check if it have mstest settings
-        IConfiguration config = serviceProvider.GetConfiguration();
-        _configration = config["mstest"] is null ? null : config;
+        _configration = serviceProvider.GetConfiguration();
     }
 
     /// <inheritdoc />
