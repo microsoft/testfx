@@ -374,14 +374,14 @@ public class MSTestAdapterSettings
         //     ]
         //  ... remaining settings
         // }
-        int indx = 0;
-        while (configuration[$"mstest:assemblyResolution:{indx}:path"] is string path)
+        int index = 0;
+        while (configuration[$"mstest:assemblyResolution:{index}:path"] is string path)
         {
             if (!StringEx.IsNullOrEmpty(path))
             {
                 // Default includeSubDirectories to false if not provided
                 bool includeSubDirectories = false;
-                ParseBooleanSetting(configuration, $"assemblyResolution:{indx++}:includeSubDirectories", value => includeSubDirectories = value);
+                ParseBooleanSetting(configuration, $"assemblyResolution:{index++}:includeSubDirectories", value => includeSubDirectories = value);
 
                 SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
             }
