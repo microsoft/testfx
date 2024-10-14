@@ -309,6 +309,18 @@ internal abstract class BaseSerializer
         WriteStringValue(stream, value);
     }
 
+    protected static void WriteField(Stream stream, ushort id, long? value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        WriteShort(stream, id);
+        WriteSize<long>(stream);
+        WriteLong(stream, value.Value);
+    }
+
     protected static void WriteField(Stream stream, string? value)
     {
         if (value is null)
@@ -370,6 +382,7 @@ internal abstract class BaseSerializer
         Type type when type == typeof(short) => sizeof(short),
         Type type when type == typeof(bool) => sizeof(bool),
         Type type when type == typeof(byte) => sizeof(byte),
+        Type type when type == typeof(long) => sizeof(long),
         _ => 0,
     };
 
