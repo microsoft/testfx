@@ -23,6 +23,7 @@ public class MSTestAdapterSettings
         DeploymentEnabled = true;
         DeployTestSourceDependencies = true;
         SearchDirectories = [];
+        Configuration = null;
     }
 
     /// <summary>
@@ -188,9 +189,9 @@ public class MSTestAdapterSettings
                 bool.TryParse(reader.ReadInnerXml(), out bool result) && result;
         }
 
-        if (Configuration is not null)
+        string? isAppDomainDisabled = Configuration?["mstest:execution:disableAppDomain"];
+        if (!StringEx.IsNullOrEmpty(isAppDomainDisabled))
         {
-            string? isAppDomainDisabled = Configuration["mstest:execution:disableAppDomain"];
             disableAppDomain = bool.TryParse(isAppDomainDisabled, out bool result) && result;
         }
 
