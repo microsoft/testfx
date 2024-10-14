@@ -57,8 +57,8 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateConfigurationError">
-        <source>You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.</source>
-        <target state="new">You are using both 'runsettings' and 'testconfig' files. Please use only one type of configuration file.</target>
+        <source>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</source>
+        <target state="new">Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">

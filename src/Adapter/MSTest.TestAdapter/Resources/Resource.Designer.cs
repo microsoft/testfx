@@ -234,7 +234,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You are using both &apos;runsettings&apos; and &apos;testconfig&apos; files. Please use only one type of configuration file..
+        ///   Looks up a localized string similar to Both &apos;.runsettings&apos; and &apos;.testconfig.json&apos; files have been detected. Please select only one of these test configuration files..
         /// </summary>
         internal static string DuplicateConfigurationError {
             get {
