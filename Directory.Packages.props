@@ -6,7 +6,7 @@
   <PropertyGroup Label="Product dependencies">
     <AspireHostingTestingVersion>8.2.1</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.4</MicrosoftBuildVersion>
-    <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.24479.1</MicrosoftCodeAnalysisAnalyzersVersion>
+    <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.24508.2</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>$(MicrosoftCodeAnalysisAnalyzersVersion)</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
@@ -63,7 +63,7 @@
     <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
     <!-- Pinned to 4.18.4 for security -->
     <PackageVersion Include="Moq" Version="4.18.4" />
-    <PackageVersion Include="MSBuild.StructuredLogger" Version="2.2.206" />
+    <PackageVersion Include="MSBuild.StructuredLogger" Version="2.2.350" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <!-- CVE-2024-0057 / Transitive deps of code analysis testing packages -->
     <PackageVersion Include="NuGet.Packaging" Version="6.11.0" />
