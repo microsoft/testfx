@@ -460,7 +460,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(DummyTestClassForParallelize.ThreadIds.Count == 1);
@@ -497,7 +497,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(_enqueuedParallelTestsCount == 2);
@@ -534,7 +534,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(DummyTestClassForParallelize.ThreadIds.Count == 1);
@@ -569,7 +569,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
@@ -625,7 +625,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
@@ -689,7 +689,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(_enqueuedParallelTestsCount == 2);
@@ -723,7 +723,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
@@ -792,7 +792,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Verify(DummyTestClassWithDoNotParallelizeMethods.ThreadApartmentStates.Count == 1);

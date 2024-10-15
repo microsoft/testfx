@@ -4,7 +4,6 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
     <!-- By default, MSTest Sdk uses MSTest runner -->
     <EnablePlaywright>true</EnablePlaywright>
   </PropertyGroup>
@@ -30,15 +29,16 @@ Below is the equivalent project configuration when not using MSTest.Sdk
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(VSTestVersion)" />
+    <PackageReference Include="Microsoft.Playwright.MSTest" Version="$(PlaywrightVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(CodeCoverageVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
-    <PackageReference Include="Microsoft.Playwright.MSTest" Version="$(PlaywrightVersion)" />
   </ItemGroup>
 
   <ItemGroup>
-      <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
 </Project>

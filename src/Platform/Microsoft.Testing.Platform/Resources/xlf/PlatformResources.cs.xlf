@@ -402,9 +402,9 @@ Poznámka: Toto zpomaluje provádění testu.</target>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
         <target state="translated">Umožňuje povolit protokolování diagnostiky. Výchozí úroveň protokolování je Trace.
-Soubor se zapíše do výstupního adresáře s názvem log_[MMddHHssfff].diag.</target>
+Soubor se zapíše do výstupního adresáře s názvem log_[yyMMddHHmmssfff].diag.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -631,6 +631,16 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
         <target state="translated">Trasování zásobníku</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="new">Error output</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="new">Standard output</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">

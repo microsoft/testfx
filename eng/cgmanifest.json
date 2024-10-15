@@ -1,13 +1,14 @@
 {
-    "Registrations":[
-        {
-            "Component": {
-                "Type": "git",
-                "Git": {
-                  "RepositoryUrl": "https://github.com/xoofx/jsonite",
-                  "CommitHash": "35ecf451b18bfe1ec4bb278654f61a8b3dfec2a2"
-                }
-            }
+  "Registrations":[
+    {
+      "Component": {
+        "Type": "git",
+        "Git": {
+          "RepositoryUrl": "https://github.com/xoofx/jsonite",
+          "CommitHash": "35ecf451b18bfe1ec4bb278654f61a8b3dfec2a2"
         }
-    ]
+      }
+    }
+  ],
+  "$schema": "https://json.schemastore.org/component-detection-manifest.json"
 }

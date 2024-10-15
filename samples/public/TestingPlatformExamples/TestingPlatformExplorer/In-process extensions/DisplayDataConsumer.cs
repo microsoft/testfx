@@ -7,7 +7,7 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.OutputDevice;
 
 namespace TestingPlatformExplorer.InProcess;
-internal class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProducer
+internal sealed class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProducer
 {
     private readonly IOutputDevice _outputDevice;
 

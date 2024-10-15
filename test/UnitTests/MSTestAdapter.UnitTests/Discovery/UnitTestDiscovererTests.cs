@@ -114,7 +114,7 @@ public class UnitTestDiscovererTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
 
         // Act
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
 
@@ -196,7 +196,7 @@ public class UnitTestDiscovererTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
 
         // Act
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
         _unitTestDiscoverer.SendTestCases(Source, _testElements, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         // Assert

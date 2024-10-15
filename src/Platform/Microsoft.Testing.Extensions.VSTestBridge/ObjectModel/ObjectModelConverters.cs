@@ -167,11 +167,13 @@ internal static class ObjectModelConverters
             if (testResultMessage.Category == TestResultMessage.StandardErrorCategory)
             {
                 testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", testResultMessage.Text ?? string.Empty));
+                testNode.Properties.Add(new StandardErrorProperty(testResultMessage.Text ?? string.Empty));
             }
 
             if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
             {
                 testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", testResultMessage.Text ?? string.Empty));
+                testNode.Properties.Add(new StandardOutputProperty(testResultMessage.Text ?? string.Empty));
             }
         }
 

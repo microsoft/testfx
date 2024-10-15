@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
@@ -27,9 +28,11 @@ internal sealed partial class JsonConfigurationSource(ITestApplicationModuleInfo
     // Can be empty string because it's not used in the UI
     public string Description { get; } = string.Empty;
 
+    public int Order => 3;
+
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public IConfigurationProvider Build()
-        => new JsonConfigurationProvider(_testApplicationModuleInfo, _fileSystem, _fileLoggerProvider?.CreateLogger(typeof(JsonConfigurationProvider).ToString()));
+    public Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
+        => Task.FromResult((IConfigurationProvider)new JsonConfigurationProvider(_testApplicationModuleInfo, _fileSystem, _fileLoggerProvider?.CreateLogger(typeof(JsonConfigurationProvider).ToString())));
 }

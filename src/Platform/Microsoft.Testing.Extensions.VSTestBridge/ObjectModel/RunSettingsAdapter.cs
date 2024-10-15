@@ -8,6 +8,7 @@ using System.Xml.Linq;
 
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 using Microsoft.Testing.Extensions.VSTestBridge.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
@@ -31,13 +32,31 @@ internal sealed class RunSettingsAdapter : IRunSettings
         ILoggerFactory loggerFactory,
         IMessageLogger messageLogger)
     {
-        string? runSettingsXml =
-            commandLineOptions.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? fileNames)
-            && fileNames is not null
+        string? runSettingsXml = string.Empty;
+
+        if (commandLineOptions.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? fileNames)
+             && fileNames is not null
             && fileNames.Length == 1
-            && fileSystem.Exists(fileNames[0])
-                ? fileSystem.ReadAllText(fileNames[0])
-                : Environment.GetEnvironmentVariable("TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS");
+            && fileSystem.Exists(fileNames[0]))
+        {
+            runSettingsXml = fileSystem.ReadAllText(fileNames[0]);
+        }
+        else
+        {
+            if (!RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS")))
+            {
+                runSettingsXml = Environment.GetEnvironmentVariable("TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS");
+            }
+            else
+            {
+                string? runSettingsFilePath = Environment.GetEnvironmentVariable("TESTINGPLATFORM_VSTESTBRIDGE_RUNSETTINGS_FILE");
+
+                if (!RoslynString.IsNullOrEmpty(runSettingsFilePath) && File.Exists(runSettingsFilePath))
+                {
+                    runSettingsXml = fileSystem.ReadAllText(runSettingsFilePath);
+                }
+            }
+        }
 
         XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettingsXml, configuration, client, commandLineOptions);
         WarnOnUnsupportedEntries(runSettingsDocument, messageLogger);

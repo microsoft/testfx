@@ -3,11 +3,13 @@
 
 using System.Xml;
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -635,7 +637,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         Verify(!MSTestSettings.CurrentSettings.DisableParallelization);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Never);
@@ -654,7 +656,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         Verify(MSTestSettings.CurrentSettings.DisableParallelization);
     }
@@ -672,7 +674,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'DisableParallelization', setting will be ignored."), Times.Once);
     }
 
@@ -988,7 +990,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         MSTestSettings adapterSettings2 = MSTestSettings.CurrentSettings;
@@ -1035,7 +1037,7 @@ public class MSTestSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultAdapterSettingsWhenDiscoveryContextIsNull()
     {
-        MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object, null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         Verify(adapterSettings.CaptureDebugTraces);
@@ -1047,7 +1049,7 @@ public class MSTestSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
     {
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         Verify(adapterSettings.CaptureDebugTraces);
@@ -1060,7 +1062,7 @@ public class MSTestSettingsTests : TestContainer
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
     {
         _mockDiscoveryContext.Setup(md => md.RunSettings.SettingsXml).Returns(string.Empty);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         Verify(adapterSettings.CaptureDebugTraces);
@@ -1083,7 +1085,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1110,7 +1112,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1140,7 +1142,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1173,7 +1175,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1193,7 +1195,7 @@ public class MSTestSettingsTests : TestContainer
 
     public void IsLegacyScenarioReturnsFalseWhenDiscoveryContextIsNull()
     {
-        MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object, null);
         Verify(!MSTestSettings.IsLegacyScenario(null));
     }
 
@@ -1210,7 +1212,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
         Verify(!MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object));
     }
 
@@ -1226,7 +1228,7 @@ public class MSTestSettingsTests : TestContainer
             """;
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
         Verify(!MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object));
     }
 
@@ -1242,7 +1244,7 @@ public class MSTestSettingsTests : TestContainer
             """;
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
         Verify(MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object));
     }
 
@@ -1258,10 +1260,119 @@ public class MSTestSettingsTests : TestContainer
             """;
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
         Verify(MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object));
         _mockMessageLogger.Verify(logger => logger.SendMessage(TestMessageLevel.Warning, Resource.LegacyScenariosNotSupportedWarning), Times.Once);
     }
 
+    #endregion
+
+    #region ConfigJson
+    public void ConfigJson_WithInvalidValues_GettingAWarningForEachInvalidSetting()
+    {
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:timeout:assemblyInitialize", "timeout" },
+            { "mstest:timeout:assemblyCleanup", "timeout" },
+            { "mstest:timeout:classInitialize", "timeout" },
+            { "mstest:timeout:classCleanup", "timeout" },
+            { "mstest:timeout:testInitialize", "timeout" },
+            { "mstest:timeout:testCleanup", "timeout" },
+            { "mstest:timeout:test", "timeout" },
+            { "mstest:timeout:useCooperativeCancellation", "3" },
+            { "mstest:execution:mapInconclusiveToFailed", "3" },
+            { "mstest:execution:mapNotRunnableToFailed", "3" },
+            { "mstest:execution:treatDiscoveryWarningsAsErrors", "3" },
+            { "mstest:execution:considerEmptyDataSourceAsInconclusive", "3" },
+            { "mstest:execution:treatClassAndAssemblyCleanupWarningsAsErrors", "3" },
+            { "mstest:execution:considerFixturesAsSpecialTests", "3" },
+            { "mstest:enableBaseClassTestMethodsFromOtherAssemblies", "3" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string value) ? value : null);
+
+        var settings = new MSTestSettings();
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(15));
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'timeout:useCooperativeCancellation', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:assemblyInitialize', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:assemblyCleanup', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:classInitialize', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:mapNotRunnableToFailed', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'enableBaseClassTestMethodsFromOtherAssemblies', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:treatClassAndAssemblyCleanupWarningsAsErrors', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:classCleanup', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:testInitialize', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:testCleanup', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:test', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:treatDiscoveryWarningsAsErrors', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:mapInconclusiveToFailed', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:considerEmptyDataSourceAsInconclusive', setting will be ignored."), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:considerFixturesAsSpecialTests', setting will be ignored."), Times.Once);
+    }
+
+    [TestMethod]
+    public void ConfigJson_WithValidValues_ValuesAreSetCorrectly()
+    {
+        // Arrange - setting up valid configuration values
+        var configDictionary = new Dictionary<string, string>
+    {
+        { "mstest:timeout:assemblyInitialize", "300" },
+        { "mstest:timeout:assemblyCleanup", "300" },
+        { "mstest:timeout:classInitialize", "200" },
+        { "mstest:timeout:classCleanup", "200" },
+        { "mstest:timeout:testInitialize", "100" },
+        { "mstest:timeout:testCleanup", "100" },
+        { "mstest:timeout:test", "60" },
+        { "mstest:timeout:useCooperativeCancellation", "true" },
+        { "mstest:parallelism:enabled", "true" },
+        { "mstest:parallelism:workers", "4" },
+        { "mstest:parallelism:scope", "class" },
+        { "mstest:execution:mapInconclusiveToFailed", "true" },
+        { "mstest:execution:mapNotRunnableToFailed", "true" },
+        { "mstest:execution:treatDiscoveryWarningsAsErrors", "true" },
+        { "mstest:execution:considerEmptyDataSourceAsInconclusive", "true" },
+        { "mstest:execution:treatClassAndAssemblyCleanupWarningsAsErrors", "true" },
+        { "mstest:execution:considerFixturesAsSpecialTests", "true" },
+        { "mstest:enableBaseClassTestMethodsFromOtherAssemblies", "true" },
+        { "mstest:orderTestsByNameInClass", "true" },
+        { "mstest:output:captureTrace", "true" },
+    };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+
+        // Assert
+        Verify(settings.EnableBaseClassTestMethodsFromOtherAssemblies);
+        Verify(settings.OrderTestsByNameInClass);
+        Verify(settings.CaptureDebugTraces);
+        Verify(settings.CooperativeCancellationTimeout);
+        Verify(settings.MapInconclusiveToFailed);
+        Verify(settings.MapNotRunnableToFailed);
+        Verify(settings.TreatDiscoveryWarningsAsErrors);
+        Verify(settings.ConsiderEmptyDataSourceAsInconclusive);
+        Verify(settings.TreatClassAndAssemblyCleanupWarningsAsErrors);
+        Verify(settings.ConsiderFixturesAsSpecialTests);
+
+        Verify(settings.TestTimeout == 60);
+        Verify(settings.AssemblyInitializeTimeout == 300);
+        Verify(settings.AssemblyCleanupTimeout == 300);
+        Verify(settings.ClassInitializeTimeout == 200);
+        Verify(settings.ClassCleanupTimeout == 200);
+        Verify(settings.TestInitializeTimeout == 100);
+        Verify(settings.TestCleanupTimeout == 100);
+
+        Verify(settings.ParallelizationWorkers == 4);
+        Verify(settings.ParallelizationScope == ExecutionScope.ClassLevel);
+    }
     #endregion
 }

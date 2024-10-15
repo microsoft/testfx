@@ -375,7 +375,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Member &apos;{0}&apos; is already exist in the base class.
+        ///   Looks up a localized string similar to Member &apos;{0}&apos; already exists in the base class.
         /// </summary>
         internal static string DoNotUseShadowingMessageFormat {
             get {

@@ -402,9 +402,9 @@ Tenere presente ciò rallenta l'esecuzione del test.</target>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">Abilitare la registrazione diagnostica. Il livello di log predefinito è ‘Trace’.
-Il file verrà scritto nella directory di output con il nome log_[MMddHHssfff].diag</target>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
+        <target state="translated">Abilita la registrazione diagnostica. Il livello di registro per impostazione predefinita è ''Traccia''.
+Il file verrà scritto nella directory di output con il nome log_[yyMMddHHmmssfff].diag</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -631,6 +631,16 @@ Acquisisce un argomento come stringa nel formato &lt;value&gt;[h|m|s] dove 'valu
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
         <target state="translated">Analisi dello stack</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="new">Error output</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="new">Standard output</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">

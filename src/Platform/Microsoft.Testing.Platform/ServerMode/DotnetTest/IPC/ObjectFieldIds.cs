@@ -66,8 +66,11 @@ internal static class SuccessfulTestResultMessageFieldsId
     public const ushort Uid = 1;
     public const ushort DisplayName = 2;
     public const ushort State = 3;
-    public const ushort Reason = 4;
-    public const ushort SessionUid = 5;
+    public const ushort Duration = 4;
+    public const ushort Reason = 5;
+    public const ushort StandardOutput = 6;
+    public const ushort ErrorOutput = 7;
+    public const ushort SessionUid = 8;
 }
 
 internal static class FailedTestResultMessageFieldsId
@@ -75,10 +78,13 @@ internal static class FailedTestResultMessageFieldsId
     public const ushort Uid = 1;
     public const ushort DisplayName = 2;
     public const ushort State = 3;
-    public const ushort Reason = 4;
-    public const ushort ErrorMessage = 5;
-    public const ushort ErrorStackTrace = 6;
-    public const ushort SessionUid = 7;
+    public const ushort Duration = 4;
+    public const ushort Reason = 5;
+    public const ushort ErrorMessage = 6;
+    public const ushort ErrorStackTrace = 7;
+    public const ushort StandardOutput = 8;
+    public const ushort ErrorOutput = 9;
+    public const ushort SessionUid = 10;
 }
 
 internal static class FileArtifactMessagesFieldsId
