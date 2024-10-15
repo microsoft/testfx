@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -20,7 +21,7 @@ internal static class MSTestDiscovererHelpers
             PlatformServiceProvider.Instance.TestSource.ValidSourceExtensions.Any(extension =>
                 string.Equals(Path.GetExtension(source), extension, StringComparison.OrdinalIgnoreCase)));
 
-    internal static bool InitializeDiscovery(IEnumerable<string> sources, IDiscoveryContext? discoveryContext, IMessageLogger messageLogger)
+    internal static bool InitializeDiscovery(IEnumerable<string> sources, IDiscoveryContext? discoveryContext, IMessageLogger messageLogger, IConfiguration? configuration)
     {
         if (!AreValidSources(sources))
         {
@@ -30,7 +31,7 @@ internal static class MSTestDiscovererHelpers
         // Populate the runsettings.
         try
         {
-            MSTestSettings.PopulateSettings(discoveryContext, messageLogger);
+            MSTestSettings.PopulateSettings(discoveryContext, messageLogger, configuration);
         }
         catch (AdapterSettingsException ex)
         {

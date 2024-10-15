@@ -56,6 +56,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">已取消类初始化方法“{0}.{1}”</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateConfigurationError">
+        <source>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</source>
+        <target state="new">Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
         <target state="translated">“[DynamicData]”引用的成员“{0}.{1}”应返回“IEnumerable&lt;object[]&gt;”、“IEnumerable&lt;Tuple&gt;”或“IEnumerable&lt;ValueTuple&gt;”</target>

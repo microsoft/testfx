@@ -3,6 +3,7 @@
 
 using System.Xml;
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -39,6 +40,15 @@ public class MSTestSettingsProvider : ISettingsProvider
     /// </summary>
     public static void Reset() => s_settings = null;
 #endif
+
+    internal static void Load(IConfiguration configuration)
+    {
+#if !WINDOWS_UWP
+#pragma warning disable IDE0022 // Use expression body for method
+        var settings = MSTestAdapterSettings.ToSettings(configuration);
+#pragma warning restore IDE0022 // Use expression body for method
+#endif
+    }
 
     /// <summary>
     /// Load the settings from the reader.
