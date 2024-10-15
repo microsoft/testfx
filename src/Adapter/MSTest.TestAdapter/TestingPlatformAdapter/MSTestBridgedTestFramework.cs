@@ -8,17 +8,22 @@ using System.Reflection;
 using Microsoft.Testing.Extensions.VSTestBridge;
 using Microsoft.Testing.Extensions.VSTestBridge.Requests;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTestBridgedTestFramework
 {
+    private readonly IConfiguration? _configration;
+
     public MSTestBridgedTestFramework(MSTestExtension mstestExtension, Func<IEnumerable<Assembly>> getTestAssemblies,
         IServiceProvider serviceProvider, ITestFrameworkCapabilities capabilities)
         : base(mstestExtension, getTestAssemblies, serviceProvider, capabilities)
     {
+        _configration = serviceProvider.GetConfiguration();
     }
 
     /// <inheritdoc />
@@ -31,7 +36,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        new MSTestDiscoverer().DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink);
+        MSTestDiscoverer.DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configration);
         return Task.CompletedTask;
     }
 
@@ -49,11 +54,11 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
 
         if (request.VSTestFilter.TestCases is { } testCases)
         {
-            testExecutor.RunTests(testCases, request.RunContext, request.FrameworkHandle);
+            testExecutor.RunTests(testCases, request.RunContext, request.FrameworkHandle, _configration);
         }
         else
         {
-            testExecutor.RunTests(request.AssemblyPaths, request.RunContext, request.FrameworkHandle);
+            testExecutor.RunTests(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configration);
         }
 
         return Task.CompletedTask;

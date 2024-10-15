@@ -117,7 +117,7 @@ public class TypeEnumeratorTests : TestContainer
         mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        MSTestSettings.PopulateSettings(mockRunContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(mockRunContext.Object, _mockMessageLogger.Object, null);
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: false);
 
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
@@ -148,7 +148,7 @@ public class TypeEnumeratorTests : TestContainer
         mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        MSTestSettings.PopulateSettings(mockRunContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(mockRunContext.Object, _mockMessageLogger.Object, null);
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
 
@@ -179,7 +179,7 @@ public class TypeEnumeratorTests : TestContainer
         mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        MSTestSettings.PopulateSettings(mockRunContext.Object, _mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(mockRunContext.Object, _mockMessageLogger.Object, null);
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: false);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
 

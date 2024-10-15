@@ -234,6 +234,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Both &apos;.runsettings&apos; and &apos;.testconfig.json&apos; files have been detected. Please select only one of these test configuration files..
+        /// </summary>
+        internal static string DuplicateConfigurationError {
+            get {
+                return ResourceManager.GetString("DuplicateConfigurationError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; referenced member &apos;{0}.{1}&apos; should return &apos;IEnumerable&lt;object[]&gt;&apos;, &apos;IEnumerable&lt;Tuple&gt;` or &apos;IEnumerable&lt;ValueTuple&gt;&apos;.
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_MemberType {
