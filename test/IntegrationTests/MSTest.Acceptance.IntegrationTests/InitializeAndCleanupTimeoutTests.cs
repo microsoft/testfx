@@ -8,8 +8,8 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-internal class InitializeAndCleanupTimeoutTests : AcceptanceTestBase
+// [TestGroup]
+public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase
 {
     private static readonly Dictionary<string, (string MethodFullName, string Prefix, string EnvVarSuffix, string RunSettingsEntryName)> InfoByKind = new()
     {
