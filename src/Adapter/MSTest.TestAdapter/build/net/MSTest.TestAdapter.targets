@@ -73,18 +73,18 @@
 
   <!-- Copy resources over to $(TargetDir) if this is a localized build. -->
   <Target Name="CopyMSTestV2Resources" BeforeTargets="PrepareForBuild" Condition=" '$(EnableMSTestV2CopyResources)' == 'true' " DependsOnTargets="GetMSTestV2CultureHierarchy">
-    <PropertyGroup>
-      <CurrentUICultureHierarchy>%(CurrentUICultureHierarchy.Identity)</CurrentUICultureHierarchy>
-    </PropertyGroup>
 
+    <!-- Expand the UICulture hierarchy to items, such as cs-CZ, cs, and attach the culture metadata to the item. -->
     <ItemGroup>
-      <MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_localization\*.dll" />
+      <MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_localization\%(CurrentUICultureHierarchy.Identity)\*.dll">
+        <UICulture>%(CurrentUICultureHierarchy.Identity)</UICulture>
+      </MSTestV2Files>
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="@(MSTestV2Files->'%(RootDir)%(Directory)$(CurrentUICultureHierarchy)\%(FileName).resources.dll')"
-               Condition="Exists('%(RootDir)%(Directory)$(CurrentUICultureHierarchy)\%(FileName).resources.dll')">
-        <Link>$(CurrentUICultureHierarchy)\%(FileName).resources.dll</Link>
+      <!-- Add the localization file as content so it gets copied from nuget to bin folder. -->
+      <Content Include="@(MSTestV2Files->'%(FullPath)')">
+        <Link>%(MSTestV2Files.UICulture)\%(FileName).dll</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <BaseAssemblyFullPath>%(FullPath)</BaseAssemblyFullPath>
         <Visible>False</Visible>
