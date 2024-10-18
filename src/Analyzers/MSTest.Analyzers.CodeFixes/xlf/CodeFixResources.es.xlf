@@ -37,6 +37,11 @@
         <target state="translated">Reemplazar el método TestInitialize por el constructor</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceWithDisposeFix">
+        <source>Replace TestCleanup with Dispose method</source>
+        <target state="new">Replace TestCleanup with Dispose method</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
         <source>Replace the assertion with 'Assert.Fail()'</source>
         <target state="translated">Reemplazar la aserción por "Assert.Fail()"</target>
