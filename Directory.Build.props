@@ -27,6 +27,7 @@
   <PropertyGroup>
     <NetFrameworkMinimum>net462</NetFrameworkMinimum>
     <UwpMinimum>uap10.0.16299</UwpMinimum>
+    <UwpNet9Minimum>net8.0-windows10.0.26100.0</UwpNet9Minimum>
     <WinUiMinimum>net6.0-windows10.0.18362.0</WinUiMinimum>
     <NetCurrent>net8.0</NetCurrent>
 
