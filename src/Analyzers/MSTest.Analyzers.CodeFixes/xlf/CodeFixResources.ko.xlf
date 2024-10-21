@@ -37,6 +37,11 @@
         <target state="translated">TestInitialize 메서드를 생성자로 바꾸기</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceWithDisposeFix">
+        <source>Replace TestCleanup with Dispose method</source>
+        <target state="new">Replace TestCleanup with Dispose method</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
         <source>Replace the assertion with 'Assert.Fail()'</source>
         <target state="translated">어설션을 'Assert.Fail()'으로 바꾸기</target>
