@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
-        <target state="new">Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</target>
+        <target state="translated">runsettings 項目 '{1}' 的值 '{0}' 無效，將忽略設定。</target>
         <note />
       </trans-unit>
       <trans-unit id="MissingDeploymentDependency">

@@ -58,7 +58,7 @@ ale liczba odebranych argumentów to {4} z typami „{5}”.</target>
       </trans-unit>
       <trans-unit id="DuplicateConfigurationError">
         <source>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</source>
-        <target state="new">Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</target>
+        <target state="translated">Wykryto zarówno pliki „.runsettings”, jak i „.testconfig.json”. Wybierz tylko jeden z tych plików konfiguracji testu.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">

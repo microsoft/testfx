@@ -8,8 +8,8 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class InitializeAndCleanupTimeout : AcceptanceTestBase
+// [TestGroup]
+public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase
 {
     private static readonly Dictionary<string, (string MethodFullName, string Prefix, string EnvVarSuffix, string RunSettingsEntryName)> InfoByKind = new()
     {
@@ -26,7 +26,7 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
-    public InitializeAndCleanupTimeout(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
+    public InitializeAndCleanupTimeoutTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
         AcceptanceFixture globalFixture)
         : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 

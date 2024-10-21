@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 /// <summary>
@@ -10,8 +12,9 @@ public class TestRunCancellationToken
 {
     /// <summary>
     /// Callbacks to be invoked when canceled.
+    /// Needs to be a concurrent collection, see https://github.com/microsoft/testfx/issues/3953.
     /// </summary>
-    private readonly List<Action> _registeredCallbacks = new();
+    private readonly ConcurrentBag<Action> _registeredCallbacks = new();
 
     /// <summary>
     /// Stores whether the test run is canceled or not.
@@ -63,7 +66,17 @@ public class TestRunCancellationToken
     /// <summary>
     /// Unregister the callback method.
     /// </summary>
-    public void Unregister() => _registeredCallbacks.Clear();
+    public void Unregister()
+#if NETCOREAPP || WINDOWS_UWP
+        => _registeredCallbacks.Clear();
+#else
+    {
+        while (!_registeredCallbacks.IsEmpty)
+        {
+            _ = _registeredCallbacks.TryTake(out _);
+        }
+    }
+#endif
 
     internal void ThrowIfCancellationRequested()
     {
