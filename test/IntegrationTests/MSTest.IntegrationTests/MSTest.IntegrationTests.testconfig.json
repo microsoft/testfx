@@ -1,0 +1,8 @@
+﻿{
+  "platformOptions": {
+    "telemetry": {
+      "isDevelopmentRepository": true
+    },
+    "exitProcessOnUnhandledException": false
+  }
+}
