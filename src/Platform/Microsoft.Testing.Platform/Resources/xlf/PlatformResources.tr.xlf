@@ -635,12 +635,12 @@ Bir bağımsız değişkeni, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|
       </trans-unit>
       <trans-unit id="StandardError">
         <source>Error output</source>
-        <target state="new">Error output</target>
+        <target state="translated">Hata çıkışı</target>
         <note />
       </trans-unit>
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
-        <target state="new">Standard output</target>
+        <target state="translated">Standart çıkış</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">

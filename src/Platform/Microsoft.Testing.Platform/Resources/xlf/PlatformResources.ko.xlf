@@ -635,12 +635,12 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       </trans-unit>
       <trans-unit id="StandardError">
         <source>Error output</source>
-        <target state="new">Error output</target>
+        <target state="translated">오류 출력</target>
         <note />
       </trans-unit>
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
-        <target state="new">Standard output</target>
+        <target state="translated">표준 출력</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">

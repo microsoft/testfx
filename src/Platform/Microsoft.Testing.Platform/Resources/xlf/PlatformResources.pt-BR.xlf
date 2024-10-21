@@ -635,12 +635,12 @@ Recebe um argumento como cadeia de caracteres no formato &lt;valor&gt;[h|m|s] em
       </trans-unit>
       <trans-unit id="StandardError">
         <source>Error output</source>
-        <target state="new">Error output</target>
+        <target state="translated">Saída de erros</target>
         <note />
       </trans-unit>
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
-        <target state="new">Standard output</target>
+        <target state="translated">Saída padrão</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">
