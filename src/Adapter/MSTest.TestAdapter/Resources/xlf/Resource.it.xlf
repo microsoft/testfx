@@ -58,7 +58,7 @@ ma ha ricevuto {4} argomenti, con tipi "{5}".</target>
       </trans-unit>
       <trans-unit id="DuplicateConfigurationError">
         <source>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</source>
-        <target state="new">Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</target>
+        <target state="translated">Sono stati rilevati sia i file '.runsettings' sia '.testconfig.json'. Selezionare solo uno di questi file di configurazione di test.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">

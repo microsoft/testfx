@@ -635,12 +635,12 @@ Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' 
       </trans-unit>
       <trans-unit id="StandardError">
         <source>Error output</source>
-        <target state="new">Error output</target>
+        <target state="translated">Salida de error</target>
         <note />
       </trans-unit>
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
-        <target state="new">Standard output</target>
+        <target state="translated">Salida estándar</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">

@@ -635,12 +635,12 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
       </trans-unit>
       <trans-unit id="StandardError">
         <source>Error output</source>
-        <target state="new">Error output</target>
+        <target state="translated">Chybový výstup</target>
         <note />
       </trans-unit>
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
-        <target state="new">Standard output</target>
+        <target state="translated">Standardní výstup</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">
