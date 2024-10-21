@@ -635,12 +635,12 @@ Pobiera jeden argument jako ciąg w formacie &lt;value&gt;[h|m|s], gdzie element
       </trans-unit>
       <trans-unit id="StandardError">
         <source>Error output</source>
-        <target state="new">Error output</target>
+        <target state="translated">Dane wyjściowe w przypadku błędu</target>
         <note />
       </trans-unit>
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
-        <target state="new">Standard output</target>
+        <target state="translated">Standardowe dane wyjściowe</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">
