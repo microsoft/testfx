@@ -73,16 +73,16 @@ public sealed class TerminalTestReporterTests : TestBase
         string errorOutput = "Oh no!";
 
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null, standardOutput, errorOutput);
+            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null, standardOutput, errorOutput);
-        // timed out + cancelled + failed should all report as failed in summary
+            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+        // timed out + canceled + failed should all report as failed in summary
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null, standardOutput, errorOutput);
+            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null, standardOutput, errorOutput);
+            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
-            errorMessage: "Tests failed", errorStackTrace: @$"   at FailingTest() in {folder}codefile.cs:line 10", expected: "ABC", actual: "DEF", standardOutput, errorOutput);
+            errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
         terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact1.txt");
         terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact2.txt");
         terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture, executionId: null);
@@ -117,9 +117,8 @@ public sealed class TerminalTestReporterTests : TestBase
                 ABC
               Actual
                 DEF
-            ␛[m␛[91m  Stack Trace:
-                ␛[90mat ␛[m␛[91mFailingTest()␛[90m in ␛[90m␛]8;;file:///{folderLink}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m
-            ␛[90m  Standard output
+            ␛[m␛[90m    at FailingTest() in ␛[90m␛]8;;file:///{folderLink}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m␛[90m
+            ␛[m␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
@@ -138,13 +137,10 @@ public sealed class TerminalTestReporterTests : TestBase
 
             """;
 
-        EnsureAnsiMatch(expected, output);
+        Assert.AreEqual(expected, ShowEscape(output));
     }
 
-    private void EnsureAnsiMatch(string expected, string actual)
-        => Assert.AreEqual(expected, ShowEscape(actual));
-
-    private string? ShowEscape(string? text)
+    private static string? ShowEscape(string? text)
     {
         string visibleEsc = "\x241b";
         return text?.Replace(AnsiCodes.Esc, visibleEsc);
@@ -251,5 +247,12 @@ public sealed class TerminalTestReporterTests : TestBase
         public void StopBusyIndicator() => throw new NotImplementedException();
 
         public void StopUpdate() => throw new NotImplementedException();
+    }
+
+    private class StackTraceException : Exception
+    {
+        public StackTraceException(string stackTrace) => StackTrace = stackTrace;
+
+        public override string? StackTrace { get; }
     }
 }
