@@ -70,16 +70,16 @@ public sealed class TerminalTestReporterTests : TestBase
 
         terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
+            errorMessage: null, exception: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
+            errorMessage: null, exception: null, expected: null, actual: null);
         // timed out + cancelled + failed should all report as failed in summary
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
+            errorMessage: null, exception: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
+            errorMessage: null, exception: null, expected: null, actual: null);
         terminalReporter.TestCompleted(assembly, targetFramework, architecture, "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
-            errorMessage: "Tests failed", errorStackTrace: @$"   at FailingTest() in {folder}codefile.cs:line 10", expected: "ABC", actual: "DEF");
+            errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF");
         terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact1.txt");
         terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact2.txt");
         terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture);
@@ -98,8 +98,7 @@ public sealed class TerminalTestReporterTests : TestBase
                 ABC
               Actual
                 DEF
-            ␛[m␛[91m  Stack Trace:
-                ␛[90mat ␛[m␛[91mFailingTest()␛[90m in ␛[90m␛]8;;file:///{folderLink}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m
+            ␛[m␛[90m    at FailingTest() in ␛[90m␛]8;;file:///{folderLink}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m␛[90m
 
 
               Out of process file artifacts produced:
@@ -228,5 +227,12 @@ public sealed class TerminalTestReporterTests : TestBase
         public void StopBusyIndicator() => throw new NotImplementedException();
 
         public void StopUpdate() => throw new NotImplementedException();
+    }
+
+    private class StackTraceException : Exception
+    {
+        public StackTraceException(string stackTrace) => StackTrace = stackTrace;
+
+        public override string? StackTrace { get; }
     }
 }
