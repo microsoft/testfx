@@ -521,7 +521,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
         else if (outcome == TestOutcome.Fail)
         {
-            // For failed tests, we don't prefix the message with the exception type as it's most likely some assertion failure.
+            // For failed tests, we don't prefix the message with the exception type because it is most likely an assertion specific exception like AssertionFailedException, and we prefer to show that without the exception type to avoid additional noise.
             AppendIndentedLine(terminal, errorMessage ?? exception.Message, SingleIndentation);
         }
         else
