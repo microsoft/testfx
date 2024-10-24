@@ -373,7 +373,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         TestOutcome outcome,
         TimeSpan duration,
         string? errorMessage,
-        string? errorStackTrace,
+        Exception? exception,
         string? expected,
         string? actual)
     {
@@ -410,7 +410,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 outcome,
                 duration,
                 errorMessage,
-                errorStackTrace,
+                exception,
                 expected,
                 actual));
         }
@@ -425,7 +425,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         TestOutcome outcome,
         TimeSpan duration,
         string? errorMessage,
-        string? errorStackTrace,
+        Exception? exception,
         string? expected,
         string? actual)
     {
@@ -469,9 +469,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         terminal.AppendLine();
 
-        FormatErrorMessage(terminal, errorMessage);
+        FormatErrorMessage(terminal, errorMessage, exception, outcome);
         FormatExpectedAndActual(terminal, expected, actual);
-        FormatStackTrace(terminal, errorStackTrace);
+        FormatStackTrace(terminal, exception);
+        FormatInnerExceptions(terminal, exception);
     }
 
     private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture)
@@ -495,25 +496,16 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
-    private static void FormatStackTrace(ITerminal terminal, string? errorStackTrace)
+    private static void FormatStackTrace(ITerminal terminal, Exception? exception)
     {
-        if (RoslynString.IsNullOrWhiteSpace(errorStackTrace))
+        if (exception?.StackTrace is not { } stackTrace)
         {
             return;
         }
 
-        terminal.SetColor(TerminalColor.Red);
-        terminal.Append(SingleIndentation);
-        terminal.Append(PlatformResources.StackTrace);
-        terminal.AppendLine(":");
+        terminal.SetColor(TerminalColor.DarkGray);
 
-        if (!errorStackTrace.Contains('\n'))
-        {
-            AppendStackFrame(terminal, errorStackTrace);
-            return;
-        }
-
-        string[] lines = errorStackTrace.Split(NewLineStrings, StringSplitOptions.None);
+        string[] lines = stackTrace.Split(NewLineStrings, StringSplitOptions.None);
         foreach (string line in lines)
         {
             AppendStackFrame(terminal, line);
@@ -581,16 +573,55 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
     }
 
-    private static void FormatErrorMessage(ITerminal terminal, string? errorMessage)
+    private static void FormatErrorMessage(ITerminal terminal, string? errorMessage, Exception? exception, TestOutcome outcome)
     {
-        if (RoslynString.IsNullOrWhiteSpace(errorMessage))
+        if (RoslynString.IsNullOrWhiteSpace(errorMessage) && exception is null)
         {
             return;
         }
 
         terminal.SetColor(TerminalColor.Red);
-        AppendIndentedLine(terminal, errorMessage, SingleIndentation);
+
+        if (exception is null)
+        {
+            AppendIndentedLine(terminal, errorMessage, SingleIndentation);
+        }
+        else if (outcome == TestOutcome.Fail)
+        {
+            // For failed tests, we don't prefix the message with the exception type because it is most likely an assertion specific exception like AssertionFailedException, and we prefer to show that without the exception type to avoid additional noise.
+            AppendIndentedLine(terminal, errorMessage ?? exception.Message, SingleIndentation);
+        }
+        else
+        {
+            AppendIndentedLine(terminal, $"{exception.GetType().FullName}: {errorMessage ?? exception.Message}", SingleIndentation);
+        }
+
         terminal.ResetColor();
+    }
+
+    private static void FormatInnerExceptions(ITerminal terminal, Exception? exception)
+    {
+        IEnumerable<Exception?> aggregateExceptions = exception switch
+        {
+            AggregateException aggregate => aggregate.Flatten().InnerExceptions,
+            _ => [exception?.InnerException],
+        };
+
+        foreach (Exception? aggregate in aggregateExceptions)
+        {
+            Exception? currentException = aggregate;
+            while (currentException is not null)
+            {
+                terminal.SetColor(TerminalColor.Red);
+                terminal.Append(SingleIndentation);
+                terminal.Append("--->");
+                FormatErrorMessage(terminal, null, currentException, TestOutcome.Error);
+
+                FormatStackTrace(terminal, currentException);
+
+                currentException = currentException.InnerException;
+            }
+        }
     }
 
     private static void AppendIndentedLine(ITerminal terminal, string? message, string indent)
