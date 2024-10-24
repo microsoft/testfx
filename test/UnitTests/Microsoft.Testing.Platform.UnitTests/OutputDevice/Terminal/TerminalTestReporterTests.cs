@@ -98,8 +98,8 @@ public sealed class TerminalTestReporterTests : TestBase
                 ABC
               Actual
                 DEF
-            ␛[m␛[90m    at FailingTest() in ␛[90m␛]8;;file:///{folderLink}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m␛[90m
-
+            ␛[m␛[90m    ␛[90mat ␛[m␛[91mFailingTest()␛[90m in ␛[90m␛]8;;file:///C:/work/codefile.cs␛\C:\work\codefile.cs:10␛]8;;␛\␛[m
+            ␛[m
 
               Out of process file artifacts produced:
                 - ␛[90m␛]8;;file:///{folderLink}artifact1.txt␛\{folder}artifact1.txt␛]8;;␛\␛[m
@@ -114,13 +114,10 @@ public sealed class TerminalTestReporterTests : TestBase
 
             """;
 
-        EnsureAnsiMatch(expected, output);
+        Assert.AreEqual(expected, ShowEscape(output));
     }
 
-    private void EnsureAnsiMatch(string expected, string actual)
-        => Assert.AreEqual(expected, ShowEscape(actual));
-
-    private string? ShowEscape(string? text)
+    private static string? ShowEscape(string? text)
     {
         string visibleEsc = "\x241b";
         return text?.Replace(AnsiCodes.Esc, visibleEsc);
