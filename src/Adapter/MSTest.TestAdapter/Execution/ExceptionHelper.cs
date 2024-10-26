@@ -156,6 +156,7 @@ internal static class ExceptionHelper
                 result.Append(" ---> [Cyclic Exception Reference]");
                 break;
             }
+            
             seenExceptions.Add(curException);
 
             // Get the exception message. Need to check for errors because the Message property
