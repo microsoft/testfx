@@ -145,10 +145,19 @@ internal static class ExceptionHelper
 
         StringBuilder result = new();
         bool first = true;
+        HashSet<Exception> seenExceptions = new();
+
         for (Exception? curException = ex;
              curException != null;
              curException = curException.InnerException)
         {
+            if (seenExceptions.Contains(curException))
+            {
+                result.Append(" ---> [Cyclic Exception Reference]");
+                break;
+            }
+            seenExceptions.Add(curException);
+
             // Get the exception message. Need to check for errors because the Message property
             // may have been overridden by the exception type in user code.
             string msg;
