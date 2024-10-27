@@ -151,13 +151,11 @@ internal static class ExceptionHelper
              curException != null;
              curException = curException.InnerException)
         {
-            if (seenExceptions.Contains(curException))
+            if (!seenExceptions.Add(curException))
             {
                 result.Append(" ---> [Cyclic Exception Reference]");
                 break;
             }
-            
-            seenExceptions.Add(curException);
 
             // Get the exception message. Need to check for errors because the Message property
             // may have been overridden by the exception type in user code.
