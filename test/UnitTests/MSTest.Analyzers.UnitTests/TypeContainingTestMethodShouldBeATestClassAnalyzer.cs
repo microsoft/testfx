@@ -162,4 +162,28 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    public async Task WhenClassHasTestInitializeAndThenTestMethod_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class [|TestClass|]
+            {
+                [TestInitialize]
+                public void Initialize()
+                {
+
+                }
+
+                [TestMethod]
+                public void TestMethod1()
+                {
+
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
