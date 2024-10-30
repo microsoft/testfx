@@ -411,8 +411,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Error,
                             duration,
-                            errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
-                            errorState.Exception?.StackTrace,
+                            errorState.Explanation,
+                            errorState.Exception,
                             expected: null,
                             actual: null);
                         break;
@@ -425,8 +425,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Fail,
                              duration,
-                             errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
-                             failedState.Exception?.StackTrace,
+                             failedState.Explanation,
+                             failedState.Exception,
                              expected: failedState.Exception?.Data["assert.expected"] as string,
                              actual: failedState.Exception?.Data["assert.actual"] as string);
                         break;
@@ -439,8 +439,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Timeout,
                              duration,
-                             errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
-                             timeoutState.Exception?.StackTrace,
+                             timeoutState.Explanation,
+                             timeoutState.Exception,
                              expected: null,
                              actual: null);
                         break;
@@ -453,8 +453,8 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Canceled,
                              duration,
-                             errorMessage: cancelledState.Exception?.Message ?? cancelledState.Explanation,
-                             cancelledState.Exception?.StackTrace,
+                             cancelledState.Explanation,
+                             cancelledState.Exception,
                              expected: null,
                              actual: null);
                         break;
@@ -468,7 +468,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             outcome: TestOutcome.Passed,
                             duration: duration,
                             errorMessage: null,
-                            errorStackTrace: null,
+                            exception: null,
                             expected: null,
                             actual: null);
                         break;
@@ -482,7 +482,7 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
                             TestOutcome.Skipped,
                             duration,
                             errorMessage: null,
-                            errorStackTrace: null,
+                            exception: null,
                             expected: null,
                             actual: null);
                         break;
