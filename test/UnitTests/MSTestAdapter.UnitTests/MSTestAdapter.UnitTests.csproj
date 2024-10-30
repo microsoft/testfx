@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="Moq" />
+    <PackageReference Include="StrongNamer" />
   </ItemGroup>
 
 </Project>
