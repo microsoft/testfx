@@ -98,7 +98,7 @@ public sealed class TerminalTestReporterTests : TestBase
                 ABC
               Actual
                 DEF
-            ␛[m␛[90m    ␛[90mat ␛[m␛[91mFailingTest()␛[90m in ␛[90m␛]8;;file:///{folderLink}codefile.cs␛\{folderLink}codefile.cs:10␛]8;;␛\␛[m
+            ␛[m␛[90m    ␛[90mat ␛[m␛[91mFailingTest()␛[90m in ␛[90m␛]8;;file:///{folderLink}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m
             ␛[m
 
               Out of process file artifacts produced:
