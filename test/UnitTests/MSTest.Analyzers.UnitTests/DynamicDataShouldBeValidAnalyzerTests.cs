@@ -164,12 +164,112 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
                 {
                 }
 
+                [DynamicData("DataJaggedArray")]
+                [TestMethod]
+                public void TestMethod301(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData("SomeDataJaggedArray", typeof(SomeClass))]
+                [TestMethod]
+                public void TestMethod302(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData(dynamicDataSourceName: "DataJaggedArray")]
+                [TestMethod]
+                public void TestMethod303(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeDataJaggedArray")]
+                [TestMethod]
+                public void TestMethod304(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData("GetDataJaggedArray", DynamicDataSourceType.Method)]
+                [TestMethod]
+                public void TestMethod311(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData("GetSomeDataJaggedArray", typeof(SomeClass), DynamicDataSourceType.Method)]
+                [TestMethod]
+                public void TestMethod312(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData(dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetDataJaggedArray")]
+                [TestMethod]
+                public void TestMethod313(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetSomeDataJaggedArray")]
+                [TestMethod]
+                public void TestMethod314(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData("DataNonObjectTypeArray")]
+                [TestMethod]
+                public void TestMethod401(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData("SomeDataNonObjectTypeArray", typeof(SomeClass))]
+                [TestMethod]
+                public void TestMethod402(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData(dynamicDataSourceName: "DataNonObjectTypeArray")]
+                [TestMethod]
+                public void TestMethod403(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeDataNonObjectTypeArray")]
+                [TestMethod]
+                public void TestMethod404(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData("GetDataNonObjectTypeArray", DynamicDataSourceType.Method)]
+                [TestMethod]
+                public void TestMethod411(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData("GetSomeDataNonObjectTypeArray", typeof(SomeClass), DynamicDataSourceType.Method)]
+                [TestMethod]
+                public void TestMethod412(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData(dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetDataNonObjectTypeArray")]
+                [TestMethod]
+                public void TestMethod413(MyTestClass[] testClasses)
+                {
+                }
+
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetSomeDataNonObjectTypeArray")]
+                [TestMethod]
+                public void TestMethod414(MyTestClass[] testClasses)
+                {
+                }
+
                 public static IEnumerable<object[]> Data => new List<object[]>();
                 public static IEnumerable<Tuple<int, string>> DataTuple => new List<Tuple<int, string>>();
                 public static IEnumerable<(int, string)> DataValueTuple => new List<(int, string)>();
+                public static MyTestClass[][] DataJaggedArray => System.Array.Empty<MyTestClass[]>();
+                public static IEnumerable<MyTestClass[]> DataNonObjectTypeArray => new List<MyTestClass[]>();
                 public static IEnumerable<object[]> GetData() => new List<object[]>();
                 public static IEnumerable<Tuple<int, string>> GetDataTuple() => new List<Tuple<int, string>>();
                 public static IEnumerable<(int, string)> GetDataValueTuple() => new List<(int, string)>();
+                public static MyTestClass[][] GetDataJaggedArray() => System.Array.Empty<MyTestClass[]>();
+                public static IEnumerable<MyTestClass[]> GetDataNonObjectTypeArray() => new List<MyTestClass[]>();
             }
 
             public class SomeClass
@@ -177,9 +277,13 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
                 public static IEnumerable<object[]> SomeData => new List<object[]>();
                 public static IEnumerable<Tuple<int, string>> SomeDataTuple => new List<Tuple<int, string>>();
                 public static IEnumerable<(int, string)> SomeDataValueTuple => new List<(int, string)>();
+                public static MyTestClass[][] SomeDataJaggedArray => System.Array.Empty<MyTestClass[]>();
+                public static IEnumerable<MyTestClass[]> SomeDataNonObjectTypeArray => new List<MyTestClass[]>();
                 public static IEnumerable<object[]> GetSomeData() => new List<object[]>();
                 public static IEnumerable<Tuple<int, string>> GetSomeDataTuple() => new List<Tuple<int, string>>();
                 public static IEnumerable<(int, string)> GetSomeDataValueTuple() => new List<(int, string)>();
+                public static MyTestClass[][] GetSomeDataJaggedArray() => System.Array.Empty<MyTestClass[]>();
+                public static IEnumerable<MyTestClass[]> GetSomeDataNonObjectTypeArray() => new List<MyTestClass[]>();
             }
             """;
 
@@ -469,36 +573,88 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
 
                 [{|#4:DynamicData("GetData", DynamicDataSourceType.Method)|}]
                 [TestMethod]
-                public void TestMethod11(object[] o)
+                public void TestMethod5(object[] o)
                 {
                 }
 
                 [{|#5:DynamicData("GetSomeData", typeof(SomeClass), DynamicDataSourceType.Method)|}]
                 [TestMethod]
-                public void TestMethod12(object[] o)
+                public void TestMethod6(object[] o)
                 {
                 }
 
                 [{|#6:DynamicData(dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetData")|}]
                 [TestMethod]
-                public void TestMethod13(object[] o)
+                public void TestMethod7(object[] o)
                 {
                 }
 
                 [{|#7:DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetSomeData")|}]
                 [TestMethod]
-                public void TestMethod14(object[] o)
+                public void TestMethod8(object[] o)
+                {
+                }
+
+                [{|#8:DynamicData("DataArray")|}]
+                [TestMethod]
+                public void TestMethod9(MyTestClass[] o)
+                {
+                }
+
+                [{|#9:DynamicData("SomeDataArray", typeof(SomeClass))|}]
+                [TestMethod]
+                public void TestMethod10(MyTestClass[] o)
+                {
+                }
+
+                [{|#10:DynamicData(dynamicDataSourceName: "DataArray")|}]
+                [TestMethod]
+                public void TestMethod11(MyTestClass[] o)
+                {
+                }
+
+                [{|#11:DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeDataArray")|}]
+                [TestMethod]
+                public void TestMethod12(MyTestClass[] o)
+                {
+                }
+
+                [{|#12:DynamicData("GetDataArray", DynamicDataSourceType.Method)|}]
+                [TestMethod]
+                public void TestMethod13(MyTestClass[] o)
+                {
+                }
+
+                [{|#13:DynamicData("GetSomeDataArray", typeof(SomeClass), DynamicDataSourceType.Method)|}]
+                [TestMethod]
+                public void TestMethod14(MyTestClass[] o)
+                {
+                }
+
+                [{|#14:DynamicData(dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetDataArray")|}]
+                [TestMethod]
+                public void TestMethod15(MyTestClass[] o)
+                {
+                }
+
+                [{|#15:DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetSomeDataArray")|}]
+                [TestMethod]
+                public void TestMethod16(MyTestClass[] o)
                 {
                 }
 
                 public static IEnumerable<object> Data => new List<object>();
+                public static MyTestClass[] DataArray => System.Array.Empty<MyTestClass>();
                 public static IEnumerable<object> GetData() => new List<object>();
+                public static MyTestClass[] GetDataArray() => System.Array.Empty<MyTestClass>();
             }
 
             public class SomeClass
             {
                 public static IEnumerable<object> SomeData => new List<object>();
+                public static MyTestClass[] SomeDataArray => System.Array.Empty<MyTestClass>();
                 public static IEnumerable<object> GetSomeData() => new List<object>();
+                public static MyTestClass[] GetSomeDataArray() => System.Array.Empty<MyTestClass>();
             }
             """;
 
@@ -511,7 +667,15 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(4).WithArguments("MyTestClass", "GetData"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(5).WithArguments("SomeClass", "GetSomeData"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(6).WithArguments("MyTestClass", "GetData"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(7).WithArguments("SomeClass", "GetSomeData"));
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(7).WithArguments("SomeClass", "GetSomeData"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(8).WithArguments("MyTestClass", "DataArray"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(9).WithArguments("SomeClass", "SomeDataArray"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(10).WithArguments("MyTestClass", "DataArray"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(11).WithArguments("SomeClass", "SomeDataArray"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(12).WithArguments("MyTestClass", "GetDataArray"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(13).WithArguments("SomeClass", "GetSomeDataArray"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(14).WithArguments("MyTestClass", "GetDataArray"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(15).WithArguments("SomeClass", "GetSomeDataArray"));
     }
 
     public async Task MemberIsNotStatic_Diagnostic()
