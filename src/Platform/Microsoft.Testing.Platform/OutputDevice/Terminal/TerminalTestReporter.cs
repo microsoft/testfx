@@ -50,6 +50,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private bool _wasCancelled;
 
+    private bool? _shouldShowPassedTests;
+
 #if NET7_0_OR_GREATER
     [GeneratedRegex(@$"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture, 1000)]
     private static partial Regex GetFrameRegex();
@@ -399,7 +401,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
-        if (outcome != TestOutcome.Passed || _options.ShowPassedTests)
+        if (outcome != TestOutcome.Passed || GetShowPassedTests())
         {
             _terminalWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
                 terminal,
@@ -416,6 +418,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
+    private bool GetShowPassedTests()
+    {
+        _shouldShowPassedTests ??= _options.ShowPassedTests();
+        return _shouldShowPassedTests.Value;
+    }
+
     internal /* for testing */ void RenderTestCompleted(
         ITerminal terminal,
         string assembly,
@@ -429,7 +437,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? expected,
         string? actual)
     {
-        if (outcome == TestOutcome.Passed && !_options.ShowPassedTests)
+        if (outcome == TestOutcome.Passed && !GetShowPassedTests())
         {
             return;
         }
