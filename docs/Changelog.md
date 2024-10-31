@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.6.2" />[3.6.2] - 2024-10-31
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.6.1...v3.6.2)
+
+### Fixed
+
+* Fix localization of test adapter messages by @nohwnd in [#3949](https://github.com/microsoft/testfx/pull/3949)
+* Fix call to EqtTrace by @nohwnd in [#3952](https://github.com/microsoft/testfx/pull/3952)
+* Fix concurrency issue with registering callback on TestRunCancellationToken by @Evangelink in [#3958](https://github.com/microsoft/testfx/pull/3958)
+* Fix MSTEST0030 to correctly handle all methods by @Evangelink in [#3974](https://github.com/microsoft/testfx/pull/3974)
+* Fix displaying inner exceptions by @Evangelink in [#3965](https://github.com/microsoft/testfx/pull/3965)
+* Fix MSTEST0018 FP with IEnumerable<SomeType[]> by @Evangelink in [#3978](https://github.com/microsoft/testfx/pull/3978)
+
+### Artifacts
+
+* MSTest: [3.6.2](https://www.nuget.org/packages/MSTest/3.6.2)
+* MSTest.TestFramework: [3.6.2](https://www.nuget.org/packages/MSTest.TestFramework/3.6.2)
+* MSTest.TestAdapter: [3.6.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.6.2)
+* MSTest.Analyzers: [3.6.2](https://www.nuget.org/packages/MSTest.Analyzers/3.6.2)
+* MSTest.Sdk: [3.6.2](https://www.nuget.org/packages/MSTest.Sdk/3.6.2)
+* Microsoft.Testing.Extensions.CrashDump: [1.4.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.4.2)
+* Microsoft.Testing.Extensions.HangDump: [1.4.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.4.2)
+* Microsoft.Testing.Extensions.HotReload: [1.4.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.4.2)
+* Microsoft.Testing.Extensions.Retry: [1.4.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.4.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.4.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.4.2)
+
 ## <a name="3.6.1" />[3.6.1] - 2024-10-03
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.6.0...v3.6.1)
