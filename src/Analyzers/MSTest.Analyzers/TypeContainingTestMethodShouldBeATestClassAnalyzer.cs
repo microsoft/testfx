@@ -77,7 +77,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzer : Diagnos
 
         bool hasTestMethod = false;
         INamedTypeSymbol? currentType = namedTypeSymbol;
-        do
+        while (currentType is not null && !hasTestMethod)
         {
             foreach (ISymbol classMember in currentType.GetMembers())
             {
@@ -94,16 +94,10 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzer : Diagnos
                         break;
                     }
                 }
-
-                if (!hasTestMethod)
-                {
-                    break;
-                }
             }
 
             currentType = currentType.BaseType;
         }
-        while (currentType is not null && !hasTestMethod);
 
         if (!hasTestMethod)
         {

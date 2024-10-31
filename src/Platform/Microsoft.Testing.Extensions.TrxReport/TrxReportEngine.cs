@@ -102,11 +102,12 @@ internal sealed partial class TrxReportEngine
     private readonly ITestFramework _testFrameworkAdapter;
     private readonly DateTimeOffset _testStartTime;
     private readonly CancellationToken _cancellationToken;
+    private readonly int _exitCode;
     private readonly XNamespace _namespaceUri = XNamespace.Get("http://microsoft.com/schemas/VisualStudio/TeamTest/2010");
     private readonly IFileSystem _fileSystem;
     private readonly bool _isCopyingFileAllowed;
 
-    public TrxReportEngine(ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, int timeoutTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, Dictionary<TestNodeUid, List<SessionFileArtifact>> artifactsByTestNode, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, CancellationToken cancellationToken)
+    public TrxReportEngine(ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, int timeoutTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, Dictionary<TestNodeUid, List<SessionFileArtifact>> artifactsByTestNode, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken)
     : this(
         new SystemFileSystem(),
         testApplicationModuleInfo,
@@ -124,11 +125,12 @@ internal sealed partial class TrxReportEngine
         adapterSupportTrxCapability,
         testFrameworkAdapter,
         testStartTime,
+        exitCode,
         cancellationToken)
     {
     }
 
-    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, int timeoutTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, Dictionary<TestNodeUid, List<SessionFileArtifact>> artifactsByTestNode, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
+    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, int timeoutTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, Dictionary<TestNodeUid, List<SessionFileArtifact>> artifactsByTestNode, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
     {
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _environment = environment;
@@ -146,6 +148,7 @@ internal sealed partial class TrxReportEngine
         _testFrameworkAdapter = testFrameworkAdapter;
         _testStartTime = testStartTime;
         _cancellationToken = cancellationToken;
+        _exitCode = exitCode;
         _fileSystem = fileSystem;
         _isCopyingFileAllowed = isCopyingFileAllowed;
     }
@@ -175,9 +178,9 @@ internal sealed partial class TrxReportEngine
             AddTestLists(testRun, uncategorizedTestId);
 
             // NotExecuted is the status for the skipped test.
-            resultSummaryOutcome = isTestHostCrashed ? "Failed" : resultSummaryOutcome is "Passed" or "NotExecuted" ? "Completed" : resultSummaryOutcome;
+            resultSummaryOutcome = isTestHostCrashed || _exitCode != ExitCodes.Success ? "Failed" : resultSummaryOutcome is "Passed" or "NotExecuted" ? "Completed" : resultSummaryOutcome;
 
-            await AddResultSummaryAsync(testRun, resultSummaryOutcome, runDeploymentRoot, testHostCrashInfo, isTestHostCrashed);
+            await AddResultSummaryAsync(testRun, resultSummaryOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, isTestHostCrashed);
 
             // will need catch Unauthorized access
             document.Add(testRun);
@@ -289,7 +292,7 @@ internal sealed partial class TrxReportEngine
         }
     }
 
-    private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, bool isTestHostCrashed = false)
+    private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, bool isTestHostCrashed = false)
     {
         var resultSummary = new XElement(
             _namespaceUri + "ResultSummary",
@@ -326,6 +329,19 @@ internal sealed partial class TrxReportEngine
                 new XAttribute("outcome", "Error"),
                 new XAttribute("timestamp", _clock.UtcNow.DateTime));
             var text = new XElement(_namespaceUri + "Text", testHostCrashInfo);
+            runInfo.Add(text);
+            runInfos.Add(runInfo);
+        }
+        else if (exitCode != ExitCodes.Success)
+        {
+            var runInfos = new XElement(_namespaceUri + "RunInfos");
+            resultSummary.Add(runInfos);
+            var runInfo = new XElement(
+                _namespaceUri + "RunInfo",
+                new XAttribute("computerName", _environment.MachineName),
+                new XAttribute("outcome", "Error"),
+                new XAttribute("timestamp", _clock.UtcNow.DateTime));
+            var text = new XElement(_namespaceUri + "Text", $"Exit code indicates failure: '{exitCode}'. Please refer to https://aka.ms/testingplatform/exitcodes for more information.");
             runInfo.Add(text);
             runInfos.Add(runInfo);
         }

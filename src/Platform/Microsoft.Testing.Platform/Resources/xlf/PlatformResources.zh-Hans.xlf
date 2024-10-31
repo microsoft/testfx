@@ -402,9 +402,9 @@ Note that this is slowing down the test execution.</source>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
         <target state="translated">启用诊断日志记录。默认日志级别为 "Trace"。
-文件将写入输出目录，名称为 log_[MMddHHssfff].diag</target>
+文件将写入输出目录，名称为 log_[yyMMddHHmmssfff].diag</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -631,6 +631,16 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
         <target state="translated">堆栈跟踪</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="translated">错误输出</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="translated">标准输出</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">

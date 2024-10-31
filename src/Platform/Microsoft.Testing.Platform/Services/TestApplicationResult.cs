@@ -1,14 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
 using System.Globalization;
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
@@ -19,13 +17,12 @@ internal sealed class TestApplicationResult(
     IOutputDevice outputService,
     ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
     ICommandLineOptions commandLineOptions,
-    IEnvironment environment) : ITestApplicationProcessExitCode, ILoggerProvider, IOutputDeviceDataProducer
+    IEnvironment environment) : ITestApplicationProcessExitCode, IOutputDeviceDataProducer
 {
     private readonly IOutputDevice _outputService = outputService;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     private readonly ICommandLineOptions _commandLineOptions = commandLineOptions;
     private readonly IEnvironment _environment = environment;
-    private readonly List<TestApplicationResultLogger> _testApplicationResultLoggers = [];
     private readonly List<TestNode> _failedTests = [];
     private int _totalRanTests;
     private bool _testAdapterTestSessionFailure;
@@ -81,25 +78,9 @@ internal sealed class TestApplicationResult(
         return Task.CompletedTask;
     }
 
-    public ILogger CreateLogger(string categoryName)
+    public int GetProcessExitCode()
     {
-        TestApplicationResultLogger logger = new(categoryName);
-        _testApplicationResultLoggers.Add(logger);
-
-        return logger;
-    }
-
-    public async Task<int> GetProcessExitCodeAsync()
-    {
-        bool anyError = false;
-        foreach ((string categoryName, string error) in _testApplicationResultLoggers.SelectMany(logger => logger.Errors.Select(error => (logger.CategoryName, error))))
-        {
-            anyError = true;
-            await _outputService.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText($"[{categoryName}] {error}"));
-        }
-
         int exitCode = ExitCodes.Success;
-        exitCode = anyError ? ExitCodes.GenericFailure : exitCode;
         exitCode = exitCode == ExitCodes.Success && _testAdapterTestSessionFailure ? ExitCodes.TestAdapterTestSessionFailure : exitCode;
         exitCode = exitCode == ExitCodes.Success && _failedTests.Count > 0 ? ExitCodes.AtLeastOneTestFailed : exitCode;
         exitCode = exitCode == ExitCodes.Success && _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested ? ExitCodes.TestSessionAborted : exitCode;
@@ -145,25 +126,4 @@ internal sealed class TestApplicationResult(
 
     public Statistics GetStatistics()
         => new() { TotalRanTests = _totalRanTests, TotalFailedTests = _failedTests.Count };
-
-    private sealed class TestApplicationResultLogger(string categoryName) : ILogger
-    {
-        private readonly ConcurrentBag<string> _errors = [];
-
-        public IReadOnlyCollection<string> Errors => _errors;
-
-        public string CategoryName { get; } = categoryName;
-
-        public bool IsEnabled(LogLevel logLevel)
-            => logLevel is LogLevel.Error or LogLevel.Critical;
-
-        public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-        {
-            _errors.Add(formatter(state, exception));
-            return Task.CompletedTask;
-        }
-
-        public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-            => _errors.Add(formatter(state, exception));
-    }
 }

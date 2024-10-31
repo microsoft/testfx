@@ -63,7 +63,7 @@ internal static class JsonRpcStrings
     public const string Message = "message";
 
     // Telemetry
-    public const string EventName = "EventName";
+    public const string EventName = "eventName";
     public const string Metrics = "metrics";
 
     // Process

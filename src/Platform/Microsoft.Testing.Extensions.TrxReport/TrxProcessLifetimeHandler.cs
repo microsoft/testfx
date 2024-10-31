@@ -164,6 +164,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 adapterSupportTrxCapability: null,
                 new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
                 _startTime,
+                testHostProcessInformation.ExitCode,
                 cancellation);
 
             await _messageBus.PublishAsync(
@@ -194,6 +195,7 @@ internal sealed class TrxProcessLifetimeHandler :
                false,
                new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
                _startTime,
+               testHostProcessInformation.ExitCode,
                cancellation);
 
             await trxReportGeneratorEngine.AddArtifactsAsync(trxFile, artifacts);

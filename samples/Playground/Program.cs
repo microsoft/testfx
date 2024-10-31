@@ -5,10 +5,12 @@ using System.Reflection;
 
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using MSTest.Acceptance.IntegrationTests.Messages.V100;
@@ -27,7 +29,12 @@ public class Program
             // To attach to the children
             // Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+
+            // Test MSTest
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
+
+            // Test a custom local test framework
+            // testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new DummyAdapter());
 
             // Custom test host controller extension
             testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
@@ -64,7 +71,64 @@ public class Program
     }
 }
 
-public class OutOfProc : ITestHostProcessLifetimeHandler, IDataProducer
+internal sealed class DummyAdapter() : ITestFramework, IDataProducer
+{
+    public string Uid => nameof(DummyAdapter);
+
+    public string Version => string.Empty;
+
+    public string DisplayName => string.Empty;
+
+    public string Description => string.Empty;
+
+    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
+
+    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
+
+    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context) => Task.FromResult(new CreateTestSessionResult { IsSuccess = true });
+
+    public async Task ExecuteRequestAsync(ExecuteRequestContext context)
+    {
+        try
+        {
+            MyService.DoSomething();
+        }
+        catch (Exception e)
+        {
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(new SessionUid("1"), new Microsoft.Testing.Platform.Extensions.Messages.TestNode()
+            {
+                Uid = "2",
+                DisplayName = "Blah",
+                Properties = new PropertyBag(new FailedTestNodeStateProperty(e)),
+            }));
+        }
+
+        context.Complete();
+    }
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+}
+
+public sealed class MyService
+{
+    public static void DoSomething()
+    {
+        try
+        {
+            InnerDoSomething();
+        }
+        catch (Exception e)
+        {
+            throw new WrappedException("Service failed!", e);
+        }
+    }
+
+    private static void InnerDoSomething() => throw new InvalidOperationException("Error code 488");
+}
+
+public sealed class WrappedException(string message, Exception innerException) : Exception(message, innerException);
+
+public sealed class OutOfProc : ITestHostProcessLifetimeHandler, IDataProducer
 {
     private readonly IMessageBus _messageBus;
 

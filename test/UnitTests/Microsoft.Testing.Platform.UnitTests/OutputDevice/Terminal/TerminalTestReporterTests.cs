@@ -68,39 +68,61 @@ public sealed class TerminalTestReporterTests : TestBase
         string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
         string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
-        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture);
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
-        // timed out + cancelled + failed should all report as failed in summary
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
-            errorMessage: null, errorStackTrace: null, expected: null, actual: null);
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
-            errorMessage: "Tests failed", errorStackTrace: @$"   at FailingTest() in {folder}codefile.cs:line 10", expected: "ABC", actual: "DEF");
-        terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact1.txt");
-        terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, testName: null, @$"{folder}artifact2.txt");
-        terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture);
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, executionId: null);
+        string standardOutput = "Hello!";
+        string errorOutput = "Oh no!";
+
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
+            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+        // timed out + canceled + failed should all report as failed in summary
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
+            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
+            errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
+            errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
+        terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact1.txt");
+        terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact2.txt");
+        terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture, executionId: null);
         terminalReporter.TestExecutionCompleted(endTime);
 
         string output = stringBuilderConsole.Output;
 
         string expected = $"""
             ␛[92mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
-            ␛[93mskipped␛[m SkippedTest1␛[90m ␛[90m(10s 000ms)␛[m
-            ␛[91mfailed (canceled)␛[m TimedoutTest1␛[90m ␛[90m(10s 000ms)␛[m
-            ␛[91mfailed (canceled)␛[m CanceledTest1␛[90m ␛[90m(10s 000ms)␛[m
-            ␛[91mfailed␛[m FailedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m␛[93mskipped␛[m SkippedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m␛[91mfailed (canceled)␛[m TimedoutTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m␛[91mfailed (canceled)␛[m CanceledTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m␛[91mfailed␛[m FailedTest1␛[90m ␛[90m(10s 000ms)␛[m
             ␛[91m  Tests failed
             ␛[m␛[91m  Expected
                 ABC
               Actual
                 DEF
-            ␛[m␛[91m  Stack Trace:
-                ␛[90mat ␛[m␛[91mFailingTest()␛[90m in ␛[90m␛]8;;file:///{folderLink}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m
-
+            ␛[m␛[90m    at FailingTest() in ␛[90m␛]8;;file:///{folderLink}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m␛[90m
+            ␛[m␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m
 
               Out of process file artifacts produced:
                 - ␛[90m␛]8;;file:///{folderLink}artifact1.txt␛\{folder}artifact1.txt␛]8;;␛\␛[m
@@ -115,13 +137,10 @@ public sealed class TerminalTestReporterTests : TestBase
 
             """;
 
-        EnsureAnsiMatch(expected, output);
+        Assert.AreEqual(expected, ShowEscape(output));
     }
 
-    private void EnsureAnsiMatch(string expected, string actual)
-        => Assert.AreEqual(expected, ShowEscape(actual));
-
-    private string? ShowEscape(string? text)
+    private static string? ShowEscape(string? text)
     {
         string visibleEsc = "\x241b";
         return text?.Replace(AnsiCodes.Esc, visibleEsc);
@@ -228,5 +247,12 @@ public sealed class TerminalTestReporterTests : TestBase
         public void StopBusyIndicator() => throw new NotImplementedException();
 
         public void StopUpdate() => throw new NotImplementedException();
+    }
+
+    private class StackTraceException : Exception
+    {
+        public StackTraceException(string stackTrace) => StackTrace = stackTrace;
+
+        public override string? StackTrace { get; }
     }
 }

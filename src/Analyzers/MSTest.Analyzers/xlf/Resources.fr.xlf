@@ -287,8 +287,8 @@ Le type doit être une classe
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
-        <source>Member '{0}' is already exist in the base class</source>
-        <target state="translated">Le membre '{0}' existe déjà dans la classe de base</target>
+        <source>Member '{0}' already exists in the base class</source>
+        <target state="translated">Le membre « {0} » existe déjà dans la classe de base</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">

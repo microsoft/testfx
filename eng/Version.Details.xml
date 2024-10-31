@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24476.2">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24529.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>7e8b8f4f321c8671aa01b53567d31aaa4950706f</Sha>
+      <Sha>e4df2888e714255352a6afa2ec1246e70ac21a49</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.24476.2">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.24529.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>7e8b8f4f321c8671aa01b53567d31aaa4950706f</Sha>
+      <Sha>e4df2888e714255352a6afa2ec1246e70ac21a49</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="10.0.0-beta.24476.2">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="10.0.0-beta.24529.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>7e8b8f4f321c8671aa01b53567d31aaa4950706f</Sha>
+      <Sha>e4df2888e714255352a6afa2ec1246e70ac21a49</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.12.5-preview.24477.4">
+    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.13.0-preview.24522.1">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>aaeae7ecb0ed313fa6ec2ac29298bcc06b8b60fc</Sha>
+      <Sha>d960e2e7f33e3c5a2d88fa34cb825e2b581ac68d</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Internal.Framework" Version="1.5.0-preview.24477.3">
+    <Dependency Name="Microsoft.Testing.Internal.Framework" Version="1.5.0-preview.24530.1">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>c13e51348015685e1ec9a71377c6e7a2ef52cfd2</Sha>
+      <Sha>3f926c0b05898210d0623fedb6e041811ad97b08</Sha>
     </Dependency>
     <Dependency Name="MSTest.SourceGeneration" Version="1.0.0-alpha.24501.1">
       <Uri>https://github.com/microsoft/testanywhere</Uri>

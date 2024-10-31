@@ -7,7 +7,7 @@ using Microsoft.Testing.Platform.OutputDevice;
 
 namespace TestingPlatformExplorer.OutOfProcess;
 
-internal class MonitorTestHost : ITestHostProcessLifetimeHandler, IOutputDeviceDataProducer
+internal sealed class MonitorTestHost : ITestHostProcessLifetimeHandler, IOutputDeviceDataProducer
 {
     private readonly IOutputDevice _outputDevice;
 

@@ -402,9 +402,9 @@ Bunun test yürütmesini yavaşlatacağını unutmayın.</target>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
         <target state="translated">Tanılama günlük kaydını etkinleştirir. Varsayılan günlük düzeyi: 'İzleme'.
-Dosya, çıkış dizinine log_[MMddHHssfff].diag adıyla yazılır</target>
+Dosya, çıkış dizinine log_[yyMMddHHmmssfff].diag adıyla yazılır</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -631,6 +631,16 @@ Bir bağımsız değişkeni, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
         <target state="translated">Yığın İzlemesi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="translated">Hata çıkışı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="translated">Standart çıkış</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">

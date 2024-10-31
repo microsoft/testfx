@@ -402,9 +402,9 @@ Note that this is slowing down the test execution.</source>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
         <target state="translated">Включить ведение журнала диагностики. Уровень журнала по умолчанию — "Трассировка".
-Файл с именем log_[MMddHHssfff].diag будет записан в выходной каталог</target>
+Файл с именем log_[yyMMddHHmmssfff].diag будет записан в выходной каталог</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -631,6 +631,16 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
         <target state="translated">Трассировка стека</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="translated">Вывод ошибок</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="translated">Стандартный вывод</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">

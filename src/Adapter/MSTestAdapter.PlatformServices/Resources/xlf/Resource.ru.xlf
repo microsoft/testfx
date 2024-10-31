@@ -82,6 +82,11 @@
         <target state="translated">MSTestAdapter обнаружил непредвиденный элемент "{0}" в параметрах "{1}". Удалите этот элемент и повторите попытку.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="InvalidValue">
+        <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
+        <target state="translated">Недопустимое значение "{0}" для записи runsettings "{1}", параметр будет пропущен.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MissingDeploymentDependency">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</source>
         <target state="translated">Ошибка развертывания тестового запуска: не удалось найти сборку или модуль "{0}". Причина: {1}</target>

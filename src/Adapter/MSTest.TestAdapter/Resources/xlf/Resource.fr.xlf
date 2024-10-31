@@ -56,6 +56,11 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <target state="translated">La méthode d’initialisation de la classe « {0}.{1} » a été annulée</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateConfigurationError">
+        <source>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</source>
+        <target state="translated">Les fichiers « .runsettings » et « .testconfig.json » ont été détectés. Veuillez sélectionner un seul de ces fichiers de configuration de test.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
         <target state="translated">Le membre référencé « [DynamicData] '{0}.{1}' doit renvoyer « IEnumerable&lt;object[]&gt; », « IEnumerable&lt;Tuple&gt; » ou « IEnumerable&lt;ValueTuple&gt; »</target>
