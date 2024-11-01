@@ -3,10 +3,9 @@
 
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.MSBuild.TestPlatformExtensions;
 using Microsoft.Testing.Platform.Services;
 
-namespace Microsoft.Testing.Platform.MSBuild;
+namespace Microsoft.Testing.Extensions.MSBuild;
 
 public static class MSBuildExtensions
 {

@@ -4,7 +4,7 @@
 using System.Globalization;
 using System.Text;
 
-using Microsoft.Testing.Platform.MSBuild.TestPlatformExtensions.Serializers;
+using Microsoft.Testing.Extensions.MSBuild.Serializers;
 
 namespace Microsoft.Testing.Platform.MSBuild;
 

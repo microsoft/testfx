@@ -4,7 +4,7 @@
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Serializers;
 
-namespace Microsoft.Testing.Platform.MSBuild.TestPlatformExtensions.Serializers;
+namespace Microsoft.Testing.Extensions.MSBuild.Serializers;
 
 internal record FailedTestInfoRequest(
     string DisplayName,

@@ -4,16 +4,16 @@
 using System.Globalization;
 using System.Text;
 
+using Microsoft.Testing.Extensions.MSBuild.Serializers;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.MSBuild.TestPlatformExtensions.Serializers;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
-namespace Microsoft.Testing.Platform.MSBuild.TestPlatformExtensions;
+namespace Microsoft.Testing.Extensions.MSBuild;
 
 internal class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
@@ -44,10 +44,10 @@ internal class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
 
     public string DisplayName => nameof(MSBuildConsumer);
 
-    public string Description => Resources.MSBuildResources.MSBuildExtensionsDescription;
+    public string Description => Resources.ExtensionResources.MSBuildExtensionsDescription;
 
     public Task<bool> IsEnabledAsync()
-        => Task.FromResult(_commandLineOptions.IsOptionSet(MSBuildCommandLineProvider.MSBuildNodeOptionKey));
+        => Task.FromResult(_commandLineOptions.IsOptionSet(MSBuildConstants.MSBuildNodeOptionKey));
 
     public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
     {
