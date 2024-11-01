@@ -27,6 +27,7 @@
     <file src="netstandard2.0\buildTransitive\*" target="buildTransitive\netstandard2.0" />
     <file src="netstandard2.0\Microsoft.Testing.Platform.dll" target="_MSBuildTasks\netstandard2.0\" />
     <file src="netstandard2.0\Microsoft.Testing.Platform.MSBuild.dll" target="_MSBuildTasks\netstandard2.0\" />
+    <file src="netstandard2.0\**\Microsoft.Testing.Extensions.Platform.resources.*" target="_MSBuildTasks\netstandard2.0" />
     <file src="netstandard2.0\Microsoft.Testing.Extensions.MSBuild.dll" target="lib\netstandard2.0\" />
     <file src="netstandard2.0\Microsoft.Testing.Extensions.MSBuild.xml" target="lib\netstandard2.0\" />
     <file src="netstandard2.0\**\Microsoft.Testing.Extensions.MSBuild.resources.*" target="lib\netstandard2.0" />
