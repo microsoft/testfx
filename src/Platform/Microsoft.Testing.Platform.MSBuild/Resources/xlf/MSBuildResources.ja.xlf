@@ -32,11 +32,6 @@
         <target state="translated">無効な TargetPath、{0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="MSBuildExtensionsDescription">
-        <source>Extension used to pass parameters from MSBuild node and the hosts</source>
-        <target state="translated">MSBuild ノードおよびホストからパラメーターを渡すために使用される拡張機能</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
         <target state="translated">成功</target>

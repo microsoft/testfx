@@ -204,7 +204,7 @@
   </Target>
 
   <!-- We always include the entry point also if the task _GenerateAutoRegisteredExtensions is skipped for caching reason -->
-  <!-- !!! DO NOT CHANGE THE NAME OF THIS TARGET IS USED BY ADAPTERS https://github.com/microsoft/testfx/issues/3478#issuecomment-2313889212 !!! --> 
+  <!-- !!! DO NOT CHANGE THE NAME OF THIS TARGET IS USED BY ADAPTERS https://github.com/microsoft/testfx/issues/3478#issuecomment-2313889212 !!! -->
   <Target Name="_IncludeGenerateAutoRegisteredExtensionsIntoCompilation" BeforeTargets="_IncludeGenerateTestingPlatformEntryPointIntoCompilation;CoreCompile" Condition=" '$(GenerateSelfRegisteredExtensions)' == 'True' " >
     <ItemGroup>
       <Compile Include="$(_AutoRegisteredExtensionsSourcePath)" />
@@ -227,7 +227,7 @@
   <!-- Import task -->
   <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask"
          AssemblyFile="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
-  
+
   <PropertyGroup>
     <!-- Disable custom -t:Test target -->
     <TestingPlatformDisableCustomTestTarget Condition=" '$(TestingPlatformDisableCustomTestTarget)' == '' ">False</TestingPlatformDisableCustomTestTarget>
@@ -337,7 +337,7 @@
     When PublishContainer target is used to create a docker image for the test project, it will try to write /app/TestResults folder
     which is a non-writable folder. The environment variable below (notice double underscore) is used to override option defaults, and is picked up
     EnvironmentVariablesConfigurationProvider.
-    
+
     ComputeContainerConfig is target that PublishContainer depends on to figure out the configuration for the container.
     -->
     <ItemGroup>

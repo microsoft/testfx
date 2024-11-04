@@ -115,15 +115,6 @@ namespace Microsoft.Testing.Platform.MSBuild.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Extension used to pass parameters from MSBuild node and the hosts.
-        /// </summary>
-        internal static string MSBuildExtensionsDescription {
-            get {
-                return ResourceManager.GetString("MSBuildExtensionsDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Passed.
         /// </summary>
         internal static string Passed {
