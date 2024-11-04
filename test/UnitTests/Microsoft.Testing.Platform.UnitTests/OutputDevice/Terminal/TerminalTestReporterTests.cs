@@ -47,7 +47,7 @@ public sealed class TerminalTestReporterTests : TestBase
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
         {
-            ShowPassedTests = true,
+            ShowPassedTests = () => true,
             UseAnsi = true,
             ForceAnsi = true,
 
