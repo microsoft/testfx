@@ -167,6 +167,9 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+
+        Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS1")!, CultureInfo.InvariantCulture));
+
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test1",
@@ -174,7 +177,7 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
             Properties = new PropertyBag(new PassedTestNodeStateProperty()),
         }));
 
-        Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS1")!, CultureInfo.InvariantCulture));
+        Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS2")!, CultureInfo.InvariantCulture));
 
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
@@ -182,8 +185,6 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
             DisplayName = "Test2",
             Properties = new PropertyBag(new PassedTestNodeStateProperty()),
         }));
-
-        Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS2")!, CultureInfo.InvariantCulture));
 
         context.Complete();
     }
