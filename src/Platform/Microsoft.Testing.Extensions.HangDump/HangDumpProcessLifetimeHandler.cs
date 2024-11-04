@@ -2,6 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
+#if NETCOREAPP
+using System.Runtime.InteropServices;
+#endif
 
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.HangDump.Serializers;
@@ -361,6 +364,13 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             "full" => DumpType.Full,
             _ => throw ApplicationStateGuard.Unreachable(),
         };
+
+        // Wrap the dump path into "" when it has space in it, this is a workaround for this runtime issue: https://github.com/dotnet/diagnostics/issues/5020
+        // It only affects windows. Otherwise the dump creation fails with: [createdump] The pid argument is no longer supported
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && finalDumpFileName.Contains(' '))
+        {
+            finalDumpFileName = $"\"{finalDumpFileName}\"";
+        }
 
         diagnosticsClient.WriteDump(dumpType, finalDumpFileName, true);
 #else
