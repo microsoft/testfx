@@ -8,8 +8,8 @@
   <!-- Register the PlatformOutputDevice extension -->
   <ItemGroup>
     <TestingPlatformBuilderHook Include="8214564B-6107-422D-8A82-462F97602287" >
-      <DisplayName>Microsoft.Testing.Extensions.MSBuild</DisplayName>
-      <TypeFullName>Microsoft.Testing.Extensions.MSBuild.TestingPlatformBuilderHook</TypeFullName>
+      <DisplayName>Microsoft.Testing.Platform.MSBuild</DisplayName>
+      <TypeFullName>Microsoft.Testing.Platform.MSBuild.TestingPlatformBuilderHook</TypeFullName>
     </TestingPlatformBuilderHook>
   </ItemGroup>
 </Project>

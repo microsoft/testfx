@@ -15,7 +15,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
-internal class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
+internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;

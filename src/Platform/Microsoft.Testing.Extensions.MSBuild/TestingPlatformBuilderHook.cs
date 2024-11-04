@@ -3,7 +3,7 @@
 
 using Microsoft.Testing.Platform.Builder;
 
-namespace Microsoft.Testing.Extensions.MSBuild;
+namespace Microsoft.Testing.Platform.MSBuild;
 
 public static class TestingPlatformBuilderHook
 {
