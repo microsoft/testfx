@@ -25,7 +25,7 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// <summary>
 /// Implementation of output device that writes to terminal with progress and optionally with ANSI.
 /// </summary>
-internal partial class TerminalOutputDevice : IPlatformOutputDevice,
+internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,
     ITestSessionLifetimeHandler,
@@ -123,11 +123,16 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
         bool noProgress = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
 
-        bool showPassed = false;
+        // _runtimeFeature.IsHotReloadEnabled is not set to true here, even if the session will be HotReload,
+        // we need to postpone that decision until the first test result.
+        //
+        // This works but is NOT USED, we prefer to have the same experience of not showing passed tests in hotReload mode as in normal mode.
+        // Func<bool> showPassed = () => _runtimeFeature.IsHotReloadEnabled;
+        Func<bool> showPassed = () => false;
         bool outputOption = _commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.OutputOption, out string[]? arguments);
         if (outputOption && arguments?.Length > 0 && TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
         {
-            showPassed = true;
+            showPassed = () => true;
         }
 
         Func<bool?> shouldShowProgress = noProgress
@@ -270,6 +275,9 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         }
     }
 
+    public async Task DisplayBeforeHotReloadSessionStartAsync()
+        => await DisplayBeforeSessionStartAsync();
+
     public async Task DisplayBeforeSessionStartAsync()
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
@@ -284,14 +292,29 @@ internal partial class TerminalOutputDevice : IPlatformOutputDevice,
         }
     }
 
+    public async Task DisplayAfterHotReloadSessionEndAsync()
+        => await DisplayAfterSessionEndRunInternalAsync();
+
     public async Task DisplayAfterSessionEndRunAsync()
     {
-        RoslynDebug.Assert(_terminalTestReporter is not null);
-
         if (_isVSTestMode || _isListTests || _isServerMode)
         {
             return;
         }
+
+        // Do NOT check and store the value in the constructor
+        // it won't be populated yet, so you will always see false.
+        if (_runtimeFeature.IsHotReloadEnabled)
+        {
+            return;
+        }
+
+        await DisplayAfterSessionEndRunInternalAsync();
+    }
+
+    private async Task DisplayAfterSessionEndRunInternalAsync()
+    {
+        RoslynDebug.Assert(_terminalTestReporter is not null);
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
