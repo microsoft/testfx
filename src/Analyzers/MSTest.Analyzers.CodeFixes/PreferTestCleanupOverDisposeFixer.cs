@@ -49,7 +49,7 @@ public sealed class PreferTestCleanupOverDisposeFixer : CodeFixProvider
             CodeAction.Create(
                 CodeFixResources.ReplaceWithTestCleanuFix,
                 c => ReplaceDisposeWithTestCleanupAsync(context.Document, methodDeclaration, c),
-                nameof(TestMethodShouldBeValidCodeFixProvider)),
+                nameof(PreferTestCleanupOverDisposeFixer)),
             diagnostic);
     }
 
@@ -83,7 +83,9 @@ public sealed class PreferTestCleanupOverDisposeFixer : CodeFixProvider
         else
         {
             // If no interfaces left, remove the base list entirely
+            SyntaxTriviaList trailingTrivia = newParent.BaseList?.GetTrailingTrivia() ?? SyntaxTriviaList.Empty;
             newParent = newParent.WithBaseList(null);
+            newParent = newParent.WithIdentifier(newParent.Identifier.WithTrailingTrivia(trailingTrivia));
         }
 
         editor.ReplaceNode(parentClass, newParent);
