@@ -2,6 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
+#if NETCOREAPP
+using System.Runtime.InteropServices;
+#endif
 
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.HangDump.Serializers;
@@ -19,8 +22,6 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
-using System.Runtime.InteropServices;
-
 
 #if NETCOREAPP
 using Microsoft.Diagnostics.NETCore.Client;
