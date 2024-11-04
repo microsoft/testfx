@@ -35,7 +35,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
     private readonly ManualResetEventSlim _signalActivity = new(false);
     private readonly ManualResetEventSlim _mutexCreated = new(false);
     private readonly bool _traceLevelEnabled;
-    private readonly ConcurrentDictionary<string, (string Name, Type Type, DateTimeOffset StartTime)> _testsCurrentExecutionState = new();
+    private readonly ConcurrentDictionary<TestNodeUid, (string Name, Type Type, DateTimeOffset StartTime)> _testsCurrentExecutionState = new();
 
     private Task? _signalActivityIndicatorTask;
     private Mutex? _activityIndicatorMutex;
