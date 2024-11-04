@@ -123,9 +123,12 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
         bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
         bool noProgress = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
 
-        // IsHotReloadEnabled is not set to true here, even if the session will be HotReload,
+        // _runtimeFeature.IsHotReloadEnabled is not set to true here, even if the session will be HotReload,
         // we need to postpone that decision until the first test result.
-        Func<bool> showPassed = () => _runtimeFeature.IsHotReloadEnabled;
+        //
+        // This works but is NOT USED, we prefer to have the same experience of not showing passed tests in hotReload mode as in normal mode.
+        // Func<bool> showPassed = () => _runtimeFeature.IsHotReloadEnabled;
+        Func<bool> showPassed = () => false;
         bool outputOption = _commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.OutputOption, out string[]? arguments);
         if (outputOption && arguments?.Length > 0 && TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
         {
