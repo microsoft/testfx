@@ -35,7 +35,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
     private readonly ManualResetEventSlim _signalActivity = new(false);
     private readonly ManualResetEventSlim _mutexCreated = new(false);
     private readonly bool _traceLevelEnabled;
-    private readonly ConcurrentDictionary<string, (Type, DateTimeOffset)> _testsCurrentExecutionState = new();
+    private readonly ConcurrentDictionary<string, (string Name, Type Type, DateTimeOffset StartTime)> _testsCurrentExecutionState = new();
 
     private Task? _signalActivityIndicatorTask;
     private Mutex? _activityIndicatorMutex;
@@ -143,7 +143,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         if (request is GetInProgressTestsRequest)
         {
             await _logger.LogDebugAsync($"Received '{nameof(GetInProgressTestsRequest)}'");
-            return new GetInProgressTestsResponse(_testsCurrentExecutionState.Select(x => (x.Key, (int)_clock.UtcNow.Subtract(x.Value.Item2).TotalSeconds)).ToArray());
+            return new GetInProgressTestsResponse(_testsCurrentExecutionState.Select(x => (x.Value.Name, (int)_clock.UtcNow.Subtract(x.Value.StartTime).TotalSeconds)).ToArray());
         }
         else if (request is ExitSignalActivityIndicatorTaskRequest)
         {
@@ -173,14 +173,14 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
                 await _logger.LogTraceAsync($"New in-progress test '{nodeChangedMessage.TestNode.DisplayName}'");
             }
 
-            _testsCurrentExecutionState.TryAdd(nodeChangedMessage.TestNode.DisplayName, (typeof(InProgressTestNodeStateProperty), _clock.UtcNow));
+            _testsCurrentExecutionState.TryAdd(nodeChangedMessage.TestNode.Uid, (nodeChangedMessage.TestNode.DisplayName, typeof(InProgressTestNodeStateProperty), _clock.UtcNow));
         }
         else if (state is PassedTestNodeStateProperty or ErrorTestNodeStateProperty or CancelledTestNodeStateProperty
             or FailedTestNodeStateProperty or TimeoutTestNodeStateProperty or SkippedTestNodeStateProperty
-            && _testsCurrentExecutionState.TryRemove(nodeChangedMessage.TestNode.DisplayName, out (Type, DateTimeOffset) record)
+            && _testsCurrentExecutionState.TryRemove(nodeChangedMessage.TestNode.Uid, out (string Name, Type Type, DateTimeOffset StartTime) record)
             && _traceLevelEnabled)
         {
-            await _logger.LogTraceAsync($"Test removed from in-progress list '{nodeChangedMessage.TestNode.DisplayName}' after '{_clock.UtcNow.Subtract(record.Item2)}', total in-progress '{_testsCurrentExecutionState.Count}'");
+            await _logger.LogTraceAsync($"Test removed from in-progress list '{record.Name}' after '{_clock.UtcNow.Subtract(record.StartTime)}', total in-progress '{_testsCurrentExecutionState.Count}'");
         }
 
         // Optimization, we're interested in test progression and eventually in the discovery progression
