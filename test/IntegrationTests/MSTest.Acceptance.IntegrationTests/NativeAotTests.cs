@@ -42,6 +42,36 @@ namespace MyTests;
 [TestClass]
 public class UnitTest1
 {
+    [ClassInitialize]
+    public static void ClassInit(TestContext testContext)
+    {
+    }
+
+    [ClassCleanup]
+    public static void ClassClean(TestContext testContext)
+    {
+    }
+
+    [TestInitialize]
+    public void TestInit()
+    {
+    }
+
+    [TestCleanup]
+    public void TestClean()
+    {
+    }
+
+    [AssemblyInitialize]
+    public static void AssemblyInit(TestContext testContext)
+    {
+    }
+
+    [AssemblyCleanup]
+    public static void AssemblyClean(TestContext testContext)
+    {
+    }
+
     [TestMethod]
     public void TestMethod1()
     {
