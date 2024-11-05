@@ -228,16 +228,15 @@ internal sealed class AnsiTerminal : ITerminal
         }
 
         // Generates file:// schema url string which is better handled by various Terminal clients than raw folder name.
-        string urlString = linkPath.ToString();
-        if (Uri.TryCreate(urlString, UriKind.Absolute, out Uri? uri))
+        if (Uri.TryCreate(linkPath, UriKind.Absolute, out Uri? uri))
         {
             // url.ToString() un-escapes the URL which is needed for our case file://
-            urlString = uri.ToString();
+            linkPath = uri.ToString();
         }
 
         SetColor(TerminalColor.DarkGray);
         Append(AnsiCodes.LinkPrefix);
-        Append(urlString);
+        Append(linkPath);
         Append(AnsiCodes.LinkInfix);
         Append(path);
         Append(AnsiCodes.LinkSuffix);
