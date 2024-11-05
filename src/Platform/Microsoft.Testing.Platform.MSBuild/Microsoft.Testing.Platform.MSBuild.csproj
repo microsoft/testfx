@@ -23,10 +23,8 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <NuspecFile>Microsoft.Testing.Platform.MSBuild.nuspec</NuspecFile>
-    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
-    <PackageId>Microsoft.Testing.Platform.MSBuild</PackageId>
-    <PackageTags>$(CommonPackageTags)</PackageTags>
+    <BuildOutputTargetFolder>_MSBuildTasks</BuildOutputTargetFolder>
+    <IncludeBuildOutput Condition="'$(TargetFramework)' != '' and '$(TargetFramework)' != 'netstandard2.0'">false</IncludeBuildOutput>
     <PackageDescription>
       <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
 
@@ -34,9 +32,28 @@ This package provides MSBuild integration of the platform, its extensions and co
     </PackageDescription>
   </PropertyGroup>
 
-  <ItemGroup Label="NuGet">
-    <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
+  <!--
+    Default to including all *.props and *.targets files
+    from the project directory into the NuGet package root
+  -->
+  <ItemGroup>
+    <None Include="**/*.props;**/*.targets"
+          Pack="true"
+          PackagePath="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
+
+  <!-- Microsoft.Testing.Extensions.MSBuild should appear in both the build output folder (_MSBuildTasks) and the lib/<tfm> folder. -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput Condition="'$(TargetFramework)' == 'netstandard2.0'">$(TargetsForTfmSpecificBuildOutput);IncludeProjectReferenceDlls</TargetsForTfmSpecificBuildOutput>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);IncludeProjectReferenceDlls</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <Target Name="IncludeProjectReferenceDlls" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))" TargetPath="%(ReferenceCopyLocalPaths.DestinationSubDirectory)" />
+      <TfmSpecificPackageFile Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))" PackagePath="lib\$(TargetFramework)\%(ReferenceCopyLocalPaths.DestinationSubDirectory)" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\MSBuildConstants.cs" Link="MSBuildConstants.cs" />
@@ -46,17 +63,7 @@ This package provides MSBuild integration of the platform, its extensions and co
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Resources\MSBuildResources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>MSBuildResources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\MSBuildResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>MSBuildResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\MSBuildResources.resx" GenerateSource="true" />
   </ItemGroup>
 
   <!-- Generates NuGet package layout inside artifacts to make it testable with simple imports -->
@@ -90,18 +97,6 @@ This package provides MSBuild integration of the platform, its extensions and co
 
   <ItemGroup>
     <Using Include="Polyfills" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="buildMultiTargeting\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="build\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="buildTransitive\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>
