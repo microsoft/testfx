@@ -48,18 +48,7 @@ This package extends Microsoft Testing Platform to provide a crash dump function
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Resources\CrashDumpResources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>CrashDumpResources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\CrashDumpResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>CrashDumpResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\CrashDumpResources.resx" GenerateSource="true" />
   </ItemGroup>
 
 </Project>

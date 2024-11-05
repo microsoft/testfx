@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
     <DefineConstants>PLATFORM_MSBUILD</DefineConstants>
@@ -46,17 +46,7 @@ This package provides MSBuild integration of the platform, its extensions and co
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Resources\MSBuildResources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>MSBuildResources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\MSBuildResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>MSBuildResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\MSBuildResources.resx" GenerateSource="true" />
   </ItemGroup>
 
   <!-- Generates NuGet package layout inside artifacts to make it testable with simple imports -->
