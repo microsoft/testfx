@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
     <DefineConstants>PLATFORM_MSBUILD</DefineConstants>
@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" CopyToBuildOutput="true" />
     <!-- Deps only so we can include it in the lib of the NuGet package -->
     <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj" PrivateAssets="All" />
   </ItemGroup>
@@ -32,26 +32,26 @@ This package provides MSBuild integration of the platform, its extensions and co
     </PackageDescription>
   </PropertyGroup>
 
-  <!--
-    Default to including all *.props and *.targets files
-    from the project directory into the NuGet package root
-  -->
+  <!-- Default to including all *.props and *.targets files from the project directory into the NuGet package root -->
   <ItemGroup>
-    <None Include="**/*.props;**/*.targets"
-          Pack="true"
-          PackagePath="%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="**/*.props;**/*.targets" Pack="true" PackagePath="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <!-- Microsoft.Testing.Extensions.MSBuild should appear in both the build output folder (_MSBuildTasks) and the lib/<tfm> folder. -->
   <PropertyGroup>
-    <TargetsForTfmSpecificBuildOutput Condition="'$(TargetFramework)' == 'netstandard2.0'">$(TargetsForTfmSpecificBuildOutput);IncludeProjectReferenceDlls</TargetsForTfmSpecificBuildOutput>
-    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);IncludeProjectReferenceDlls</TargetsForTfmSpecificContentInPackage>
+    <TargetsForTfmSpecificBuildOutput Condition="'$(TargetFramework)' == 'netstandard2.0'">$(TargetsForTfmSpecificBuildOutput);IncludeProjectReferenceLabelDlls</TargetsForTfmSpecificBuildOutput>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);IncludeProjectReferencePrivateAssetsDlls</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
-  <Target Name="IncludeProjectReferenceDlls" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+  <Target Name="IncludeProjectReferencePrivateAssetsDlls" DependsOnTargets="BuildOnlySettings;ResolveReferences">
     <ItemGroup>
-      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))" TargetPath="%(ReferenceCopyLocalPaths.DestinationSubDirectory)" />
       <TfmSpecificPackageFile Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))" PackagePath="lib\$(TargetFramework)\%(ReferenceCopyLocalPaths.DestinationSubDirectory)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="IncludeProjectReferenceLabelDlls">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('CopyToBuildOutput', 'true'))" TargetPath="%(ReferenceCopyLocalPaths.DestinationSubDirectory)" />
     </ItemGroup>
   </Target>
 
