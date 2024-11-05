@@ -20,6 +20,7 @@ public class NativeAotTests : AcceptanceTestBase
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <PublishAot>true</PublishAot>
+        <NoWarn>$(NoWarn);IL2104;IL2026;IL3053</NoWarn>
         <!--
             This makes sure that the project is referencing MSTest.TestAdapter.dll when MSTest.TestAdapter nuget is imported,
             without this the dll is just copied into the output folder.
@@ -48,7 +49,7 @@ public class UnitTest1
     }
 
     [ClassCleanup]
-    public static void ClassClean(TestContext testContext)
+    public static void ClassClean()
     {
     }
 
@@ -68,7 +69,7 @@ public class UnitTest1
     }
 
     [AssemblyCleanup]
-    public static void AssemblyClean(TestContext testContext)
+    public static void AssemblyClean()
     {
     }
 
