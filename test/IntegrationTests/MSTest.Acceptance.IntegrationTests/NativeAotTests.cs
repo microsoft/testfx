@@ -174,7 +174,7 @@ public class NativeAotTests : AcceptanceTestBase
         }
         """;
 
-    private const string SourceCodeWithInCompatibleLibrary = $$"""
+    private const string SourceCodeWithIncompatibleLibrary = $$"""
         #file TestProject/NativeAotTests.csproj
         <Project Sdk="Microsoft.NET.Sdk">
             <PropertyGroup>
@@ -260,6 +260,84 @@ public class NativeAotTests : AcceptanceTestBase
         : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
     public async Task NativeAotTests_WillRunWithExitCodeZero()
+    {
+        TestHostResult result = await GetTestResultForCode(SourceCodeSimple);
+        result.AssertExitCodeIs(0);
+    }
+
+    public async Task NativeAotTests_WillFailAsserts()
+    {
+        TestHostResult result = await GetTestResultForCode(SourceCodeWithFailingAssert);
+        result.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+
+        result.AssertOutputContains("failed TestMethod1");
+        result.AssertOutputContains("Assert.Fail failed. Failing TestMethod1");
+
+        result.AssertOutputContains("failed TestMethod2 (2,3)");
+        result.AssertOutputContains("Assert.Fail failed. Failing a specific case of TestMethod2");
+
+        result.AssertOutputContains("failed TestMethod3 (2,3)");
+        result.AssertOutputContains("Assert.Fail failed. Failing a specific case of TestMethod3");
+
+        result.AssertOutputContains("Test run summary: Failed!");
+        result.AssertOutputContains("total: 5");
+        result.AssertOutputContains("failed: 3");
+        result.AssertOutputContains("succeeded: 2");
+        result.AssertOutputContains("skipped: 0");
+    }
+
+    public async Task NativeAotTests_WillFailBecauseTestedLibraryIsNotCompatible()
+    {
+        TestHostResult result = await GetTestResultForCode(SourceCodeWithIncompatibleLibrary, "TestProject");
+        result.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+
+        result.AssertOutputContains("System.NullReferenceException: Object reference not set to an instance of an object.");
+        result.AssertOutputContains("TestBadLibrary.ClassToBeTested.M()");
+
+        result.AssertOutputContains("Test run summary: Failed!");
+        result.AssertOutputContains("total: 1");
+        result.AssertOutputContains("failed: 1");
+        result.AssertOutputContains("succeeded: 0");
+        result.AssertOutputContains("skipped: 0");
+    }
+
+    public async Task NativeAotTests_WillFailInTestInitialize()
+    {
+        string code = ConstructFailingFixture("TestInitialize", isStatic: false, usesTestContext: false);
+        await NativeAotTests_WillFailInTestFixtureCommon(code);
+    }
+
+    public async Task NativeAotTests_WillFailInTestCleanup()
+    {
+        string code = ConstructFailingFixture("TestCleanup", isStatic: false, usesTestContext: false);
+        await NativeAotTests_WillFailInTestFixtureCommon(code);
+    }
+
+    public async Task NativeAotTests_WillFailInClassInitialize()
+    {
+        string code = ConstructFailingFixture("ClassInitialize", isStatic: true, usesTestContext: true);
+        await NativeAotTests_WillFailInTestFixtureCommon(code);
+    }
+
+    public async Task NativeAotTests_WillFailInClassCleanup()
+    {
+        string code = ConstructFailingFixture("ClassInitialize", isStatic: true, usesTestContext: false);
+        await NativeAotTests_WillFailInTestFixtureCommon(code);
+    }
+
+    public async Task NativeAotTests_WillFailInAssemblyInitialize()
+    {
+        string code = ConstructFailingFixture("AssemblyInitialize", isStatic: true, usesTestContext: true);
+        await NativeAotTests_WillFailInTestFixtureCommon(code);
+    }
+
+    public async Task NativeAotTests_WillFailInAssemblyCleanup()
+    {
+        string code = ConstructFailingFixture("AssemblyCleanup", isStatic: true, usesTestContext: false);
+        await NativeAotTests_WillFailInTestFixtureCommon(code);
+    }
+
+    private async Task<TestHostResult> GetTestResultForCode(string code, string? projectDir = null)
         // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
         // or sometimes doesn't fail but the native code generation is not done.
         // Retrying the restore/publish on fresh asset seems to be more effective than retrying on the same asset.
@@ -268,7 +346,7 @@ public class NativeAotTests : AcceptanceTestBase
             {
                 using TestAsset generator = await TestAsset.GenerateAssetAsync(
                     "NativeAotTests",
-                    SourceCodeSimple
+                    code
                     .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                     .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
                     .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent.Arguments)
@@ -276,112 +354,52 @@ public class NativeAotTests : AcceptanceTestBase
                     .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
                     addPublicFeeds: true);
 
+                string targetAssetPath = projectDir is null ? generator.TargetAssetPath : Path.Combine(generator.TargetAssetPath, projectDir);
+
                 await DotnetCli.RunAsync(
-                    $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
+                    $"restore -m:1 -nodeReuse:false {targetAssetPath} -r {RID}",
                     _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     retryCount: 0);
                 DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-                    $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
+                    $"publish -m:1 -nodeReuse:false {targetAssetPath} -r {RID}",
                     _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     timeoutInSeconds: 100,
                     retryCount: 0);
                 compilationResult.AssertOutputContains("Generating native code");
 
-                var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent.Arguments, RID, Verb.publish);
+                var testHost = TestHost.LocateFrom(targetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent.Arguments, RID, Verb.publish);
 
-                TestHostResult result = await testHost.ExecuteAsync();
-                result.AssertExitCodeIs(0);
+                return await testHost.ExecuteAsync();
             }, times: 15, every: TimeSpan.FromSeconds(5));
 
-    public async Task NativeAotTests_WillFailAsserts()
-     // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
-     // or sometimes doesn't fail but the native code generation is not done.
-     // Retrying the restore/publish on fresh asset seems to be more effective than retrying on the same asset.
-     => await RetryHelper.RetryAsync(
-         async () =>
-         {
-             using TestAsset generator = await TestAsset.GenerateAssetAsync(
-                 "NativeAotTests",
-                 SourceCodeWithFailingAssert
-                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                 .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
-                 .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent.Arguments)
-                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                 .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
-                 addPublicFeeds: true);
+    private async Task NativeAotTests_WillFailInTestFixtureCommon(string code)
+    {
+        TestHostResult result = await GetTestResultForCode(code);
+        result.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        result.AssertOutputContains("Assert.Fail failed. Fails in fixture");
+    }
 
-             await DotnetCli.RunAsync(
-                 $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
-                 _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
-                 retryCount: 0);
-             DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-                 $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
-                 _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
-                 timeoutInSeconds: 100,
-                 retryCount: 0);
-             compilationResult.AssertOutputContains("Generating native code");
+    private static string ConstructFailingFixture(string attributeName, bool isStatic, bool usesTestContext) => $$"""
+        {{SourceCodeCsproj}}
 
-             var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent.Arguments, RID, Verb.publish);
+        #file TestClass1.cs
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-             TestHostResult result = await testHost.ExecuteAsync();
-             result.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        namespace MyTests;
 
-             result.AssertOutputContains("failed TestMethod1");
-             result.AssertOutputContains("Assert.Fail failed. Failing TestMethod1");
+        [TestClass]
+        public class UnitTest1
+        {
+            [{{attributeName}}]
+            public{{(isStatic ? " static" : string.Empty)}} void FixtureMethod({{(usesTestContext ? "TestContext testContext" : "")}})
+            {
+                Assert.Fail("Fails in fixture");
+            }
 
-             result.AssertOutputContains("failed TestMethod2 (2,3)");
-             result.AssertOutputContains("Assert.Fail failed. Failing a specific case of TestMethod2");
-
-             result.AssertOutputContains("failed TestMethod3 (2,3)");
-             result.AssertOutputContains("Assert.Fail failed. Failing a specific case of TestMethod3");
-
-             result.AssertOutputContains("Test run summary: Failed!");
-             result.AssertOutputContains("total: 5");
-             result.AssertOutputContains("failed: 3");
-             result.AssertOutputContains("succeeded: 2");
-             result.AssertOutputContains("skipped: 0");
-         }, times: 15, every: TimeSpan.FromSeconds(5));
-
-    public async Task NativeAotTests_WillFailBecauseTestedLibraryIsNotCompatible()
-     // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
-     // or sometimes doesn't fail but the native code generation is not done.
-     // Retrying the restore/publish on fresh asset seems to be more effective than retrying on the same asset.
-     => await RetryHelper.RetryAsync(
-         async () =>
-         {
-             using TestAsset generator = await TestAsset.GenerateAssetAsync(
-                 "NativeAotTests",
-                 SourceCodeWithInCompatibleLibrary
-                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                 .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
-                 .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent.Arguments)
-                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                 .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
-                 addPublicFeeds: true);
-
-             await DotnetCli.RunAsync(
-                 $"restore -m:1 -nodeReuse:false {Path.Combine(generator.TargetAssetPath, "TestProject")} -r {RID}",
-                 _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
-                 retryCount: 0);
-             DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-                 $"publish -m:1 -nodeReuse:false {Path.Combine(generator.TargetAssetPath, "TestProject")} -r {RID}",
-                 _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
-                 timeoutInSeconds: 100,
-                 retryCount: 0);
-             compilationResult.AssertOutputContains("Generating native code");
-
-             var testHost = TestHost.LocateFrom(Path.Combine(generator.TargetAssetPath, "TestProject"), "NativeAotTests", TargetFrameworks.NetCurrent.Arguments, RID, Verb.publish);
-
-             TestHostResult result = await testHost.ExecuteAsync();
-             result.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-
-             result.AssertOutputContains("System.NullReferenceException: Object reference not set to an instance of an object.");
-             result.AssertOutputContains("TestBadLibrary.ClassToBeTested.M()");
-
-             result.AssertOutputContains("Test run summary: Failed!");
-             result.AssertOutputContains("total: 1");
-             result.AssertOutputContains("failed: 1");
-             result.AssertOutputContains("succeeded: 0");
-             result.AssertOutputContains("skipped: 0");
-         }, times: 15, every: TimeSpan.FromSeconds(5));
+            [TestMethod]
+            public void TestMethod1()
+            {
+            }
+        }
+        """;
 }
