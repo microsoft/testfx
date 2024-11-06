@@ -9,6 +9,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [AttributeUsage(AttributeTargets.Method)]
 public sealed class TimeoutAttribute : Attribute
 {
+    private bool _isCooperativeCancellation;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TimeoutAttribute"/> class.
     /// </summary>
@@ -41,12 +43,12 @@ public sealed class TimeoutAttribute : Attribute
     /// </summary>
     public bool CooperativeCancellation
     {
-        get;
+        get => _isCooperativeCancellation;
         set
         {
             // Attributes don't allow nullable boolean, so we need this to know that the value was set explicitly.
             IsCooperativeCancellationSet = true;
-            field = value;
+            _isCooperativeCancellation = value;
         }
     }
 
