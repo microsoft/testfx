@@ -47,6 +47,24 @@ public sealed class HangDumpTests : AcceptanceTestBase
         Assert.IsTrue(dumpFile is not null, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
     }
 
+    public async Task HangDump_PathWithSpaces_CreateDump()
+    {
+        string resultDir = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent.Arguments);
+        string resultDirectory = Path.Combine(resultDir, "directory with spaces");
+        Directory.CreateDirectory(resultDirectory);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"""--hangdump --hangdump-timeout 8s --hangdump-filename myhungdumpfile_%p.dmp --results-directory "{resultDirectory}" """,
+            new Dictionary<string, string>
+            {
+                { "SLEEPTIMEMS1", "4000" },
+                { "SLEEPTIMEMS2", "20000" },
+            });
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        string? dumpFile = Directory.GetFiles(resultDirectory, "myhungdumpfile_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
+        Assert.IsTrue(dumpFile is not null, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+    }
+
     [Arguments("Mini")]
     [Arguments("Heap")]
     [Arguments("Triage")]
@@ -167,6 +185,9 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+
+        Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS1")!, CultureInfo.InvariantCulture));
+
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test1",
@@ -174,7 +195,7 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
             Properties = new PropertyBag(new PassedTestNodeStateProperty()),
         }));
 
-        Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS1")!, CultureInfo.InvariantCulture));
+        Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS2")!, CultureInfo.InvariantCulture));
 
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
@@ -182,8 +203,6 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
             DisplayName = "Test2",
             Properties = new PropertyBag(new PassedTestNodeStateProperty()),
         }));
-
-        Thread.Sleep(int.Parse(Environment.GetEnvironmentVariable("SLEEPTIMEMS2")!, CultureInfo.InvariantCulture));
 
         context.Complete();
     }

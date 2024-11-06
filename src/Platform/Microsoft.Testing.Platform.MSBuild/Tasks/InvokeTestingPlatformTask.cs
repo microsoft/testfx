@@ -9,6 +9,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 using Microsoft.Build.Framework;
+using Microsoft.Testing.Extensions.MSBuild;
+using Microsoft.Testing.Extensions.MSBuild.Serializers;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
@@ -16,8 +18,6 @@ using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.MSBuild.Tasks;
-using Microsoft.Testing.Platform.MSBuild.TestPlatformExtensions;
-using Microsoft.Testing.Platform.MSBuild.TestPlatformExtensions.Serializers;
 
 using static Microsoft.Testing.Platform.MSBuild.Tasks.DotnetMuxerLocator;
 
@@ -203,7 +203,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             }
         }
 
-        builder.AppendSwitchIfNotNull($"--{MSBuildCommandLineProvider.MSBuildNodeOptionKey} ", _pipeNameDescription.Name);
+        builder.AppendSwitchIfNotNull($"--{MSBuildConstants.MSBuildNodeOptionKey} ", _pipeNameDescription.Name);
 
         if (!string.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
         {

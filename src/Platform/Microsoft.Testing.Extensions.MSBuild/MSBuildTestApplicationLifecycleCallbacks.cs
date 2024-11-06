@@ -3,6 +3,7 @@
 
 using System.Runtime.InteropServices;
 
+using Microsoft.Testing.Extensions.MSBuild.Serializers;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestHost;
@@ -10,13 +11,11 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
-using Microsoft.Testing.Platform.MSBuild.TestPlatformExtensions;
-using Microsoft.Testing.Platform.MSBuild.TestPlatformExtensions.Serializers;
 using Microsoft.Testing.Platform.Services;
 
-namespace Microsoft.Testing.Platform.MSBuild;
+namespace Microsoft.Testing.Extensions.MSBuild;
 
-internal class MSBuildTestApplicationLifecycleCallbacks : ITestApplicationLifecycleCallbacks, IDisposable
+internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestApplicationLifecycleCallbacks, IDisposable
 {
     private readonly IConfiguration _configuration;
     private readonly ICommandLineOptions _commandLineOptions;
@@ -40,21 +39,21 @@ internal class MSBuildTestApplicationLifecycleCallbacks : ITestApplicationLifecy
 
     public string DisplayName => nameof(MSBuildTestApplicationLifecycleCallbacks);
 
-    public string Description => Resources.MSBuildResources.MSBuildExtensionsDescription;
+    public string Description => Resources.ExtensionResources.MSBuildExtensionsDescription;
 
     public Task<bool> IsEnabledAsync()
-        => Task.FromResult(_commandLineOptions.IsOptionSet(MSBuildCommandLineProvider.MSBuildNodeOptionKey));
+        => Task.FromResult(_commandLineOptions.IsOptionSet(MSBuildConstants.MSBuildNodeOptionKey));
 
     public async Task BeforeRunAsync(CancellationToken cancellationToken)
     {
-        if (!_commandLineOptions.TryGetOptionArgumentList(MSBuildCommandLineProvider.MSBuildNodeOptionKey, out string[]? msbuildInfo))
+        if (!_commandLineOptions.TryGetOptionArgumentList(MSBuildConstants.MSBuildNodeOptionKey, out string[]? msbuildInfo))
         {
-            throw new InvalidOperationException($"MSBuild pipe name not found in the command line, missing {MSBuildCommandLineProvider.MSBuildNodeOptionKey}");
+            throw new InvalidOperationException($"MSBuild pipe name not found in the command line, missing {MSBuildConstants.MSBuildNodeOptionKey}");
         }
 
         if (msbuildInfo is null || msbuildInfo.Length != 1 || string.IsNullOrEmpty(msbuildInfo[0]))
         {
-            throw new InvalidOperationException($"MSBuild pipe name not found in the command line, missing argument for {MSBuildCommandLineProvider.MSBuildNodeOptionKey}");
+            throw new InvalidOperationException($"MSBuild pipe name not found in the command line, missing argument for {MSBuildConstants.MSBuildNodeOptionKey}");
         }
 
         PipeClient = new(msbuildInfo[0]);

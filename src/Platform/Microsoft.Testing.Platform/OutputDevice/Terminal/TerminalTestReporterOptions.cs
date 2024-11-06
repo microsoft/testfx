@@ -13,7 +13,7 @@ internal sealed class TerminalTestReporterOptions
     /// <summary>
     /// Gets a value indicating whether we should show passed tests.
     /// </summary>
-    public bool ShowPassedTests { get; init; }
+    public Func<bool> ShowPassedTests { get; init; } = () => true;
 
     /// <summary>
     /// Gets a value indicating whether we should show information about which assembly is the source of the data on screen. Turn this off when running directly from an exe to reduce noise, because the path will always be the same.

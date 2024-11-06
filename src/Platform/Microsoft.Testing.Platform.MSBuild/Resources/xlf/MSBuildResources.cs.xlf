@@ -32,11 +32,6 @@
         <target state="translated">Neplatná hodnota TargetPath, {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="MSBuildExtensionsDescription">
-        <source>Extension used to pass parameters from MSBuild node and the hosts</source>
-        <target state="translated">Rozšíření používané k předání parametrů z uzlu MSBuild a hostitelů</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
         <target state="translated">Úspěšné</target>
