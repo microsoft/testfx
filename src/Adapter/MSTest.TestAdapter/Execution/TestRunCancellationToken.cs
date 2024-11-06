@@ -16,11 +16,6 @@ public class TestRunCancellationToken
     /// </summary>
     private readonly ConcurrentBag<Action> _registeredCallbacks = new();
 
-    /// <summary>
-    /// Stores whether the test run is canceled or not.
-    /// </summary>
-    private bool _canceled;
-
     public TestRunCancellationToken()
         : this(CancellationToken.None)
     {
@@ -35,12 +30,11 @@ public class TestRunCancellationToken
     /// </summary>
     public bool Canceled
     {
-        get => _canceled;
-
+        get;
         private set
         {
-            bool previousValue = _canceled;
-            _canceled = value;
+            bool previousValue = field;
+            field = value;
 
             if (!previousValue && value)
             {

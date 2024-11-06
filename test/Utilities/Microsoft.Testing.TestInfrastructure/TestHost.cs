@@ -12,9 +12,7 @@ namespace Microsoft.Testing.TestInfrastructure;
 public sealed class TestHost
 {
     private readonly string _testHostModuleName;
-
-    private static int s_maxOutstandingExecutions = Environment.ProcessorCount;
-    private static SemaphoreSlim s_maxOutstandingExecutions_semaphore = new(s_maxOutstandingExecutions, s_maxOutstandingExecutions);
+    private static SemaphoreSlim s_maxOutstandingExecutions_semaphore = new(MaxOutstandingExecutions, MaxOutstandingExecutions);
 
     private TestHost(string testHostFullName, string testHostModuleName)
     {
@@ -25,15 +23,17 @@ public sealed class TestHost
 
     public static int MaxOutstandingExecutions
     {
-        get => s_maxOutstandingExecutions;
-
+        get;
         set
         {
-            s_maxOutstandingExecutions = value;
+            field = value;
             s_maxOutstandingExecutions_semaphore.Dispose();
-            s_maxOutstandingExecutions_semaphore = new SemaphoreSlim(s_maxOutstandingExecutions, s_maxOutstandingExecutions);
+            s_maxOutstandingExecutions_semaphore = new SemaphoreSlim(field, field);
         }
     }
+#pragma warning disable SA1513 // Closing brace should be followed by blank line
+    = Environment.ProcessorCount;
+#pragma warning restore SA1513 // Closing brace should be followed by blank line
 
     public string FullName { get; }
 

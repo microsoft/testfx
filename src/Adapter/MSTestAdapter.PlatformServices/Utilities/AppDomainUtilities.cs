@@ -23,21 +23,15 @@ internal static class AppDomainUtilities
     private static readonly Version DefaultVersion = new();
     private static readonly Version Version45 = new("4.5");
 
-    private static XmlUtilities? s_xmlUtilities;
-
     /// <summary>
     /// Gets or sets the Xml Utilities instance.
     /// </summary>
+    [field: AllowNull]
+    [field: MaybeNull]
     internal static XmlUtilities XmlUtilities
     {
-        get
-        {
-            s_xmlUtilities ??= new XmlUtilities();
-
-            return s_xmlUtilities;
-        }
-
-        set => s_xmlUtilities = value;
+        get => field ??= new XmlUtilities();
+        set;
     }
 
     /// <summary>
