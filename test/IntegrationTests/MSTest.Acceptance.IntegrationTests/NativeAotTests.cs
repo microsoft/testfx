@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.RegularExpressions;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
@@ -33,6 +35,7 @@ public class NativeAotTests : AcceptanceTestBase
                 <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestSourceGenerationVersion$" />
                 <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
                 <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+                <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
             </ItemGroup>
         </Project>
         """;
@@ -174,6 +177,90 @@ public class NativeAotTests : AcceptanceTestBase
         }
         """;
 
+    private const string SourceCodeWithDerivedTestClass = $$"""
+        {{SourceCodeCsproj}}
+
+        #file TestClass1.cs
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        namespace MyTests;
+
+        public class MyTestClassAttribute : TestClassAttribute { }
+
+        [MyTestClass]
+        public class UnitTest1
+        {
+            [TestMethod]
+            public void TestMethod1()
+            {
+                Assert.Fail("Failing TestMethod1");
+            }
+        }
+        """;
+
+
+    private const string SourceCodeWithFailingAssertClassIgnored = $$"""
+        {{SourceCodeCsproj}}
+
+        #file TestClass1.cs
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        namespace MyTests;
+
+        [TestClass]
+        [Ignore]
+        public class UnitTest1
+        {
+            [TestMethod]
+            public void TestMethod1()
+            {
+                Assert.Fail("Failing TestMethod1");
+            }
+        }
+        """;
+
+    private const string SourceCodeWithFailingAssertMethodIgnored = $$"""
+        {{SourceCodeCsproj}}
+
+        #file TestClass1.cs
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        namespace MyTests;
+
+        [TestClass]
+        public class UnitTest1
+        {
+            [TestMethod]
+            [Ignore]
+            public void TestMethod1()
+            {
+                Assert.Fail("Failing TestMethod1");
+            }
+
+        """;
+
+    private const string SourceCodeWithTestContext = $$"""
+        {{SourceCodeCsproj}}
+
+        #file TestClass1.cs
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        namespace MyTests;
+
+        [TestClass]
+        public class UnitTest1
+        {
+            public TestContext TestContext { get; set; } = default!;
+
+            [TestMethod]
+            public void TestMethod1()
+            {
+                TestContext.WriteLine("Writing to TestContext");
+                TestContext.AddResultFile("C:\\file.txt");
+            }
+        }
+        """;
+
     private const string SourceCodeWithIncompatibleLibrary = $$"""
         #file TestProject/NativeAotTests.csproj
         <Project Sdk="Microsoft.NET.Sdk">
@@ -262,7 +349,7 @@ public class NativeAotTests : AcceptanceTestBase
     public async Task NativeAotTests_WillRunWithExitCodeZero()
     {
         TestHostResult result = await GetTestResultForCode(SourceCodeSimple);
-        result.AssertExitCodeIs(0);
+        result.AssertExitCodeIs(ExitCodes.Success);
     }
 
     public async Task NativeAotTests_WillFailAsserts()
@@ -279,11 +366,40 @@ public class NativeAotTests : AcceptanceTestBase
         result.AssertOutputContains("failed TestMethod3 (2,3)");
         result.AssertOutputContains("Assert.Fail failed. Failing a specific case of TestMethod3");
 
-        result.AssertOutputContains("Test run summary: Failed!");
-        result.AssertOutputContains("total: 5");
-        result.AssertOutputContains("failed: 3");
-        result.AssertOutputContains("succeeded: 2");
-        result.AssertOutputContains("skipped: 0");
+        result.AssertOutputContainsSummary(failed: 3, passed: 2, skipped: 0);
+    }
+
+    public async Task NativeAotTests_WillRespectIgnoreInClass()
+    {
+        TestHostResult result = await GetTestResultForCode(SourceCodeWithFailingAssertClassIgnored);
+        result.AssertExitCodeIs(ExitCodes.ZeroTests);
+        result.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
+    }
+
+    public async Task NativeAotTests_WillRespectIgnoreInMethod()
+    {
+        TestHostResult result = await GetTestResultForCode(SourceCodeWithFailingAssertMethodIgnored);
+        result.AssertExitCodeIs(ExitCodes.ZeroTests);
+        result.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
+    }
+
+    public async Task NativeAotTests_DerivedTestClassAttribute_NotCurrentlySupported()
+    {
+        TestHostResult result = await GetTestResultForCode(SourceCodeWithDerivedTestClass);
+        // TODO: Add 'wrong' asserts to document the current behavior.
+    }
+
+    public async Task NativeAotTests_TestContext()
+    {
+        TestHostResult result = await GetTestResultForCode(SourceCodeWithTestContext, executeBeforeDisposingTestAsset: result =>
+        {
+            string trxPath = Regex.Match(result.StandardOutput, "- (.+?).trx").Value.Substring("- ".Length);
+            string trxContent = File.ReadAllText(trxPath);
+            Assert.Contains("Writing to TestContext", trxContent);
+            Assert.Contains(@"<ResultFile path=""C:\file.txt"" />", trxContent);
+        });
+
+        result.AssertExitCodeIs(ExitCodes.Success);
     }
 
     public async Task NativeAotTests_WillFailBecauseTestedLibraryIsNotCompatible()
@@ -294,11 +410,7 @@ public class NativeAotTests : AcceptanceTestBase
         result.AssertOutputContains("System.NullReferenceException: Object reference not set to an instance of an object.");
         result.AssertOutputContains("TestBadLibrary.ClassToBeTested.M()");
 
-        result.AssertOutputContains("Test run summary: Failed!");
-        result.AssertOutputContains("total: 1");
-        result.AssertOutputContains("failed: 1");
-        result.AssertOutputContains("succeeded: 0");
-        result.AssertOutputContains("skipped: 0");
+        result.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
     }
 
     public async Task NativeAotTests_WillFailInTestInitialize()
@@ -337,7 +449,7 @@ public class NativeAotTests : AcceptanceTestBase
         await NativeAotTests_WillFailInTestFixtureCommon(code);
     }
 
-    private async Task<TestHostResult> GetTestResultForCode(string code, string? projectDir = null)
+    private async Task<TestHostResult> GetTestResultForCode(string code, string? projectDir = null, Action<TestHostResult>? executeBeforeDisposingTestAsset = null)
         // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
         // or sometimes doesn't fail but the native code generation is not done.
         // Retrying the restore/publish on fresh asset seems to be more effective than retrying on the same asset.
@@ -369,7 +481,9 @@ public class NativeAotTests : AcceptanceTestBase
 
                 var testHost = TestHost.LocateFrom(targetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent.Arguments, RID, Verb.publish);
 
-                return await testHost.ExecuteAsync();
+                TestHostResult result = await testHost.ExecuteAsync("--report-trx");
+                executeBeforeDisposingTestAsset?.Invoke(result);
+                return result;
             }, times: 15, every: TimeSpan.FromSeconds(5));
 
     private async Task NativeAotTests_WillFailInTestFixtureCommon(string code)
