@@ -321,7 +321,7 @@ public class NativeAotTests : AcceptanceTestBase
 
     public async Task NativeAotTests_WillFailInClassCleanup()
     {
-        string code = ConstructFailingFixture("ClassInitialize", isStatic: true, usesTestContext: false);
+        string code = ConstructFailingFixture("ClassCleanup", isStatic: true, usesTestContext: false);
         await NativeAotTests_WillFailInTestFixtureCommon(code);
     }
 
