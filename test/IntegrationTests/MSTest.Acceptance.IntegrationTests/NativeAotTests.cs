@@ -391,7 +391,7 @@ public class NativeAotTests : AcceptanceTestBase
         public class UnitTest1
         {
             [{{attributeName}}]
-            public{{(isStatic ? " static" : string.Empty)}} void FixtureMethod({{(usesTestContext ? "TestContext testContext" : "")}})
+            public{{(isStatic ? " static" : string.Empty)}} void FixtureMethod({{(usesTestContext ? "TestContext testContext" : string.Empty)}})
             {
                 Assert.Fail("Fails in fixture");
             }
