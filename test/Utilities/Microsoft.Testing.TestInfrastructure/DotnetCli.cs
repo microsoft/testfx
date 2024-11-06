@@ -29,20 +29,22 @@ public static class DotnetCli
         "MicrosoftInstrumentationEngine_FileLogPath"
     ];
 
-    private static int s_maxOutstandingCommand = Environment.ProcessorCount;
-    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
+    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(MaxOutstandingCommands, MaxOutstandingCommands);
 
     public static int MaxOutstandingCommands
     {
-        get => s_maxOutstandingCommand;
+        get;
 
         set
         {
-            s_maxOutstandingCommand = value;
+            field = value;
             s_maxOutstandingCommands_semaphore.Dispose();
-            s_maxOutstandingCommands_semaphore = new SemaphoreSlim(s_maxOutstandingCommand, s_maxOutstandingCommand);
+            s_maxOutstandingCommands_semaphore = new SemaphoreSlim(field, field);
         }
     }
+#pragma warning disable SA1513 // Closing brace should be followed by blank line
+    = Environment.ProcessorCount;
+#pragma warning restore SA1513 // Closing brace should be followed by blank line
 
     public static bool DoNotRetry { get; set; }
 

@@ -8,6 +8,7 @@ namespace Microsoft.Testing.TestInfrastructure;
 public sealed class CommandLine : IDisposable
 {
     private static int s_totalProcessesAttempt;
+    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(MaxOutstandingCommands, MaxOutstandingCommands);
 
     private readonly List<string> _errorOutputLines = new();
     private readonly List<string> _standardOutputLines = new();
@@ -23,20 +24,20 @@ public sealed class CommandLine : IDisposable
 
     public string ErrorOutput => string.Join(Environment.NewLine, _errorOutputLines);
 
-    private static int s_maxOutstandingCommand = Environment.ProcessorCount;
-    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
-
     public static int MaxOutstandingCommands
     {
-        get => s_maxOutstandingCommand;
+        get;
 
         set
         {
-            s_maxOutstandingCommand = value;
+            field = value;
             s_maxOutstandingCommands_semaphore.Dispose();
-            s_maxOutstandingCommands_semaphore = new SemaphoreSlim(s_maxOutstandingCommand, s_maxOutstandingCommand);
+            s_maxOutstandingCommands_semaphore = new SemaphoreSlim(field, field);
         }
     }
+#pragma warning disable SA1513 // Closing brace should be followed by blank line
+    = Environment.ProcessorCount;
+#pragma warning restore SA1513 // Closing brace should be followed by blank line
 
     public async Task RunAsync(
         string commandLine,

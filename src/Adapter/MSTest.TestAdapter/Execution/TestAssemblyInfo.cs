@@ -22,9 +22,6 @@ public class TestAssemblyInfo
 {
     private readonly object _assemblyInfoExecuteSyncObject;
 
-    private MethodInfo? _assemblyInitializeMethod;
-    private MethodInfo? _assemblyCleanupMethod;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="TestAssemblyInfo"/> class.
     /// </summary>
@@ -40,18 +37,17 @@ public class TestAssemblyInfo
     /// </summary>
     public MethodInfo? AssemblyInitializeMethod
     {
-        get => _assemblyInitializeMethod;
-
+        get;
         internal set
         {
-            if (_assemblyInitializeMethod != null)
+            if (field != null)
             {
-                DebugEx.Assert(_assemblyInitializeMethod.DeclaringType?.FullName is not null, "AssemblyInitializeMethod.DeclaringType.FullName is null");
-                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyInit, _assemblyInitializeMethod.DeclaringType.FullName);
+                DebugEx.Assert(field.DeclaringType?.FullName is not null, "AssemblyInitializeMethod.DeclaringType.FullName is null");
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyInit, field.DeclaringType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            _assemblyInitializeMethod = value;
+            field = value;
         }
     }
 
@@ -70,18 +66,17 @@ public class TestAssemblyInfo
     /// </summary>
     public MethodInfo? AssemblyCleanupMethod
     {
-        get => _assemblyCleanupMethod;
-
+        get;
         internal set
         {
-            if (_assemblyCleanupMethod != null)
+            if (field != null)
             {
-                DebugEx.Assert(_assemblyCleanupMethod.DeclaringType?.FullName is not null, "AssemblyCleanupMethod.DeclaringType.FullName is null");
-                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyClean, _assemblyCleanupMethod.DeclaringType.FullName);
+                DebugEx.Assert(field.DeclaringType?.FullName is not null, "AssemblyCleanupMethod.DeclaringType.FullName is null");
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyClean, field.DeclaringType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            _assemblyCleanupMethod = value;
+            field = value;
         }
     }
 

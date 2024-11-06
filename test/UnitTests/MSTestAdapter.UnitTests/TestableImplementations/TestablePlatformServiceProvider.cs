@@ -14,9 +14,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
 
 internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 {
-    // Using the actual reflection operations implementation since this does not need mocking for existing tests.
-    private IReflectionOperations2 _reflectionOperations;
-
     public TestablePlatformServiceProvider()
     {
         MockTestSourceValidator = new Mock<ITestSource>();
@@ -113,7 +110,13 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public IThreadOperations ThreadOperations => MockThreadOperations.Object;
 
-    public IReflectionOperations2 ReflectionOperations => MockReflectionOperations != null ? MockReflectionOperations.Object : (_reflectionOperations ??= new ReflectionOperations2());
+    public IReflectionOperations2 ReflectionOperations
+    {
+        get => MockReflectionOperations != null
+            ? MockReflectionOperations.Object
+            : field ??= new ReflectionOperations2();
+        private set;
+    }
 
     public ITestDataSource TestDataSource => MockTestDataSource.Object;
 
