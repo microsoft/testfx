@@ -228,7 +228,7 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         return new TestNodeDetails(state, duration, reason, errorMessage, errorStackTrace, standardOutput, standardError);
     }
 
-    public record TestNodeDetails(byte? State, long? Duration, string? Reason, string? ErrorMessage, string? ErrorStackTrace, string? StandardOutput, string? StandardError);
+    public record TestNodeDetails(byte? State, long? Duration, string? Reason, ExceptionMessage? Errors, string? StandardOutput, string? StandardError);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
