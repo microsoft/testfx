@@ -44,27 +44,11 @@ This package extends Microsoft Testing Platform to provide an implementation of 
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Resources\ExtensionResources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ExtensionResources.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Resources\ExtensionResources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ExtensionResources.resx</DependentUpon>
-    </Compile>
+    <EmbeddedResource Update="Resources\ExtensionResources.resx" GenerateSource="true" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\ExtensionResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>ExtensionResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
