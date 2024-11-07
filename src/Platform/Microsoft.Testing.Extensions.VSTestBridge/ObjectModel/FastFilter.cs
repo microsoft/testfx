@@ -8,7 +8,6 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 

@@ -5,9 +5,6 @@ using System.Xml;
 
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-#if !WINDOWS_UWP
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-#endif
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
