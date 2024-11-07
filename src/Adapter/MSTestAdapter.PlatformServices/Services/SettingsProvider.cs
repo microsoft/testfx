@@ -57,7 +57,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     public void Load(XmlReader reader)
     {
 #if !WINDOWS_UWP
-        ValidateArg.NotNull(reader, "reader");
+        Guard.NotNull(reader);
         s_settings = MSTestAdapterSettings.ToSettings(reader);
 #endif
     }

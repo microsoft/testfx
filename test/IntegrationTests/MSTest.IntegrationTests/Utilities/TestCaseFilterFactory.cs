@@ -20,7 +20,7 @@ internal static class TestCaseFilterFactory
 
     public static ITestCaseFilterExpression ParseTestFilter(string filterString)
     {
-        ValidateArg.NotNullOrEmpty(filterString, nameof(filterString));
+        Guard.NotNullOrEmpty(filterString);
         if (Regex.IsMatch(filterString, @"\(\s*\)"))
         {
             throw new FormatException($"Invalid filter, empty parenthesis: {filterString}");
@@ -119,7 +119,7 @@ internal static class TestCaseFilterFactory
 
     private static void MergeExpression(Stack<Expression<Func<Func<string, object>, bool>>> exp, Operator op)
     {
-        ValidateArg.NotNull(exp, nameof(exp));
+        Guard.NotNull(exp);
         if (op is not Operator.And and not Operator.Or)
         {
             throw new ArgumentException($"Unexpected operator: {op}", nameof(op));
@@ -190,7 +190,7 @@ internal static class TestCaseFilterFactory
 
     private static IEnumerable<string> TokenizeCondition(string conditionString)
     {
-        ValidateArg.NotNullOrEmpty(conditionString, nameof(conditionString));
+        Guard.NotNullOrEmpty(conditionString);
         var token = new StringBuilder(conditionString.Length);
 
         bool escaped = false;
@@ -294,7 +294,7 @@ internal static class TestCaseFilterFactory
 
     private static Expression<Func<Func<string, object>, bool>> ConditionExpresion(string conditionString)
     {
-        ValidateArg.NotNull(conditionString, nameof(conditionString));
+        Guard.NotNull(conditionString);
 
         string[] condition = TokenizeCondition(conditionString).ToArray();
 
