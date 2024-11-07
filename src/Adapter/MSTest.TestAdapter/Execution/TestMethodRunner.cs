@@ -354,8 +354,8 @@ internal class TestMethodRunner
     private TestResult[] ExecuteTestWithDataSource(UTF.ITestDataSource? testDataSource, object?[]? data)
     {
         var stopwatch = Stopwatch.StartNew();
-
         _testMethodInfo.SetArguments(data);
+        _testContext.SetTestData(data);
         TestResult[] testResults = ExecuteTest(_testMethodInfo);
         stopwatch.Stop();
 
