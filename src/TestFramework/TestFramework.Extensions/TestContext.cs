@@ -158,6 +158,14 @@ public abstract class TestContext
     public virtual UnitTestOutcome CurrentTestOutcome => UnitTestOutcome.Unknown;
 
     /// <summary>
+    /// Gets or sets the exception that occurred in the TestInitialize or TestMethod steps.
+    /// </summary>
+    /// <remarks>
+    /// The property is always <c>null</c> when accessed during the TestInitialize or TestMethod steps.
+    /// </remarks>
+    public Exception? TestException { get; protected set; }
+
+    /// <summary>
     /// Adds a file name to the list in TestResult.ResultFileNames.
     /// </summary>
     /// <param name="fileName">

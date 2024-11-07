@@ -305,8 +305,12 @@ public class TestMethodInfo : ITestMethod
             testRunnerException = exception;
         }
 
-        // Set the current tests outcome before cleanup so it can be used in the cleanup logic.
-        TestMethodOptions.TestContext!.SetOutcome(result.Outcome);
+        // Update TestContext with outcome and exception so it can be used in the cleanup logic.
+        if (TestMethodOptions.TestContext is { } testContext)
+        {
+            testContext.SetOutcome(result.Outcome);
+            testContext.SetException(result.TestFailureException);
+        }
 
         // TestCleanup can potentially be a long running operation which shouldn't ideally be in a finally block.
         // Pulling it out so extension writers can abort custom cleanups if need be. Having this in a finally block

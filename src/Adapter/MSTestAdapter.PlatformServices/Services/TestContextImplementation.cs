@@ -256,6 +256,10 @@ public class TestContextImplementation : TestContext, ITestContext
     public void SetOutcome(UnitTestOutcome outcome)
         => _outcome = outcome;
 
+    /// <inheritdoc/>
+    public void SetException(Exception? exception)
+        => TestException = exception;
+
     /// <summary>
     /// Set data row for particular run of TestMethod.
     /// </summary>

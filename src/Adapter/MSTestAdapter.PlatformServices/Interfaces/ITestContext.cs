@@ -37,6 +37,12 @@ public interface ITestContext
     void SetOutcome(UnitTestOutcome outcome);
 
     /// <summary>
+    /// Sets the exception that occurred during the TestInitialize or TestMethod step (if any).
+    /// </summary>
+    /// <param name="exception">The exception.</param>
+    void SetException(Exception? exception);
+
+    /// <summary>
     /// Set data row for particular run of TestMethod.
     /// </summary>
     /// <param name="dataRow">data row.</param>
