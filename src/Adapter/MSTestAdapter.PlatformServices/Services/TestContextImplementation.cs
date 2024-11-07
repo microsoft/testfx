@@ -269,6 +269,9 @@ public class TestContextImplementation : TestContext, ITestContext
 #endif
     }
 
+    /// <inheritdoc/>
+    public void SetTestData(object?[]? data) => TestData = data;
+
     /// <summary>
     /// Set connection for TestContext.
     /// </summary>

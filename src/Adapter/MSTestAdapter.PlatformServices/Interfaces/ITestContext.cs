@@ -43,6 +43,13 @@ public interface ITestContext
     void SetDataRow(object? dataRow);
 
     /// <summary>
+    /// Sets the data that will be provided to the test.
+    /// For non-parameterized tests, the value will be <see langword="null"/>.
+    /// </summary>
+    /// <param name="data">The data.</param>
+    void SetTestData(object?[]? data);
+
+    /// <summary>
     /// Set connection for TestContext.
     /// </summary>
     /// <param name="dbConnection">db Connection.</param>
