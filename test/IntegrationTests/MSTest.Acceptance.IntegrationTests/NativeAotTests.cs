@@ -198,7 +198,6 @@ public class NativeAotTests : AcceptanceTestBase
         }
         """;
 
-
     private const string SourceCodeWithFailingAssertClassIgnored = $$"""
         {{SourceCodeCsproj}}
 
