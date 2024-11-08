@@ -81,7 +81,7 @@ internal static class TestCaseFilterFactory
                     continue;
 
                 default:
-                    Expression<Func<Func<string, object>, bool>> e = ConditionExpresion(token);
+                    Expression<Func<Func<string, object>, bool>> e = ConditionExpression(token);
                     exp.Push(e);
                     break;
             }
@@ -284,7 +284,7 @@ internal static class TestCaseFilterFactory
         return false;
     }
 
-    private static Expression<Func<Func<string, object>, bool>> ConditionExpresion(string conditionString)
+    private static Expression<Func<Func<string, object>, bool>> ConditionExpression(string conditionString)
     {
         ValidateArg.NotNull(conditionString, nameof(conditionString));
 
@@ -306,7 +306,7 @@ internal static class TestCaseFilterFactory
         }
         else
         {
-            throw new FormatException("Invalid ConditionExpresion: " + conditionString);
+            throw new FormatException("Invalid ConditionExpression: " + conditionString);
         }
 
         ParameterExpression parameter = Expression.Parameter(typeof(Func<string, object>), "p");
