@@ -6,7 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 internal static class AttributeComparer
 {
     public static bool IsNonDerived<TAttribute>(Attribute attribute) =>
-        attribute is TAttribute;
+        attribute.GetType() == typeof(TAttribute);
 
     public static bool IsDerived<TAttribute>(Attribute attribute)
     {
