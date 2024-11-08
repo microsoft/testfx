@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="MSBuildExtensionsDescription">
         <source>Extension used to pass parameters from MSBuild node and the hosts</source>
-        <target state="new">Extension used to pass parameters from MSBuild node and the hosts</target>
+        <target state="translated">用于从 MSBuild 节点和主机传递参数的扩展</target>
         <note />
       </trans-unit>
     </body>
