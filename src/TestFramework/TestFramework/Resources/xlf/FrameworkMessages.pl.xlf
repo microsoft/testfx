@@ -98,9 +98,9 @@
         <note></note>
       </trans-unit>
       <trans-unit id="ElementsAtIndexDontMatch">
-        <source>Element at index {0} do not match.</source>
-        <target state="translated">Element w indeksie {0} nie jest zgodny.</target>
-        <note></note>
+        <source>Element at index {0} do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.</source>
+        <target state="new">Element at index {0} do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.</target>
+        <note />
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
         <source>Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</source>

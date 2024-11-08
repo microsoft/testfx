@@ -340,7 +340,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Element at index {0} do not match..
+        ///   Looks up a localized string similar to Element at index {0} do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;..
         /// </summary>
         internal static string ElementsAtIndexDontMatch {
             get {

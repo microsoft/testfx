@@ -1656,7 +1656,9 @@ public sealed class CollectionAssert
                     reason = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.ElementsAtIndexDontMatch,
-                        position);
+                        position,
+                        Assert.ReplaceNulls(curExpected),
+                        Assert.ReplaceNulls(curActual));
                     return false;
                 }
             }
