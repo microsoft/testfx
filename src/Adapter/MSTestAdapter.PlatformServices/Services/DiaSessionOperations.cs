@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -33,15 +34,17 @@ internal static class DiaSessionOperations
     /// </summary>
     /// <param name="source"> The source file. </param>
     /// <returns> A Navigation session instance for the current platform. </returns>
+    [UnconditionalSuppressMessage(
+        "ReflectionAnalysis",
+        "IL2077",
+        Justification = "<Pending>")]
     internal static object? CreateNavigationSession(string source)
     {
         // Create instance only when DiaSession is found in Object Model.
         if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
             string messageFormatOnException = string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
-#pragma warning disable IL2077 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
             return SafeInvoke(() => Activator.CreateInstance(s_typeDiaSession, source));
-#pragma warning restore IL2077 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
         }
 
         return null;
@@ -90,23 +93,27 @@ internal static class DiaSessionOperations
     /// </summary>
     /// <param name="diaSession">Type name of  DiaSession class.</param>
     /// <param name="diaNavigationData">Type name of DiaNavigationData class.</param>
+    [UnconditionalSuppressMessage(
+            "ReflectionAnalysis",
+            "IL2057",
+            Justification = "<Pending>")]
+    [UnconditionalSuppressMessage(
+        "ReflectionAnalysis",
+        "IL2077",
+        Justification = "<Pending>")]
     internal static void Initialize(string diaSession, string diaNavigationData)
     {
         // We won't reach this code, in we will generate this info in source generator,
         // and we won't use navigation session to get method locations from PDBs.
-#pragma warning disable IL2057 // Unrecognized value passed to the typeName parameter of 'System.Type.GetType(String)'
         s_typeDiaSession = Type.GetType(diaSession, false);
         s_typeDiaNavigationData = Type.GetType(diaNavigationData, false);
-#pragma warning restore IL2057 // Unrecognized value passed to the typeName parameter of 'System.Type.GetType(String)'
 
-#pragma warning disable IL2077 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
         if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
             s_methodGetNavigationData = s_typeDiaSession.GetRuntimeMethod("GetNavigationData", [typeof(string), typeof(string)]);
             s_propertyFileName = s_typeDiaNavigationData.GetRuntimeProperty("FileName");
             s_propertyMinLineNumber = s_typeDiaNavigationData.GetRuntimeProperty("MinLineNumber");
         }
-#pragma warning restore IL2077 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
     }
 
     private static object? SafeInvoke<T>(Func<T> action)

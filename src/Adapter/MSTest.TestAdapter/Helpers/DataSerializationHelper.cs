@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization.Json;
 using System.Text;
 
@@ -23,6 +24,14 @@ internal static class DataSerializationHelper
     /// </summary>
     /// <param name="data">Data array to serialize.</param>
     /// <returns>Serialized array.</returns>
+    [UnconditionalSuppressMessage(
+        "Trimming",
+        "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
+        Justification = "This should be safe as long as our generator mentions getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551. Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.")]
+    [UnconditionalSuppressMessage(
+        "AOT",
+        "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
+        Justification = "This should be safe as long as our generator mentions getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551. Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.")]
     public static string?[]? Serialize(object?[]? data)
     {
         if (data == null)
@@ -51,14 +60,7 @@ internal static class DataSerializationHelper
             DataContractJsonSerializer serializer = GetSerializer(type);
 
             using var memoryStream = new MemoryStream();
-            // This should be safe as long as our generator mentions
-            // getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551
-            // Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.
-#pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             serializer.WriteObject(memoryStream, data[i]);
-#pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             byte[] serializerData = memoryStream.ToArray();
 
             serializedData[dataIndex] = Encoding.UTF8.GetString(serializerData, 0, serializerData.Length);
@@ -72,6 +74,14 @@ internal static class DataSerializationHelper
     /// </summary>
     /// <param name="serializedData">Serialized data array to deserialize.</param>
     /// <returns>Deserialized array.</returns>
+    [UnconditionalSuppressMessage(
+            "Trimming",
+            "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
+            Justification = "This should be safe as long as our generator mentions getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551. Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.")]
+    [UnconditionalSuppressMessage(
+            "AOT",
+            "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
+            Justification = "This should be safe as long as our generator mentions getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551. Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.")]
     public static object?[]? Deserialize(string?[]? serializedData)
     {
         if (serializedData == null || serializedData.Length % 2 != 0)
@@ -98,40 +108,36 @@ internal static class DataSerializationHelper
 
             byte[] serializedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
             using var memoryStream = new MemoryStream(serializedDataBytes);
-            // This should be safe as long as our generator mentions
-            // getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551
-            // Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.
-#pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             data[i] = serializer.ReadObject(memoryStream);
-#pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
         }
 
         return data;
     }
 
+    [UnconditionalSuppressMessage(
+        "Trimming",
+        "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
+        Justification = "This should be safe as long as our generator mentions getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551. Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.")]
+    [UnconditionalSuppressMessage(
+        "AOT",
+        "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
+        Justification = "This should be safe as long as our generator mentions getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551. Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.")]
+
     private static DataContractJsonSerializer GetSerializer(string assemblyQualifiedName)
         => SerializerCache.GetOrAdd(
             assemblyQualifiedName,
-            // This should be safe as long as our generator mentions
-            // getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551
-            // Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.
-#pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             _ => new DataContractJsonSerializer(PlatformServiceProvider.Instance.ReflectionOperations.GetType(assemblyQualifiedName) ?? typeof(object), SerializerSettings));
-#pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
 
+    [UnconditionalSuppressMessage(
+        "Trimming",
+        "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
+        Justification = "This should be safe as long as our generator mentions getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551. Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.")]
+    [UnconditionalSuppressMessage(
+        "AOT",
+        "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
+        Justification = "This should be safe as long as our generator mentions getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551. Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.")]
     private static DataContractJsonSerializer GetSerializer(Type type)
         => SerializerCache.GetOrAdd(
             type.AssemblyQualifiedName!,
-            // This should be safe as long as our generator mentions
-            // getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551
-            // Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.
-#pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             _ => new DataContractJsonSerializer(type, SerializerSettings));
-#pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
 }

@@ -20,22 +20,38 @@ internal class ReflectionOperations2 : ReflectionOperations, IReflectionOperatio
 #endif
     }
 
-#pragma warning disable IL2070 // this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
-#pragma warning disable IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
-#pragma warning disable IL2067 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
-#pragma warning disable IL2057 // Unrecognized value passed to the typeName parameter of 'System.Type.GetType(String)'
+    [UnconditionalSuppressMessage(
+        "ReflectionAnalysis",
+        "IL2070",
+        Justification = "<Pending>")]
     public IEnumerable<ConstructorInfo> GetDeclaredConstructors(Type classType)
         => classType.GetTypeInfo().DeclaredConstructors;
 
+    [UnconditionalSuppressMessage(
+        "ReflectionAnalysis",
+        "IL2070",
+        Justification = "<Pending>")]
     public MethodInfo? GetDeclaredMethod(Type type, string methodName)
         => type.GetTypeInfo().GetDeclaredMethod(methodName);
 
+    [UnconditionalSuppressMessage(
+        "ReflectionAnalysis",
+        "IL2070",
+        Justification = "<Pending>")]
     public IEnumerable<MethodInfo> GetDeclaredMethods(Type classType)
         => classType.GetTypeInfo().DeclaredMethods;
 
+    [UnconditionalSuppressMessage(
+        "ReflectionAnalysis",
+        "IL2070",
+        Justification = "<Pending>")]
     public IEnumerable<PropertyInfo> GetDeclaredProperties(Type type)
         => type.GetTypeInfo().DeclaredProperties;
 
+    [UnconditionalSuppressMessage(
+        "ReflectionAnalysis",
+        "IL2070",
+        Justification = "<Pending>")]
     public PropertyInfo? GetDeclaredProperty(Type type, string propertyName)
         => type.GetTypeInfo().GetDeclaredProperty(propertyName);
 
@@ -44,16 +60,32 @@ internal class ReflectionOperations2 : ReflectionOperations, IReflectionOperatio
     public Type[] GetDefinedTypes(Assembly assembly)
         => assembly.DefinedTypes.ToArray();
 
+    [UnconditionalSuppressMessage(
+        "Trimming",
+        "IL2067",
+        Justification = "<Pending>")]
     public IEnumerable<MethodInfo> GetRuntimeMethods(Type type)
         => type.GetRuntimeMethods();
 
+    [UnconditionalSuppressMessage(
+        "ReflectionAnalysis",
+        "IL2067",
+        Justification = "<Pending>")]
     public MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters)
         => declaringType.GetRuntimeMethod(methodName, parameters);
 
+    [UnconditionalSuppressMessage(
+        "ReflectionAnalysis",
+        "IL2070",
+        Justification = "<Pending>")]
     public PropertyInfo? GetRuntimeProperty(Type classType, string testContextPropertyName)
         => classType.GetProperty(testContextPropertyName);
 
     [UnconditionalSuppressMessage("Aot", "IL2026:DoNotUseGetDefinedTypes", Justification = "We access all the types we need in metadata, so this is preserved and works.")]
+    [UnconditionalSuppressMessage(
+        "ReflectionAnalysis",
+        "IL2057",
+        Justification = "<Pending>")]
     public Type? GetType(string typeName)
         => Type.GetType(typeName);
 
@@ -61,10 +93,10 @@ internal class ReflectionOperations2 : ReflectionOperations, IReflectionOperatio
     public Type? GetType(Assembly assembly, string typeName)
         => assembly.GetType(typeName);
 
+    [UnconditionalSuppressMessage(
+    "ReflectionAnalysis",
+    "IL2067",
+    Justification = "<Pending>")]
     public object? CreateInstance(Type type, object?[] parameters)
         => Activator.CreateInstance(type, parameters);
-#pragma warning restore IL2070 // this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
-#pragma warning restore IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
-#pragma warning restore IL2067 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
-#pragma warning restore IL2057 // Unrecognized value passed to the typeName parameter of 'System.Type.GetType(String)'
 }

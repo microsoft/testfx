@@ -235,7 +235,7 @@ public class NativeAotTests : AcceptanceTestBase
             {
                 Assert.Fail("Failing TestMethod1");
             }
-
+        }
         """;
 
     private const string SourceCodeWithTestContext = $$"""
