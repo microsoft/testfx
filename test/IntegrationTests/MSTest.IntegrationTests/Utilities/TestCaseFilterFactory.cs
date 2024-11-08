@@ -193,17 +193,9 @@ internal static class TestCaseFilterFactory
         Guard.NotNullOrEmpty(conditionString);
         var token = new StringBuilder(conditionString.Length);
 
-        bool escaped = false;
         for (int i = 0; i < conditionString.Length; i++)
         {
             char c = conditionString[i];
-
-            if (escaped)
-            {
-                token.Append(c);
-                escaped = false;
-                continue;
-            }
 
             switch (c)
             {
