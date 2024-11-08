@@ -5,9 +5,6 @@ using System.Xml;
 
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-#if !WINDOWS_UWP
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-#endif
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -57,7 +54,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     public void Load(XmlReader reader)
     {
 #if !WINDOWS_UWP
-        ValidateArg.NotNull(reader, "reader");
+        Guard.NotNull(reader);
         s_settings = MSTestAdapterSettings.ToSettings(reader);
 #endif
     }
