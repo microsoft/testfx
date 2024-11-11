@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.Simplification;
 using Microsoft.CodeAnalysis.Text;
 
 using MSTest.Analyzers.Helpers;
@@ -114,7 +115,7 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
                 // Ensure the class implements IDisposable
                 if (iDisposableSymbol != null && !ImplementsIDisposable(containingType, iDisposableSymbol, semanticModel))
                 {
-                    newParent = (TypeDeclarationSyntax)generator.AddInterfaceType(newParent, generator.TypeExpression(iDisposableSymbol, addImport: true).WithAddImportsAnnotation());
+                    newParent = (TypeDeclarationSyntax)generator.AddInterfaceType(newParent, generator.TypeExpression(iDisposableSymbol, addImport: true).WithAdditionalAnnotations(Simplifier.AddImportsAnnotation));
                 }
 
                 editor.ReplaceNode(containingType, newParent);
