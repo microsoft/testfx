@@ -1,5 +1,7 @@
 ﻿#nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetDisplayName(string? displayName) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetException(System.Exception? exception) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetTestData(object?[]? data) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetDisplayName(string? displayName) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetException(System.Exception? exception) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetTestData(object?[]? data) -> void

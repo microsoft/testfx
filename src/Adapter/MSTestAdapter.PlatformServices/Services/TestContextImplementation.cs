@@ -346,5 +346,9 @@ public class TestContextImplementation : TestContext, ITestContext
     public void ClearDiagnosticMessages()
         => _threadSafeStringWriter?.ToStringAndClear();
 
+    /// <inheritdoc/>
+    public void SetDisplayName(string? displayName)
+        => TestDisplayName = displayName;
+
     #endregion
 }
