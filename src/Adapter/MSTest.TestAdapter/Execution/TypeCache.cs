@@ -259,8 +259,7 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
     private TestClassInfo CreateClassInfo(Type classType, TestMethod testMethod)
     {
-        IEnumerable<ConstructorInfo> constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
-        ConstructorInfo? constructor = constructors.FirstOrDefault(ctor => ctor.GetParameters().Length == 0 && ctor.IsPublic);
+        ConstructorInfo? constructor;
         bool isParameterLessConstructor;
 
         if (classType.GetConstructor([typeof(TestContext)]) is { } testContextCtor)
