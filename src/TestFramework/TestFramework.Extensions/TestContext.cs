@@ -55,6 +55,8 @@ public abstract class TestContext
 
     public object?[]? TestData { get; protected set; }
 
+    public string? TestDisplayName { get; protected set; }
+
 #if NETFRAMEWORK
     /// <summary>
     /// Gets the current data row when test is used for data driven testing.

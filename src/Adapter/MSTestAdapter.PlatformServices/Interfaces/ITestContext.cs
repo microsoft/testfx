@@ -79,4 +79,10 @@ public interface ITestContext
     /// Clears the previous testContext writeline messages.
     /// </summary>
     void ClearDiagnosticMessages();
+
+    /// <summary>
+    /// Sets the test method display name.
+    /// </summary>
+    /// <param name="displayName">The display name.</param>
+    void SetDisplayName(string? displayName);
 }
