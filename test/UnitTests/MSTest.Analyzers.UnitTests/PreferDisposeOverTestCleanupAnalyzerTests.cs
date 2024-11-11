@@ -151,6 +151,56 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    public async Task WhenTestClassHasTestCleanup_AndHasDisposeInAnotherPartial_Diagnostic()
+    {
+        // This scenario is currently broken. The test is to document the current behavior
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            public partial class MyTestClass : IDisposable
+            {
+                public void Dispose()
+                {
+                    int x = 1;
+                }
+            }
+
+            [TestClass]
+            public partial class MyTestClass
+            {
+                [TestCleanup]
+                public void [|MyTestCleanup|]()
+                {
+                    int y = 1;
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            
+            public partial class MyTestClass : IDisposable
+            {
+                public void Dispose()
+                {
+                    int x = 1;
+                }
+            }
+            
+            [TestClass]
+            public partial class MyTestClass : IDisposable
+            {
+                public void {|CS0111:Dispose|}()
+                {
+                    int y = 1;
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
     public async Task WhenTestClassHasTestCleanupTask_Diagnostic()
     {
         string code = """
