@@ -380,7 +380,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
        string? standardOutput,
        string? errorOutput)
     {
-        FlatException? flatException = ExceptionFlattener.Flatten(errorMessage, exception);
+        FlatException[] flatExceptions = ExceptionFlattener.Flatten(errorMessage, exception);
         TestCompleted(
             assembly,
             targetFramework,
@@ -389,9 +389,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             displayName,
             outcome,
             duration,
-            flatException?.ErrorMessages,
-            flatException?.ErrorTypes,
-            flatException?.StackTraces,
+            flatExceptions,
             expected,
             actual,
             standardOutput,
@@ -406,9 +404,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
-        string?[]? errorMessages,
-        string?[]? errorTypes,
-        string?[]? stackTraces,
+        FlatException[] exceptions,
         string? expected,
         string? actual,
         string? standardOutput,
@@ -446,9 +442,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 displayName,
                 outcome,
                 duration,
-                errorMessages,
-                errorTypes,
-                stackTraces,
+                exceptions,
                 expected,
                 actual,
                 standardOutput,
@@ -470,9 +464,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
-        string?[]? errorMessages,
-        string?[]? errorTypes,
-        string?[]? stackTraces,
+        FlatException[] flatExceptions,
         string? expected,
         string? actual,
         string? standardOutput,
@@ -518,36 +510,35 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         terminal.AppendLine();
 
-        FormatErrorMessage(terminal, errorMessages, errorTypes, stackTraces, outcome, 0);
+        FormatErrorMessage(terminal, flatExceptions, outcome, 0);
         FormatExpectedAndActual(terminal, expected, actual);
-        FormatStackTrace(terminal, stackTraces, 0);
-        FormatInnerExceptions(terminal, errorMessages, errorTypes, stackTraces);
+        FormatStackTrace(terminal, flatExceptions, 0);
+        FormatInnerExceptions(terminal, flatExceptions);
         FormatStandardAndErrorOutput(terminal, standardOutput, errorOutput);
     }
 
-    private static void FormatInnerExceptions(ITerminal terminal, string?[]? errorMessages, string?[]? errorTypes, string?[]? stackTraces)
+    private static void FormatInnerExceptions(ITerminal terminal, FlatException[] exceptions)
     {
-        int max = Math.Max(errorMessages?.Length ?? 0, Math.Max(errorTypes?.Length ?? 0, stackTraces?.Length ?? 0));
-        if (max <= 1)
+        if (exceptions is null || exceptions.Length == 0)
         {
             return;
         }
 
-        for (int i = 1; i < max; i++)
+        for (int i = 1; i < exceptions.Length; i++)
         {
             terminal.SetColor(TerminalColor.Red);
             terminal.Append(SingleIndentation);
             terminal.Append("--->");
-            FormatErrorMessage(terminal, null, errorMessages, errorTypes, TestOutcome.Error, i);
-            FormatStackTrace(terminal, stackTraces, i);
+            FormatErrorMessage(terminal, exceptions, TestOutcome.Error, i);
+            FormatStackTrace(terminal, exceptions, i);
         }
     }
 
-    private static void FormatErrorMessage(ITerminal terminal, string?[]? errorMessages, string?[]? errorTypes, string?[]? stackTraces, TestOutcome outcome, int index)
+    private static void FormatErrorMessage(ITerminal terminal, FlatException[] exceptions, TestOutcome outcome, int index)
     {
-        string? firstErrorMessage = GetStringFromIndexOrDefault(errorMessages, index);
-        string? firstErrorType = GetStringFromIndexOrDefault(errorTypes, index);
-        string? firstStackTrace = GetStringFromIndexOrDefault(stackTraces, index);
+        string? firstErrorMessage = GetStringFromIndexOrDefault(exceptions, e => e.ErrorMessage, index);
+        string? firstErrorType = GetStringFromIndexOrDefault(exceptions, e => e.ErrorType, index);
+        string? firstStackTrace = GetStringFromIndexOrDefault(exceptions, e => e.StackTrace, index);
         if (RoslynString.IsNullOrWhiteSpace(firstErrorMessage) && RoslynString.IsNullOrWhiteSpace(firstErrorType) && RoslynString.IsNullOrWhiteSpace(firstStackTrace))
         {
             return;
@@ -572,8 +563,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
     }
 
-    private static string? GetStringFromIndexOrDefault(string?[]? values, int index) =>
-        values != null && values.Length >= index + 1 ? values[index] : null;
+    private static string? GetStringFromIndexOrDefault(FlatException[] exceptions, Func<FlatException, string?> property, int index) =>
+        exceptions != null && exceptions.Length >= index + 1 ? property(exceptions[index]) : null;
 
     private static void FormatExpectedAndActual(ITerminal terminal, string? expected, string? actual)
     {
@@ -592,9 +583,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
     }
 
-    private static void FormatStackTrace(ITerminal terminal, string?[]? stackTraces, int index)
+    private static void FormatStackTrace(ITerminal terminal, FlatException[] exceptions, int index)
     {
-        string? stackTrace = GetStringFromIndexOrDefault(stackTraces, index);
+        string? stackTrace = GetStringFromIndexOrDefault(exceptions, e => e.StackTrace, index);
         if (RoslynString.IsNullOrWhiteSpace(stackTrace))
         {
             return;

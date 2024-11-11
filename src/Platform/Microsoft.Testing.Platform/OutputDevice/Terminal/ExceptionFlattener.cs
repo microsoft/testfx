@@ -5,19 +5,23 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal class ExceptionFlattener
 {
-    internal static FlatException Flatten(string? errorMessage, Exception? exception)
+    internal static FlatException[] Flatten(string? errorMessage, Exception? exception)
     {
         if (errorMessage is null && exception is null)
         {
-            return FlatException.Empty;
+            return Array.Empty<FlatException>();
         }
 
         List<Exception> exceptions = new();
 
-        List<Exception?> allExceptions = new()
+        string? message = !RoslynString.IsNullOrWhiteSpace(errorMessage) ? errorMessage : exception?.Message;
+        string? type = exception?.GetType().FullName;
+        string? stackTrace = exception?.StackTrace;
+        var flatException = new FlatException(message, type, stackTrace);
+
+        List<FlatException> flatExceptions = new()
         {
-            // Add first exception or null to make space for it.
-            exception,
+           flatException,
         };
 
         // Add all inner exceptions. This will flatten top level AggregateExceptions,
@@ -34,35 +38,17 @@ internal class ExceptionFlattener
             Exception? currentException = aggregate;
             while (currentException is not null)
             {
-                allExceptions.Add(currentException);
+                flatExceptions.Add(new FlatException(
+                    aggregate?.Message,
+                    aggregate?.GetType().FullName,
+                    aggregate?.StackTrace));
+
                 currentException = currentException.InnerException;
             }
         }
 
-        string?[] errorMessages = allExceptions.Select(static e => e?.Message).ToArray();
-        if (!RoslynString.IsNullOrWhiteSpace(errorMessage) && errorMessages.Length > 0)
-        {
-            errorMessages[0] = errorMessage;
-        }
-
-        var flatException = new FlatException
-        {
-            ErrorMessages = errorMessages,
-            ErrorTypes = allExceptions.Select(e => e?.GetType().FullName).ToArray(),
-            StackTraces = allExceptions.Select(static e => e?.StackTrace).ToArray(),
-        };
-
-        return flatException;
+        return flatExceptions.ToArray();
     }
 }
 
-internal class FlatException
-{
-    public string?[]? ErrorMessages { get; init; }
-
-    public string?[]? ErrorTypes { get; init; }
-
-    public string?[]? StackTraces { get; init; }
-
-    public static FlatException Empty { get; } = new FlatException { ErrorMessages = null, ErrorTypes = null, StackTraces = null };
-}
+internal record FlatException(string? ErrorMessage, string? ErrorType, string? StackTrace);

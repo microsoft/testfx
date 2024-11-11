@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
+using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.TestHost;
 
@@ -35,7 +36,7 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public string DisplayName => nameof(DotnetTestDataConsumer);
 
-    public string Description => "Send back information to the dotnet test";
+    public string Description => "Send information back to the dotnet test";
 
     private string? ExecutionId => _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
 
@@ -97,8 +98,7 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                    testNodeDetails.State,
                                    testNodeDetails.Duration,
                                    testNodeDetails.Reason ?? string.Empty,
-                                   testNodeDetails.ErrorMessage ?? string.Empty,
-                                   testNodeDetails.ErrorStackTrace ?? string.Empty,
+                                   testNodeDetails.Exceptions,
                                    testNodeDetails.StandardOutput ?? string.Empty,
                                    testNodeDetails.StandardError ?? string.Empty,
                                    testNodeUpdateMessage.SessionUid.Value),
@@ -168,7 +168,7 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         byte? state = null;
         long? duration = null;
         string? reason = string.Empty;
-        string? errorMessage = string.Empty;
+        ExceptionMessage[]? exceptions = null;
         string? errorStackTrace = string.Empty;
 
         TestNodeStateProperty nodeState = testNodeUpdateMessage.TestNode.Properties.Single<TestNodeStateProperty>();
@@ -196,39 +196,53 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 state = TestStates.Failed;
                 duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
-                errorMessage = failedTestNodeStateProperty.Exception?.Message;
-                errorStackTrace = failedTestNodeStateProperty.Exception?.StackTrace;
+                exceptions = FlattenToExceptionMessages(reason, failedTestNodeStateProperty.Exception);
                 break;
 
             case ErrorTestNodeStateProperty errorTestNodeStateProperty:
                 state = TestStates.Error;
                 duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
-                errorMessage = errorTestNodeStateProperty.Exception?.Message;
-                errorStackTrace = errorTestNodeStateProperty.Exception?.StackTrace;
+                exceptions = FlattenToExceptionMessages(reason, errorTestNodeStateProperty.Exception);
                 break;
 
             case TimeoutTestNodeStateProperty timeoutTestNodeStateProperty:
                 state = TestStates.Timeout;
                 duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
-                errorMessage = timeoutTestNodeStateProperty.Exception?.Message;
-                errorStackTrace = timeoutTestNodeStateProperty.Exception?.StackTrace;
+                exceptions = FlattenToExceptionMessages(reason, timeoutTestNodeStateProperty.Exception);
                 break;
 
             case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
                 state = TestStates.Cancelled;
                 duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
-                errorMessage = cancelledTestNodeStateProperty.Exception?.Message;
-                errorStackTrace = cancelledTestNodeStateProperty.Exception?.StackTrace;
+                exceptions = FlattenToExceptionMessages(reason, cancelledTestNodeStateProperty.Exception);
                 break;
         }
 
-        return new TestNodeDetails(state, duration, reason, errorMessage, errorStackTrace, standardOutput, standardError);
+        return new TestNodeDetails(state, duration, reason, exceptions, standardOutput, standardError);
+
+        static ExceptionMessage[]? FlattenToExceptionMessages(string? errorMessage, Exception? exception)
+        {
+            if (errorMessage is null && exception is null)
+            {
+                return null;
+            }
+
+            FlatException[] exceptions = ExceptionFlattener.Flatten(errorMessage, exception);
+
+            var exceptionMessages = new ExceptionMessage[exceptions.Length];
+            for (int i = 0; i < exceptions.Length; i++)
+            {
+                exceptionMessages[i] = new ExceptionMessage(exceptions[i].ErrorMessage, exceptions[i].ErrorType, exceptions[i].StackTrace);
+            }
+
+            return exceptionMessages;
+        }
     }
 
-    public record TestNodeDetails(byte? State, long? Duration, string? Reason, ExceptionMessage? Errors, string? StandardOutput, string? StandardError);
+    public record TestNodeDetails(byte? State, long? Duration, string? Reason, ExceptionMessage[]? Exceptions, string? StandardOutput, string? StandardError);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
