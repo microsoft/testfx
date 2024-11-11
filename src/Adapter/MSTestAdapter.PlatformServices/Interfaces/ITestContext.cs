@@ -37,6 +37,12 @@ public interface ITestContext
     void SetOutcome(UnitTestOutcome outcome);
 
     /// <summary>
+    /// Sets the exception that occurred during the TestInitialize or TestMethod step (if any).
+    /// </summary>
+    /// <param name="exception">The exception.</param>
+    void SetException(Exception? exception);
+
+    /// <summary>
     /// Set data row for particular run of TestMethod.
     /// </summary>
     /// <param name="dataRow">data row.</param>
@@ -73,4 +79,10 @@ public interface ITestContext
     /// Clears the previous testContext writeline messages.
     /// </summary>
     void ClearDiagnosticMessages();
+
+    /// <summary>
+    /// Sets the test method display name.
+    /// </summary>
+    /// <param name="displayName">The display name.</param>
+    void SetDisplayName(string? displayName);
 }

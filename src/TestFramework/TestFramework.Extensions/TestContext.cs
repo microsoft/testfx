@@ -55,6 +55,8 @@ public abstract class TestContext
 
     public object?[]? TestData { get; protected set; }
 
+    public string? TestDisplayName { get; protected set; }
+
 #if NETFRAMEWORK
     /// <summary>
     /// Gets the current data row when test is used for data driven testing.
@@ -156,6 +158,14 @@ public abstract class TestContext
     /// Gets the current test outcome.
     /// </summary>
     public virtual UnitTestOutcome CurrentTestOutcome => UnitTestOutcome.Unknown;
+
+    /// <summary>
+    /// Gets or sets the exception that occurred in the TestInitialize or TestMethod steps.
+    /// </summary>
+    /// <remarks>
+    /// The property is always <c>null</c> when accessed during the TestInitialize or TestMethod steps.
+    /// </remarks>
+    public Exception? TestException { get; protected set; }
 
     /// <summary>
     /// Adds a file name to the list in TestResult.ResultFileNames.

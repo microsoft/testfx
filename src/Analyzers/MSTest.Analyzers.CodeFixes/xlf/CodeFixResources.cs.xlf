@@ -37,6 +37,11 @@
         <target state="translated">Nahradit metodu TestInitialize konstruktorem</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceWithDisposeFix">
+        <source>Replace TestCleanup with Dispose method</source>
+        <target state="new">Replace TestCleanup with Dispose method</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
         <source>Replace the assertion with 'Assert.Fail()'</source>
         <target state="translated">Nahradit kontrolní výraz za Assert.Fail()</target>

@@ -91,28 +91,25 @@ public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
         }
 
         // Ensure the method returns void or Task/ValueTask.
-        SemanticModel? semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-        if (semanticModel is not null)
+        SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+        Compilation compilation = semanticModel.Compilation;
+        var wellKnownTypeProvider = WellKnownTypeProvider.GetOrCreate(semanticModel.Compilation);
+        INamedTypeSymbol? taskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
+        INamedTypeSymbol? valueTaskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
+
+        if (newMethodDeclaration.ReturnType != null &&
+            !newMethodDeclaration.ReturnType.IsVoid() &&
+            (taskSymbol == null || !semanticModel.ClassifyConversion(newMethodDeclaration.ReturnType, taskSymbol).IsImplicit) &&
+            (valueTaskSymbol == null || !semanticModel.ClassifyConversion(newMethodDeclaration.ReturnType, valueTaskSymbol).IsImplicit))
         {
-            Compilation compilation = semanticModel.Compilation;
-            var wellKnownTypeProvider = WellKnownTypeProvider.GetOrCreate(semanticModel.Compilation);
-            INamedTypeSymbol? taskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
-            INamedTypeSymbol? valueTaskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
+            // Change return type to void and remove return statements
+            newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)));
 
-            if (newMethodDeclaration.ReturnType != null &&
-                !newMethodDeclaration.ReturnType.IsVoid() &&
-                (taskSymbol == null || !semanticModel.ClassifyConversion(newMethodDeclaration.ReturnType, taskSymbol).IsImplicit) &&
-                (valueTaskSymbol == null || !semanticModel.ClassifyConversion(newMethodDeclaration.ReturnType, valueTaskSymbol).IsImplicit))
+            if (newMethodDeclaration.Body != null)
             {
-                // Change return type to void and remove return statements
-                newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)));
-
-                if (newMethodDeclaration.Body != null)
-                {
-                    SyntaxList<StatementSyntax> statements = newMethodDeclaration.Body.Statements;
-                    IEnumerable<StatementSyntax> newStatements = statements.Where(s => s is not ReturnStatementSyntax);
-                    newMethodDeclaration = newMethodDeclaration.WithBody(newMethodDeclaration.Body.WithStatements(SyntaxFactory.List(newStatements)));
-                }
+                SyntaxList<StatementSyntax> statements = newMethodDeclaration.Body.Statements;
+                IEnumerable<StatementSyntax> newStatements = statements.Where(s => s is not ReturnStatementSyntax);
+                newMethodDeclaration = newMethodDeclaration.WithBody(newMethodDeclaration.Body.WithStatements(SyntaxFactory.List(newStatements)));
             }
         }
 

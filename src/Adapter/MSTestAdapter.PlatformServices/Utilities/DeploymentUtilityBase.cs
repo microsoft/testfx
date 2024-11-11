@@ -145,7 +145,7 @@ internal abstract class DeploymentUtilityBase
         // Copy the deployment items. (As deployment item can correspond to directories as well, so each deployment item may map to n files)
         foreach (DeploymentItem deploymentItem in deploymentItems)
         {
-            ValidateArg.NotNull(deploymentItem, "deploymentItem should not be null.");
+            Guard.NotNull(deploymentItem);
 
             // Validate the output directory.
             if (!IsOutputDirectoryValid(deploymentItem, deploymentDirectory, warnings))
@@ -399,7 +399,7 @@ internal abstract class DeploymentUtilityBase
 
     private bool Deploy(string source, IRunContext? runContext, ITestExecutionRecorder testExecutionRecorder, IList<DeploymentItem> deploymentItems, TestRunDirectories runDirectories)
     {
-        ValidateArg.NotNull(runDirectories, "runDirectories");
+        Guard.NotNull(runDirectories);
         if (EqtTrace.IsInfoEnabled)
         {
             EqtTrace.Info("MSTestExecutor: Found that deployment items for source {0} are: ", source);
