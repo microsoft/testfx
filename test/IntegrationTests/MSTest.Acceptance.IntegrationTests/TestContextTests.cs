@@ -42,6 +42,8 @@ public sealed class TestContextTests : AcceptanceTestBase
         // Assert
         testHostResult.AssertExitCodeIs(2);
         testHostResult.AssertOutputContainsSummary(failed: 2, passed: 1, skipped: 0);
+        testHostResult.AssertOutputContains("Initialization method TestContextExceptionFailingInTestInit.TInit threw exception. System.InvalidOperationException");
+        testHostResult.AssertOutputContains("Test method TestContextExceptionFailingInTestMethod.TestFailingInTestMethod threw exception:");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -262,7 +264,7 @@ public class TestContextExceptionFailingInTestInit
     }
 
     [TestMethod]
-    public void Test()
+    public void TestFailingInTestInit()
     {
     }
 
@@ -286,7 +288,7 @@ public class TestContextExceptionFailingInTestMethod
     }
 
     [TestMethod]
-    public void Test()
+    public void TestFailingInTestMethod()
     {
         Assert.IsNull(TestContext.TestException);
         throw new NotSupportedException();
@@ -312,7 +314,7 @@ public class TestContextExceptionNotFailing
     }
 
     [TestMethod]
-    public void Test()
+    public void TestNotFailing()
     {
         Assert.IsNull(TestContext.TestException);
     }

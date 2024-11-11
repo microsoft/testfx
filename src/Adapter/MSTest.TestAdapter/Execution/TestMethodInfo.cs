@@ -309,7 +309,11 @@ public class TestMethodInfo : ITestMethod
         if (TestMethodOptions.TestContext is { } testContext)
         {
             testContext.SetOutcome(result.Outcome);
-            testContext.SetException(result.TestFailureException);
+            // Uwnrap the exception if it's a TestFailedException
+            Exception? realException = result.TestFailureException is TestFailedException
+                ? result.TestFailureException.InnerException
+                : result.TestFailureException;
+            testContext.SetException(realException);
         }
 
         // TestCleanup can potentially be a long running operation which shouldn't ideally be in a finally block.
