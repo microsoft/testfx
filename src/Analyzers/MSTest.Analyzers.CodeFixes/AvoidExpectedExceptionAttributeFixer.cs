@@ -49,9 +49,7 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
 
         // Find the method declaration identified by the diagnostic.
         MethodDeclarationSyntax methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().First();
-        SemanticModel semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("SemanticModel cannot be null.");
-
+        SemanticModel semanticModel = await context.Document.GetRequiredSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
         if (!semanticModel.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute, out INamedTypeSymbol? expectedExceptionAttributeSymbol))
         {
             return;
