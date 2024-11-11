@@ -31,9 +31,9 @@ public class MSTestDiscoverer : ITestDiscoverer
 
     internal static void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration)
     {
-        ValidateArg.NotNull(sources, "sources");
-        ValidateArg.NotNull(logger, "logger");
-        ValidateArg.NotNull(discoverySink, "discoverySink");
+        Guard.NotNull(sources);
+        Guard.NotNull(logger);
+        Guard.NotNull(discoverySink);
 
         if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger, configuration))
         {

@@ -43,7 +43,7 @@
     <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
-    <PackageVersion Include="Polyfill" Version="6.9.0" />
+    <PackageVersion Include="Polyfill" Version="7.4.0" />
     <!-- CVE-2019-0820 -->
     <PackageVersion Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />
     <!-- CVE-2019-0981, CVE-2019-0980, CVE-2019-0657 -->
