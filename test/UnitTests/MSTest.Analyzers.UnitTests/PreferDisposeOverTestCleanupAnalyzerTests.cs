@@ -68,8 +68,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests(ITestExecutionCont
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             
             [TestClass]
-            public class MyTestClass
-            : IDisposable
+            public class MyTestClass : IDisposable
             {
                 public void Dispose()
                 {

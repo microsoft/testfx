@@ -57,7 +57,7 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
             diagnostic);
     }
 
-    // The fix will be onle for void TestCleanup.
+    // The fix will be only for void TestCleanup.
     // We can use DisposeAsync with other types but in that case we would also need to detect if the test is using multi-tfm as DisposeAsync is not available in netfx so we could only fix for netcore.
     private static bool IsTestCleanupMethodValid(MethodDeclarationSyntax methodDeclaration) =>
         // Check if the return type is void
@@ -70,15 +70,17 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
         SemanticModel semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false)
             ?? throw new InvalidOperationException("SemanticModel cannot be null.");
 
+        SyntaxGenerator generator = editor.Generator;
+
         // Find the class containing the TestCleanup method
-        if (testCleanupMethod.Parent is ClassDeclarationSyntax containingClass)
+        if (testCleanupMethod.Parent is TypeDeclarationSyntax containingType)
         {
-            ClassDeclarationSyntax? newParent = containingClass;
+            TypeDeclarationSyntax? newParent = containingType;
             INamedTypeSymbol? iDisposableSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemIDisposable);
             INamedTypeSymbol? testCleanupAttributeSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute);
 
             // Move the code from TestCleanup to Dispose method
-            MethodDeclarationSyntax? existingDisposeMethod = containingClass.Members
+            MethodDeclarationSyntax? existingDisposeMethod = containingType.Members
                 .OfType<MethodDeclarationSyntax>()
                 .FirstOrDefault(m => semanticModel.GetDeclaredSymbol(m) is IMethodSymbol methodSymbol && methodSymbol.IsDisposeImplementation(iDisposableSymbol));
 
@@ -105,54 +107,25 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
             else
             {
                 // Create a new Dispose method with the TestCleanup body
-                MethodDeclarationSyntax disposeMethod = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)), "Dispose")
-                    .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
-                    .WithBody(cleanupBody);
-                newParent = newParent.RemoveNode(testCleanupMethod, SyntaxRemoveOptions.KeepNoTrivia);
-                newParent = newParent?.AddMembers(disposeMethod);
+                var disposeMethod = (MethodDeclarationSyntax)generator.MethodDeclaration("Dispose", accessibility: Accessibility.Public);
+                disposeMethod = disposeMethod.WithBody(cleanupBody);
+                newParent = newParent.ReplaceNode(testCleanupMethod, disposeMethod);
+
                 // Ensure the class implements IDisposable
-                if (iDisposableSymbol != null && !ImplementsIDisposable(containingClass, semanticModel))
+                if (iDisposableSymbol != null && !ImplementsIDisposable(containingType, iDisposableSymbol, semanticModel))
                 {
-                    newParent = AddIDisposable(editor, newParent!);
+                    newParent = (TypeDeclarationSyntax)generator.AddInterfaceType(newParent, generator.TypeExpression(iDisposableSymbol, addImport: true).WithAddImportsAnnotation());
                 }
 
-                editor.ReplaceNode(containingClass, newParent!);
-                AddUsingDirectiveIfMissing(editor, "System");
+                editor.ReplaceNode(containingType, newParent);
             }
         }
 
         return editor.GetChangedDocument();
     }
 
-    private static void AddUsingDirectiveIfMissing(DocumentEditor editor, string namespaceName)
-    {
-        SyntaxNode root = editor.OriginalRoot;
-        IEnumerable<UsingDirectiveSyntax> usingDirectives = root.DescendantNodes().OfType<UsingDirectiveSyntax>();
-        bool hasSystemUsing = usingDirectives.Any(u => u.Name.ToString() == namespaceName);
-
-        if (!hasSystemUsing)
-        {
-            UsingDirectiveSyntax systemUsing = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(namespaceName));
-            editor.InsertBefore(root.ChildNodes().First(), systemUsing);
-        }
-    }
-
-    private static bool ImplementsIDisposable(ClassDeclarationSyntax classDeclaration, SemanticModel semanticModel)
-    {
-        INamedTypeSymbol? disposableSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemIDisposable);
-        return classDeclaration.BaseList?.Types
+    private static bool ImplementsIDisposable(TypeDeclarationSyntax typeDeclaration, INamedTypeSymbol iDisposableSymbol, SemanticModel semanticModel)
+        => typeDeclaration.BaseList?.Types
             .Any(t => semanticModel.GetSymbolInfo(t.Type).Symbol is INamedTypeSymbol typeSymbol &&
-                      SymbolEqualityComparer.Default.Equals(typeSymbol, disposableSymbol)) == true;
-    }
-
-    private static ClassDeclarationSyntax AddIDisposable(DocumentEditor editor, ClassDeclarationSyntax classDeclaration)
-    {
-        SimpleBaseTypeSyntax disposableType = SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName("IDisposable"));
-
-        // If there is already a base list, add IDisposable to it, otherwise create a new one
-        return classDeclaration.BaseList != null
-            ? classDeclaration.WithBaseList(
-                classDeclaration.BaseList.AddTypes(disposableType))
-            : classDeclaration.AddBaseListTypes(disposableType);
-    }
+                      SymbolEqualityComparer.Default.Equals(typeSymbol, iDisposableSymbol)) == true;
 }
