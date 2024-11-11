@@ -18,11 +18,7 @@ internal static class FixtureMethodFixer
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        SemanticModel? semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-        if (semanticModel is null)
-        {
-            return document.Project.Solution;
-        }
+        SemanticModel? semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
         var methodSymbol = (IMethodSymbol?)semanticModel.GetDeclaredSymbol(node, cancellationToken);
         if (methodSymbol is null)
