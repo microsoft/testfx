@@ -178,6 +178,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert.ThrowsException&lt;T&gt;&apos; instead of &apos;[ExpectedException]&apos; attribute.
+        /// </summary>
+        internal static string UseAssertThrowsExceptionOnLastStatementFix {
+            get {
+                return ResourceManager.GetString("UseAssertThrowsExceptionOnLastStatementFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add &apos;[TestMethod]&apos;.
         /// </summary>
         internal static string UseAttributeOnTestMethodFix {
