@@ -461,7 +461,8 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             _testFrameworkManager,
             _testSessionManager,
             new MessageBusProxy(),
-            method == JsonRpcMethods.TestingDiscoverTests));
+            method == JsonRpcMethods.TestingDiscoverTests,
+            true));
 
         DateTimeOffset adapterLoadStop = _clock.UtcNow;
 

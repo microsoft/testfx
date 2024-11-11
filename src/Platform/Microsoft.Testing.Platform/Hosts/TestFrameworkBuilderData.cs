@@ -15,7 +15,8 @@ internal class TestFrameworkBuilderData(ServiceProvider serviceProvider, ITestEx
     ITestFrameworkInvoker testExecutionRequestInvoker, ITestExecutionFilterFactory testExecutionFilterFactory,
     IPlatformOutputDevice platformOutputDisplayService, IEnumerable<IDataConsumer> serverPerCallConsumers,
     TestFrameworkManager testFrameworkManager, TestHostManager testSessionManager, MessageBusProxy messageBusProxy,
-    bool isForDiscoveryRequest)
+    bool isForDiscoveryRequest,
+    bool isJsonRpcProtocol)
 {
     public ServiceProvider ServiceProvider { get; } = serviceProvider;
 
@@ -36,4 +37,6 @@ internal class TestFrameworkBuilderData(ServiceProvider serviceProvider, ITestEx
     public MessageBusProxy MessageBusProxy { get; } = messageBusProxy;
 
     public bool IsForDiscoveryRequest { get; } = isForDiscoveryRequest;
+
+    public bool IsJsonRpcProtocol { get; } = isJsonRpcProtocol;
 }

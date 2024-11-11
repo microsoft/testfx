@@ -56,6 +56,11 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <target state="translated">Die Initialisierungsmethode "{0}.{1}" der Klasse wurde abgebrochen</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateConfigurationError">
+        <source>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</source>
+        <target state="translated">Es wurden sowohl die Dateien „.runsettings“ als auch „.testconfig.json“ erkannt. Wählen Sie nur eine dieser Testkonfigurationsdateien aus.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
         <target state="translated">"[DynamicData]"-Element "{0}.{1}" muss "IEnumerable"&lt;"object[]&gt;", "IEnumerable&lt;Tuple&gt;" oder "IEnumerable&lt;ValueTuple&gt;" zurückgeben.</target>
@@ -385,7 +390,7 @@ Fehler: {1}</target>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
         <target state="translated">Testparallelisierung aktiviert für {0} (Worker: {1}, Bereich: {2})</target>
-        <note />
+        <note>`Workers` is a setting name that shouldn't be localized. 'Scope' is a setting name that shouldn't be localized.</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>

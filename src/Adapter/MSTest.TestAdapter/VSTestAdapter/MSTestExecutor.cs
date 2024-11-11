@@ -3,6 +3,7 @@
 
 using System.Runtime.InteropServices;
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -43,13 +44,17 @@ public class MSTestExecutor : ITestExecutor
     /// </summary>
     public TestExecutionManager TestExecutionManager { get; protected set; }
 
-    public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
+    public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle) => RunTests(tests, runContext, frameworkHandle, null);
+
+    public void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle) => RunTests(sources, runContext, frameworkHandle, null);
+
+    internal void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from testcases.");
-        ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
-        ValidateArg.NotNullOrEmpty(tests, "tests");
+        Guard.NotNull(frameworkHandle);
+        Guard.NotNullOrEmpty(tests);
 
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle))
+        if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration))
         {
             return;
         }
@@ -57,13 +62,12 @@ public class MSTestExecutor : ITestExecutor
         RunTestsFromRightContext(frameworkHandle, testRunToken => TestExecutionManager.RunTests(tests, runContext, frameworkHandle, testRunToken));
     }
 
-    public void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
+    internal void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from sources.");
-        ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
-        ValidateArg.NotNullOrEmpty(sources, "sources");
-
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle))
+        Guard.NotNull(frameworkHandle);
+        Guard.NotNullOrEmpty(sources);
+        if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration))
         {
             return;
         }

@@ -207,6 +207,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Testing.Extension
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Testing.Platform.MSBuild.UnitTests", "test\UnitTests\Microsoft.Testing.Platform.MSBuild.UnitTests\Microsoft.Testing.Platform.MSBuild.UnitTests.csproj", "{F422398C-72CD-43EA-AC8E-E0DBD08E5563}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extensions.MSBuild", "src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj", "{8CE782A2-7374-4916-9C69-1F87E51A64A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -477,6 +479,10 @@ Global
 		{F422398C-72CD-43EA-AC8E-E0DBD08E5563}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F422398C-72CD-43EA-AC8E-E0DBD08E5563}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F422398C-72CD-43EA-AC8E-E0DBD08E5563}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CE782A2-7374-4916-9C69-1F87E51A64A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CE782A2-7374-4916-9C69-1F87E51A64A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CE782A2-7374-4916-9C69-1F87E51A64A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CE782A2-7374-4916-9C69-1F87E51A64A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -560,6 +566,7 @@ Global
 		{16FEFD31-B0D6-4291-B620-F902A16F39DC} = {BB874DF1-44FE-415A-B634-A6B829107890}
 		{573C617F-6BB2-403A-AD87-E00A7FD537F0} = {BB874DF1-44FE-415A-B634-A6B829107890}
 		{F422398C-72CD-43EA-AC8E-E0DBD08E5563} = {BB874DF1-44FE-415A-B634-A6B829107890}
+		{8CE782A2-7374-4916-9C69-1F87E51A64A9} = {6AEE1440-FDF0-4729-8196-B24D0E333550}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}

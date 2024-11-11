@@ -16,11 +16,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" CopyToBuildOutput="true" />
+    <!-- Deps only so we can include it in the lib of the NuGet package -->
+    <ProjectReference Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj" PrivateAssets="All" />
   </ItemGroup>
 
   <!-- NuGet properties -->
   <PropertyGroup>
+    <BuildOutputTargetFolder>_MSBuildTasks</BuildOutputTargetFolder>
+    <IncludeBuildOutput Condition="'$(TargetFramework)' != '' and '$(TargetFramework)' != 'netstandard2.0'">false</IncludeBuildOutput>
     <PackageDescription>
       <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
 
@@ -28,52 +32,33 @@ This package provides MSBuild integration of the platform, its extensions and co
     </PackageDescription>
   </PropertyGroup>
 
-  <!-- NuGet package layout -->
-  <!-- NuGet folders https://learn.microsoft.com/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->
+  <!-- Default to including all *.props and *.targets files from the project directory into the NuGet package root -->
   <ItemGroup>
-    <Content Include="buildMultiTargeting/**">
-      <Pack>true</Pack>
-      <PackagePath>buildMultiTargeting</PackagePath>
-    </Content>
-    <TfmSpecificPackageFile Include="buildTransitive/**">
-      <PackagePath>buildTransitive/$(TargetFramework)</PackagePath>
-    </TfmSpecificPackageFile>
-    <TfmSpecificPackageFile Include="build/**">
-      <PackagePath>build/$(TargetFramework)</PackagePath>
-    </TfmSpecificPackageFile>
+    <None Include="**/*.props;**/*.targets" Pack="true" PackagePath="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <!--
-        Test task depends on Microsoft.Testing.Platform.dll and we need to pack with it and move to custom
-        folder to not confuse nuget with same assembly references.
-  -->
+  <!-- Microsoft.Testing.Extensions.MSBuild should appear in both the build output folder (_MSBuildTasks) and the lib/<tfm> folder. -->
   <PropertyGroup>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CustomContentTarget</TargetsForTfmSpecificBuildOutput>
+    <TargetsForTfmSpecificBuildOutput Condition="'$(TargetFramework)' == 'netstandard2.0'">$(TargetsForTfmSpecificBuildOutput);IncludeProjectReferenceDlls</TargetsForTfmSpecificBuildOutput>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);IncludeProjectReferenceDlls</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
-  <Target Name="CustomContentTarget" Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+  <Target Name="IncludeProjectReferenceDlls" DependsOnTargets="BuildOnlySettings;ResolveReferences">
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(OutputPath)Microsoft.Testing.Platform.dll">
-        <PackagePath>_MSBuildTasks/$(TargetFramework)</PackagePath>
-      </TfmSpecificPackageFile>
-      <TfmSpecificPackageFile Include="$(OutputPath)Microsoft.Testing.Platform.MSBuild.dll">
-        <PackagePath>_MSBuildTasks/$(TargetFramework)</PackagePath>
-      </TfmSpecificPackageFile>
+      <TfmSpecificPackageFile Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))" PackagePath="lib\$(TargetFramework)\%(ReferenceCopyLocalPaths.DestinationSubDirectory)" />
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('CopyToBuildOutput', 'true'))" TargetPath="%(ReferenceCopyLocalPaths.DestinationSubDirectory)" />
     </ItemGroup>
   </Target>
 
   <ItemGroup>
-    <Compile Update="Resources\MSBuildResources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>MSBuildResources.resx</DependentUpon>
-    </Compile>
+    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\MSBuildConstants.cs" Link="MSBuildConstants.cs" />
+    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\FailedTestInfoRequestSerializer.cs" Link="Serializers/FailedTestInfoRequestSerializer.cs" />
+    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\ModuleInfoRequestSerializer.cs" Link="Serializers/ModuleInfoRequestSerializer.cs" />
+    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\RunSummaryRequestSerializer.cs" Link="Serializers/RunSummaryRequestSerializer.cs" />
   </ItemGroup>
+
   <ItemGroup>
-    <EmbeddedResource Update="Resources\MSBuildResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>MSBuildResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\MSBuildResources.resx" GenerateSource="true" />
   </ItemGroup>
 
   <!-- Generates NuGet package layout inside artifacts to make it testable with simple imports -->
@@ -82,10 +67,11 @@ This package provides MSBuild integration of the platform, its extensions and co
       <MSBuildAssetsBuildTargeting Include="buildMultiTargeting/**" />
       <MSBuildAssetsBuildTransitive Include="buildTransitive/**" />
       <MSBuildAssetsBuild Include="build/**" />
-      <MSBuildLib Include="$(TargetDir)$(TargetName).dll" />
-      <MSBuildLib Include="$(MSBuildLib);$(TargetDir)Microsoft.Testing.Platform.dll" />
+      <MSBuildTaskLib Include="$(TargetDir)$(TargetName).dll" />
+      <MSBuildTaskLib Include="$(MSBuildTaskLib);$(TargetDir)Microsoft.Testing.Platform.dll" />
+      <MSBuildLib Include="$(TargetDir)Microsoft.Testing.Extensions.MSBuild.dll" />
       <!-- We ship with embedded symbols -->
-      <!--<MSBuildLib Include="$(TargetDir)$(TargetName).pdb" />-->
+      <!--<MSBuildTaskLib Include="$(TargetDir)$(TargetName).pdb" />-->
     </ItemGroup>
 
     <Message Text="MSBuildAssetsBuildTargeting tests: @(MSBuildAssetsBuildTargeting->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildMultiTargeting/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
@@ -100,8 +86,8 @@ This package provides MSBuild integration of the platform, its extensions and co
     <Message Text="MSBuildLib tests: @(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/lib/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
     <Copy SourceFiles="@(MSBuildLib)" DestinationFiles="@(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/lib/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" />
 
-    <Message Text="MSBuildLib to _MSBuildTasks: @(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/_MSBuildTasks/netstandard2.0/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
-    <Copy SourceFiles="@(MSBuildLib)" DestinationFiles="@(MSBuildLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/_MSBuildTasks/netstandard2.0/%(RecursiveDir)%(Filename)%(Extension)')" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <Message Text="MSBuildTaskLib to _MSBuildTasks: @(MSBuildTaskLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/_MSBuildTasks/netstandard2.0/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
+    <Copy SourceFiles="@(MSBuildTaskLib)" DestinationFiles="@(MSBuildTaskLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/_MSBuildTasks/netstandard2.0/%(RecursiveDir)%(Filename)%(Extension)')" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
   </Target>
 
   <ItemGroup>

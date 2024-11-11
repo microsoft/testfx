@@ -5,6 +5,7 @@
 using System.Globalization;
 using System.Xml;
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -22,6 +23,7 @@ public class MSTestAdapterSettings
         DeploymentEnabled = true;
         DeployTestSourceDependencies = true;
         SearchDirectories = [];
+        Configuration = null;
     }
 
     /// <summary>
@@ -44,6 +46,8 @@ public class MSTestAdapterSettings
     /// </summary>
     protected List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
 
+    internal static IConfiguration? Configuration { get; set; }
+
     /// <summary>
     /// Convert the parameter xml to TestSettings.
     /// </summary>
@@ -51,7 +55,7 @@ public class MSTestAdapterSettings
     /// <returns>An instance of the <see cref="MSTestAdapterSettings"/> class.</returns>
     public static MSTestAdapterSettings ToSettings(XmlReader reader)
     {
-        ValidateArg.NotNull(reader, "reader");
+        Guard.NotNull(reader);
 
         // Expected format of the xml is: -
         //
@@ -126,19 +130,72 @@ public class MSTestAdapterSettings
         return settings;
     }
 
+    private static void ParseBooleanSetting(IConfiguration configuration, string key, Action<bool> setSetting)
+    {
+        if (configuration[$"mstest:{key}"] is not string value)
+        {
+            return;
+        }
+
+        if (bool.TryParse(value, out bool result))
+        {
+            setSetting(result);
+        }
+    }
+
+    internal static MSTestAdapterSettings ToSettings(IConfiguration configuration)
+    {
+        // Expected format of the json is: -
+        //
+        // "mstest" : {
+        //  "deployment" : {
+        //       "enabled": true / false,
+        //       "deployTestSourceDependencies": true / false,
+        //       "deleteDeploymentDirectoryAfterTestRunIsComplete": true / false
+        //  },
+        //  ... remaining settings
+        // }
+        var settings = new MSTestAdapterSettings();
+        Configuration = configuration;
+        ParseBooleanSetting(configuration, "deployment:enabled", value => settings.DeploymentEnabled = value);
+        ParseBooleanSetting(configuration, "deployment:deployTestSourceDependencies", value => settings.DeployTestSourceDependencies = value);
+        ParseBooleanSetting(configuration, "deployment:deleteDeploymentDirectoryAfterTestRunIsComplete", value => settings.DeleteDeploymentDirectoryAfterTestRunIsComplete = value);
+
+        settings.ReadAssemblyResolutionPath(configuration);
+
+        return settings;
+    }
+
     public static bool IsAppDomainCreationDisabled(string? settingsXml)
     {
-        if (StringEx.IsNullOrEmpty(settingsXml))
+        // Expected format of the json is: -
+        // "mstest" : {
+        //  "execution": {
+        //    "disableAppDomain": true,
+        //  }
+        // }
+        if (StringEx.IsNullOrEmpty(settingsXml) && Configuration is null)
         {
             return false;
         }
 
-        StringReader stringReader = new(settingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        bool disableAppDomain = false;
 
-        return reader.ReadToFollowing("DisableAppDomain")
-            && bool.TryParse(reader.ReadInnerXml(), out bool disableAppDomain)
-            && disableAppDomain;
+        if (!StringEx.IsNullOrEmpty(settingsXml))
+        {
+            StringReader stringReader = new(settingsXml);
+            var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+            disableAppDomain = reader.ReadToFollowing("DisableAppDomain") &&
+                bool.TryParse(reader.ReadInnerXml(), out bool result) && result;
+        }
+
+        string? isAppDomainDisabled = Configuration?["mstest:execution:disableAppDomain"];
+        if (!StringEx.IsNullOrEmpty(isAppDomainDisabled))
+        {
+            disableAppDomain = bool.TryParse(isAppDomainDisabled, out bool result) && result;
+        }
+
+        return disableAppDomain;
     }
 
     /// <summary>
@@ -260,7 +317,7 @@ public class MSTestAdapterSettings
 
     private void ReadAssemblyResolutionPath(XmlReader reader)
     {
-        ValidateArg.NotNull(reader, "reader");
+        Guard.NotNull(reader);
 
         // Expected format of the xml is: -
         //
@@ -303,6 +360,33 @@ public class MSTestAdapterSettings
 
         // go to the end of the element.
         reader.ReadEndElement();
+    }
+
+    private void ReadAssemblyResolutionPath(IConfiguration configuration)
+    {
+        // Expected format of the json is: -
+        //
+        // "mstest" : {
+        //    "assemblyResolution" : [
+        //        { "path" : "..." , includeSubDirectories: "true" } ,
+        //        { "path" : "..." , includeSubDirectories: "true" } ,
+        //        { "path" : "..." , includeSubDirectories: "true" } ,
+        //        ...
+        //     ]
+        //  ... remaining settings
+        // }
+        int index = 0;
+        while (configuration[$"mstest:assemblyResolution:{index}:path"] is string path)
+        {
+            if (!StringEx.IsNullOrEmpty(path))
+            {
+                // Default includeSubDirectories to false if not provided
+                bool includeSubDirectories = false;
+                ParseBooleanSetting(configuration, $"assemblyResolution:{index++}:includeSubDirectories", value => includeSubDirectories = value);
+
+                SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
+            }
+        }
     }
 }
 #endif

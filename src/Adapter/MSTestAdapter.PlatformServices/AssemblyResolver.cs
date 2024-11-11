@@ -382,7 +382,15 @@ class AssemblyResolver :
                     // the ResourceHelper's currentlyLoading stack to null if an exception occurs.
                     if (s_currentlyLoading != null && s_currentlyLoading.Count > 0 && s_currentlyLoading.LastIndexOf(assemblyPath) != -1)
                     {
-                        EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Assembly '{0}' is searching for itself recursively '{1}', returning as not found.", name, assemblyPath);
+                        SafeLog(
+                            name,
+                            () =>
+                            {
+                                if (EqtTrace.IsInfoEnabled)
+                                {
+                                    EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Assembly '{0}' is searching for itself recursively '{1}', returning as not found.", name, assemblyPath);
+                                }
+                            });
                         _resolvedAssemblies[name] = null;
                         return null;
                     }

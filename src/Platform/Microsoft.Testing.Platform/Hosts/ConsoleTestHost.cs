@@ -66,7 +66,8 @@ internal sealed class ConsoleTestHost(
             _testFrameworkManager,
             _testHostManager,
             new MessageBusProxy(),
-            ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)));
+            ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
+            false));
 
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
@@ -93,7 +94,7 @@ internal sealed class ConsoleTestHost(
             // Get the exit code service to be able to set the exit code
             ITestApplicationProcessExitCode testApplicationResult = ServiceProvider.GetTestApplicationProcessExitCode();
             statistics = testApplicationResult.GetStatistics();
-            exitCode = await testApplicationResult.GetProcessExitCodeAsync();
+            exitCode = testApplicationResult.GetProcessExitCode();
 
             await _logger.LogInformationAsync($"Test session '{ServiceProvider.GetTestSessionContext().SessionId}' ended with exit code '{exitCode}' in {consoleRunStarted.Elapsed}");
 

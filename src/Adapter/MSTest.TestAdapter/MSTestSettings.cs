@@ -6,8 +6,9 @@ using System.Globalization;
 using System.Xml;
 using System.Xml.Linq;
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
@@ -253,7 +254,33 @@ public class MSTestSettings
     /// The discovery context that contains the runsettings.
     /// </param>
     [Obsolete("this function will be removed in v4.0.0")]
-    public static void PopulateSettings(IDiscoveryContext? context) => PopulateSettings(context, null);
+    public static void PopulateSettings(IDiscoveryContext? context) => PopulateSettings(context, null, null);
+
+    private static bool IsRunSettingsFileHasMSTestSettings(string? runSettingsXml) => IsRunSettingsFileHasSettingName(runSettingsXml, SettingsName) || IsRunSettingsFileHasSettingName(runSettingsXml, SettingsNameAlias);
+
+    private static bool IsRunSettingsFileHasSettingName(string? runSettingsXml, string SettingName)
+    {
+        if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
+        {
+            return false;
+        }
+
+        using var stringReader = new StringReader(runSettingsXml);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+
+        // read to the fist child
+        XmlReaderUtilities.ReadToRootNode(reader);
+        reader.ReadToNextElement();
+
+        // Read till we reach nodeName element or reach EOF
+        while (!string.Equals(reader.Name, SettingName, StringComparison.OrdinalIgnoreCase)
+                && !reader.EOF)
+        {
+            reader.SkipToNextElement();
+        }
+
+        return !reader.EOF;
+    }
 
     /// <summary>
     /// Populate adapter settings from the context.
@@ -262,32 +289,43 @@ public class MSTestSettings
     /// <param name="logger"> The logger for messages. </param>
     /// The discovery context that contains the runsettings.
     /// </param>
-    internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger)
+    internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger, IConfiguration? configuration)
     {
-        RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
-
-        if (context?.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
+        if (configuration?["mstest"] != null && context?.RunSettings != null && IsRunSettingsFileHasMSTestSettings(context.RunSettings.SettingsXml))
         {
-            // This will contain default adapter settings
-            CurrentSettings = new MSTestSettings();
-            return;
+            throw new InvalidOperationException(Resource.DuplicateConfigurationError);
         }
 
-        MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias, logger);
+        // This will contain default adapter settings
+        var settings = new MSTestSettings();
+        var runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
-        // If a user specifies MSTestV2 in the runsettings, then prefer that over the v1 settings.
-        if (aliasSettings != null)
+        if (!StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml) && configuration?["mstest"] is null)
         {
-            CurrentSettings = aliasSettings;
+            MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias, logger);
+
+            // If a user specifies MSTestV2 in the runsettings, then prefer that over the v1 settings.
+            if (aliasSettings != null)
+            {
+                settings = aliasSettings;
+            }
+            else
+            {
+                MSTestSettings? mSTestSettings = GetSettings(context.RunSettings.SettingsXml, SettingsName, logger);
+
+                settings = mSTestSettings ?? new MSTestSettings();
+            }
+
+            SetGlobalSettings(context.RunSettings.SettingsXml, settings, logger);
         }
-        else
+        else if (configuration?["mstest"] is not null)
         {
-            MSTestSettings? settings = GetSettings(context.RunSettings.SettingsXml, SettingsName, logger);
-
-            CurrentSettings = settings ?? new MSTestSettings();
+            RunConfigurationSettings.SetRunConfigurationSettingsFromConfig(configuration, runConfigurationSettings);
+            SetSettingsFromConfig(configuration, logger, settings);
         }
 
-        SetGlobalSettings(context.RunSettings.SettingsXml, CurrentSettings, logger);
+        CurrentSettings = settings;
+        RunConfigurationSettings = runConfigurationSettings;
     }
 
     /// <summary>
@@ -362,7 +400,7 @@ public class MSTestSettings
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static MSTestSettings ToSettings(XmlReader reader, IMessageLogger? logger)
     {
-        ValidateArg.NotNull(reader, "reader");
+        Guard.NotNull(reader);
 
         // Expected format of the xml is: -
         //
@@ -830,5 +868,162 @@ public class MSTestSettings
         {
             logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, disableParallelizationString, "DisableParallelization"));
         }
+    }
+
+    private static void ParseBooleanSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<bool> setSetting)
+    {
+        if (configuration[$"mstest:{key}"] is not string value)
+        {
+            return;
+        }
+
+        if (bool.TryParse(value, out bool result))
+        {
+            setSetting(result);
+        }
+        else
+        {
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+        }
+    }
+
+    private static void ParseIntegerSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<int> setSetting)
+    {
+        if (configuration[$"mstest:{key}"] is not string value)
+        {
+            return;
+        }
+
+        if (int.TryParse(value, out int result) && result > 0)
+        {
+            setSetting(result);
+        }
+        else
+        {
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+        }
+    }
+
+    /// <summary>
+    /// Convert the parameter xml to TestSettings.
+    /// </summary>
+    /// <param name="configuration">Configuration to load the settings from.</param>
+    /// <param name="logger"> The logger for messages. </param>
+    internal static void SetSettingsFromConfig(IConfiguration configuration, IMessageLogger? logger, MSTestSettings settings)
+    {
+        // Expected format of the json is: -
+        //
+        // "mstest" : {
+        //  "timeout" : {
+        //      "assemblyInitialize" : strictly positive int,
+        //      "assemblyCleanup" : strictly positive int,
+        //      "classInitialize" : strictly positive int,
+        //      "classCleanup" : strictly positive int,
+        //      "testInitialize" : strictly positive int,
+        //      "testCleanup" : strictly positive int,
+        //      "test" : strictly positive int,
+        //      "useCooperativeCancellation" : true/false
+        //  },
+        //  "parallelism" : {
+        //      "enabled": true/false,
+        //      "workers": positive int,
+        //      "scope": method/class,
+        //  },
+        //  "output" : {
+        //      "captureTrace" : true/false
+        //  },
+        //  "execution" : {
+        //      "mapInconclusiveToFailed" : true/false
+        //      "mapNotRunnableToFailed" : true/false
+        //      "treatDiscoveryWarningsAsErrors" : true/false
+        //      "considerEmptyDataSourceAsInconclusive" : true/false
+        //      "treatClassAndAssemblyCleanupWarningsAsErrors" : true/false
+        //      "considerFixturesAsSpecialTests" : true/false
+        //  }
+        //  ... remaining settings
+        // }
+        ParseBooleanSetting(configuration, "enableBaseClassTestMethodsFromOtherAssemblies", logger, value => settings.EnableBaseClassTestMethodsFromOtherAssemblies = value);
+        ParseBooleanSetting(configuration, "orderTestsByNameInClass", logger, value => settings.OrderTestsByNameInClass = value);
+
+        ParseBooleanSetting(configuration, "output:captureTrace", logger, value => settings.CaptureDebugTraces = value);
+
+        ParseBooleanSetting(configuration, "parallelism:enabled", logger, value => settings.OrderTestsByNameInClass = value);
+
+        ParseBooleanSetting(configuration, "execution:mapInconclusiveToFailed", logger, value => settings.MapInconclusiveToFailed = value);
+        ParseBooleanSetting(configuration, "execution:mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);
+        ParseBooleanSetting(configuration, "execution:treatDiscoveryWarningsAsErrors", logger, value => settings.TreatDiscoveryWarningsAsErrors = value);
+        ParseBooleanSetting(configuration, "execution:considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
+        ParseBooleanSetting(configuration, "execution:treatClassAndAssemblyCleanupWarningsAsErrors", logger, value => settings.TreatClassAndAssemblyCleanupWarningsAsErrors = value);
+        ParseBooleanSetting(configuration, "execution:considerFixturesAsSpecialTests", logger, value => settings.ConsiderFixturesAsSpecialTests = value);
+
+        ParseBooleanSetting(configuration, "timeout:useCooperativeCancellation", logger, value => settings.CooperativeCancellationTimeout = value);
+        ParseIntegerSetting(configuration, "timeout:test", logger, value => settings.TestTimeout = value);
+        ParseIntegerSetting(configuration, "timeout:assemblyCleanup", logger, value => settings.AssemblyCleanupTimeout = value);
+        ParseIntegerSetting(configuration, "timeout:assemblyInitialize", logger, value => settings.AssemblyInitializeTimeout = value);
+        ParseIntegerSetting(configuration, "timeout:classInitialize", logger, value => settings.ClassInitializeTimeout = value);
+        ParseIntegerSetting(configuration, "timeout:classCleanup", logger, value => settings.ClassCleanupTimeout = value);
+        ParseIntegerSetting(configuration, "timeout:testInitialize", logger, value => settings.TestInitializeTimeout = value);
+        ParseIntegerSetting(configuration, "timeout:testCleanup", logger, value => settings.TestCleanupTimeout = value);
+
+        if (configuration["mstest:classCleanupLifecycle"] is string classCleanupLifecycle)
+        {
+            if (TryParseEnum(classCleanupLifecycle, out ClassCleanupBehavior lifecycle))
+            {
+                settings.ClassCleanupLifecycle = lifecycle;
+            }
+            else
+            {
+                throw new AdapterSettingsException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.InvalidClassCleanupLifecycleValue,
+                    classCleanupLifecycle,
+#if NET
+                    string.Join(", ", Enum.GetNames<ClassCleanupBehavior>())));
+#else
+                    string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
+#endif
+            }
+        }
+
+        if (configuration["mstest:parallelism:workers"] is string workers)
+        {
+            settings.ParallelizationWorkers = int.TryParse(workers, out int parallelWorkers)
+                ? parallelWorkers == 0
+                    ? Environment.ProcessorCount
+                    : parallelWorkers > 0
+                        ? parallelWorkers
+                        : throw new AdapterSettingsException(string.Format(
+                                                CultureInfo.CurrentCulture,
+                                                Resource.InvalidParallelWorkersValue,
+                                                workers))
+                : throw new AdapterSettingsException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.InvalidParallelWorkersValue,
+                    workers));
+        }
+
+        if (configuration["mstest:parallelism:scope"] is string value)
+        {
+            value = value.Equals("class", StringComparison.OrdinalIgnoreCase) ? "ClassLevel"
+                    : value.Equals("methood", StringComparison.OrdinalIgnoreCase) ? "MethodLevel" : value;
+            if (TryParseEnum(value, out ExecutionScope scope))
+            {
+                settings.ParallelizationScope = scope;
+            }
+            else
+            {
+                throw new AdapterSettingsException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.InvalidParallelScopeValue,
+                    value,
+#if NET
+                    string.Join(", ", Enum.GetNames<ExecutionScope>())));
+#else
+                    string.Join(", ", EnumPolyfill.GetNames<ExecutionScope>())));
+#endif
+            }
+        }
+
+        MSTestSettingsProvider.Load(configuration);
     }
 }

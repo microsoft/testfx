@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Xml;
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions;
@@ -100,6 +102,7 @@ public class RunConfigurationSettings
         // <Runsettings>
         // <RunConfiguration>
         // <CollectSourceInformation>true</CollectSourceInformation>
+        // <ExecutionApartmentState>STA/MTA</ExecutionApartmentState>
         // </RunConfiguration>
         // </Runsettings>
         RunConfigurationSettings settings = new();
@@ -122,7 +125,7 @@ public class RunConfigurationSettings
                             {
                                 settings.CollectSourceInformation = result;
                                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                                "CollectSourceInformation value Found : {0} ",
+                                "CollectSourceInformation value found : {0} ",
                                 result);
                             }
 
@@ -151,6 +154,36 @@ public class RunConfigurationSettings
                         }
                 }
             }
+        }
+
+        return settings;
+    }
+
+    internal static RunConfigurationSettings SetRunConfigurationSettingsFromConfig(IConfiguration configuration, RunConfigurationSettings settings)
+    {
+        // Expected format of the json is: -
+        // "mstest" : {
+        //  "execution": {
+        //    "collectSourceInformation": true,
+        //    "executionApartmentState": "STA"
+        //  }
+        // }
+        if (bool.TryParse(configuration["mstest:execution:collectSourceInformation"], out bool collectSourceInformation))
+        {
+            settings.CollectSourceInformation = collectSourceInformation;
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                "CollectSourceInformation value found : {0}", collectSourceInformation);
+        }
+
+        string? apartmentStateValue = configuration["mstest:execution:executionApartmentState"];
+        if (Enum.TryParse(apartmentStateValue, out PlatformApartmentState platformApartmentState))
+        {
+            settings.ExecutionApartmentState = platformApartmentState switch
+            {
+                PlatformApartmentState.STA => ApartmentState.STA,
+                PlatformApartmentState.MTA => ApartmentState.MTA,
+                _ => throw new NotSupportedException(string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, platformApartmentState, "execution:executionApartmentState")),
+            };
         }
 
         return settings;

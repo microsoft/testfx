@@ -135,9 +135,6 @@
   <data name="InvalidTargetPath" xml:space="preserve">
     <value>Invalid TargetPath, {0}</value>
   </data>
-  <data name="MSBuildExtensionsDescription" xml:space="preserve">
-    <value>Extension used to pass parameters from MSBuild node and the hosts</value>
-  </data>
   <data name="Passed" xml:space="preserve">
     <value>Passed</value>
   </data>

@@ -53,6 +53,8 @@ public abstract class TestContext
     /// </summary>
     public virtual CancellationTokenSource CancellationTokenSource { get; protected set; } = new();
 
+    public object?[]? TestData { get; protected set; }
+
 #if NETFRAMEWORK
     /// <summary>
     /// Gets the current data row when test is used for data driven testing.

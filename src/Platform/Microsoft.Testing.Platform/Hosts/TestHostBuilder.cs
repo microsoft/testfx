@@ -136,7 +136,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         Configuration.AddConfigurationSource(() => new JsonConfigurationSource(_testApplicationModuleInfo, _fileSystem, loggingState.FileLoggerProvider));
 
         // Build the IConfiguration - we need special treatment because the configuration is needed by extensions.
-        var configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(loggingState.FileLoggerProvider);
+        var configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(loggingState.FileLoggerProvider, loggingState.CommandLineParseResult);
         serviceProvider.TryAddService(configuration);
 
         // Current test platform is picky on unhandled exception, we will tear down the process in that case.
@@ -323,6 +323,14 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             // Add to the service provider for cleanup.
             serviceProvider.AddService(nonCooperativeParentProcessListener);
         }
+
+        // Register the ITestApplicationResult
+        TestApplicationResult testApplicationResult = new(
+            platformOutputDevice,
+            serviceProvider.GetTestApplicationCancellationTokenSource(),
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetEnvironment());
+        serviceProvider.AddService(testApplicationResult);
 
         // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
 
@@ -724,12 +732,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         TestSessionLifetimeHandlersContainer testSessionLifetimeHandlersContainer = new(testSessionLifetimeHandlers);
         serviceProvider.AddService(testSessionLifetimeHandlersContainer);
 
-        // Register the ITestApplicationResult
-        TestApplicationResult testApplicationResult = new(
-            testFrameworkBuilderData.PlatformOutputDisplayService,
-            serviceProvider.GetTestApplicationCancellationTokenSource(),
-            serviceProvider.GetCommandLineOptions(),
-            serviceProvider.GetEnvironment());
+        // Allow the ITestApplicationProcessExitCode to subscribe as IDataConsumer
+        ITestApplicationProcessExitCode testApplicationResult = serviceProvider.GetRequiredService<ITestApplicationProcessExitCode>();
         await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder);
 
         // We register the data consumer handler if we're connected to the dotnet test pipe
@@ -740,10 +744,12 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();
 
-        // Build the message hub
+        // Build the message bus
         // If we're running discovery command line we don't want to process any messages coming from the adapter so we filter out all extensions
         // adding a custom message bus that will simply forward to the output display for better performance
-        if (serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
+        if (serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+            // In case of server mode the discovery is handled by the ServerHost using the standard message bus
+            && !testFrameworkBuilderData.IsJsonRpcProtocol)
         {
             ListTestsMessageBus concreteMessageBusService = new(
                 serviceProvider.GetTestFramework(),

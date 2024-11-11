@@ -164,12 +164,15 @@ internal sealed class NonAnsiTerminal : ITerminal
 
     public void RenderProgress(TestProgressState?[] progress)
     {
+        int count = 0;
         foreach (TestProgressState? p in progress)
         {
             if (p == null)
             {
                 continue;
             }
+
+            count++;
 
             string durationString = HumanReadableDurationFormatter.Render(p.Stopwatch.Elapsed);
 
@@ -232,7 +235,11 @@ internal sealed class NonAnsiTerminal : ITerminal
             AppendLine();
         }
 
-        AppendLine();
+        // Do not render empty lines when there is nothing to show.
+        if (count > 0)
+        {
+            AppendLine();
+        }
     }
 
     public void StartBusyIndicator()

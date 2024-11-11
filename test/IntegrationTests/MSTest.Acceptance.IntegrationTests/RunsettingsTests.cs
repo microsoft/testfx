@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.InteropServices;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -14,9 +16,21 @@ public sealed class RunSettingsTests : AcceptanceTestBase
     public RunSettingsTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
         : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
-    public async Task UnsupportedRunSettingsEntriesAreFlagged()
+    internal static IEnumerable<TestArgumentsEntry<string>> TfmList()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        yield return TargetFrameworks.NetCurrent;
+        yield return TargetFrameworks.NetFramework.First();
+    }
+
+    [ArgumentsProvider(nameof(TfmList))]
+    public async Task UnsupportedRunSettingsEntriesAreFlagged(string tfm)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && tfm == TargetFrameworks.NetFramework.First().Arguments)
+        {
+            return;
+        }
+
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
 
         // Assert
@@ -45,7 +59,7 @@ public sealed class RunSettingsTests : AcceptanceTestBase
         {
             yield return (ProjectName, ProjectName,
                 SourceCode
-                .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+                .PatchTargetFrameworks(TargetFrameworks.NetCurrent, TargetFrameworks.NetFramework.First())
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
@@ -57,6 +71,7 @@ public sealed class RunSettingsTests : AcceptanceTestBase
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>Preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -105,6 +120,11 @@ public sealed class RunSettingsTests : AcceptanceTestBase
     <!-- true or false -->
     <!-- Value that specifies the exit code when no tests are discovered -->
     <TreatNoTestsAsError>true</TreatNoTestsAsError>
+
+    <!-- List of environment variables we want to set-->
+    <EnvironmentVariables>
+        <SAMPLEKEY>SAMPLEVALUE</SAMPLEKEY>
+    </EnvironmentVariables>
   </RunConfiguration>
 
   <!-- Configurations for data collectors -->
@@ -200,6 +220,7 @@ public class UnitTest1
     [TestMethod]
     public void TestMethod()
     {
+        Assert.AreEqual("SAMPLEVALUE", System.Environment.GetEnvironmentVariable("SAMPLEKEY")!);
     }
 }
 """;

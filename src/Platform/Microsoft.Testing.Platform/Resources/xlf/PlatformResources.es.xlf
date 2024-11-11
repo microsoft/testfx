@@ -402,9 +402,9 @@ Tenga en cuenta que esto ralentiza la ejecución de pruebas.</target>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">Habilite el registro de diagnóstico. El nivel de registro predeterminado es 'Seguimiento'.
-El archivo se escribirá en el directorio de salida con el nombre log_[MMddHHssfff].diag</target>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
+        <target state="translated">Habilite el registro de diagnóstico. El nivel de registro predeterminado es "Seguimiento".
+El archivo se escribirá en el directorio de salida con el nombre log_[yyMMddHHmmssfff].diag</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -631,6 +631,16 @@ Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' 
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
         <target state="translated">Seguimiento de la pila</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="translated">Salida de error</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="translated">Salida estándar</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">
