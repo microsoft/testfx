@@ -250,34 +250,40 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
 
                     case FailedTestResultMessageFieldsId.ExceptionMessageList:
                         {
-                            int fieldCount2 = ReadShort(stream);
-
-                            string? errorMessage = null;
-                            string? errorType = null;
-                            string? stackTrace = null;
-
-                            for (int k = 0; k < fieldCount2; k++)
+                            int length2 = ReadInt(stream);
+                            for (int k = 0; k < length2; k++)
                             {
-                                int fieldId2 = ReadShort(stream);
-                                int fieldSize2 = ReadInt(stream);
 
-                                switch (fieldId2)
+                                int fieldCount2 = ReadShort(stream);
+
+                                string? errorMessage = null;
+                                string? errorType = null;
+                                string? stackTrace = null;
+
+                                for (int l = 0; l < fieldCount2; l++)
                                 {
-                                    case ExceptionMessageFieldsId.ErrorMessage:
-                                        errorMessage = ReadString(stream);
-                                        break;
+                                    int fieldId2 = ReadShort(stream);
+                                    int fieldSize2 = ReadInt(stream);
 
-                                    case ExceptionMessageFieldsId.ErrorType:
-                                        errorType = ReadString(stream);
-                                        break;
+                                    switch (fieldId2)
+                                    {
+                                        case ExceptionMessageFieldsId.ErrorMessage:
+                                            errorMessage = ReadStringValue(stream, fieldSize2);
+                                            break;
 
-                                    case ExceptionMessageFieldsId.StackTrace:
-                                        stackTrace = ReadString(stream);
-                                        break;
+                                        case ExceptionMessageFieldsId.ErrorType:
+                                            errorType = ReadStringValue(stream, fieldSize2);
+                                            break;
+
+                                        case ExceptionMessageFieldsId.StackTrace:
+                                            stackTrace = ReadStringValue(stream, fieldSize2);
+                                            break;
+                                    }
                                 }
+
+                                exceptionMessages.Add(new ExceptionMessage(errorMessage, errorType, stackTrace));
                             }
 
-                            exceptionMessages.Add(new ExceptionMessage(errorMessage, errorType, stackTrace));
                             break;
                         }
 
