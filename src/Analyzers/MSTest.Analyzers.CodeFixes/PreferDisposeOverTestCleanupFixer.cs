@@ -45,7 +45,9 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
 
         // Find the TestCleanup method declaration identified by the diagnostic.
         MethodDeclarationSyntax testCleanupMethod = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
-        if (testCleanupMethod == null || !IsTestCleanupMethodValid(testCleanupMethod))
+        if (testCleanupMethod == null ||
+            !IsTestCleanupMethodValid(testCleanupMethod) ||
+            testCleanupMethod.Parent is not TypeDeclarationSyntax containingType)
         {
             return;
         }
@@ -53,7 +55,7 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 CodeFixResources.ReplaceWithDisposeFix,
-                c => AddDisposeAndBaseClassAsync(context.Document, testCleanupMethod, c),
+                c => AddDisposeAndBaseClassAsync(context.Document, testCleanupMethod, containingType, c),
                 nameof(PreferDisposeOverTestCleanupFixer)),
             diagnostic);
     }
@@ -65,61 +67,60 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
         methodDeclaration.ReturnType is PredefinedTypeSyntax predefinedType &&
                predefinedType.Keyword.IsKind(SyntaxKind.VoidKeyword);
 
-    private static async Task<Document> AddDisposeAndBaseClassAsync(Document document, MethodDeclarationSyntax testCleanupMethod, CancellationToken cancellationToken)
+    private static async Task<Document> AddDisposeAndBaseClassAsync(
+        Document document,
+        MethodDeclarationSyntax testCleanupMethod,
+        TypeDeclarationSyntax containingType,
+        CancellationToken cancellationToken)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         SemanticModel semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false)
             ?? throw new InvalidOperationException("SemanticModel cannot be null.");
 
         SyntaxGenerator generator = editor.Generator;
+        TypeDeclarationSyntax newParent = containingType;
+        INamedTypeSymbol? iDisposableSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemIDisposable);
+        INamedTypeSymbol? testCleanupAttributeSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute);
 
-        // Find the class containing the TestCleanup method
-        if (testCleanupMethod.Parent is TypeDeclarationSyntax containingType)
+        // Move the code from TestCleanup to Dispose method
+        MethodDeclarationSyntax? existingDisposeMethod = containingType.Members
+            .OfType<MethodDeclarationSyntax>()
+            .FirstOrDefault(m => semanticModel.GetDeclaredSymbol(m) is IMethodSymbol methodSymbol && methodSymbol.IsDisposeImplementation(iDisposableSymbol));
+
+        BlockSyntax? cleanupBody = testCleanupMethod.Body;
+
+        if (existingDisposeMethod != null)
         {
-            TypeDeclarationSyntax? newParent = containingType;
-            INamedTypeSymbol? iDisposableSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemIDisposable);
-            INamedTypeSymbol? testCleanupAttributeSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute);
-
-            // Move the code from TestCleanup to Dispose method
-            MethodDeclarationSyntax? existingDisposeMethod = containingType.Members
-                .OfType<MethodDeclarationSyntax>()
-                .FirstOrDefault(m => semanticModel.GetDeclaredSymbol(m) is IMethodSymbol methodSymbol && methodSymbol.IsDisposeImplementation(iDisposableSymbol));
-
-            BlockSyntax? cleanupBody = testCleanupMethod.Body;
-
-            if (existingDisposeMethod != null)
+            // Append the TestCleanup body to the existing Dispose method
+            StatementSyntax[]? cleanupStatements = cleanupBody?.Statements.ToArray();
+            MethodDeclarationSyntax newDisposeMethod;
+            if (existingDisposeMethod.Body != null)
             {
-                // Append the TestCleanup body to the existing Dispose method
-                StatementSyntax[]? cleanupStatements = cleanupBody?.Statements.ToArray();
-                MethodDeclarationSyntax newDisposeMethod;
-                if (existingDisposeMethod.Body != null)
-                {
-                    BlockSyntax newDisposeBody = existingDisposeMethod.Body.AddStatements(cleanupStatements ?? Array.Empty<StatementSyntax>());
-                    newDisposeMethod = existingDisposeMethod.WithBody(newDisposeBody);
-                }
-                else
-                {
-                    newDisposeMethod = existingDisposeMethod.WithBody(cleanupBody);
-                }
-
-                editor.ReplaceNode(existingDisposeMethod, newDisposeMethod);
-                editor.RemoveNode(testCleanupMethod);
+                BlockSyntax newDisposeBody = existingDisposeMethod.Body.AddStatements(cleanupStatements ?? Array.Empty<StatementSyntax>());
+                newDisposeMethod = existingDisposeMethod.WithBody(newDisposeBody);
             }
             else
             {
-                // Create a new Dispose method with the TestCleanup body
-                var disposeMethod = (MethodDeclarationSyntax)generator.MethodDeclaration("Dispose", accessibility: Accessibility.Public);
-                disposeMethod = disposeMethod.WithBody(cleanupBody);
-                newParent = newParent.ReplaceNode(testCleanupMethod, disposeMethod);
-
-                // Ensure the class implements IDisposable
-                if (iDisposableSymbol != null && !ImplementsIDisposable(containingType, iDisposableSymbol, semanticModel))
-                {
-                    newParent = (TypeDeclarationSyntax)generator.AddInterfaceType(newParent, generator.TypeExpression(iDisposableSymbol, addImport: true).WithAdditionalAnnotations(Simplifier.AddImportsAnnotation));
-                }
-
-                editor.ReplaceNode(containingType, newParent);
+                newDisposeMethod = existingDisposeMethod.WithBody(cleanupBody);
             }
+
+            editor.ReplaceNode(existingDisposeMethod, newDisposeMethod);
+            editor.RemoveNode(testCleanupMethod);
+        }
+        else
+        {
+            // Create a new Dispose method with the TestCleanup body
+            var disposeMethod = (MethodDeclarationSyntax)generator.MethodDeclaration("Dispose", accessibility: Accessibility.Public);
+            disposeMethod = disposeMethod.WithBody(cleanupBody);
+            newParent = newParent.ReplaceNode(testCleanupMethod, disposeMethod);
+
+            // Ensure the class implements IDisposable
+            if (iDisposableSymbol != null && !ImplementsIDisposable(containingType, iDisposableSymbol, semanticModel))
+            {
+                newParent = (TypeDeclarationSyntax)generator.AddInterfaceType(newParent, generator.TypeExpression(iDisposableSymbol, addImport: true).WithAdditionalAnnotations(Simplifier.AddImportsAnnotation));
+            }
+
+            editor.ReplaceNode(containingType, newParent);
         }
 
         return editor.GetChangedDocument();
