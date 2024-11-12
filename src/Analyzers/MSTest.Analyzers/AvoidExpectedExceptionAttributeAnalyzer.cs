@@ -41,8 +41,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionBaseAttribute, out INamedTypeSymbol? expectedExceptionBaseAttributeSymbol) &&
-                context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute, out INamedTypeSymbol? expectedExceptionAttributeSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionBaseAttribute, out INamedTypeSymbol? expectedExceptionBaseAttributeSymbol))
             {
                 context.RegisterSymbolAction(context => AnalyzeSymbol(context, expectedExceptionBaseAttributeSymbol), SymbolKind.Method);
             }
