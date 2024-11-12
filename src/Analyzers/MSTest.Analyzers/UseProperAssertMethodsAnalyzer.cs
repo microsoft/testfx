@@ -17,7 +17,7 @@ using MSTest.Analyzers.RoslynAnalyzerHelpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0037: Use proper 'Assert' methods
+/// MSTEST0037: Use proper 'Assert' methods.
 /// </summary>
 /// <remarks>
 /// The analyzer captures the following cases:
