@@ -123,14 +123,14 @@ internal class TypeValidator
 
         foreach (PropertyInfo pinfo in propertyInfo)
         {
-            MethodInfo? setInfo = pinfo.SetMethod;
-            if (setInfo == null)
+            MethodInfo? getInfo = pinfo.GetMethod;
+            if (getInfo == null)
             {
                 // we have a getter, but not a setter.
                 return false;
             }
 
-            if (setInfo.IsPrivate || setInfo.IsStatic || setInfo.IsAbstract)
+            if (getInfo.IsPrivate || getInfo.IsStatic || getInfo.IsAbstract)
             {
                 return false;
             }
