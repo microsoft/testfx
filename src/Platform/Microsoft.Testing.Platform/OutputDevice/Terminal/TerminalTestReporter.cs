@@ -889,12 +889,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
     }
 
     internal void TestDiscovered(
-    string assembly,
-    string? targetFramework,
-    string? architecture,
-    string? executionId,
-    string? displayName,
-    string? uid)
+        string assembly,
+        string? targetFramework,
+        string? architecture,
+        string? executionId,
+        string? displayName,
+        string? uid)
     {
         TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
 
