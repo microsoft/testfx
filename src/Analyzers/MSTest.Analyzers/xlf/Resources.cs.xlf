@@ -726,6 +726,16 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Explicitně povolit nebo zakázat paralelizaci testů</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseProperAssertMethodsMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
+        <target state="new">Use 'Assert.{0}' instead of 'Assert.{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsTitle">
+        <source>Use proper 'Assert' methods</source>
+        <target state="new">Use proper 'Assert' methods</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

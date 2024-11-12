@@ -41,4 +41,5 @@ internal static class DiagnosticIds
     public const string UseClassCleanupBehaviorEndOfClassRuleId = "MSTEST0034";
     public const string UseDeploymentItemWithTestMethodOrTestClassRuleId = "MSTEST0035";
     public const string DoNotUseShadowingRuleId = "MSTEST0036";
+    public const string UseProperAssertMethodsRuleId = "MSTEST0037";
 }

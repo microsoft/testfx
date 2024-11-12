@@ -1044,5 +1044,23 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseParallelizeAttributeAnalyzerTitle", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert.{0}&apos; instead of &apos;Assert.{1}&apos;.
+        /// </summary>
+        internal static string UseProperAssertMethodsMessageFormat {
+            get {
+                return ResourceManager.GetString("UseProperAssertMethodsMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use proper &apos;Assert&apos; methods.
+        /// </summary>
+        internal static string UseProperAssertMethodsTitle {
+            get {
+                return ResourceManager.GetString("UseProperAssertMethodsTitle", resourceCulture);
+            }
+        }
     }
 }

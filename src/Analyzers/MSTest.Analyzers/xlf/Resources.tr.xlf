@@ -728,6 +728,16 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">Doğrudan test paralelleştirmeyi etkinleştirin veya devre dışı bırakın</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseProperAssertMethodsMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
+        <target state="new">Use 'Assert.{0}' instead of 'Assert.{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsTitle">
+        <source>Use proper 'Assert' methods</source>
+        <target state="new">Use proper 'Assert' methods</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
