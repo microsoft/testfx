@@ -98,8 +98,12 @@
         <note></note>
       </trans-unit>
       <trans-unit id="ElementsAtIndexDontMatch">
-        <source>Element at index {0} do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.</source>
-        <target state="new">Element at index {0} do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.</target>
+        <source>Element at index {0} do not match.
+Expected: {1}
+Actual: {2}</source>
+        <target state="new">Element at index {0} do not match.
+Expected: {1}
+Actual: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
