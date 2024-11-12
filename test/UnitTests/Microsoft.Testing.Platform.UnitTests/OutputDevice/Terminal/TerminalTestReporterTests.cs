@@ -58,7 +58,7 @@ public sealed class TerminalTestReporterTests : TestBase
 
         DateTimeOffset startTime = DateTimeOffset.MinValue;
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
-        terminalReporter.TestExecutionStarted(startTime, 1);
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
 
         string targetFramework = "net8.0";
         string architecture = "x64";

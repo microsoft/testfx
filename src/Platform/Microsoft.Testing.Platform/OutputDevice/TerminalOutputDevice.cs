@@ -287,7 +287,7 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
 
         // Start test execution here, rather than in ShowBanner, because then we know
         // if we are a testHost controller or not, and if we should show progress bar.
-        _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1);
+        _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1, isDiscovery: false);
         _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _shortArchitecture, executionId: null);
         if (_logger is not null && _logger.IsEnabled(LogLevel.Trace))
         {

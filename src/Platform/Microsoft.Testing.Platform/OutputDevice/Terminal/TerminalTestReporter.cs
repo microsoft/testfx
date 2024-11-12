@@ -39,7 +39,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private readonly TestProgressStateAwareTerminal _terminalWithProgress;
 
     private readonly uint? _originalConsoleMode;
-
+    private bool _isDiscovery;
     private DateTimeOffset? _testExecutionStartTime;
 
     private DateTimeOffset? _testExecutionEndTime;
@@ -132,8 +132,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _terminalWithProgress = terminalWithProgress;
     }
 
-    public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount)
+    public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount, bool isDiscovery)
     {
+        _isDiscovery = isDiscovery;
         _testExecutionStartTime = testStartTime;
         _terminalWithProgress.StartShowingProgress(workerCount);
     }
@@ -144,7 +145,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             _terminalWithProgress.WriteToTerminal(terminal =>
             {
-                terminal.Append(PlatformResources.RunningTestsFrom);
+                terminal.Append(_isDiscovery ? PlatformResources.DiscoveringTestsFrom : PlatformResources.RunningTestsFrom);
                 terminal.Append(' ');
                 AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly, targetFramework, architecture);
                 terminal.AppendLine();
@@ -177,7 +178,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _testExecutionEndTime = endTime;
         _terminalWithProgress.StopShowingProgress();
 
-        _terminalWithProgress.WriteToTerminal(AppendTestRunSummary);
+        _terminalWithProgress.WriteToTerminal(_isDiscovery ? AppendTestDiscoverySummary : AppendTestRunSummary);
 
         NativeMethods.RestoreConsoleMode(_originalConsoleMode);
         _assemblies.Clear();
@@ -718,7 +719,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
 
-        if (_options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
+        if (!_isDiscovery && _options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
         {
             _terminalWithProgress.WriteToTerminal(terminal => AppendAssemblySummary(assemblyRun, terminal));
         }
@@ -858,31 +859,71 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
-    public void TestDiscovered(string uid, string displayName) =>
-        _terminalWithProgress.WriteToTerminal(terminal =>
-        {
-            terminal.Append(SingleIndentation);
-            terminal.Append(displayName);
-            terminal.Append(" (");
-            terminal.Append(uid);
-            terminal.Append(')');
-            terminal.AppendLine();
-        });
+    internal void TestDiscovered(
+    string assembly,
+    string? targetFramework,
+    string? architecture,
+    string? executionId,
+    string? displayName,
+    string? uid)
+    {
+        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
 
-    public void AssemblyDiscoveryStarted(string modulePath, string targetFramework, string architecture) =>
-        _terminalWithProgress.WriteToTerminal(terminal =>
+        // TODO: add mode for discovered tests to the progress bar - jajares
+        asm.PassedTests++;
+        asm.TotalTests++;
+        asm.DiscoveredTests.Add(new(displayName, uid));
+        _terminalWithProgress.UpdateWorker(asm.SlotIndex);
+    }
+
+    public void AppendTestDiscoverySummary(ITerminal terminal)
+    {
+        terminal.AppendLine();
+
+        var assemblies = _assemblies.Select(asm => asm.Value).OrderBy(a => a.Assembly).Where(a => a is not null).ToList();
+
+        int totalTests = _assemblies.Values.Sum(a => a.TotalTests);
+        bool runFailed = _wasCancelled;
+
+        foreach (TestProgressState assembly in assemblies)
+        {
+            terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiscoveredTestsInAssembly, assembly.DiscoveredTests.Count));
+            terminal.Append(" - ");
+            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly.Assembly, assembly.TargetFramework, assembly.Architecture);
+            terminal.AppendLine();
+            foreach ((string? displayName, string? uid) in assembly.DiscoveredTests)
             {
-                if (_options.ShowAssembly)
+                if (displayName is not null)
                 {
-                    terminal.Append("Discovering tests in ");
-                    AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, modulePath, targetFramework, architecture);
-                    terminal.AppendLine();
+                    terminal.Append(SingleIndentation);
+                    terminal.AppendLine(displayName);
                 }
-                else
-                {
-                    terminal.Append("Discovering tests");
-                }
-            });
+            }
+
+            terminal.AppendLine();
+        }
+
+        terminal.AppendLine();
+
+        terminal.SetColor(runFailed ? TerminalColor.Red : TerminalColor.Green);
+        if (assemblies.Count <= 1)
+        {
+            terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, PlatformResources.TestDiscoverySummarySingular, totalTests));
+        }
+        else
+        {
+            terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, PlatformResources.TestDiscoverySummary, totalTests, assemblies.Count));
+        }
+
+        terminal.ResetColor();
+        terminal.AppendLine();
+
+        if (_wasCancelled)
+        {
+            terminal.Append(PlatformResources.Aborted);
+            terminal.AppendLine();
+        }
+    }
 
     public void AssemblyDiscoveryCompleted(int testCount) =>
         _terminalWithProgress.WriteToTerminal(terminal => terminal.Append($"Found {testCount} tests"));

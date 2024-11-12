@@ -253,7 +253,6 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
                             int length2 = ReadInt(stream);
                             for (int k = 0; k < length2; k++)
                             {
-
                                 int fieldCount2 = ReadShort(stream);
 
                                 string? errorMessage = null;

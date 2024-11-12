@@ -394,6 +394,24 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Discovered {0} tests in assembly.
+        /// </summary>
+        internal static string DiscoveredTestsInAssembly {
+            get {
+                return ResourceManager.GetString("DiscoveredTestsInAssembly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Discovering tests from.
+        /// </summary>
+        internal static string DiscoveringTestsFrom {
+            get {
+                return ResourceManager.GetString("DiscoveringTestsFrom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Provider &apos;{0}&apos; (UID: {1}) failed with error: {2}.
         /// </summary>
         internal static string EnvironmentVariableProviderFailedWithError {
@@ -1335,6 +1353,24 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string TestApplicationVSTestModeTooManyBuilders {
             get {
                 return ResourceManager.GetString("TestApplicationVSTestModeTooManyBuilders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Discovered {0} tests in {1} assemblies..
+        /// </summary>
+        internal static string TestDiscoverySummary {
+            get {
+                return ResourceManager.GetString("TestDiscoverySummary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Discovered {0} tests..
+        /// </summary>
+        internal static string TestDiscoverySummarySingular {
+            get {
+                return ResourceManager.GetString("TestDiscoverySummarySingular", resourceCulture);
             }
         }
         
