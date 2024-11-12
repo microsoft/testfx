@@ -814,6 +814,7 @@ internal class TypeCache : MarshalByRefObject
         return testMethodInfo;
     }
 
+    [UnconditionalSuppressMessage("Aot", "IL2026:DoNotUseGetConstructor", Justification = "We access all the types we need in metadata, so this is preserved and works.")]
     private static MethodInfo? GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
         MethodBase? methodBase = null;
