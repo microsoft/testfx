@@ -43,6 +43,7 @@ public class TestMethodInfo : ITestMethod
         TestMethod = testMethod;
         Parent = parent;
         TestMethodOptions = testMethodOptions;
+        TestCultureName = GetAttributes<TestCultureAttribute>(inherit: false).FirstOrDefault()?.CultureName;
     }
 
     /// <summary>
@@ -86,6 +87,8 @@ public class TestMethodInfo : ITestMethod
     /// Gets the options for the test method in this environment.
     /// </summary>
     internal TestMethodOptions TestMethodOptions { get; }
+
+    internal string? TestCultureName { get; }
 
     public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.Instance.GetDerivedAttributes<Attribute>(TestMethod, inherit).ToArray();
 
