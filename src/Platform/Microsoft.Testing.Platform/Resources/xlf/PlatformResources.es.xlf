@@ -204,6 +204,11 @@
         <target state="translated">Error del proveedor "{0}" (UID: {1}) con el error: {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="new">Exit code</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
         <target state="translated">Se esperaba</target>
@@ -237,8 +242,8 @@
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
-        <source>failed with {0} errors(s)</source>
-        <target state="translated">error con {0} errores</target>
+        <source>failed with {0} error(s)</source>
+        <target state="needs-review-translation">error con {0} errores</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">

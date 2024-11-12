@@ -204,6 +204,11 @@
         <target state="translated">공급자 '{0}'(UID: {1})이 오류 {2}(으)로 실패했습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="new">Exit code</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
         <target state="translated">필요</target>
@@ -237,8 +242,8 @@
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
-        <source>failed with {0} errors(s)</source>
-        <target state="translated">{0} 오류와 함께 실패</target>
+        <source>failed with {0} error(s)</source>
+        <target state="needs-review-translation">{0} 오류와 함께 실패</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">

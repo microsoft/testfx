@@ -269,6 +269,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             {
                 terminal.Append(SingleIndentation);
                 AppendAssemblySummary(assemblyRun, terminal);
+                terminal.AppendLine();
             }
 
             terminal.AppendLine();
@@ -712,7 +713,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
-    internal void AssemblyRunCompleted(string assembly, string? targetFramework, string? architecture, string? executionId)
+    internal void AssemblyRunCompleted(string assembly, string? targetFramework, string? architecture, string? executionId,
+        // These parameters are useful only for "remote" runs in dotnet test, where we are reporting on multiple processes.
+        // In single process run, like with testing platform .exe we report these via messages, and run exit.
+        int? exitCode, string? outputData, string? errorData)
     {
         TestProgressState assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
         assemblyRun.Stopwatch.Stop();
@@ -723,6 +727,31 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             _terminalWithProgress.WriteToTerminal(terminal => AppendAssemblySummary(assemblyRun, terminal));
         }
+
+        if (exitCode is null or 0)
+        {
+            // Report nothing, we don't want to report on success, because then we will also report on test-discovery etc.
+            return;
+        }
+
+        _terminalWithProgress.WriteToTerminal(terminal =>
+        {
+            AppendExecutableSummary(terminal, exitCode, outputData, errorData);
+            terminal.AppendLine();
+        });
+    }
+
+    private static void AppendExecutableSummary(ITerminal terminal, int? exitCode, string? outputData, string? errorData)
+    {
+        terminal.Append(PlatformResources.ExitCode);
+        terminal.Append(": ");
+        terminal.AppendLine(exitCode?.ToString(CultureInfo.CurrentCulture) ?? "<null>");
+        terminal.Append(PlatformResources.StandardOutput);
+        terminal.AppendLine(":");
+        terminal.AppendLine(outputData ?? string.Empty);
+        terminal.Append(PlatformResources.StandardError);
+        terminal.AppendLine(":");
+        terminal.AppendLine(errorData ?? string.Empty);
     }
 
     private static string? NormalizeSpecialCharacters(string? text)
@@ -740,7 +769,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         AppendAssemblyResult(terminal, assemblyRun.FailedTests == 0, failedTests, warnings);
         terminal.Append(' ');
         AppendLongDuration(terminal, assemblyRun.Stopwatch.Elapsed);
-        terminal.AppendLine();
     }
 
     /// <summary>
@@ -902,8 +930,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
             terminal.AppendLine();
         }
-
-        terminal.AppendLine();
 
         terminal.SetColor(runFailed ? TerminalColor.Red : TerminalColor.Green);
         if (assemblies.Count <= 1)

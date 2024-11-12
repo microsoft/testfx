@@ -323,7 +323,7 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
         {
             if (!_firstCallTo_OnSessionStartingAsync)
             {
-                _terminalTestReporter.AssemblyRunCompleted(_assemblyName, _targetFramework, _shortArchitecture, executionId: null);
+                _terminalTestReporter.AssemblyRunCompleted(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, exitCode: null, outputData: null, errorData: null);
                 _terminalTestReporter.TestExecutionCompleted(_clock.UtcNow);
             }
         }

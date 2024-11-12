@@ -567,7 +567,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <comment>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</comment>
   </data>
   <data name="FailedWithErrors" xml:space="preserve">
-    <value>failed with {0} errors(s)</value>
+    <value>failed with {0} error(s)</value>
   </data>
   <data name="FailedWithErrorsAndWarnings" xml:space="preserve">
     <value>failed with {0} error(s) and {1} warning(s)</value>
@@ -651,5 +651,8 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="TestDiscoverySummarySingular" xml:space="preserve">
     <value>Discovered {0} tests.</value>
     <comment>0 is number of tests</comment>
+  </data>
+  <data name="ExitCode" xml:space="preserve">
+    <value>Exit code</value>
   </data>
 </root>

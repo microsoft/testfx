@@ -204,6 +204,11 @@
         <target state="translated">提供者 '{0}' (UID: {1}) 失敗，發生錯誤: {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="new">Exit code</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
         <target state="translated">預期</target>
@@ -237,8 +242,8 @@
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
-        <source>failed with {0} errors(s)</source>
-        <target state="translated">失敗，發生 {0} 個錯誤</target>
+        <source>failed with {0} error(s)</source>
+        <target state="needs-review-translation">失敗，發生 {0} 個錯誤</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">

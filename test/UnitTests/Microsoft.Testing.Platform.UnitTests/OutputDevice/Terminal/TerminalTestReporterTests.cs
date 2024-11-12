@@ -85,7 +85,7 @@ public sealed class TerminalTestReporterTests : TestBase
             errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
         terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact1.txt");
         terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact2.txt");
-        terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture, executionId: null);
+        terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture, executionId: null, exitCode: null, outputData: null, errorData: null);
         terminalReporter.TestExecutionCompleted(endTime);
 
         string output = stringBuilderConsole.Output;

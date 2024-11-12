@@ -204,6 +204,11 @@
         <target state="translated">Anbieter "{0}" (UID: {1}) ist mit folgendem Fehler fehlgeschlagen: {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="new">Exit code</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
         <target state="translated">Erwartet</target>
@@ -237,8 +242,8 @@
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
-        <source>failed with {0} errors(s)</source>
-        <target state="translated">Fehlgeschlagen mit {0} Fehler(n)</target>
+        <source>failed with {0} error(s)</source>
+        <target state="needs-review-translation">Fehlgeschlagen mit {0} Fehler(n)</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">

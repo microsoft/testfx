@@ -204,6 +204,11 @@
         <target state="translated">Désolé, échec de l’« {0} » du fournisseur (UID : {1}) avec l’erreur : {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="new">Exit code</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
         <target state="translated">Attendu</target>
@@ -237,8 +242,8 @@
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
-        <source>failed with {0} errors(s)</source>
-        <target state="translated">Désolé... Nous avons rencontré {0} erreur(s)</target>
+        <source>failed with {0} error(s)</source>
+        <target state="needs-review-translation">Désolé... Nous avons rencontré {0} erreur(s)</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">

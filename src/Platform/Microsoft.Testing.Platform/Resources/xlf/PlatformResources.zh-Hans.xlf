@@ -204,6 +204,11 @@
         <target state="translated">提供程序 '{0}' (UID: {1}) 失败，出现错误: {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="new">Exit code</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
         <target state="translated">预期</target>
@@ -237,8 +242,8 @@
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
-        <source>failed with {0} errors(s)</source>
-        <target state="translated">失败，出现 {0} 个错误</target>
+        <source>failed with {0} error(s)</source>
+        <target state="needs-review-translation">失败，出现 {0} 个错误</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">

@@ -204,6 +204,11 @@
         <target state="translated">Сбой поставщика "{0}" (ИД пользователя: {1}) с ошибкой: {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="new">Exit code</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
         <target state="translated">Ожидалось</target>
@@ -237,8 +242,8 @@
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
-        <source>failed with {0} errors(s)</source>
-        <target state="translated">сбой с ошибками {0}</target>
+        <source>failed with {0} error(s)</source>
+        <target state="needs-review-translation">сбой с ошибками {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">
