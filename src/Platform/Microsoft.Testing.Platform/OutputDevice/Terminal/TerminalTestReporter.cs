@@ -743,15 +743,16 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private static void AppendExecutableSummary(ITerminal terminal, int? exitCode, string? outputData, string? errorData)
     {
+        terminal.AppendLine();
         terminal.Append(PlatformResources.ExitCode);
         terminal.Append(": ");
         terminal.AppendLine(exitCode?.ToString(CultureInfo.CurrentCulture) ?? "<null>");
         terminal.Append(PlatformResources.StandardOutput);
         terminal.AppendLine(":");
-        terminal.AppendLine(outputData ?? string.Empty);
+        terminal.AppendLine(RoslynString.IsNullOrWhiteSpace(outputData) ? string.Empty : outputData);
         terminal.Append(PlatformResources.StandardError);
         terminal.AppendLine(":");
-        terminal.AppendLine(errorData ?? string.Empty);
+        terminal.AppendLine(RoslynString.IsNullOrWhiteSpace(errorData) ? string.Empty : errorData);
     }
 
     private static string? NormalizeSpecialCharacters(string? text)
