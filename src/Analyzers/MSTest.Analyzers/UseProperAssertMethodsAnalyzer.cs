@@ -29,7 +29,7 @@ namespace MSTest.Analyzers;
 /// <code>Assert.[IsTrue|IsFalse](x [==|!=] y)</code>
 /// </item>
 /// <item>
-/// <code>Assert.[AreEqual|AreNotEqual]([true|false], x)</code>
+/// <code>Assert.AreEqual([true|false], x)</code>
 /// </item>
 /// <item>
 /// <code>Assert.[AreEqual|AreNotEqual](null, x)</code>
@@ -203,7 +203,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeAreEqualOrAreNotEqualInvocation(OperationAnalysisContext context, IOperation expectedArgument, bool isAreEqualInvocation)
     {
-        // Don't flag a warning for Assert.AreNotEqual(true, x).
+        // Don't flag a warning for Assert.AreNotEqual([true|false], x).
         // This is not the same as Assert.IsFalse(x).
         if (isAreEqualInvocation && expectedArgument is ILiteralOperation { ConstantValue: { HasValue: true, Value: bool expectedLiteralBoolean } })
         {
