@@ -86,6 +86,9 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         break;
 
                     case TestStates.Failed:
+                    case TestStates.Error:
+                    case TestStates.Timeout:
+                    case TestStates.Cancelled:
                         testResultMessages = new(
                             ExecutionId,
                             Array.Empty<SuccessfulTestResultMessage>(),
