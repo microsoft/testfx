@@ -20,7 +20,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
-        Verify(attributes is not null);
         Verify(attributes.Count == 2);
 
         string[] expectedAttributes = ["DummyA : base", "DummySingleA : base"];
@@ -33,7 +32,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
-        Verify(attributes is not null);
         Verify(attributes.Count == 2);
 
         string[] expectedAttributes = ["DummyA : derived", "DummySingleA : derived"];
@@ -46,7 +44,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, true);
 
-        Verify(attributes is not null);
         Verify(attributes.Count == 3);
 
         // Notice that the DummySingleA on the base method does not show up since it can only be defined once.
@@ -60,7 +57,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, false);
 
-        Verify(attributes is not null);
         Verify(attributes.Count == 1);
 
         string[] expectedAttributes = ["DummyA : ba"];
@@ -73,7 +69,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, false);
 
-        Verify(attributes is not null);
         Verify(attributes.Count == 1);
 
         string[] expectedAttributes = ["DummyA : a"];
@@ -86,7 +81,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(method, true);
 
-        Verify(attributes is not null);
         Verify(attributes.Count == 2);
 
         string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
@@ -99,7 +93,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
 
-        Verify(attributes is not null);
         Verify(attributes.Count == 1);
 
         string[] expectedAttributes = ["DummyA : base"];
@@ -112,7 +105,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
 
-        Verify(attributes is not null);
         Verify(attributes.Count == 1);
 
         string[] expectedAttributes = ["DummyA : derived"];
@@ -125,7 +117,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), true);
 
-        Verify(attributes is not null);
         Verify(attributes.Count == 2);
 
         string[] expectedAttributes = ["DummyA : derived", "DummyA : base"];
@@ -138,7 +129,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, typeof(DummyAAttribute), false);
 
-        Verify(attributes is not null);
         Verify(attributes.Count == 1);
 
         string[] expectedAttributes = ["DummyA : ba"];
@@ -151,7 +141,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, typeof(DummyAAttribute), false);
 
-        Verify(attributes is not null);
         Verify(attributes.Count == 1);
 
         string[] expectedAttributes = ["DummyA : a"];
@@ -164,7 +153,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(method, typeof(DummyAAttribute), true);
 
-        Verify(attributes is not null);
         Verify(attributes.Count == 2);
 
         string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];

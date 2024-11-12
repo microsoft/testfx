@@ -455,8 +455,8 @@ internal class ReflectHelper : MarshalByRefObject
             // Populate the cache
             try
             {
-                object[]? attributes = NotCachedReflectionAccessor.GetCustomAttributesNotCached(attributeProvider, inherit);
-                return attributes is null ? [] : attributes as Attribute[] ?? attributes.Cast<Attribute>().ToArray();
+                object[] attributes = NotCachedReflectionAccessor.GetCustomAttributesNotCached(attributeProvider, inherit);
+                return attributes as Attribute[] ?? attributes.Cast<Attribute>().ToArray();
             }
             catch (Exception ex)
             {
@@ -469,7 +469,7 @@ internal class ReflectHelper : MarshalByRefObject
                 }
                 catch (Exception ex2)
                 {
-                    description = string.Format(CultureInfo.CurrentCulture, Resource.ExceptionOccuredWhileGettingTheExceptionDescription, ex.GetType().FullName, ex2.GetType().FullName);                               // ex.GetType().FullName +
+                    description = string.Format(CultureInfo.CurrentCulture, Resource.ExceptionOccuredWhileGettingTheExceptionDescription, ex.GetType().FullName, ex2.GetType().FullName); // ex.GetType().FullName +
                 }
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.FailedToGetCustomAttribute, attributeProvider.GetType().FullName!, description);
@@ -490,14 +490,10 @@ internal class ReflectHelper : MarshalByRefObject
         /// <param name="attributeProvider">Member for which attributes needs to be retrieved.</param>
         /// <param name="inherit">If inherited type of attribute.</param>
         /// <returns>All attributes of give type on member.</returns>
-        public static object[]? GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider, bool inherit)
-        {
-            object[] attributesArray = attributeProvider is MemberInfo memberInfo
+        public static object[] GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider, bool inherit) =>
+            attributeProvider is MemberInfo memberInfo
                 ? PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(memberInfo, inherit)
                 : PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes((Assembly)attributeProvider, typeof(Attribute));
-
-            return attributesArray; // TODO: Investigate if we rely on NRE
-        }
     }
 
     internal /* for tests */ void ClearCache()

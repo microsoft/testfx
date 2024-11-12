@@ -21,7 +21,6 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
         string[] expectedAttributes = ["DummyA : base", "DummySingleA : base"];
@@ -34,7 +33,6 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
         string[] expectedAttributes = ["DummyA : derived", "DummySingleA : derived"];
@@ -47,7 +45,6 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, true);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 3);
 
         // Notice that the DummySingleA on the base method does not show up since it can only be defined once.
@@ -61,7 +58,6 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(type, false);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
         string[] expectedAttributes = ["DummyA : ba"];
@@ -74,7 +70,6 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(type, false);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
         string[] expectedAttributes = ["DummyA : a"];
@@ -87,7 +82,6 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(method, true);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
         string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
@@ -100,7 +94,6 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
         string[] expectedAttributes = ["DummyA : base"];
@@ -113,7 +106,6 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
         string[] expectedAttributes = ["DummyA : derived"];
@@ -126,7 +118,6 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), true);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
         string[] expectedAttributes = ["DummyA : derived", "DummyA : base"];
@@ -139,7 +130,6 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(DummyAAttribute), false);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
         string[] expectedAttributes = ["DummyA : ba"];
@@ -152,7 +142,6 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(DummyAAttribute), false);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
         string[] expectedAttributes = ["DummyA : a"];
@@ -165,7 +154,6 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(method, typeof(DummyAAttribute), true);
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
         string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
@@ -178,7 +166,6 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
-        Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
         string[] expectedAttributes = ["DummyA : a1", "DummyA : a2"];

@@ -15,8 +15,7 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
     public SourceGeneratedReflectionDataProvider ReflectionDataProvider { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
-    [return: NotNullIfNotNull(nameof(memberInfo))]
-    public object[]? GetCustomAttributes(MemberInfo memberInfo, bool inherit)
+    public object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
     {
         if (memberInfo is Type type)
         {
@@ -33,8 +32,7 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
         }
     }
 
-    [return: NotNullIfNotNull(nameof(memberInfo))]
-    public object[]? GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit) => throw new NotImplementedException();
+    public object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit) => throw new NotImplementedException();
 
     public object[] GetCustomAttributes(Assembly assembly, Type /* the attribute type to find */ type)
     {

@@ -251,7 +251,7 @@ public class ReflectHelperTests : TestContainer
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
-            Returns((object[])null);
+            Returns([]);
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(TestMethodAttribute), true)).

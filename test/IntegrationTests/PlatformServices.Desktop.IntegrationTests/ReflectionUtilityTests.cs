@@ -45,7 +45,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
         string[] expectedAttributes = ["TestCategory : base", "Owner : base"];
@@ -58,7 +57,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
         string[] expectedAttributes = ["TestCategory : derived", "Owner : derived"];
@@ -71,7 +69,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, true);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(3);
 
         // Notice that the Owner on the base method does not show up since it can only be defined once.
@@ -85,7 +82,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, false);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
         string[] expectedAttributes = ["TestCategory : ba"];
@@ -98,7 +94,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, false);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
         string[] expectedAttributes = ["TestCategory : a"];
@@ -111,7 +106,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(method, true);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
         string[] expectedAttributes = ["TestCategory : a", "TestCategory : ba"];
@@ -124,7 +118,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), false);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
         string[] expectedAttributes = ["TestCategory : base"];
@@ -137,7 +130,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), false);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
         string[] expectedAttributes = ["TestCategory : derived"];
@@ -151,7 +143,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), true);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
         string[] expectedAttributes = ["TestCategory : derived", "TestCategory : base"];
@@ -164,7 +155,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, null, true);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(3);
 
         string[] expectedAttributes = ["Duration : superfast", "TestCategory : base", "Owner : base"];
@@ -177,7 +167,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestPropertyAttribute), true);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
         string[] expectedAttributes = ["Duration : superfast"];
@@ -190,7 +179,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(CategoryArrayAttribute), true);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
         string[] expectedAttributes = ["CategoryAttribute : foo,foo2"];
@@ -203,7 +191,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, typeof(TestCategoryAttribute), false);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
         string[] expectedAttributes = ["TestCategory : ba"];
@@ -216,7 +203,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type, typeof(TestCategoryAttribute), false);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
         string[] expectedAttributes = ["TestCategory : a"];
@@ -229,7 +215,6 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(method, typeof(TestCategoryAttribute), true);
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
         string[] expectedAttributes = ["TestCategory : a", "TestCategory : ba"];
@@ -242,7 +227,6 @@ public class ReflectionUtilityTests : TestContainer
 
         List<Attribute> attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(TestCategoryAttribute));
 
-        attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
         string[] expectedAttributes = ["TestCategory : a1", "TestCategory : a2"];

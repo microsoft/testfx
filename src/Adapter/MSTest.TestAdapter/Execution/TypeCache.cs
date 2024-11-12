@@ -898,7 +898,6 @@ internal class TypeCache : MarshalByRefObject
         DebugEx.Assert(testMethodInfo.TestMethod != null, "testMethodInfo.TestMethod is Null");
 
         object[] attributes = testMethodInfo.TestMethod.GetCustomAttributes(typeof(TestPropertyAttribute), false);
-        DebugEx.Assert(attributes != null, "attributes is null");
 
         foreach (TestPropertyAttribute attribute in attributes.Cast<TestPropertyAttribute>())
         {

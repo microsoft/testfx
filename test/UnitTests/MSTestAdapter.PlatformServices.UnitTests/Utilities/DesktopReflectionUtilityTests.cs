@@ -21,7 +21,6 @@ public class ReflectionUtilityTests : TestContainer
 
         List<Attribute> attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
-        Verify(attributes is not null);
         Verify(attributes.Count == 2);
 
         string[] expectedAttributes = ["DummyA : a1", "DummyA : a2"];
