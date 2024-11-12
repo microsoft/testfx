@@ -180,18 +180,11 @@ public class TypeValidatorTests : TestContainer
 
     #region TestContext signature
 
-    public void IsValidTestClassShouldReturnFalseForTestClassesWithInvalidTestContextSignature()
+    public void IsValidTestClassShouldReturnTrueForTestClassesWithReadOnlyTestContextSignature()
     {
         SetupTestClass();
-        Verify(!_typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), _warnings));
-    }
-
-    public void IsValidTestClassShouldReportWarningsForTestClassesWithInvalidTestContextSignature()
-    {
-        SetupTestClass();
-        _typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), _warnings);
-        Verify(_warnings.Count == 1);
-        Verify(_warnings.Contains(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorInValidTestContextSignature, typeof(ClassWithTestContextGetterOnly).FullName)));
+        Verify(_typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), _warnings));
+        Verify(_warnings.Count == 0);
     }
 
     public void IsValidTestClassShouldReturnTrueForTestClassesWithValidTestContextSignature()
