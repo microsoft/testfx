@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis.Testing;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AvoidExpectedExceptionAttributeAnalyzer,
     MSTest.Analyzers.AvoidExpectedExceptionAttributeFixer>;
@@ -62,13 +64,13 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests(ITestExecutionC
 
                 [ExpectedException(typeof(System.Exception), AllowDerivedTypes = true)]
                 [TestMethod]
-                public void TestMethod3()
+                public void [|TestMethod3|]()
                 {
                 }
 
                 [ExpectedException(typeof(System.Exception), "Some message", AllowDerivedTypes = true)]
                 [TestMethod]
-                public void TestMethod4()
+                public void [|TestMethod4|]()
                 {
                 }
             }
@@ -76,13 +78,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests(ITestExecutionC
 
         var test = new VerifyCS.Test
         {
-            TestState =
-            {
-                Sources =
-                {
-                    code,
-                },
-            },
+            TestCode = code,
             FixedState =
             {
                 Sources =
@@ -94,13 +90,9 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests(ITestExecutionC
                 // For now, the user needs to manually fix this to use Assert.ThrowsException and specify the actual (exact) exception type.
                 // We *could* provide a codefix that uses Assert.ThrowsException<SameExceptionType> but that's most likely going to be wrong.
                 // If the user explicitly has AllowDerivedTypes, it's likely because he doesn't specify the exact exception type.
-                ExpectedDiagnostics =
-                {
-                    // /0/Test0.cs(18,17): info MSTEST0006: Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'
-                    VerifyCS.Diagnostic().WithSpan(18, 17, 18, 28),
-                    // /0/Test0.cs(24,17): info MSTEST0006: Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'
-                    VerifyCS.Diagnostic().WithSpan(24, 17, 24, 28),
-                },
+                // NOTE: For fixed state, the default is MarkupMode.IgnoreFixable, so we set
+                // to Allow as we still have expected errors after applying the codefix.
+                MarkupHandling = MarkupMode.Allow,
             },
         };
 
