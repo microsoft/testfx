@@ -182,19 +182,14 @@ internal class FileUtility
 
     public virtual List<string> AddFilesFromDirectory(string directoryPath, Func<string, bool>? ignoreDirectory, bool ignoreIOExceptions)
     {
-        var fileContents = new List<string>();
+        var files = new List<string>();
 
         try
         {
-            string[] files = GetFilesInADirectory(directoryPath);
-            fileContents.AddRange(files);
+            files.AddRange(GetFilesInADirectory(directoryPath));
         }
-        catch (IOException)
+        catch (IOException) when (ignoreIOExceptions)
         {
-            if (!ignoreIOExceptions)
-            {
-                throw;
-            }
         }
 
         foreach (string subDirectoryPath in GetDirectoriesInADirectory(directoryPath))
@@ -204,14 +199,10 @@ internal class FileUtility
                 continue;
             }
 
-            List<string> subDirectoryContents = AddFilesFromDirectory(subDirectoryPath, ignoreDirectory, true);
-            if (subDirectoryContents.Count > 0)
-            {
-                fileContents.AddRange(subDirectoryContents);
-            }
+            files.AddRange(AddFilesFromDirectory(subDirectoryPath, ignoreDirectory, true));
         }
 
-        return fileContents;
+        return files;
     }
 
     public static string TryConvertPathToRelative(string path, string rootDir)
