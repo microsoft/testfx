@@ -17,7 +17,11 @@ public sealed class TimeoutAttribute : Attribute
     /// <param name="timeout">
     /// The timeout in milliseconds.
     /// </param>
-    public TimeoutAttribute(int timeout) => Timeout = timeout;
+    public TimeoutAttribute(int timeout)
+    {
+        Timeout = timeout;
+        HasCorrectTimeout = Timeout > 0;
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TimeoutAttribute"/> class with a preset timeout.
@@ -26,9 +30,8 @@ public sealed class TimeoutAttribute : Attribute
     /// The timeout.
     /// </param>
     public TimeoutAttribute(TestTimeout timeout)
+        : this((int)timeout)
     {
-        Timeout = (int)timeout;
-        HasCorrectTimeout = Timeout > 0;
     }
 
     /// <summary>
