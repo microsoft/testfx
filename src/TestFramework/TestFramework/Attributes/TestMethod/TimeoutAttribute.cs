@@ -25,7 +25,11 @@ public sealed class TimeoutAttribute : Attribute
     /// <param name="timeout">
     /// The timeout.
     /// </param>
-    public TimeoutAttribute(TestTimeout timeout) => Timeout = (int)timeout;
+    public TimeoutAttribute(TestTimeout timeout)
+    {
+        Timeout = (int)timeout;
+        HasCorrectTimeout = Timeout > 0;
+    }
 
     /// <summary>
     /// Gets the timeout in milliseconds.
@@ -51,6 +55,11 @@ public sealed class TimeoutAttribute : Attribute
             _isCooperativeCancellation = value;
         }
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the instance has the correct test timeout signature.
+    /// </summary>
+    internal bool HasCorrectTimeout { get; private set; }
 
     internal bool IsCooperativeCancellationSet { get; private set; }
 }

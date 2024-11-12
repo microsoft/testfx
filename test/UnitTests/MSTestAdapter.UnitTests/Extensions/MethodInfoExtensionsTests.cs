@@ -244,28 +244,6 @@ public class MethodInfoExtensionsTests : TestContainer
 
     #endregion
 
-    #region HasCorrectTimeout tests
-
-    public void HasCorrectTimeoutShouldReturnFalseForMethodsWithoutTimeoutAttribute()
-    {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethod");
-        Verify(!methodInfo.HasCorrectTimeout());
-    }
-
-    public void HasCorrectTimeoutShouldReturnFalseForMethodsWithInvalidTimeoutAttribute()
-    {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodWithInvalidTimeout");
-        Verify(!methodInfo.HasCorrectTimeout());
-    }
-
-    public void HasCorrectTimeoutShouldReturnTrueForMethodsWithTimeoutAttribute()
-    {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodWithTimeout");
-        Verify(methodInfo.HasCorrectTimeout());
-    }
-
-    #endregion
-
     #region IsVoidOrTaskReturnType tests
 
     public void IsVoidOrTaskReturnTypeShouldReturnTrueForVoidMethods()
