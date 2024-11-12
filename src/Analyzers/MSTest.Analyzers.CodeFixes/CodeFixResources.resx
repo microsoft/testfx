@@ -156,7 +156,13 @@
   <data name="ReplaceWithConstructorFix" xml:space="preserve">
     <value>Replace TestInitialize method with constructor</value>
   </data>
+  <data name="ReplaceWithDisposeFix" xml:space="preserve">
+    <value>Replace TestCleanup with Dispose method</value>
+  </data>
   <data name="ReplaceWithTestInitializeFix" xml:space="preserve">
     <value>Replace constructor with TestInitialize method</value>
+  </data>
+  <data name="UseAssertThrowsExceptionOnLastStatementFix" xml:space="preserve">
+    <value>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</value>
   </data>
 </root>

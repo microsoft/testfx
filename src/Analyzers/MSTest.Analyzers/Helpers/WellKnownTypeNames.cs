@@ -24,6 +24,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingDynamicDataAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDynamicDataSourceType = "Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType";
     public const string MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionBaseAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionBaseAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingIgnoreAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingInheritanceBehavior = "Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior";
     public const string MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.OwnerAttribute";
@@ -38,6 +39,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestPropertyAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.WorkItemAttribute";
 
+    public const string System = "System";
     public const string SystemCollectionsGenericIEnumerable1 = "System.Collections.Generic.IEnumerable`1";
     public const string SystemDescriptionAttribute = "System.ComponentModel.DescriptionAttribute";
     public const string SystemIAsyncDisposable = "System.IAsyncDisposable";

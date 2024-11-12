@@ -124,6 +124,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replace TestCleanup with Dispose method.
+        /// </summary>
+        internal static string ReplaceWithDisposeFix {
+            get {
+                return ResourceManager.GetString("ReplaceWithDisposeFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replace the assertion with &apos;Assert.Fail()&apos;.
         /// </summary>
         internal static string ReplaceWithFailAssertionFix {
@@ -174,6 +183,15 @@ namespace MSTest.Analyzers {
         internal static string TestMethodShouldBeValidFix {
             get {
                 return ResourceManager.GetString("TestMethodShouldBeValidFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert.ThrowsException&lt;T&gt;&apos; instead of &apos;[ExpectedException]&apos; attribute.
+        /// </summary>
+        internal static string UseAssertThrowsExceptionOnLastStatementFix {
+            get {
+                return ResourceManager.GetString("UseAssertThrowsExceptionOnLastStatementFix", resourceCulture);
             }
         }
         

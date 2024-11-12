@@ -1,1 +1,7 @@
 ﻿#nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDisplayName.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDisplayName.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestData.get -> object?[]?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestData.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestException.get -> System.Exception?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestException.set -> void

@@ -37,6 +37,11 @@
         <target state="translated">Zastąp metodę TestInitialize konstruktorem</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceWithDisposeFix">
+        <source>Replace TestCleanup with Dispose method</source>
+        <target state="new">Replace TestCleanup with Dispose method</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
         <source>Replace the assertion with 'Assert.Fail()'</source>
         <target state="translated">Zastąp asercję elementem „Assert.Fail()”</target>
@@ -65,6 +70,11 @@
       <trans-unit id="TestMethodShouldBeValidFix">
         <source>Fix test method signature</source>
         <target state="translated">Napraw podpis metody testowej</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseAssertThrowsExceptionOnLastStatementFix">
+        <source>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</source>
+        <target state="new">Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">

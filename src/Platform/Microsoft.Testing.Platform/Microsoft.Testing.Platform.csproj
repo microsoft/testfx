@@ -87,18 +87,7 @@ This package provides the core platform and the .NET implementation of the proto
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Resources\PlatformResources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>PlatformResources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\PlatformResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>PlatformResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\PlatformResources.resx" GenerateSource="true" />
   </ItemGroup>
 
   <!-- Version templating -->
