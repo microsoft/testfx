@@ -51,9 +51,15 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol expectedExceptionAttributeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        if (methodSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, expectedExceptionAttributeSymbol)))
+        if (methodSymbol.GetAttributes().FirstOrDefault(
+            attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, expectedExceptionAttributeSymbol)) is { } expectedExceptionAttribute)
         {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(Rule));
+            bool allowsDerivedTypes = expectedExceptionAttribute.NamedArguments.FirstOrDefault(n => n.Key == "AllowDerivedTypes").Value.Value is true;
+            // Assert.ThrowsException checks the exact Exception type. So, we cannot offer a fix to ThrowsException if the user sets AllowDerivedTypes to true.
+            context.ReportDiagnostic(
+                allowsDerivedTypes
+                ? methodSymbol.CreateDiagnostic(Rule, properties: DiagnosticDescriptorHelper.CannotFixProperties)
+                : methodSymbol.CreateDiagnostic(Rule));
         }
     }
 }

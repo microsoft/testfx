@@ -162,4 +162,7 @@
   <data name="ReplaceWithTestInitializeFix" xml:space="preserve">
     <value>Replace constructor with TestInitialize method</value>
   </data>
+  <data name="UseAssertThrowsExceptionOnLastStatementFix" xml:space="preserve">
+    <value>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</value>
+  </data>
 </root>
