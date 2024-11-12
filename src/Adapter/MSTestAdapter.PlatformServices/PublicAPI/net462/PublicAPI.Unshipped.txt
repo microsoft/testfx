@@ -1,1 +1,2 @@
 #nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ReflectionOperations.GetCustomAttributes(System.Reflection.MemberInfo! memberInfo, bool inherit) -> object![]!
