@@ -126,7 +126,7 @@ internal class TypeValidator
             MethodInfo? getInfo = pinfo.GetMethod;
             if (getInfo == null)
             {
-                // we have a getter, but not a setter.
+                // we don't have a getter.
                 return false;
             }
 
