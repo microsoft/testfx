@@ -403,6 +403,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
     private static bool ProcessTestDataSourceTests(UnitTestElement test, ReflectionTestMethodInfo methodInfo, IEnumerable<ITestDataSource> testDataSources,
         List<UnitTestElement> tests)
     {
+        // The data source tests that we can process currently are those using attributes that
+        // implement ITestDataSource (i.e, DataRow and DynamicData attributes).
+        // However, for DataSourceAttribute, we currently don't have anyway to process it during discovery.
+        // For that case, we want to return false from this method. Otherwise, the test will be completely skipped which is wrong behavior.
         bool hasAtLeastOneITestDataSource = false;
         foreach (ITestDataSource dataSource in testDataSources)
         {
