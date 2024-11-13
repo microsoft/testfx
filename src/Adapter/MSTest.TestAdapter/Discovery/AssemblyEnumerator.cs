@@ -409,24 +409,22 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
             // Any change made here should be reflected in TestMethodRunner.ExecuteDataSourceBasedTests as well.
-            try
-            {
-                data = dataSource.GetData(methodInfo);
+            data = dataSource.GetData(methodInfo);
 
-                if (!data.Any())
+            if (!data.Any())
+            {
+                if (MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
                 {
-                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", dataSource.GetType().Name));
+                    UnitTestElement discoveredTest = test.Clone();
+                    // Make the test not data driven, because it had no data.
+                    discoveredTest.TestMethod.DataType = DynamicDataType.None;
+                    discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
+                    
+                    tests.Add(discoveredTest);
+                    continue;
                 }
-            }
-            catch (ArgumentException) when (MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
-            {
-                UnitTestElement discoveredTest = test.Clone();
-                // Make the test not data driven, because it had no data.
-                discoveredTest.TestMethod.DataType = DynamicDataType.None;
-                discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
 
-                tests.Add(discoveredTest);
-                continue;
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", dataSource.GetType().Name));
             }
 
             var testDisplayNameFirstSeen = new Dictionary<string, int>();
