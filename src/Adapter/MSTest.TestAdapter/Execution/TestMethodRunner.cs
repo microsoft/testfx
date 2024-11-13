@@ -311,25 +311,24 @@ internal class TestMethodRunner
                 {
                     isDataDriven = true;
                     IEnumerable<object?[]>? dataSource;
-                    try
-                    {
-                        // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
-                        // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
-                        dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
 
-                        if (!dataSource.Any())
-                        {
-                            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", testDataSource.GetType().Name));
-                        }
-                    }
-                    catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+                    // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
+                    // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
+                    dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
+
+                    if (!dataSource.Any())
                     {
-                        var inconclusiveResult = new TestResult
+                        if (MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
                         {
-                            Outcome = UTF.UnitTestOutcome.Inconclusive,
-                        };
-                        results.Add(inconclusiveResult);
-                        continue;
+                            var inconclusiveResult = new TestResult
+                            {
+                                Outcome = UTF.UnitTestOutcome.Inconclusive,
+                            };
+                            results.Add(inconclusiveResult);
+                            continue;
+                        }
+
+                        throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", testDataSource.GetType().Name));
                     }
 
                     foreach (object?[] data in dataSource)
