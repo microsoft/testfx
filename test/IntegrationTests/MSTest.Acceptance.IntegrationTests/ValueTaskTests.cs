@@ -14,9 +14,10 @@ public sealed class ValueTaskTests : AcceptanceTestBase
     public ValueTaskTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
         : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
 
-    public async Task CanUseValueTaskForAllKnownLocations()
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task CanUseValueTaskForAllKnownLocations(string tfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         // Assert
@@ -35,7 +36,7 @@ public sealed class ValueTaskTests : AcceptanceTestBase
         {
             yield return (ProjectName, ProjectName,
                 SourceCode
-                .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+                .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 

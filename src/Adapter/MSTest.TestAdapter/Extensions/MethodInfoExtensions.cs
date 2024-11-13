@@ -103,9 +103,7 @@ internal static class MethodInfoExtensions
     /// <returns>True if the method has a void/task return type..</returns>
     internal static bool IsValidReturnType(this MethodInfo method)
         => ReflectHelper.MatchReturnType(method, typeof(Task))
-#if NETCOREAPP
         || ReflectHelper.MatchReturnType(method, typeof(ValueTask))
-#endif
         || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName() == null);
 
     /// <summary>
@@ -201,11 +199,9 @@ internal static class MethodInfoExtensions
         {
             task.GetAwaiter().GetResult();
         }
-#if NET6_0_OR_GREATER
         else if (invokeResult is ValueTask valueTask)
         {
             valueTask.GetAwaiter().GetResult();
         }
-#endif
     }
 }
