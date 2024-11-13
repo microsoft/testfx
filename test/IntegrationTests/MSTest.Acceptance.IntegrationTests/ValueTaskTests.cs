@@ -64,41 +64,49 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class UnitTest1
 {
+    private static ValueTask CompletedTask =>
+#if !NET5_0_OR_GREATER
+        // ValueTask.CompletedTask is only available in .NET 5 and later
+        default;
+#else
+        ValueTask.CompletedTask;
+#endif
+
     [AssemblyInitialize]
-    public static ValueTask AssemblyInitialize(TestContext testContext) => ValueTask.CompletedTask;
+    public static ValueTask AssemblyInitialize(TestContext testContext) => CompletedTask;
 
     [AssemblyCleanup]
-    public static ValueTask AssemblyCleanup() => ValueTask.CompletedTask;
+    public static ValueTask AssemblyCleanup() => CompletedTask;
 
     [ClassInitialize]
-    public static ValueTask ClassInitialize(TestContext testContext) => ValueTask.CompletedTask;
+    public static ValueTask ClassInitialize(TestContext testContext) => CompletedTask;
 
     [ClassCleanup]
-    public static ValueTask ClassCleanup() => ValueTask.CompletedTask;
+    public static ValueTask ClassCleanup() => CompletedTask;
 
     [TestInitialize]
-    public ValueTask TestInit() => ValueTask.CompletedTask;
+    public ValueTask TestInit() => CompletedTask;
 
     [TestCleanup]
-    public ValueTask TestCleanup() => ValueTask.CompletedTask;
+    public ValueTask TestCleanup() => CompletedTask;
 
     [TestMethod]
-    public async ValueTask TestMethod1() => await ValueTask.CompletedTask;
+    public async ValueTask TestMethod1() => await CompletedTask;
 
     [TestMethod]
-    public ValueTask TestMethod2() => ValueTask.CompletedTask;
+    public ValueTask TestMethod2() => CompletedTask;
 
     [TestMethod]
     public async ValueTask FailedTestMethod()
     {
-        await ValueTask.CompletedTask;
+        await CompletedTask;
         Assert.Fail();
     }
 
     [TestMethod]
     public async ValueTask InconclusiveTestMethod()
     {
-        await ValueTask.CompletedTask;
+        await CompletedTask;
         Assert.Inconclusive();
     }
 }
