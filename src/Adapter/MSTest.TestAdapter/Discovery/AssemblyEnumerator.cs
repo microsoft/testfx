@@ -285,6 +285,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
+        DynamicDataType originalDataType = test.TestMethod.DataType;
+
         // PERF: For perf we started setting DataType in TypeEnumerator, so when it is None we will not reach this line.
         // But if we do run this code, we still reset it to None, because the code that determines if this is data drive test expects the value to be None
         // and only sets it when needed.
@@ -298,7 +300,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // (Note: this method is only called under discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
         // So we want to return false from this method for non ITestDataSource (whether it's None or DataSourceAttribute). Otherwise, the test
         // will be completely skipped which is wrong behavior.
-        return test.TestMethod.DataType == DynamicDataType.ITestDataSource &&
+        return originalDataType == DynamicDataType.ITestDataSource &&
             testMethodInfo.Value != null &&
             TryProcessITestDataSourceTests(test, testMethodInfo.Value, tests);
     }
