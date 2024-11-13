@@ -403,8 +403,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
     private static bool ProcessTestDataSourceTests(UnitTestElement test, ReflectionTestMethodInfo methodInfo, IEnumerable<ITestDataSource> testDataSources,
         List<UnitTestElement> tests)
     {
+        bool hasAtLeastOneITestDataSource = false;
         foreach (ITestDataSource dataSource in testDataSources)
         {
+            hasAtLeastOneITestDataSource = true;
             IEnumerable<object?[]>? data;
 
             // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
@@ -476,6 +478,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
             tests.AddRange(discoveredTests);
         }
 
-        return true;
+        return hasAtLeastOneITestDataSource;
     }
 }
