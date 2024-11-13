@@ -419,7 +419,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                     // Make the test not data driven, because it had no data.
                     discoveredTest.TestMethod.DataType = DynamicDataType.None;
                     discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
-                    
+
                     tests.Add(discoveredTest);
                     continue;
                 }
