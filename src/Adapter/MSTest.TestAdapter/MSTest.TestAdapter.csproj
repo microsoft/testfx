@@ -81,6 +81,7 @@
     <NuspecProperty Include="ArtifactsBinDir=$(ArtifactsBinDir)" />
     <NuspecProperty Include="Configuration=$(Configuration)" />
     <NuspecProperty Include="TestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'))" />
+    <NuspecProperty Include="SystemThreadingTasksExtensionsVersion=$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>
 
   <ItemGroup>

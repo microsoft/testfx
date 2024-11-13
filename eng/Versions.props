@@ -13,4 +13,7 @@
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24560.1</MicrosoftTestingInternalFrameworkVersion>
     <MSTestEngineVersion>1.0.0-alpha.24473.2</MSTestEngineVersion>
   </PropertyGroup>
+  <PropertyGroup Label="MSTest prod dependencies">
+    <SystemThreadingTasksExtensionsVersion>4.5.4</SystemThreadingTasksExtensionsVersion>
+  </PropertyGroup>
 </Project>
