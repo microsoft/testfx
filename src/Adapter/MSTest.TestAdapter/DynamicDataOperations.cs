@@ -78,9 +78,17 @@ internal class DynamicDataOperations : IDynamicDataOperations
                     _dynamicDataDeclaringType.FullName));
         }
 
-        // If data is empty, it's the caller's responsibility to check
-        // for MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive and
-        // take the appropriate action
+        if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive && !data.Any())
+        {
+            throw new ArgumentException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    FrameworkMessages.DynamicDataIEnumerableEmpty,
+                    _dynamicDataSourceName,
+                    _dynamicDataDeclaringType.FullName));
+        }
+
+        // Data is valid, return it.
         return data;
     }
 
