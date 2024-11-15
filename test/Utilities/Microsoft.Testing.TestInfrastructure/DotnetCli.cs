@@ -29,7 +29,9 @@ public static class DotnetCli
         "MicrosoftInstrumentationEngine_FileLogPath"
     ];
 
-    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(MaxOutstandingCommands, MaxOutstandingCommands);
+    private static readonly int MaxOutstandingCommandsInitialValue = Environment.ProcessorCount;
+
+    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(MaxOutstandingCommandsInitialValue, MaxOutstandingCommandsInitialValue);
 
     public static int MaxOutstandingCommands
     {
@@ -43,7 +45,7 @@ public static class DotnetCli
         }
     }
 #pragma warning disable SA1513 // Closing brace should be followed by blank line
-    = Environment.ProcessorCount;
+    = MaxOutstandingCommandsInitialValue;
 #pragma warning restore SA1513 // Closing brace should be followed by blank line
 
     public static bool DoNotRetry { get; set; }
