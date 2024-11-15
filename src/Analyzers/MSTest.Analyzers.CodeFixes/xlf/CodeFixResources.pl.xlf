@@ -39,7 +39,7 @@
       </trans-unit>
       <trans-unit id="ReplaceWithDisposeFix">
         <source>Replace TestCleanup with Dispose method</source>
-        <target state="new">Replace TestCleanup with Dispose method</target>
+        <target state="translated">Zamień TestCleanup na metodę Dispose</target>
         <note />
       </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">

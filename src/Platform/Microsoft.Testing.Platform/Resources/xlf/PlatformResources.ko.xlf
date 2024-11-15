@@ -243,7 +243,7 @@
       </trans-unit>
       <trans-unit id="FailedWithErrors">
         <source>failed with {0} error(s)</source>
-        <target state="needs-review-translation">{0} 오류와 함께 실패</target>
+        <target state="new">failed with {0} error(s)</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">
