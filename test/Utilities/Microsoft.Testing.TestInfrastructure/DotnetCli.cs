@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 using Polly;
 using Polly.Contrib.WaitAndRetry;
@@ -29,24 +30,21 @@ public static class DotnetCli
         "MicrosoftInstrumentationEngine_FileLogPath"
     ];
 
-    private static readonly int MaxOutstandingCommandsInitialValue = Environment.ProcessorCount;
-
-    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(MaxOutstandingCommandsInitialValue, MaxOutstandingCommandsInitialValue);
+    [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing some runtime bug")]
+    private static int s_maxOutstandingCommand = Environment.ProcessorCount;
+    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
 
     public static int MaxOutstandingCommands
     {
-        get;
+        get => s_maxOutstandingCommand;
 
         set
         {
-            field = value;
+            s_maxOutstandingCommand = value;
             s_maxOutstandingCommands_semaphore.Dispose();
-            s_maxOutstandingCommands_semaphore = new SemaphoreSlim(field, field);
+            s_maxOutstandingCommands_semaphore = new SemaphoreSlim(s_maxOutstandingCommand, s_maxOutstandingCommand);
         }
     }
-#pragma warning disable SA1513 // Closing brace should be followed by blank line
-    = MaxOutstandingCommandsInitialValue;
-#pragma warning restore SA1513 // Closing brace should be followed by blank line
 
     public static bool DoNotRetry { get; set; }
 

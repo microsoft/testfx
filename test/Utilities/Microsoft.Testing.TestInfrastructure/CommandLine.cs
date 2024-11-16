@@ -2,20 +2,22 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
 public sealed class CommandLine : IDisposable
 {
-    private static readonly int MaxOutstandingCommandsInitialValue = Environment.ProcessorCount;
     private static int s_totalProcessesAttempt;
-    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(MaxOutstandingCommandsInitialValue, MaxOutstandingCommandsInitialValue);
+    [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing some runtime issue")]
+    private static int s_maxOutstandingCommand = Environment.ProcessorCount;
+    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
+
+    public static int TotalProcessesAttempt => s_totalProcessesAttempt;
 
     private readonly List<string> _errorOutputLines = new();
     private readonly List<string> _standardOutputLines = new();
     private IProcessHandle? _process;
-
-    public static int TotalProcessesAttempt => s_totalProcessesAttempt;
 
     public ReadOnlyCollection<string> StandardOutputLines => _standardOutputLines.AsReadOnly();
 
@@ -27,18 +29,15 @@ public sealed class CommandLine : IDisposable
 
     public static int MaxOutstandingCommands
     {
-        get;
+        get => s_maxOutstandingCommand;
 
         set
         {
-            field = value;
+            s_maxOutstandingCommand = value;
             s_maxOutstandingCommands_semaphore.Dispose();
-            s_maxOutstandingCommands_semaphore = new SemaphoreSlim(field, field);
+            s_maxOutstandingCommands_semaphore = new SemaphoreSlim(s_maxOutstandingCommand, s_maxOutstandingCommand);
         }
     }
-#pragma warning disable SA1513 // Closing brace should be followed by blank line
-    = MaxOutstandingCommandsInitialValue;
-#pragma warning restore SA1513 // Closing brace should be followed by blank line
 
     public async Task RunAsync(
         string commandLine,
