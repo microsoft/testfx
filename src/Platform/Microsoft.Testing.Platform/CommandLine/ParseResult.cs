@@ -5,19 +5,17 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<OptionRecord> options, IReadOnlyList<string> errors, IReadOnlyList<string> originalArguments) : IEquatable<CommandLineParseResult>
+internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<OptionRecord> options, IReadOnlyList<string> errors) : IEquatable<CommandLineParseResult>
 {
     public const char OptionPrefix = '-';
 
-    public static CommandLineParseResult Empty => new(null, [], [], []);
+    public static CommandLineParseResult Empty => new(null, [], []);
 
     public string? ToolName { get; } = toolName;
 
     public IReadOnlyList<OptionRecord> Options { get; } = options;
 
     public IReadOnlyList<string> Errors { get; } = errors;
-
-    public IReadOnlyList<string> OriginalArguments { get; } = originalArguments;
 
     public bool HasError => Errors.Count > 0;
 
