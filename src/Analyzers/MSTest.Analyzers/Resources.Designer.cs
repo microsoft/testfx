@@ -784,7 +784,7 @@ namespace MSTest.Analyzers {
         ///- it should be a property
         ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
         ///- it should not be &apos;static&apos;
-        ///- it should not be readonly..
+        ///- it should not be readonly unless set in constructor to the TestContext parameter..
         /// </summary>
         internal static string TestContextShouldBeValidDescription {
             get {

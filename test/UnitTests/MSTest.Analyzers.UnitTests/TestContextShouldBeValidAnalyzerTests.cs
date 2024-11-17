@@ -43,7 +43,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             [TestClass]
             public class MyTestClass
             {
-                public TestContext {{fieldName}} { get; set; }
+                public TestContext TestContext { get; set; }
             }
             """;
         await VerifyCS.VerifyCodeFixAsync(
@@ -77,7 +77,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             [TestClass]
             public class MyTestClass
             {
-                public TestContext {{propertyName}} { get; set; }
+                public TestContext TestContext { get; set; }
             }
             """;
         await VerifyCS.VerifyCodeFixAsync(
@@ -87,10 +87,14 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             fixedCode);
     }
 
-    public async Task WhenTestContextPropertyIsValid_NoDiagnostic()
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task WhenTestContextPropertyIsValid_NoDiagnostic(bool discoverInternals)
     {
         string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            {{(discoverInternals ? "[assembly: DiscoverInternals]" : string.Empty)}}
 
             [TestClass]
             public class MyTestClass
@@ -123,7 +127,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             [TestClass]
             public class MyTestClass
             {
-                internal TestContext TestContext { get; set; }
+                public TestContext TestContext { get; set; }
             }
             """;
 
@@ -134,11 +138,9 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             fixedCode);
     }
 
-    [Arguments("public")]
-    [Arguments("internal")]
-    public async Task WhenDiscoverInternalsTestContextPropertyIsPublicOrInternal_NoDiagnostic(string accessibility)
+    public async Task WhenDiscoverInternalsTestContextPropertyIsInternal_Diagnostic()
     {
-        string code = $$"""
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [assembly: DiscoverInternals]
@@ -146,11 +148,23 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             [TestClass]
             public class MyTestClass
             {
-                {{accessibility}} TestContext TestContext { get; set; }
+                internal TestContext [|TestContext|] { get; set; }
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext [|TestContext|] { get; set; }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     public async Task WhenTestContextPropertyIsStatic_Diagnostic()

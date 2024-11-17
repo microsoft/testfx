@@ -571,8 +571,8 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
 - it should be a property
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
-- it should not be readonly.</source>
-        <target state="translated">A propriedade TestContext deve seguir o seguinte layout para ser válida:
+- it should not be readonly unless set in constructor to the TestContext parameter.</source>
+        <target state="needs-review-translation">A propriedade TestContext deve seguir o seguinte layout para ser válida:
 – deve ser uma propriedade
 – deve ser "public" (ou "internal" se o atributo "[assembly: DiscoverInternals]" estiver definido) 
 – não deve ser ''static''

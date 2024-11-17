@@ -578,8 +578,8 @@ The type declaring these methods should also respect the following rules:
 - it should be a property
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
-- it should not be readonly.</source>
-        <target state="translated">Свойство TestContext должно использовать следующий макет, чтобы считаться допустимым:
+- it should not be readonly unless set in constructor to the TestContext parameter.</source>
+        <target state="needs-review-translation">Свойство TestContext должно использовать следующий макет, чтобы считаться допустимым:
 – должно быть свойством;
 – должно быть присвоено значение "public" (или "internal", если задан атрибут "[assembly: DiscoverInternals]");
 – не следует присваивать значение "static";
