@@ -413,13 +413,26 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             if (!data.Any())
             {
-                UnitTestElement discoveredTest = test.Clone();
-                // Make the test not data driven, because it had no data.
-                discoveredTest.TestMethod.DataType = DynamicDataType.None;
-                discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
+                if (MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+                {
+                    UnitTestElement discoveredTest = test.Clone();
+                    // Make the test not data driven, because it had no data.
+                    discoveredTest.TestMethod.DataType = DynamicDataType.None;
+                    discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
 
-                tests.Add(discoveredTest);
-                continue;
+                    tests.Add(discoveredTest);
+
+                    continue;
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            FrameworkMessages.DynamicDataIEnumerableEmpty,
+                            "GetData",
+                            dataSource.GetType().Name));
+                }
             }
 
             var testDisplayNameFirstSeen = new Dictionary<string, int>();
