@@ -567,11 +567,11 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
-        <source>TestContext property should follow the following layout to be valid:
+        <source>TestContext should be a non-static property or field that is assigned in the constructor. Otherwise, all the following is required for it to be valid:
 - it should be a property
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
-- it should not be readonly unless set in constructor to the TestContext parameter.</source>
+- it should have a setter.</source>
         <target state="needs-review-translation">Właściwość TestContext powinna być zgodna z następującym układem, aby była prawidłowa:
 — powinna to być właściwość
 — powinna mieć wartość „public” (lub „internal”, jeśli ustawiono atrybut „[assembly: DiscoverInternals]”)

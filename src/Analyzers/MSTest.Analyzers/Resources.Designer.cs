@@ -780,11 +780,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestContext property should follow the following layout to be valid:
+        ///   Looks up a localized string similar to TestContext should be a non-static property or field that is assigned in the constructor. Otherwise, all the following is required for it to be valid:
         ///- it should be a property
-        ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
+        ///- it should be &apos;public&apos; regardless of whether &apos;[assembly: DiscoverInternals]&apos; attribute is set or not.
         ///- it should not be &apos;static&apos;
-        ///- it should not be readonly unless set in constructor to the TestContext parameter..
+        ///- it should have a setter..
         /// </summary>
         internal static string TestContextShouldBeValidDescription {
             get {

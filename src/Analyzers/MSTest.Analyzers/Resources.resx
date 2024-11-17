@@ -361,11 +361,11 @@ The type declaring these methods should also respect the following rules:
     <value>TestCleanup method should have valid layout</value>
   </data>
   <data name="TestContextShouldBeValidDescription" xml:space="preserve">
-    <value>TestContext property should follow the following layout to be valid:
+    <value>TestContext should be a non-static property or field that is assigned in the constructor. Otherwise, all the following is required for it to be valid:
 - it should be a property
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
-- it should not be readonly unless set in constructor to the TestContext parameter.</value>
+- it should have a setter.</value>
   </data>
   <data name="TestContextShouldBeValidMessageFormat" xml:space="preserve">
     <value>Property 'TestContext' should be valid</value>
