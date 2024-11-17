@@ -121,6 +121,9 @@ internal class TypeValidator
             return true;
         }
 
+        // NOTE: It's okay to not have a setter for the property at all.
+        // The user may set the TestContext property in the constructor.
+        // In case the user didn't set it in the constructor, the TestContextShouldBeValidAnalyzer will report a diagnostic.
         foreach (PropertyInfo pinfo in propertyInfo)
         {
             MethodInfo? getInfo = pinfo.GetMethod;
