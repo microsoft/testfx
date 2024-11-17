@@ -35,6 +35,38 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(TestContextShouldBeValidRule);
 
+    private static bool AssignsParameterToMember(IParameterSymbol parameter, ISymbol member, ImmutableArray<IOperation> operations)
+    {
+        foreach (IOperation operation in operations)
+        {
+            if (AssignsParameterToMember(parameter, member, operation))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool AssignsParameterToMember(IParameterSymbol parameter, ISymbol member, IOperation operation)
+    {
+        if (operation is IBlockOperation blockOperation)
+        {
+            return AssignsParameterToMember(parameter, member, blockOperation.Operations);
+        }
+
+        if (operation is IExpressionStatementOperation expressionStatementOperation)
+        {
+            operation = expressionStatementOperation.Operation;
+        }
+
+        return operation is ISimpleAssignmentOperation assignmentOperation &&
+            assignmentOperation.Target is IMemberReferenceOperation targetMemberReference &&
+            SymbolEqualityComparer.Default.Equals(targetMemberReference.Member, member) &&
+            assignmentOperation.Value is IParameterReferenceOperation parameterReference &&
+            SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, parameter);
+    }
+
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -118,25 +150,20 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
                                                 return;
                                             }
 
-                                            foreach (IOperation operationInConstructor in context.OperationBlocks)
+                                            if (AssignsParameterToMember(constructor.Parameters[0], member, context.OperationBlocks))
                                             {
-                                                if (operationInConstructor is ISimpleAssignmentOperation assignmentOperation &&
-                                                    assignmentOperation.Target is IMemberReferenceOperation targetMemberReference &&
-                                                    SymbolEqualityComparer.Default.Equals(targetMemberReference.Member, member) &&
-                                                    assignmentOperation.Value is IParameterReferenceOperation parameterReference &&
-                                                    SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, constructor.Parameters[0]))
-                                                {
-                                                    isAssigned = true;
-                                                    break;
-                                                }
+                                                isAssigned = true;
                                             }
                                         });
 
-                                    if (!isAssigned)
-                                    {
-                                        context.RegisterSymbolEndAction(
-                                            context => context.ReportDiagnostic(member.CreateDiagnostic(TestContextShouldBeValidRule)));
-                                    }
+                                    context.RegisterSymbolEndAction(
+                                        context =>
+                                        {
+                                            if (!isAssigned)
+                                            {
+                                                context.ReportDiagnostic(member.CreateDiagnostic(TestContextShouldBeValidRule));
+                                            }
+                                        });
 
                                     break;
                             }

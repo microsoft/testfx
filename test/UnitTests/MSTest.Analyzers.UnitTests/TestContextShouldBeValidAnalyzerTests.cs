@@ -53,6 +53,42 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
     }
 
     [Arguments("TestContext", "private")]
+    [Arguments("TestContext", "public")]
+    [Arguments("TestContext", "internal")]
+    [Arguments("TestContext", "protected")]
+    [Arguments("testcontext", "private")]
+    [Arguments("testcontext", "public")]
+    [Arguments("testcontext", "internal")]
+    [Arguments("testcontext", "protected")]
+    [Arguments("TESTCONTEXT", "private")]
+    [Arguments("TESTCONTEXT", "public")]
+    [Arguments("TESTCONTEXT", "internal")]
+    [Arguments("TESTCONTEXT", "protected")]
+    [Arguments("TeStCoNtExT", "private")]
+    [Arguments("TeStCoNtExT", "public")]
+    [Arguments("TeStCoNtExT", "internal")]
+    [Arguments("TeStCoNtExT", "protected")]
+    public async Task WhenTestContextCaseInsensitiveIsField_AssignedInConstructor_NoDiagnostic(string fieldName, string accessibility)
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public MyTestClass(TestContext testContext)
+                {
+                    this.{{fieldName}} = testContext;
+                }
+
+                {{accessibility}} TestContext {{fieldName}};
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [Arguments("TestContext", "private")]
     [Arguments("TestContext", "internal")]
     [Arguments("testcontext", "private")]
     [Arguments("testcontext", "internal")]
@@ -85,6 +121,34 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
                 .WithLocation(0),
             fixedCode);
+    }
+
+    [Arguments("TestContext", "private")]
+    [Arguments("TestContext", "internal")]
+    [Arguments("testcontext", "private")]
+    [Arguments("testcontext", "internal")]
+    [Arguments("TESTCONTEXT", "private")]
+    [Arguments("TESTCONTEXT", "internal")]
+    [Arguments("TeStCoNtExT", "private")]
+    [Arguments("TeStCoNtExT", "internal")]
+    public async Task WhenTestContextPropertyIsPrivateOrInternal_AssignedInConstructor_NoDiagnostic(string propertyName, string accessibility)
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public MyTestClass(TestContext testContext)
+                {
+                    this.{{propertyName}} = testContext;
+                }
+
+                {{accessibility}} TestContext {|#0:{{propertyName}}|} { get; set; }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [Arguments(true)]
@@ -138,6 +202,28 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             fixedCode);
     }
 
+    public async Task WhenDiscoverInternalsTestContextPropertyIsPrivate_AssignedInConstructor_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public MyTestClass(TestContext testContext)
+                {
+                    TestContext = testContext;
+                }
+
+                private TestContext TestContext { get; set; }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
     public async Task WhenDiscoverInternalsTestContextPropertyIsInternal_Diagnostic()
     {
         string code = """
@@ -165,6 +251,28 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    public async Task WhenDiscoverInternalsTestContextPropertyIsInternal_AssignedInConstructor_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public MyTestClass(TestContext testContext)
+                {
+                    TestContext = testContext;
+                }
+
+                internal TestContext TestContext { get; set; }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     public async Task WhenTestContextPropertyIsStatic_Diagnostic()
@@ -221,6 +329,26 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
                 .WithLocation(0),
             fixedCode);
+    }
+
+    public async Task WhenTestContextPropertyIsReadonly_AssignedInConstructor_NoDiagnostic()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public MyTestClass(TestContext testContext)
+                {
+                    TestContext = testContext;
+                }
+
+                public TestContext TestContext { get; }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [Arguments("TestContext", "private")]
