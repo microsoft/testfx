@@ -730,12 +730,12 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsMessageFormat">
         <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
-        <target state="new">Use 'Assert.{0}' instead of 'Assert.{1}'</target>
+        <target state="translated">'Assert.{1}' yerine 'Assert.{0}' kullan</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsTitle">
         <source>Use proper 'Assert' methods</source>
-        <target state="new">Use proper 'Assert' methods</target>
+        <target state="translated">Uygun 'Assert' yöntemlerini kullan</target>
         <note />
       </trans-unit>
     </body>
