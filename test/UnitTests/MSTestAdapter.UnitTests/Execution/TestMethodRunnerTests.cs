@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -40,16 +41,12 @@ public class TestMethodRunnerTests : TestContainer
 
     public TestMethodRunnerTests()
     {
-        ConstructorInfo constructorInfo = typeof(DummyTestClass).GetConstructor([])!;
         _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod", StringComparison.Ordinal));
-        var classAttribute = new UTF.TestClassAttribute();
         _testMethodAttribute = new UTF.TestMethodAttribute();
-        PropertyInfo testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 
-        var testAssemblyInfo = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
         _testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
         _testContextImplementation = new TestContextImplementation(_testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>());
-        _testClassInfo = new TestClassInfo(typeof(DummyTestClass), constructorInfo, true, testContextProperty, classAttribute, testAssemblyInfo);
+        _testClassInfo = GetTestClassInfo<DummyTestClass>();
 
         _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), null, _testContextImplementation, false, _testMethodAttribute);
 
@@ -66,6 +63,15 @@ public class TestMethodRunnerTests : TestContainer
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
         ReflectHelper.Instance.ClearCache();
+    }
+
+    private static TestClassInfo GetTestClassInfo<T>()
+    {
+        ConstructorInfo constructorInfo = typeof(T).GetConstructor([])!;
+        PropertyInfo testContextProperty = typeof(T).GetProperty("TestContext");
+        var classAttribute = new UTF.TestClassAttribute();
+        var testAssemblyInfo = new TestAssemblyInfo(typeof(T).Assembly);
+        return new TestClassInfo(typeof(T), constructorInfo, isParameterlessConstructor: true, testContextProperty, classAttribute, testAssemblyInfo);
     }
 
     protected override void Dispose(bool disposing)
@@ -369,6 +375,55 @@ public class TestMethodRunnerTests : TestContainer
         Verify(results[1].ResultFiles.ToList().Contains("C:\\temp.txt"));
     }
 
+    public void RunTestMethodWithEmptyDataSourceShouldFailBecauseConsiderEmptyDataSourceAsInconclusiveIsFalse()
+        => RunTestMethodWithEmptyDataSourceShouldFailIfConsiderEmptyDataSourceAsInconclusiveIsNotTrueHelper(false);
+
+    public void RunTestMethodWithEmptyDataSourceShouldNotFailBecauseConsiderEmptyDataSourceAsInconclusiveIsTrue()
+        => RunTestMethodWithEmptyDataSourceShouldFailIfConsiderEmptyDataSourceAsInconclusiveIsNotTrueHelper(true);
+
+    private void RunTestMethodWithEmptyDataSourceShouldFailIfConsiderEmptyDataSourceAsInconclusiveIsNotTrueHelper(bool considerEmptyAsInconclusive)
+    {
+        Mock<PlatformServices.Interface.IReflectionOperations2> existingMock = _testablePlatformServiceProvider.MockReflectionOperations;
+        try
+        {
+            // We want this test to go through the "real" reflection to hit the product code path relevant for the test.
+            _testablePlatformServiceProvider.MockReflectionOperations = null;
+
+            string xml =
+                $$"""
+                <RunSettings>
+                    <MSTestV2>
+                        <ConsiderEmptyDataSourceAsInconclusive>{{considerEmptyAsInconclusive}}</ConsiderEmptyDataSourceAsInconclusive>
+                    </MSTestV2>
+                </RunSettings>
+                """;
+
+            var settings = MSTestSettings.GetSettings(xml, MSTestSettings.SettingsNameAlias, null);
+            MSTestSettings.PopulateSettings(settings);
+
+            var testMethodInfo = new TestableTestMethodInfo(
+                typeof(DummyTestClassEmptyDataSource).GetMethod(nameof(DummyTestClassEmptyDataSource.TestMethod)),
+                GetTestClassInfo<DummyTestClassEmptyDataSource>(),
+                _testMethodOptions,
+                () => throw ApplicationStateGuard.Unreachable());
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+            if (considerEmptyAsInconclusive)
+            {
+                UnitTestResult[] results = testMethodRunner.RunTestMethod();
+                Verify(results[0].Outcome == AdapterTestOutcome.Inconclusive);
+            }
+            else
+            {
+                ArgumentException thrownException = VerifyThrows<ArgumentException>(() => testMethodRunner.RunTestMethod());
+            }
+        }
+        finally
+        {
+            _testablePlatformServiceProvider.MockReflectionOperations = existingMock;
+        }
+    }
+
     #region Test data
 
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Use through reflection")]
@@ -449,6 +504,16 @@ public class TestMethodRunnerTests : TestContainer
     public class DummyTestClassWithTestContextWithoutSetter
     {
         public UTFExtension.TestContext TestContext { get; }
+    }
+
+    public class DummyTestClassEmptyDataSource
+    {
+        public static IEnumerable<object[]> EmptyProperty => Array.Empty<object[]>();
+
+        [DynamicData("EmptyProperty")]
+        public void TestMethod(int x)
+        {
+        }
     }
 
     #endregion

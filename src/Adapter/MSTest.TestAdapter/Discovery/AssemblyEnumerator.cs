@@ -426,12 +426,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
                 else
                 {
-                    throw new ArgumentException(
-                        string.Format(
-                            CultureInfo.InvariantCulture,
-                            FrameworkMessages.DynamicDataIEnumerableEmpty,
-                            "GetData",
-                            dataSource.GetType().Name));
+                    throw dataSource.GetExceptionForEmptyDataSource(methodInfo);
                 }
             }
 

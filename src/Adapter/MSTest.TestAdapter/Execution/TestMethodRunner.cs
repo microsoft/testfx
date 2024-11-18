@@ -329,7 +329,7 @@ internal class TestMethodRunner
                         }
                         else
                         {
-                            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", testDataSource.GetType().Name));
+                            throw testDataSource.GetExceptionForEmptyDataSource(_testMethodInfo.MethodInfo);
                         }
                     }
 
