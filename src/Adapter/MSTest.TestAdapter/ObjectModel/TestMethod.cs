@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 
@@ -27,6 +28,8 @@ public sealed class TestMethod : ITestMethod
     private readonly ReadOnlyCollection<string?> _hierarchy;
     private string? _declaringClassFullName;
     private string? _declaringAssemblyName;
+
+    private static readonly ConcurrentDictionary<string, object?[]> DataDictionary = new();
 
     public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
         : this(null, null, null, name, fullClassName, assemblyName, isAsync, null, TestIdGenerationStrategy.FullyQualified)
@@ -136,6 +139,29 @@ public sealed class TestMethod : ITestMethod
     /// Gets or sets the serialized data.
     /// </summary>
     internal string?[]? SerializedData { get; set; }
+
+    private object?[]? _actualData;
+
+    [DisallowNull]
+    internal object?[]? ActualData
+    {
+        get
+        {
+            if (_actualData is not null)
+            {
+                return _actualData;
+            }
+
+            DataDictionary.TryGetValue(UniqueName, out _actualData);
+            return _actualData;
+        }
+
+        set
+        {
+            _actualData = value;
+            DataDictionary.TryAdd(UniqueName, value);
+        }
+    }
 
     /// <summary>
     /// Gets or sets the test group set during discovery.

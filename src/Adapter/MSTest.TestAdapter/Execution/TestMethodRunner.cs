@@ -172,7 +172,7 @@ internal class TestMethodRunner
         {
             if (_test.DataType == DynamicDataType.ITestDataSource)
             {
-                object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
+                object?[]? data = _test.ActualData ?? DataSerializationHelper.Deserialize(_test.SerializedData);
                 TestResult[] testResults = ExecuteTestWithDataSource(null, data);
                 results.AddRange(testResults);
             }
