@@ -76,6 +76,7 @@
 
   <ItemGroup Label="NuGet">
     <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
+    <NuspecProperty Include="SystemConfigurationConfigurationManagerVersion=$(SystemConfigurationConfigurationManagerVersion)" />
   </ItemGroup>
 
   <ItemGroup>

@@ -7,9 +7,15 @@
       <group targetFramework="net462" />
       <group targetFramework="uap10.0" />
       <group targetFramework="netcoreapp3.1" />
-      <group targetFramework="net6.0" />
-      <group targetFramework="net7.0" />
-      <group targetFramework="net8.0" />
+      <group targetFramework="net6.0">
+        <dependency id="System.Configuration.ConfigurationManager" version="$SystemConfigurationConfigurationManagerVersion$" />
+      </group>
+      <group targetFramework="net7.0">
+        <dependency id="System.Configuration.ConfigurationManager" version="$SystemConfigurationConfigurationManagerVersion$" />
+      </group>
+      <group targetFramework="net8.0">
+        <dependency id="System.Configuration.ConfigurationManager" version="$SystemConfigurationConfigurationManagerVersion$" />
+      </group>
     </dependencies>
     <readme>PACKAGE.md</readme>
   </metadata>
