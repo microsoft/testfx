@@ -14,7 +14,7 @@ public class DataSourceTests : AcceptanceTestBase
 #file DataSourceTests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net472</TargetFramework>
+        <TargetFramework>$TargetFramework$</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <OutputType>Exe</OutputType>
         <LangVersion>preview</LangVersion>
@@ -88,7 +88,8 @@ num1,num2,expectedSum
     public DataSourceTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
         : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
-    public async Task TestDataSourceFromAppConfig()
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task TestDataSourceFromAppConfig(string tfm)
     {
         if (!OperatingSystem.IsWindows())
         {
@@ -100,7 +101,8 @@ num1,num2,expectedSum
             "DataSourceTests",
             SourceCode
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion),
+            .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
+            .PatchCodeWithReplace("$TargetFramework$", tfm),
             addPublicFeeds: true);
 
         await DotnetCli.RunAsync(
@@ -108,7 +110,7 @@ num1,num2,expectedSum
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
             retryCount: 0);
 
-        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "DataSourceTests", "net472");
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "DataSourceTests", tfm);
 
         TestHostResult result = await testHost.ExecuteAsync();
         result.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
