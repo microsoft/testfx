@@ -1,8 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
-
+#if IS_DATA_SOURCE_SUPPORTED
 using System.Configuration;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,7 +9,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// The Data Source element.
 /// </summary>
-public sealed class DataSourceElement : ConfigurationElement
+#if NETFRAMEWORK
+public
+#else
+internal
+#endif
+sealed class DataSourceElement : ConfigurationElement
 {
     private static readonly ConfigurationProperty NameValue = new(ConfigurationNames.NameAttributeName, typeof(string), string.Empty, ConfigurationPropertyOptions.IsKey | ConfigurationPropertyOptions.IsRequired);
     private static readonly ConfigurationProperty ConnectionStringValue = new(ConfigurationNames.ConnectionStringAttributeName, typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);

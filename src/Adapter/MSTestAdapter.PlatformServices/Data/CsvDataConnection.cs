@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
 
 using System.Collections;
 using System.Data;
@@ -77,6 +77,13 @@ internal sealed class CsvDataConnection : TestDataConnection
     [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security", Justification = "Not passed in from user.")]
     public DataTable ReadTable(string tableName, IEnumerable? columns, int maxRows)
     {
+#if !NETFRAMEWORK
+        if (!OperatingSystem.IsWindows())
+        {
+            // TODO: It looks like the whole Csv logic can be refactored to work on all operating systems by not using OleDbConnection at all?
+            throw new NotSupportedException("CsvDataConnection is only supported on Windows.");
+        }
+#endif
         // We specifically use OleDb to read a CSV file...
         WriteDiagnostics("ReadTable: {0}", tableName);
         WriteDiagnostics("Current Directory: {0}", Directory.GetCurrentDirectory());

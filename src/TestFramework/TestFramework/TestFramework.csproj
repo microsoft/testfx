@@ -8,7 +8,7 @@
   <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework</AssemblyName>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

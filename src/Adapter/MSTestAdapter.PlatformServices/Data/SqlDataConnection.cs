@@ -1,9 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
 
+#if NETFRAMEWORK
 using System.Data.SqlClient;
+#else
+using Microsoft.Data.SqlClient;
+#endif
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

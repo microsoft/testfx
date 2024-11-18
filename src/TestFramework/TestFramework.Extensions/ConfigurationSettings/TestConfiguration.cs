@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
 using System.Configuration;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -9,7 +9,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Support for configuration settings for Tests.
 /// </summary>
-public static class TestConfiguration
+#if NETFRAMEWORK
+public
+#else
+internal
+#endif
+static class TestConfiguration
 {
     /// <summary>
     /// Gets the configuration section for tests.

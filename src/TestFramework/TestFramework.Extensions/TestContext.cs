@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
 using System.Data;
 using System.Data.Common;
 #endif
@@ -57,7 +57,7 @@ public abstract class TestContext
 
     public string? TestDisplayName { get; protected set; }
 
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
     /// <summary>
     /// Gets the current data row when test is used for data driven testing.
     /// </summary>

@@ -30,6 +30,9 @@
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
   </ItemGroup>
   <ItemGroup Label="Product dependencies">
+    <PackageVersion Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+    <PackageVersion Include="System.Data.Odbc" Version="8.0.0" />
+    <PackageVersion Include="System.Data.OleDb" Version="8.0.0" />
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.22.0" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildVersion)" />
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildVersion)" />
@@ -37,6 +40,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="$(MicrosoftCodeAnalysisAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(MicrosoftCodeAnalysisVersion)" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="5.1.5" />
     <PackageVersion Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.510501" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
     <PackageVersion Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingInternalFrameworkVersion)" />

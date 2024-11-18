@@ -34,6 +34,26 @@
     <MicrosoftTestingTargetFrameworks>net6.0;net7.0;net8.0</MicrosoftTestingTargetFrameworks>
   </PropertyGroup>
 
+  <!-- Constants -->
+  <PropertyGroup>
+    <!-- Historically, DataSourceAttribute was only supported for .NET Framework ONLY. -->
+    <!-- We are adding the support for net6.0 and later only for now (not including netstandard2.0, nor netcoreapp3.1) -->
+    <!-- On netcoreapp3.1, we get this warning: -->
+    <!--
+      C:\Users\<USER>\.nuget\packages\system.security.cryptography.protecteddata\8.0.0\buildTransitive\netcoreapp2.0\System.Security.Cryptography.ProtectedData.targets(4,5)
+      : error : System.Security.Cryptography.ProtectedData 8.0.0 doesn't support netcoreapp3.1 and has not been tested with it. Consider upgrading your TargetFramework to ne
+      t6.0 or later. You may also set <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings> in the project file to ignore this warning and attempt to run i
+      n this unsupported configuration at your own risk. [C:\Users\<USER>\Desktop\testfx\test\UnitTests\MSTestAdapter.UnitTests\MSTestAdapter.UnitTests.csproj::TargetFramew
+      ork=netcoreapp3.1]
+    -->
+    <!-- For now, we don't care that much about netcoreapp3.1. That's a better idea than suppressing the build warning. -->
+    <!-- Also, on WinUI we are hitting this bug, https://github.com/microsoft/microsoft-ui-xaml/issues/5689, so not including it for now. -->
+    <IsDataSourceSupported>false</IsDataSourceSupported>
+    <IsDataSourceSupported Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0')) AND '$(TargetFramework)'!='$(WinUiMinimum)'">true</IsDataSourceSupported>
+    <IsDataSourceSupported Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', '$(NetFrameworkMinimum)'))">true</IsDataSourceSupported>
+    <DefineConstants Condition="$(IsDataSourceSupported)">$(DefineConstants);IS_DATA_SOURCE_SUPPORTED</DefineConstants>
+  </PropertyGroup>
+
   <!-- Build config -->
   <PropertyGroup>
     <!-- Prevent warning about deprecated target frameworks -->

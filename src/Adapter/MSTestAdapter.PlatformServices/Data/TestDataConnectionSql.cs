@@ -1,17 +1,22 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
 using System.Collections;
 using System.Data;
 using System.Data.Common;
 using System.Data.Odbc;
 using System.Data.OleDb;
+#if NETFRAMEWORK
 using System.Data.SqlClient;
+#endif
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 
+#if !NETFRAMEWORK
+using Microsoft.Data.SqlClient;
+#endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -35,11 +40,11 @@ internal class TestDataConnectionSql : TestDataConnection
         DebugEx.Assert(Factory != null, "factory should not be null.");
         WriteDiagnostics("DbProviderFactory {0}", Factory);
 
-        _connection = Factory.CreateConnection();
+        _connection = Factory.CreateConnection()!;
         DebugEx.Assert(_connection != null, "connection");
         WriteDiagnostics("DbConnection {0}", _connection);
 
-        CommandBuilder = Factory.CreateCommandBuilder();
+        CommandBuilder = Factory.CreateCommandBuilder()!;
         DebugEx.Assert(CommandBuilder != null, "builder");
         WriteDiagnostics("DbCommandBuilder {0}", CommandBuilder);
 
@@ -81,6 +86,13 @@ internal class TestDataConnectionSql : TestDataConnection
         }
         else if (string.Equals(invariantProviderName, "System.Data.OleDb", StringComparison.OrdinalIgnoreCase))
         {
+#if !NETFRAMEWORK
+            if (!OperatingSystem.IsWindows())
+            {
+                throw new NotSupportedException($"Failed to create connection to '{connectionString}'. OleDbConnection is only supported on Windows.");
+            }
+#endif
+
             return new OleDataConnection(invariantProviderName, connectionString, dataFolders);
         }
         else if (string.Equals(invariantProviderName, "System.Data.Odbc", StringComparison.OrdinalIgnoreCase))
@@ -485,7 +497,7 @@ internal class TestDataConnectionSql : TestDataConnection
                 try
                 {
                     WriteDiagnostics("Getting schema table {0}", metadata.SchemaTable);
-                    dataTable = Connection.GetSchema(metadata.SchemaTable);
+                    dataTable = Connection.GetSchema(metadata.SchemaTable!);
                 }
                 catch (Exception ex)
                 {
@@ -521,9 +533,9 @@ internal class TestDataConnectionSql : TestDataConnection
                     }
 
                     // Get the schema name, and filter bad schemas
-                    if (row[metadata.SchemaColumn] != DBNull.Value)
+                    if (row[metadata.SchemaColumn!] != DBNull.Value)
                     {
-                        tableSchema = row[metadata.SchemaColumn] as string;
+                        tableSchema = row[metadata.SchemaColumn!] as string;
 
                         if (IsInArray(tableSchema, metadata.InvalidSchemas))
                         {
@@ -536,7 +548,7 @@ internal class TestDataConnectionSql : TestDataConnection
                         isDefaultSchema = string.Equals(tableSchema, defaultSchema, StringComparison.OrdinalIgnoreCase);
                     }
 
-                    string? tableName = row[metadata.NameColumn] as string;
+                    string? tableName = row[metadata.NameColumn!] as string;
                     WriteDiagnostics("Table {0}{1} found", tableSchema != null ? tableSchema + "." : string.Empty, tableName);
 
                     // If schema is defined and is not equal to default, prepend table schema in front of the table.
@@ -599,7 +611,7 @@ internal class TestDataConnectionSql : TestDataConnection
                 foreach (DataRow columnRow in columns.Rows)
                 {
                     WriteDiagnostics("Column info: {0}", columnRow);
-                    result.Add(columnRow["COLUMN_NAME"].ToString());
+                    result.Add(columnRow["COLUMN_NAME"].ToString()!);
                 }
 
                 // Now we are done, since for any particular table or view, all the columns
@@ -723,6 +735,12 @@ internal class TestDataConnectionSql : TestDataConnection
         {
             var oleDbConnection = Connection as OleDbConnection;
             var odbcConnection = Connection as OdbcConnection;
+#if !NETFRAMEWORK
+            if (oleDbConnection is not null && !OperatingSystem.IsWindows())
+            {
+                throw new NotSupportedException("OleDbConnection is only supported on Windows.");
+            }
+#endif
             DebugEx.Assert(
                 Connection is SqlConnection ||
                 (oleDbConnection != null && IsMSSql(oleDbConnection.Provider)) ||
@@ -732,7 +750,11 @@ internal class TestDataConnectionSql : TestDataConnection
             DebugEx.Assert(IsOpen(), "The connection must already be open!");
             DebugEx.Assert(!StringEx.IsNullOrEmpty(Connection.ServerVersion), "GetDefaultSchema: the ServerVersion is null or empty!");
 
+#if NETFRAMEWORK
             int index = Connection.ServerVersion.IndexOf(".", StringComparison.Ordinal);
+#else
+            int index = Connection.ServerVersion.IndexOf('.');
+#endif
             DebugEx.Assert(index > 0, "GetDefaultSchema: index should be 0");
 
             string versionString = Connection.ServerVersion.Substring(0, index);
@@ -776,8 +798,8 @@ internal class TestDataConnectionSql : TestDataConnection
     public override DataTable ReadTable(string tableName, IEnumerable? columns)
 #pragma warning restore SA1202 // Elements must be ordered by access
     {
-        using DbDataAdapter dataAdapter = Factory.CreateDataAdapter();
-        using DbCommand command = Factory.CreateCommand();
+        using DbDataAdapter dataAdapter = Factory.CreateDataAdapter()!;
+        using DbCommand command = Factory.CreateCommand()!;
 
         // We need to escape bad characters in table name like [Sheet1$] in Excel.
         // But if table name is quoted in terms of provider, don't touch it to avoid e.g. [dbo.tables.etc].

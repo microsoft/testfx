@@ -1,1 +1,3 @@
 #nullable enable
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataConnection.get -> System.Data.Common.DbConnection?
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataRow.get -> System.Data.DataRow?

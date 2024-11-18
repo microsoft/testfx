@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
 using System.Collections;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
@@ -87,6 +87,9 @@ internal sealed class XmlDataConnection : TestDataConnection
     [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Un-tested. Preserving behavior.")]
     [SuppressMessage("Security", "CA3075:Insecure DTD processing in XML", Justification = "Not enough tests to understand if we would break")]
     [SuppressMessage("Security", "CA5366:Use XmlReader for 'DataSet.ReadXml()'", Justification = "Not enough tests to understand if we would break")]
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
+        Justification = "While this can fail and the analysis is actually correct, it seems like if it happened it's likely to be user's fault?" +
+        "If the user is referencing type from XML, they should be confident that they are not trimmed.")]
     private DataSet? LoadDataSet(bool schemaOnly)
     {
         try

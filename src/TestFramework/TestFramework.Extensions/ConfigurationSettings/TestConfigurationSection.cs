@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
 
 using System.Configuration;
 
@@ -10,7 +10,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// The configuration section for tests.
 /// </summary>
-public sealed class TestConfigurationSection : ConfigurationSection
+#if NETFRAMEWORK
+public
+#else
+internal
+#endif
+sealed class TestConfigurationSection : ConfigurationSection
 {
     private static readonly ConfigurationProperty DataSourcesValue = new(ConfigurationNames.DataSourcesSectionName, typeof(DataSourceElementCollection), null);
 

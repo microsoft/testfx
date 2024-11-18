@@ -1,10 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
+#if NET6_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -31,15 +34,26 @@ public class TestDataSource : ITestDataSource
 #if NETFRAMEWORK
     public IEnumerable<object>? GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
 #else
+#if NET6_0_OR_GREATER && IS_DATA_SOURCE_SUPPORTED
+    [UnconditionalSuppressMessage("SingleFile", "IL3000: Avoid accessing Assembly file path when publishing as a single file",
+        Justification = "The code handles the Assembly.Location equals null")]
+#endif
     IEnumerable<object>? ITestDataSource.GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
 #endif
     {
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
         // Figure out where (as well as the current directory) we could look for data files
         // for unit tests this means looking at the location of the test itself
+        string location =
+#if NETFRAMEWORK
+            testMethodInfo.MethodInfo.Module.Assembly.CodeBase;
+#else
+            // TODO: Should we use AppContext.BaseDirectory when Assembly.Location is null?
+            testMethodInfo.MethodInfo.Module.Assembly.Location ?? throw new NotSupportedException("DataSourceAttribute is currently not supported when publishing as single file.");
+#endif
         List<string> dataFolders =
         [
-            Path.GetDirectoryName(new Uri(testMethodInfo.MethodInfo.Module.Assembly.CodeBase).LocalPath),
+            Path.GetDirectoryName(new Uri(location).LocalPath),
         ];
 
         List<UTF.TestResult> dataRowResults = [];
@@ -89,7 +103,7 @@ public class TestDataSource : ITestDataSource
 #endif
     }
 
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
     /// <summary>
     /// Get permutations for data row access.
     /// </summary>

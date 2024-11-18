@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
 
 using System.Configuration;
 using System.Diagnostics.CodeAnalysis;
@@ -12,7 +12,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// The Data source element collection.
 /// </summary>
 [SuppressMessage("Microsoft.Design", "CA1010:CollectionsShouldImplementGenericInterface", Justification = "Compat")]
-public sealed class DataSourceElementCollection : ConfigurationElementCollection
+#if NETFRAMEWORK
+public
+#else
+internal
+#endif
+sealed class DataSourceElementCollection : ConfigurationElementCollection
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DataSourceElementCollection"/> class.

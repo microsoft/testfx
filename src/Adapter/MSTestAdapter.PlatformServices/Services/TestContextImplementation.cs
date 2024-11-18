@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
 using System.Data;
 using System.Data.Common;
 #endif
@@ -53,7 +53,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// </summary>
     private UnitTestOutcome _outcome;
 
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
     /// <summary>
     /// DB connection for test context.
     /// </summary>
@@ -100,7 +100,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <inheritdoc/>
     public override UnitTestOutcome CurrentTestOutcome => _outcome;
 
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
     /// <inheritdoc/>
     public override DbConnection? DataConnection => _dbConnection;
 
@@ -266,7 +266,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="dataRow">data row.</param>
     public void SetDataRow(object? dataRow)
     {
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
 #pragma warning disable IDE0022 // Use expression body for method
         _dataRow = dataRow as DataRow;
 #pragma warning restore IDE0022 // Use expression body for method
@@ -282,7 +282,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="dbConnection">db Connection.</param>
     public void SetDataConnection(object? dbConnection)
     {
-#if NETFRAMEWORK
+#if IS_DATA_SOURCE_SUPPORTED
 #pragma warning disable IDE0022 // Use expression body for method
         _dbConnection = dbConnection as DbConnection;
 #pragma warning restore IDE0022 // Use expression body for method
