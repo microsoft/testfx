@@ -80,6 +80,9 @@
     <NuspecProperty Include="ArtifactsBinDir=$(ArtifactsBinDir)" />
     <NuspecProperty Include="Configuration=$(Configuration)" />
     <NuspecProperty Include="TestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'))" />
+    <NuspecProperty Include="SystemDataOdbcVersion=$(SystemDataOdbcVersion)" />
+    <NuspecProperty Include="SystemDataOleDbVersion=$(SystemDataOleDbVersion)" />
+    <NuspecProperty Include="MicrosoftDataSqlClientVersion=$(MicrosoftDataSqlClientVersion)" />
   </ItemGroup>
 
   <ItemGroup>

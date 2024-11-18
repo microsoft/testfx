@@ -12,14 +12,23 @@
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
       </group>
       <group targetFramework="net6.0">
+        <dependency id="System.Data.Odbc" version="$SystemDataOdbcVersion$" />
+        <dependency id="System.Data.OleDb" version="$SystemDataOleDbVersion$" />
+        <dependency id="Microsoft.Data.SqlClient" version="$MicrosoftDataSqlClientVersion$" />
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
       </group>
       <group targetFramework="net7.0">
+        <dependency id="System.Data.Odbc" version="$SystemDataOdbcVersion$" />
+        <dependency id="System.Data.OleDb" version="$SystemDataOleDbVersion$" />
+        <dependency id="Microsoft.Data.SqlClient" version="$MicrosoftDataSqlClientVersion$" />
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
       </group>
       <group targetFramework="net8.0">
+        <dependency id="System.Data.Odbc" version="$SystemDataOdbcVersion$" />
+        <dependency id="System.Data.OleDb" version="$SystemDataOleDbVersion$" />
+        <dependency id="Microsoft.Data.SqlClient" version="$MicrosoftDataSqlClientVersion$" />
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
       </group>
