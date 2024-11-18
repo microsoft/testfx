@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 
@@ -416,6 +417,7 @@ public class TestMethodRunnerTests : TestContainer
             else
             {
                 ArgumentException thrownException = VerifyThrows<ArgumentException>(() => testMethodRunner.RunTestMethod());
+                Verify(thrownException.Message == string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, nameof(DummyTestClassEmptyDataSource.EmptyProperty), typeof(DummyTestClassEmptyDataSource).FullName));
             }
         }
         finally
