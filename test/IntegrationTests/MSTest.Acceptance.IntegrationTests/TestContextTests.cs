@@ -21,7 +21,7 @@ public sealed class TestContextTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 5, skipped: 0);
     }
 
     public async Task TestContext_TestData_PropertyContainsExpectedValue()
@@ -106,6 +106,7 @@ public class TestContextCtorWithReadOnlyProperty
     public void TestMethod()
     {
         TestContext.WriteLine("Method TestContextCtorWithReadOnlyProperty.TestMethod() was called");
+        Assert.IsNotNull(TestContext);
     }
 }
 
@@ -123,6 +124,7 @@ public class TestContextCtor
     public void TestMethod()
     {
         _testContext.WriteLine("Method TestContextCtor.TestMethod() was called");
+        Assert.IsNotNull(_testContext);
     }
 }
 
@@ -143,6 +145,8 @@ public class TestContextCtorAndProperty
     {
         _testContext.WriteLine("Method TestContextCtorAndProperty.TestMethod() was called");
         TestContext.WriteLine("Method TestContextCtorAndProperty.TestMethod() was called");
+        Assert.IsNotNull(_testContext);
+        Assert.IsNotNull(TestContext);
     }
 }
 
@@ -158,6 +162,7 @@ public class TestContextCtorDerived : TestContextCtor
     public void DerivedTestMethod()
     {
         _testContext.WriteLine("Method TestContextCtorDerived.DerivedTestMethod() was called");
+        Assert.IsNotNull(_testContext);
     }
 }
 

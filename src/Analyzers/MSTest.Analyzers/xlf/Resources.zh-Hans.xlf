@@ -567,12 +567,11 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
-        <source>TestContext property should follow the following layout to be valid:
-- it should be a property
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+        <source>'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
-- it should not be readonly.</source>
-        <target state="translated">TestContext 属性应遵循以下布局才能生效：
+- it should have a setter.</source>
+        <target state="needs-review-translation">TestContext 属性应遵循以下布局才能生效：
 - 它应该是属性
 - 它应为“public”(如果设置了“[assembly: DiscoverInternals]”属性，则应为“internal”)
 - 它不应为“static”

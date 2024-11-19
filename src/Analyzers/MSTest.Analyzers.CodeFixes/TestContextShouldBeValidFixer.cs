@@ -58,7 +58,6 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
 
         // Get the SemanticModel and Compilation
         SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-        bool canDiscoverInternals = semanticModel.Compilation.CanDiscoverInternals();
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
@@ -68,10 +67,7 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
 
         if (!memberDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword))
         {
-            // Determine the visibility modifier
-            SyntaxToken visibilityModifier = canDiscoverInternals
-                ? SyntaxFactory.Token(SyntaxKind.InternalKeyword)
-                : SyntaxFactory.Token(SyntaxKind.PublicKeyword);
+            SyntaxToken visibilityModifier = SyntaxFactory.Token(SyntaxKind.PublicKeyword);
 
             modifiers = SyntaxFactory.TokenList(
                 modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.PrivateKeyword) && !modifier.IsKind(SyntaxKind.InternalKeyword) && !modifier.IsKind(SyntaxKind.ProtectedKeyword))).Add(visibilityModifier);
@@ -87,6 +83,12 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
         {
             // ensure that the property has setter and getter
             var propertyDeclaration = (PropertyDeclarationSyntax)newMemberDeclaration;
+            if (!propertyDeclaration.Identifier.ValueText.Equals(TestContextShouldBeValidAnalyzer.TestContextPropertyName, StringComparison.Ordinal))
+            {
+                propertyDeclaration = propertyDeclaration.WithIdentifier(
+                    SyntaxFactory.Identifier(propertyDeclaration.Identifier.LeadingTrivia, TestContextShouldBeValidAnalyzer.TestContextPropertyName, propertyDeclaration.Identifier.TrailingTrivia));
+            }
+
             SyntaxList<AccessorDeclarationSyntax> accessors = propertyDeclaration.AccessorList?.Accessors ?? default;
 
             AccessorDeclarationSyntax getAccessor = accessors.FirstOrDefault(a => a.Kind() == SyntaxKind.GetAccessorDeclaration)
@@ -108,10 +110,9 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
     private static PropertyDeclarationSyntax ConvertFieldToProperty(FieldDeclarationSyntax fieldDeclaration)
     {
         TypeSyntax type = fieldDeclaration.Declaration.Type;
-        VariableDeclaratorSyntax variableDeclarator = fieldDeclaration.Declaration.Variables.First();
 
         // Create the property declaration
-        PropertyDeclarationSyntax propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, variableDeclarator.Identifier.Text)
+        PropertyDeclarationSyntax propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, TestContextShouldBeValidAnalyzer.TestContextPropertyName)
             .WithModifiers(SyntaxFactory.TokenList(fieldDeclaration.Modifiers))
             .WithAccessorList(SyntaxFactory.AccessorList(
                 SyntaxFactory.List(new[]
