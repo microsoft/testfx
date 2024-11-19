@@ -74,7 +74,7 @@
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
-        <target state="needs-review-translation">{0}({1})</target>
+        <target state="new">{0}. {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsFail">
