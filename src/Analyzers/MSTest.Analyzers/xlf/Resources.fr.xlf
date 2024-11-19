@@ -571,11 +571,10 @@ Le type doit être une classe
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="needs-review-translation">La propriété TestContext doit suivre la disposition suivante pour être valide : 
-– il doit s’agir d’une propriété
-– il doit être "public" (ou "interne" si l'attribut "[assembly: DiscoverInternals]" est défini)
-– ça ne devrait pas être "statique"
-– il ne doit pas être en lecture seule.</target>
+        <target state="new">'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
+- it should not be 'static'
+- it should have a setter.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">
