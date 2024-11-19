@@ -318,19 +318,17 @@ internal class TestMethodRunner
 
                     if (!dataSource.Any())
                     {
-                        if (MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
-                        {
-                            var inconclusiveResult = new TestResult
-                            {
-                                Outcome = UTF.UnitTestOutcome.Inconclusive,
-                            };
-                            results.Add(inconclusiveResult);
-                            continue;
-                        }
-                        else
+                        if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
                         {
                             throw testDataSource.GetExceptionForEmptyDataSource(_testMethodInfo.MethodInfo);
                         }
+
+                        var inconclusiveResult = new TestResult
+                        {
+                            Outcome = UTF.UnitTestOutcome.Inconclusive,
+                        };
+                        results.Add(inconclusiveResult);
+                        continue;
                     }
 
                     foreach (object?[] data in dataSource)
