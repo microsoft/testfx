@@ -116,6 +116,13 @@ extends:
                 failOnStderr: true
                 showWarnings: true
 
+            - task: PowerShell@2
+              displayName: 'Install Access Database Engine'
+              inputs:
+                targetType: filePath
+                filePath: ./eng/install-access-database-engine.ps1
+                failOnStderr: true
+                showWarnings: true
 
             - script: eng\common\CIBuild.cmd
                 -configuration $(_BuildConfig)
