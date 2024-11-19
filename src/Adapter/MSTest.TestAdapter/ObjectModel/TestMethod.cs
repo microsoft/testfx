@@ -29,7 +29,8 @@ public sealed class TestMethod : ITestMethod
     private string? _declaringClassFullName;
     private string? _declaringAssemblyName;
 
-    private static readonly ConcurrentDictionary<string, object?[]> DataDictionary = new();
+    private static readonly ConcurrentDictionary<int, object?[]> DataDictionary = new();
+    private static int s_currentTestIndex;
 
     public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
         : this(null, null, null, name, fullClassName, assemblyName, isAsync, null, TestIdGenerationStrategy.FullyQualified)
@@ -37,14 +38,14 @@ public sealed class TestMethod : ITestMethod
     }
 
     internal TestMethod(string name, string fullClassName, string assemblyName, bool isAsync, string? displayName,
-        TestIdGenerationStrategy testIdGenerationStrategy)
-        : this(null, null, null, name, fullClassName, assemblyName, isAsync, displayName, testIdGenerationStrategy)
+        TestIdGenerationStrategy testIdGenerationStrategy, int? testCaseIndex = null)
+        : this(null, null, null, name, fullClassName, assemblyName, isAsync, displayName, testIdGenerationStrategy, testCaseIndex)
     {
     }
 
     internal TestMethod(string? managedTypeName, string? managedMethodName, string?[]? hierarchyValues, string name,
         string fullClassName, string assemblyName, bool isAsync, string? displayName,
-        TestIdGenerationStrategy testIdGenerationStrategy)
+        TestIdGenerationStrategy testIdGenerationStrategy, int? testCaseIndex = null)
     {
         Guard.NotNullOrWhiteSpace(assemblyName);
 
@@ -67,6 +68,7 @@ public sealed class TestMethod : ITestMethod
         ManagedTypeName = managedTypeName;
         ManagedMethodName = managedMethodName;
         TestIdGenerationStrategy = testIdGenerationStrategy;
+        Index = testCaseIndex ?? Interlocked.Increment(ref s_currentTestIndex);
     }
 
     /// <inheritdoc />
@@ -74,6 +76,8 @@ public sealed class TestMethod : ITestMethod
 
     /// <inheritdoc />
     public string FullClassName { get; }
+
+    internal int Index { get; }
 
     /// <summary>
     /// Gets or sets the declaring assembly full name. This will be used while getting navigation data.
@@ -152,14 +156,14 @@ public sealed class TestMethod : ITestMethod
                 return _actualData;
             }
 
-            DataDictionary.TryGetValue(UniqueName, out _actualData);
+            DataDictionary.TryGetValue(Index, out _actualData);
             return _actualData;
         }
 
         set
         {
             _actualData = value;
-            DataDictionary.TryAdd(UniqueName, value);
+            DataDictionary.TryAdd(Index, value);
         }
     }
 

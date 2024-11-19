@@ -76,9 +76,11 @@ internal static class TestCaseExtensions
             Constants.TestIdGenerationStrategyProperty,
             (int)TestIdGenerationStrategy.FullyQualified);
 
+        int? testCaseIndex = testCase.GetPropertyValue(Constants.TestCaseIndexProperty) as int?;
+
         TestMethod testMethod = testCase.ContainsManagedMethodAndType()
-            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, isAsync, testCase.DisplayName, testIdGenerationStrategy)
-            : new(name, testClassName!, source, isAsync, testCase.DisplayName, testIdGenerationStrategy);
+            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, isAsync, testCase.DisplayName, testIdGenerationStrategy, testCaseIndex)
+            : new(name, testClassName!, source, isAsync, testCase.DisplayName, testIdGenerationStrategy, testCaseIndex);
         var dataType = (DynamicDataType)testCase.GetPropertyValue(Constants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
         {

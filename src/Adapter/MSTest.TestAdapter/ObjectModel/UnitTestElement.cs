@@ -140,6 +140,8 @@ internal class UnitTestElement
             testCase.SetPropertyValue(Constants.TestClassNameProperty, TestMethod.FullClassName);
         }
 
+        testCase.SetPropertyValue(Constants.TestCaseIndexProperty, TestMethod.Index);
+
         IReadOnlyCollection<string?> hierarchy = TestMethod.Hierarchy;
         if (hierarchy is { Count: > 0 })
         {
