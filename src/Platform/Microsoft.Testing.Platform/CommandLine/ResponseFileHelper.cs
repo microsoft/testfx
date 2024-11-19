@@ -3,7 +3,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Threading;
 
 using Microsoft.Testing.Platform.Resources;
 
