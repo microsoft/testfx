@@ -191,12 +191,12 @@
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} tests in assembly</source>
-        <target state="new">Discovered {0} tests in assembly</target>
+        <target state="translated">アセンブリで {0} つのテストを検出しました。</target>
         <note>0 is count, the sentence is followed by the path of the assebly</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
         <source>Discovering tests from</source>
-        <target state="new">Discovering tests from</target>
+        <target state="translated">からテストを検出しています</target>
         <note />
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -206,7 +206,7 @@
       </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
-        <target state="new">Exit code</target>
+        <target state="translated">終了コード</target>
         <note />
       </trans-unit>
       <trans-unit id="Expected">
@@ -243,7 +243,7 @@
       </trans-unit>
       <trans-unit id="FailedWithErrors">
         <source>failed with {0} error(s)</source>
-        <target state="new">failed with {0} error(s)</target>
+        <target state="translated">{0} 件のエラーで失敗しました</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">
@@ -763,12 +763,12 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
         <source>Discovered {0} tests in {1} assemblies.</source>
-        <target state="new">Discovered {0} tests in {1} assemblies.</target>
+        <target state="translated">{1} アセンブリで {0} つのテストを検出しました。</target>
         <note>0 is number of tests, 1 is count of assemblies</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Discovered {0} tests.</source>
-        <target state="new">Discovered {0} tests.</target>
+        <target state="translated">{0} つのテストが検出されました。</target>
         <note>0 is number of tests</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
