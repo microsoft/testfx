@@ -3,15 +3,16 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Threading;
 
 using Microsoft.Testing.Platform.Resources;
 
 // Most of the core logic is from:
-// - https://github.com/dotnet/command-line-api/blob/feb61c7f328a2401d74f4317b39d02126cfdfe24/src/System.CommandLine/Parsing/CliParser.cs#L49
+// - https://github.com/dotnet/command-line-api/blob/feb61c7f328a2401d74f4317b39d02126cfdfe24/src/System.CommandLine/Parsing/CliParser.cs#L40
 // - https://github.com/dotnet/command-line-api/blob/feb61c7f328a2401d74f4317b39d02126cfdfe24/src/System.CommandLine/Parsing/StringExtensions.cs#L349
 internal static class ResponseFileHelper
 {
-    internal static bool TryReadResponseFile(string rspFilePath, List<string> errors, [NotNullWhen(true)] out string[]? newArguments)
+    internal static bool TryReadResponseFile(string rspFilePath, ICollection<string> errors, [NotNullWhen(true)] out string[]? newArguments)
     {
         try
         {
@@ -24,12 +25,13 @@ internal static class ResponseFileHelper
         }
         catch (IOException e)
         {
-            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserFailedToReadResponseFile, rspFilePath, e.Message));
+            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserFailedToReadResponseFile, rspFilePath, e.ToString()));
         }
 
         newArguments = null;
         return false;
 
+        // Local functions
         static IEnumerable<string> ExpandResponseFile(string filePath)
         {
             string[] lines = File.ReadAllLines(filePath);
