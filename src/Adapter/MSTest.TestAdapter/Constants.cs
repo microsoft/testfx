@@ -65,7 +65,7 @@ internal static class Constants
     internal static readonly TestProperty CssProjectStructureProperty = TestProperty.Register("CssProjectStructure", CssProjectStructureLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty TestClassNameProperty = TestProperty.Register("MSTestDiscoverer.TestClassName", TestClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-    internal static readonly TestProperty TestCaseIndexProperty = TestProperty.Register("TestCaseIndexProperty", TestCaseIndexLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase))
+    internal static readonly TestProperty TestCaseIndexProperty = TestProperty.Register("TestCaseIndexProperty", TestCaseIndexLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty DeclaringClassNameProperty = TestProperty.Register("MSTestDiscoverer.DeclaringClassName", DeclaringClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
