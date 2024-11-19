@@ -63,7 +63,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         null,
         Category.Usage,
         DiagnosticSeverity.Info,
-        isEnabledByDefault: false);
+        isEnabledByDefault: true);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);

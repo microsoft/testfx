@@ -728,12 +728,12 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsMessageFormat">
         <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
-        <target state="new">Use 'Assert.{0}' instead of 'Assert.{1}'</target>
+        <target state="translated">Użyj instrukcji „Assert{0}.” zamiast „Assert{1}”.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsTitle">
         <source>Use proper 'Assert' methods</source>
-        <target state="new">Use proper 'Assert' methods</target>
+        <target state="translated">Użyj odpowiednich metod „Assert”</target>
         <note />
       </trans-unit>
     </body>

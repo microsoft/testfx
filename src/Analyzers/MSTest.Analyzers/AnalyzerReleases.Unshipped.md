@@ -5,4 +5,4 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MSTEST0037 | `Usage` | Disabled | UseProperAssertMethodsAnalyzer
+MSTEST0037 | `Usage` | Info | UseProperAssertMethodsAnalyzer

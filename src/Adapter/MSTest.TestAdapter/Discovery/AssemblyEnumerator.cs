@@ -285,10 +285,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
-        if (test.TestMethod.DataType == DynamicDataType.None)
-        {
-            return false;
-        }
+        DynamicDataType originalDataType = test.TestMethod.DataType;
 
         // PERF: For perf we started setting DataType in TypeEnumerator, so when it is None we will not reach this line.
         // But if we do run this code, we still reset it to None, because the code that determines if this is data drive test expects the value to be None
@@ -297,7 +294,15 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // If you remove this line and acceptance tests still pass you are okay.
         test.TestMethod.DataType = DynamicDataType.None;
 
-        return testMethodInfo.Value != null && TryProcessTestDataSourceTests(test, testMethodInfo.Value, tests);
+        // The data source tests that we can process currently are those using attributes that
+        // implement ITestDataSource (i.e, DataRow and DynamicData attributes).
+        // However, for DataSourceAttribute, we currently don't have anyway to process it during discovery.
+        // (Note: this method is only called under discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
+        // So we want to return false from this method for non ITestDataSource (whether it's None or DataSourceAttribute). Otherwise, the test
+        // will be completely skipped which is wrong behavior.
+        return originalDataType == DynamicDataType.ITestDataSource &&
+            testMethodInfo.Value != null &&
+            TryProcessITestDataSourceTests(test, testMethodInfo.Value, tests);
     }
 
     private static void AddFixtureTests(TestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> fixtureTests)
@@ -381,7 +386,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
+    private static bool TryProcessITestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
     {
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
@@ -390,7 +395,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         try
         {
-            return ProcessTestDataSourceTests(test, new(testMethodInfo.MethodInfo, test.DisplayName), testDataSources, tests);
+            return ProcessITestDataSourceTests(test, new(testMethodInfo.MethodInfo, test.DisplayName), testDataSources, tests);
         }
         catch (Exception ex)
         {
@@ -400,7 +405,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool ProcessTestDataSourceTests(UnitTestElement test, ReflectionTestMethodInfo methodInfo, IEnumerable<ITestDataSource> testDataSources,
+    private static bool ProcessITestDataSourceTests(UnitTestElement test, ReflectionTestMethodInfo methodInfo, IEnumerable<ITestDataSource> testDataSources,
         List<UnitTestElement> tests)
     {
         foreach (ITestDataSource dataSource in testDataSources)
