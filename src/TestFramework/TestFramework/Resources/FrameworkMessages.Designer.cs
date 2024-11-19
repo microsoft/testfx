@@ -223,7 +223,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}({1}).
+        ///   Looks up a localized string similar to {0}. {1}.
         /// </summary>
         internal static string CollectionEqualReason {
             get {
@@ -340,7 +340,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Element at index {0} do not match..
+        ///   Looks up a localized string similar to Element at index {0} do not match.
+        ///Expected: {1}
+        ///Actual: {2}.
         /// </summary>
         internal static string ElementsAtIndexDontMatch {
             get {

@@ -465,6 +465,28 @@ public class CollectionAssertTests : TestContainer
         Verify(ex.Message.Contains("message"));
     }
 
+    public void CollectionAssertAreEqualWithoutUserMessage_FailsWithGoodMessage()
+    {
+        Exception ex = VerifyThrows(() => CollectionAssert.AreEqual(new[] { 1, 2, 3 }, new[] { 1, 5, 3 }));
+        Assert.AreEqual(
+            """
+            CollectionAssert.AreEqual failed. Element at index 1 do not match.
+            Expected: 2
+            Actual: 5
+            """, ex.Message);
+    }
+
+    public void CollectionAssertAreEqualWithUserMessage_FailsWithGoodMessage()
+    {
+        Exception ex = VerifyThrows(() => CollectionAssert.AreEqual(new[] { 1, 2, 3 }, new[] { 1, 5, 3 }, "User-provided message"));
+        Assert.AreEqual(
+            """
+            CollectionAssert.AreEqual failed. User-provided message. Element at index 1 do not match.
+            Expected: 2
+            Actual: 5
+            """, ex.Message);
+    }
+
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
 
     private static List<object> GenerateDeeplyNestedCollection(int depth)

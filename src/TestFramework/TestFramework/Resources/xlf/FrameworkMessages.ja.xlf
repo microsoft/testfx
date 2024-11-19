@@ -73,9 +73,9 @@
         <note></note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
-        <source>{0}({1})</source>
-        <target state="translated">{0}({1})</target>
-        <note></note>
+        <source>{0}. {1}</source>
+        <target state="needs-review-translation">{0}({1})</target>
+        <note />
       </trans-unit>
       <trans-unit id="ContainsFail">
         <source>String '{0}' does not contain string '{1}'. {2}.</source>
@@ -98,9 +98,13 @@
         <note></note>
       </trans-unit>
       <trans-unit id="ElementsAtIndexDontMatch">
-        <source>Element at index {0} do not match.</source>
-        <target state="translated">インデックス {0} の要素が一致しません。</target>
-        <note></note>
+        <source>Element at index {0} do not match.
+Expected: {1}
+Actual: {2}</source>
+        <target state="new">Element at index {0} do not match.
+Expected: {1}
+Actual: {2}</target>
+        <note />
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
         <source>Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</source>
