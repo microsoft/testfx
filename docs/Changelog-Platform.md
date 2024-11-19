@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="1.4.3" />[1.4.3] - 2024-11-12
+
+See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.2...v1.4.3)
+
+### Fixed
+
+* Fix live output with HotReload by @nohwnd in [#3983](https://github.com/microsoft/testfx/pull//3983)
+* Fix hangdump space in dump path by @nohwnd in [#3994](https://github.com/microsoft/testfx/pull//3994)
+* Fix hangdump not showing tests in progress by @nohwnd in [#3992](https://github.com/microsoft/testfx/pull//3992)
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.4.3)
+* Microsoft.Testing.Extensions.HangDump: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.4.3)
+* Microsoft.Testing.Extensions.HotReload: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.4.3)
+* Microsoft.Testing.Extensions.Retry: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.4.3)
+* Microsoft.Testing.Extensions.Telemetry: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.4.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.4.3)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.4.3)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.4.3)
+* Microsoft.Testing.Platform: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.4.3)
+* Microsoft.Testing.Platform.MSBuild: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.4.3)
+
 ## <a name="1.4.2" />[1.4.2] - 2024-10-31
 
 See full log [here](https://github.com/microsoft/testanywhere/compare/v1.4.1...v1.4.2)

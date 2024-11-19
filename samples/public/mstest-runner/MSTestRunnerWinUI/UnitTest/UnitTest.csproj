@@ -35,14 +35,7 @@
     <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="$(VSTestVersion)" Condition=" '$(EnableMSTestRunner)' != 'true' " />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240428000" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.3233" />
-
-    <!-- We cannot use the v$(MSTestVersion) has it contains a bug in how the targets are importing the dll for WinUI -->
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest" Version="$(MSTestVersion)" />
   </ItemGroup>
 
   <!--

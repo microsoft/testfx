@@ -122,7 +122,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute, TestPropertyRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute, WorkItemRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDescriptionAttribute, DescriptionRule),
-        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute, ExpectedExceptionRule),
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionBaseAttribute, ExpectedExceptionRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssIterationAttribute, CssIterationRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute, CssProjectStructureRule)
     ];
@@ -188,7 +188,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             // Get all test attributes decorating the current method.
             foreach ((INamedTypeSymbol attributeSymbol, DiagnosticDescriptor rule) in attributeRuleTuples)
             {
-                if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, attributeSymbol))
+                if (methodAttribute.AttributeClass.Inherits(attributeSymbol))
                 {
                     attributes.Add((methodAttribute, rule));
                 }

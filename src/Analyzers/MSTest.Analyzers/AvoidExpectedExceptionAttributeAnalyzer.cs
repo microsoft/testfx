@@ -41,20 +41,21 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute, out INamedTypeSymbol? expectedExceptionAttributeSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionBaseAttribute, out INamedTypeSymbol? expectedExceptionBaseAttributeSymbol))
             {
-                context.RegisterSymbolAction(context => AnalyzeSymbol(context, expectedExceptionAttributeSymbol), SymbolKind.Method);
+                context.RegisterSymbolAction(context => AnalyzeSymbol(context, expectedExceptionBaseAttributeSymbol), SymbolKind.Method);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol expectedExceptionAttributeSymbol)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol expectedExceptionBaseAttributeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
         if (methodSymbol.GetAttributes().FirstOrDefault(
-            attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, expectedExceptionAttributeSymbol)) is { } expectedExceptionAttribute)
+            attr => attr.AttributeClass.Inherits(expectedExceptionBaseAttributeSymbol)) is { } expectedExceptionBaseAttribute)
         {
-            bool allowsDerivedTypes = expectedExceptionAttribute.NamedArguments.FirstOrDefault(n => n.Key == "AllowDerivedTypes").Value.Value is true;
+            bool allowsDerivedTypes = expectedExceptionBaseAttribute.NamedArguments.FirstOrDefault(n => n.Key == "AllowDerivedTypes").Value.Value is true;
+
             // Assert.ThrowsException checks the exact Exception type. So, we cannot offer a fix to ThrowsException if the user sets AllowDerivedTypes to true.
             context.ReportDiagnostic(
                 allowsDerivedTypes

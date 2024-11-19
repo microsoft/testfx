@@ -306,11 +306,23 @@ public sealed record TestFileLocationProperty(string FilePath, LinePositionSpan 
 public sealed record TestMethodIdentifierProperty(string AssemblyFullName, string Namespace, string TypeName, string MethodName, string[] ParameterTypeFullNames, string ReturnTypeFullName) : IProperty;
 
 /// <summary>
-/// Property that represents a generic test metadata property.
+/// Initializes a new instance of the <see cref="TestMetadataProperty"/> class.
+/// Property that represents a generic test metadata property in the shape of a key-value pair associated with a <see cref="TestNode"/>.
 /// </summary>
-/// <param name="Key">Key name.</param>
-/// <param name="Value">Value name.</param>
-public sealed record TestMetadataProperty(string Key, string Value) : IProperty;
+/// <param name="Key">The metadata key.</param>
+/// <param name="Value">The metadata value.</param>
+public sealed record TestMetadataProperty(string Key, string Value) : IProperty
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestMetadataProperty"/> class.
+    /// Property that represents a generic test metadata property in the shape of a value associated with a <see cref="TestNode"/>.
+    /// </summary>
+    /// <param name="key">The metadata key.</param>
+    public TestMetadataProperty(string key)
+        : this(key, string.Empty)
+    {
+    }
+}
 
 /// <summary>
 /// Property that represents standard output to associate with a test node.
