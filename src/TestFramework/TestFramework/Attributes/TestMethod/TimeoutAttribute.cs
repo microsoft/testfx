@@ -20,7 +20,6 @@ public sealed class TimeoutAttribute : Attribute
     public TimeoutAttribute(int timeout)
     {
         Timeout = timeout;
-        HasCorrectTimeout = Timeout > 0;
     }
 
     /// <summary>
