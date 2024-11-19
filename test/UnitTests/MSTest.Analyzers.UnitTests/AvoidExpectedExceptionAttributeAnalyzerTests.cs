@@ -17,6 +17,11 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests(ITestExecutionC
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+            public class MyExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
+            {
+                protected override void Verify(System.Exception exception) { }
+            }
+
             [TestClass]
             public class TestClass
             {
@@ -43,11 +48,22 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests(ITestExecutionC
                 public void [|TestMethod4|]()
                 {
                 }
+
+                [MyExpectedException]
+                [TestMethod]
+                public void [|TestMethod5|]()
+                {
+                }
             }
             """;
 
         string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
+            {
+                protected override void Verify(System.Exception exception) { }
+            }
 
             [TestClass]
             public class TestClass
@@ -73,6 +89,12 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests(ITestExecutionC
                 public void [|TestMethod4|]()
                 {
                 }
+
+                [MyExpectedException]
+                [TestMethod]
+                public void [|TestMethod5|]()
+                {
+                }
             }
             """;
 
@@ -86,7 +108,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests(ITestExecutionC
                     fixedCode,
                 },
                 // ExpectedException with AllowDerivedTypes = True cannot be simply converted
-                // to Assert.ThrowsException as the semantics are different.
+                // to Assert.ThrowsException as the semantics are different (same for custom attributes that may have some special semantics).
                 // For now, the user needs to manually fix this to use Assert.ThrowsException and specify the actual (exact) exception type.
                 // We *could* provide a codefix that uses Assert.ThrowsException<SameExceptionType> but that's most likely going to be wrong.
                 // If the user explicitly has AllowDerivedTypes, it's likely because he doesn't specify the exact exception type.

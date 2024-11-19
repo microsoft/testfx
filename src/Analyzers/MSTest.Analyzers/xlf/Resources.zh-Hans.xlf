@@ -725,6 +725,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">显式启用或禁用测试并行化</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseProperAssertMethodsMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
+        <target state="translated">使用“Assert.{0}”而不是“Assert.{1}”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsTitle">
+        <source>Use proper 'Assert' methods</source>
+        <target state="translated">使用正确的“断言”方法</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

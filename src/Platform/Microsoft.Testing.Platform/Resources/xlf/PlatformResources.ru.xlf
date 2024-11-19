@@ -189,9 +189,24 @@
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
+      <trans-unit id="DiscoveredTestsInAssembly">
+        <source>Discovered {0} tests in assembly</source>
+        <target state="translated">Обнаружены тесты ({0}) в сборке.</target>
+        <note>0 is count, the sentence is followed by the path of the assebly</note>
+      </trans-unit>
+      <trans-unit id="DiscoveringTestsFrom">
+        <source>Discovering tests from</source>
+        <target state="translated">Обнаружение тестов из</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">Сбой поставщика "{0}" (ИД пользователя: {1}) с ошибкой: {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="translated">Код завершения</target>
         <note />
       </trans-unit>
       <trans-unit id="Expected">
@@ -227,8 +242,8 @@
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
-        <source>failed with {0} errors(s)</source>
-        <target state="translated">сбой с ошибками {0}</target>
+        <source>failed with {0} error(s)</source>
+        <target state="translated">сбой с ошибками ({0})</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">
@@ -744,6 +759,16 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
         <target state="translated">Режим VSTest поддерживает только один TestApplicationBuilder для каждого процесса</target>
         <note />
+      </trans-unit>
+      <trans-unit id="TestDiscoverySummary">
+        <source>Discovered {0} tests in {1} assemblies.</source>
+        <target state="translated">Обнаружены тесты ({0}) в сборках ({1})</target>
+        <note>0 is number of tests, 1 is count of assemblies</note>
+      </trans-unit>
+      <trans-unit id="TestDiscoverySummarySingular">
+        <source>Discovered {0} tests.</source>
+        <target state="translated">Обнаружены тесты ({0}).</target>
+        <note>0 is number of tests</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>

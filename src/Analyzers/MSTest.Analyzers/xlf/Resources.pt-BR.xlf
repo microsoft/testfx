@@ -725,6 +725,16 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="translated">Habilitar ou desabilitar explicitamente a paralelização de testes</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseProperAssertMethodsMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
+        <target state="translated">Usar 'Assert.{0}' em vez de 'Assert.{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsTitle">
+        <source>Use proper 'Assert' methods</source>
+        <target state="translated">Usar métodos 'Assert' adequados</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

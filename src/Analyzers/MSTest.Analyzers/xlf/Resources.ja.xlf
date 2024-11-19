@@ -726,6 +726,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">テストの並列化を明示的に有効または無効にする</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseProperAssertMethodsMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
+        <target state="translated">'Assert.{1}' の代わりに 'Assert.{0}' を使用する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsTitle">
+        <source>Use proper 'Assert' methods</source>
+        <target state="translated">適切な 'Assert' メソッドを使用する</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

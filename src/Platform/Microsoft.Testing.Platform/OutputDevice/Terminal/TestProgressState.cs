@@ -44,6 +44,8 @@ internal sealed class TestProgressState
 
     public long LastUpdate { get; internal set; }
 
+    public List<(string? DisplayName, string? UID)> DiscoveredTests { get; internal set; } = new();
+
     internal void AddError(string text)
         => Messages.Add(new ErrorMessage(text));
 
