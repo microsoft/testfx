@@ -110,7 +110,7 @@ public sealed class CommandLineTests : TestBase
             new("option5", ["e"]),
         }.ToArray(), []));
         yield return (25, ["--option1", "a", "@25_test1.rsp", "--option6", "f"], [
-            ("test1.rsp",
+            ("25_test1.rsp",
             """
             --option2 b
             @25_test2.rsp
