@@ -23,6 +23,8 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Description = new(nameof(Resources.TestContextShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestContextShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources));
 
+    internal const string TestContextPropertyName = "TestContext";
+
     internal static readonly DiagnosticDescriptor TestContextShouldBeValidRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestContextShouldBeValidRuleId,
         Title,
@@ -95,7 +97,7 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
                                     if (member is IPropertySymbol propertySymbol)
                                     {
                                         if (!SymbolEqualityComparer.Default.Equals(propertySymbol.Type, testContextSymbol) ||
-                                            !member.Name.Equals("TestContext", StringComparison.OrdinalIgnoreCase))
+                                            !member.Name.Equals(TestContextPropertyName, StringComparison.OrdinalIgnoreCase))
                                         {
                                             continue;
                                         }
@@ -177,7 +179,7 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
         // See TypeCache.ResolveTestContext
 
         // For the property to be auto assigned, the name must be exactly TestContext (case sensitive)
-        property.Name.Equals("TestContext", StringComparison.Ordinal) &&
+        property.Name.Equals(TestContextPropertyName, StringComparison.Ordinal) &&
             // The TestContext property must be public regardless of the presence of DiscoverInternals attribute.
             property.DeclaredAccessibility == Accessibility.Public &&
             // A setter must exist, even if private.

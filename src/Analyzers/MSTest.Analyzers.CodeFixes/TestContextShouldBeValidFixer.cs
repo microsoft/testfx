@@ -83,10 +83,10 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
         {
             // ensure that the property has setter and getter
             var propertyDeclaration = (PropertyDeclarationSyntax)newMemberDeclaration;
-            if (!propertyDeclaration.Identifier.ValueText.Equals("TestContext", StringComparison.Ordinal))
+            if (!propertyDeclaration.Identifier.ValueText.Equals(TestContextShouldBeValidAnalyzer.TestContextPropertyName, StringComparison.Ordinal))
             {
                 propertyDeclaration = propertyDeclaration.WithIdentifier(
-                    SyntaxFactory.Identifier(propertyDeclaration.Identifier.LeadingTrivia, "TestContext", propertyDeclaration.Identifier.TrailingTrivia));
+                    SyntaxFactory.Identifier(propertyDeclaration.Identifier.LeadingTrivia, TestContextShouldBeValidAnalyzer.TestContextPropertyName, propertyDeclaration.Identifier.TrailingTrivia));
             }
 
             SyntaxList<AccessorDeclarationSyntax> accessors = propertyDeclaration.AccessorList?.Accessors ?? default;
@@ -112,7 +112,7 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
         TypeSyntax type = fieldDeclaration.Declaration.Type;
 
         // Create the property declaration
-        PropertyDeclarationSyntax propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, "TestContext")
+        PropertyDeclarationSyntax propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, TestContextShouldBeValidAnalyzer.TestContextPropertyName)
             .WithModifiers(SyntaxFactory.TokenList(fieldDeclaration.Modifiers))
             .WithAccessorList(SyntaxFactory.AccessorList(
                 SyntaxFactory.List(new[]
