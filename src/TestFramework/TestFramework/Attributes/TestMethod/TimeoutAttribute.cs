@@ -62,7 +62,7 @@ public sealed class TimeoutAttribute : Attribute
     /// <summary>
     /// Gets a value indicating whether the instance has the correct test timeout signature.
     /// </summary>
-    internal bool HasCorrectTimeout { get; private set; }
+    internal bool HasCorrectTimeout => Timeout > 0;
 
     internal bool IsCooperativeCancellationSet { get; private set; }
 }
