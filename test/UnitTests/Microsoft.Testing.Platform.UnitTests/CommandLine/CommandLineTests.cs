@@ -109,14 +109,14 @@ public sealed class CommandLineTests : TestBase
             new("option4", ["d"]),
             new("option5", ["e"]),
         }.ToArray(), []));
-        yield return (25, ["--option1", "a", "@test1.rsp", "--option6", "f"], [
+        yield return (25, ["--option1", "a", "@25_test1.rsp", "--option6", "f"], [
             ("test1.rsp",
             """
             --option2 b
-            @test2.rsp
+            @25_test2.rsp
             --option5 e
             """),
-            ("test2.rsp",
+            ("25_test2.rsp",
             """
             --option3 c
             --option4 d
@@ -129,8 +129,8 @@ public sealed class CommandLineTests : TestBase
             new("option5", ["e"]),
             new("option6", ["f"]),
         }.ToArray(), []));
-        yield return (26, ["@test.rsp", "--option3", "c", "--option4", "d"], [
-            ("test.rsp",
+        yield return (26, ["@26_test.rsp", "--option3", "c", "--option4", "d"], [
+            ("26_test.rsp",
             """
             --option1 a
             --option2 b
@@ -141,8 +141,8 @@ public sealed class CommandLineTests : TestBase
             new("option3", ["c"]),
             new("option4", ["d"]),
         }.ToArray(), []));
-        yield return (27, ["--option1", "a", "--option2", "b", "@test.rsp"], [
-            ("test.rsp",
+        yield return (27, ["--option1", "a", "--option2", "b", "@27_test.rsp"], [
+            ("27_test.rsp",
             """
             --option3 c
             --option4 d
@@ -153,8 +153,8 @@ public sealed class CommandLineTests : TestBase
             new("option3", ["c"]),
             new("option4", ["d"]),
         }.ToArray(), []));
-        yield return (28, ["@test.rsp"], [
-            ("test.rsp",
+        yield return (28, ["@28_test.rsp"], [
+            ("28_test.rsp",
             """
             --option1 a
             --option2 b
@@ -167,13 +167,13 @@ public sealed class CommandLineTests : TestBase
             new("option3", ["c"]),
             new("option4", ["d"]),
         }.ToArray(), []));
-        yield return (29, ["@test1.rsp", "@test2.rsp"], [
-            ("test1.rsp",
+        yield return (29, ["@29_test1.rsp", "@29_test2.rsp"], [
+            ("29_test1.rsp",
             """
             --option1 a
             --option2 b
             """),
-            ("test2.rsp",
+            ("29_test2.rsp",
             """
             --option3 c
             --option4 d
@@ -184,14 +184,14 @@ public sealed class CommandLineTests : TestBase
             new("option3", ["c"]),
             new("option4", ["d"]),
         }.ToArray(), []));
-        yield return (30, ["@test1.rsp"], [
-            ("test1.rsp",
+        yield return (30, ["@30_test1.rsp"], [
+            ("30_test1.rsp",
             """
             --option1 a
             --option2 b
-            @test2.rsp
+            @30_test2.rsp
             """),
-            ("test2.rsp",
+            ("30_test2.rsp",
             """
             --option3 c
             --option4 d
