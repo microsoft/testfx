@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 using Polly;
@@ -13,6 +14,7 @@ public sealed class TestHost
 {
     private readonly string _testHostModuleName;
 
+    [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing runtime bug")]
     private static int s_maxOutstandingExecutions = Environment.ProcessorCount;
     private static SemaphoreSlim s_maxOutstandingExecutions_semaphore = new(s_maxOutstandingExecutions, s_maxOutstandingExecutions);
 

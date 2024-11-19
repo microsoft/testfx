@@ -5,6 +5,7 @@
 
 #if NETFRAMEWORK
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
@@ -23,29 +24,28 @@ internal class AssemblyUtility
     : IAssemblyUtility
 #endif
 {
-#if NETFRAMEWORK
-    private static HashSet<string>? s_cultures;
-#endif
     private readonly string[] _assemblyExtensions = [".dll", ".exe"];
 
 #if NETFRAMEWORK
     /// <summary>
     /// Gets all supported culture names in Keys.
     /// </summary>
+    [field: AllowNull]
+    [field: MaybeNull]
     private static HashSet<string> Cultures
     {
         get
         {
-            if (s_cultures == null)
+            if (field == null)
             {
-                s_cultures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                field = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 foreach (CultureInfo? info in CultureInfo.GetCultures(CultureTypes.AllCultures))
                 {
-                    s_cultures.Add(info.Name);
+                    field.Add(info.Name);
                 }
             }
 
-            return s_cultures;
+            return field;
         }
     }
 

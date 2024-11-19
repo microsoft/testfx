@@ -21,7 +21,6 @@ public class PrivateObject
     private static readonly BindingFlags ConstructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.NonPublic;
 
     private object _target;
-    private Dictionary<string, LinkedList<MethodInfo>>? _methodCache;
 
     #endregion
 
@@ -181,19 +180,22 @@ public class PrivateObject
     /// </summary>
     public Type RealType { get; private set; }
 
+    [field: AllowNull]
+    [field: MaybeNull]
     private Dictionary<string, LinkedList<MethodInfo>> GenericMethodCache
     {
         get
         {
-            if (_methodCache == null)
+            if (field == null)
             {
                 BuildGenericMethodCacheForType(RealType);
             }
 
-            DebugEx.Assert(_methodCache != null, "Invalid method cache for type.");
+            DebugEx.Assert(field != null, "Invalid method cache for type.");
 
-            return _methodCache;
+            return field;
         }
+        set;
     }
 
     /// <summary>
@@ -681,7 +683,7 @@ public class PrivateObject
     private void BuildGenericMethodCacheForType(Type t)
     {
         DebugEx.Assert(t != null, "type should not be null.");
-        _methodCache = [];
+        GenericMethodCache = [];
 
         MethodInfo[] members = t.GetMethods(BindToEveryThing);
 

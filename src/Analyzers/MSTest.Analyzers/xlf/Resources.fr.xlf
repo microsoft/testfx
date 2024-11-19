@@ -726,6 +726,16 @@ Le type doit être une classe
         <target state="translated">Activer ou désactiver explicitement la parallélisation des tests</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseProperAssertMethodsMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
+        <target state="translated">Utilisez ' Assert.{0}' au lieu de 'Assert.{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsTitle">
+        <source>Use proper 'Assert' methods</source>
+        <target state="translated">Utiliser les méthodes 'Assert' appropriées</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

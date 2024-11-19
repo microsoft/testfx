@@ -60,8 +60,7 @@ public sealed class PreferTestInitializeOverConstructorFixer : CodeFixProvider
     private static async Task<Document> ReplaceConstructorWithTestInitializeAsync(Document document, ConstructorDeclarationSyntax constructorDeclaration, CancellationToken cancellationToken)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-        SemanticModel semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false)
-           ?? throw new InvalidOperationException("SemanticModel cannot be null.");
+        SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
         // Find the class containing the constructor
         if (constructorDeclaration.Parent is ClassDeclarationSyntax containingClass)

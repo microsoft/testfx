@@ -529,4 +529,10 @@ The type declaring these methods should also respect the following rules:
   <data name="DoNotUseShadowingTitle" xml:space="preserve">
     <value>Do not use shadowing</value>
   </data>
+  <data name="UseProperAssertMethodsTitle" xml:space="preserve">
+    <value>Use proper 'Assert' methods</value>
+  </data>
+  <data name="UseProperAssertMethodsMessageFormat" xml:space="preserve">
+    <value>Use 'Assert.{0}' instead of 'Assert.{1}'</value>
+  </data>
 </root>
