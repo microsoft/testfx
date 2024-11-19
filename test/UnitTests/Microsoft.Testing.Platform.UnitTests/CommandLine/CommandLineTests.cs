@@ -129,6 +129,79 @@ public sealed class CommandLineTests : TestBase
             new("option5", ["e"]),
             new("option6", ["f"]),
         }.ToArray(), []));
+        yield return (26, ["@test.rsp", "--option3", "c", "--option4", "d"], [
+            ("test.rsp",
+            """
+            --option1 a
+            --option2 b
+            """)], new CommandLineParseResultWrapper(null, new List<OptionRecord>
+        {
+            new("option1", ["a"]),
+            new("option2", ["b"]),
+            new("option3", ["c"]),
+            new("option4", ["d"]),
+        }.ToArray(), []));
+        yield return (27, ["--option1", "a", "--option2", "b", "@test.rsp"], [
+            ("test.rsp",
+            """
+            --option3 c
+            --option4 d
+            """)], new CommandLineParseResultWrapper(null, new List<OptionRecord>
+        {
+            new("option1", ["a"]),
+            new("option2", ["b"]),
+            new("option3", ["c"]),
+            new("option4", ["d"]),
+        }.ToArray(), []));
+        yield return (28, ["@test.rsp"], [
+            ("test.rsp",
+            """
+            --option1 a
+            --option2 b
+            --option3 c
+            --option4 d
+            """)], new CommandLineParseResultWrapper(null, new List<OptionRecord>
+        {
+            new("option1", ["a"]),
+            new("option2", ["b"]),
+            new("option3", ["c"]),
+            new("option4", ["d"]),
+        }.ToArray(), []));
+        yield return (29, ["@test1.rsp", "@test2.rsp"], [
+            ("test1.rsp",
+            """
+            --option1 a
+            --option2 b
+            """),
+            ("test2.rsp",
+            """
+            --option3 c
+            --option4 d
+            """)], new CommandLineParseResultWrapper(null, new List<OptionRecord>
+        {
+            new("option1", ["a"]),
+            new("option2", ["b"]),
+            new("option3", ["c"]),
+            new("option4", ["d"]),
+        }.ToArray(), []));
+        yield return (30, ["@test1.rsp"], [
+            ("test1.rsp",
+            """
+            --option1 a
+            --option2 b
+            @test2.rsp
+            """),
+            ("test2.rsp",
+            """
+            --option3 c
+            --option4 d
+            """)], new CommandLineParseResultWrapper(null, new List<OptionRecord>
+        {
+            new("option1", ["a"]),
+            new("option2", ["b"]),
+            new("option3", ["c"]),
+            new("option4", ["d"]),
+        }.ToArray(), []));
     }
 
     public void CommandLineOptionWithNumber_IsSupported()
