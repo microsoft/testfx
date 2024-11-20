@@ -13,6 +13,10 @@ configuration:
           - payloadType: Issues
           - isAction:
               action: Opened
+          - and:
+            - not:
+                activitySenderHasPermission:
+                  permission: Write
         then:
           - addLabel:
               label: 'Needs: Triage :mag:'
