@@ -6,9 +6,9 @@
   <PropertyGroup Label="Product dependencies">
     <AspireHostingTestingVersion>8.2.2</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.4</MicrosoftBuildVersion>
-    <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.24508.2</MicrosoftCodeAnalysisAnalyzersVersion>
-    <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
-    <MicrosoftCodeAnalysisVersionForTests>4.8.0</MicrosoftCodeAnalysisVersionForTests>
+    <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.24527.2</MicrosoftCodeAnalysisAnalyzersVersion>
+    <MicrosoftCodeAnalysisVersion>4.10.0</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>$(MicrosoftCodeAnalysisAnalyzersVersion)</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- UWP and WinUI dependencies -->
