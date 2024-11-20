@@ -437,7 +437,7 @@ internal class TypeCache : MarshalByRefObject
                     TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
                     if (timeoutAttribute != null)
                     {
-                        if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+                        if (!timeoutAttribute.HasCorrectTimeout)
                         {
                             string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                             throw new TypeInspectionException(message);
@@ -456,7 +456,7 @@ internal class TypeCache : MarshalByRefObject
                     TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
                     if (timeoutAttribute != null)
                     {
-                        if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+                        if (!timeoutAttribute.HasCorrectTimeout)
                         {
                             string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                             throw new TypeInspectionException(message);
@@ -597,7 +597,7 @@ internal class TypeCache : MarshalByRefObject
             TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
             if (timeoutAttribute != null)
             {
-                if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+                if (!timeoutAttribute.HasCorrectTimeout)
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                     throw new TypeInspectionException(message);
@@ -630,7 +630,7 @@ internal class TypeCache : MarshalByRefObject
             TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
             if (timeoutAttribute != null)
             {
-                if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+                if (!timeoutAttribute.HasCorrectTimeout)
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                     throw new TypeInspectionException(message);
@@ -696,7 +696,7 @@ internal class TypeCache : MarshalByRefObject
             TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
             if (timeoutAttribute != null)
             {
-                if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+                if (!timeoutAttribute.HasCorrectTimeout)
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                     throw new TypeInspectionException(message);
@@ -727,7 +727,7 @@ internal class TypeCache : MarshalByRefObject
             TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
             if (timeoutAttribute != null)
             {
-                if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+                if (!timeoutAttribute.HasCorrectTimeout)
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                     throw new TypeInspectionException(message);
@@ -894,7 +894,7 @@ internal class TypeCache : MarshalByRefObject
 
         if (timeoutAttribute != null)
         {
-            if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+            if (!timeoutAttribute.HasCorrectTimeout)
             {
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, testMethod.FullClassName, testMethod.Name);
                 throw new TypeInspectionException(message);

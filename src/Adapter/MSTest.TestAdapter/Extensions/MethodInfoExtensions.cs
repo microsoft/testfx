@@ -81,22 +81,6 @@ internal static class MethodInfoExtensions
     }
 
     /// <summary>
-    /// Checks whether test method has correct Timeout attribute.
-    /// </summary>
-    /// <param name="method">The method to verify.</param>
-    /// <param name="timeoutAttribute">The timeout attribute when we already have it.</param>
-    /// <returns>True if the method has the right test timeout signature.</returns>
-    internal static bool HasCorrectTimeout(this MethodInfo method, TimeoutAttribute? timeoutAttribute = null)
-    {
-        DebugEx.Assert(method != null, "method should not be null.");
-
-        // TODO: redesign this, probably change this to GetTimeout? so we don't have to do this weird dance?
-        timeoutAttribute ??= ReflectHelper.Instance.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(method, inherit: false);
-
-        return timeoutAttribute?.Timeout > 0;
-    }
-
-    /// <summary>
     /// Check is return type is void for non async and Task for async methods.
     /// </summary>
     /// <param name="method">The method to verify.</param>
