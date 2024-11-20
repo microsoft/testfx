@@ -2,22 +2,22 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Text;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<OptionRecord> options, IReadOnlyList<string> errors, IReadOnlyList<string> originalArguments) : IEquatable<CommandLineParseResult>
+internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<OptionRecord> options, IReadOnlyList<string> errors) : IEquatable<CommandLineParseResult>
 {
     public const char OptionPrefix = '-';
 
-    public static CommandLineParseResult Empty => new(null, [], [], []);
+    public static CommandLineParseResult Empty => new(null, [], []);
 
     public string? ToolName { get; } = toolName;
 
     public IReadOnlyList<OptionRecord> Options { get; } = options;
 
     public IReadOnlyList<string> Errors { get; } = errors;
-
-    public IReadOnlyList<string> OriginalArguments { get; } = originalArguments;
 
     public bool HasError => Errors.Count > 0;
 
@@ -121,5 +121,43 @@ internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Opt
         }
 
         return hashCode.ToHashCode();
+    }
+
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine(CultureInfo.InvariantCulture, $"ToolName: {ToolName}");
+
+        builder.AppendLine("Errors:");
+        if (Errors.Count == 0)
+        {
+            builder.AppendLine("    None");
+        }
+        else
+        {
+            foreach (string error in Errors)
+            {
+                builder.AppendLine(CultureInfo.InvariantCulture, $"    {error}");
+            }
+        }
+
+        builder.AppendLine("Options:");
+        if (Options.Count == 0)
+        {
+            builder.AppendLine("    None");
+        }
+        else
+        {
+            foreach (OptionRecord option in Options)
+            {
+                builder.AppendLine(CultureInfo.InvariantCulture, $"   {option.Option}");
+                foreach (string arg in option.Arguments)
+                {
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"        {arg}");
+                }
+            }
+        }
+
+        return builder.ToString();
     }
 }
