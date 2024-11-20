@@ -244,6 +244,22 @@ public class MethodInfoExtensionsTests : TestContainer
 
     #endregion
 
+    #region HasCorrectTimeout tests
+
+    public void HasCorrectTimeoutShouldReturnFalseForMethodsWithInvalidTimeoutAttribute()
+    {
+        var timeoutAttribute = new UTF.TimeoutAttribute(-11);
+        Verify(!timeoutAttribute.HasCorrectTimeout);
+    }
+
+    public void HasCorrectTimeoutShouldReturnTrueForMethodsWithTimeoutAttribute()
+    {
+        var timeoutAttribute = new UTF.TimeoutAttribute(11);
+        Verify(timeoutAttribute.HasCorrectTimeout);
+    }
+
+    #endregion
+
     #region IsVoidOrTaskReturnType tests
 
     public void IsVoidOrTaskReturnTypeShouldReturnTrueForVoidMethods()
