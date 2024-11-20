@@ -5,7 +5,7 @@
   </PropertyGroup>
   <PropertyGroup Label="Product dependencies">
     <AspireHostingTestingVersion>8.2.2</AspireHostingTestingVersion>
-    <MicrosoftBuildVersion>17.11.4</MicrosoftBuildVersion>
+    <MicrosoftBuildVersion>17.12.6</MicrosoftBuildVersion>
     <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.24508.2</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.8.0</MicrosoftCodeAnalysisVersionForTests>
