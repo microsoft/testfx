@@ -260,23 +260,42 @@ internal class TypeCache : MarshalByRefObject
     private TestClassInfo CreateClassInfo(Type classType, TestMethod testMethod)
     {
         IEnumerable<ConstructorInfo> constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
-        ConstructorInfo? constructor = constructors.FirstOrDefault(ctor => ctor.GetParameters().Length == 0 && ctor.IsPublic);
-        bool isParameterLessConstructor;
+        (ConstructorInfo CtorInfo, bool IsParameterless)? selectedConstructor = null;
 
-        if (classType.GetConstructor([typeof(TestContext)]) is { } testContextCtor)
+        foreach (ConstructorInfo ctor in constructors)
         {
-            constructor = testContextCtor;
-            isParameterLessConstructor = false;
+            if (!ctor.IsPublic)
+            {
+                continue;
+            }
+
+            ParameterInfo[] parameters = ctor.GetParameters();
+
+            // There are just 2 ctor shapes that we know, so the code is quite simple,
+            // but if we add more, add a priority to the search, and short-circuit this search so we only iterate
+            // through the collection once, to avoid re-allocating GetParameters multiple times.
+            if (parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext))
+            {
+                selectedConstructor = (ctor, IsParameterless: false);
+
+                // This is the preferred constructor, no point in searching for more.
+                break;
+            }
+
+            if (parameters.Length == 0)
+            {
+                // Otherwise take the first parameterless constructor we can find.
+                selectedConstructor ??= (ctor, IsParameterless: true);
+            }
         }
-        else if (classType.GetConstructor([]) is { } parameterLessCtor)
-        {
-            constructor = parameterLessCtor;
-            isParameterLessConstructor = true;
-        }
-        else
+
+        if (selectedConstructor is null)
         {
             throw new TypeInspectionException(string.Format(CultureInfo.CurrentCulture, Resource.UTA_NoValidConstructor, testMethod.FullClassName));
         }
+
+        ConstructorInfo constructor = selectedConstructor.Value.CtorInfo;
+        bool isParameterLessConstructor = selectedConstructor.Value.IsParameterless;
 
         PropertyInfo? testContextProperty = ResolveTestContext(classType);
 
