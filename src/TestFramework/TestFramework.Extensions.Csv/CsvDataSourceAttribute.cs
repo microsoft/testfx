@@ -37,13 +37,7 @@ public sealed class CsvDataSourceAttribute : Attribute, ITestDataSource
             throw new FileNotFoundException($"Csv file '{fullPath}' cannot be found.", fullPath);
         }
 
-        string tableName = Path.GetFileName(fullPath).Replace('.', '#');
-
-        // We can map simplified CSVs to an OLEDB/Text connection, then proceed as normal
         using OleDbConnection connection = new();
-        using OleDbDataAdapter dataAdapter = new();
-        using OleDbCommandBuilder commandBuilder = new();
-        using OleDbCommand command = new();
 
         // We have to use the name of the folder which contains the CSV file in the connection string
         // If target platform is x64, then use CsvConnectionTemplate64 connection string.
@@ -56,13 +50,20 @@ public sealed class CsvDataSourceAttribute : Attribute, ITestDataSource
         // The connection will get closed when we dispose of it
         connection.Open();
 
+        using OleDbCommandBuilder commandBuilder = new();
+        string tableName = Path.GetFileName(fullPath).Replace('.', '#');
         string quotedTableName = commandBuilder.QuoteIdentifier(tableName, connection);
 
-        command.Connection = connection;
+        using OleDbCommand command = new()
+        {
+            Connection = connection,
+            CommandText = $"SELECT * FROM {quotedTableName}",
+        };
 
-        command.CommandText = $"SELECT * FROM {quotedTableName}";
-
-        dataAdapter.SelectCommand = command;
+        using OleDbDataAdapter dataAdapter = new()
+        {
+            SelectCommand = command,
+        };
 
         DataTable table = new()
         {
