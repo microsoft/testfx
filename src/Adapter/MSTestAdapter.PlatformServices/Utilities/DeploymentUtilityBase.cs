@@ -126,6 +126,7 @@ internal abstract class DeploymentUtilityBase
     /// <param name="deploymentDirectory">The deployment directory.</param>
     /// <param name="resultsDirectory">Root results directory.</param>
     /// <returns>Returns a list of deployment warnings.</returns>
+    [UnconditionalSuppressMessage("Aot", "IL3000:DoNotUseLocation", Justification = "Deployment feature is not available in native.")]
     protected IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, string resultsDirectory)
     {
         Guard.NotNullOrWhiteSpace(deploymentDirectory);
@@ -186,10 +187,7 @@ internal abstract class DeploymentUtilityBase
 
                     // Ignore the test platform files.
                     string tempFile = Path.GetFileName(fileToDeploy);
-                    // We throw when we run in source gen mode.
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
                     string assemblyName = Path.GetFileName(GetType().Assembly.Location);
-#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
                     if (tempFile.Equals(assemblyName, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;

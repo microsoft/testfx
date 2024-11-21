@@ -257,6 +257,7 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="classType"> The class Type. </param>
     /// <param name="testMethod"> The test Method. </param>
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
+    [UnconditionalSuppressMessage("Aot", "IL2070:DoNotUseGetConstructor", Justification = "We access all the types we need in metadata, so this is preserved and works.")]
     private TestClassInfo CreateClassInfo(Type classType, TestMethod testMethod)
     {
         IEnumerable<ConstructorInfo> constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
@@ -832,6 +833,7 @@ internal class TypeCache : MarshalByRefObject
         return testMethodInfo;
     }
 
+    [UnconditionalSuppressMessage("Aot", "IL2026:DoNotUseGetConstructor", Justification = "We access all the types we need in metadata, so this is preserved and works.")]
     private static MethodInfo? GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
         MethodBase? methodBase = null;

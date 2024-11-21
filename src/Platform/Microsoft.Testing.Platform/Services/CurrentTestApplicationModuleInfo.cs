@@ -45,10 +45,8 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
 #endif
     public string GetCurrentTestApplicationFullPath()
     {
-#pragma warning disable IL3000
         // This is empty in native app, or in single file app.
         string? moduleName = Assembly.GetEntryAssembly()?.Location;
-#pragma warning restore IL3000
 
         moduleName = RoslynString.IsNullOrEmpty(moduleName)
             ? GetProcessPath(_environment, _process)

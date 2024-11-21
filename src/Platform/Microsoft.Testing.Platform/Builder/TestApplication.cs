@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 #if NETCOREAPP
@@ -113,6 +114,8 @@ public sealed class TestApplication : ITestApplication
         return new TestApplicationBuilder(loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler);
     }
 
+    [UnconditionalSuppressMessage("SingleFile", "IL3000: Avoid accessing Assembly file path when publishing as a single file",
+        Justification = "Only for logging, and is under IsDynamicCodeSupported check.")]
     private static async Task LogInformationAsync(
         ILogger logger,
         CurrentTestApplicationModuleInfo testApplicationModuleInfo,
@@ -151,9 +154,7 @@ public sealed class TestApplication : ITestApplication
 #if NETCOREAPP
         if (RuntimeFeature.IsDynamicCodeSupported)
         {
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
             string? runtimeLocation = typeof(object).Assembly.Location;
-#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
             if (runtimeLocation is not null)
             {
                 await logger.LogInformationAsync($"Runtime location: {runtimeLocation}");
@@ -164,9 +165,7 @@ public sealed class TestApplication : ITestApplication
             }
         }
 #else
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file, this branch run only on .NET Framework
         string? runtimeLocation = typeof(object).Assembly?.Location;
-#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
         if (runtimeLocation is not null)
         {
             await logger.LogInformationAsync($"Runtime location: {runtimeLocation}");

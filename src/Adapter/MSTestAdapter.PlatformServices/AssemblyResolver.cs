@@ -3,6 +3,7 @@
 
 #if NETFRAMEWORK || NET
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 #if NETFRAMEWORK
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -291,16 +292,14 @@ class AssemblyResolver :
 #endif
     bool DoesFileExist(string filePath) => File.Exists(filePath);
 
+    [UnconditionalSuppressMessage("Aot", "IL2026:DoNotUseGetDefinedTypes", Justification = "The whole class is not used in source generator mode.")]
+
 #if NETFRAMEWORK
     protected virtual
 #else
     private static
 #endif
-
-    // This whole class is not used in source generator mode.
-#pragma warning disable IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
     Assembly LoadAssemblyFrom(string path) => Assembly.LoadFrom(path);
-#pragma warning restore IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
 
 #if NETFRAMEWORK
     protected virtual Assembly ReflectionOnlyLoadAssemblyFrom(string path) => Assembly.ReflectionOnlyLoadFrom(path);

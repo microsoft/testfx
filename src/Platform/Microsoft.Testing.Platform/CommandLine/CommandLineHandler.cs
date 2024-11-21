@@ -51,6 +51,8 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
     internal CommandLineParseResult ParseResult { get; }
 
+    [UnconditionalSuppressMessage("SingleFile", "IL3000: Avoid accessing Assembly file path when publishing as a single file",
+        Justification = "Only for logging and not under NETCOREAPP")]
     public async Task PrintInfoAsync(IPlatformOutputDevice platformOutputDevice, IReadOnlyList<ITool>? availableTools = null)
     {
         // /!\ Info should not be localized as it serves debugging purposes.
@@ -101,9 +103,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
             await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Runtime information: {runtimeInformation}"));
 
 #if !NETCOREAPP
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file, this branch run only in .NET Framework
             string runtimeLocation = typeof(object).Assembly?.Location ?? "Not Found";
-#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
             await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Runtime location: {runtimeLocation}"));
 #endif
 

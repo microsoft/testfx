@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
@@ -103,13 +104,12 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
     protected abstract Task SynchronizedRunTestsAsync(VSTestRunTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken);
 
+    [UnconditionalSuppressMessage("Aot", "IL3000:DoNotUseLocation", Justification = "We are passing our own class that derives from Assembly and sets the Location.")]
     protected sealed override Task ExecuteRequestAsync(TestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken)
         => ExecuteRequestWithRequestCountGuardAsync(async () =>
         {
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
             string[] testAssemblyPaths = _getTestAssemblies().Select(x => x.Location).ToArray();
-#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
             switch (request)
             {
                 case DiscoverTestExecutionRequest discoverRequest:

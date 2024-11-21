@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 #if WIN_UI
@@ -81,12 +82,10 @@ public class FileOperations : IFileOperations
     /// </summary>
     /// <param name="assembly">The assembly.</param>
     /// <returns>Path to the .DLL of the assembly.</returns>
+    [UnconditionalSuppressMessage("Aot", "IL3000:DoNotUseLocation", Justification = "This method will never be called in source generator mode, we are providing a different provider for file operations.")]
     public string? GetAssemblyPath(Assembly assembly)
 #if NETSTANDARD || NETCOREAPP || NETFRAMEWORK
-        // This method will never be called in source generator mode, we are providing a different provider for file operations.
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
         => assembly.Location;
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
 #elif WINDOWS_UWP
         => null; // TODO: what are the options here?
 #endif

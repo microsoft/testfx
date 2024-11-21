@@ -3,7 +3,7 @@
     <!-- MSTest version -->
     <VersionPrefix>3.7.0</VersionPrefix>
     <!-- Testing Platform version -->
-    <TestingPlatformVersionPrefix>1.5.0</TestingPlatformVersionPrefix>
+    <TestingPlatformVersionPrefix>1.6.0</TestingPlatformVersionPrefix>
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
   </PropertyGroup>
   <PropertyGroup Label="MSTest prod dependencies - darc updated">
@@ -11,6 +11,6 @@
     <MicrosoftTestingExtensionsCodeCoverageVersion>17.13.0-preview.24562.1</MicrosoftTestingExtensionsCodeCoverageVersion>
     <!-- comment to facilitate merge conflicts -->
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24569.1</MicrosoftTestingInternalFrameworkVersion>
-    <MSTestEngineVersion>1.0.0-alpha.24473.2</MSTestEngineVersion>
+    <MSTestSourceGenerationVersion>1.0.0-alpha.24555.1</MSTestSourceGenerationVersion>
   </PropertyGroup>
 </Project>
