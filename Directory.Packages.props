@@ -7,7 +7,7 @@
     <AspireHostingTestingVersion>8.2.2</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.4</MicrosoftBuildVersion>
     <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.24508.2</MicrosoftCodeAnalysisAnalyzersVersion>
-    <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>4.8.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.8.0</MicrosoftCodeAnalysisVersionForTests>
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>$(MicrosoftCodeAnalysisAnalyzersVersion)</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
@@ -71,7 +71,7 @@
     <PackageVersion Include="MSBuild.StructuredLogger" Version="2.2.350" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <!-- CVE-2024-0057 / Transitive deps of code analysis testing packages -->
-    <PackageVersion Include="NuGet.Packaging" Version="6.11.0" />
+    <PackageVersion Include="NuGet.Packaging" Version="6.12.1" />
     <PackageVersion Include="Polly" Version="8.4.2" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="ReportGenerator" Version="4.3.6" />
