@@ -25,8 +25,12 @@ public class DataSourceTests : AcceptanceTestBase
         <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
         <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
         <PackageReference Include="MSTest.TestFramework.Csv" Version="$MSTestVersion$" />
+        <PackageReference Include="MSTest.TestFramework.Xml" Version="$MSTestVersion$" />
 
         <None Include="TestData.csv">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="TestData.xml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
@@ -63,7 +67,7 @@ public class MyTestClass
 
     [DataTestMethod]
     [DataSource("TestData")]
-    public void TestSum()
+    public void TestSumDataSource()
     {
         int expected = (int)TestContext.DataRow["expectedSum"];
         int num1 = (int)TestContext.DataRow["num1"];
@@ -73,7 +77,17 @@ public class MyTestClass
 
     [TestMethod]
     [CsvDataSource("TestData.csv")]
-    public void TestSum2(DataRow dataRow)
+    public void TestSumCsv(DataRow dataRow)
+    {
+        int expected = (int)dataRow["expectedSum"];
+        int num1 = (int)dataRow["num1"];
+        int num2 = (int)dataRow["num2"];
+        Assert.AreEqual(expected, num1 + num2);
+    }
+
+    [TestMethod]
+    [XmlDataSource("TestData.xml")]
+    public void TestSumXml(DataRow dataRow)
     {
         int expected = (int)dataRow["expectedSum"];
         int num1 = (int)dataRow["num1"];
@@ -93,6 +107,31 @@ num1,num2,expectedSum
 5,6,11
 10,30,40
 1,1,1
+
+#file TestData.xml
+
+<Root>
+    <MyTable>
+        <Num1>1</Num1>
+        <Num2>1</Num2>
+        <ExpectedSum>2</ExpectedSum>
+    </MyTable>
+    <MyTable>
+        <Num1>5</Num1>
+        <Num2>6</Num2>
+        <ExpectedSum>11</ExpectedSum>
+    </MyTable>
+    <MyTable>
+        <Num1>10</Num1>
+        <Num2>30</Num2>
+        <ExpectedSum>40</ExpectedSum>
+    </MyTable>
+    <MyTable>
+        <Num1>1</Num1>
+        <Num2>1</Num2>
+        <ExpectedSum>1</ExpectedSum>
+    </MyTable>
+</Root>
 """;
 
     private readonly AcceptanceFixture _acceptanceFixture;
@@ -124,6 +163,6 @@ num1,num2,expectedSum
 
         TestHostResult result = await testHost.ExecuteAsync();
         result.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        result.AssertOutputContainsSummary(failed: 2, passed: 7, skipped: 0);
+        result.AssertOutputContainsSummary(failed: 3, passed: 10, skipped: 0);
     }
 }
