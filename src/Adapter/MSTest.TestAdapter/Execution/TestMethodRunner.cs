@@ -182,6 +182,7 @@ internal class TestMethodRunner
             }
             else
             {
+                _testContext.SetDisplayName(_test.DisplayName);
                 TestResult[] testResults = ExecuteTest(_testMethodInfo);
 
                 foreach (TestResult testResult in testResults)
@@ -310,19 +311,18 @@ internal class TestMethodRunner
                 {
                     isDataDriven = true;
                     IEnumerable<object?[]>? dataSource;
-                    try
-                    {
-                        // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
-                        // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
-                        dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
 
-                        if (!dataSource.Any())
-                        {
-                            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", testDataSource.GetType().Name));
-                        }
-                    }
-                    catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+                    // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
+                    // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
+                    dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
+
+                    if (!dataSource.Any())
                     {
+                        if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+                        {
+                            throw testDataSource.GetExceptionForEmptyDataSource(_testMethodInfo.MethodInfo);
+                        }
+
                         var inconclusiveResult = new TestResult
                         {
                             Outcome = UTF.UnitTestOutcome.Inconclusive,
@@ -353,28 +353,26 @@ internal class TestMethodRunner
 
     private TestResult[] ExecuteTestWithDataSource(UTF.ITestDataSource? testDataSource, object?[]? data)
     {
-        var stopwatch = Stopwatch.StartNew();
+        string? displayName = StringEx.IsNullOrWhiteSpace(_test.DisplayName)
+            ? _test.Name
+            : _test.DisplayName;
+        if (testDataSource != null)
+        {
+            displayName = testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data);
+        }
 
+        var stopwatch = Stopwatch.StartNew();
         _testMethodInfo.SetArguments(data);
+        _testContext.SetTestData(data);
+        _testContext.SetDisplayName(displayName);
         TestResult[] testResults = ExecuteTest(_testMethodInfo);
         stopwatch.Stop();
 
-        bool hasDisplayName = !StringEx.IsNullOrWhiteSpace(_test.DisplayName);
         foreach (TestResult testResult in testResults)
         {
             if (testResult.Duration == TimeSpan.Zero)
             {
                 testResult.Duration = stopwatch.Elapsed;
-            }
-
-            string? displayName = _test.Name;
-            if (testDataSource != null)
-            {
-                displayName = testDataSource.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data);
-            }
-            else if (hasDisplayName)
-            {
-                displayName = _test.DisplayName;
             }
 
             testResult.DisplayName = displayName;

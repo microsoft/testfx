@@ -49,18 +49,23 @@ public partial class App : Application
 
         // Replace back with e.Arguments when https://github.com/microsoft/microsoft-ui-xaml/issues/3368 is fixed
 #if MSTEST_RUNNER
-        // Ideally we would want to reuse the generated main so we don't have to manually handle all dependencies
-        // but this type is generated too late in the build process so we fail before.
-        // You can build, inspect the generated type to copy its content if you want.
-        // await TestingPlatformEntryPoint.Main(Environment.GetCommandLineArgs().Skip(1).ToArray());
         try
         {
-
-            string[] cliArgs = Environment.GetCommandLineArgs().Skip(1).ToArray();
+            // Ideally we would want to reuse the generated main so we don't have to manually handle all dependencies
+            // but this type is generated too late in the build process so we fail before.
+            // You can build, inspect the generated type to copy its content if you want.
+            // await TestingPlatformEntryPoint.Main(Environment.GetCommandLineArgs().Skip(1).ToArray());
+            string[] cliArgs = Environment.GetCommandLineArgs()
+                .Skip(1)
+                .Where(arg => !arg.Contains("EnableMSTestRunner"))
+                .ToArray();
             ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(cliArgs);
+
+            // Or alternatively, we would want to use AddSelfRegisteredExtensions but we have the same issue.
+            //builder.AddSelfRegisteredExtensions(cliArgs);
             Microsoft.Testing.Platform.MSBuild.TestingPlatformBuilderHook.AddExtensions(builder, cliArgs);
             Microsoft.Testing.Extensions.Telemetry.TestingPlatformBuilderHook.AddExtensions(builder, cliArgs);
-            TestingPlatformBuilderHook.AddExtensions(builder, cliArgs);
+            Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook.AddExtensions(builder, cliArgs);
             using ITestApplication app = await builder.BuildAsync();
             await app.RunAsync();
         }

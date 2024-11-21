@@ -71,8 +71,7 @@ namespace MSTestSdkTest
             .PatchCodeWithReplace("$TargetFramework$", multiTfm)
             .PatchCodeWithReplace("$ExtraProperties$", "<UseVSTest>true</UseVSTest>"));
 
-        // Pass '-p:vstestusemsbuildoutput=false' to ensure that the output is not Terminal Logger (only net9+)
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath} -p:vstestusemsbuildoutput=false", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
         compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
@@ -311,7 +310,9 @@ namespace MSTestSdkTest
                     AssetName,
                     SingleTestSourceCode
                     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                    .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent.Arguments)
+                    // temporarily set test to be on net9.0 as it's fixing one error that started to happen:  error IL3000: System.Net.Quic.MsQuicApi..cctor
+                    // see https://github.com/dotnet/sdk/issues/44880.
+                    .PatchCodeWithReplace("$TargetFramework$", "net9.0")
                     .PatchCodeWithReplace("$ExtraProperties$", $"""
                 <PublishAot>true</PublishAot>
                 <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
@@ -319,14 +320,15 @@ namespace MSTestSdkTest
                     addPublicFeeds: true);
 
                 DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-                    $"publish -r {RID} -f {TargetFrameworks.NetCurrent.Arguments} {testAsset.TargetAssetPath}",
+                    $"publish -r {RID} -f net9.0 {testAsset.TargetAssetPath}",
                     _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     // We prefer to use the outer retry mechanism as we need some extra checks
-                    retryCount: 0);
+                    retryCount: 0,
+                    timeoutInSeconds: 180);
                 compilationResult.AssertOutputContains("Generating native code");
                 compilationResult.AssertOutputNotContains("warning");
 
-                var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments, verb: Verb.publish);
+                var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, "net9.0", verb: Verb.publish);
                 TestHostResult testHostResult = await testHost.ExecuteAsync();
 
                 testHostResult.AssertExitCodeIs(ExitCodes.Success);

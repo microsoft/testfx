@@ -51,8 +51,8 @@ public class MSTestExecutor : ITestExecutor
     internal void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from testcases.");
-        ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
-        ValidateArg.NotNullOrEmpty(tests, "tests");
+        Guard.NotNull(frameworkHandle);
+        Guard.NotNullOrEmpty(tests);
 
         if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration))
         {
@@ -65,8 +65,8 @@ public class MSTestExecutor : ITestExecutor
     internal void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from sources.");
-        ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
-        ValidateArg.NotNullOrEmpty(sources, "sources");
+        Guard.NotNull(frameworkHandle);
+        Guard.NotNullOrEmpty(sources);
         if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration))
         {
             return;

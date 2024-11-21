@@ -569,16 +569,14 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
-        <source>TestContext property should follow the following layout to be valid:
-- it should be a property
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+        <source>'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
-- it should not be readonly.</source>
-        <target state="translated">Die TestContext-Eigenschaft muss dem folgenden Layout folgen, um gültig zu sein:
-– sie muss eine Eigenschaft sein
-– sie muss "public" (oder "internal" sein, wenn das Attribut "[assembly: DiscoverInternals]" festgelegt ist)
-– sie darf nicht "static" sein
-– sie darf nicht schreibgeschützt sein.</target>
+- it should have a setter.</source>
+        <target state="new">'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
+- it should not be 'static'
+- it should have a setter.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">
@@ -726,6 +724,16 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       <trans-unit id="UseParallelizeAttributeAnalyzerTitle">
         <source>Explicitly enable or disable tests parallelization</source>
         <target state="translated">Parallelisierung von Tests explizit aktivieren oder deaktivieren</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
+        <target state="translated">Verwenden Sie "Assert.{0}" anstelle von "Assert.{1}".</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsTitle">
+        <source>Use proper 'Assert' methods</source>
+        <target state="translated">Geeignete Assert-Methoden verwenden</target>
         <note />
       </trans-unit>
     </body>

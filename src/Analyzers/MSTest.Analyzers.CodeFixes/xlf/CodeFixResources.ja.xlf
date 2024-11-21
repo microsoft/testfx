@@ -37,6 +37,11 @@
         <target state="translated">TestInitialize メソッドをコンストラクターに置き換える</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReplaceWithDisposeFix">
+        <source>Replace TestCleanup with Dispose method</source>
+        <target state="translated">TestCleanup を Dispose メソッドに置換する</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
         <source>Replace the assertion with 'Assert.Fail()'</source>
         <target state="translated">アサーションを 'Assert.Fail()' に置き換えます</target>
@@ -65,6 +70,11 @@
       <trans-unit id="TestMethodShouldBeValidFix">
         <source>Fix test method signature</source>
         <target state="translated">テスト メソッドのシグネチャを修正する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseAssertThrowsExceptionOnLastStatementFix">
+        <source>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</source>
+        <target state="translated">'[ExpectedException]' 属性の代わりに 'Assert.ThrowsException&lt;T&gt;' を使用してください</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">

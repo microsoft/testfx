@@ -256,6 +256,10 @@ public class TestContextImplementation : TestContext, ITestContext
     public void SetOutcome(UnitTestOutcome outcome)
         => _outcome = outcome;
 
+    /// <inheritdoc/>
+    public void SetException(Exception? exception)
+        => TestException = exception;
+
     /// <summary>
     /// Set data row for particular run of TestMethod.
     /// </summary>
@@ -268,6 +272,9 @@ public class TestContextImplementation : TestContext, ITestContext
 #pragma warning restore IDE0022 // Use expression body for method
 #endif
     }
+
+    /// <inheritdoc/>
+    public void SetTestData(object?[]? data) => TestData = data;
 
     /// <summary>
     /// Set connection for TestContext.
@@ -338,6 +345,10 @@ public class TestContextImplementation : TestContext, ITestContext
     /// </summary>
     public void ClearDiagnosticMessages()
         => _threadSafeStringWriter?.ToStringAndClear();
+
+    /// <inheritdoc/>
+    public void SetDisplayName(string? displayName)
+        => TestDisplayName = displayName;
 
     #endregion
 }

@@ -6,12 +6,16 @@
       <group targetFramework="netstandard2.0">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
+        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
       </group>
       <group targetFramework="net462">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
+        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
       </group>
-      <group targetFramework="uap10.0" />
+      <group targetFramework="uap10.0">
+        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
+      </group>
       <group targetFramework="netcoreapp3.1">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
@@ -93,8 +97,8 @@
     <file src="net462\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\net462\" />
 
     <!-- Localization -->
-    <!-- All TFMs share the same resx + TestAdapter depends on PlatformServices + TestFramework so all resources are available -->
-    <file src="net462\**\Microsoft.VisualStudio.TestPlatform.*.resources.dll" target="\build\_localization\" />
+    <!-- All TFMs share the same resx, copy only TestAdapter TestAdapter.PlatformServices, do NOT copy TestFramework and other dependency resource dlls. -->
+    <file src="net462\**\Microsoft.VisualStudio.TestPlatform.*Adapter*.resources.dll" target="\build\_localization\" />
 
     <!-- Source code -->
     <file src="$srcroot$\**\*.cs" target="src" />

@@ -80,13 +80,15 @@ public class DynamicDataAttributeTests : TestContainer
             _dynamicDataAttribute.GetData(methodInfo);
         });
 
-    public void GetDataShouldThrowExceptionIfPropertyReturnsEmpty() =>
-        VerifyThrows<ArgumentException>(() =>
-        {
-            MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod5");
-            _dynamicDataAttribute = new DynamicDataAttribute("EmptyProperty", typeof(DummyTestClass));
-            _dynamicDataAttribute.GetData(methodInfo);
-        });
+    public void GetDataShouldNotThrowExceptionIfPropertyReturnsEmpty()
+    {
+        MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod5");
+        _dynamicDataAttribute = new DynamicDataAttribute("EmptyProperty", typeof(DummyTestClass));
+        IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
+        // The callers in AssemblyEnumerator and TestMethodRunner are responsible
+        // for throwing an exception if data is empty and ConsiderEmptyDataSourceAsInconclusive is false.
+        Verify(!data.Any());
+    }
 
     public void GetDataShouldThrowExceptionIfPropertyDoesNotReturnCorrectType() =>
         VerifyThrows<ArgumentNullException>(() =>

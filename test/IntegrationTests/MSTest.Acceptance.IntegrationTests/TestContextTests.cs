@@ -17,7 +17,39 @@ public sealed class TestContextTests : AcceptanceTestBase
     public async Task TestContextsAreCorrectlySet()
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextCtor");
+
+        // Assert
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 5, skipped: 0);
+    }
+
+    public async Task TestContext_TestData_PropertyContainsExpectedValue()
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextData");
+
+        // Assert
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 3, skipped: 0);
+    }
+
+    public async Task TestContext_TestException_PropertyContainsExpectedValue()
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextException");
+
+        // Assert
+        testHostResult.AssertExitCodeIs(2);
+        testHostResult.AssertOutputContainsSummary(failed: 2, passed: 1, skipped: 0);
+        testHostResult.AssertOutputContains("Initialization method TestContextExceptionFailingInTestInit.TInit threw exception. System.InvalidOperationException");
+        testHostResult.AssertOutputContains("Test method TestContextExceptionFailingInTestMethod.TestFailingInTestMethod threw exception:");
+    }
+
+    public async Task TestContext_TestDisplayName_PropertyContainsExpectedValue()
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextDisplayName");
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
@@ -56,6 +88,8 @@ public sealed class TestContextTests : AcceptanceTestBase
 </Project>
 
 #file UnitTest1.cs
+using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -72,6 +106,7 @@ public class TestContextCtorWithReadOnlyProperty
     public void TestMethod()
     {
         TestContext.WriteLine("Method TestContextCtorWithReadOnlyProperty.TestMethod() was called");
+        Assert.IsNotNull(TestContext);
     }
 }
 
@@ -89,6 +124,7 @@ public class TestContextCtor
     public void TestMethod()
     {
         _testContext.WriteLine("Method TestContextCtor.TestMethod() was called");
+        Assert.IsNotNull(_testContext);
     }
 }
 
@@ -109,6 +145,8 @@ public class TestContextCtorAndProperty
     {
         _testContext.WriteLine("Method TestContextCtorAndProperty.TestMethod() was called");
         TestContext.WriteLine("Method TestContextCtorAndProperty.TestMethod() was called");
+        Assert.IsNotNull(_testContext);
+        Assert.IsNotNull(TestContext);
     }
 }
 
@@ -124,6 +162,224 @@ public class TestContextCtorDerived : TestContextCtor
     public void DerivedTestMethod()
     {
         _testContext.WriteLine("Method TestContextCtorDerived.DerivedTestMethod() was called");
+        Assert.IsNotNull(_testContext);
+    }
+}
+
+[TestClass]
+public class TestContextDataFromNonParameterizedMethod
+{
+    public TestContext TestContext { get; set; }
+
+    [TestInitialize]
+    public void TInit()
+    {
+        AssertTestContextData();
+    }
+
+    [TestMethod]
+    public void Test()
+    {
+        AssertTestContextData();
+    }
+
+    [TestCleanup]
+    public void TCleanup()
+    {
+        AssertTestContextData();
+    }
+
+    private void AssertTestContextData()
+    {
+        Assert.IsNull(TestContext.TestData);
+    }
+}
+
+[TestClass]
+public class TestContextDataFromDataRow
+{
+    public TestContext TestContext { get; set; }
+
+    [TestInitialize]
+    public void TInit()
+    {
+        AssertTestContextData();
+    }
+
+    [TestMethod]
+    [DataRow(1, "ok")]
+    public void Test(int i, string s)
+    {
+        AssertTestContextData();
+    }
+
+    [TestCleanup]
+    public void TCleanup()
+    {
+        AssertTestContextData();
+    }
+
+    private void AssertTestContextData()
+    {
+        Assert.IsNotNull(TestContext.TestData);
+        Assert.AreEqual(2, TestContext.TestData.Length);
+        Assert.AreEqual(1, TestContext.TestData[0]);
+        Assert.AreEqual("ok", TestContext.TestData[1]);
+    }
+}
+
+[TestClass]
+public class TestContextDataFromDynamicData
+{
+    public TestContext TestContext { get; set; }
+
+    [TestInitialize]
+    public void TInit()
+    {
+        AssertTestContextData();
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(GetData), DynamicDataSourceType.Method)]
+    public void Test(int i, string s)
+    {
+        AssertTestContextData();
+    }
+
+    [TestCleanup]
+    public void TCleanup()
+    {
+        AssertTestContextData();
+    }
+
+    private void AssertTestContextData()
+    {
+        Assert.IsNotNull(TestContext.TestData);
+        Assert.AreEqual(2, TestContext.TestData.Length);
+        Assert.AreEqual(1, TestContext.TestData[0]);
+        Assert.AreEqual("ok", TestContext.TestData[1]);
+    }
+
+    private static IEnumerable<object[]> GetData()
+    {
+        yield return new object[] { 1, "ok" };
+    }
+}
+
+[TestClass]
+public class TestContextExceptionFailingInTestInit
+{
+    public TestContext TestContext { get; set; }
+
+    [TestInitialize]
+    public void TInit()
+    {
+        Assert.IsNull(TestContext.TestException);
+        throw new InvalidOperationException();
+    }
+
+    [TestMethod]
+    public void TestFailingInTestInit()
+    {
+    }
+
+    [TestCleanup]
+    public void TCleanup()
+    {
+        Assert.IsNotNull(TestContext.TestException);
+        Assert.IsInstanceOfType<InvalidOperationException>(TestContext.TestException);
+    }
+}
+
+[TestClass]
+public class TestContextExceptionFailingInTestMethod
+{
+    public TestContext TestContext { get; set; }
+
+    [TestInitialize]
+    public void TInit()
+    {
+        Assert.IsNull(TestContext.TestException);
+    }
+
+    [TestMethod]
+    public void TestFailingInTestMethod()
+    {
+        Assert.IsNull(TestContext.TestException);
+        throw new NotSupportedException();
+    }
+
+    [TestCleanup]
+    public void TCleanup()
+    {
+        Assert.IsNotNull(TestContext.TestException);
+        Assert.IsInstanceOfType<NotSupportedException>(TestContext.TestException);
+    }
+}
+
+[TestClass]
+public class TestContextExceptionNotFailing
+{
+    public TestContext TestContext { get; set; }
+
+    [TestInitialize]
+    public void TInit()
+    {
+        Assert.IsNull(TestContext.TestException);
+    }
+
+    [TestMethod]
+    public void TestNotFailing()
+    {
+        Assert.IsNull(TestContext.TestException);
+    }
+
+    [TestCleanup]
+    public void TCleanup()
+    {
+        Assert.IsNull(TestContext.TestException);
+    }
+}
+
+// NOTE: We are not testing all possible combinations of display name as it's covered by some other tests.
+// We just want to ensure that the main paths of getting the computed display name are covered.
+[TestClass]
+public class TestContextDisplayName
+{
+    public TestContext TestContext { get; set; }
+
+    [TestMethod("Custom name")]
+    public void TestCustomName()
+    {
+        Assert.AreEqual("Custom name", TestContext.TestDisplayName);
+    }
+
+    [TestMethod]
+    public void TestMethod()
+    {
+        Assert.AreEqual("TestMethod", TestContext.TestDisplayName);
+    }
+
+    [TestMethod("Custom name")]
+    [DataRow(42)]
+    public void TestCustomNameDataRow(int i)
+    {
+        Assert.AreEqual("Custom name (42)", TestContext.TestDisplayName);
+    }
+
+    [TestMethod("Custom name")]
+    [DynamicData(nameof(Data))]
+    public void TestCustomNameDynamicData(bool b)
+    {
+        Assert.AreEqual("Custom name (True)", TestContext.TestDisplayName);
+    }
+
+    public static IEnumerable<object[]> Data
+    {
+        get
+        {
+            yield return new object[] { true };
+        }
     }
 }
 """;

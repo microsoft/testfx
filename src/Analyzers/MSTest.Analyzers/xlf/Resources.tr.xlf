@@ -568,16 +568,14 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
-        <source>TestContext property should follow the following layout to be valid:
-- it should be a property
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+        <source>'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
-- it should not be readonly.</source>
-        <target state="translated">TestContext özelliğinin geçerli olması için aşağıdaki düzeni izlemesi gerekir:
-- bir özellik olmalıdır
-- 'public' (veya '[assembly: DiscoverInternals]' özniteliği ayarlanmışsa 'internal') olmalıdır
-- 'static' olmamalıdır
-- salt okunur olamaz.</target>
+- it should have a setter.</source>
+        <target state="new">'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
+- it should not be 'static'
+- it should have a setter.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">
@@ -726,6 +724,16 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       <trans-unit id="UseParallelizeAttributeAnalyzerTitle">
         <source>Explicitly enable or disable tests parallelization</source>
         <target state="translated">Doğrudan test paralelleştirmeyi etkinleştirin veya devre dışı bırakın</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
+        <target state="translated">'Assert.{1}' yerine 'Assert.{0}' kullan</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsTitle">
+        <source>Use proper 'Assert' methods</source>
+        <target state="translated">Uygun 'Assert' yöntemlerini kullan</target>
         <note />
       </trans-unit>
     </body>

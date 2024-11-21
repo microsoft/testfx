@@ -117,6 +117,16 @@
         <target state="translated">ICommandLineOptions aún no se ha compilado.</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineParserFailedToReadResponseFile">
+        <source>Failed to read response file '{0}'. {1}.</source>
+        <target state="new">Failed to read response file '{0}'. {1}.</target>
+        <note>{1} is the exception</note>
+      </trans-unit>
+      <trans-unit id="CommandLineParserResponseFileNotFound">
+        <source>The response file '{0}' was not found</source>
+        <target state="new">The response file '{0}' was not found</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">Argumento inesperado {0}</target>
@@ -189,9 +199,24 @@
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
+      <trans-unit id="DiscoveredTestsInAssembly">
+        <source>Discovered {0} tests in assembly</source>
+        <target state="translated">{0} pruebas detectadas en el ensamblado</target>
+        <note>0 is count, the sentence is followed by the path of the assebly</note>
+      </trans-unit>
+      <trans-unit id="DiscoveringTestsFrom">
+        <source>Discovering tests from</source>
+        <target state="translated">Detección de pruebas de</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">Error del proveedor "{0}" (UID: {1}) con el error: {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="translated">Código de salida</target>
         <note />
       </trans-unit>
       <trans-unit id="Expected">
@@ -227,7 +252,7 @@
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
-        <source>failed with {0} errors(s)</source>
+        <source>failed with {0} error(s)</source>
         <target state="translated">error con {0} errores</target>
         <note />
       </trans-unit>
@@ -744,6 +769,16 @@ Los valores válidos son 'Normal', 'Detallado'. El valor predeterminado es 'Norm
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
         <target state="translated">El modo VSTest solo admite un único TestApplicationBuilder por proceso</target>
         <note />
+      </trans-unit>
+      <trans-unit id="TestDiscoverySummary">
+        <source>Discovered {0} tests in {1} assemblies.</source>
+        <target state="translated">{0} pruebas detectadas en {1} ensamblados.</target>
+        <note>0 is number of tests, 1 is count of assemblies</note>
+      </trans-unit>
+      <trans-unit id="TestDiscoverySummarySingular">
+        <source>Discovered {0} tests.</source>
+        <target state="translated">{0} pruebas detectadas.</target>
+        <note>0 is number of tests</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>

@@ -180,18 +180,11 @@ public class TypeValidatorTests : TestContainer
 
     #region TestContext signature
 
-    public void IsValidTestClassShouldReturnFalseForTestClassesWithInvalidTestContextSignature()
+    public void IsValidTestClassShouldReturnTrueForTestClassesWithReadOnlyTestContextSignature()
     {
         SetupTestClass();
-        Verify(!_typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), _warnings));
-    }
-
-    public void IsValidTestClassShouldReportWarningsForTestClassesWithInvalidTestContextSignature()
-    {
-        SetupTestClass();
-        _typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), _warnings);
-        Verify(_warnings.Count == 1);
-        Verify(_warnings.Contains(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorInValidTestContextSignature, typeof(ClassWithTestContextGetterOnly).FullName)));
+        Verify(_typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), _warnings));
+        Verify(_warnings.Count == 0);
     }
 
     public void IsValidTestClassShouldReturnTrueForTestClassesWithValidTestContextSignature()
@@ -230,9 +223,9 @@ public class TypeValidatorTests : TestContainer
 
     public void HasCorrectTestContextSignatureShouldReturnTrueForClassesWithNoTestContextProperty() => Verify(TypeValidator.HasCorrectTestContextSignature(typeof(PublicTestClass)));
 
-    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithNoSetters() => Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)));
+    public void HasCorrectTestContextSignatureShouldReturnTrueForTestContextsWithNoSetters() => Verify(TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)));
 
-    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithPrivateSetter() => Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter)));
+    public void HasCorrectTestContextSignatureShouldReturnTrueForTestContextsWithPrivateSetter() => Verify(TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter)));
 
     public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithStaticSetter() => Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithStaticTestContext)));
 

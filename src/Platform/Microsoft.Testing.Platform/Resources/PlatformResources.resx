@@ -567,7 +567,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <comment>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</comment>
   </data>
   <data name="FailedWithErrors" xml:space="preserve">
-    <value>failed with {0} errors(s)</value>
+    <value>failed with {0} error(s)</value>
   </data>
   <data name="FailedWithErrorsAndWarnings" xml:space="preserve">
     <value>failed with {0} error(s) and {1} warning(s)</value>
@@ -636,5 +636,30 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="StandardOutput" xml:space="preserve">
     <value>Standard output</value>
+  </data>
+  <data name="DiscoveringTestsFrom" xml:space="preserve">
+    <value>Discovering tests from</value>
+  </data>
+  <data name="TestDiscoverySummary" xml:space="preserve">
+    <value>Discovered {0} tests in {1} assemblies.</value>
+    <comment>0 is number of tests, 1 is count of assemblies</comment>
+  </data>
+  <data name="DiscoveredTestsInAssembly" xml:space="preserve">
+    <value>Discovered {0} tests in assembly</value>
+    <comment>0 is count, the sentence is followed by the path of the assebly</comment>
+  </data>
+  <data name="TestDiscoverySummarySingular" xml:space="preserve">
+    <value>Discovered {0} tests.</value>
+    <comment>0 is number of tests</comment>
+  </data>
+  <data name="ExitCode" xml:space="preserve">
+    <value>Exit code</value>
+  </data>
+  <data name="CommandLineParserResponseFileNotFound" xml:space="preserve">
+    <value>The response file '{0}' was not found</value>
+  </data>
+  <data name="CommandLineParserFailedToReadResponseFile" xml:space="preserve">
+    <value>Failed to read response file '{0}'. {1}.</value>
+    <comment>{1} is the exception</comment>
   </data>
 </root>

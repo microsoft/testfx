@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
@@ -15,18 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Resources\ExtensionResources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ExtensionResources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\ExtensionResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>ExtensionResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\ExtensionResources.resx" GenerateSource="true" />
   </ItemGroup>
 
 </Project>

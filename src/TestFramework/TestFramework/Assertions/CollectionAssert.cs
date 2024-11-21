@@ -1158,8 +1158,7 @@ public sealed class CollectionAssert
         string reason = string.Empty;
         if (!AreCollectionsEqual(expected, actual, new ObjectComparer(), ref reason))
         {
-            string userMessage = Assert.BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
+            string finalMessage = ConstructFinalMessage(reason, message, parameters);
             Assert.ThrowAssertFailed("CollectionAssert.AreEqual", finalMessage);
         }
     }
@@ -1243,8 +1242,7 @@ public sealed class CollectionAssert
         string reason = string.Empty;
         if (AreCollectionsEqual(notExpected, actual, new ObjectComparer(), ref reason))
         {
-            string userMessage = Assert.BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
+            string finalMessage = ConstructFinalMessage(reason, message, parameters);
             Assert.ThrowAssertFailed("CollectionAssert.AreNotEqual", finalMessage);
         }
     }
@@ -1335,8 +1333,7 @@ public sealed class CollectionAssert
         string reason = string.Empty;
         if (!AreCollectionsEqual(expected, actual, comparer, ref reason))
         {
-            string userMessage = Assert.BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
+            string finalMessage = ConstructFinalMessage(reason, message, parameters);
             Assert.ThrowAssertFailed("CollectionAssert.AreEqual", finalMessage);
         }
     }
@@ -1427,8 +1424,7 @@ public sealed class CollectionAssert
         string reason = string.Empty;
         if (AreCollectionsEqual(notExpected, actual, comparer, ref reason))
         {
-            string userMessage = Assert.BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
+            string finalMessage = ConstructFinalMessage(reason, message, parameters);
             Assert.ThrowAssertFailed("CollectionAssert.AreNotEqual", finalMessage);
         }
     }
@@ -1656,7 +1652,9 @@ public sealed class CollectionAssert
                     reason = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.ElementsAtIndexDontMatch,
-                        position);
+                        position,
+                        Assert.ReplaceNulls(curExpected),
+                        Assert.ReplaceNulls(curActual));
                     return false;
                 }
             }
@@ -1670,6 +1668,17 @@ public sealed class CollectionAssert
 
         reason = FrameworkMessages.BothCollectionsSameElements;
         return true;
+    }
+
+    private static string ConstructFinalMessage(
+        string reason,
+        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
+        params object?[]? parameters)
+    {
+        string userMessage = Assert.BuildUserMessage(message, parameters);
+        return userMessage.Length == 0
+            ? reason
+            : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
     }
 
     /// <summary>

@@ -33,7 +33,7 @@ public enum DynamicDataSourceType
 /// Attribute to define dynamic data for a test method.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public sealed class DynamicDataAttribute : Attribute, ITestDataSource
+public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestDataSourceEmptyDataSourceExceptionInfo
 {
     private readonly string _dynamicDataSourceName;
     private readonly DynamicDataSourceType _dynamicDataSourceType;
@@ -155,5 +155,15 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
 
         data = null;
         return false;
+    }
+
+    string? ITestDataSourceEmptyDataSourceExceptionInfo.GetPropertyOrMethodNameForEmptyDataSourceException()
+        => _dynamicDataSourceName;
+
+    string? ITestDataSourceEmptyDataSourceExceptionInfo.GetPropertyOrMethodContainerTypeNameForEmptyDataSourceException(MethodInfo testMethodInfo)
+    {
+        Type? type = _dynamicDataDeclaringType ?? testMethodInfo.DeclaringType;
+        DebugEx.Assert(type is not null, "Declaring type of test data cannot be null.");
+        return type.FullName;
     }
 }
