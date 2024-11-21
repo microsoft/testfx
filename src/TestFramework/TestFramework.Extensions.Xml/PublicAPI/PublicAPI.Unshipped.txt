@@ -1,0 +1,3 @@
+﻿#nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.XmlDataSourceAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.XmlDataSourceAttribute.XmlDataSourceAttribute(string! fileName, string! tableName) -> void

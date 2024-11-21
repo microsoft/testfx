@@ -211,6 +211,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extension
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestFramework.Extensions.Csv", "src\TestFramework\TestFramework.Extensions.Csv\TestFramework.Extensions.Csv.csproj", "{536A4485-F77F-4617-8449-2DCB387514AB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestFramework.Extensions.Xml", "src\TestFramework\TestFramework.Extensions.Xml\TestFramework.Extensions.Xml.csproj", "{7BF7BE9E-8D46-47ED-B45D-121C2252DF16}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -489,6 +491,10 @@ Global
 		{536A4485-F77F-4617-8449-2DCB387514AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{536A4485-F77F-4617-8449-2DCB387514AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{536A4485-F77F-4617-8449-2DCB387514AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BF7BE9E-8D46-47ED-B45D-121C2252DF16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BF7BE9E-8D46-47ED-B45D-121C2252DF16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BF7BE9E-8D46-47ED-B45D-121C2252DF16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BF7BE9E-8D46-47ED-B45D-121C2252DF16}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -574,6 +580,7 @@ Global
 		{F422398C-72CD-43EA-AC8E-E0DBD08E5563} = {BB874DF1-44FE-415A-B634-A6B829107890}
 		{8CE782A2-7374-4916-9C69-1F87E51A64A9} = {6AEE1440-FDF0-4729-8196-B24D0E333550}
 		{536A4485-F77F-4617-8449-2DCB387514AB} = {E48AC786-E150-4F41-9A16-32F02E4493D8}
+		{7BF7BE9E-8D46-47ED-B45D-121C2252DF16} = {E48AC786-E150-4F41-9A16-32F02E4493D8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}
