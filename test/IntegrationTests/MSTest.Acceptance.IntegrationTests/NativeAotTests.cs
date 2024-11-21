@@ -23,7 +23,6 @@ public class NativeAotTests : AcceptanceTestBase
                 <UseAppHost>true</UseAppHost>
                 <LangVersion>preview</LangVersion>
                 <PublishAot>true</PublishAot>
-                <NoWarn>$(NoWarn);IL2104;IL2026;IL3053</NoWarn>
                 <!--
                     This makes sure that the project is referencing MSTest.TestAdapter.dll when MSTest.TestAdapter nuget is imported,
                     without this the dll is just copied into the output folder.
@@ -36,6 +35,10 @@ public class NativeAotTests : AcceptanceTestBase
                 <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
                 <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
                 <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
+
+                <!-- Temporary for local debugging only -->
+                <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="17.13.0-dev" />
+                <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="17.13.0-dev" />
             </ItemGroup>
         </Project>
         """;
@@ -460,7 +463,9 @@ public class NativeAotTests : AcceptanceTestBase
                     code
                     .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                     .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
-                    .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent.Arguments)
+                    // temporarily set test to be on net9.0 as it's fixing one error that started to happen:  error IL3000: System.Net.Quic.MsQuicApi..cctor
+                    // see https://github.com/dotnet/sdk/issues/44880.
+                    .PatchCodeWithReplace("$TargetFramework$", "net9.0"/*TODO: TargetFrameworks.NetCurrent.Arguments*/)
                     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                     .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
                     addPublicFeeds: true);
@@ -478,7 +483,7 @@ public class NativeAotTests : AcceptanceTestBase
                     retryCount: 0);
                 compilationResult.AssertOutputContains("Generating native code");
 
-                var testHost = TestHost.LocateFrom(targetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent.Arguments, RID, Verb.publish);
+                var testHost = TestHost.LocateFrom(targetAssetPath, "NativeAotTests", "net9.0"/*TODO: TargetFrameworks.NetCurrent.Arguments*/, RID, Verb.publish);
 
                 TestHostResult result = await testHost.ExecuteAsync("--report-trx");
                 executeBeforeDisposingTestAsset?.Invoke(result);
