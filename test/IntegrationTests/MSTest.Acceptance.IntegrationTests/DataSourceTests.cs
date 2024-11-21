@@ -86,12 +86,12 @@ public class MyTestClass
     }
 
     [TestMethod]
-    [XmlDataSource("TestData.xml")]
+    [XmlDataSource("TestData.xml", "MyTable")]
     public void TestSumXml(DataRow dataRow)
     {
-        int expected = (int)dataRow["expectedSum"];
-        int num1 = (int)dataRow["num1"];
-        int num2 = (int)dataRow["num2"];
+        int expected = (int)dataRow["ExpectedSum"];
+        int num1 = (int)dataRow["Num1"];
+        int num2 = (int)dataRow["Num2"];
         Assert.AreEqual(expected, num1 + num2);
     }
 
