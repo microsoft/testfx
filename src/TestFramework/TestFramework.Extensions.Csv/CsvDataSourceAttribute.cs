@@ -6,12 +6,14 @@ using System.Data.OleDb;
 using System.Globalization;
 using System.Reflection;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// Attribute to define dynamic data from a CSV file for a test method.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = false/*TODO: Do we want to allow multiple*/)]
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public sealed class CsvDataSourceAttribute : Attribute, ITestDataSource
 {
     // Template used to map from a filename to a DB connection string
@@ -82,6 +84,5 @@ public sealed class CsvDataSourceAttribute : Attribute, ITestDataSource
     }
 
     string? ITestDataSource.GetDisplayName(MethodInfo methodInfo, object?[]? data)
-        // TODO
-        => null;
+        => TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, DynamicDataAttribute.TestIdGenerationStrategy);
 }

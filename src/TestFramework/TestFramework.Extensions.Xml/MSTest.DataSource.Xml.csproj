@@ -8,7 +8,7 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageId>MSTest.TestFramework.Xml</PackageId>
+    <PackageId>MSTest.DataSource.Xml</PackageId>
     <PackageTags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework</PackageTags>
     <PackageDescription>
       MSTest is Microsoft supported Test Framework.
@@ -22,8 +22,6 @@
 
   <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
-    <!-- TODO: Discuss the assembly name before shipping/merging -->
-    <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.Xml</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

@@ -209,9 +209,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Testing.Platform.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extensions.MSBuild", "src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj", "{8CE782A2-7374-4916-9C69-1F87E51A64A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestFramework.Extensions.Csv", "src\TestFramework\TestFramework.Extensions.Csv\TestFramework.Extensions.Csv.csproj", "{536A4485-F77F-4617-8449-2DCB387514AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.DataSource.Csv", "src\TestFramework\TestFramework.Extensions.Csv\MSTest.DataSource.Csv.csproj", "{536A4485-F77F-4617-8449-2DCB387514AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestFramework.Extensions.Xml", "src\TestFramework\TestFramework.Extensions.Xml\TestFramework.Extensions.Xml.csproj", "{7BF7BE9E-8D46-47ED-B45D-121C2252DF16}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.DataSource.Xml", "src\TestFramework\TestFramework.Extensions.Xml\MSTest.DataSource.Xml.csproj", "{7BF7BE9E-8D46-47ED-B45D-121C2252DF16}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

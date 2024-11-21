@@ -31,6 +31,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.DataSource.Csv" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.DataSource.Xml" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
