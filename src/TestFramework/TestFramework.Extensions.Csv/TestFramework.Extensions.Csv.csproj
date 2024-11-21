@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <!-- TODO: (before merge) Is this hack relevant for a new project? -->
     <UseAssemblyVersion14>true</UseAssemblyVersion14>
   </PropertyGroup>
 
