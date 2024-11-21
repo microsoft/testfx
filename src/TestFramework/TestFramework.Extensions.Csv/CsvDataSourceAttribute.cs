@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Attribute to define dynamic data from a CSV file for a test method.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false/*TODO: Do we want to allow multiple*/)]
 public sealed class CsvDataSourceAttribute : Attribute, ITestDataSource
 {
     // Template used to map from a filename to a DB connection string
