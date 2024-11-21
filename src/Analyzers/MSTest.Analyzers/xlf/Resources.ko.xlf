@@ -571,10 +571,10 @@ The type declaring these methods should also respect the following rules:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="new">'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
-- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
-- it should not be 'static'
-- it should have a setter.</target>
+        <target state="translated">'TestContext'는 생성자 또는 MSTest에서 설정한 속성에 할당된 비정적 필드 또는 속성이어야 하며 레이아웃을 따라야 합니다.
+- '[assembly: DiscoverInternals]' 특성이 설정되었는지 여부에 관계없이 'public'이어야 합니다.
+- 'static'이 아니어야 합니다.
+- setter가 있어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">
