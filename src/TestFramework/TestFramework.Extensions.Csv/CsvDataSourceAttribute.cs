@@ -25,7 +25,10 @@ public sealed class CsvDataSourceAttribute : Attribute, ITestDataSource
 
     IEnumerable<object?[]> ITestDataSource.GetData(MethodInfo methodInfo)
     {
-        // We specifically use OleDb to read a CSV file...
+        // TODO: Avoid using OleDb and instead parse Csv directly. Maybe use https://www.nuget.org/packages/CsvHelper? Write our own?
+        // When that happens, the OleDb dependency in the csproj should be
+        // removed, and relevant tests for CsvDataSource should run on Linux.
+
         // We better work with a full path, if nothing else, errors become easier to report
         string fullPath = Path.GetFullPath(FileName);
         if (!File.Exists(fullPath))

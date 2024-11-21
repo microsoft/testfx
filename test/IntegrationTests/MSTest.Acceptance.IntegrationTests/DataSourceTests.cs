@@ -24,6 +24,7 @@ public class DataSourceTests : AcceptanceTestBase
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />
         <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
         <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+        <PackageReference Include="MSTest.TestFramework.Csv" Version="$MSTestVersion$" />
 
         <None Include="TestData.csv">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -52,6 +53,7 @@ public class DataSourceTests : AcceptanceTestBase
 
 
 #file MyTestClass.cs
+using System.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -66,6 +68,16 @@ public class MyTestClass
         int expected = (int)TestContext.DataRow["expectedSum"];
         int num1 = (int)TestContext.DataRow["num1"];
         int num2 = (int)TestContext.DataRow["num2"];
+        Assert.AreEqual(expected, num1 + num2);
+    }
+
+    [TestMethod]
+    [CsvDataSource("TestData.csv")]
+    public void TestSum2(DataRow dataRow)
+    {
+        int expected = (int)dataRow["expectedSum"];
+        int num1 = (int)dataRow["num1"];
+        int num2 = (int)dataRow["num2"];
         Assert.AreEqual(expected, num1 + num2);
     }
 
@@ -112,6 +124,6 @@ num1,num2,expectedSum
 
         TestHostResult result = await testHost.ExecuteAsync();
         result.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        result.AssertOutputContainsSummary(failed: 1, passed: 4, skipped: 0);
+        result.AssertOutputContainsSummary(failed: 2, passed: 7, skipped: 0);
     }
 }
