@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <UseAssemblyVersion14>true</UseAssemblyVersion14>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>MSTest.TestFramework.Csv</PackageId>
+    <PackageTags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework</PackageTags>
+    <PackageDescription>
+      MSTest is Microsoft supported Test Framework.
+
+      This package includes the functionality needed for writing Csv-based data source unit tests.
+
+      Supported platforms:
+      - .NET Standard 2.0
+    </PackageDescription>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
+    <!-- TODO: Discuss the assembly name before shipping/merging -->
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.Csv</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
+
+    <!--<PackageReference Include="System.Data.Odbc" />-->
+    <PackageReference Include="System.Data.OleDb" />
+    <!--<PackageReference Include="Microsoft.Data.SqlClient" />-->
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- API that is common to all frameworks that we build for. -->
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+</Project>
