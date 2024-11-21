@@ -74,7 +74,7 @@
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
-        <target state="new">{0}. {1}</target>
+        <target state="translated">{0}. {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsFail">
@@ -101,9 +101,9 @@
         <source>Element at index {0} do not match.
 Expected: {1}
 Actual: {2}</source>
-        <target state="new">Element at index {0} do not match.
-Expected: {1}
-Actual: {2}</target>
+        <target state="translated">L'elemento nell'indice {0} non corrisponde.
+Previsto: {1}
+Effettivo: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
