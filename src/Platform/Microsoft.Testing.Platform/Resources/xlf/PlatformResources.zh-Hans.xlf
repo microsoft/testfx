@@ -416,6 +416,11 @@
         <target state="translated">指定客户端的端口。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineConfigOptionDescription">
+        <source>Specifies a testconfig.json file.</source>
+        <target state="new">Specifies a testconfig.json file.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously.
 Useful for scenario where you don't want to lose any log (i.e. in case of crash).
