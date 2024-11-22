@@ -71,13 +71,17 @@ public sealed class TestApplication : ITestApplication
     /// <returns>The task representing the asynchronous operation.</returns>
     public static async Task<ITestApplicationBuilder> CreateBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
     {
+        SystemEnvironment systemEnvironment = new();
+
+        // See AB#2304879.
+        UILanguageOverride.SetCultureSpecifiedByUser(systemEnvironment);
+
         // We get the time to save it in the logs for testcontrollers troubleshooting.
         SystemClock systemClock = new();
         DateTimeOffset createBuilderStart = systemClock.UtcNow;
         string createBuilderEntryTime = createBuilderStart.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
         testApplicationOptions ??= new TestApplicationOptions();
 
-        SystemEnvironment systemEnvironment = new();
         LaunchAttachDebugger(systemEnvironment);
 
         // First step is to parse the command line from where we get the second input layer.
