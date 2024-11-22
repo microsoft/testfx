@@ -35,16 +35,26 @@ internal sealed partial class JsonConfigurationSource
 
         public async Task LoadAsync()
         {
-            string configFileName = _commandLineParseResult.TryGetOptionArgumentList(PlatformCommandLineProvider.ConfigOptionKey, out string[]? configOptions)
-                ? Path.GetFullPath(configOptions[0])
-                : $"{Path.Combine(
+            string configFileName;
+            if (_commandLineParseResult.TryGetOptionArgumentList(PlatformCommandLineProvider.ConfigOptionKey, out string[]? configOptions))
+            {
+                configFileName = Path.GetFullPath(configOptions[0]);
+                if (!_fileSystem.Exists(configFileName))
+                {
+                    // TODO: Localize
+                    throw new FileNotFoundException($"The configuration file '{configFileName}' specified with '--config' could not be found.", configFileName);
+                }
+            }
+            else
+            {
+                configFileName = $"{Path.Combine(
                     Path.GetDirectoryName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath())!,
                     Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()))}{PlatformConfigurationConstants.PlatformConfigSuffixFileName}";
 
-            if (!_fileSystem.Exists(configFileName))
-            {
-                await LogInformationAsync($"Config file '{configFileName}' not found.");
-                return;
+                if (!_fileSystem.Exists(configFileName))
+                {
+                    return;
+                }
             }
 
             await LogInformationAsync($"Config file '{configFileName}' loaded.");

@@ -57,6 +57,39 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
+    public async Task TestWithConfigFromCommandLineWithExitProcessOnUnhandledExceptionTrue()
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--config dummyconfigfile_exit.json", environmentVariables: new()
+        {
+            ["TestWithConfigFromCommandLine"] = "true",
+        });
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+    }
+
+    public async Task TestWithConfigFromCommandLineWithExitProcessOnUnhandledExceptionFalse()
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--config dummyconfigfile_doNotExit.json", environmentVariables: new()
+        {
+            ["TestWithConfigFromCommandLine"] = "true",
+        });
+
+        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+    }
+
+    public async Task TestWithConfigFromCommandLineWithNonExistingFile()
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--config dummyconfigfile_not_existing_file.json", environmentVariables: new()
+        {
+            ["TestWithConfigFromCommandLine"] = "true",
+        });
+
+        testHostResult.AssertOutputContains("FileNotFoundException");
+    }
+
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
@@ -127,6 +160,12 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
     <None Update="*.testconfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="dummyconfigfile_exit.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="dummyconfigfile_doNotExit.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
@@ -142,6 +181,20 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
 
     $AppendSettings$
 </RunSettings>
+
+#file dummyconfigfile_exit.json
+{
+  "platformOptions": {
+    "exitProcessOnUnhandledException": true
+  }
+}
+
+#file dummyconfigfile_doNotExit.json
+{
+  "platformOptions": {
+    "exitProcessOnUnhandledException": false
+  }
+}
 
 #file $ProjectName$.testconfig.json
 {
@@ -197,6 +250,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
 
 
 #file UnitTest1.cs
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -205,6 +259,24 @@ public class UnitTest1
     [TestMethod]
     public void TestMethod()
     {
+    }
+
+    [TestMethod]
+    public void TestWithConfigFromCommandLine1()
+    {
+        if (Environment.GetEnvironmentVariable("TestWithConfigFromCommandLine") == "true")
+        {
+            Assert.Fail("Failing TestWithConfigFromCommandLine1");
+        }
+    }
+
+    [TestMethod]
+    public void TestWithConfigFromCommandLine2()
+    {
+        if (Environment.GetEnvironmentVariable("TestWithConfigFromCommandLine") == "true")
+        {
+            Assert.Fail("Failing TestWithConfigFromCommandLine2");
+        }
     }
 }
 """;
