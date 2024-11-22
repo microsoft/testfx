@@ -132,7 +132,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
 
         string root = RootFinder.Find();
         string x86Muxer = Path.Combine(root, ".dotnet", "x86");
-        var dotnetRootX86 = new Dictionary<string, string>
+        var dotnetRootX86 = new Dictionary<string, string?>
         {
             { "DOTNET_ROOT_X86", x86Muxer },
         };
@@ -168,7 +168,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
 
         string root = RootFinder.Find();
         string dotnetHostPath = Path.Combine(root, ".dotnet", "dotnet.exe");
-        var dotnetHostPathEnvVar = new Dictionary<string, string>
+        var dotnetHostPathEnvVar = new Dictionary<string, string?>
         {
             { "DOTNET_HOST_PATH", dotnetHostPath },
         };

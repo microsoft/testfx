@@ -52,7 +52,7 @@ public static class DotnetCli
         string args,
         string nugetGlobalPackagesFolder,
         string? workingDirectory = null,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
         int timeoutInSeconds = 50,
@@ -64,7 +64,7 @@ public static class DotnetCli
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
         {
-            environmentVariables ??= new Dictionary<string, string>();
+            environmentVariables ??= new Dictionary<string, string?>();
             foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
             {
                 // Skip all unwanted environment variables.
@@ -123,7 +123,7 @@ public static class DotnetCli
         }
     }
 
-    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
+    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
     {
         if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
         {

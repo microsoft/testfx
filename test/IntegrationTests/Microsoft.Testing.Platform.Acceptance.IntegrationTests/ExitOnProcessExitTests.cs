@@ -21,7 +21,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase
 
         // Create the mutex name used to wait for the PID file created by the test host.
         string waitPid = Guid.NewGuid().ToString("N");
-        _ = testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string> { { "WaitPid", waitPid } });
+        _ = testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string?> { { "WaitPid", waitPid } });
 
         Process? process;
         var startTime = Stopwatch.StartNew();

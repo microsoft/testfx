@@ -113,7 +113,7 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
         var host = TestInfrastructure.TestHost.LocateFrom(assetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
         TestHostResult hostResult = await host.ExecuteAsync(
             command: commandLine,
-            environmentVariables: new Dictionary<string, string>
+            environmentVariables: new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE, environmentVariable },
             });

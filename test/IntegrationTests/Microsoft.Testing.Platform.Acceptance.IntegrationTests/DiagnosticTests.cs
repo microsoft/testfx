@@ -110,7 +110,7 @@ public class DiagnosticTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
             });
@@ -127,7 +127,7 @@ public class DiagnosticTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY, "Trace" },
@@ -145,7 +145,7 @@ public class DiagnosticTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX, "MyPrefix" },
@@ -163,7 +163,7 @@ public class DiagnosticTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE, "1" },
@@ -179,7 +179,7 @@ public class DiagnosticTests : AcceptanceTestBase
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--diagnostic",
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "0" },
             });
