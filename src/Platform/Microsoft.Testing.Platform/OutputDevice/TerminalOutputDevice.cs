@@ -426,14 +426,21 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
         switch (value)
         {
             case TestNodeUpdateMessage testNodeStateChanged:
-
-                TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
+                TimingProperty? timingProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>();
+                TimeSpan duration = timingProperty?.GlobalTiming.Duration ?? TimeSpan.Zero;
                 string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
                 string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case InProgressTestNodeStateProperty:
+                        _terminalTestReporter.ReportInProgress(
+                            _assemblyName,
+                            _targetFramework,
+                            _shortArchitecture,
+                            executionId: null,
+                            testNodeStateChanged.TestNode,
+                            timingProperty?.GlobalTiming.StartTime);
                         // do nothing.
                         break;
 

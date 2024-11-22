@@ -3,12 +3,14 @@
 
 #if !NET7_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
+#endif
+using System.Globalization;
+#if !NET7_0_OR_GREATER
 using System.Reflection;
 #endif
-
-using System.Globalization;
 using System.Text.RegularExpressions;
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
@@ -157,7 +159,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture, string? executionId)
     {
-        string key = $"{assembly}|{targetFramework}|{architecture}|{executionId}";
+        string key = GetAssemblyProgressStateKey(assembly, targetFramework, architecture, executionId);
         if (_assemblies.TryGetValue(key, out TestProgressState? asm))
         {
             return asm;
@@ -412,7 +414,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? standardOutput,
         string? errorOutput)
     {
-        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
+        TestProgressState testProgressState = _assemblies[GetAssemblyProgressStateKey(assembly, targetFramework, architecture, executionId)];
 
         switch (outcome)
         {
@@ -420,20 +422,20 @@ internal sealed partial class TerminalTestReporter : IDisposable
             case TestOutcome.Timeout:
             case TestOutcome.Canceled:
             case TestOutcome.Fail:
-                asm.FailedTests++;
-                asm.TotalTests++;
+                testProgressState.FailedTests++;
+                testProgressState.TotalTests++;
                 break;
             case TestOutcome.Passed:
-                asm.PassedTests++;
-                asm.TotalTests++;
+                testProgressState.PassedTests++;
+                testProgressState.TotalTests++;
                 break;
             case TestOutcome.Skipped:
-                asm.SkippedTests++;
-                asm.TotalTests++;
+                testProgressState.SkippedTests++;
+                testProgressState.TotalTests++;
                 break;
         }
 
-        _terminalWithProgress.UpdateWorker(asm.SlotIndex);
+        _terminalWithProgress.UpdateWorker(testProgressState.SlotIndex);
         if (outcome != TestOutcome.Passed || GetShowPassedTests())
         {
             _terminalWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
@@ -976,4 +978,14 @@ internal sealed partial class TerminalTestReporter : IDisposable
             ConsoleColor.White => TerminalColor.White,
             _ => TerminalColor.Default,
         };
+
+    internal void ReportInProgress(string assemblyName, string? targetFramework, string? shortArchitecture, string? executionId, TestNode testNode, DateTimeOffset? startTime)
+    {
+        TestProgressState testProgressState = _assemblies[GetAssemblyProgressStateKey(assemblyName, targetFramework, shortArchitecture, executionId)];
+        testProgressState.InProgressTests.Add(new(testNode, startTime));
+        _terminalWithProgress.UpdateWorker(testProgressState.SlotIndex);
+    }
+
+    private static string GetAssemblyProgressStateKey(string assemblyName, string? targetFramework, string? shortArchitecture, string? executionId)
+        => $"{assemblyName}|{targetFramework}|{shortArchitecture}|{executionId}";
 }

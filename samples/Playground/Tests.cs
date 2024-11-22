@@ -21,7 +21,8 @@ public class TestClass
     public void Test2() => Assert.AreEqual(1, 0, "few");
 
     [TestMethod]
-    public void Test3()
-    {
-    }
+    public void Test3() => Thread.Sleep(3000);
+
+    [TestMethod]
+    public void Test4() => Thread.Sleep(1000);
 }

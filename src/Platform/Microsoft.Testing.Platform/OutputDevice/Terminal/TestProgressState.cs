@@ -30,6 +30,8 @@ internal sealed class TestProgressState
 
     public List<IProgressMessage> Messages { get; } = new();
 
+    public List<TestInProgress> InProgressTests { get; } = new();
+
     public int FailedTests { get; internal set; }
 
     public int PassedTests { get; internal set; }
