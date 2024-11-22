@@ -27,6 +27,8 @@ public class HelpInfoTests : AcceptanceTestBase
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
+    --config
+        Specifies a testconfig.json file.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
         The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
@@ -150,6 +152,8 @@ Built-in command line providers:
         Arity: 1
         Hidden: True
         Description: Specify the port of the client\.
+    --config
+        Specifies a testconfig\.json file\.
       --diagnostic
         Arity: 0
         Hidden: False
@@ -283,6 +287,8 @@ Registered tools:
 Usage {TestAssetFixture.AllExtensionsAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
+    --config
+        Specifies a testconfig.json file.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
         The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
@@ -418,6 +424,8 @@ Built-in command line providers:
         Arity: 1
         Hidden: True
         Description: Specify the port of the client.
+    --config
+        Specifies a testconfig.json file.
       --diagnostic
         Arity: 0
         Hidden: False

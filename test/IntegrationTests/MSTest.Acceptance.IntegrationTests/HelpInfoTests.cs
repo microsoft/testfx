@@ -31,6 +31,8 @@ MSTest v{MSTestVersion} (UTC *) [* - *]
 Usage {AssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
+    --config
+        Specifies a testconfig.json file.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
         The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
