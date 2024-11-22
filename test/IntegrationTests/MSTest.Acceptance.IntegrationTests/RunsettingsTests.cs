@@ -1,10 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
@@ -20,6 +22,27 @@ public sealed class RunSettingsTests : AcceptanceTestBase
     {
         yield return TargetFrameworks.NetCurrent;
         yield return TargetFrameworks.NetFramework.First();
+    }
+
+    internal static IEnumerable<TestArgumentsEntry<(string? TestingPlatformUILanguage, string? DotnetCLILanguage, string? VSLang, string ExpectedLocale)>> LocalizationTestCases()
+    {
+        // Show that TestingPlatformUILanguage is respected.
+        yield return new TestArgumentsEntry<(string?, string?, string?, string)>(("fr-FR", null, null, "fr-FR"), "TestingPlatformUILanguage: fr-FR, expected: fr-FR");
+
+        // Show that TestingPlatformUILanguage takes precedence over DotnetCLILanguage.
+        yield return new TestArgumentsEntry<(string?, string?, string?, string)>(("fr-FR", "it-IT", null, "fr-FR"), "TestingPlatformUILanguage: fr-FR, CLI: it-IT, expected: fr-FR");
+
+        // Show that DotnetCLILanguage is respected.
+        yield return new TestArgumentsEntry<(string?, string?, string?, string)>((null, "it-IT", null, "it-IT"), "CLI: it-IT, expected: it-IT");
+
+        // Show that DotnetCLILanguage takes precedence over VSLang.
+        yield return new TestArgumentsEntry<(string?, string?, string?, string)>((null, "it-IT", "fr-FR", "it-IT"), "CLI: it-IT, VSLang: fr-FR, expected: it-IT");
+
+        // Show that VSLang is respected.
+        yield return new TestArgumentsEntry<(string?, string?, string?, string)>((null, null, "it-IT", "it-IT"), "VSLang: it-IT, expected: it-IT");
+
+        // Show that TestingPlatformUILanguage takes precedence over everything.
+        yield return new TestArgumentsEntry<(string?, string?, string?, string)>(("fr-FR", "it-IT", "it-IT", "fr-FR"), "TestingPlatformUILanguage: fr-FR, CLI: it-IT, VSLang: it-IT, expected: fr-FR");
     }
 
     [ArgumentsProvider(nameof(TfmList))]
@@ -46,6 +69,49 @@ public sealed class RunSettingsTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Runsettings attribute 'TestCaseFilter' is not supported by Microsoft.Testing.Platform and will be ignored");
         testHostResult.AssertOutputContains("Runsettings attribute 'TestSessionTimeout' is not supported by Microsoft.Testing.Platform and will be ignored");
         testHostResult.AssertOutputContains("Runsettings attribute 'TreatNoTestsAsError' is not supported by Microsoft.Testing.Platform and will be ignored");
+    }
+
+    [ArgumentsProvider(nameof(LocalizationTestCases))]
+    public async Task UnsupportedRunSettingsEntriesAreFlagged_Localization((string? TestingPlatformUILanguage, string? DotnetCLILanguage, string? VSLang, string? ExpectedLocale) testArgument)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", environmentVariables: new()
+        {
+            ["TESTINGPLATFORM_UI_LANGUAGE"] = testArgument.TestingPlatformUILanguage,
+            ["DOTNET_CLI_UI_LANGUAGE"] = testArgument.DotnetCLILanguage,
+            ["VSLANG"] = testArgument.VSLang is null ? null : new CultureInfo(testArgument.VSLang).LCID.ToString(CultureInfo.CurrentCulture),
+        });
+
+        // Assert
+        testHostResult.AssertExitCodeIs(0);
+
+        switch (testArgument.ExpectedLocale)
+        {
+            case "fr-FR":
+                testHostResult.AssertOutputContains("Les loggers Runsettings ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
+                testHostResult.AssertOutputContains("Les datacollecteurs Runsettings ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
+                testHostResult.AssertOutputContains("Les attributs Runsettings « MaxCpuCount » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
+                testHostResult.AssertOutputContains("Les attributs Runsettings « TargetFrameworkVersion » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
+                testHostResult.AssertOutputContains("Les attributs Runsettings « TargetPlatform » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
+                testHostResult.AssertOutputContains("Les attributs Runsettings « TestAdaptersPaths » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
+                testHostResult.AssertOutputContains("Les attributs Runsettings « TestCaseFilter » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
+                testHostResult.AssertOutputContains("Les attributs Runsettings « TestSessionTimeout » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
+                testHostResult.AssertOutputContains("Les attributs Runsettings « TreatNoTestsAsError » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
+                break;
+            case "it-IT":
+                testHostResult.AssertOutputContains("I logger Runsettings non sono supportati da Microsoft.Testing.Platform e verranno ignorati");
+                testHostResult.AssertOutputContains("I datacollector Runsettings non sono supportati da Microsoft.Testing.Platform e verranno ignorati");
+                testHostResult.AssertOutputContains("L'attributo Runsettings `MaxCpuCount' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                testHostResult.AssertOutputContains("L'attributo Runsettings `TargetFrameworkVersion' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                testHostResult.AssertOutputContains("L'attributo Runsettings `TargetPlatform' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                testHostResult.AssertOutputContains("L'attributo Runsettings `TestAdaptersPaths' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                testHostResult.AssertOutputContains("L'attributo Runsettings `TestCaseFilter' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                testHostResult.AssertOutputContains("L'attributo Runsettings `TestSessionTimeout' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                testHostResult.AssertOutputContains("L'attributo Runsettings `TreatNoTestsAsError' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                break;
+            default:
+                throw ApplicationStateGuard.Unreachable();
+        }
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
