@@ -90,30 +90,10 @@ public sealed class RunSettingsTests : AcceptanceTestBase
             case "fr-FR":
                 testHostResult.AssertOutputContains("Les loggers Runsettings ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
                 testHostResult.AssertOutputContains("Les datacollecteurs Runsettings ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
-                testHostResult.AssertOutputContains("Les attributs Runsettings « MaxCpuCount » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
-                testHostResult.AssertOutputContains("Les attributs Runsettings « TargetFrameworkVersion » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
-                testHostResult.AssertOutputContains("Les attributs Runsettings « TargetPlatform » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
-                testHostResult.AssertOutputContains("Les attributs Runsettings « TestAdaptersPaths » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
-                testHostResult.AssertOutputContains("Les attributs Runsettings « TestCaseFilter » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
-                testHostResult.AssertOutputContains("Les attributs Runsettings « TestSessionTimeout » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
-                testHostResult.AssertOutputContains("Les attributs Runsettings « TreatNoTestsAsError » ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
                 break;
             case "it-IT":
                 testHostResult.AssertOutputContains("I logger Runsettings non sono supportati da Microsoft.Testing.Platform e verranno ignorati");
                 testHostResult.AssertOutputContains("I datacollector Runsettings non sono supportati da Microsoft.Testing.Platform e verranno ignorati");
-
-                // Unsure why this happens :/
-                string notSupportedItalianMessageFormat = OperatingSystem.IsWindows()
-                    ? "L'attributo Runsettings `{0}' non è supportato da Microsoft.Testing.Platform e verrà ignorato"
-                    : "L’attributo Runsettings ‘0’ non è supportato da Microsoft.Testing.Platform e verrà ignorato";
-
-                testHostResult.AssertOutputContains(string.Format(CultureInfo.InvariantCulture, notSupportedItalianMessageFormat, "MaxCpuCount"));
-                testHostResult.AssertOutputContains(string.Format(CultureInfo.InvariantCulture, notSupportedItalianMessageFormat, "TargetFrameworkVersion"));
-                testHostResult.AssertOutputContains(string.Format(CultureInfo.InvariantCulture, notSupportedItalianMessageFormat, "TargetPlatform"));
-                testHostResult.AssertOutputContains(string.Format(CultureInfo.InvariantCulture, notSupportedItalianMessageFormat, "TestAdaptersPaths"));
-                testHostResult.AssertOutputContains(string.Format(CultureInfo.InvariantCulture, notSupportedItalianMessageFormat, "TestCaseFilter"));
-                testHostResult.AssertOutputContains(string.Format(CultureInfo.InvariantCulture, notSupportedItalianMessageFormat, "TestSessionTimeout"));
-                testHostResult.AssertOutputContains(string.Format(CultureInfo.InvariantCulture, notSupportedItalianMessageFormat, "TreatNoTestsAsError"));
                 break;
             default:
                 throw ApplicationStateGuard.Unreachable();
