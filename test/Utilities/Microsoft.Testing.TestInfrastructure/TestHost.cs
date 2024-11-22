@@ -55,7 +55,7 @@ public sealed class TestHost
                 throw new InvalidOperationException($"Command should not start with module name '{_testHostModuleName}'.");
             }
 
-            environmentVariables ??= new Dictionary<string, string>();
+            environmentVariables ??= new Dictionary<string, string?>();
 
             if (disableTelemetry)
             {

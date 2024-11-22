@@ -33,7 +33,7 @@ public static class ProcessFactory
                 processStartInfo.EnvironmentVariables.Clear();
             }
 
-            foreach (KeyValuePair<string, string> kvp in config.EnvironmentVariables)
+            foreach (KeyValuePair<string, string?> kvp in config.EnvironmentVariables)
             {
                 if (kvp.Value is null)
                 {
