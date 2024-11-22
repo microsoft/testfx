@@ -153,7 +153,9 @@ Built-in command line providers:
         Hidden: True
         Description: Specify the port of the client\.
     --config
-        Specifies a testconfig\.json file\.
+        Arity: 1
+        Hidden: False
+        Description: Specifies a testconfig\.json file\.
       --diagnostic
         Arity: 0
         Hidden: False
@@ -425,7 +427,9 @@ Built-in command line providers:
         Hidden: True
         Description: Specify the port of the client.
     --config
-        Specifies a testconfig.json file.
+        Arity: 1
+        Hidden: False
+        Description: Specifies a testconfig.json file.
       --diagnostic
         Arity: 0
         Hidden: False
