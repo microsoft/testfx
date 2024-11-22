@@ -101,13 +101,13 @@ public sealed class RunSettingsTests : AcceptanceTestBase
             case "it-IT":
                 testHostResult.AssertOutputContains("I logger Runsettings non sono supportati da Microsoft.Testing.Platform e verranno ignorati");
                 testHostResult.AssertOutputContains("I datacollector Runsettings non sono supportati da Microsoft.Testing.Platform e verranno ignorati");
-                testHostResult.AssertOutputContains("L'attributo Runsettings `MaxCpuCount' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
-                testHostResult.AssertOutputContains("L'attributo Runsettings `TargetFrameworkVersion' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
-                testHostResult.AssertOutputContains("L'attributo Runsettings `TargetPlatform' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
-                testHostResult.AssertOutputContains("L'attributo Runsettings `TestAdaptersPaths' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
-                testHostResult.AssertOutputContains("L'attributo Runsettings `TestCaseFilter' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
-                testHostResult.AssertOutputContains("L'attributo Runsettings `TestSessionTimeout' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
-                testHostResult.AssertOutputContains("L'attributo Runsettings `TreatNoTestsAsError' non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                testHostResult.AssertOutputContains("L’attributo Runsettings ‘MaxCpuCount’ non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                testHostResult.AssertOutputContains("L’attributo Runsettings ‘TargetFrameworkVersion’ non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                testHostResult.AssertOutputContains("L’attributo Runsettings ‘TargetPlatform’ non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                testHostResult.AssertOutputContains("L’attributo Runsettings ‘TestAdaptersPaths’ non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                testHostResult.AssertOutputContains("L’attributo Runsettings ‘TestCaseFilter’ non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                testHostResult.AssertOutputContains("L’attributo Runsettings ‘TestSessionTimeout’ non è supportato da Microsoft.Testing.Platform e verrà ignorato");
+                testHostResult.AssertOutputContains("L’attributo Runsettings ‘TreatNoTestsAsError’ non è supportato da Microsoft.Testing.Platform e verrà ignorato");
                 break;
             default:
                 throw ApplicationStateGuard.Unreachable();
