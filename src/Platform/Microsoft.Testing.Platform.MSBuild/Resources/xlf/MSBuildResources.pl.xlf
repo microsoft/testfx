@@ -27,6 +27,11 @@
         <target state="translated">Obliczanie narzędzia pełnej ścieżki nie powiodło się. Moduł uruchamiający „{0}”</target>
         <note />
       </trans-unit>
+      <trans-unit id="IncompatibleArchitecture">
+        <source>Current process architecture '{0}' is not compatible with '{1}'</source>
+        <target state="new">Current process architecture '{0}' is not compatible with '{1}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidTargetPath">
         <source>Invalid TargetPath, {0}</source>
         <target state="translated">Nieprawidłowa ścieżka docelowa, {0}</target>

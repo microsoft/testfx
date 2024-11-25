@@ -27,6 +27,11 @@
         <target state="translated">完整路径工具计算失败。运行器“{0}”</target>
         <note />
       </trans-unit>
+      <trans-unit id="IncompatibleArchitecture">
+        <source>Current process architecture '{0}' is not compatible with '{1}'</source>
+        <target state="new">Current process architecture '{0}' is not compatible with '{1}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidTargetPath">
         <source>Invalid TargetPath, {0}</source>
         <target state="translated">TargetPath {0} 无效</target>

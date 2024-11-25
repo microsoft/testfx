@@ -27,6 +27,11 @@
         <target state="translated">Désolé... Nous n’avons pas pu effectuer le calcul d’outil de chemin complet. Exécuteur « {0} »</target>
         <note />
       </trans-unit>
+      <trans-unit id="IncompatibleArchitecture">
+        <source>Current process architecture '{0}' is not compatible with '{1}'</source>
+        <target state="new">Current process architecture '{0}' is not compatible with '{1}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidTargetPath">
         <source>Invalid TargetPath, {0}</source>
         <target state="translated">TargetPath non valide, {0}</target>

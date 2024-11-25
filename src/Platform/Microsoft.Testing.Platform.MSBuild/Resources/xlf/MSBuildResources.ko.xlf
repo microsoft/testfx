@@ -27,6 +27,11 @@
         <target state="translated">전체 경로 도구를 계산하지 못했습니다. 러너 '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="IncompatibleArchitecture">
+        <source>Current process architecture '{0}' is not compatible with '{1}'</source>
+        <target state="new">Current process architecture '{0}' is not compatible with '{1}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidTargetPath">
         <source>Invalid TargetPath, {0}</source>
         <target state="translated">잘못된 TargetPath, {0}</target>

@@ -4,6 +4,8 @@
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
@@ -157,6 +159,23 @@ public class MSBuildTests_Test : AcceptanceTestBase
         string logFileContent = File.ReadAllText(outputFileLog);
         Assert.IsTrue(Regex.IsMatch(logFileContent, ".*win-x86.*"), logFileContent);
         Assert.IsTrue(Regex.IsMatch(logFileContent, @"\.dotnet\\x86\\dotnet\.exe"), logFileContent);
+    }
+
+    public async Task Invoke_DotnetTest_With_Incompatible_Arch()
+    {
+        TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", string.Empty)
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent.Arguments}</TargetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"test --arch arm64 -p:TestingPlatformDotnetTestSupport=True \"{testAsset.TargetAssetPath}\"",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            failIfReturnValueIsNotZero: false);
+        result.AssertOutputContains("Current process architecture 'X64' is not compatible with 'arm64'");
     }
 
     public async Task Invoke_DotnetTest_With_DOTNET_HOST_PATH_Should_Work()

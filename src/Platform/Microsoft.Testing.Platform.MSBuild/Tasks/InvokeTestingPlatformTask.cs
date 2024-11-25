@@ -141,7 +141,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 else
                 {
                     Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
-                    Log.LogError(Resources.MSBuildResources.FullPathToolCalculationFailed, dotnetRunnerName);
+                    Log.LogError(string.Format(CultureInfo.InvariantCulture, Resources.MSBuildResources.IncompatibleArchitecture, _currentProcessArchitecture, TestArchitecture.ItemSpec));
                     return null;
                 }
             }
