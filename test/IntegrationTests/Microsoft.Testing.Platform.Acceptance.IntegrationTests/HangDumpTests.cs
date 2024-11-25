@@ -21,7 +21,7 @@ public sealed class HangDumpTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "HangDump", tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--hangdump --hangdump-timeout 8s --results-directory {resultDirectory}",
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
@@ -37,7 +37,7 @@ public sealed class HangDumpTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent.Arguments);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--hangdump --hangdump-timeout 8s --hangdump-filename myhungdumpfile_%p.dmp --results-directory {resultDirectory}",
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { "SLEEPTIMEMS1", "4000" },
                 { "SLEEPTIMEMS2", "600000" },
@@ -55,7 +55,7 @@ public sealed class HangDumpTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent.Arguments);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"""--hangdump --hangdump-timeout 8s --hangdump-filename myhungdumpfile_%p.dmp --results-directory "{resultDirectory}" """,
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { "SLEEPTIMEMS1", "4000" },
                 { "SLEEPTIMEMS2", "20000" },
@@ -75,7 +75,7 @@ public sealed class HangDumpTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent.Arguments);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--hangdump --hangdump-timeout 8s --hangdump-type {format} --results-directory {resultDirectory}",
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
@@ -91,7 +91,7 @@ public sealed class HangDumpTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent.Arguments);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--hangdump --hangdump-timeout 8s --hangdump-type invalid --results-directory {resultDirectory}",
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { "SLEEPTIMEMS1", "4000" },
                 { "SLEEPTIMEMS2", "600000" },

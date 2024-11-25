@@ -515,6 +515,11 @@ Kullanılabilir değerler: 'Trace', 'Debug', 'Information', 'Warning', 'Error' v
         <target state="translated">'--list-tests' ve '--minimum-expected-tests' uyumsuz seçenekler</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
+        <source>Specifies the minimum number of tests that are expected to run.</source>
+        <target state="new">Specifies the minimum number of tests that are expected to run.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
         <source>'--minimum-expected-tests' expects a single non-zero positive integer value
 (e.g. '--minimum-expected-tests 10')</source>

@@ -16,7 +16,7 @@ namespace MSTest.Acceptance.IntegrationTests.Messages.V100;
 public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTestBase
 {
     private static readonly string Root = RootFinder.Find();
-    private static readonly Dictionary<string, string> DefaultEnvironmentVariables = new()
+    private static readonly Dictionary<string, string?> DefaultEnvironmentVariables = new()
     {
         { "DOTNET_ROOT", $"{Root}/.dotnet" },
         { "DOTNET_INSTALL_DIR", $"{Root}/.dotnet" },
@@ -31,7 +31,7 @@ public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTest
 
     protected async Task<TestingPlatformClient> StartAsServerAndConnectToTheClientAsync(TestHost testHost)
     {
-        var environmentVariables = new Dictionary<string, string>(DefaultEnvironmentVariables);
+        var environmentVariables = new Dictionary<string, string?>(DefaultEnvironmentVariables);
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
         {
             // Skip all unwanted environment variables.
@@ -80,7 +80,7 @@ public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTest
 
     protected async Task<TestingPlatformClient> StartAsServerAndConnectAsync(TestHost testHost, bool enableDiagnostic = false)
     {
-        var environmentVariables = new Dictionary<string, string>(DefaultEnvironmentVariables);
+        var environmentVariables = new Dictionary<string, string?>(DefaultEnvironmentVariables);
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
         {
             // Skip all unwanted environment variables.

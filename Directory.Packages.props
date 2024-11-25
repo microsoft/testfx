@@ -6,9 +6,9 @@
   <PropertyGroup Label="Product dependencies">
     <AspireHostingTestingVersion>8.2.2</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.4</MicrosoftBuildVersion>
-    <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.24508.2</MicrosoftCodeAnalysisAnalyzersVersion>
+    <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.24574.2</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
-    <MicrosoftCodeAnalysisVersionForTests>4.8.0</MicrosoftCodeAnalysisVersionForTests>
+    <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>$(MicrosoftCodeAnalysisAnalyzersVersion)</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- UWP and WinUI dependencies -->
@@ -16,6 +16,7 @@
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>17.12.0</MicrosoftNETTestSdkVersion>
     <MicrosoftPlaywrightVersion>1.47.0</MicrosoftPlaywrightVersion>
+    <MicrosoftTestingExtensionsFakesVersion>17.12.0-beta.24429.1</MicrosoftTestingExtensionsFakesVersion>
     <!-- CVE-2017-0247 -->
     <SystemNetWebSocketsClientVersion>4.3.1</SystemNetWebSocketsClientVersion>
     <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
@@ -62,23 +63,23 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Testing.Internal.Framework" Version="$(MicrosoftTestingInternalFrameworkVersion)" />
     <PackageVersion Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$(MicrosoftTestingInternalFrameworkVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
     <!-- Pinned to 4.18.4 for security -->
     <PackageVersion Include="Moq" Version="4.18.4" />
-    <PackageVersion Include="MSBuild.StructuredLogger" Version="2.2.350" />
+    <PackageVersion Include="MSBuild.StructuredLogger" Version="2.2.386" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <!-- CVE-2024-0057 / Transitive deps of code analysis testing packages -->
-    <PackageVersion Include="NuGet.Packaging" Version="6.11.0" />
+    <PackageVersion Include="NuGet.Packaging" Version="6.12.1" />
     <PackageVersion Include="Polly" Version="8.4.2" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="ReportGenerator" Version="4.3.6" />
     <PackageVersion Include="StreamJsonRpc" Version="2.20.17" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageVersion Include="System.Management" Version="8.0.0" />
+    <PackageVersion Include="System.Management" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
   </ItemGroup>
 </Project>

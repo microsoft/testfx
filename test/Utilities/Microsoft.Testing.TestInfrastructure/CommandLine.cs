@@ -41,7 +41,7 @@ public sealed class CommandLine : IDisposable
 
     public async Task RunAsync(
         string commandLine,
-        IDictionary<string, string>? environmentVariables = null)
+        IDictionary<string, string?>? environmentVariables = null)
     {
         int exitCode = await RunAsyncAndReturnExitCodeAsync(commandLine, environmentVariables);
         if (exitCode != 0)
@@ -57,7 +57,7 @@ public sealed class CommandLine : IDisposable
 
     public async Task<int> RunAsyncAndReturnExitCodeAsync(
         string commandLine,
-        IDictionary<string, string>? environmentVariables = null,
+        IDictionary<string, string?>? environmentVariables = null,
         string? workingDirectory = null,
         bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false,
         int timeoutInSeconds = 60)

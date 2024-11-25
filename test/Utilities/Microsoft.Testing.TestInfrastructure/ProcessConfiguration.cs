@@ -13,7 +13,7 @@ public sealed class ProcessConfiguration
 
     public string? WorkingDirectory { get; init; }
 
-    public IDictionary<string, string>? EnvironmentVariables { get; init; }
+    public IDictionary<string, string?>? EnvironmentVariables { get; init; }
 
     public Action<IProcessHandle, string>? OnErrorOutput { get; init; }
 

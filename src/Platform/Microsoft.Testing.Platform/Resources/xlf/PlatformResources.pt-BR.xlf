@@ -119,12 +119,12 @@
       </trans-unit>
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
-        <target state="new">Failed to read response file '{0}'. {1}.</target>
+        <target state="translated">Falha ao ler o arquivo de resposta '{0}'. {1}.</target>
         <note>{1} is the exception</note>
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
         <source>The response file '{0}' was not found</source>
-        <target state="new">The response file '{0}' was not found</target>
+        <target state="translated">O arquivo de resposta '{0}' não foi encontrado</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
@@ -513,6 +513,11 @@ Os valores disponíveis são 'Rastreamento', 'Depuração', 'Informação', 'Avi
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
         <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
         <target state="translated">'--list-tests' e '--minimum-expected-tests' são opções incompatíveis</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
+        <source>Specifies the minimum number of tests that are expected to run.</source>
+        <target state="new">Specifies the minimum number of tests that are expected to run.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">

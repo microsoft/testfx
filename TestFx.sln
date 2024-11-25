@@ -150,7 +150,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestingPlatformRunner", "Te
 		eng\TestingPlatformRunner\TestingPlatformRunner.targets = eng\TestingPlatformRunner\TestingPlatformRunner.targets
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1 - Platform & Extensions", "1 - Platform & Extensions", "{6AEE1440-FDF0-4729-8196-B24D0E333550}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1 - Platform and Extensions", "1 - Platform and Extensions", "{6AEE1440-FDF0-4729-8196-B24D0E333550}"
 	ProjectSection(SolutionItems) = preProject
 		src\Platform\Directory.Build.props = src\Platform\Directory.Build.props
 	EndProjectSection

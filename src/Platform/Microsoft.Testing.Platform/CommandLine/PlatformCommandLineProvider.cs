@@ -42,7 +42,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
 
     private static readonly string[] VerbosityOptions = ["Trace", "Debug", "Information", "Warning", "Error", "Critical"];
 
-    private static readonly CommandLineOption MinimumExpectedTests = new(MinimumExpectedTestsOptionKey, "Specifies the minimum number of tests that are expected to run.", ArgumentArity.ZeroOrOne, false, isBuiltIn: true);
+    private static readonly CommandLineOption MinimumExpectedTests = new(MinimumExpectedTestsOptionKey, PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionDescription, ArgumentArity.ZeroOrOne, false, isBuiltIn: true);
 
     private static readonly IReadOnlyCollection<CommandLineOption> PlatformCommandLineProviderCache =
     [
