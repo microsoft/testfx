@@ -4,6 +4,8 @@
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
@@ -157,6 +159,43 @@ public class MSBuildTests_Test : AcceptanceTestBase
         string logFileContent = File.ReadAllText(outputFileLog);
         Assert.IsTrue(Regex.IsMatch(logFileContent, ".*win-x86.*"), logFileContent);
         Assert.IsTrue(Regex.IsMatch(logFileContent, @"\.dotnet\\x86\\dotnet\.exe"), logFileContent);
+    }
+
+    public async Task Invoke_DotnetTest_With_Incompatible_Arch()
+    {
+        Architecture currentArchitecture = RuntimeInformation.ProcessArchitecture;
+        string incompatibleArchitecture = currentArchitecture switch
+        {
+            Architecture.X86 or Architecture.X64 => "arm64",
+            _ => "x64",
+        };
+
+        TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", string.Empty)
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent.Arguments}</TargetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"test --arch {incompatibleArchitecture} -p:TestingPlatformDotnetTestSupport=True \"{testAsset.TargetAssetPath}\"",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            failIfReturnValueIsNotZero: false);
+        // The output looks like:
+        /*
+            D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : Could not find 'dotnet.exe' host for the 'arm64' architecture. [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+            D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :  [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+            D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : You can resolve the problem by installing the 'arm64' .NET. [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+            D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :  [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+            D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error : The specified framework can be found at: [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+            D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :   - https://aka.ms/dotnet-download [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
+         */
+        // Assert each error line separately for simplicity.
+        result.AssertOutputContains($"Could not find '{(OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet")}' host for the '{incompatibleArchitecture}' architecture.");
+        result.AssertOutputContains($"You can resolve the problem by installing the '{incompatibleArchitecture}' .NET.");
+        result.AssertOutputContains("The specified framework can be found at:");
+        result.AssertOutputContains("  - https://aka.ms/dotnet-download");
     }
 
     public async Task Invoke_DotnetTest_With_DOTNET_HOST_PATH_Should_Work()
