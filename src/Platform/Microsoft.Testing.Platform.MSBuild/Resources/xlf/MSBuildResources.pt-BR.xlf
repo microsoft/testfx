@@ -28,8 +28,18 @@
         <note />
       </trans-unit>
       <trans-unit id="IncompatibleArchitecture">
-        <source>Current process architecture '{0}' is not compatible with '{1}'</source>
-        <target state="new">Current process architecture '{0}' is not compatible with '{1}'</target>
+        <source>Could not find '{0}' host for the '{1}' architecture.
+
+You can resolve the problem by installing the '{1}' .NET.
+
+The specified framework can be found at:
+  - https://aka.ms/dotnet-download</source>
+        <target state="new">Could not find '{0}' host for the '{1}' architecture.
+
+You can resolve the problem by installing the '{1}' .NET.
+
+The specified framework can be found at:
+  - https://aka.ms/dotnet-download</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTargetPath">

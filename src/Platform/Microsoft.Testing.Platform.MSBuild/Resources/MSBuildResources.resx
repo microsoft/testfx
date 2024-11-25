@@ -132,9 +132,6 @@
   <data name="FullPathToolCalculationFailed" xml:space="preserve">
     <value>Full path tool calculation failed. Runner '{0}'</value>
   </data>
-  <data name="IncompatibleArchitecture" xml:space="preserve">
-    <value>Current process architecture '{0}' is not compatible with '{1}'</value>
-  </data>
   <data name="InvalidTargetPath" xml:space="preserve">
     <value>Invalid TargetPath, {0}</value>
   </data>
@@ -158,5 +155,13 @@
   </data>
   <data name="TestsSucceeded" xml:space="preserve">
     <value>Tests succeeded: '{0}' [{1}|{2}]</value>
+  </data>
+  <data name="IncompatibleArchitecture" xml:space="preserve">
+    <value>Could not find '{0}' host for the '{1}' architecture.
+
+You can resolve the problem by installing the '{1}' .NET.
+
+The specified framework can be found at:
+  - https://aka.ms/dotnet-download</value>
   </data>
 </root>
