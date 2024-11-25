@@ -5,6 +5,7 @@
 
   <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">
     <EnableMSTestRunner>true</EnableMSTestRunner>
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <!-- Extensions -->
