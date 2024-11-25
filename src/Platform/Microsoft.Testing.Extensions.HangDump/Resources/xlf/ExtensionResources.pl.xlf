@@ -17,6 +17,11 @@
         <target state="translated">Zawieszanie pliku zrzutu</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpCreatingFile">
+        <source>Creating dump file name '{0}'.</source>
+        <target state="new">Creating dump file name '{0}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
         <target state="translated">Zmienna środowiskowa „{0}” jest ustawiona na wartość „{1}” zamiast „{2}”</target>
@@ -70,6 +75,11 @@ Wartość limitu czasu jest określana w jednym z następujących formatów:
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
         <source>'--hangdump-timeout' expects a single timeout argument</source>
         <target state="translated">Element „--hangdump-timeout” oczekuje pojedynczego argumentu limitu czasu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTimeoutSetup">
+        <source>Hang dump timeout setup {0}.</source>
+        <target state="new">Hang dump timeout setup {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">

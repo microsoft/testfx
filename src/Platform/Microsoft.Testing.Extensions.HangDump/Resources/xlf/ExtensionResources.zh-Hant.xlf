@@ -17,6 +17,11 @@
         <target state="translated">擱置傾印檔案</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpCreatingFile">
+        <source>Creating dump file name '{0}'.</source>
+        <target state="new">Creating dump file name '{0}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
         <target state="translated">環境變數 '{0}' 已設定為 '{1}' 而不是 '{2}'</target>
@@ -70,6 +75,11 @@ The timeout value is specified in one of the following formats:
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
         <source>'--hangdump-timeout' expects a single timeout argument</source>
         <target state="translated">'--hangdump-timeout' 需要單一逾時引數</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTimeoutSetup">
+        <source>Hang dump timeout setup {0}.</source>
+        <target state="new">Hang dump timeout setup {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">

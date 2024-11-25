@@ -17,6 +17,11 @@
         <target state="translated">Döküm dosyasını as</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpCreatingFile">
+        <source>Creating dump file name '{0}'.</source>
+        <target state="new">Creating dump file name '{0}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
         <target state="translated">'{0}' ortam değişkeni '{1}' yerine '{2}' olarak ayarlandı</target>
@@ -70,6 +75,11 @@ Zaman aşımı değeri, aşağıdaki biçimlerden biri ile belirtilir:
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
         <source>'--hangdump-timeout' expects a single timeout argument</source>
         <target state="translated">'--hangdump-timeout' tek bir zaman aşımı bağımsız değişkeni bekliyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTimeoutSetup">
+        <source>Hang dump timeout setup {0}.</source>
+        <target state="new">Hang dump timeout setup {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">

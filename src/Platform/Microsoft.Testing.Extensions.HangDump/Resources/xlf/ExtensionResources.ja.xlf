@@ -17,6 +17,11 @@
         <target state="translated">ハング ダンプ ファイル</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpCreatingFile">
+        <source>Creating dump file name '{0}'.</source>
+        <target state="new">Creating dump file name '{0}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
         <target state="translated">環境変数 '{0}' は '{2}' ではなく '{1}' に設定されています</target>
@@ -70,6 +75,11 @@ The timeout value is specified in one of the following formats:
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
         <source>'--hangdump-timeout' expects a single timeout argument</source>
         <target state="translated">'--hangdump-timeout' には 1 つのタイムアウト引数が必要です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTimeoutSetup">
+        <source>Hang dump timeout setup {0}.</source>
+        <target state="new">Hang dump timeout setup {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">

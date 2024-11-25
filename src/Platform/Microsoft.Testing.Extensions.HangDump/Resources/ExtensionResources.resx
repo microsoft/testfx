@@ -126,6 +126,9 @@
   <data name="HangDumpArtifactDisplayName" xml:space="preserve">
     <value>Hang dump file</value>
   </data>
+  <data name="HangDumpCreatingFile" xml:space="preserve">
+    <value>Creating dump file name '{0}'.</value>
+  </data>
   <data name="HangDumpEnvironmentVariableInvalidValueErrorMessage" xml:space="preserve">
     <value>Environment variable '{0}' is set to '{1}' instead of '{2}'</value>
   </data>
@@ -157,6 +160,9 @@ The timeout value is specified in one of the following formats:
   </data>
   <data name="HangDumpTimeoutOptionInvalidArgument" xml:space="preserve">
     <value>'--hangdump-timeout' expects a single timeout argument</value>
+  </data>
+  <data name="HangDumpTimeoutSetup" xml:space="preserve">
+    <value>Hang dump timeout setup {0}.</value>
   </data>
   <data name="HangDumpTypeOptionDescription" xml:space="preserve">
     <value>Specify the type of the dump.
