@@ -24,4 +24,10 @@ public class TestClass
     public void Test3()
     {
     }
+
+    [TestMethod]
+    public void Test4()
+    {
+        Thread.Sleep(15_000);
+    }
 }

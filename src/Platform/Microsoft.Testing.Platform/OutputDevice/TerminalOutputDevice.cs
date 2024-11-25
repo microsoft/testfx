@@ -434,7 +434,12 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case InProgressTestNodeStateProperty:
-                        // do nothing.
+                        _terminalTestReporter.TestInProgress(
+                            _assemblyName,
+                            _targetFramework,
+                            _shortArchitecture,
+                            testNodeStateChanged.TestNode.DisplayName,
+                            executionId: null);
                         break;
 
                     case ErrorTestNodeStateProperty errorState:
