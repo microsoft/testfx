@@ -182,7 +182,14 @@ public class MSBuildTests_Test : AcceptanceTestBase
             $"test --arch {incompatibleArchitecture} -p:TestingPlatformDotnetTestSupport=True \"{testAsset.TargetAssetPath}\"",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
             failIfReturnValueIsNotZero: false);
-        result.AssertOutputContains($"Current process architecture '{currentArchitecture}' is not compatible with '{incompatibleArchitecture}'");
+        result.AssertOutputContains($"""
+            Could not find 'dotnet.exe' host for the '{incompatibleArchitecture}' architecture.
+
+            You can resolve the problem by installing the '{incompatibleArchitecture}' .NET.
+
+            The specified framework can be found at:
+              - https://aka.ms/dotnet-download
+            """);
     }
 
     public async Task Invoke_DotnetTest_With_DOTNET_HOST_PATH_Should_Work()
