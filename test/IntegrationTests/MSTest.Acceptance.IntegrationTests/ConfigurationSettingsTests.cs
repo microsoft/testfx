@@ -57,26 +57,28 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
-    public async Task TestWithConfigFromCommandLineWithExitProcessOnUnhandledExceptionTrue()
+    public async Task TestWithConfigFromCommandLineWithMapInconclusiveToFailedIsTrue()
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--config dummyconfigfile_exit.json", environmentVariables: new()
-        {
-            ["TestWithConfigFromCommandLine"] = "true",
-        });
-
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
-    }
-
-    public async Task TestWithConfigFromCommandLineWithExitProcessOnUnhandledExceptionFalse()
-    {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--config dummyconfigfile_doNotExit.json", environmentVariables: new()
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--config dummyconfigfile_map.json", environmentVariables: new()
         {
             ["TestWithConfigFromCommandLine"] = "true",
         });
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertOutputContainsSummary(failed: 1, passed: 1, skipped: 0);
+    }
+
+    public async Task TestWithConfigFromCommandLineWithMapInconclusiveToFailedIsFalse()
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--config dummyconfigfile_doNotMap.json", environmentVariables: new()
+        {
+            ["TestWithConfigFromCommandLine"] = "true",
+        });
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
     }
 
     public async Task TestWithConfigFromCommandLineWithNonExistingFile()
@@ -160,10 +162,10 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
     <None Update="*.testconfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="dummyconfigfile_exit.json">
+    <None Update="dummyconfigfile_map.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="dummyconfigfile_doNotExit.json">
+    <None Update="dummyconfigfile_doNotMap.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -182,17 +184,21 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
     $AppendSettings$
 </RunSettings>
 
-#file dummyconfigfile_exit.json
+#file dummyconfigfile_map.json
 {
-  "platformOptions": {
-    "exitProcessOnUnhandledException": true
+  "mstest": {
+    "execution": {
+      "mapInconclusiveToFailed": true,
+    },
   }
 }
 
-#file dummyconfigfile_doNotExit.json
+#file dummyconfigfile_doNotMap.json
 {
-  "platformOptions": {
-    "exitProcessOnUnhandledException": false
+  "mstest": {
+    "execution": {
+      "mapInconclusiveToFailed": false,
+    },
   }
 }
 
@@ -262,20 +268,11 @@ public class UnitTest1
     }
 
     [TestMethod]
-    public void TestWithConfigFromCommandLine1()
+    public void TestWithConfigFromCommandLine()
     {
         if (Environment.GetEnvironmentVariable("TestWithConfigFromCommandLine") == "true")
         {
-            Assert.Fail("Failing TestWithConfigFromCommandLine1");
-        }
-    }
-
-    [TestMethod]
-    public void TestWithConfigFromCommandLine2()
-    {
-        if (Environment.GetEnvironmentVariable("TestWithConfigFromCommandLine") == "true")
-        {
-            Assert.Fail("Failing TestWithConfigFromCommandLine2");
+            Assert.Inconclusive("Inconclusive TestWithConfigFromCommandLine");
         }
     }
 }
