@@ -163,6 +163,13 @@ public class MSBuildTests_Test : AcceptanceTestBase
 
     public async Task Invoke_DotnetTest_With_Incompatible_Arch()
     {
+        Architecture currentArchitecture = RuntimeInformation.ProcessArchitecture;
+        string incompatibleArchitecture = currentArchitecture switch
+        {
+            Architecture.X86 or Architecture.X64 => "arm64",
+            _ => "x64",
+        };
+
         TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
             SourceCode
@@ -172,10 +179,10 @@ public class MSBuildTests_Test : AcceptanceTestBase
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"test --arch arm64 -p:TestingPlatformDotnetTestSupport=True \"{testAsset.TargetAssetPath}\"",
+            $"test --arch {incompatibleArchitecture} -p:TestingPlatformDotnetTestSupport=True \"{testAsset.TargetAssetPath}\"",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
             failIfReturnValueIsNotZero: false);
-        result.AssertOutputContains("Current process architecture 'X64' is not compatible with 'arm64'");
+        result.AssertOutputContains($"Current process architecture '{currentArchitecture}' is not compatible with '{incompatibleArchitecture}'");
     }
 
     public async Task Invoke_DotnetTest_With_DOTNET_HOST_PATH_Should_Work()
