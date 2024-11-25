@@ -149,7 +149,7 @@ stages:
             name: Test
             displayName: Tests
 
-      - job: Mac OS
+      - job: MacOS
         timeoutInMinutes: 90
         pool:
           name: Azure Pipelines
