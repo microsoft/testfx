@@ -69,8 +69,10 @@
     <file src="net8.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net8.0\" />
     <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net8.0\" />
     <file src="net8.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net8.0\" />
-    <file src="net8.0-windows10.0.26100.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net8.0\uwp\" />
-    <file src="net8.0-windows10.0.26100.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net8.0\uwp\" />
+
+    <!-- net9.0 -->
+    <file src="net9.0-windows10.0.17763.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net9.0\uwp\" />
+    <file src="net9.0-windows10.0.17763.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net9.0\uwp\" />
 
     <!-- Source code -->
     <file src="$srcroot$\**\*.cs" target="src" />
