@@ -9,7 +9,10 @@
     <!-- When we are using mstest sdk-style project, we have IsTestingPlatformApplication set to false, thus it's causing issues.
     Because we are setting this property based on EnableMSTestRunner which is set to false,
     because of the order of import (mstest testadapter props then ClassicEngine.targets),
-    we need to set IsTestingPlatformApplication to true in ClassicEngine.targets to fix this issue. -->
+    we need to set IsTestingPlatformApplication to true in ClassicEngine.targets to fix this issue.
+
+    The IsTestingPlatformApplication property is needed for the dotnet test driver to distinguish
+    if we need to run the test project using the new testing platform. -->
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
   </PropertyGroup>
 
