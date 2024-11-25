@@ -157,6 +157,11 @@
         <target state="translated">Такой же экземпляр CompositeExtensonFactory уже зарегистрирован</target>
         <note />
       </trans-unit>
+      <trans-unit id="ConfigurationFileNotFound">
+        <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
+        <target state="new">The configuration file '{0}' specified with '--config-file' could not be found.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
         <source>Could not find the default json configuration</source>
         <target state="translated">Не удалось найти конфигурацию JSON по умолчанию</target>
@@ -414,6 +419,11 @@
       <trans-unit id="PlatformCommandLineClientPortOptionDescription">
         <source>Specify the port of the client.</source>
         <target state="translated">Укажите порт клиента.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
+        <source>Specifies a testconfig.json file.</source>
+        <target state="new">Specifies a testconfig.json file.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
