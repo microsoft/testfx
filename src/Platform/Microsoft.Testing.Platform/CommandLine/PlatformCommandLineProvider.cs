@@ -127,6 +127,16 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             string arg = arguments[0];
             if (!File.Exists(arg))
             {
+                try
+                {
+                    // Get the full path for better error messages.
+                    // As this is only for the purpose of throwing an exception, ignore any exceptions during the GetFullPath call.
+                    arg = Path.GetFullPath(arg);
+                }
+                catch
+                {
+                }
+
                 return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConfigurationFileNotFound, arg));
             }
         }
