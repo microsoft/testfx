@@ -665,7 +665,10 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="PlatformCommandLineMinimumExpectedTestsOptionDescription" xml:space="preserve">
     <value>Specifies the minimum number of tests that are expected to run.</value>
   </data>
-  <data name="PlatformCommandLineConfigOptionDescription" xml:space="preserve">
+  <data name="PlatformCommandLineConfigFileOptionDescription" xml:space="preserve">
     <value>Specifies a testconfig.json file.</value>
+  </data>
+  <data name="ConfigurationFileNotFound" xml:space="preserve">
+    <value>The configuration file '{0}' specified with '--config-file' could not be found.</value>
   </data>
 </root>

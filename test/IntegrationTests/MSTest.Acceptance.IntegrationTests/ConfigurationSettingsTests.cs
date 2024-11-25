@@ -60,7 +60,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
     public async Task TestWithConfigFromCommandLineWithMapInconclusiveToFailedIsTrue()
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--config dummyconfigfile_map.json", environmentVariables: new()
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--config-file dummyconfigfile_map.json", environmentVariables: new()
         {
             ["TestWithConfigFromCommandLine"] = "true",
         });
@@ -72,7 +72,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
     public async Task TestWithConfigFromCommandLineWithMapInconclusiveToFailedIsFalse()
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--config dummyconfigfile_doNotMap.json", environmentVariables: new()
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--config-file dummyconfigfile_doNotMap.json", environmentVariables: new()
         {
             ["TestWithConfigFromCommandLine"] = "true",
         });
@@ -84,7 +84,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
     public async Task TestWithConfigFromCommandLineWithNonExistingFile()
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--config dummyconfigfile_not_existing_file.json", environmentVariables: new()
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--config-file dummyconfigfile_not_existing_file.json", environmentVariables: new()
         {
             ["TestWithConfigFromCommandLine"] = "true",
         });

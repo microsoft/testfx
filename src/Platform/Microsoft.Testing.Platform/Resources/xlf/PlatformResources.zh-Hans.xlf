@@ -157,6 +157,11 @@
         <target state="translated">“CompositeExtensonFactory”的同一实例已注册</target>
         <note />
       </trans-unit>
+      <trans-unit id="ConfigurationFileNotFound">
+        <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
+        <target state="new">The configuration file '{0}' specified with '--config-file' could not be found.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
         <source>Could not find the default json configuration</source>
         <target state="translated">找不到默认 json 配置</target>
@@ -416,7 +421,7 @@
         <target state="translated">指定客户端的端口。</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineConfigOptionDescription">
+      <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
         <source>Specifies a testconfig.json file.</source>
         <target state="new">Specifies a testconfig.json file.</target>
         <note />
