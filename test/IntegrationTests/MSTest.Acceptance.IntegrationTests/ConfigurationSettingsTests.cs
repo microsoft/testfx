@@ -90,6 +90,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
         });
 
         testHostResult.AssertStandardErrorContains("FileNotFoundException");
+        testHostResult.AssertStandardErrorContains("dummyconfigfile_not_existing_file.json");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
