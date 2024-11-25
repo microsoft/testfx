@@ -192,7 +192,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
             D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\tidOn\.packages\microsoft.testing.platform.msbuild\1.5.0-ci\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(320,5): error :   - https://aka.ms/dotnet-download [D:\a\_work\1\s\artifacts\tmp\Debug\testsuite\vf8vR\MSBuildTests\MSBuild Tests.csproj]
          */
         // Assert each error line separately for simplicity.
-        result.AssertOutputContains($"Could not find 'dotnet.exe' host for the '{incompatibleArchitecture}' architecture.");
+        result.AssertOutputContains($"Could not find '{(OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet")}' host for the '{incompatibleArchitecture}' architecture.");
         result.AssertOutputContains($"You can resolve the problem by installing the '{incompatibleArchitecture}' .NET.");
         result.AssertOutputContains("The specified framework can be found at:");
         result.AssertOutputContains("  - https://aka.ms/dotnet-download");
