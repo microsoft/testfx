@@ -15,7 +15,7 @@
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>17.12.0</MicrosoftNETTestSdkVersion>
-    <MicrosoftPlaywrightVersion>1.47.0</MicrosoftPlaywrightVersion>
+    <MicrosoftPlaywrightVersion>1.49.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>17.12.0-beta.24429.1</MicrosoftTestingExtensionsFakesVersion>
     <!-- CVE-2017-0247 -->
     <SystemNetWebSocketsClientVersion>4.3.1</SystemNetWebSocketsClientVersion>
@@ -81,5 +81,12 @@
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.Management" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
+  </ItemGroup>
+  <!--
+    Declare below packages that we will be referenced through MSTest.Sdk but don't have direct reference.
+    This allows dependabot to suggest updates.
+    -->
+  <ItemGroup Label="Declared by MSTest.Sdk but not used directly">
+    <PackageVersion Include="Microsoft.Playwright.MSTest" Version="$(MicrosoftPlaywrightVersion)" />
   </ItemGroup>
 </Project>
