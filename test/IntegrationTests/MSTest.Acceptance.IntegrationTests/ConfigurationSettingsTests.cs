@@ -89,7 +89,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase
             ["TestWithConfigFromCommandLine"] = "true",
         });
 
-        testHostResult.AssertOutputContains("FileNotFoundException");
+        testHostResult.AssertStandardErrorContains("FileNotFoundException");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]

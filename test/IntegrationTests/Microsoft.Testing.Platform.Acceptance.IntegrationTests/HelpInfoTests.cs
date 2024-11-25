@@ -426,7 +426,7 @@ Built-in command line providers:
         Arity: 1
         Hidden: True
         Description: Specify the port of the client.
-    --config
+      --config
         Arity: 1
         Hidden: False
         Description: Specifies a testconfig.json file.
