@@ -9,11 +9,6 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestGroup]
 public sealed class CrashDumpTests : AcceptanceTestBase
 {
-    internal static Func<Exception, bool> RetryPolicy
-        => ex => ex.ToString().Contains("FAILED No such process")
-        || ex.ToString().Contains("FAILED 13 (Permission denied)")
-        || ex.ToString().Contains("Problem suspending threads");
-
     private readonly TestAssetFixture _testAssetFixture;
 
     public CrashDumpTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
