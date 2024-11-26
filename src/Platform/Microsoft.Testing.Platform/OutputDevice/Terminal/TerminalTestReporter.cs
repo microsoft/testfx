@@ -51,7 +51,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private bool? _shouldShowPassedTests;
 
 #if NET7_0_OR_GREATER
-    [GeneratedRegex(@$"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture, 1000)]
+    [GeneratedRegex(@"^   at (?<code>.+) in (?<file>.+):line (?<line>.+)$", RegexOptions.ExplicitCapture, 1000)]
     private static partial Regex GetFrameRegex();
 #else
     private static Regex? s_regex;
@@ -94,9 +94,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         atString = atString == null || atString == atResourceName ? "at" : atString;
         inString = inString == null || inString == inResourceName ? "in {0}:line {1}" : inString;
 
-        string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");
+        string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>.+)");
 
-        s_regex = new Regex(@$"^   {atString} ((?<code>.+) {inPattern}|(?<code1>.+))$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
+        s_regex = new Regex(@$"^   {atString} (?<code>.+) {inPattern}$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
         return s_regex;
     }
 #endif
@@ -653,13 +653,14 @@ internal sealed partial class TerminalTestReporter : IDisposable
             bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
             terminal.Append(PlatformResources.StackFrameAt);
             terminal.Append(' ');
+
             if (weHaveFilePathAndCodeLine)
             {
                 terminal.Append(match.Groups["code"].Value);
             }
             else
             {
-                terminal.Append(match.Groups["code1"].Value);
+                terminal.Append(match.Groups["line"].Value);
             }
 
             if (weHaveFilePathAndCodeLine)
