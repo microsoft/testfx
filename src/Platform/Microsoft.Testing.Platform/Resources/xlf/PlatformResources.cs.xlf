@@ -119,12 +119,12 @@
       </trans-unit>
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
-        <target state="new">Failed to read response file '{0}'. {1}.</target>
+        <target state="translated">Čtení souboru odpovědí {0} selhalo. {1}.</target>
         <note>{1} is the exception</note>
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
         <source>The response file '{0}' was not found</source>
-        <target state="new">The response file '{0}' was not found</target>
+        <target state="translated">Soubor odpovědí {0} nebyl nalezen.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
