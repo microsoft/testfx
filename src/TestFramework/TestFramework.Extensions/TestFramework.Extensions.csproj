@@ -13,7 +13,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <NuspecFile Condition=" '$(OS)' == 'Windows_NT' ">MSTest.TestFramework.nuspec</NuspecFile>
-    <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.TestFramework.Linux.nuspec</NuspecFile>
+    <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.TestFramework.NonWindows.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
     <PackageId>MSTest.TestFramework</PackageId>
     <PackageTags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework</PackageTags>
