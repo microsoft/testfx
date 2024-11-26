@@ -148,3 +148,33 @@ stages:
               ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
             name: Test
             displayName: Tests
+
+      - job: MacOS
+        timeoutInMinutes: 90
+        pool:
+          name: Azure Pipelines
+          vmImage: macos-latest
+          os: macOS
+        strategy:
+          matrix:
+            Release:
+              _BuildConfig: Release
+            Debug:
+              _BuildConfig: Debug
+        steps:
+        - script: eng/common/cibuild.sh
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            /p:Test=false
+            /p:NonWindowsBuild=true
+            /p:FastAcceptanceTest=true
+          displayName: Build
+
+        - ${{ if eq(parameters.SkipTests, False) }}:
+          # --ci is allowing to import some environment variables and some required configurations
+          # --nobl avoids overwriting build binlog with binlog from tests
+          - script: |
+              chmod +x ./test.sh
+              ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
+            name: Test
+            displayName: Tests
