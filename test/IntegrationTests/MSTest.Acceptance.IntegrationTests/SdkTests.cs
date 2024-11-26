@@ -74,8 +74,9 @@ namespace MSTestSdkTest
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
-        compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
+        compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net9\.0\)");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
+        compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
         compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net7\.0\)");
         compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net6\.0\)");
 #endif
@@ -99,8 +100,9 @@ namespace MSTestSdkTest
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
-        compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net8\.0|x64\]");
+        compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net9\.0|x64\]");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
+        compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net8\.0|x64\]");
         compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net7\.0|x64\]");
         compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net6\.0|x64\]");
 #endif

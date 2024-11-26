@@ -18,7 +18,7 @@ public class ThreadSafeStringWriter : StringWriter
     // This static lock guards access to the state and getting values from dictionary. There can be multiple different instances of ThreadSafeStringWriter
     // accessing the state at the same time, and we need to give them the correct state for their async context. Non-concurrent dictionary is used to store the
     // state because we need to lock around it anyway, to ensure that the State is populated, but not overwritten by every new instance of ThreadSafeStringWriter.
-    private static readonly object StaticLockObject = new();
+    private static readonly Lock StaticLockObject = new();
     private readonly string _outputType;
 
     /// <summary>
@@ -175,7 +175,7 @@ public class ThreadSafeStringWriter : StringWriter
     private class ThreadSafeStringBuilder
     {
         private readonly StringBuilder _stringBuilder = new();
-        private readonly object _instanceLockObject = new();
+        private readonly Lock _instanceLockObject = new();
 
         public void Append(string? value)
         {
