@@ -498,21 +498,15 @@ public sealed class TerminalTestReporterTests : TestBase
                                     """.Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
 
         Regex regex = TerminalTestReporter.GetAOTFrameRegex();
-        foreach (string stackTraceLine in stackTraceLines.Where(line => !line.StartsWith("--- ", StringComparison.Ordinal)))
+        foreach (string stackTraceLine in stackTraceLines.Where(line =>
+                     !line.StartsWith("--- ", StringComparison.Ordinal)))
         {
-            try
-            {
-                Match match = regex.Match(stackTraceLine);
-                Assert.IsTrue(match.Success);
-                Assert.IsTrue(match.Groups["code"].Success);
+            Match match = regex.Match(stackTraceLine);
+            Assert.IsTrue(match.Success);
+            Assert.IsTrue(match.Groups["code"].Success);
 
-                Assert.IsFalse(match.Groups["file"].Success);
-                Assert.IsFalse(match.Groups["line"].Success);
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"Line was: {stackTraceLine}", e);
-            }
+            Assert.IsFalse(match.Groups["file"].Success);
+            Assert.IsFalse(match.Groups["line"].Success);
         }
     }
 #endif
