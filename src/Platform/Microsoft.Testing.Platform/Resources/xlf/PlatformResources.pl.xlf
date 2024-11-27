@@ -826,8 +826,8 @@ Prawidłowe wartości to „Normalne”, „Szczegółowe”. Wartość domyśln
         <note />
       </trans-unit>
       <trans-unit id="TimeoutInRegexStackTraceLineParsing">
-        <source>Parsing stack trace line with regex timeout: '{0}'</source>
-        <target state="new">Parsing stack trace line with regex timeout: '{0}'</target>
+        <source>Parsing stack trace line with regex timed out. Input: '{0}'</source>
+        <target state="new">Parsing stack trace line with regex timed out. Input: '{0}'</target>
         <note>{0} is the line that was being matched</note>
       </trans-unit>
       <trans-unit id="Total">
