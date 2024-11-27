@@ -89,6 +89,434 @@ public sealed class TerminalTestReporterTests : TestBase
         }
     }
 
+#if NET7_0_OR_GREATER
+    public void AOTStackTraceRegexCapturesLines()
+    {
+        string[] stackTraceLines = """
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x42f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested4>d__5.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x341
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested3>d__4.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x2ab
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested4>d__5.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x341
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested2>d__3.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x215
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested3>d__4.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x2ab
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested3>d__4.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x2ab
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested2>d__3.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x215
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested4>d__5.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x341
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested4>d__5.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x341
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested2>d__3.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x215
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested3>d__4.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x2ab
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested3>d__4.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x2ab
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<GetExceptionWithStacktrace>d__1.MoveNext() + 0xad
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x42f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested4>d__5.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x341
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested3>d__4.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x2ab
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested4>d__5.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x341
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested2>d__3.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x215
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested3>d__4.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x2ab
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested3>d__4.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x2ab
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested2>d__3.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x215
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested4>d__5.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x341
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested4>d__5.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x341
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested2>d__3.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x215
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested3>d__4.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x2ab
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x17f
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested3>d__4.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<RandomSwitcher>d__7.MoveNext() + 0x2ab
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d
+                                    --- End of stack trace from previous location ---
+                                       at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw() + 0x20
+                                       at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task) + 0xb2
+                                       at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task, ConfigureAwaitOptions) + 0x4b
+                                       at BenchmarkTest.ExceptionThrower.<GetExceptionWithStacktrace>d__1.MoveNext() + 0xad
+                                    """.Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
+
+        Regex regex = TerminalTestReporter.GetAOTFrameRegex();
+        foreach (string stackTraceLine in stackTraceLines.Where(line => !line.StartsWith("--- ", StringComparison.Ordinal)))
+        {
+            try
+            {
+                Match match = regex.Match(stackTraceLine);
+                Assert.IsTrue(match.Success);
+                Assert.IsTrue(match.Groups["code"].Success);
+
+                Assert.IsFalse(match.Groups["file"].Success);
+                Assert.IsFalse(match.Groups["line"].Success);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Line was: {stackTraceLine}", e);
+            }
+        }
+    }
+#endif
+
     public void OutputFormattingIsCorrect()
     {
         var stringBuilderConsole = new StringBuilderConsole();

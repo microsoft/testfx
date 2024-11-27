@@ -50,12 +50,21 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private bool? _shouldShowPassedTests;
 
-#if NET7_0_OR_GREATER
-    [GeneratedRegex(@"^   at (?<code>.+\))( in (?<file>.+):line (?<line>\d+))?$", RegexOptions.ExplicitCapture, 1000)]
-    internal static partial Regex GetFrameRegex();
-#else
     private static Regex? s_regex;
 
+#if NET7_0_OR_GREATER
+
+    [GeneratedRegex(@"^   at (?<code>.+\))( in (?<file>.+):line (?<line>\d+))?$", RegexOptions.ExplicitCapture, 1000)]
+    internal static partial Regex GetStandardFrameRegex();
+
+    [GeneratedRegex(@"^   at (?<code>.+\))", RegexOptions.ExplicitCapture, 1000)]
+    internal static partial Regex GetAOTFrameRegex();
+
+    internal static Regex GetFrameRegex() => s_regex ??=
+        System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported
+            ? GetStandardFrameRegex()
+            : GetAOTFrameRegex();
+#else
     [MemberNotNull(nameof(s_regex))]
     internal static Regex GetFrameRegex()
     {
