@@ -219,16 +219,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Get the command line options
         ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
 
-        // Register the server mode log forwarder if needed. We follow the console --diagnostic behavior.
-        bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
-        bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
-        if (hasServerFlag && isJsonRpcProtocol)
-        {
-            ServerLoggerForwarderProvider serverLoggerProxy = new(loggingState.LogLevel, serviceProvider);
-            serviceProvider.AddService(serverLoggerProxy);
-            Logging.AddProvider((logLevel, services) => serverLoggerProxy);
-        }
-
         // Build the logger factory.
         ILoggerFactory loggerFactory = await ((LoggingManager)Logging).BuildAsync(serviceProvider, loggingState.LogLevel, systemMonitor);
 
@@ -392,6 +382,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         {
             return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, serviceProvider);
         }
+
+        bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
+        bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
 
         // ======= TEST HOST CONTROLLER MODE ======== //
         // Check if we're in the test host or we should check test controllers extensions

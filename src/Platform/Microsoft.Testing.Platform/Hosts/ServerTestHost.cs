@@ -118,13 +118,6 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             await _logger.LogDebugAsync("Starting server mode");
             _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(_testApplicationCancellationTokenSource.CancellationToken);
 
-            // Initialize the ServerLoggerForwarderProvider, it can be null if diagnostic is disabled.
-            ServerLoggerForwarderProvider? serviceLoggerForwarder = ServiceProvider.GetService<ServerLoggerForwarderProvider>();
-            if (serviceLoggerForwarder is not null)
-            {
-                await serviceLoggerForwarder.InitializeAsync(this);
-            }
-
             await HandleMessagesAsync();
 
             (_messageHandler as IDisposable)?.Dispose();
@@ -456,7 +449,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             requestFactory,
             invoker,
             filterFactory,
-            new ServerModePerCallOutputDevice(),
+            new ServerModePerCallOutputDevice(this, _messageMonitor),
             [testNodeUpdateProcessor],
             _testFrameworkManager,
             _testSessionManager,
