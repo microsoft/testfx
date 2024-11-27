@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24575.1">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24576.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>2a3bf4e3a4c473135d058adcd7193a5a4bcd38a7</Sha>
+      <Sha>9ad0880a9f8450f4ac4e097cfe830e401ea3e22c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.24575.1">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.24576.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>2a3bf4e3a4c473135d058adcd7193a5a4bcd38a7</Sha>
+      <Sha>9ad0880a9f8450f4ac4e097cfe830e401ea3e22c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="10.0.0-beta.24575.1">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="10.0.0-beta.24576.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>2a3bf4e3a4c473135d058adcd7193a5a4bcd38a7</Sha>
+      <Sha>9ad0880a9f8450f4ac4e097cfe830e401ea3e22c</Sha>
     </Dependency>
     <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.13.0-preview.24572.7">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
       <Sha>2d88381a218863f6b20537637b2bcfb0bc93686d</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Internal.Framework" Version="1.5.0-preview.24575.1">
+    <Dependency Name="Microsoft.Testing.Internal.Framework" Version="1.5.0-preview.24576.1">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>0628cb69980b9b2a41b0dcc20a9ffdf181e942f6</Sha>
+      <Sha>f01fa388c7ec30f4f92ee01c2db94cc8e7a93ae8</Sha>
     </Dependency>
     <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24473.2">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
