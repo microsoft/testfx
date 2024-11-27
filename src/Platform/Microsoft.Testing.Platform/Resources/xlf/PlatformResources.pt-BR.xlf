@@ -825,6 +825,11 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
         <target state="translated">Falha ao liberar logs antes do tempo limite de '{0}' segundos</target>
         <note />
       </trans-unit>
+      <trans-unit id="TimeoutInRegexStackTraceLineParsing">
+        <source>Parsing stack trace line with regex timed out. Input: '{0}'</source>
+        <target state="new">Parsing stack trace line with regex timed out. Input: '{0}'</target>
+        <note>{0} is the line that was being matched</note>
+      </trans-unit>
       <trans-unit id="Total">
         <source>Total</source>
         <target state="translated">Total</target>

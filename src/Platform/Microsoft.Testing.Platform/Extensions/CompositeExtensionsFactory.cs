@@ -17,7 +17,7 @@ namespace Microsoft.Testing.Platform.Extensions;
 public class CompositeExtensionFactory<TExtension> : ICompositeExtensionFactory, ICloneable
     where TExtension : class, IExtension
 {
-    private readonly object _syncLock = new();
+    private readonly Lock _syncLock = new();
     private readonly Func<IServiceProvider, TExtension>? _factoryWithServiceProvider;
     private readonly Func<TExtension>? _factory;
     private TExtension? _instance;
