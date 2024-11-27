@@ -654,7 +654,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
         catch (RegexMatchTimeoutException ex)
         {
-            throw new RegexMatchTimeoutException($"Timeout matching '{stackTraceLine}'.", ex);
+            throw new RegexMatchTimeoutException(string.Format(CultureInfo.CurrentCulture, PlatformResources.TimeoutInRegexStackTraceLineParsing, stackTraceLine), ex);
         }
 
         if (match.Success)

@@ -825,6 +825,11 @@ Gültige Werte sind „Normal“, „Detailed“. Der Standardwert ist „Normal
         <target state="translated">Fehler beim Leeren von Protokollen vor dem Timeout von "{0}" Sekunden</target>
         <note />
       </trans-unit>
+      <trans-unit id="TimeoutInRegexStackTraceLineParsing">
+        <source>Parsing stack trace line with regex timeout: '{0}'</source>
+        <target state="new">Parsing stack trace line with regex timeout: '{0}'</target>
+        <note>{0} is the line that was being matched</note>
+      </trans-unit>
       <trans-unit id="Total">
         <source>Total</source>
         <target state="translated">Gesamt</target>
