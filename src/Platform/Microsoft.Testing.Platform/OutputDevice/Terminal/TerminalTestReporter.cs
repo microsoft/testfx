@@ -75,7 +75,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             // Get these resources: https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/Resources/Strings.resx
 #pragma warning disable RS0030 // Do not use banned APIs
-            MethodInfo? getResourceStringMethod = typeof(Environment).GetMethod("GetResourceString",
+            MethodInfo? getResourceStringMethod = typeof(Environment).GetMethod(
+                "GetResourceString",
                 BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(string)], null);
 #pragma warning restore RS0030 // Do not use banned APIs
             if (getResourceStringMethod is not null)
