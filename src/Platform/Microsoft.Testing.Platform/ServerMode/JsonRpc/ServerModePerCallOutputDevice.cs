@@ -2,11 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text;
-#if NETCOREAPP
-using System.Threading.Channels;
-#else
-using System.Collections.Concurrent;
-#endif
 
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
