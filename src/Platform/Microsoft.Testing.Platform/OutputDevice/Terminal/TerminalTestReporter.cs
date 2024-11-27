@@ -54,14 +54,23 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private bool? _shouldShowPassedTests;
 
-#if NET7_0_OR_GREATER
-    [GeneratedRegex(@$"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture, 1000)]
-    private static partial Regex GetFrameRegex();
-#else
     private static Regex? s_regex;
 
+#if NET7_0_OR_GREATER
+
+    [GeneratedRegex(@"^   at (?<code>.+\))( in (?<file>.+):line (?<line>\d+))?$", RegexOptions.ExplicitCapture, 1000)]
+    internal static partial Regex GetStandardFrameRegex();
+
+    [GeneratedRegex(@"^   at (?<code>.+\))", RegexOptions.ExplicitCapture, 1000)]
+    internal static partial Regex GetAOTFrameRegex();
+
+    internal static Regex GetFrameRegex() => s_regex ??=
+        System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported
+            ? GetStandardFrameRegex()
+            : GetAOTFrameRegex();
+#else
     [MemberNotNull(nameof(s_regex))]
-    private static Regex GetFrameRegex()
+    internal static Regex GetFrameRegex()
     {
         if (s_regex != null)
         {
@@ -79,7 +88,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             // Get these resources: https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/Resources/Strings.resx
 #pragma warning disable RS0030 // Do not use banned APIs
-            MethodInfo? getResourceStringMethod = typeof(Environment).GetMethod("GetResourceString", BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(string)], null);
+            MethodInfo? getResourceStringMethod = typeof(Environment).GetMethod(
+                "GetResourceString",
+                BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(string)], null);
 #pragma warning restore RS0030 // Do not use banned APIs
             if (getResourceStringMethod is not null)
             {
@@ -100,7 +111,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");
 
-        s_regex = new Regex(@$"^   {atString} ((?<code>.+) {inPattern}|(?<code1>.+))$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
+        s_regex = new Regex($@"^   {atString} (?<code>.+\))( {inPattern})?$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
         return s_regex;
     }
 #endif
@@ -676,13 +687,14 @@ internal sealed partial class TerminalTestReporter : IDisposable
             bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
             terminal.Append(PlatformResources.StackFrameAt);
             terminal.Append(' ');
+
             if (weHaveFilePathAndCodeLine)
             {
                 terminal.Append(match.Groups["code"].Value);
             }
             else
             {
-                terminal.Append(match.Groups["code1"].Value);
+                terminal.Append(match.Groups["line"].Value);
             }
 
             if (weHaveFilePathAndCodeLine)
