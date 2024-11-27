@@ -22,9 +22,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
     public MSTestBridgedTestFramework(MSTestExtension mstestExtension, Func<IEnumerable<Assembly>> getTestAssemblies,
         IServiceProvider serviceProvider, ITestFrameworkCapabilities capabilities)
         : base(mstestExtension, getTestAssemblies, serviceProvider, capabilities)
-    {
-        _configration = serviceProvider.GetConfiguration();
-    }
+        => _configration = serviceProvider.GetConfiguration();
 
     /// <inheritdoc />
     protected override Task SynchronizedDiscoverTestsAsync(VSTestDiscoverTestExecutionRequest request, IMessageBus messageBus,
