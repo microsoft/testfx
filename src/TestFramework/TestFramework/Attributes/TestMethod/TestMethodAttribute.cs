@@ -3,6 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#pragma warning disable CS1574 // XML comment has cref attribute that could not be resolved - The warning is for ValueTask.
 /// <summary>
 /// This attribute is used to mark test methods.
 /// </summary>
@@ -24,6 +25,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </item>
 /// </list>
 /// </remarks>
+#pragma warning restore CS1574 // XML comment has cref attribute that could not be resolved// XML comment has cref attribute that could not be resolved
 [AttributeUsage(AttributeTargets.Method)]
 public class TestMethodAttribute : Attribute
 {
