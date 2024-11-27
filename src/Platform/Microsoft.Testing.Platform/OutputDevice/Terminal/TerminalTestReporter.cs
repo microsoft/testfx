@@ -647,7 +647,16 @@ internal sealed partial class TerminalTestReporter : IDisposable
     internal /* for testing */ static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
     {
         terminal.Append(DoubleIndentation);
-        Match match = GetFrameRegex().Match(stackTraceLine);
+        Match match;
+        try
+        {
+            match = GetFrameRegex().Match(stackTraceLine);
+        }
+        catch (RegexMatchTimeoutException ex)
+        {
+            throw new RegexMatchTimeoutException($"Timeout matching '{stackTraceLine}'.", ex);
+        }
+
         if (match.Success)
         {
             bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
