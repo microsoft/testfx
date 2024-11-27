@@ -81,7 +81,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
 #pragma warning restore RS0030 // Do not use banned APIs
             if (getResourceStringMethod is not null)
             {
+                // <value>at</value>
                 atString = (string?)getResourceStringMethod.Invoke(null, [atResourceName]);
+
+                // <value>in {0}:line {1}</value>
                 inString = (string?)getResourceStringMethod.Invoke(null, [inResourceName]);
             }
         }
