@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <item>not static</item>
 /// <item>not generic</item>
 /// <item>not abstract</item>
-/// <item>return type is either <see langword="void"/> or <see cref="Task"/>. If <see langword="void"/>, then it shouldn't be <see langword="async"/>.</item>
+/// <item>return type is either <see langword="void"/>, <see cref="Task"/>, or <see cref="ValueTask"/>. If <see langword="void"/>, then it shouldn't be <see langword="async"/>.</item>
 /// </list>
 /// </item>
 /// </list>
