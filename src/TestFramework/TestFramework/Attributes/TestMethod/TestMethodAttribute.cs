@@ -4,8 +4,26 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// The test method attribute.
+/// This attribute is used to mark test methods.
 /// </summary>
+/// <remarks>
+/// <list type="bullet">
+/// <item>
+/// When using other attributes like <see cref="DataRowAttribute" /> or <see cref="DynamicDataAttribute" />, it
+/// the use of <see cref="TestMethodAttribute" /> is still required.
+/// </item>
+/// <item>
+/// Test methods must be:
+/// <list type="bullet">
+/// <item>public, or if <see cref="DiscoverInternalsAttribute"/> is used then it can be internal.</item>
+/// <item>not static</item>
+/// <item>not generic</item>
+/// <item>not abstract</item>
+/// <item>return type is either <see langword="void"/> or <see cref="Task"/>. If <see langword="void"/>, then it shouldn't be <see langword="async"/>.</item>
+/// </list>
+/// </item>
+/// </list>
+/// </remarks>
 [AttributeUsage(AttributeTargets.Method)]
 public class TestMethodAttribute : Attribute
 {

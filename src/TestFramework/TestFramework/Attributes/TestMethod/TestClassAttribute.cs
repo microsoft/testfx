@@ -4,8 +4,16 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// The test class attribute.
+/// This attribute is used to mark test classes.
 /// </summary>
+/// <remarks>
+/// Test classes must be:
+/// <list type="bullet">
+/// <item>public, or if <see cref="DiscoverInternalsAttribute"/> is used then it can be internal.</item>
+/// <item>not static</item>
+/// <item>not generic</item>
+/// </list>
+/// </remarks>
 [AttributeUsage(AttributeTargets.Class)]
 public class TestClassAttribute : Attribute
 {
