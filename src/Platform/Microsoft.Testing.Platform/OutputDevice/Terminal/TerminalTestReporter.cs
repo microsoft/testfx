@@ -4,7 +4,6 @@
 #if !NET7_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Resources;
 #endif
 
 using System.Globalization;
@@ -74,13 +73,16 @@ internal sealed partial class TerminalTestReporter : IDisposable
         // Grab words from localized resource, in case the stack trace is localized.
         try
         {
-            Assembly assembly = Assembly.GetAssembly(typeof(object))!;
-            string? assemblyName = assembly.GetName().Name!;
-            var manager = new ResourceManager(assemblyName, assembly);
-            ResourceSet? resources = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
-
-            atString = resources?.GetString(atResourceName);
-            inString = resources?.GetString(inResourceName);
+            // Get these resources: https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/Resources/Strings.resx
+#pragma warning disable RS0030 // Do not use banned APIs
+            MethodInfo? getResourceStringMethod = typeof(Environment).GetMethod("GetResourceString",
+                BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(string)], null);
+#pragma warning restore RS0030 // Do not use banned APIs
+            if (getResourceStringMethod is not null)
+            {
+                atString = (string?)getResourceStringMethod.Invoke(null, [atResourceName]);
+                inString = (string?)getResourceStringMethod.Invoke(null, [inResourceName]);
+            }
         }
         catch
         {
