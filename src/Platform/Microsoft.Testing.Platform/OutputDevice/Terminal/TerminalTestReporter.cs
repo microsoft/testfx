@@ -4,6 +4,7 @@
 #if !NET7_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Resources;
 #endif
 
 using System.Globalization;
@@ -51,13 +52,13 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private bool? _shouldShowPassedTests;
 
 #if NET7_0_OR_GREATER
-    [GeneratedRegex(@"^   at (?<code>.+) in (?<file>.+):line (?<line>.+)$", RegexOptions.ExplicitCapture, 1000)]
-    private static partial Regex GetFrameRegex();
+    [GeneratedRegex(@"^   at (?<code>.+?)( in (?<file>.+):line (?<line>\d+))?$", RegexOptions.ExplicitCapture, 1000)]
+    internal static partial Regex GetFrameRegex();
 #else
     private static Regex? s_regex;
 
     [MemberNotNull(nameof(s_regex))]
-    private static Regex GetFrameRegex()
+    internal static Regex GetFrameRegex()
     {
         if (s_regex != null)
         {
@@ -73,18 +74,13 @@ internal sealed partial class TerminalTestReporter : IDisposable
         // Grab words from localized resource, in case the stack trace is localized.
         try
         {
-            // Get these resources: https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/Resources/Strings.resx
-#pragma warning disable RS0030 // Do not use banned APIs
-            MethodInfo? getResourceStringMethod = typeof(Environment).GetMethod("GetResourceString", BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(string)], null);
-#pragma warning restore RS0030 // Do not use banned APIs
-            if (getResourceStringMethod is not null)
-            {
-                // <value>at</value>
-                atString = (string?)getResourceStringMethod.Invoke(null, [atResourceName]);
+            Assembly assembly = Assembly.GetAssembly(typeof(object))!;
+            string? assemblyName = assembly.GetName().Name!;
+            var manager = new ResourceManager(assemblyName, assembly);
+            ResourceSet? resources = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
 
-                // <value>in {0}:line {1}</value>
-                inString = (string?)getResourceStringMethod.Invoke(null, [inResourceName]);
-            }
+            atString = resources?.GetString(atResourceName);
+            inString = resources?.GetString(inResourceName);
         }
         catch
         {
@@ -94,9 +90,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
         atString = atString == null || atString == atResourceName ? "at" : atString;
         inString = inString == null || inString == inResourceName ? "in {0}:line {1}" : inString;
 
-        string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>.+)");
+        string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");
 
-        s_regex = new Regex(@$"^   {atString} (?<code>.+) {inPattern}$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
+        s_regex = new Regex(@$"^   {atString} (?<code>.+?)( {inPattern})?$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
         return s_regex;
     }
 #endif
