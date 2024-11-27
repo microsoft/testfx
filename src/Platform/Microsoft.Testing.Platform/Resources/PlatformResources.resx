@@ -671,4 +671,8 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="ConfigurationFileNotFound" xml:space="preserve">
     <value>The configuration file '{0}' specified with '--config-file' could not be found.</value>
   </data>
+  <data name="TimeoutInRegexStackTraceLineParsing" xml:space="preserve">
+    <value>Parsing stack trace line with regex timed out. Input: '{0}'</value>
+    <comment>{0} is the line that was being matched</comment>
+  </data>
 </root>
