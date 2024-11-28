@@ -200,5 +200,10 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
     }
 
     private static void FixInvocationMethodName(DocumentEditor editor, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName)
+        // NOTE: Switching Assert.IsTrue(x == y) to Assert.AreEqual(x, y) MAY produce an overload resolution error.
+        // For example, Assert.AreEqual("string", true) will fail the inference for generic argument.
+        // This is not very common and is currently not handled properly.
+        // If needed, we can adjust the codefix to account for that case and
+        // produce a GenericNameSyntax (e.g, AreEqual<object>) instead of IdentifierNameSyntax (e.g, AreEqual).
         => editor.ReplaceNode(simpleNameSyntax, SyntaxFactory.IdentifierName(properAssertMethodName));
 }
