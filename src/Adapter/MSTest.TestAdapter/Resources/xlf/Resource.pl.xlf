@@ -203,11 +203,6 @@ Error: {1}</source>
 Błąd: {1}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTA_ErrorGenericTestMethod">
-        <source>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</source>
-        <target state="translated">UTA015: Metoda ogólna nie może być metodą testową. {0}{1} ma nieprawidłową sygnaturę</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
         <source>File does not exist: {0}</source>
         <target state="translated">Plik nie istnieje: {0}</target>

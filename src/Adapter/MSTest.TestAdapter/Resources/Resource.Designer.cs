@@ -604,15 +604,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature.
-        /// </summary>
-        internal static string UTA_ErrorGenericTestMethod {
-            get {
-                return ResourceManager.GetString("UTA_ErrorGenericTestMethod", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be &apos;Task&apos; or &apos;ValueTask&apos;. Example: public async Task Test.Class1.Test2().
         /// </summary>
         internal static string UTA_ErrorIncorrectTestMethodSignature {

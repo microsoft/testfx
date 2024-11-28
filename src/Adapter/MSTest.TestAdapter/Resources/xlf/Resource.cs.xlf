@@ -203,11 +203,6 @@ Error: {1}</source>
 Chyba: {1}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTA_ErrorGenericTestMethod">
-        <source>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</source>
-        <target state="translated">UTA015: Obecná metoda nemůže být testovací metodou. {0}.{1} má neplatný podpis.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
         <source>File does not exist: {0}</source>
         <target state="translated">Neexistující soubor: {0}</target>

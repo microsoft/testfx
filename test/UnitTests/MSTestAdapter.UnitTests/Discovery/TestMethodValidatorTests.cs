@@ -53,7 +53,7 @@ public class TestMethodValidatorTests : TestContainer
         Verify(!_testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings));
     }
 
-    public void IsValidTestMethodShouldReportWarningsForGenericTestMethodDefinitions()
+    public void IsValidTestMethodShouldNotReportWarningsForGenericTestMethodDefinitions()
     {
         SetupTestMethod();
 
@@ -61,10 +61,9 @@ public class TestMethodValidatorTests : TestContainer
         _mockMethodInfo.Setup(mi => mi.DeclaringType.FullName).Returns("DummyTestClass");
         _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
 
-        _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings);
+        Verify(_testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings));
 
-        Verify(_warnings.Count == 1);
-        Verify(_warnings.Contains(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, "DummyTestClass", "DummyTestMethod")));
+        Verify(_warnings.Count == 0);
     }
 
     public void IsValidTestMethodShouldReturnFalseForNonPublicMethods()
