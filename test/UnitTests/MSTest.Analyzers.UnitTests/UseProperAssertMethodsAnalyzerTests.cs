@@ -682,6 +682,55 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    public async Task WhenAssertAreEqualAndExpectedIsTrue_CastShouldBeAddedWithParentheses()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:Assert.AreEqual<object>(true, new C() + new C())|};
+                }
+            }
+
+            public class C
+            {
+                public static object operator +(C c1, C c2)
+                    => true;
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Assert.IsTrue((bool?)(new C() + new C()));
+                }
+            }
+
+            public class C
+            {
+                public static object operator +(C c1, C c2)
+                    => true;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsTrue' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsTrue", "AreEqual"),
+            fixedCode);
+    }
+
     public async Task WhenAssertAreNotEqualAndExpectedIsTrue()
     {
         string code = """

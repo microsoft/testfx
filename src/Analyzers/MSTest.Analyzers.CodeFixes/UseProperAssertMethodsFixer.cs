@@ -56,9 +56,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             methodNameIdentifier = memberAccess.Name;
         }
 
-        if (methodNameIdentifier is not IdentifierNameSyntax identifierNameSyntax)
+        if (methodNameIdentifier is not SimpleNameSyntax simpleNameSyntax)
         {
-            Debug.Fail($"Is this an interesting scenario where we are unable to retrieve IdentifierNameSyntax corresponding to the assert method? SyntaxNode type: '{methodNameIdentifier}', Text: '{methodNameIdentifier.GetText()}'.");
+            Debug.Fail($"Is this an interesting scenario where we are unable to retrieve SimpleNameSyntax corresponding to the assert method? SyntaxNode type: '{methodNameIdentifier}', Text: '{methodNameIdentifier.GetText()}'.");
             return;
         }
 
@@ -66,13 +66,13 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         switch (mode)
         {
             case UseProperAssertMethodsAnalyzer.CodeFixModeSimple:
-                createChangedDocument = ct => FixAssertMethodForSimpleModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], root, identifierNameSyntax, properAssertMethodName, ct);
+                createChangedDocument = ct => FixAssertMethodForSimpleModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeAddArgument:
-                createChangedDocument = ct => FixAssertMethodForAddArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], diagnostic.AdditionalLocations[2], root, identifierNameSyntax, properAssertMethodName, ct);
+                createChangedDocument = ct => FixAssertMethodForAddArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], diagnostic.AdditionalLocations[2], root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeRemoveArgument:
-                createChangedDocument = ct => FixAssertMethodForRemoveArgumentModeAsync(context.Document, diagnostic.AdditionalLocations, root, identifierNameSyntax, properAssertMethodName, diagnostic.Properties.ContainsKey(UseProperAssertMethodsAnalyzer.NeedsNullableBooleanCastKey), ct);
+                createChangedDocument = ct => FixAssertMethodForRemoveArgumentModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, diagnostic.Properties.ContainsKey(UseProperAssertMethodsAnalyzer.NeedsNullableBooleanCastKey), ct);
                 break;
             default:
                 break;
@@ -89,7 +89,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         }
     }
 
-    private static async Task<Document> FixAssertMethodForSimpleModeAsync(Document document, Location location1, Location location2, SyntaxNode root, IdentifierNameSyntax identifierNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
+    private static async Task<Document> FixAssertMethodForSimpleModeAsync(Document document, Location location1, Location location2, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
     {
         // This doesn't properly handle cases like Assert.IsTrue(message: "My message", condition: x == null)
         // The proper handling of this may be Assert.IsNull(message: "My message", value: x)
@@ -106,13 +106,13 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         }
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-        FixInvocationMethodName(editor, identifierNameSyntax, properAssertMethodName);
+        FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
         editor.ReplaceNode(node1, SyntaxFactory.Argument(node2).WithAdditionalAnnotations(Formatter.Annotation));
 
         return editor.GetChangedDocument();
     }
 
-    private static async Task<Document> FixAssertMethodForAddArgumentModeAsync(Document document, Location location1, Location location2, Location location3, SyntaxNode root, IdentifierNameSyntax identifierNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
+    private static async Task<Document> FixAssertMethodForAddArgumentModeAsync(Document document, Location location1, Location location2, Location location3, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
     {
         // This doesn't properly handle cases like Assert.IsTrue(message: "My message", condition: x == y)
         // The proper handling of this may be Assert.AreEqual(message: "My message", expected: x, actual: y)
@@ -139,7 +139,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         }
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-        FixInvocationMethodName(editor, identifierNameSyntax, properAssertMethodName);
+        FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
         ArgumentListSyntax newArgumentList = argumentList;
         newArgumentList = newArgumentList.ReplaceNode(node1, SyntaxFactory.Argument(node2).WithAdditionalAnnotations(Formatter.Annotation));
@@ -155,7 +155,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         Document document,
         IReadOnlyList<Location> additionalLocations,
         SyntaxNode root,
-        IdentifierNameSyntax identifierNameSyntax,
+        SimpleNameSyntax simpleNameSyntax,
         string properAssertMethodName,
         bool needsNullableBoolCast,
         CancellationToken cancellationToken)
@@ -175,7 +175,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         }
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-        FixInvocationMethodName(editor, identifierNameSyntax, properAssertMethodName);
+        FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
         int argumentIndexToRemove = argumentList.Arguments.IndexOf(node1);
         ArgumentListSyntax newArgumentList;
@@ -199,9 +199,6 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         return editor.GetChangedDocument();
     }
 
-    private static void FixInvocationMethodName(DocumentEditor editor, IdentifierNameSyntax identifierNameSyntax, string properAssertMethodName)
-    {
-        IdentifierNameSyntax updatedIdentifier = identifierNameSyntax.WithIdentifier(SyntaxFactory.Identifier(identifierNameSyntax.Identifier.LeadingTrivia, properAssertMethodName, identifierNameSyntax.Identifier.TrailingTrivia));
-        editor.ReplaceNode(identifierNameSyntax, updatedIdentifier);
-    }
+    private static void FixInvocationMethodName(DocumentEditor editor, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName)
+        => editor.ReplaceNode(simpleNameSyntax, SyntaxFactory.IdentifierName(properAssertMethodName));
 }
