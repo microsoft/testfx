@@ -54,23 +54,14 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private bool? _shouldShowPassedTests;
 
+#if NET7_0_OR_GREATER
+    [GeneratedRegex(@$"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture, 1000)]
+    private static partial Regex GetFrameRegex();
+#else
     private static Regex? s_regex;
 
-#if NET7_0_OR_GREATER
-
-    [GeneratedRegex(@"^   at (?<code>.+\))( in (?<file>.+):line (?<line>\d+))?$", RegexOptions.ExplicitCapture, 1000)]
-    internal static partial Regex GetStandardFrameRegex();
-
-    [GeneratedRegex(@"^   at (?<code>.+\))", RegexOptions.ExplicitCapture, 1000)]
-    internal static partial Regex GetAOTFrameRegex();
-
-    internal static Regex GetFrameRegex() => s_regex ??=
-        System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported
-            ? GetStandardFrameRegex()
-            : GetAOTFrameRegex();
-#else
     [MemberNotNull(nameof(s_regex))]
-    internal static Regex GetFrameRegex()
+    private static Regex GetFrameRegex()
     {
         if (s_regex != null)
         {
@@ -111,7 +102,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");
 
-        s_regex = new Regex($@"^   {atString} (?<code>.+\))( {inPattern})?$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
+        s_regex = new Regex(@$"^   {atString} ((?<code>.+) {inPattern}|(?<code1>.+))$", RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
         return s_regex;
     }
 #endif
@@ -694,7 +685,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             }
             else
             {
-                terminal.Append(match.Groups["line"].Value);
+                terminal.Append(match.Groups["code1"].Value);
             }
 
             if (weHaveFilePathAndCodeLine)
