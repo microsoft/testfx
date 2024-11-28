@@ -8,45 +8,56 @@
 
   <ItemGroup>
     <PackageReference Include="Codecov" Version="$(CodecovVersion)" GeneratePathProperty="true" />
-    <PackageReference Include="ReportGenerator" Version="$(ReportGeneratorVersion)" GeneratePathProperty="true" />
   </ItemGroup>
 
   <Target Name="GatherCoverageInputs">
     <PropertyGroup>
       <_CodecovPath>$(PkgCodecov)\tools\Codecov.exe</_CodecovPath>
-      <_ReportGeneratorPath>$(PkgReportGenerator)\tools\net47\ReportGenerator.exe</_ReportGeneratorPath>
+      <_LocalDotNetPath>$(DotNetRoot)\dotnet.exe</_LocalDotNetPath>
+      <MergedFullCoverageDirectory>$(ArtifactsCoverageDir)full\</MergedFullCoverageDirectory>
+      <MergedUnitCoverageDirectory>$(ArtifactsCoverageDir)unit\</MergedUnitCoverageDirectory>
+      <MergedIntegrationCoverageDirectory>$(ArtifactsCoverageDir)integration\</MergedIntegrationCoverageDirectory>
+      <CoberturaFileName>Cobertura.xml</CoberturaFileName>
     </PropertyGroup>
 
     <ItemGroup>
       <_CoverageReports Include="$(ArtifactsTestResultsDir)\*.coverage" />
+      <_CoverageReports Include="@(_CoverageReports->'&quot;%(Identity)&quot;', ' ')" />
       <_UnitCoverageReports Include="@(_CoverageReports)" Condition="$([System.String]::Copy('%(Identity)').Contains('.UnitTests_'))" />
+      <_UnitCoverageReports Include="@(_UnitCoverageReports->'&quot;%(Identity)&quot;', ' ')" />
       <_IntegrationCoverageReports Include="@(_CoverageReports)" Condition="$([System.String]::Copy('%(Identity)').Contains('.IntegrationTests_'))" />
+      <_IntegrationCoverageReports Include="@(_IntegrationCoverageReports->'&quot;%(Identity)&quot;', ' ')" />
     </ItemGroup>
   </Target>
 
   <Target Name="MergeCoverage" DependsOnTargets="GatherCoverageInputs">
-    <!-- Merge multiple coverlet reports into a single Cobertura report before uploading to codecov.io, in order to
-      reduce upload size and load on the codecov.io processing servers. -->
-    <Message Importance="high" Text="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_CoverageReports)&quot; -targetdir:$(ArtifactsCoverageDir)full -reporttypes:Cobertura -filefilters:-*.g.cs" />
-    <Exec Condition="'@(_CoverageReports)' != ''" Command="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_CoverageReports)&quot; -targetdir:$(ArtifactsCoverageDir)/full -reporttypes:Cobertura -filefilters:-*.g.cs" />
+    <!-- coverage tool doesn't create output directories if they don't exist -->
+    <MakeDir Directories="$(MergedFullCoverageDirectory)" Condition="!Exists('$(MergedFullCoverageDirectory)')" />
+    <MakeDir Directories="$(MergedUnitCoverageDirectory)" Condition="!Exists('$(MergedUnitCoverageDirectory)')" />
+    <MakeDir Directories="$(MergedIntegrationCoverageDirectory)" Condition="!Exists('$(MergedIntegrationCoverageDirectory)')" />
 
     <!-- Merge multiple coverlet reports into a single Cobertura report before uploading to codecov.io, in order to
       reduce upload size and load on the codecov.io processing servers. -->
-    <Message Importance="high" Text="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_UnitCoverageReports)&quot; -targetdir:$(ArtifactsCoverageDir)unit -reporttypes:Cobertura -filefilters:-*.g.cs" />
-    <Exec Condition="'@(_UnitCoverageReports)' != ''" Command="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_UnitCoverageReports)&quot; -targetdir:$(ArtifactsCoverageDir)/unit -reporttypes:Cobertura -filefilters:-*.g.cs" />
+    <Message Importance="high" Text="&quot;$(_LocalDotNetPath)&quot; coverage merge @(_CoverageReports) --output &quot;$(MergedFullCoverageDirectory)$(CoberturaFileName)&quot; --output-format Cobertura" />
+    <Exec Condition="'@(_CoverageReports)' != ''" Command="&quot;$(_LocalDotNetPath)&quot; coverage merge @(_CoverageReports) --output &quot;$(MergedFullCoverageDirectory)$(CoberturaFileName)&quot; --output-format Cobertura" ConsoleToMsBuild="true" />
 
     <!-- Merge multiple coverlet reports into a single Cobertura report before uploading to codecov.io, in order to
       reduce upload size and load on the codecov.io processing servers. -->
-    <Message Importance="high" Text="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_IntegrationCoverageReports)&quot; -targetdir:$(ArtifactsCoverageDir)integration -reporttypes:Cobertura -filefilters:-*.g.cs" />
-    <Exec Condition="'@(_IntegrationCoverageReports)' != ''" Command="&quot;$(_ReportGeneratorPath)&quot; &quot;-reports:@(_IntegrationCoverageReports)&quot; -targetdir:$(ArtifactsCoverageDir)/integration -reporttypes:Cobertura -filefilters:-*.g.cs" />
+    <Message Importance="high" Text="&quot;$(_LocalDotNetPath)&quot; coverage merge @(_UnitCoverageReports) --output &quot;$(MergedUnitCoverageDirectory)$(CoberturaFileName)&quot; --output-format Cobertura" />
+    <Exec Condition="'@(_UnitCoverageReports)' != ''" Command="&quot;$(_LocalDotNetPath)&quot; coverage merge @(_UnitCoverageReports) --output &quot;$(MergedUnitCoverageDirectory)$(CoberturaFileName)&quot; --output-format Cobertura" ConsoleToMsBuild="true" />
+
+    <!-- Merge multiple coverlet reports into a single Cobertura report before uploading to codecov.io, in order to
+      reduce upload size and load on the codecov.io processing servers. -->
+    <Message Importance="high" Text="&quot;$(_LocalDotNetPath)&quot; coverage merge @(_IntegrationCoverageReports) --output &quot;$(MergedIntegrationCoverageDirectory)$(CoberturaFileName)&quot; --output-format Cobertura" />
+    <Exec Condition="'@(_IntegrationCoverageReports)' != ''" Command="&quot;$(_LocalDotNetPath)&quot; coverage merge @(_IntegrationCoverageReports) --output &quot;$(MergedIntegrationCoverageDirectory)$(CoberturaFileName)&quot; --output-format Cobertura" ConsoleToMsBuild="true" />
   </Target>
 
   <Target Name="Codecov" DependsOnTargets="MergeCoverage">
 
     <ItemGroup>
-      <_CodecovFullArgs Include="-f;$(ArtifactsCoverageDir)full\Cobertura.xml" />
-      <_CodecovUnitArgs Include="-f;$(ArtifactsCoverageDir)unit\Cobertura.xml" />
-      <_CodecovIntegrationArgs Include="-f;$(ArtifactsCoverageDir)integration\Cobertura.xml" />
+      <_CodecovFullArgs Include="-f;$(MergedFullCoverageDirectory)$(CoberturaFileName)" />
+      <_CodecovUnitArgs Include="-f;$(MergedUnitCoverageDirectory)$(CoberturaFileName)" />
+      <_CodecovIntegrationArgs Include="-f;$(MergedIntegrationCoverageDirectory)$(CoberturaFileName)" />
 
       <!-- Report an error if the upload fails -->
       <_CodecovArgs Include="--required" />
