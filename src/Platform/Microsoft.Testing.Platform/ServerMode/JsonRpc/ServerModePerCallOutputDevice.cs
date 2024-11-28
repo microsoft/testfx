@@ -82,6 +82,10 @@ internal class ServerModePerCallOutputDevice : IPlatformOutputDevice
         {
             await LogAsync(LogLevel.Trace, $"Starting test session. Log file path is '{logFileName}'."/*TODO: Localize*/, padding: null);
         }
+        else
+        {
+            await LogAsync(LogLevel.Trace, $"Starting test session."/*TODO: Localize*/, padding: null);
+        }
     }
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
