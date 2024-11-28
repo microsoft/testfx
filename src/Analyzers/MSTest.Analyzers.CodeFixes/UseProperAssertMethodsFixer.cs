@@ -72,7 +72,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
                 createChangedDocument = ct => FixAssertMethodForAddArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], diagnostic.AdditionalLocations[2], root, identifierNameSyntax, properAssertMethodName, ct);
                 break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeRemoveArgument:
-                createChangedDocument = ct => FixAssertMethodForRemoveArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], root, identifierNameSyntax, properAssertMethodName, ct);
+                createChangedDocument = ct => FixAssertMethodForRemoveArgumentModeAsync(context.Document, diagnostic.AdditionalLocations, root, identifierNameSyntax, properAssertMethodName, diagnostic.Properties.ContainsKey(UseProperAssertMethodsAnalyzer.NeedsNullableBooleanCastKey), ct);
                 break;
             default:
                 break;
@@ -151,13 +151,20 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         return editor.GetChangedDocument();
     }
 
-    private static async Task<Document> FixAssertMethodForRemoveArgumentModeAsync(Document document, Location location1, SyntaxNode root, IdentifierNameSyntax identifierNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
+    private static async Task<Document> FixAssertMethodForRemoveArgumentModeAsync(
+        Document document,
+        IReadOnlyList<Location> additionalLocations,
+        SyntaxNode root,
+        IdentifierNameSyntax identifierNameSyntax,
+        string properAssertMethodName,
+        bool needsNullableBoolCast,
+        CancellationToken cancellationToken)
     {
         // This doesn't properly handle cases like Assert.AreEqual(message: "My message", expected: true, actual: x)
         // The proper handling of this may be Assert.IsTrue(message: "My message", condition: x)
         // Or: Assert.IsTrue(x, "My message")
         // For now this is not handled.
-        if (root.FindNode(location1.SourceSpan) is not ArgumentSyntax node1)
+        if (root.FindNode(additionalLocations[0].SourceSpan) is not ArgumentSyntax node1)
         {
             return document;
         }
@@ -169,7 +176,25 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         FixInvocationMethodName(editor, identifierNameSyntax, properAssertMethodName);
-        editor.ReplaceNode(argumentList, argumentList.WithArguments(argumentList.Arguments.Remove(node1)));
+
+        int argumentIndexToRemove = argumentList.Arguments.IndexOf(node1);
+        ArgumentListSyntax newArgumentList;
+        if (additionalLocations.Count > 1 && needsNullableBoolCast &&
+            root.FindNode(additionalLocations[1].SourceSpan) is ArgumentSyntax actualArgument)
+        {
+            Compilation compilation = editor.SemanticModel.Compilation;
+            var castExpression = (CastExpressionSyntax)editor.Generator.CastExpression(
+                compilation.GetSpecialType(SpecialType.System_Nullable_T).Construct(compilation.GetSpecialType(SpecialType.System_Boolean)),
+                actualArgument.Expression);
+            newArgumentList = argumentList.WithArguments(
+                argumentList.Arguments.Replace(actualArgument, SyntaxFactory.Argument(castExpression)).RemoveAt(argumentIndexToRemove));
+        }
+        else
+        {
+            newArgumentList = argumentList.WithArguments(argumentList.Arguments.RemoveAt(argumentIndexToRemove));
+        }
+
+        editor.ReplaceNode(argumentList, newArgumentList);
 
         return editor.GetChangedDocument();
     }

@@ -56,6 +56,12 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
 
     /// <summary>
+    /// Only the presence of this key in properties bag indicates that a cast is needed.
+    /// The value of the key is always null.
+    /// </summary>
+    internal const string NeedsNullableBooleanCastKey = nameof(NeedsNullableBooleanCastKey);
+
+    /// <summary>
     /// Key in the properties bag that has value one of CodeFixModeSimple, CodeFixModeAddArgument, or CodeFixModeRemoveArgument.
     /// </summary>
     internal const string CodeFixModeKey = nameof(CodeFixModeKey);
@@ -100,7 +106,11 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     /// <para>Example: For <c>Assert.AreEqual(false, x)</c>, it will become <c>Assert.IsFalse(x)</c>.</para>
     /// <para>The value for ProperAssertMethodNameKey is "IsFalse".</para>
     /// <para>The first additional location will point to the "false" node.</para>
+    /// <para>The second additional location will point to the "x" node, in case a cast is needed.</para>
     /// </summary>
+    /// <remarks>
+    /// If <see cref="NeedsNullableBooleanCastKey"/> is present, then the produced code will be <c>Assert.IsFalse((bool?)x);</c>.
+    /// </remarks>
     internal const string CodeFixModeRemoveArgument = nameof(CodeFixModeRemoveArgument);
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseProperAssertMethodsTitle), Resources.ResourceManager, typeof(Resources));
@@ -339,12 +349,25 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
             // The message is: Use 'Assert.{0}' instead of 'Assert.{1}'.
             string properAssertMethod = shouldUseIsTrue ? "IsTrue" : "IsFalse";
+
+            bool codeFixShouldAddCast = TryGetSecondArgumentValue((IInvocationOperation)context.Operation, out IOperation? actualArgumentValue) &&
+                actualArgumentValue.Type is { } actualType &&
+                actualType.SpecialType != SpecialType.System_Boolean &&
+                !actualType.IsNullableOfBoolean();
+
+            ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty
+                .Add(ProperAssertMethodNameKey, properAssertMethod)
+                .Add(CodeFixModeKey, CodeFixModeRemoveArgument);
+
+            if (codeFixShouldAddCast)
+            {
+                properties = properties.Add(NeedsNullableBooleanCastKey, null);
+            }
+
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
-                additionalLocations: ImmutableArray.Create(expectedArgument.Syntax.GetLocation()),
-                properties: ImmutableDictionary<string, string?>.Empty
-                    .Add(ProperAssertMethodNameKey, properAssertMethod)
-                    .Add(CodeFixModeKey, CodeFixModeRemoveArgument),
+                additionalLocations: ImmutableArray.Create(expectedArgument.Syntax.GetLocation(), actualArgumentValue?.Syntax.GetLocation() ?? Location.None),
+                properties: properties,
                 properAssertMethod,
                 isAreEqualInvocation ? "AreEqual" : "AreNotEqual"));
         }
@@ -369,6 +392,9 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
     private static bool TryGetFirstArgumentValue(IInvocationOperation operation, [NotNullWhen(true)] out IOperation? argumentValue)
         => TryGetArgumentValueForParameterOrdinal(operation, 0, out argumentValue);
+
+    private static bool TryGetSecondArgumentValue(IInvocationOperation operation, [NotNullWhen(true)] out IOperation? argumentValue)
+        => TryGetArgumentValueForParameterOrdinal(operation, 1, out argumentValue);
 
     private static bool TryGetArgumentValueForParameterOrdinal(IInvocationOperation operation, int ordinal, [NotNullWhen(true)] out IOperation? argumentValue)
     {

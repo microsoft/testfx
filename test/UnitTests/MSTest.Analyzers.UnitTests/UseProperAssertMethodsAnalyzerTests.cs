@@ -582,8 +582,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             }
             """;
 
-        // error CS1503: Argument 1: cannot convert from 'object' to 'bool'
-        // Consider having the codefix to produce Assert.IsTrue(x as bool).
         string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -594,7 +592,85 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
                 public void MyTestMethod()
                 {
                     object x = new object();
-                    Assert.IsTrue({|CS1503:x|});
+                    Assert.IsTrue((bool?)x);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsTrue' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsTrue", "AreEqual"),
+            fixedCode);
+    }
+
+    public async Task WhenAssertAreEqualAndExpectedIsTrue_CastNotAddedWhenTypeIsBool()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    bool x = false;
+                    {|#0:Assert.AreEqual(true, x)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    bool x = false;
+                    Assert.IsTrue(x);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsTrue' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsTrue", "AreEqual"),
+            fixedCode);
+    }
+
+    public async Task WhenAssertAreEqualAndExpectedIsTrue_CastNotAddedWhenTypeIsNullableBool()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    bool? x = false;
+                    {|#0:Assert.AreEqual(true, x)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    bool? x = false;
+                    Assert.IsTrue(x);
                 }
             }
             """;
@@ -646,8 +722,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             }
             """;
 
-        // error CS1503: Argument 1: cannot convert from 'object' to 'bool'
-        // Consider having the codefix to produce Assert.IsTrue(x as bool).
         string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -658,7 +732,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
                 public void MyTestMethod()
                 {
                     object x = new object();
-                    Assert.IsFalse({|CS1503:x|});
+                    Assert.IsFalse((bool?)x);
                 }
             }
             """;
