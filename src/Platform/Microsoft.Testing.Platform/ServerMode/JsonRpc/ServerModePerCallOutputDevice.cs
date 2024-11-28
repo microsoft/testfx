@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
@@ -15,13 +16,15 @@ internal class ServerModePerCallOutputDevice : IPlatformOutputDevice
 {
     private readonly IServerTestHost _serverTestHost;
     private readonly IAsyncMonitor _asyncMonitor;
+    private readonly IServiceProvider _serviceProvider;
 
     private static readonly string[] NewLineStrings = { "\r\n", "\n" };
 
-    public ServerModePerCallOutputDevice(IServerTestHost serverTestHost, IAsyncMonitor asyncMonitor)
+    public ServerModePerCallOutputDevice(IServerTestHost serverTestHost, IAsyncMonitor asyncMonitor, IServiceProvider serviceProvider)
     {
         _serverTestHost = serverTestHost;
         _asyncMonitor = asyncMonitor;
+        _serviceProvider = serviceProvider;
     }
 
     public string Uid => nameof(ServerModePerCallOutputDevice);
@@ -32,7 +35,8 @@ internal class ServerModePerCallOutputDevice : IPlatformOutputDevice
 
     public string Description => nameof(ServerModePerCallOutputDevice);
 
-    public Task DisplayAfterSessionEndRunAsync() => Task.CompletedTask;
+    public async Task DisplayAfterSessionEndRunAsync()
+        => await LogAsync(LogLevel.Trace, /*TODO: Localize*/"Finished test session", padding: null);
 
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
     {
@@ -64,9 +68,21 @@ internal class ServerModePerCallOutputDevice : IPlatformOutputDevice
         }
     }
 
-    public Task DisplayBannerAsync(string? bannerMessage) => Task.CompletedTask;
+    public async Task DisplayBannerAsync(string? bannerMessage)
+    {
+        if (bannerMessage is not null)
+        {
+            await LogAsync(LogLevel.Debug, bannerMessage, padding: null);
+        }
+    }
 
-    public Task DisplayBeforeSessionStartAsync() => Task.CompletedTask;
+    public async Task DisplayBeforeSessionStartAsync()
+    {
+        if (_serviceProvider.GetService<FileLoggerProvider>() is { FileLogger.FileName: { } logFileName, LogLevel: LogLevel.Trace })
+        {
+            await LogAsync(LogLevel.Trace, $"Starting test session. Log file path is '{logFileName}'."/*TODO: Localize*/, padding: null);
+        }
+    }
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
