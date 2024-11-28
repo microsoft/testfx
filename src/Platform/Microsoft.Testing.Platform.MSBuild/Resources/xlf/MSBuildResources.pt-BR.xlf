@@ -34,12 +34,12 @@ You can resolve the problem by installing the '{1}' .NET.
 
 The specified framework can be found at:
   - https://aka.ms/dotnet-download</source>
-        <target state="new">Could not find '{0}' host for the '{1}' architecture.
+        <target state="translated">Não foi possível localizar o host '{0}' para a arquitetura '{1}'.
 
-You can resolve the problem by installing the '{1}' .NET.
+Você pode resolver o problema instalando o .NET '{1}'.
 
-The specified framework can be found at:
-  - https://aka.ms/dotnet-download</target>
+A estrutura especificada pode ser encontrada em:
+  – https://aka.ms/dotnet-download</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTargetPath">
