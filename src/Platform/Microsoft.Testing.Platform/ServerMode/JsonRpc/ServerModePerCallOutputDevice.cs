@@ -78,7 +78,7 @@ internal class ServerModePerCallOutputDevice : IPlatformOutputDevice
 
     public async Task DisplayBeforeSessionStartAsync()
     {
-        if (_serviceProvider.GetService<FileLoggerProvider>() is { FileLogger.FileName: { } logFileName, LogLevel: LogLevel.Trace })
+        if (_serviceProvider.GetService<FileLoggerProvider>() is { FileLogger.FileName: { } logFileName })
         {
             await LogAsync(LogLevel.Trace, $"Starting test session. Log file path is '{logFileName}'."/*TODO: Localize*/, padding: null);
         }
