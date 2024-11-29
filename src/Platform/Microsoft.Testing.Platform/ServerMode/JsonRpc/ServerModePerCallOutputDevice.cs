@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Text;
 
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
@@ -9,6 +10,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.ServerMode;
@@ -46,7 +48,7 @@ internal class ServerModePerCallOutputDevice : IPlatformOutputDevice
     public string Description => nameof(ServerModePerCallOutputDevice);
 
     public async Task DisplayAfterSessionEndRunAsync()
-        => await LogAsync(LogLevel.Trace, /*TODO: Localize*/"Finished test session", padding: null);
+        => await LogAsync(LogLevel.Trace, PlatformResources.FinishedTestSession, padding: null);
 
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
     {
@@ -87,11 +89,11 @@ internal class ServerModePerCallOutputDevice : IPlatformOutputDevice
     {
         if (_serviceProvider.GetService<FileLoggerProvider>() is { FileLogger.FileName: { } logFileName })
         {
-            await LogAsync(LogLevel.Trace, $"Starting test session. Log file path is '{logFileName}'."/*TODO: Localize*/, padding: null);
+            await LogAsync(LogLevel.Trace, string.Format(CultureInfo.InvariantCulture, PlatformResources.StartingTestSessionWithLogFilePath, logFileName), padding: null);
         }
         else
         {
-            await LogAsync(LogLevel.Trace, $"Starting test session."/*TODO: Localize*/, padding: null);
+            await LogAsync(LogLevel.Trace, PlatformResources.StartingTestSession, padding: null);
         }
     }
 
