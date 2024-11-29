@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 #endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-#if NETFRAMEWORK || NET
+#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 #endif
 #if !WINDOWS_UWP
@@ -32,7 +32,7 @@ public class TestSourceHost : ITestSourceHost
     private string? _currentDirectory;
 #endif
 
-#if NETFRAMEWORK || NET
+#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
     /// <summary>
     /// Assembly resolver used in the current app-domain.
     /// </summary>
@@ -104,7 +104,7 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     public void SetupHost()
     {
-#if NET
+#if NET && !WINDOWS_UWP
         List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, false);
 
         if (EqtTrace.IsInfoEnabled)
@@ -209,7 +209,7 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     public void Dispose()
     {
-#if NETFRAMEWORK || NET
+#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
         if (_parentDomainAssemblyResolver != null)
         {
             _parentDomainAssemblyResolver.Dispose();
@@ -347,7 +347,7 @@ public class TestSourceHost : ITestSourceHost
         => new DeploymentUtility().GetConfigFile(sourceFileName);
 #endif
 
-#if NETFRAMEWORK || NET
+#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
     /// <summary>
     /// Gets the probing paths to load the test assembly dependencies.
     /// </summary>

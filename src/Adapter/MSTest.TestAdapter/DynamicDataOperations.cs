@@ -3,7 +3,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#if NET471_OR_GREATER || NETCOREAPP
+#if NET471_OR_GREATER || (NET && !WINDOWS_UWP)
 using System.Collections;
 using System.Runtime.CompilerServices;
 #endif
@@ -129,7 +129,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
             return true;
         }
 
-#if NETCOREAPP || NET471_OR_GREATER
+#if NET471_OR_GREATER || (NET && !WINDOWS_UWP)
         if (dataSource is IEnumerable enumerable)
         {
             List<object[]> objects = new();

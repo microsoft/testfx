@@ -13,6 +13,6 @@
 
     <file src="$ArtifactsBinDir$TestFramework.Extensions\$Configuration$\uap10.*\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\UWP" />
 
-    <file src="$ArtifactsBinDir$TestFramework.Extensions\$Configuration$\net*.0-windows*\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\WinUI" />
+    <file src="$ArtifactsBinDir$TestFramework.Extensions\$Configuration$\net6.0-windows*\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\WinUI" />
   </files>
 </package>

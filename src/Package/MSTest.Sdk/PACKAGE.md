@@ -11,3 +11,4 @@ Supported platforms:
 - .NET 6.0+
 - .NET 6.0 Windows.18362+
 - UWP 10.0.16299
+- UWP 10.0.17763 with .NET 9
