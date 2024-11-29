@@ -8,56 +8,24 @@ root = false
 
 #### .NET Coding Conventions ####
 
-# VSTHRD200: Use "Async" suffix for async methods
-dotnet_diagnostic.VSTHRD200.severity = suggestion
+dotnet_diagnostic.VSTHRD200.severity = suggestion   # VSTHRD200: Use "Async" suffix for async methods
 
-# SA1118: Parameter should not span multiple lines
-dotnet_diagnostic.SA1118.severity = suggestion
+dotnet_diagnostic.SA1118.severity = suggestion      # SA1118: Parameter should not span multiple lines
+dotnet_diagnostic.SA1201.severity = suggestion      # SA1201: Elements should appear in the correct order
+dotnet_diagnostic.SA1203.severity = suggestion      # SA1203: Constants should appear before fields
+dotnet_diagnostic.SA1311.severity = none            # SA1311: Static readonly fields should begin with upper-case letter
+dotnet_diagnostic.SA1602.severity = none            # SA1602: Enumeration items should be documented
 
-# SA1201: Elements should appear in the correct order
-dotnet_diagnostic.SA1201.severity = suggestion
+dotnet_diagnostic.CA1000.severity = suggestion      # CA1000: Do not declare static members on generic types
+dotnet_diagnostic.CA1018.severity = none            # CA1018: Mark attributes with AttributeUsageAttribute
+dotnet_diagnostic.CA1707.severity = none            # CA1707: Identifiers should not contain underscores
+dotnet_diagnostic.CA1711.severity = none            # CA1711: Identifiers should not have incorrect suffix
+dotnet_diagnostic.CA1816.severity = none            # CA1816: Dispose methods should call SuppressFinalize
+dotnet_diagnostic.CA1822.severity = none            # CA1822: Mark members as static
+dotnet_diagnostic.CA1852.severity = none            # CA1852: Type can be sealed
+dotnet_diagnostic.CA1859.severity = none            # CA1859: Change return type to be more specific
+dotnet_diagnostic.CA1861.severity = none            # CA1861: Avoid constant arrays as arguments
+dotnet_diagnostic.CA2201.severity = none            # CA2201: Do not raise reserved exception types
+dotnet_diagnostic.CA3075.severity = none            # CA3075: Insecure DTD processing in XML
 
-# SA1203: Constants should appear before fields
-dotnet_diagnostic.SA1203.severity = suggestion
-
-# SA1311: Static readonly fields should begin with upper-case letter
-dotnet_diagnostic.SA1311.severity = none
-
-# SA1602: Enumeration items should be documented
-dotnet_diagnostic.SA1602.severity = none
-
-# CA1000: Do not declare static members on generic types
-dotnet_diagnostic.CA1000.severity = suggestion
-
-# CA1018: Mark attributes with AttributeUsageAttribute
-dotnet_diagnostic.CA1018.severity = none
-
-# CA1707: Identifiers should not contain underscores
-dotnet_diagnostic.CA1707.severity = none
-
-# CA1711: Identifiers should not have incorrect suffix
-dotnet_diagnostic.CA1711.severity = none
-
-# CA1816: Dispose methods should call SuppressFinalize
-dotnet_diagnostic.CA1816.severity = none
-
-# CA1822: Mark members as static
-dotnet_diagnostic.CA1822.severity = none
-
-# CA1852: Type can be sealed
-dotnet_diagnostic.CA1852.severity = none
-
-# CA1859: Change return type to be more specific
-dotnet_diagnostic.CA1859.severity = none
-
-# CA1861: Avoid constant arrays as arguments
-dotnet_diagnostic.CA1861.severity = none
-
-# CA2201: Do not raise reserved exception types
-dotnet_diagnostic.CA2201.severity = none
-
-# CA3075: Insecure DTD processing in XML
-dotnet_diagnostic.CA3075.severity = none
-
-# IDE0060: Remove unused parameter
-dotnet_diagnostic.IDE0060.severity = none
+dotnet_diagnostic.IDE0060.severity = none           # IDE0060: Remove unused parameter

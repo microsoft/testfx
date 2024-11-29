@@ -10,6 +10,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// </summary>
 internal static class Constants
 {
+    internal const string PublicTypeObsoleteMessage = "We will remove or hide this type starting with v4. If you are using this type, reach out to our team on https://github.com/microsoft/testfx.";
+
     /// <summary>
     /// The 3rd level entry (class) name in the hierarchy array.
     /// </summary>

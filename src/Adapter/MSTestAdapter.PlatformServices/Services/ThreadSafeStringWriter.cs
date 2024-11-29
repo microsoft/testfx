@@ -8,6 +8,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// AsyncContext aware, thread safe string writer that allows output writes from different threads to end up in the same async local context.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public class ThreadSafeStringWriter : StringWriter
 {
 #if DEBUG
