@@ -196,10 +196,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         LoggerFactoryProxy loggerFactoryProxy = new();
         serviceProvider.TryAddService(loggerFactoryProxy);
 
-        // Add output display proxy, needed by command line manager.
-        // We don't add to the service right now because we need special treatment between console/server mode.
-        IPlatformOutputDevice platformOutputDevice = ((PlatformOutputDeviceManager)OutputDisplay).Build(serviceProvider);
-
         // Add Terminal options provider
         CommandLine.AddProvider(() => new TerminalTestReporterCommandLineOptionsProvider());
 
@@ -209,6 +205,16 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Set the concrete command line options to the proxy.
         commandLineOptionsProxy.SetCommandLineOptions(commandLineHandler);
+
+        bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
+        bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
+
+        // TODO(youssef): In what way the output device is needed by command line manager?
+        // TODO(youssef): Building the platform output device depends on whether we are running server mode in TE or not.
+        // TODO(youssef): So we need to now create commandline handler first. :(
+        // Add output display proxy, needed by command line manager.
+        // We don't add to the service right now because we need special treatment between console/server mode.
+        IPlatformOutputDevice platformOutputDevice = ((PlatformOutputDeviceManager)OutputDisplay).Build(serviceProvider, hasServerFlag && isJsonRpcProtocol);
 
         // Add FileLoggerProvider if needed
         if (loggingState.FileLoggerProvider is not null)
@@ -382,9 +388,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         {
             return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, serviceProvider);
         }
-
-        bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
-        bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
 
         // ======= TEST HOST CONTROLLER MODE ======== //
         // Check if we're in the test host or we should check test controllers extensions

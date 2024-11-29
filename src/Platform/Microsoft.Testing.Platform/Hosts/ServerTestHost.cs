@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
@@ -443,13 +444,20 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         DateTimeOffset adapterLoadStart = _clock.UtcNow;
 
+        IPlatformOutputDevice outputDevice = ServiceProvider.GetRequiredService<IPlatformOutputDevice>();
+        // TODO: What if some one wants to have their own output device that's also compatible with server mode in IDE?
+        if (outputDevice is ServerModePerCallOutputDevice serverModePerCallOutputDevice)
+        {
+            await serverModePerCallOutputDevice.InitializeAsync(this);
+        }
+
         // Build the per request adapter
-        ITestFramework perRequestTestFramework = await _buildTestFrameworkAsync(new(
+        ITestFramework perRequestTestFramework = await _buildTestFrameworkAsync(new TestFrameworkBuilderData(
             perRequestServiceProvider,
             requestFactory,
             invoker,
             filterFactory,
-            new ServerModePerCallOutputDevice(this, _messageMonitor, ServiceProvider),
+            outputDevice,
             [testNodeUpdateProcessor],
             _testFrameworkManager,
             _testSessionManager,
