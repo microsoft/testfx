@@ -11,10 +11,10 @@
   <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
     <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net6.0/winui/</_TestAdapterPlatformServicesRoot>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(UseUwp)' == 'true' ">
+  <PropertyGroup Condition=" '$(UseUwpTools)' == 'true' ">
     <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net9.0/uwp/</_TestAdapterPlatformServicesRoot>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(UseWinUI)' != 'true' AND '$(UseUwp)' != 'true' ">
+  <PropertyGroup Condition=" '$(UseWinUI)' != 'true' AND '$(UseUwpTools)' != 'true' ">
     <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)</_TestAdapterPlatformServicesRoot>
   </PropertyGroup>
 

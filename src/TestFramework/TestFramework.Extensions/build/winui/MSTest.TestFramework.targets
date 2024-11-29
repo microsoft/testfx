@@ -3,7 +3,7 @@
   <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
     <_TestFrameworkExtensionsRoot>$(MSBuildThisFileDirectory)../net6.0/winui/</_TestFrameworkExtensionsRoot>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(UseUwpTools)' == 'true' ">
+  <PropertyGroup Condition=" '$(UseUwpToolsTools)' == 'true' ">
     <_TestFrameworkExtensionsRoot>$(MSBuildThisFileDirectory)../net9.0/uwp/</_TestFrameworkExtensionsRoot>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(UseWinUI)' != 'true' ">
