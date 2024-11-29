@@ -825,11 +825,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">未能在“{0}”秒超时之前刷新日志</target>
         <note />
       </trans-unit>
-      <trans-unit id="TimeoutInRegexStackTraceLineParsing">
-        <source>Parsing stack trace line with regex timed out. Input: '{0}'</source>
-        <target state="new">Parsing stack trace line with regex timed out. Input: '{0}'</target>
-        <note>{0} is the line that was being matched</note>
-      </trans-unit>
       <trans-unit id="Total">
         <source>Total</source>
         <target state="translated">总计</target>

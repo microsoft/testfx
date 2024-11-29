@@ -4,13 +4,9 @@
 #if !NET7_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-
 #endif
 
 using System.Globalization;
-#if !NETSTANDARD
-using System.Runtime.ExceptionServices;
-#endif
 using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform.Helpers;
@@ -657,26 +653,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     internal /* for testing */ static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
     {
         terminal.Append(DoubleIndentation);
-        Match match;
-        try
-        {
-            match = GetFrameRegex().Match(stackTraceLine);
-        }
-        catch (RegexMatchTimeoutException ex)
-        {
-            // Add the stack trace line that was being matched to test locally.
-            var newTimeoutException = new RegexMatchTimeoutException(string.Format(CultureInfo.CurrentCulture, PlatformResources.TimeoutInRegexStackTraceLineParsing, stackTraceLine), ex);
-#if !NETSTANDARD
-            throw ex.StackTrace is null
-                ? newTimeoutException
-                // Otherwise preserve the stack trace, so we can tell if this was using
-                // the generated regex or not.
-                : ExceptionDispatchInfo.SetRemoteStackTrace(newTimeoutException, ex.StackTrace);
-#else
-            throw newTimeoutException;
-#endif
-        }
-
+        Match match = GetFrameRegex().Match(stackTraceLine);
         if (match.Success)
         {
             bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
