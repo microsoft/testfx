@@ -20,6 +20,8 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
     {
         if (_platformOutputDeviceFactory is not null)
         {
+            // TODO: SetPlatformOutputDevice isn't public yet.
+            // Before exposing it, do we want to pass the "useServerModeOutputDevice" info to it?
             IPlatformOutputDevice platformOutputDevice = _platformOutputDeviceFactory(serviceProvider);
             return platformOutputDevice;
         }
