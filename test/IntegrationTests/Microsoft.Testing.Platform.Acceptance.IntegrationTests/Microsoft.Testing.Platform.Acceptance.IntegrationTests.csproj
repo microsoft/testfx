@@ -1,17 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
     <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --retry-failed-tests 3</TestRunnerAdditionalArguments>
     <UseVSTestRunner>false</UseVSTestRunner>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
+    <DefineConstants>$(DefineConstants);IS_MTP</DefineConstants>
     <OutputType>Exe</OutputType>
     <UseAppHost>true</UseAppHost>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" />
+    <PackageReference Include="StreamJsonRpc" />
     <PackageReference Include="Microsoft.Testing.Extensions.Retry" />
+
+    <Compile Include="$(RepoRoot)test\IntegrationTests\MSTest.Acceptance.IntegrationTests\ServerMode\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
 
   <!-- Packages needed for the test assets but that we don't want to reference -->
