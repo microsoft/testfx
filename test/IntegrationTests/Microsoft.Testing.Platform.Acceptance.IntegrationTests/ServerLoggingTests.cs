@@ -10,7 +10,7 @@ using MSTest.Acceptance.IntegrationTests.Messages.V100;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
-public sealed class ServerLoggingTests : ServerModeTestsBase
+public sealed partial class ServerLoggingTests : ServerModeTestsBase
 {
     private readonly TestAssetFixture _testAssetFixture;
 
@@ -37,11 +37,12 @@ public sealed class ServerLoggingTests : ServerModeTestsBase
         await Task.WhenAll(discoveryListener.WaitCompletion(), runListener.WaitCompletion());
         Assert.IsFalse(logs.Count == 0, $"Logs are empty");
         string logsString = string.Join(Environment.NewLine, logs.Select(l => l.ToString()));
-        string logPath = Regex.Match(logsString, "Log file path is '(.+?)'").Groups[1].Value;
+        string logPath = LogFilePathRegex().Match(logsString).Groups[1].Value;
+        string port = PortRegex().Match(logsString).Groups[1].Value;
 
         Assert.AreEqual(
             $$"""
-            Log { LogLevel = Information, Message = Connecting to client host '127.0.0.1' port '61960' }
+            Log { LogLevel = Information, Message = Connecting to client host '127.0.0.1' port '{{port}}' }
             Log { LogLevel = Trace, Message = Starting test session. Log file path is '{{logPath}}'. }
             Log { LogLevel = Error, Message = System.Exception: This is an exception output }
             Log { LogLevel = Error, Message =    This is a red output with padding set to 3 }
@@ -168,4 +169,10 @@ public class DummyTestAdapter : ITestFramework, IDataProducer, IOutputDeviceData
 }
 """;
     }
+
+    [GeneratedRegex("Connecting to client host '127.0.0.1' port '(\\d+)'")]
+    private static partial Regex PortRegex();
+
+    [GeneratedRegex("The log file path is '(.+?)'")]
+    private static partial Regex LogFilePathRegex();
 }
