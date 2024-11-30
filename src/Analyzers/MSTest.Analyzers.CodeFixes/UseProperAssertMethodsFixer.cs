@@ -89,51 +89,51 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         }
     }
 
-    private static async Task<Document> FixAssertMethodForSimpleModeAsync(Document document, Location location1, Location location2, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
+    private static async Task<Document> FixAssertMethodForSimpleModeAsync(Document document, Location conditionLocationToBeReplaced, Location replacementExpressionLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
     {
         // This doesn't properly handle cases like Assert.IsTrue(message: "My message", condition: x == null)
         // The proper handling of this may be Assert.IsNull(message: "My message", value: x)
         // Or: Assert.IsNull(x, "My message")
         // For now this is not handled.
-        if (root.FindNode(location1.SourceSpan) is not ArgumentSyntax node1)
+        if (root.FindNode(conditionLocationToBeReplaced.SourceSpan) is not ArgumentSyntax conditionNodeToBeReplaced)
         {
             return document;
         }
 
-        if (root.FindNode(location2.SourceSpan) is not ExpressionSyntax node2)
+        if (root.FindNode(replacementExpressionLocation.SourceSpan) is not ExpressionSyntax replacementExpressionNode)
         {
             return document;
         }
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
-        editor.ReplaceNode(node1, SyntaxFactory.Argument(node2).WithAdditionalAnnotations(Formatter.Annotation));
+        editor.ReplaceNode(conditionNodeToBeReplaced, SyntaxFactory.Argument(replacementExpressionNode).WithAdditionalAnnotations(Formatter.Annotation));
 
         return editor.GetChangedDocument();
     }
 
-    private static async Task<Document> FixAssertMethodForAddArgumentModeAsync(Document document, Location location1, Location location2, Location location3, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
+    private static async Task<Document> FixAssertMethodForAddArgumentModeAsync(Document document, Location conditionLocation, Location expectedLocation, Location actualLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
     {
         // This doesn't properly handle cases like Assert.IsTrue(message: "My message", condition: x == y)
         // The proper handling of this may be Assert.AreEqual(message: "My message", expected: x, actual: y)
         // Or: Assert.AreEqual(x, y, "My message")
         // For now this is not handled.
-        if (root.FindNode(location1.SourceSpan) is not ArgumentSyntax node1)
+        if (root.FindNode(conditionLocation.SourceSpan) is not ArgumentSyntax conditionNode)
         {
             return document;
         }
 
-        if (node1.Parent is not ArgumentListSyntax argumentList)
+        if (conditionNode.Parent is not ArgumentListSyntax argumentList)
         {
             return document;
         }
 
-        if (root.FindNode(location2.SourceSpan) is not ExpressionSyntax node2)
+        if (root.FindNode(expectedLocation.SourceSpan) is not ExpressionSyntax expectedNode)
         {
             return document;
         }
 
-        if (root.FindNode(location3.SourceSpan) is not ExpressionSyntax node3)
+        if (root.FindNode(actualLocation.SourceSpan) is not ExpressionSyntax actualNode)
         {
             return document;
         }
@@ -142,9 +142,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
         ArgumentListSyntax newArgumentList = argumentList;
-        newArgumentList = newArgumentList.ReplaceNode(node1, SyntaxFactory.Argument(node2).WithAdditionalAnnotations(Formatter.Annotation));
-        int insertionIndex = argumentList.Arguments.IndexOf(node1) + 1;
-        newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.Insert(insertionIndex, SyntaxFactory.Argument(node3).WithAdditionalAnnotations(Formatter.Annotation)));
+        newArgumentList = newArgumentList.ReplaceNode(conditionNode, SyntaxFactory.Argument(expectedNode).WithAdditionalAnnotations(Formatter.Annotation));
+        int insertionIndex = argumentList.Arguments.IndexOf(conditionNode) + 1;
+        newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.Insert(insertionIndex, SyntaxFactory.Argument(actualNode).WithAdditionalAnnotations(Formatter.Annotation)));
 
         editor.ReplaceNode(argumentList, newArgumentList);
 
@@ -164,12 +164,12 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         // The proper handling of this may be Assert.IsTrue(message: "My message", condition: x)
         // Or: Assert.IsTrue(x, "My message")
         // For now this is not handled.
-        if (root.FindNode(additionalLocations[0].SourceSpan) is not ArgumentSyntax node1)
+        if (root.FindNode(additionalLocations[0].SourceSpan) is not ArgumentSyntax expectedArgumentToRemove)
         {
             return document;
         }
 
-        if (node1.Parent is not ArgumentListSyntax argumentList)
+        if (expectedArgumentToRemove.Parent is not ArgumentListSyntax argumentList)
         {
             return document;
         }
@@ -177,7 +177,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
-        int argumentIndexToRemove = argumentList.Arguments.IndexOf(node1);
+        int argumentIndexToRemove = argumentList.Arguments.IndexOf(expectedArgumentToRemove);
         ArgumentListSyntax newArgumentList;
         if (additionalLocations.Count > 1 && needsNullableBoolCast &&
             root.FindNode(additionalLocations[1].SourceSpan) is ArgumentSyntax actualArgument)
