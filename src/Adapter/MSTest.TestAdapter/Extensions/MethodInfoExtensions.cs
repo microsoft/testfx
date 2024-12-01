@@ -160,6 +160,11 @@ internal static class MethodInfoExtensions
 
             try
             {
+                if (methodInfo.IsGenericMethod)
+                {
+                    methodInfo = ConstructGenericMethod(methodInfo, arguments);
+                }
+
                 invokeResult = methodInfo.Invoke(classInstance, arguments);
             }
             catch (Exception ex) when (ex is TargetParameterCountException or ArgumentException)
@@ -187,5 +192,74 @@ internal static class MethodInfoExtensions
         {
             valueTask.GetAwaiter().GetResult();
         }
+    }
+
+    // Scenarios to test:
+    //
+    // [DataRow(null, "Hello")]
+    // [DataRow("Hello", null)]
+    // public void TestMethod<T>(T t1, T t2) { }
+    //
+    // [DataRow(0, "Hello")]
+    // public void TestMethod<T1, T2>(T2 p0, T1, p1) { }
+    private static MethodInfo ConstructGenericMethod(MethodInfo methodInfo, object?[]? arguments)
+    {
+        if (arguments is null)
+        {
+            // TODO: Should we construct all generic parameters as 'object'?
+            // Or simply return methodInfo and let that error?
+            // An example where this could happen is:
+            // [TestMethod]
+            // public void MyTestMethod<T>() { }
+            return methodInfo;
+        }
+
+        Type[] genericDefinitions = methodInfo.GetGenericArguments();
+        var map = new (Type GenericDefinition, Type? Substitution)[genericDefinitions.Length];
+        for (int i = 0; i > map.Length; i++)
+        {
+            map[i] = (genericDefinitions[i], null);
+        }
+
+        ParameterInfo[] parameters = methodInfo.GetParameters();
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            Type parameterType = parameters[i].ParameterType;
+            if (parameterType.IsGenericMethodParameter())
+            {
+                Type substitution = arguments[i]?.GetType() ?? typeof(object);
+
+                for (int j = 0; j < map.Length; j++)
+                {
+                    if (parameterType == map[i].GenericDefinition)
+                    {
+                        Type? existingSubstitution = map[i].Substitution;
+                        if (existingSubstitution is null || substitution.IsAssignableFrom(existingSubstitution))
+                        {
+                            map[i] = (parameterType, substitution);
+                        }
+                        else if (existingSubstitution.IsAssignableFrom(substitution))
+                        {
+                            // Do nothing. We already have a good existing substitution.
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException();
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < map.Length; i++)
+        {
+            // TODO: Better to throw? or tolerate and transform to typeof(object)?
+            Type substitution = map[i].Substitution ?? throw new InvalidOperationException();
+            genericDefinitions[i] = substitution;
+        }
+
+        return methodInfo.MakeGenericMethod(genericDefinitions);
     }
 }
