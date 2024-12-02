@@ -74,7 +74,7 @@ internal static class MethodInfoExtensions
         DebugEx.Assert(method != null, "method should not be null.");
 
         return
-            method is { IsAbstract: false, IsStatic: false, IsGenericMethod: false } &&
+            method is { IsAbstract: false, IsStatic: false } &&
             (method.IsPublic || (discoverInternals && method.IsAssembly)) &&
             (method.GetParameters().Length == 0 || ignoreParameterLength) &&
             method.IsValidReturnType(); // Match return type Task for async methods only. Else return type void.
@@ -216,7 +216,7 @@ internal static class MethodInfoExtensions
 
         Type[] genericDefinitions = methodInfo.GetGenericArguments();
         var map = new (Type GenericDefinition, Type? Substitution)[genericDefinitions.Length];
-        for (int i = 0; i > map.Length; i++)
+        for (int i = 0; i < map.Length; i++)
         {
             map[i] = (genericDefinitions[i], null);
         }

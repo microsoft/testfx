@@ -178,6 +178,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
+            // TODO: Handle generics parameters
             ITypeSymbol? argumentType = constructorArguments[currentArgumentIndex].Type;
             ITypeSymbol paramType = GetParameterType(methodSymbol, currentArgumentIndex, constructorArguments.Length);
 

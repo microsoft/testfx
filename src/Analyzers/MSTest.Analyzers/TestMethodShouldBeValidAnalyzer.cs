@@ -69,6 +69,7 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        // TODO: Fix IsGenericMethod check and update analyzer message.
         if (methodSymbol.IsGenericMethod || methodSymbol.IsStatic || methodSymbol.IsAbstract || methodSymbol is { ReturnsVoid: true, IsAsync: true }
             || (!methodSymbol.ReturnsVoid
             && (taskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, taskSymbol))
