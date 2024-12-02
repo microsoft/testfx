@@ -121,7 +121,7 @@ internal sealed class TestApplicationResult(
     {
         TestAdapterTestSessionFailureErrorMessage = errorMessage;
         _testAdapterTestSessionFailure = true;
-        await _outputService.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(errorMessage));
+        await _outputService.DisplayAsync(this, new ErrorMessageOutputDeviceData(errorMessage));
     }
 
     public Statistics GetStatistics()

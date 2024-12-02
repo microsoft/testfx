@@ -203,7 +203,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                         displayErrorMessageBuilder.AppendLine(CultureInfo.InvariantCulture, $"Provider '{extension.DisplayName}' (UID: {extension.Uid}) failed with error: {errorMessage}");
                     }
 
-                    await platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(displayErrorMessageBuilder.ToString()));
+                    await platformOutputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(displayErrorMessageBuilder.ToString()));
                     await _logger.LogErrorAsync(logErrorMessageBuilder.ToString());
                     return ExitCodes.InvalidPlatformSetup;
                 }
@@ -322,7 +322,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
             if (!_testHostGracefullyClosed && !abortRun.IsCancellationRequested)
             {
-                await platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode)));
+                await platformOutputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode)));
             }
 
             await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}')' in '{consoleRunStarted.Elapsed}'");
