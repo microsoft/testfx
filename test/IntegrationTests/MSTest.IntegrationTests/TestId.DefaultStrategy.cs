@@ -4,6 +4,7 @@
 using FluentAssertions;
 
 using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.IntegrationTests;
 
@@ -11,6 +12,7 @@ public partial class TestId : CLITestBase
 {
     private const string DefaultStrategyDll = "TestIdProject.DefaultStrategy";
 
+    [TestMethod]
     public void TestIdUniqueness_DataRowArray_DefaultStrategy()
     {
         // Arrange
@@ -32,6 +34,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DataRowString_DefaultStrategy()
     {
         // Arrange
@@ -54,6 +57,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DynamicDataArrays_DefaultStrategy()
     {
         // Arrange
@@ -75,6 +79,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DynamicDataTuple_DefaultStrategy()
     {
         // Arrange
@@ -95,6 +100,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_DynamicDataGenericCollections_DefaultStrategy()
     {
         // Arrange
@@ -117,6 +123,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_TestDataSourceArrays_DefaultStrategy()
     {
         // Arrange
@@ -138,6 +145,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_TestDataSourceTuples_DefaultStrategy()
     {
         // Arrange
@@ -158,6 +166,7 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
+    [TestMethod]
     public void TestIdUniqueness_TestDataSourceGenericCollections_DefaultStrategy()
     {
         // Arrange

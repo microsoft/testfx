@@ -2,13 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class FSharpTestProjectTests : CLITestBase
 {
     private const string TestAssetName = "FSharpTestProject";
 
+    [TestMethod]
     public void TestFSharpTestsWithSpaceAndDotInName()
     {
         // Arrange

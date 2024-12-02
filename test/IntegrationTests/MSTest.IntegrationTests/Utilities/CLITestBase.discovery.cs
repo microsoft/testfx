@@ -15,11 +15,9 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
-using TestFramework.ForTestingMSTest;
-
 namespace Microsoft.MSTestV2.CLIAutomation;
 
-public partial class CLITestBase : TestContainer
+public partial class CLITestBase
 {
     internal ImmutableArray<TestCase> DiscoverTests(string assemblyPath, string testCaseFilter = null)
     {
