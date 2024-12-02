@@ -665,4 +665,7 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="PlatformCommandLineMinimumExpectedTestsOptionDescription" xml:space="preserve">
     <value>Specifies the minimum number of tests that are expected to run.</value>
   </data>
+  <data name="MoreTestsRunning" xml:space="preserve">
+    <value>and {0} more</value>
+  </data>
 </root>

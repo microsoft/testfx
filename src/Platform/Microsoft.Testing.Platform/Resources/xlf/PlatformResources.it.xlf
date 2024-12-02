@@ -371,6 +371,11 @@
         <target state="translated">Previsto --client-port quando viene usato il protocollo jsonRpc.</target>
         <note />
       </trans-unit>
+      <trans-unit id="MoreTestsRunning">
+        <source>and {0} more</source>
+        <target state="new">and {0} more</target>
+        <note />
+      </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
         <source>No serializer registered with ID '{0}'</source>
         <target state="translated">Nessun serializzatore registrato con ID '{0}'</target>

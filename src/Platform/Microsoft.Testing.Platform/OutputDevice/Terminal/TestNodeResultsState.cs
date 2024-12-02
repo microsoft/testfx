@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Globalization;
 
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -36,7 +38,7 @@ internal sealed class TestNodeResultsState
 
     private void UpdateSummaryDetail()
         => _summaryDetail.Text = TestNodeProgressStates.Count > 5
-            ? $"... {TestNodeProgressStates.Count} more tests"
+            ? $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.MoreTestsRunning, TestNodeProgressStates.Count)}"
             : string.Empty;
 
     // Note: Show up to 5 long running tests per project.
