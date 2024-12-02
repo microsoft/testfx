@@ -4,7 +4,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Product dependencies">
-    <AspireHostingTestingVersion>8.1.0</AspireHostingTestingVersion>
+    <AspireHostingTestingVersion>8.2.2</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.10.0-preview-24127-03</MicrosoftBuildVersion>
     <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.24318.1</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
@@ -14,7 +14,7 @@
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>17.11.1</MicrosoftNETTestSdkVersion>
-    <MicrosoftPlaywrightVersion>1.45.1</MicrosoftPlaywrightVersion>
+    <MicrosoftPlaywrightVersion>1.49.0</MicrosoftPlaywrightVersion>
     <!-- CVE-2017-0247 -->
     <SystemNetWebSocketsClientVersion>4.3.1</SystemNetWebSocketsClientVersion>
     <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
@@ -70,7 +70,7 @@
     <PackageVersion Include="Polly" Version="8.4.1" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="ReportGenerator" Version="4.3.6" />
-    <PackageVersion Include="StreamJsonRpc" Version="2.18.48" />
+    <PackageVersion Include="StreamJsonRpc" Version="2.20.20" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.Management" Version="8.0.0" />
