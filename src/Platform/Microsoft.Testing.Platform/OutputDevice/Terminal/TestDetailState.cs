@@ -9,7 +9,7 @@ internal sealed class TestDetailState
 {
     private string _text;
 
-    public TestDetailState(long id, IStopwatch stopwatch, string text)
+    public TestDetailState(long id, IStopwatch? stopwatch, string text)
     {
         Id = id;
         Stopwatch = stopwatch;
@@ -20,7 +20,7 @@ internal sealed class TestDetailState
 
     public long Version { get; set; }
 
-    public IStopwatch Stopwatch { get; }
+    public IStopwatch? Stopwatch { get; }
 
     public string Text
     {

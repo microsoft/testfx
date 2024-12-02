@@ -123,7 +123,7 @@ internal sealed class AnsiTerminalTestProgressFrame
 
     public void AppendTestWorkerDetail(TestDetailState detail, RenderedProgressItem currentLine, AnsiTerminal terminal)
     {
-        string durationString = HumanReadableDurationFormatter.Render(detail.Stopwatch.Elapsed);
+        string durationString = HumanReadableDurationFormatter.Render(detail.Stopwatch?.Elapsed);
 
         currentLine.RenderedDurationLength = durationString.Length;
 
@@ -171,6 +171,14 @@ internal sealed class AnsiTerminalTestProgressFrame
             terminal.EraseProgress();
         }
 
+        // At the end of the terminal we're going to print the live progress.
+        // We re-render this progress by moving the cursor to the beginning of the previous progress
+        // and then overwriting the lines that have changed.
+        // The assumption we do here is that:
+        // - Each rendered line is a single line, i.e. a single detail cannot span multiple lines.
+        // - Each rendered detail can be tracked via a unique ID and version, so that we can
+        //   quickly determine if the detail has changed since the last render.
+
         // Don't go up if we did not render any lines in previous frame or we already cleared them.
         if (previousFrame.RenderedLines != null && previousFrame.RenderedLines.Count > 0)
         {
@@ -181,10 +189,11 @@ internal sealed class AnsiTerminalTestProgressFrame
 
         // When there is nothing to render, don't write empty lines, e.g. when we start the test run, and then we kick off build
         // in dotnet test, there is a long pause where we have no assemblies and no test results (yet).
-        // if (ProgressCount > 0)
-        // {
-        //     terminal.AppendLine();
-        // }
+        if (progress.Length > 0)
+        {
+            terminal.AppendLine();
+        }
+
         int i = 0;
         RenderedLines = new List<RenderedProgressItem>(progress.Length * 2);
         var progresses = new List<object>(progress.Length);
@@ -197,9 +206,15 @@ internal sealed class AnsiTerminalTestProgressFrame
             }
 
             progresses.Add(progressItem);
-            if (progressItem.Detail != null)
+
+            IEnumerable<TestDetailState>? runningTasks
+                = progressItem.TestNodeResultsState?.GetRunningTasks();
+            if (runningTasks is not null)
             {
-                progresses.Add(progressItem.Detail);
+                foreach (TestDetailState testDetail in runningTasks)
+                {
+                    progresses.Add(testDetail);
+                }
             }
         }
 
@@ -214,7 +229,7 @@ internal sealed class AnsiTerminalTestProgressFrame
 
                     // We have a line that was rendered previously, compare it and decide how to render.
                     RenderedProgressItem previouslyRenderedLine = previousFrame.RenderedLines[i];
-                    if (previouslyRenderedLine.ProgressId == progressItem.Id && previouslyRenderedLine.ProgressVersion == progressItem.Version)
+                    if (previouslyRenderedLine.ProgressId == progressItem.Id && false)
                     {
                         // This is the same progress item and it was not updated since we rendered it, only update the timestamp if possible to avoid flicker.
                         string durationString = HumanReadableDurationFormatter.Render(progressItem.Stopwatch.Elapsed);
@@ -252,7 +267,7 @@ internal sealed class AnsiTerminalTestProgressFrame
                     if (previouslyRenderedLine.ProgressId == detailItem.Id && previouslyRenderedLine.ProgressVersion == detailItem.Version)
                     {
                         // This is the same progress item and it was not updated since we rendered it, only update the timestamp if possible to avoid flicker.
-                        string durationString = HumanReadableDurationFormatter.Render(detailItem.Stopwatch.Elapsed);
+                        string durationString = HumanReadableDurationFormatter.Render(detailItem.Stopwatch?.Elapsed);
 
                         if (previouslyRenderedLine.RenderedDurationLength == durationString.Length)
                         {

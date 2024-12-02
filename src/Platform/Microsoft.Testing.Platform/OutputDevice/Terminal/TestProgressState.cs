@@ -39,7 +39,7 @@ internal sealed class TestProgressState
 
     public int TotalTests { get; internal set; }
 
-    public TestDetailState? Detail { get; internal set; }
+    public TestNodeResultsState? TestNodeResultsState { get; internal set; }
 
     public int SlotIndex { get; internal set; }
 

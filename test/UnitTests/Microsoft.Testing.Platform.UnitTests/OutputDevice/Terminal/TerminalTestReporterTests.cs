@@ -72,16 +72,16 @@ public sealed class TerminalTestReporterTests : TestBase
         string standardOutput = "Hello!";
         string errorOutput = "Oh no!";
 
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
             errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
             errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         // timed out + canceled + failed should all report as failed in summary
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, testNodeUid: "TimedoutTest1", "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
             errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, testNodeUid: "CanceledTest1", "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
             errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
-        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted(assembly, targetFramework, architecture, executionId: null, testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
             errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
         terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact1.txt");
         terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact2.txt");

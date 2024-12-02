@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.Extensions.Messages;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -374,6 +375,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
        string? targetFramework,
        string? architecture,
        string? executionId,
+       string testNodeUid,
        string displayName,
        TestOutcome outcome,
        TimeSpan duration,
@@ -390,6 +392,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             targetFramework,
             architecture,
             executionId,
+            testNodeUid,
             displayName,
             outcome,
             duration,
@@ -405,6 +408,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? targetFramework,
         string? architecture,
         string? executionId,
+        string testNodeUid,
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
@@ -415,6 +419,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? errorOutput)
     {
         TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
+
+        asm.TestNodeResultsState?.RemoveRunningTestNode(testNodeUid);
 
         switch (outcome)
         {
@@ -983,12 +989,15 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string assembly,
         string? targetFramework,
         string? architecture,
+        string testNodeUid,
         string displayName,
         string? executionId)
     {
         TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
 
-        asm.Detail = new(_counter++, CreateStopwatch(), displayName);
+        asm.TestNodeResultsState ??= new(_counter++);
+        asm.TestNodeResultsState.AddRunningTestNode(
+            _counter++, testNodeUid, $"{displayName}", CreateStopwatch());
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
     }
 }
