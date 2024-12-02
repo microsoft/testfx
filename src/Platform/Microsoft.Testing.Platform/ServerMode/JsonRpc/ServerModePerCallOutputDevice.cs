@@ -15,7 +15,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal class ServerModePerCallOutputDevice : IPlatformOutputDevice
+internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ConcurrentBag<ServerLogMessage> _messages = new();

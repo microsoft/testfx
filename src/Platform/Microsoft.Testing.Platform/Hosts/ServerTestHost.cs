@@ -446,7 +446,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         IPlatformOutputDevice outputDevice = ServiceProvider.GetRequiredService<IPlatformOutputDevice>();
         // TODO: What if some one wants to have their own output device that's also compatible with server mode in IDE?
-        if (outputDevice is ServerModePerCallOutputDevice serverModePerCallOutputDevice)
+        if (outputDevice is ProxyPlatformOutputDevice { ServerModeOutputDevice: { } serverModePerCallOutputDevice })
         {
             await serverModePerCallOutputDevice.InitializeAsync(this);
         }

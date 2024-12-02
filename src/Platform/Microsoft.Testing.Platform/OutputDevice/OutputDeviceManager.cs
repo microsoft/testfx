@@ -18,17 +18,13 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
 
     public IPlatformOutputDevice Build(ServiceProvider serviceProvider, bool useServerModeOutputDevice)
     {
-        if (_platformOutputDeviceFactory is not null)
-        {
-            // TODO: SetPlatformOutputDevice isn't public yet.
-            // Before exposing it, do we want to pass the "useServerModeOutputDevice" info to it?
-            IPlatformOutputDevice platformOutputDevice = _platformOutputDeviceFactory(serviceProvider);
-            return platformOutputDevice;
-        }
+        // TODO: SetPlatformOutputDevice isn't public yet.
+        // Before exposing it, do we want to pass the "useServerModeOutputDevice" info to it?
+        IPlatformOutputDevice nonServerOutputDevice = _platformOutputDeviceFactory is null
+            ? GetDefaultTerminalOutputDevice(serviceProvider)
+            : _platformOutputDeviceFactory(serviceProvider);
 
-        return useServerModeOutputDevice
-            ? new ServerModePerCallOutputDevice(serviceProvider)
-            : GetDefaultTerminalOutputDevice(serviceProvider);
+        return new ProxyPlatformOutputDevice(nonServerOutputDevice, useServerModeOutputDevice ? new ServerModePerCallOutputDevice(serviceProvider) : null);
     }
 
     public static TerminalOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider)
