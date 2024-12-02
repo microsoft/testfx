@@ -77,7 +77,7 @@ public class GenericTestMethodTests : AcceptanceTestBase
                 at Microsoft\.VisualStudio\.TestPlatform\.MSTestAdapter\.PlatformServices\.ReflectionOperations2\.CreateInstance\(Type type, Object\[] parameters\) in .+?ReflectionOperations2.cs:60
             failed ParameterizedMethodSimpleParams \("Hello world"\) \(\d+ms\)
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
-                at System\.RuntimeType\.CreateInstanceCheckThis\()
+                at System\.RuntimeType\.CreateInstanceCheckThis\(\)
                 at System\.RuntimeType\.CreateInstanceImpl\(BindingFlags bindingAttr, Binder binder, Object\[] args, CultureInfo culture\)
                 at System\.Activator\.CreateInstance\(Type type, Object\[] args\)
                 at Microsoft\.VisualStudio\.TestPlatform\.MSTestAdapter\.PlatformServices\.ReflectionOperations2\.CreateInstance\(Type type, Object\[] parameters\) in .+?ReflectionOperations2.cs:60
