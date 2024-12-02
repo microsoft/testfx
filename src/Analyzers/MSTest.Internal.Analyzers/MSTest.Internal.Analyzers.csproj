@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-    <LangVersion>Latest</LangVersion>
     <IsPackable>false</IsPackable>
     <IsShipping>false</IsShipping>
 
