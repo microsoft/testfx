@@ -444,12 +444,8 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         DateTimeOffset adapterLoadStart = _clock.UtcNow;
 
-        IPlatformOutputDevice outputDevice = ServiceProvider.GetRequiredService<IPlatformOutputDevice>();
-        // TODO: What if some one wants to have their own output device that's also compatible with server mode in IDE?
-        if (outputDevice is ProxyPlatformOutputDevice proxyPlatformOutputDevice)
-        {
-            await proxyPlatformOutputDevice.InitializeAsync(this);
-        }
+        ProxyPlatformOutputDevice outputDevice = ServiceProvider.GetRequiredService<ProxyPlatformOutputDevice>();
+        await outputDevice.InitializeAsync(this);
 
         // Build the per request adapter
         ITestFramework perRequestTestFramework = await _buildTestFrameworkAsync(new TestFrameworkBuilderData(
