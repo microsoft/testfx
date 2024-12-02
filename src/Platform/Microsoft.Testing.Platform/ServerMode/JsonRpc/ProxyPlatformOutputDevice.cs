@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
@@ -8,7 +9,7 @@ using Microsoft.Testing.Platform.OutputDevice;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal sealed class ProxyPlatformOutputDevice : IPlatformOutputDevice
+internal sealed class ProxyPlatformOutputDevice : IPlatformOutputDevice, IAsyncInitializableExtension
 {
     private readonly IPlatformOutputDevice _originalOutputDevice;
     private readonly ServerModePerCallOutputDevice? _serverModeOutputDevice;
@@ -62,6 +63,9 @@ internal sealed class ProxyPlatformOutputDevice : IPlatformOutputDevice
             await _serverModeOutputDevice.DisplayBeforeSessionStartAsync();
         }
     }
+
+    public async Task InitializeAsync()
+        => await _originalOutputDevice.TryInitializeAsync();
 
     public async Task<bool> IsEnabledAsync()
         => (_serverModeOutputDevice is not null && await _serverModeOutputDevice.IsEnabledAsync()) || await _originalOutputDevice.IsEnabledAsync();
