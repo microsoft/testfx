@@ -49,6 +49,10 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.VSTestBridge\Microsoft.Testing.Extensions.VSTestBridge.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Internal.Analyzers\MSTest.Internal.Analyzers.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
