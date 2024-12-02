@@ -12,7 +12,7 @@ namespace MSTest.Internal.Analyzers;
 /// <summary>
 /// MSTESTINT1: Suppress type is obsolete for known MSTest types.
 /// </summary>
-[DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
+[DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class MSTestObsoleteTypesSuppressor : DiagnosticSuppressor
 {
     // CS0618: Member is obsolete.
