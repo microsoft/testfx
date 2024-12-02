@@ -264,7 +264,14 @@ internal static class MethodInfoExtensions
 
         try
         {
-            return methodInfo.MakeGenericMethod(genericDefinitions);
+            MethodInfo constructed = methodInfo.MakeGenericMethod(genericDefinitions);
+            if (constructed.ContainsGenericParameters)
+            {
+                // TODO: Localize.
+                throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, $"The generic test method '{methodInfo}' is not supported. Generic type parameters can only be the top level type. For example, 'T' is supported but 'T[]' is not.");
+            }
+
+            return constructed;
         }
         catch (Exception e)
         {

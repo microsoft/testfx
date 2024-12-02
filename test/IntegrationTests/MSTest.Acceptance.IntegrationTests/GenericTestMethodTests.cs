@@ -63,6 +63,36 @@ public class GenericTestMethodTests : AcceptanceTestBase
             failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \(null,null,null,null\) \(\d+ms\)
               Test method TestClass\.ParameterizedMethodTwoGenericParametersAndFourMethodParameters threw exception: 
               System\.InvalidOperationException: The type of the generic parameter 'T1' could not be inferred\.
+            failed ParameterizedMethodSimpleParams \(1\) \(\d+ms\)
+              Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
+                at System\.RuntimeType\.CreateInstanceCheckThis\(\)
+                at System\.RuntimeType\.CreateInstanceImpl\(BindingFlags bindingAttr, Binder binder, Object\[] args, CultureInfo culture\)
+                at System\.Activator\.CreateInstance\(Type type, Object\[] args\)
+                at Microsoft\.VisualStudio\.TestPlatform\.MSTestAdapter\.PlatformServices\.ReflectionOperations2\.CreateInstance\(Type type, Object\[] parameters\) in .+?ReflectionOperations2.cs:60
+            failed ParameterizedMethodSimpleParams \(1,2\) \(\d+ms\)
+              Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
+                at System\.RuntimeType\.CreateInstanceCheckThis\(\)
+                at System\.RuntimeType\.CreateInstanceImpl\(BindingFlags bindingAttr, Binder binder, Object\[] args, CultureInfo culture\)
+                at System\.Activator\.CreateInstance\(Type type, Object\[] args\)
+                at Microsoft\.VisualStudio\.TestPlatform\.MSTestAdapter\.PlatformServices\.ReflectionOperations2\.CreateInstance\(Type type, Object\[] parameters\) in .+?ReflectionOperations2.cs:60
+            failed ParameterizedMethodSimpleParams \("Hello world"\) \(\d+ms\)
+              Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
+                at System\.RuntimeType\.CreateInstanceCheckThis\()
+                at System\.RuntimeType\.CreateInstanceImpl\(BindingFlags bindingAttr, Binder binder, Object\[] args, CultureInfo culture\)
+                at System\.Activator\.CreateInstance\(Type type, Object\[] args\)
+                at Microsoft\.VisualStudio\.TestPlatform\.MSTestAdapter\.PlatformServices\.ReflectionOperations2\.CreateInstance\(Type type, Object\[] parameters\) in .+?ReflectionOperations2.cs:60
+            failed ParameterizedMethodSimpleParams \(null\) (\d+ms)
+              Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
+                at System\.RuntimeType\.CreateInstanceCheckThis\(\)
+                at System\.RuntimeType\.CreateInstanceImpl\(BindingFlags bindingAttr, Binder binder, Object\[] args, CultureInfo culture\)
+                at System\.Activator\.CreateInstance\(Type type, Object\[] args\)
+                at Microsoft\.VisualStudio\.TestPlatform\.MSTestAdapter\.PlatformServices\.ReflectionOperations2\.CreateInstance\(Type type, Object\[] parameters\) in .+?ReflectionOperations2.cs:60
+            failed ParameterizedMethodSimpleParams \(null,"Hello world"\) \(\d+ms\)
+              Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
+                at System\.RuntimeType\.CreateInstanceCheckThis\(\)
+                at System\.RuntimeType\.CreateInstanceImpl\(BindingFlags bindingAttr, Binder binder, Object\[] args, CultureInfo culture\)
+                at System\.Activator\.CreateInstance\(Type type, Object\[] args\)
+                at Microsoft\.VisualStudio\.TestPlatform\.MSTestAdapter\.PlatformServices\.ReflectionOperations2\.CreateInstance\(Type type, Object\[] parameters\) in .+?ReflectionOperations2.cs:60
             """);
     }
 
@@ -126,6 +156,15 @@ public class TestClass
     [DataRow(null, null, null, null)]
     public void ParameterizedMethodTwoGenericParametersAndFourMethodParameters<T1, T2>(T2 p1, string p2, T2 p3, T1 p4)
         => Assert.Fail($"Test method 'ParameterizedMethodTwoGenericParametersAndFourMethodParameters' did run with parameters '{p1?.ToString() ?? "<null>"}', '{p2 ?? "<null>"}', '{p3?.ToString() ?? "<null>"}', '{p4?.ToString() ?? "<null>"}' and generic types '{typeof(T1)}', '{typeof(T2)}'.");
+
+    [TestMethod]
+    [DataRow((byte)1)]
+    [DataRow((byte)1, 2)]
+    [DataRow("Hello world")]
+    [DataRow(null)]
+    [DataRow(null, "Hello world")]
+    public void ParameterizedMethodSimpleParams<T>(params T[] parameter)
+        => Assert.Fail($"Test method 'ParameterizedMethodSimple' did run with parameter '{string.Join(",", parameter)}' and type '{typeof(T)}'.");
 }
 """;
     }
