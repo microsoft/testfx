@@ -16,7 +16,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
         _platformOutputDeviceFactory = platformOutputDeviceFactory;
     }
 
-    public IPlatformOutputDevice Build(ServiceProvider serviceProvider, bool useServerModeOutputDevice)
+    internal ProxyPlatformOutputDevice Build(ServiceProvider serviceProvider, bool useServerModeOutputDevice)
     {
         // TODO: SetPlatformOutputDevice isn't public yet.
         // Before exposing it, do we want to pass the "useServerModeOutputDevice" info to it?
