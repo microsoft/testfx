@@ -19,6 +19,10 @@ public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
     public static DiagnosticResult Diagnostic()
         => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, DefaultVerifier>.Diagnostic();
 
+    /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.Diagnostic()"/>
+    public static DiagnosticResult DiagnosticIgnoringAdditionalLocations()
+        => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, DefaultVerifier>.Diagnostic().WithOptions(DiagnosticOptions.IgnoreAdditionalLocations);
+
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.Diagnostic(string)"/>
     public static DiagnosticResult Diagnostic(string diagnosticId)
         => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, DefaultVerifier>.Diagnostic(diagnosticId);
