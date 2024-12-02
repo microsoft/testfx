@@ -325,7 +325,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_dumpType is not null);
 
         await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.");
-        await _outputDisplay.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue)));
+        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue)));
 
         string finalDumpFileName = _dumpFileNamePattern.Replace("%p", _testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
         finalDumpFileName = Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName);
@@ -339,11 +339,11 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             using (FileStream fs = File.OpenWrite(hangTestsFileName))
             using (StreamWriter sw = new(fs))
             {
-                await _outputDisplay.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(ExtensionResources.RunningTestsWhileDumping));
+                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(ExtensionResources.RunningTestsWhileDumping));
                 foreach ((string testName, int seconds) in tests.Tests)
                 {
                     await sw.WriteLineAsync($"[{TimeSpan.FromSeconds(seconds)}] {testName}");
-                    await _outputDisplay.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText($"[{TimeSpan.FromSeconds(seconds)}] {testName}"));
+                    await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"[{TimeSpan.FromSeconds(seconds)}] {testName}"));
                 }
             }
 
@@ -352,7 +352,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         await _logger.LogInformationAsync($"Creating dump filename {finalDumpFileName}");
 
-        await _outputDisplay.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName)));
+        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName)));
 
 #if NETCOREAPP
         DiagnosticsClient diagnosticsClient = new(_testHostProcessInformation.PID);

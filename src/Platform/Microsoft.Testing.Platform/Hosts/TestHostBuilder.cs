@@ -270,7 +270,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         if (!loggingState.CommandLineParseResult.HasTool && !commandLineValidationResult.IsValid)
         {
             await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice, testFrameworkCapabilities);
-            await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(commandLineValidationResult.ErrorMessage));
+            await platformOutputDevice.DisplayAsync(commandLineHandler, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage));
             await commandLineHandler.PrintHelpAsync(platformOutputDevice);
             return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine, serviceProvider);
         }
