@@ -15,7 +15,7 @@ namespace MSTest.Analyzers;
 /// <summary>
 /// MSTEST0028: <inheritdoc cref="Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification"/>.
 /// </summary>
-[DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
+[DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class NonNullableReferenceNotInitializedSuppressor : DiagnosticSuppressor
 {
     // CS8618: Non-nullable variable must contain a non-null value when exiting constructor. Consider declaring it as nullable.
