@@ -31,11 +31,6 @@
   </Target>
 
   <Target Name="MergeCoverage" DependsOnTargets="GatherCoverageInputs">
-    <!-- coverage tool doesn't create output directories if they don't exist -->
-    <MakeDir Directories="$(MergedFullCoverageDirectory)" Condition="!Exists('$(MergedFullCoverageDirectory)')" />
-    <MakeDir Directories="$(MergedUnitCoverageDirectory)" Condition="!Exists('$(MergedUnitCoverageDirectory)')" />
-    <MakeDir Directories="$(MergedIntegrationCoverageDirectory)" Condition="!Exists('$(MergedIntegrationCoverageDirectory)')" />
-
     <!-- Merge multiple coverlet reports into a single Cobertura report before uploading to codecov.io, in order to
       reduce upload size and load on the codecov.io processing servers. -->
     <Message Importance="high" Text="&quot;$(_LocalDotNetPath)&quot; coverage merge @(_CoverageReports) --output &quot;$(MergedFullCoverageDirectory)$(CoberturaFileName)&quot; --output-format Cobertura" />
