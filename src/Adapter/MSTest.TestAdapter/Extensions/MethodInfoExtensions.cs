@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -204,14 +205,16 @@ internal static class MethodInfoExtensions
     // public void TestMethod<T1, T2>(T2 p0, T1, p1) { }
     private static MethodInfo ConstructGenericMethod(MethodInfo methodInfo, object?[]? arguments)
     {
+        DebugEx.Assert(methodInfo.IsGenericMethod, "ConstructGenericMethod should only be called for a generic method.");
+
         if (arguments is null)
         {
-            // TODO: Should we construct all generic parameters as 'object'?
-            // Or simply return methodInfo and let that error?
             // An example where this could happen is:
             // [TestMethod]
             // public void MyTestMethod<T>() { }
-            return methodInfo;
+
+            // TODO: Localize.
+            throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, $"The generic test method '{methodInfo.Name}' doesn't have arguments, so the generic parameter cannot be inferred.");
         }
 
         Type[] genericDefinitions = methodInfo.GetGenericArguments();
@@ -227,28 +230,27 @@ internal static class MethodInfoExtensions
             Type parameterType = parameters[i].ParameterType;
             if (parameterType.IsGenericMethodParameter())
             {
-                Type substitution = arguments[i]?.GetType() ?? typeof(object);
-
-                for (int j = 0; j < map.Length; j++)
+                if (arguments[i] is null)
                 {
-                    if (parameterType == map[i].GenericDefinition)
-                    {
-                        Type? existingSubstitution = map[i].Substitution;
-                        if (existingSubstitution is null || substitution.IsAssignableFrom(existingSubstitution))
-                        {
-                            map[i] = (parameterType, substitution);
-                        }
-                        else if (existingSubstitution.IsAssignableFrom(substitution))
-                        {
-                            // Do nothing. We already have a good existing substitution.
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException();
-                        }
+                    continue;
+                }
 
-                        break;
-                    }
+                Type substitution = arguments[i]!/*Very strange nullability warning*/.GetType();
+                int mapIndexForParameter = GetMapIndexForParameterType(parameterType, map);
+                Type? existingSubstitution = map[mapIndexForParameter].Substitution;
+
+                if (existingSubstitution is null || substitution.IsAssignableFrom(existingSubstitution))
+                {
+                    map[mapIndexForParameter] = (parameterType, substitution);
+                }
+                else if (existingSubstitution.IsAssignableFrom(substitution))
+                {
+                    // Do nothing. We already have a good existing substitution.
+                }
+                else
+                {
+                    // TODO: Localize.
+                    throw new InvalidOperationException($"Found two conflicting types for generic parameter '{parameterType.Name}'. The conflicting types are '{existingSubstitution}' and '{substitution}'.");
                 }
             }
         }
@@ -256,10 +258,32 @@ internal static class MethodInfoExtensions
         for (int i = 0; i < map.Length; i++)
         {
             // TODO: Better to throw? or tolerate and transform to typeof(object)?
-            Type substitution = map[i].Substitution ?? throw new InvalidOperationException();
+            Type substitution = map[i].Substitution ?? throw new InvalidOperationException($"The type of the generic parameter '{map[i].GenericDefinition.Name}' could not be inferred.");
             genericDefinitions[i] = substitution;
         }
 
-        return methodInfo.MakeGenericMethod(genericDefinitions);
+        try
+        {
+            return methodInfo.MakeGenericMethod(genericDefinitions);
+        }
+        catch (Exception e)
+        {
+            // The caller catches ArgumentExceptions and will lose the original exception details.
+            // We transform the exception to TestFailedException here to preserve its details.
+            throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, e.TryGetMessage(), e.TryGetStackTraceInformation(), e);
+        }
+    }
+
+    private static int GetMapIndexForParameterType(Type parameterType, (Type GenericDefinition, Type? Substitution)[] map)
+    {
+        for (int i = 0; i < map.Length; i++)
+        {
+            if (parameterType == map[i].GenericDefinition)
+            {
+                return i;
+            }
+        }
+
+        throw ApplicationStateGuard.Unreachable();
     }
 }
