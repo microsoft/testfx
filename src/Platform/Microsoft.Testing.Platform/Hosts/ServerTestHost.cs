@@ -104,30 +104,28 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
     public string Description => PlatformResources.ServerTestHostDescription;
 
-#pragma warning disable VSTHRD100 // Avoid async void methods
-    private async void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
-#pragma warning restore VSTHRD100 // Avoid async void methods
+    private void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         _logger.LogWarning($"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}");
 
         // Looks like nothing in this message to really be localized?
         // All are class names, method names, property names, and placeholders. So none is localizable?
-        await ServiceProvider.GetOutputDevice().DisplayAsync(
+        ServiceProvider.GetOutputDevice().DisplayAsync(
             this,
             new WarningMessageOutputDeviceData(
-                $"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}"));
+                $"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}"))
+            .GetAwaiter().GetResult();
     }
 
-#pragma warning disable VSTHRD100 // Avoid async void methods
-    private async void OnTaskSchedulerUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
-#pragma warning restore VSTHRD100 // Avoid async void methods
+    private void OnTaskSchedulerUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
         e.SetObserved();
         _logger.LogWarning($"[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {e.Exception}");
 
         // Looks like nothing in this message to really be localized?
         // All are class names, method names, property names, and placeholders. So none is localizable?
-        await ServiceProvider.GetOutputDevice().DisplayAsync(this, new WarningMessageOutputDeviceData(PlatformResources.UnobservedTaskExceptionWarningMessage));
+        ServiceProvider.GetOutputDevice().DisplayAsync(this, new WarningMessageOutputDeviceData(PlatformResources.UnobservedTaskExceptionWarningMessage))
+            .GetAwaiter().GetResult();
     }
 
     [MemberNotNull(nameof(_messageHandler))]
