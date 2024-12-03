@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Diagnostics;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -12,7 +11,9 @@ namespace MSTest.Internal.Analyzers;
 /// <summary>
 /// MSTESTINT1: Suppress type is obsolete for known MSTest types.
 /// </summary>
+#pragma warning disable RS1004 // Recommend adding language support to diagnostic analyzer - For internal use only. We don't have VB code.
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
+#pragma warning restore RS1004 // Recommend adding language support to diagnostic analyzer
 public sealed class MSTestObsoleteTypesSuppressor : DiagnosticSuppressor
 {
     // CS0618: Member is obsolete.
