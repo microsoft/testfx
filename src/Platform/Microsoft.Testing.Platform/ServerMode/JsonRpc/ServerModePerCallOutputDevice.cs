@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
@@ -55,20 +56,19 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice
         switch (data)
         {
             case FormattedTextOutputDeviceData formattedTextOutputDeviceData:
-                LogLevel logLevel = formattedTextOutputDeviceData.ForegroundColor is SystemConsoleColor color
-                    ? color.ConsoleColor switch
-                    {
-                        ConsoleColor.Red => LogLevel.Error,
-                        ConsoleColor.Yellow => LogLevel.Warning,
-                        _ => LogLevel.Information,
-                    }
-                    : LogLevel.Information;
-
-                await LogAsync(logLevel, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
+                await LogAsync(LogLevel.Information, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
                 break;
 
             case TextOutputDeviceData textOutputDeviceData:
                 await LogAsync(LogLevel.Information, textOutputDeviceData.Text, padding: null);
+                break;
+
+            case WarningMessageOutputDeviceData warningData:
+                await LogAsync(LogLevel.Warning, warningData.Message, padding: null);
+                break;
+
+            case ErrorMessageOutputDeviceData errorData:
+                await LogAsync(LogLevel.Error, errorData.Message, padding: null);
                 break;
 
             case ExceptionOutputDeviceData exceptionOutputDeviceData:
