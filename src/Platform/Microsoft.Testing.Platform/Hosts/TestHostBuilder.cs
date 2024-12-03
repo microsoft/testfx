@@ -209,12 +209,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
         bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
 
-        // TODO(youssef): In what way the output device is needed by command line manager?
-        // TODO(youssef): Building the platform output device depends on whether we are running server mode in TE or not.
-        // TODO(youssef): So we need to now create commandline handler first. :(
-        // Add output display proxy, needed by command line manager.
-        // We don't add to the service right now because we need special treatment between console/server mode.
-        IPlatformOutputDevice platformOutputDevice = ((PlatformOutputDeviceManager)OutputDisplay).Build(serviceProvider, hasServerFlag && isJsonRpcProtocol);
+        ProxyPlatformOutputDevice platformOutputDevice = await ((PlatformOutputDeviceManager)OutputDisplay).BuildAsync(serviceProvider, hasServerFlag && isJsonRpcProtocol);
 
         // Add FileLoggerProvider if needed
         if (loggingState.FileLoggerProvider is not null)
@@ -232,15 +227,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         loggerFactoryProxy.SetLoggerFactory(loggerFactory);
 
         // Initialize the output device if needed.
-        if (await platformOutputDevice.IsEnabledAsync())
+        if (await platformOutputDevice.OriginalOutputDevice.IsEnabledAsync())
         {
-            await platformOutputDevice.TryInitializeAsync();
-        }
-        else
-        {
-            // If for some reason the custom output is not enabled we opt-in the default terminal output device.
-            platformOutputDevice = PlatformOutputDeviceManager.GetDefaultTerminalOutputDevice(serviceProvider);
-            await platformOutputDevice.TryInitializeAsync();
+            await platformOutputDevice.OriginalOutputDevice.TryInitializeAsync();
         }
 
         // Add the platform output device to the service provider for both modes.
@@ -654,7 +643,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // creations and we could lose interesting diagnostic information.
         List<IDataConsumer> dataConsumersBuilder = [];
 
-        await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.PlatformOutputDisplayService, serviceProvider, dataConsumersBuilder);
+        await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.OriginalPlatformOutputDisplayService, serviceProvider, dataConsumersBuilder);
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestFactory, serviceProvider, dataConsumersBuilder);
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestInvoker, serviceProvider, dataConsumersBuilder);
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionFilterFactory, serviceProvider, dataConsumersBuilder);

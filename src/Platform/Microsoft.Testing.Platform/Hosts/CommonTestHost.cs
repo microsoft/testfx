@@ -119,7 +119,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 
     protected abstract Task<int> InternalRunAsync();
 
-    protected static async Task ExecuteRequestAsync(IPlatformOutputDevice outputDevice, ITestSessionContext testSessionInfo,
+    protected static async Task ExecuteRequestAsync(ProxyPlatformOutputDevice outputDevice, ITestSessionContext testSessionInfo,
         ServiceProvider serviceProvider, BaseMessageBus baseMessageBus, ITestFramework testFramework, TestHost.ClientInfo client)
     {
         CancellationToken testSessionCancellationToken = serviceProvider.GetTestSessionContext().CancellationToken;
@@ -142,12 +142,12 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo, testSessionCancellationToken);
     }
 
-    private static async Task DisplayBeforeSessionStartAsync(IPlatformOutputDevice outputDevice, ITestSessionContext sessionInfo, CancellationToken cancellationToken)
+    private static async Task DisplayBeforeSessionStartAsync(ProxyPlatformOutputDevice outputDevice, ITestSessionContext sessionInfo, CancellationToken cancellationToken)
     {
         // Display before session start
         await outputDevice.DisplayBeforeSessionStartAsync();
 
-        if (outputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandler)
+        if (outputDevice.OriginalOutputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandler)
         {
             await testSessionLifetimeHandler.OnTestSessionStartingAsync(
                 sessionInfo.SessionId,
@@ -155,13 +155,13 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         }
     }
 
-    private static async Task DisplayAfterSessionEndRunAsync(IPlatformOutputDevice outputDevice, ITestSessionContext sessionInfo, CancellationToken cancellationToken)
+    private static async Task DisplayAfterSessionEndRunAsync(ProxyPlatformOutputDevice outputDevice, ITestSessionContext sessionInfo, CancellationToken cancellationToken)
     {
         // Display after session end
         await outputDevice.DisplayAfterSessionEndRunAsync();
 
         // We want to ensure that the output service is the last one to run
-        if (outputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandlerFinishing)
+        if (outputDevice.OriginalOutputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandlerFinishing)
         {
             await testSessionLifetimeHandlerFinishing.OnTestSessionFinishingAsync(
                 sessionInfo.SessionId,
