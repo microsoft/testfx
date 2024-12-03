@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
+using System.Globalization;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -20,35 +21,6 @@ public sealed class MSTestObsoleteTypesSuppressor : DiagnosticSuppressor
     // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/cs0618
     private const string SuppressedDiagnosticId = "CS0618";
 
-    private static readonly ImmutableArray<string> TypesToSuppress = ImmutableArray.Create(
-        "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo",
-        "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo",
-        "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo",
-        "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions.UnitTestOutcomeExtensions",
-        "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestDiscoverer",
-        "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestExecutor",
-        "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings",
-        "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod",
-        "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome",
-        "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestResult",
-        "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.RunConfigurationSettings",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestSource",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IFileOperations",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ISettingsProvider",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IThreadOperations",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITraceListenerManager",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITraceListener",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSource",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHost",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterTraceLogger",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestDeployment",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.TestRunDirectories",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IReflectionOperations",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ISettingsProvider",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ReflectionOperations");
-
     internal static readonly SuppressionDescriptor Rule =
         new("MSTESTINT1", SuppressedDiagnosticId, "Type is obsolete only so we can change accessibility");
 
@@ -58,23 +30,10 @@ public sealed class MSTestObsoleteTypesSuppressor : DiagnosticSuppressor
     {
         foreach (Diagnostic diagnostic in context.ReportedDiagnostics)
         {
-            // The diagnostic is reported on the test method
-            if (diagnostic.Location.SourceTree is not { } tree)
-            {
-                continue;
-            }
-
-            SyntaxNode root = tree.GetRoot(context.CancellationToken);
-            SyntaxNode node = root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true);
-
-            SemanticModel semanticModel = context.GetSemanticModel(tree);
-
-            // GetTypeInfo alone is not enough if the node is calling the type constructor.
-            ISymbol? type = semanticModel.GetTypeInfo(node, context.CancellationToken).Type ??
-                semanticModel.GetSymbolInfo(node, context.CancellationToken).Symbol;
-
-            if (type is not null
-                && TypesToSuppress.Contains(type.ToDisplayString()))
+            // It's very tedious to list all types that we obsoleted. We know for sure that this message is
+            // for types that can be used internally but not externally.
+            const string PublicTypeObsoleteMessage = "We will remove or hide this type starting with v4. If you are using this type, reach out to our team on https://github.com/microsoft/testfx.";
+            if (diagnostic.GetMessage(CultureInfo.InvariantCulture).Contains(PublicTypeObsoleteMessage))
             {
                 context.ReportSuppression(Suppression.Create(Rule, diagnostic));
             }
