@@ -84,7 +84,7 @@ class AssemblyResolver :
     /// <summary>
     /// lock for the loaded assemblies cache.
     /// </summary>
-    private readonly object _syncLock = new();
+    private readonly Lock _syncLock = new();
 
     private static List<string>? s_currentlyLoading;
     private bool _disposed;

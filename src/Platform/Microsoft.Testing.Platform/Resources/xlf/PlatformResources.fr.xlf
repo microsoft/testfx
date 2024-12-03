@@ -157,6 +157,11 @@
         <target state="translated">La même instance de « CompositeExtensonFactory » est déjà inscrite</target>
         <note />
       </trans-unit>
+      <trans-unit id="ConfigurationFileNotFound">
+        <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
+        <target state="translated">Nous n’avons pas pu trouver le fichier de configuration « {0} » spécifié avec « --config-file ».</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
         <source>Could not find the default json configuration</source>
         <target state="translated">Configuration JSON par défaut introuvable</target>
@@ -421,6 +426,11 @@
         <target state="translated">Spécifier le port du client.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
+        <source>Specifies a testconfig.json file.</source>
+        <target state="translated">Spécifie un fichier testconfig.json.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously.
 Useful for scenario where you don't want to lose any log (i.e. in case of crash).
@@ -517,7 +527,7 @@ Les valeurs disponibles sont « Trace », « Debug », « Information », 
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
         <source>Specifies the minimum number of tests that are expected to run.</source>
-        <target state="new">Specifies the minimum number of tests that are expected to run.</target>
+        <target state="translated">Spécifie le nombre minimal de tests censés s’exécuter.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">

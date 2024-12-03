@@ -27,6 +27,21 @@
         <target state="translated">完整路径工具计算失败。运行器“{0}”</target>
         <note />
       </trans-unit>
+      <trans-unit id="IncompatibleArchitecture">
+        <source>Could not find '{0}' host for the '{1}' architecture.
+
+You can resolve the problem by installing the '{1}' .NET.
+
+The specified framework can be found at:
+  - https://aka.ms/dotnet-download</source>
+        <target state="translated">找不到“{1}”体系结构的“{0}”主机。
+
+可以通过安装 “{1}” .NET 来解决此问题。
+
+可在以下位置找到指定的框架：
+  - https://aka.ms/dotnet-download</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidTargetPath">
         <source>Invalid TargetPath, {0}</source>
         <target state="translated">TargetPath {0} 无效</target>

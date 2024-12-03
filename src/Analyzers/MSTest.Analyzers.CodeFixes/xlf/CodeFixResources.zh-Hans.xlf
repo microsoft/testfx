@@ -82,6 +82,11 @@
         <target state="translated">添加“[TestMethod]”</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseProperAssertMethodsFix">
+        <source>Use '{0}'</source>
+        <target state="new">Use '{0}'</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
