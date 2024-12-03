@@ -6,15 +6,15 @@ using System.ComponentModel;
 namespace Microsoft.Testing.Platform.OutputDevice;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-[Obsolete("Do not use this class. This is present temporarily for internal usages and will be removed after fixing the internal usages", error: true)]
+[Obsolete("Do not use this class. This is present temporarily for internal usages (in Retry extension) and will be removed after fixing the internal usages", error: true)]
 internal static class FormattedTextOutputDeviceDataBuilder
 {
-    public static IOutputDeviceData CreateGreenConsoleColorText(string text)
-           => new TextOutputDeviceData(text);
+    public static FormattedTextOutputDeviceData CreateGreenConsoleColorText(string text)
+        => new(text) { ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green } };
 
-    public static IOutputDeviceData CreateRedConsoleColorText(string text)
-           => new ErrorMessageOutputDeviceData(text);
+    public static FormattedTextOutputDeviceData CreateRedConsoleColorText(string text)
+        => new(text) { ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Red } };
 
-    public static IOutputDeviceData CreateYellowConsoleColorText(string text)
-        => new WarningMessageOutputDeviceData(text);
+    public static FormattedTextOutputDeviceData CreateYellowConsoleColorText(string text)
+        => new(text) { ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Yellow } };
 }
