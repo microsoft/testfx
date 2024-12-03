@@ -638,6 +638,16 @@ Recebe um argumento como cadeia de caracteres no formato &lt;valor&gt;[h|m|s] em
         <target state="translated">Fábrica de filtros de execução de teste de servidor</target>
         <note />
       </trans-unit>
+      <trans-unit id="ServerTestHostDescription">
+        <source>The 'ITestHost' implementation used when running server mode.</source>
+        <target state="new">The 'ITestHost' implementation used when running server mode.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDisplayName">
+        <source>Server mode test host</source>
+        <target state="new">Server mode test host</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
         <target state="translated">Não é possível localizar o serviço do tipo "{0}"</target>
@@ -911,6 +921,11 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
         <source>The communication protocol '{0}' is not supported</source>
         <target state="translated">O protocolo de comunicação “{0}” não tem suporte</target>
         <note />
+      </trans-unit>
+      <trans-unit id="UnobservedTaskExceptionWarningMessage">
+        <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+        <target state="new">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</target>
+        <note>{0} is the exception that was unhandled/unobserved</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>

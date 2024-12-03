@@ -8,11 +8,14 @@ using System.Net.Sockets;
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
@@ -20,7 +23,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, IDisposable
+internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, IDisposable, IOutputDeviceDataProducer
 {
     public const string ProtocolVersion = "1.0.0";
     private readonly Func<TestFrameworkBuilderData, Task<ITestFramework>> _buildTestFrameworkAsync;
@@ -93,13 +96,38 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
     protected override bool RunTestApplicationLifeCycleCallbacks => true;
 
-    private void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
-        => _logger.LogWarning($"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}");
+    public string Uid => nameof(ServerTestHost);
 
-    private void OnTaskSchedulerUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    public string Version => AppVersion.DefaultSemVer;
+
+    public string DisplayName => PlatformResources.ServerTestHostDisplayName;
+
+    public string Description => PlatformResources.ServerTestHostDescription;
+
+#pragma warning disable VSTHRD100 // Avoid async void methods
+    private async void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
+#pragma warning restore VSTHRD100 // Avoid async void methods
+    {
+        _logger.LogWarning($"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}");
+
+        // Looks like nothing in this message to really be localized?
+        // All are class names, method names, property names, and placeholders. So none is localizable?
+        await ServiceProvider.GetOutputDevice().DisplayAsync(
+            this,
+            new WarningMessageOutputDeviceData(
+                $"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}"));
+    }
+
+#pragma warning disable VSTHRD100 // Avoid async void methods
+    private async void OnTaskSchedulerUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+#pragma warning restore VSTHRD100 // Avoid async void methods
     {
         e.SetObserved();
         _logger.LogWarning($"[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {e.Exception}");
+
+        // Looks like nothing in this message to really be localized?
+        // All are class names, method names, property names, and placeholders. So none is localizable?
+        await ServiceProvider.GetOutputDevice().DisplayAsync(this, new WarningMessageOutputDeviceData(PlatformResources.UnobservedTaskExceptionWarningMessage));
     }
 
     [MemberNotNull(nameof(_messageHandler))]
@@ -262,6 +290,12 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                         if (cancellationException is null)
                         {
                             await _logger.LogWarningAsync($"Exception during the cancellation of request id '{args.CancelRequestId}'");
+
+                            // TODO: Localize
+                            await ServiceProvider.GetOutputDevice().DisplayAsync(
+                                this,
+                                new WarningMessageOutputDeviceData(
+                                    $"Exception during the cancellation of request id '{args.CancelRequestId}'"));
                         }
                     }
 
@@ -695,6 +729,8 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                 break;
         }
     }
+
+    public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
 
     private sealed class RpcInvocationState : IDisposable
     {

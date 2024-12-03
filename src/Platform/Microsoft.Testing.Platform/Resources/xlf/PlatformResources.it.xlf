@@ -638,6 +638,16 @@ Acquisisce un argomento come stringa nel formato &lt;value&gt;[h|m|s] dove 'valu
         <target state="translated">Factory del filtro per l'esecuzione dei test del server</target>
         <note />
       </trans-unit>
+      <trans-unit id="ServerTestHostDescription">
+        <source>The 'ITestHost' implementation used when running server mode.</source>
+        <target state="new">The 'ITestHost' implementation used when running server mode.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDisplayName">
+        <source>Server mode test host</source>
+        <target state="new">Server mode test host</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
         <target state="translated">Impossibile trovare il servizio di tipo '{0}'</target>
@@ -911,6 +921,11 @@ I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal
         <source>The communication protocol '{0}' is not supported</source>
         <target state="translated">Il protocollo di comunicazione '{0}' non è supportato</target>
         <note />
+      </trans-unit>
+      <trans-unit id="UnobservedTaskExceptionWarningMessage">
+        <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+        <target state="new">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</target>
+        <note>{0} is the exception that was unhandled/unobserved</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>

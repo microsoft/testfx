@@ -638,6 +638,16 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">伺服器測試執行篩選條件中心</target>
         <note />
       </trans-unit>
+      <trans-unit id="ServerTestHostDescription">
+        <source>The 'ITestHost' implementation used when running server mode.</source>
+        <target state="new">The 'ITestHost' implementation used when running server mode.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDisplayName">
+        <source>Server mode test host</source>
+        <target state="new">Server mode test host</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
         <target state="translated">找不到類型 '{0}' 的服務</target>
@@ -911,6 +921,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <source>The communication protocol '{0}' is not supported</source>
         <target state="translated">通訊協定 '{0}' 不受支援</target>
         <note />
+      </trans-unit>
+      <trans-unit id="UnobservedTaskExceptionWarningMessage">
+        <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+        <target state="new">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</target>
+        <note>{0} is the exception that was unhandled/unobserved</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
