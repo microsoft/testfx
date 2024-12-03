@@ -15,6 +15,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// Contains the execution logic for this adapter.
 /// </summary>
 [ExtensionUri(Constants.ExecutorUriString)]
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public class MSTestExecutor : ITestExecutor
 {
     private readonly CancellationToken _cancellationToken;

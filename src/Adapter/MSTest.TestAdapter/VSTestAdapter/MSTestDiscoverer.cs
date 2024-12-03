@@ -16,6 +16,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [FileExtension(".appx")]
 [FileExtension(".dll")]
 [FileExtension(".exe")]
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public class MSTestDiscoverer : ITestDiscoverer
 {
     /// <summary>

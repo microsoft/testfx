@@ -66,6 +66,9 @@ tab_width = 4
 # Do not set end_of_line property, this is causing issues with Linux,
 # see https://github.com/dotnet/roslyn/issues/55526
 
+# MSTESTOBS: Type or member is obsolete
+dotnet_diagnostic.MSTESTOBS.severity = none
+
 #### .NET Coding Conventions ####
 
 ## Organize usings

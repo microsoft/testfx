@@ -39,4 +39,6 @@ internal class Constants
 #endif
 
     private const string DeploymentItemsLabel = "DeploymentItems";
+
+    internal const string PublicTypeObsoleteMessage = "We will remove or hide this type starting with v4. If you are using this type, reach out to our team on https://github.com/microsoft/testfx.";
 }

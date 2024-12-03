@@ -17,6 +17,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// This platform service is responsible for any data or operations to validate
 /// the test sources provided to the adapter.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public class TestSource : ITestSource
 {
 #if WINDOWS_UWP || WIN_UI
