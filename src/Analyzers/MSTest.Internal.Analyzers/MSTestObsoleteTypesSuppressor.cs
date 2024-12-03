@@ -38,7 +38,7 @@ public sealed class MSTestObsoleteTypesSuppressor : DiagnosticSuppressor
         "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings",
         "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver",
         "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.TestRunDirectories",
-        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IReflectionOperations",,
+        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IReflectionOperations",
         "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ISettingsProvider",
         "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider",
         "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ReflectionOperations");
