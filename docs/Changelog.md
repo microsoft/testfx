@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.6.4" />[3.6.4] - 2024-12-03
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.6.3...v3.6.4)
+
+### Fixed
+
+* Bump MS CC to 17.13.0 by @Evangelink in [#4212](https://github.com/microsoft/testfx/pull/4212)
+* Bump vulnerable deps by @Evangelink in [#4218)(https://github.com/microsoft/testfx/pull/4218)
+
+### Artifacts
+
+* MSTest: [3.6.4](https://www.nuget.org/packages/MSTest/3.6.4)
+* MSTest.TestFramework: [3.6.4](https://www.nuget.org/packages/MSTest.TestFramework/3.6.4)
+* MSTest.TestAdapter: [3.6.4](https://www.nuget.org/packages/MSTest.TestAdapter/3.6.4)
+* MSTest.Analyzers: [3.6.4](https://www.nuget.org/packages/MSTest.Analyzers/3.6.4)
+* MSTest.Sdk: [3.6.4](https://www.nuget.org/packages/MSTest.Sdk/3.6.4)
+* Microsoft.Testing.Extensions.CrashDump: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.4.3)
+* Microsoft.Testing.Extensions.HangDump: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.4.3)
+* Microsoft.Testing.Extensions.HotReload: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.4.3)
+* Microsoft.Testing.Extensions.Retry: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.4.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.4.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.4.3)
+
 ## <a name="3.6.3" />[3.6.3] - 2024-11-12
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.6.2...v3.6.3)
