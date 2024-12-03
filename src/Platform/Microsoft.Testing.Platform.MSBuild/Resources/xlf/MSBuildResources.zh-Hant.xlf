@@ -34,11 +34,11 @@ You can resolve the problem by installing the '{1}' .NET.
 
 The specified framework can be found at:
   - https://aka.ms/dotnet-download</source>
-        <target state="new">Could not find '{0}' host for the '{1}' architecture.
+        <target state="translated">找不到 '{1}' 結構的 '{0}' 主機。
 
-You can resolve the problem by installing the '{1}' .NET.
+您可以安裝 '{1}' .NET 來解決問題。
 
-The specified framework can be found at:
+您可以在以下位置找到指定的架構:
   - https://aka.ms/dotnet-download</target>
         <note />
       </trans-unit>
