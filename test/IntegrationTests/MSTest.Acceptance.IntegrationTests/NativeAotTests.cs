@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.InteropServices;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -88,10 +90,17 @@ public class UnitTest1
         : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
     public async Task NativeAotTests_WillRunWithExitCodeZero()
+    {
+        // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            return;
+        }
+
         // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
         // or sometimes doesn't fail but the native code generation is not done.
         // Retrying the restore/publish on fresh asset seems to be more effective than retrying on the same asset.
-        => await RetryHelper.RetryAsync(
+        await RetryHelper.RetryAsync(
             async () =>
             {
                 using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -111,6 +120,7 @@ public class UnitTest1
                 DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
                     $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
                     _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+                    timeoutInSeconds: 90,
                     retryCount: 0);
                 compilationResult.AssertOutputContains("Generating native code");
 
@@ -119,4 +129,5 @@ public class UnitTest1
                 TestHostResult result = await testHost.ExecuteAsync();
                 result.AssertExitCodeIs(0);
             }, times: 15, every: TimeSpan.FromSeconds(5));
+    }
 }

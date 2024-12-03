@@ -1,5 +1,11 @@
 #nullable enable
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.TestMetadataProperty(string! key) -> void
+Microsoft.Testing.Platform.OutputDevice.ErrorMessageOutputDeviceData
+Microsoft.Testing.Platform.OutputDevice.ErrorMessageOutputDeviceData.ErrorMessageOutputDeviceData(string! message) -> void
+Microsoft.Testing.Platform.OutputDevice.ErrorMessageOutputDeviceData.Message.get -> string!
+Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData
+Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData.Message.get -> string!
+Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData.WarningMessageOutputDeviceData(string! message) -> void
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.init -> void

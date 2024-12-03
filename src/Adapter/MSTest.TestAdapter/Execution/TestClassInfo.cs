@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 public class TestClassInfo
 {
-    private readonly object _testClassExecuteSyncObject = new();
+    private readonly Lock _testClassExecuteSyncObject = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestClassInfo"/> class.

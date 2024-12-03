@@ -17,14 +17,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTestBridgedTestFramework
 {
-    private readonly IConfiguration? _configration;
+    private readonly IConfiguration? _configuration;
 
     public MSTestBridgedTestFramework(MSTestExtension mstestExtension, Func<IEnumerable<Assembly>> getTestAssemblies,
         IServiceProvider serviceProvider, ITestFrameworkCapabilities capabilities)
         : base(mstestExtension, getTestAssemblies, serviceProvider, capabilities)
-    {
-        _configration = serviceProvider.GetConfiguration();
-    }
+        => _configuration = serviceProvider.GetConfiguration();
 
     /// <inheritdoc />
     protected override Task SynchronizedDiscoverTestsAsync(VSTestDiscoverTestExecutionRequest request, IMessageBus messageBus,
@@ -36,7 +34,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        MSTestDiscoverer.DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configration);
+        MSTestDiscoverer.DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration);
         return Task.CompletedTask;
     }
 
@@ -54,11 +52,11 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
 
         if (request.VSTestFilter.TestCases is { } testCases)
         {
-            testExecutor.RunTests(testCases, request.RunContext, request.FrameworkHandle, _configration);
+            testExecutor.RunTests(testCases, request.RunContext, request.FrameworkHandle, _configuration);
         }
         else
         {
-            testExecutor.RunTests(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configration);
+            testExecutor.RunTests(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configuration);
         }
 
         return Task.CompletedTask;

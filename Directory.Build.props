@@ -28,10 +28,10 @@
     <NetFrameworkMinimum>net462</NetFrameworkMinimum>
     <UwpMinimum>uap10.0.16299</UwpMinimum>
     <WinUiMinimum>net6.0-windows10.0.18362.0</WinUiMinimum>
-    <NetCurrent>net8.0</NetCurrent>
+    <NetCurrent>net9.0</NetCurrent>
 
-    <SupportedNetFrameworks>netcoreapp3.1;net6.0;net7.0;net8.0</SupportedNetFrameworks>
-    <MicrosoftTestingTargetFrameworks>net6.0;net7.0;net8.0</MicrosoftTestingTargetFrameworks>
+    <MicrosoftTestingTargetFrameworks>net6.0;net7.0;net8.0;net9.0</MicrosoftTestingTargetFrameworks>
+    <SupportedNetFrameworks>netcoreapp3.1;net6.0;net7.0;net8.0;net9.0</SupportedNetFrameworks>
   </PropertyGroup>
 
   <!-- Build config -->

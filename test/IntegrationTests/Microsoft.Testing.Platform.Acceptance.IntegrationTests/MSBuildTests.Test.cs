@@ -154,7 +154,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
             environmentVariables: dotnetRootX86,
             failIfReturnValueIsNotZero: false);
 
-        string outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, "MSBuild Tests_net8.0_x86.log", SearchOption.AllDirectories).Single();
+        string outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, $"MSBuild Tests_net9.0_x86.log", SearchOption.AllDirectories).Single();
         Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
         string logFileContent = File.ReadAllText(outputFileLog);
         Assert.IsTrue(Regex.IsMatch(logFileContent, ".*win-x86.*"), logFileContent);
@@ -227,7 +227,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
             environmentVariables: dotnetHostPathEnvVar,
             failIfReturnValueIsNotZero: false);
 
-        string outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, "MSBuild Tests_net8.0_x64.log", SearchOption.AllDirectories).Single();
+        string outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, "MSBuild Tests_net9.0_x64.log", SearchOption.AllDirectories).Single();
         Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
         string logFileContent = File.ReadAllText(outputFileLog);
         Assert.IsTrue(Regex.IsMatch(logFileContent, @"\.dotnet\\dotnet\.exe"), logFileContent);

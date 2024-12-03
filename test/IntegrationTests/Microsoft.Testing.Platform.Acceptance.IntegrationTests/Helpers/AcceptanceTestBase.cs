@@ -76,7 +76,14 @@ public class UnitTest1
     {
     }
 
-    internal static string RID { get; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
+    internal static string RID { get; }
+        = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "win-x64"
+            : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                ? "linux-x64"
+                : RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                    ? "osx-x64"
+                    : throw new NotSupportedException("Current OS is not supported");
 
     public static string MSTestVersion { get; private set; }
 

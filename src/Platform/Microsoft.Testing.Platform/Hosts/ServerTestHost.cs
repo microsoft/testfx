@@ -698,7 +698,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
     private sealed class RpcInvocationState : IDisposable
     {
-        private readonly object _cancellationTokenSourceLock = new();
+        private readonly Lock _cancellationTokenSourceLock = new();
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private volatile bool _isDisposed;
 

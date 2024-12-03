@@ -53,11 +53,11 @@ internal sealed class MessageLoggerAdapter : IMessageLogger, IOutputDeviceDataPr
                 break;
             case TestMessageLevel.Warning:
                 _logger.LogWarning(message);
-                _outputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateYellowConsoleColorText(message)).Await();
+                _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(message)).Await();
                 break;
             case TestMessageLevel.Error:
                 _logger.LogError(message);
-                _outputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(message)).Await();
+                _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(message)).Await();
                 break;
             default:
                 throw new NotSupportedException($"Unsupported logging level '{testMessageLevel}'.");
