@@ -16,7 +16,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
         _platformOutputDeviceFactory = platformOutputDeviceFactory;
     }
 
-    internal async Task<ProxyPlatformOutputDevice> BuildAsync(ServiceProvider serviceProvider, bool useServerModeOutputDevice)
+    internal async Task<ProxyOutputDevice> BuildAsync(ServiceProvider serviceProvider, bool useServerModeOutputDevice)
     {
         // TODO: SetPlatformOutputDevice isn't public yet.
         // Before exposing it, do we want to pass the "useServerModeOutputDevice" info to it?
@@ -30,7 +30,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             nonServerOutputDevice = GetDefaultTerminalOutputDevice(serviceProvider);
         }
 
-        return new ProxyPlatformOutputDevice(nonServerOutputDevice, useServerModeOutputDevice ? new ServerModePerCallOutputDevice(serviceProvider) : null);
+        return new ProxyOutputDevice(nonServerOutputDevice, useServerModeOutputDevice ? new ServerModePerCallOutputDevice(serviceProvider) : null);
     }
 
     public static TerminalOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider)

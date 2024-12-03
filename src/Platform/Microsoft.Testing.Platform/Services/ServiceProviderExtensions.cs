@@ -144,8 +144,8 @@ public static class ServiceProviderExtensions
     internal static ITask GetTask(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ITask>();
 
-    internal static ProxyPlatformOutputDevice GetPlatformOutputDevice(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredServiceInternal<ProxyPlatformOutputDevice>();
+    internal static IPlatformOutputDevice GetPlatformOutputDevice(this IServiceProvider serviceProvider)
+        => serviceProvider.GetRequiredServiceInternal<IPlatformOutputDevice>();
 
     internal static IEnvironment GetEnvironment(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IEnvironment>();

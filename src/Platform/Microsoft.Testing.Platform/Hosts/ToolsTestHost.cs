@@ -20,12 +20,12 @@ internal sealed class ToolsTestHost(
     IReadOnlyList<ITool> toolsInformation,
     ServiceProvider serviceProvider,
     CommandLineHandler commandLineHandler,
-    IPlatformOutputDevice platformOutputDevice) : ITestHost, IOutputDeviceDataProducer
+    IOutputDevice outputDevice) : ITestHost, IOutputDeviceDataProducer
 {
     private readonly IReadOnlyList<ITool> _toolsInformation = toolsInformation;
     private readonly ServiceProvider _serviceProvider = serviceProvider;
     private readonly CommandLineHandler _commandLineHandler = commandLineHandler;
-    private readonly IPlatformOutputDevice _platformOutputDevice = platformOutputDevice;
+    private readonly IOutputDevice _outputDevice = outputDevice;
 
     /// <inheritdoc />
     public string Uid => nameof(ToolsTestHost);
@@ -64,21 +64,21 @@ internal sealed class ToolsTestHost(
             {
                 if (UnknownOptions(out string? unknownOptionsError, tool))
                 {
-                    await _platformOutputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(unknownOptionsError));
+                    await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(unknownOptionsError));
                     console.WriteLine();
                     return ExitCodes.InvalidCommandLine;
                 }
 
                 if (ExtensionArgumentArityAreInvalid(out string? arityErrors, tool))
                 {
-                    await _platformOutputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(arityErrors));
+                    await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(arityErrors));
                     return ExitCodes.InvalidCommandLine;
                 }
 
                 ValidationResult optionsArgumentsValidationResult = await ValidateOptionsArgumentsAsync(tool);
                 if (!optionsArgumentsValidationResult.IsValid)
                 {
-                    await _platformOutputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(optionsArgumentsValidationResult.ErrorMessage));
+                    await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(optionsArgumentsValidationResult.ErrorMessage));
                     return ExitCodes.InvalidCommandLine;
                 }
 
@@ -86,8 +86,8 @@ internal sealed class ToolsTestHost(
             }
         }
 
-        await _platformOutputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData($"Tool '{toolNameToRun}' not found in the list of registered tools."));
-        await _commandLineHandler.PrintHelpAsync(_platformOutputDevice);
+        await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData($"Tool '{toolNameToRun}' not found in the list of registered tools."));
+        await _commandLineHandler.PrintHelpAsync(_outputDevice);
         return ExitCodes.InvalidCommandLine;
     }
 

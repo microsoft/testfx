@@ -28,8 +28,6 @@ internal class TestFrameworkBuilderData(ServiceProvider serviceProvider, ITestEx
 
     public IPlatformOutputDevice PlatformOutputDisplayService { get; } = platformOutputDisplayService;
 
-    internal IPlatformOutputDevice OriginalPlatformOutputDisplayService => ((ProxyPlatformOutputDevice)PlatformOutputDisplayService).OriginalOutputDevice;
-
     public IEnumerable<IDataConsumer> ServerPerCallConsumers { get; } = serverPerCallConsumers;
 
     public TestFrameworkManager TestFrameworkManager { get; } = testFrameworkManager;

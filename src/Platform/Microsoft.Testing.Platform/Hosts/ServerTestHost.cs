@@ -477,7 +477,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         DateTimeOffset adapterLoadStart = _clock.UtcNow;
 
-        ProxyPlatformOutputDevice outputDevice = ServiceProvider.GetRequiredService<ProxyPlatformOutputDevice>();
+        ProxyOutputDevice outputDevice = ServiceProvider.GetRequiredService<ProxyOutputDevice>();
         await outputDevice.InitializeAsync(this);
 
         // Build the per request adapter
@@ -486,7 +486,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             requestFactory,
             invoker,
             filterFactory,
-            outputDevice,
+            outputDevice.OriginalOutputDevice,
             [testNodeUpdateProcessor],
             _testFrameworkManager,
             _testSessionManager,
@@ -505,7 +505,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
             // Execute the request
             await ExecuteRequestAsync(
-                perRequestServiceProvider.GetPlatformOutputDevice(),
+                outputDevice,
                 perRequestServiceProvider.GetTestSessionContext(),
                 perRequestServiceProvider,
                 perRequestServiceProvider.GetBaseMessageBus(),
