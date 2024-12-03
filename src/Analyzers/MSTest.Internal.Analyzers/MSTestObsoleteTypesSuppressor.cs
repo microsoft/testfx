@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -38,6 +39,7 @@ public sealed class MSTestObsoleteTypesSuppressor : DiagnosticSuppressor
         "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings",
         "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver",
         "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.TestRunDirectories",
+        "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IReflectionOperations",
         "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ISettingsProvider",
         "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider");
 
@@ -60,10 +62,13 @@ public sealed class MSTestObsoleteTypesSuppressor : DiagnosticSuppressor
             SyntaxNode node = root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true);
 
             SemanticModel semanticModel = context.GetSemanticModel(tree);
-            TypeInfo typeInfo = semanticModel.GetTypeInfo(node, context.CancellationToken);
 
-            if (typeInfo.Type is not null
-                && TypesToSuppress.Contains(typeInfo.Type.ToDisplayString()))
+            // GetTypeInfo alone is not enough if the node is calling the type constructor.
+            ISymbol? type = semanticModel.GetTypeInfo(node, context.CancellationToken).Type ??
+                semanticModel.GetSymbolInfo(node, context.CancellationToken).Symbol;
+
+            if (type is not null
+                && TypesToSuppress.Contains(type.ToDisplayString()))
             {
                 context.ReportSuppression(Suppression.Create(Rule, diagnostic));
             }
