@@ -196,27 +196,7 @@ internal sealed class AnsiTerminalTestProgressFrame
 
         int i = 0;
         RenderedLines = new List<RenderedProgressItem>(progress.Length * 2);
-        var progresses = new List<object>(progress.Length);
-
-        foreach (TestProgressState? progressItem in progress)
-        {
-            if (progressItem == null)
-            {
-                continue;
-            }
-
-            progresses.Add(progressItem);
-
-            IEnumerable<TestDetailState>? runningTasks
-                = progressItem.TestNodeResultsState?.GetRunningTasks();
-            if (runningTasks is not null)
-            {
-                foreach (TestDetailState testDetail in runningTasks)
-                {
-                    progresses.Add(testDetail);
-                }
-            }
-        }
+        List<object> progresses = GenerateLinesToRender(progress);
 
         foreach (object item in progresses)
         {
@@ -321,6 +301,34 @@ internal sealed class AnsiTerminalTestProgressFrame
         {
             terminal.Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInDisplay}");
         }
+    }
+
+    private List<object> GenerateLinesToRender(TestProgressState?[] progress)
+    {
+        var linesToRender = new List<object>(progress.Length);
+
+        // Note: We want to render the list of active tests, but this can easily fill up the full screen.
+        // As such, we should balance the number of active tests shown per project.
+        // We do this by distributing the remaining lines for each projects.
+        var progressItems = progress.OfType<TestProgressState>().ToList();
+        int linesToDistribute = (int)(Height * 0.7) - 1 - progressItems.Count;
+        var detailItems = new IEnumerable<TestDetailState>[progressItems.Count];
+        var sortedItemsI = Enumerable.Range(0, progressItems.Count).OrderBy(i => progressItems[i].TestNodeResultsState?.Count ?? 0).ToList();
+
+        foreach (int sortedItemIndex in sortedItemsI)
+        {
+            detailItems[sortedItemIndex] = progressItems[sortedItemIndex].TestNodeResultsState?.GetRunningTasks(
+                linesToDistribute / progressItems.Count)
+                ?? Array.Empty<TestDetailState>();
+        }
+
+        for (int progressI = 0; progressI < progressItems.Count; progressI++)
+        {
+            linesToRender.Add(progressItems[progressI]);
+            linesToRender.AddRange(detailItems[progressI]);
+        }
+
+        return linesToRender;
     }
 
     public void Clear() => RenderedLines?.Clear();

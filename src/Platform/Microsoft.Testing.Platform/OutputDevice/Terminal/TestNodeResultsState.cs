@@ -22,30 +22,27 @@ internal sealed class TestNodeResultsState
     private readonly TestDetailState _summaryDetail;
     private readonly ConcurrentDictionary<string, TestDetailState> _testNodeProgressStates = new();
 
-    public void AddRunningTestNode(int id, string uid, string name, IStopwatch stopwatch)
-    {
-        _testNodeProgressStates[uid] = new TestDetailState(id, stopwatch, name);
-        UpdateSummaryDetail();
-    }
+    public int Count => _testNodeProgressStates.Count;
 
-    public void RemoveRunningTestNode(string uid)
-    {
-        _testNodeProgressStates.TryRemove(uid, out _);
-        UpdateSummaryDetail();
-    }
+    public void AddRunningTestNode(int id, string uid, string name, IStopwatch stopwatch) => _testNodeProgressStates[uid] = new TestDetailState(id, stopwatch, name);
 
-    private void UpdateSummaryDetail()
-        => _summaryDetail.Text = _testNodeProgressStates.Count > 5
-            ? $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.MoreTestsRunning, _testNodeProgressStates.Count)}"
+    public void RemoveRunningTestNode(string uid) => _testNodeProgressStates.TryRemove(uid, out _);
+
+    private void UpdateSummaryDetail(int maxCount)
+        => _summaryDetail.Text = _testNodeProgressStates.Count > maxCount
+            ? $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.MoreTestsRunning, _testNodeProgressStates.Count - maxCount)}"
             : string.Empty;
 
-    // Note: Show up to 5 long running tests per project.
-    public IEnumerable<TestDetailState> GetRunningTasks()
+    public TestDetailState? GetFirstRunningTask() => _testNodeProgressStates.FirstOrDefault().Value;
+
+    public IEnumerable<TestDetailState> GetRunningTasks(int maxCount)
     {
+        UpdateSummaryDetail(maxCount);
+
         IEnumerable<TestDetailState> sortedDetails = _testNodeProgressStates
             .Select(d => d.Value)
             .OrderBy(d => d.Stopwatch?.Elapsed ?? TimeSpan.Zero)
-            .Take(5);
+            .Take(maxCount);
 
         foreach (TestDetailState? detail in sortedDetails)
         {

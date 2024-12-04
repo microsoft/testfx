@@ -27,8 +27,11 @@ internal sealed class TestDetailState
         get => _text;
         set
         {
-            Version++;
-            _text = value;
+            if (!_text.Equals(value, StringComparison.Ordinal))
+            {
+                Version++;
+                _text = value;
+            }
         }
     }
 }
