@@ -131,7 +131,7 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
         await _logger.LogTraceAsync(messageBuilder.ToString());
     }
 
-    public override async Task DrainDataAsync()
+    public override async Task DrainDataAsync(bool forceIfCancelled = false)
     {
         Dictionary<AsyncConsumerDataProcessor, long> consumerToDrain = [];
         bool anotherRound = true;
@@ -145,7 +145,7 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
         CancellationToken cancellationToken = _testApplicationCancellationTokenSource.CancellationToken;
         while (anotherRound)
         {
-            if (cancellationToken.IsCancellationRequested)
+            if (!forceIfCancelled && cancellationToken.IsCancellationRequested)
             {
                 return;
             }

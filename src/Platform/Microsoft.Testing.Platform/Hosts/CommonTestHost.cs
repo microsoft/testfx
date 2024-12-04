@@ -35,6 +35,11 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 
                 if (testApplicationCancellationToken.IsCancellationRequested)
                 {
+                    if (ServiceProvider.GetBaseMessageBus() is BaseMessageBus baseMessageBus)
+                    {
+                        await baseMessageBus.DrainDataAsync(forceIfCancelled: true);
+                    }
+
                     exitCode = ExitCodes.TestSessionAborted;
                 }
 
@@ -74,6 +79,12 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
             // An unobserved task exception could be raised after the dispose, and we want to use OutputDevice there
             // which needs CTS down the path.
             // await DisposeHelper.DisposeAsync(ServiceProvider.GetTestApplicationCancellationTokenSource());
+        }
+
+        IPlatformOutputDevice outputDevice = ServiceProvider.GetPlatformOutputDevice();
+        if (outputDevice is IDataConsumer outputDeviceConsumer)
+        {
+            // ServiceProvider.GetMessageBus();
         }
 
         if (testApplicationCancellationToken.IsCancellationRequested)

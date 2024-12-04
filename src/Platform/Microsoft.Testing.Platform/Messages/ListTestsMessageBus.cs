@@ -53,7 +53,7 @@ internal sealed class ListTestsMessageBus(
     {
     }
 
-    public override Task DrainDataAsync() => Task.CompletedTask;
+    public override Task DrainDataAsync(bool forceIfCancelled = false) => Task.CompletedTask;
 
     public override Task InitAsync() => Task.CompletedTask;
 

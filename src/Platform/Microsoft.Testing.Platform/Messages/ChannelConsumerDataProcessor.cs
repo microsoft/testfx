@@ -94,7 +94,10 @@ internal class AsyncConsumerDataProcessor : IDisposable
         }
         catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
         {
-            // Ignore we're shutting down
+            // Make sure to drain the data.
+            // This is important for --max-failed-tests where a cancellation is requested when reaching a specific number of failures.
+            // We want to drain data before returning so that the terminal is able to print everything.
+            await DrainDataAsync();
         }
         catch (Exception ex)
         {
@@ -131,12 +134,6 @@ internal class AsyncConsumerDataProcessor : IDisposable
         int currentDelayTimeMs = minDelayTimeMs;
         while (Interlocked.CompareExchange(ref _totalPayloadReceived, totalPayloadReceived, totalPayloadProcessed) != totalPayloadProcessed)
         {
-            // When we cancel we throw inside ConsumeAsync and we won't drain anymore any data
-            if (_cancellationToken.IsCancellationRequested)
-            {
-                break;
-            }
-
             await _task.Delay(currentDelayTimeMs);
             currentDelayTimeMs = Math.Min(currentDelayTimeMs + minDelayTimeMs, 200);
 
