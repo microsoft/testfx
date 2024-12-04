@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 #endif
 
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -30,7 +31,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     internal Func<IStopwatch> CreateStopwatch { get; set; } = SystemStopwatch.StartNew;
 
-    private readonly Dictionary<string, TestProgressState> _assemblies = new();
+    private readonly ConcurrentDictionary<string, TestProgressState> _assemblies = new();
 
     private readonly List<TestRunArtifact> _artifacts = new();
 
@@ -164,19 +165,15 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture, string? executionId)
     {
         string key = $"{assembly}|{targetFramework}|{architecture}|{executionId}";
-        if (_assemblies.TryGetValue(key, out TestProgressState? asm))
+        return _assemblies.GetOrAdd(key, _ =>
         {
-            return asm;
-        }
+            IStopwatch sw = CreateStopwatch();
+            var assemblyRun = new TestProgressState(assembly, targetFramework, architecture, sw);
+            int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
+            assemblyRun.SlotIndex = slotIndex;
 
-        IStopwatch sw = CreateStopwatch();
-        var assemblyRun = new TestProgressState(assembly, targetFramework, architecture, sw);
-        int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
-        assemblyRun.SlotIndex = slotIndex;
-
-        _assemblies.Add(key, assemblyRun);
-
-        return assemblyRun;
+            return assemblyRun;
+        });
     }
 
     internal void TestExecutionCompleted(DateTimeOffset endTime)
