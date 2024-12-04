@@ -29,6 +29,14 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice
 
     internal async Task InitializeAsync(IServerTestHost serverTestHost)
     {
+        // Server mode output device is basically used to send messages to Test Explorer.
+        // For that, it needs the ServerTestHost.
+        // However, the ServerTestHost is available later than the time we create the output device.
+        // So, the server mode output device is initially created early without the ServerTestHost, and
+        // it keeps any messages in a list.
+        // Later when ServerTestHost is created and is available, we initialize the server mode output device.
+        // The initialization will setup the right state for pushing to Test Explorer, and will push any existing
+        // messages to Test Explorer as well.
         _serverTestHost = serverTestHost;
 
         foreach (ServerLogMessage message in _messages)
