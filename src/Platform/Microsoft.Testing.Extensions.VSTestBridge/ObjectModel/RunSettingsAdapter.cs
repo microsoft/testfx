@@ -25,15 +25,15 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 internal sealed class RunSettingsAdapter : IRunSettings
 {
     private static readonly string[] UnsupportedRunConfigurationSettings = [
+        "DotnetHostPath",
         "MaxCpuCount",
         "TargetFrameworkVersion",
         "TargetPlatform",
-        "TreatTestAdapterErrorsAsWarnings",
         "TestAdaptersPaths",
         "TestCaseFilter",
         "TestSessionTimeout",
-        "DotnetHostPath",
         "TreatNoTestsAsError",
+        "TreatTestAdapterErrorsAsWarnings",
     ];
 
     public RunSettingsAdapter(
