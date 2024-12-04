@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
@@ -22,15 +23,24 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
     // Note: After the token gets expanded into regex ** gets converted to .*.*.
     internal const string AllNodesBelowRegexString = ".*.*";
-    private readonly List<FilterExpression> _filters;
+    private readonly List<FilterExpression> _filters = [];
 
-    internal TreeNodeFilter(string filter)
+    internal TreeNodeFilter(ICommandLineOptions commandLineOptions)
     {
-        Filter = Guard.NotNull(filter);
-        _filters = ParseFilter(filter);
+        IsAvailable = commandLineOptions.IsOptionSet(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
+
+        if (IsAvailable)
+        {
+            commandLineOptions.TryGetOptionArgumentList(
+                TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter,
+                out string[]? args);
+
+            Filter = Guard.NotNull(args?.ElementAtOrDefault(0));
+            _filters = ParseFilter(Filter);
+        }
     }
 
-    public string Filter { get; }
+    public string Filter { get; } = string.Empty;
 
     /// <remarks>
     /// The current grammar for the filter looks as follows:
@@ -518,4 +528,6 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 => !MatchProperties(subExprs.Single(), properties),
             _ => throw ApplicationStateGuard.Unreachable(),
         };
+
+    public bool IsAvailable { get; }
 }

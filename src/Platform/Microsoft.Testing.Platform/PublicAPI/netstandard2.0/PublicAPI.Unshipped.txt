@@ -1,1 +1,10 @@
 #nullable enable
+Microsoft.Testing.Platform.Capabilities.TestFramework.ISupportsFilterCapability
+Microsoft.Testing.Platform.Capabilities.TestFramework.ISupportsFilterCapability.FilterType.get -> System.Type!
+Microsoft.Testing.Platform.Capabilities.TestFramework.SupportsFilterCapability<TExecutionFilter>
+Microsoft.Testing.Platform.Capabilities.TestFramework.SupportsFilterCapability<TExecutionFilter>.FilterType.get -> System.Type!
+Microsoft.Testing.Platform.Capabilities.TestFramework.SupportsFilterCapability<TExecutionFilter>.SupportsFilterCapability() -> void
+Microsoft.Testing.Platform.Requests.AggregateFilter
+Microsoft.Testing.Platform.Requests.AggregateFilter.AggregateFilter(params System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>! innerFilters) -> void
+Microsoft.Testing.Platform.Requests.AggregateFilter.InnerFilters.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>!
+Microsoft.Testing.Platform.Requests.AggregateFilter.IsAvailable.get -> bool

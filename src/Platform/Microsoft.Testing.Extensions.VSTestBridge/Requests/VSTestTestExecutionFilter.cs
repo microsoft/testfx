@@ -20,4 +20,6 @@ public sealed class VSTestTestExecutionFilter : ITestExecutionFilter
     internal VSTestTestExecutionFilter(ImmutableArray<TestCase> testCases) => TestCases = testCases;
 
     public ImmutableArray<TestCase>? TestCases { get; }
+
+    public bool IsAvailable => TestCases?.Length > 0;
 }

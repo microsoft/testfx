@@ -3,7 +3,9 @@
 
 using System.Globalization;
 
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Requests;
@@ -19,18 +21,19 @@ internal sealed class TestHostManager : ITestHostManager
 
     // Exposed extension points
     private readonly List<Func<IServiceProvider, ITestApplicationLifecycleCallbacks>> _testApplicationLifecycleCallbacksFactories = [];
+    private readonly List<Func<IServiceProvider, ITestExecutionFilter>> _testExecutionFilterFactories = [];
     private readonly List<Func<IServiceProvider, IDataConsumer>> _dataConsumerFactories = [];
     private readonly List<Func<IServiceProvider, ITestSessionLifetimeHandler>> _testSessionLifetimeHandlerFactories = [];
     private readonly List<ICompositeExtensionFactory> _dataConsumersCompositeServiceFactories = [];
     private readonly List<ICompositeExtensionFactory> _testSessionLifetimeHandlerCompositeFactories = [];
 
     // Non-exposed extension points
-    private Func<IServiceProvider, ITestExecutionFilterFactory>? _testExecutionFilterFactory;
     private Func<IServiceProvider, ITestFrameworkInvoker>? _testFrameworkInvokerFactory;
 
     public void AddTestFrameworkInvoker(Func<IServiceProvider, ITestFrameworkInvoker> testFrameworkInvokerFactory)
     {
         Guard.NotNull(testFrameworkInvokerFactory);
+
         if (_testFrameworkInvokerFactory is not null)
         {
             throw new InvalidOperationException(PlatformResources.TestAdapterInvokerFactoryAlreadySetErrorMessage);
@@ -59,35 +62,47 @@ internal sealed class TestHostManager : ITestHostManager
         return ActionResult.Fail<ITestFrameworkInvoker>();
     }
 
-    public void AddTestExecutionFilterFactory(Func<IServiceProvider, ITestExecutionFilterFactory> testExecutionFilterFactory)
+    public async Task<ITestExecutionFilter> BuildFilterAsync(
+        IServiceProvider serviceProvider,
+        ICollection<TestNode>? testNodes)
     {
-        Guard.NotNull(testExecutionFilterFactory);
-        if (_testExecutionFilterFactory is not null)
+        if (testNodes?.Count > 0)
         {
-            throw new InvalidOperationException(PlatformResources.TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage);
+            return new TestNodeUidListFilter(testNodes.Select(x => x.Uid).ToArray());
         }
 
-        _testExecutionFilterFactory = testExecutionFilterFactory;
-    }
+        List<ITestExecutionFilter> list = [];
 
-    internal async Task<ActionResult<ITestExecutionFilterFactory>> TryBuildTestExecutionFilterFactoryAsync(ServiceProvider serviceProvider)
-    {
-        if (_testExecutionFilterFactory is null)
+        ISupportsFilterCapability[] filterCapabilities = serviceProvider.GetTestFrameworkCapabilities()
+            .Capabilities
+            .OfType<ISupportsFilterCapability>()
+            .ToArray();
+
+        foreach (ITestExecutionFilter testExecutionFilter in _testExecutionFilterFactories
+                     .Select(testExecutionFilterFactory => testExecutionFilterFactory(serviceProvider)))
         {
-            return ActionResult.Fail<ITestExecutionFilterFactory>();
+            if (filterCapabilities.SingleOrDefault(x => x.FilterType == testExecutionFilter.GetType()) is null)
+            {
+                continue;
+            }
+
+            await testExecutionFilter.TryInitializeAsync();
+
+            list.Add(testExecutionFilter);
         }
 
-        ITestExecutionFilterFactory testExecutionFilterFactory = _testExecutionFilterFactory(serviceProvider);
+        ITestExecutionFilter[] requestedFilters = list
+            .Where(x => x.IsAvailable)
+            .ToArray();
 
-        // We initialize only if enabled
-        if (await testExecutionFilterFactory.IsEnabledAsync())
+        if (requestedFilters.Length == 0)
         {
-            await testExecutionFilterFactory.TryInitializeAsync();
-
-            return ActionResult.Ok(testExecutionFilterFactory);
+#pragma warning disable TPEXP
+            return new NopFilter();
+#pragma warning restore TPEXP
         }
 
-        return ActionResult.Fail<ITestExecutionFilterFactory>();
+        return requestedFilters.Length == 1 ? requestedFilters[0] : new AggregateFilter(requestedFilters);
     }
 
     public void AddTestApplicationLifecycleCallbacks(Func<IServiceProvider, ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacks)
@@ -128,6 +143,13 @@ internal sealed class TestHostManager : ITestHostManager
         Guard.NotNull(dataConsumerFactory);
         _dataConsumerFactories.Add(dataConsumerFactory);
         _factoryOrdering.Add(dataConsumerFactory);
+    }
+
+    public void RegisterTestExecutionFilter(Func<IServiceProvider, ITestExecutionFilter> testFilterFactory)
+    {
+        Guard.NotNull(testFilterFactory);
+        _testExecutionFilterFactories.Add(testFilterFactory);
+        _factoryOrdering.Add(testFilterFactory);
     }
 
     public void AddDataConsumer<T>(CompositeExtensionFactory<T> compositeServiceFactory)

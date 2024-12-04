@@ -1,2 +1,3 @@
 #nullable enable
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestTestExecutionFilter.IsAvailable.get -> bool
 static Microsoft.Testing.Extensions.VSTestBridge.Helpers.TestApplicationBuilderExtensions.AddRunSettingsEnvironmentVariableProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void

@@ -12,7 +12,7 @@ using Microsoft.Testing.Platform.TestHost;
 namespace Microsoft.Testing.Platform.Hosts;
 
 internal class TestFrameworkBuilderData(ServiceProvider serviceProvider, ITestExecutionRequestFactory testExecutionRequestFactory,
-    ITestFrameworkInvoker testExecutionRequestInvoker, ITestExecutionFilterFactory testExecutionFilterFactory,
+    ITestFrameworkInvoker testExecutionRequestInvoker,
     IPlatformOutputDevice platformOutputDisplayService, IEnumerable<IDataConsumer> serverPerCallConsumers,
     TestFrameworkManager testFrameworkManager, TestHostManager testSessionManager, MessageBusProxy messageBusProxy,
     bool isForDiscoveryRequest,
@@ -23,8 +23,6 @@ internal class TestFrameworkBuilderData(ServiceProvider serviceProvider, ITestEx
     public ITestExecutionRequestFactory TestExecutionRequestFactory { get; } = testExecutionRequestFactory;
 
     public ITestFrameworkInvoker TestExecutionRequestInvoker { get; } = testExecutionRequestInvoker;
-
-    public ITestExecutionFilterFactory TestExecutionFilterFactory { get; } = testExecutionFilterFactory;
 
     public IPlatformOutputDevice PlatformOutputDisplayService { get; } = platformOutputDisplayService;
 

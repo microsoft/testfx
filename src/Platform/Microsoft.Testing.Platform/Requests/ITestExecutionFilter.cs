@@ -6,4 +6,7 @@ namespace Microsoft.Testing.Platform.Requests;
 /// <summary>
 /// Represents a filter for test execution.
 /// </summary>
-public interface ITestExecutionFilter;
+public interface ITestExecutionFilter
+{
+    bool IsAvailable { get; }
+}
