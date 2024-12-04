@@ -32,12 +32,17 @@ internal sealed class TestNodeResultsState
 
     public IEnumerable<TestDetailState> GetRunningTasks(int maxCount)
     {
+        // Note: Do not show tasks that complete in less than 1s, to avoid refreshing the UI too often.
+        // Tests that took more than 1s to complete are much more likely to be longer running.
+        var minimumTime = TimeSpan.FromSeconds(1);
 
-        bool tooManyItems = _testNodeProgressStates.Count > maxCount;
-
-        IEnumerable<TestDetailState> sortedDetails = _testNodeProgressStates
+        var sortedDetails = _testNodeProgressStates
             .Select(d => d.Value)
-            .OrderBy(d => d.Stopwatch?.Elapsed ?? TimeSpan.Zero);
+            .Where(d => d.Stopwatch?.Elapsed > minimumTime)
+            .OrderBy(d => d.Stopwatch?.Elapsed ?? TimeSpan.Zero)
+            .ToList();
+
+        bool tooManyItems = sortedDetails.Count > maxCount;
 
         if (tooManyItems)
         {
@@ -45,8 +50,8 @@ internal sealed class TestNodeResultsState
             // As such, we can only take maxCount - 1 items.
             int itemsToTake = maxCount - 1;
             _summaryDetail.Text =
-                $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.MoreTestsRunning, _testNodeProgressStates.Count - itemsToTake)}";
-            sortedDetails = sortedDetails.Take(itemsToTake);
+                $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.MoreTestsRunning, sortedDetails.Count - itemsToTake)}";
+            sortedDetails = sortedDetails.Take(itemsToTake).ToList();
         }
 
         foreach (TestDetailState? detail in sortedDetails)
