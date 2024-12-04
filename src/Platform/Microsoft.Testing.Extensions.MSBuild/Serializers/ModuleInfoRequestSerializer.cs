@@ -8,7 +8,7 @@ namespace Microsoft.Testing.Extensions.MSBuild.Serializers;
 
 internal record ModuleInfoRequest(string FrameworkDescription, string ProcessArchitecture, string TestResultFolder) : IRequest;
 
-internal class ModuleInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class ModuleInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
 {
     public int Id => 1;
 

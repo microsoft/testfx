@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
-internal class ExceptionFlattener
+internal sealed class ExceptionFlattener
 {
     internal static FlatException[] Flatten(string? errorMessage, Exception? exception)
     {

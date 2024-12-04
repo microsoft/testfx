@@ -18,9 +18,9 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
+internal sealed class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
 {
-    protected IServiceProvider ServiceProvider { get; } = serviceProvider;
+    public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
     public string Uid => nameof(TestHostTestFrameworkInvoker);
 
@@ -67,7 +67,7 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         await messageBus.PublishAsync(this, new TestRequestExecutionTimeInfo(new TimingInfo(startTime, endTime, stopwatch.Elapsed)));
     }
 
-    public virtual async Task ExecuteRequestAsync(ITestFramework testFramework, TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)
+    public static async Task ExecuteRequestAsync(ITestFramework testFramework, TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)
     {
         using SemaphoreSlim requestSemaphore = new(0, 1);
         await testFramework.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken));

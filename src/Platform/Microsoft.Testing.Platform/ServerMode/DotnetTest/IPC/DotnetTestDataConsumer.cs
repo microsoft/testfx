@@ -10,7 +10,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.IPC;
 
-internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
+internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 {
     private readonly DotnetTestConnection? _dotnetTestConnection;
     private readonly IEnvironment _environment;

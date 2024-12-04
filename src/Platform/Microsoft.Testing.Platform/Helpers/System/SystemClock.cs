@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-internal class SystemClock : IClock
+internal sealed class SystemClock : IClock
 {
     public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
 }

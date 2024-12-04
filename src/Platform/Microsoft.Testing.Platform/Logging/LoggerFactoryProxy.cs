@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal class LoggerFactoryProxy : ILoggerFactory
+internal sealed class LoggerFactoryProxy : ILoggerFactory
 {
     private ILoggerFactory? _loggerFactory;
 

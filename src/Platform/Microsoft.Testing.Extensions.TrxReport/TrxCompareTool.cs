@@ -14,7 +14,7 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
-internal class TrxCompareTool : ITool, IOutputDeviceDataProducer
+internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
 {
     public const string ToolName = "ms-trxcompare";
     private readonly ICommandLineOptions _commandLineOptions;

@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
-internal class TestHostProcessPIDRequest(int pid) : IRequest
+internal sealed class TestHostProcessPIDRequest(int pid) : IRequest
 {
     public int PID { get; } = pid;
 }

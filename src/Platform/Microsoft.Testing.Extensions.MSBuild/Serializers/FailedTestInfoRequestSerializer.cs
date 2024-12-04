@@ -17,7 +17,7 @@ internal record FailedTestInfoRequest(
     string? CodeFilePath,
     int LineNumber) : IRequest;
 
-internal class FailedTestInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class FailedTestInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
 {
     public int Id => 2;
 

@@ -13,7 +13,7 @@ internal record RunSummaryInfoRequest(
     int TotalSkipped,
     string? Duration) : IRequest;
 
-internal class RunSummaryInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class RunSummaryInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
 {
     public int Id => 3;
 

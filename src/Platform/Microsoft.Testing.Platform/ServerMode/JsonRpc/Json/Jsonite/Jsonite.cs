@@ -771,7 +771,7 @@ namespace Jsonite
         }
 
         /// <summary>
-        /// The internal class used to serialize an object graph to a json text.
+        /// The internal sealed class used to serialize an object graph to a json text.
         /// </summary>
         private class JsonWriter
         {

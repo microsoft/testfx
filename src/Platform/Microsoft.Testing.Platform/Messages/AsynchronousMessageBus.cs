@@ -13,7 +13,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Messages;
 
-internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
+internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
 {
     // This is an arbitrary number of attempts to drain the message bus.
     // The number of attempts is configurable via the environment variable TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS.

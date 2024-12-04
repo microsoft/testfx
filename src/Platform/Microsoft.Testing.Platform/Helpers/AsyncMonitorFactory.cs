@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-internal class SystemMonitorAsyncFactory : IAsyncMonitorFactory
+internal sealed class SystemMonitorAsyncFactory : IAsyncMonitorFactory
 {
     public IAsyncMonitor Create() => new SystemAsyncMonitor();
 }
