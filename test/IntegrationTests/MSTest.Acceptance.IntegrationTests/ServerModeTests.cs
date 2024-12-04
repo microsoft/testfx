@@ -40,7 +40,7 @@ public sealed class ServerModeTests : ServerModeTestsBase
         await Task.WhenAll(discoveryListener.WaitCompletion(), runListener.WaitCompletion());
         Assert.AreEqual(1, discoveryCollector.TestNodeUpdates.Count(x => x.Node.NodeType == "action"), $"Wrong number of discovery");
         Assert.AreEqual(2, runCollector.TestNodeUpdates.Count, $"Wrong number of updates");
-        Assert.IsFalse(logs.IsEmpty, $"Logs are empty");
+        Assert.IsFalse(logs.Count == 0, $"Logs are empty");
         Assert.IsFalse(telemetry.IsEmpty, $"telemetry is empty");
         await jsonClient.Exit();
         Assert.AreEqual(0, await jsonClient.WaitServerProcessExit());

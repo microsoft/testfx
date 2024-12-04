@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
@@ -11,7 +11,10 @@
 
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" />
+    <PackageReference Include="StreamJsonRpc" />
     <PackageReference Include="Microsoft.Testing.Extensions.Retry" />
+
+    <Compile Include="$(RepoRoot)test\IntegrationTests\MSTest.Acceptance.IntegrationTests\ServerMode\**\*.cs" Link="ServerMode\%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
 
   <!-- Packages needed for the test assets but that we don't want to reference -->
