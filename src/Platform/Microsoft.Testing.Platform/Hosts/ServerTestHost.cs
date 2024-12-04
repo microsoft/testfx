@@ -3,6 +3,7 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Net.Sockets;
 
 using Microsoft.Testing.Internal.Framework;
@@ -287,13 +288,14 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                         Exception? cancellationException = rpcState.CancelRequest();
                         if (cancellationException is null)
                         {
+                            // This is intentionally not using PlatformResources.ExceptionDuringCancellationWarningMessage
+                            // It's meant for troubleshooting and shouldn't be localized.
+                            // The localized message that is user-facing will be displayed in the DisplayAsync call next line.
                             await _logger.LogWarningAsync($"Exception during the cancellation of request id '{args.CancelRequestId}'");
 
-                            // TODO: Localize
                             await ServiceProvider.GetOutputDevice().DisplayAsync(
                                 this,
-                                new WarningMessageOutputDeviceData(
-                                    $"Exception during the cancellation of request id '{args.CancelRequestId}'"));
+                                new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExceptionDuringCancellationWarningMessage, args.CancelRequestId)));
                         }
                     }
 

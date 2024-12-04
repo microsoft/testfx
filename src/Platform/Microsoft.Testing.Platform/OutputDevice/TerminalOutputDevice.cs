@@ -25,7 +25,6 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// <summary>
 /// Implementation of output device that writes to terminal with progress and optionally with ANSI.
 /// </summary>
-// NOTE: !!! Any interfaces here will likely need to be implemented by ProxyPlatformOutputDevice as well. !!!
 internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,

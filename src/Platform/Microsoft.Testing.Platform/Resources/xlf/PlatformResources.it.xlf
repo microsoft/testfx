@@ -219,6 +219,11 @@
         <target state="translated">Provider '{0}' (UID: {1}) non riuscito con errore: {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExceptionDuringCancellationWarningMessage">
+        <source>Exception during the cancellation of request id '{0}'</source>
+        <target state="new">Exception during the cancellation of request id '{0}'</target>
+        <note>{0} is the request id</note>
+      </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
         <target state="translated">Codice di uscita</target>

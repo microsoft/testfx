@@ -7,9 +7,6 @@ using Microsoft.Testing.Platform.ServerMode;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-// Any interfaces that can have special treatment for any output device should be implemented by
-// this proxy class and be forwarded properly.
-// This is not so good. How can we make sure we are not missing any interfaces that may be implemented by external output devices?
 internal sealed class ProxyOutputDevice : IOutputDevice
 {
     private readonly ServerModePerCallOutputDevice? _serverModeOutputDevice;
@@ -60,6 +57,14 @@ internal sealed class ProxyOutputDevice : IOutputDevice
 
     internal async Task InitializeAsync(ServerTestHost serverTestHost)
     {
+        // Server mode output device is basically used to send messages to Test Explorer.
+        // For that, it needs the ServerTestHost.
+        // However, the ServerTestHost is available later than the time we create the output device.
+        // So, the server mode output device is initially created early without the ServerTestHost, and
+        // it keeps any messages in a list.
+        // Later when ServerTestHost is created and is available, we initialize the server mode output device.
+        // The initialization will setup the right state for pushing to Test Explorer, and will push any existing
+        // messages to Test Explorer as well.
         if (_serverModeOutputDevice is not null)
         {
             await _serverModeOutputDevice.InitializeAsync(serverTestHost);

@@ -690,4 +690,8 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
     <value>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</value>
     <comment>{0} is the exception that was unhandled/unobserved</comment>
   </data>
+  <data name="ExceptionDuringCancellationWarningMessage" xml:space="preserve">
+    <value>Exception during the cancellation of request id '{0}'</value>
+    <comment>{0} is the request id</comment>
+  </data>
 </root>
