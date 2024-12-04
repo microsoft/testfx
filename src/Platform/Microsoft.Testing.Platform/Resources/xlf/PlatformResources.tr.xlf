@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="tr" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortForMaxFailedTestsDescription">
+        <source>Extension used to support '--max-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
+        <target state="new">Extension used to support '--max-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Aborted">
         <source>Aborted</source>
         <target state="translated">Durduruldu</target>
@@ -371,6 +376,11 @@
         <target state="translated">ILoggerFactory henüz derlenmedi.</target>
         <note />
       </trans-unit>
+      <trans-unit id="MaxFailedTestsMustBePositive">
+        <source>The option '--max-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
+        <target state="new">The option '--max-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MessageBusNotReady">
         <source>The message bus has not been built yet or is no more usable at this stage.</source>
         <target state="translated">İleti veri yolu henüz derlenmedi veya bu aşamada artık kullanılamıyor.</target>
@@ -523,6 +533,11 @@ Kullanılabilir değerler: 'Trace', 'Debug', 'Information', 'Warning', 'Error' v
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
         <target state="translated">.NET test uygulaması bilgilerini görüntüler.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
+        <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
+        <target state="new">Specifies a maximum number of test failures that, when exceeded, will abort the test run.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">

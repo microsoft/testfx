@@ -32,6 +32,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string TestHostControllerPIDOptionKey = "internal-testhostcontroller-pid";
     public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
     public const string ConfigFileOptionKey = "config-file";
+    public const string MaxFailedTestsOptionKey = "max-failed-tests";
 
     public const string ServerOptionKey = "server";
     public const string ClientPortOptionKey = "client-port";
@@ -61,6 +62,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         new(IgnoreExitCodeOptionKey, PlatformResources.PlatformCommandLineIgnoreExitCodeOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ExitOnProcessExitOptionKey, PlatformResources.PlatformCommandLineExitOnProcessExitOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ConfigFileOptionKey, PlatformResources.PlatformCommandLineConfigFileOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+        new(MaxFailedTestsOptionKey, PlatformResources.PlatformCommandLineMaxFailedTestsOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
 
         // Hidden options
         new(HelpOptionQuestionMark, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
@@ -138,6 +140,15 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
                 }
 
                 return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConfigurationFileNotFound, arg));
+            }
+        }
+
+        if (commandOption.Name == MaxFailedTestsOptionKey)
+        {
+            string arg = arguments[0];
+            if (!int.TryParse(arg, out int maxFailedTestsResult) || maxFailedTestsResult <= 0)
+            {
+                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.MaxFailedTestsMustBePositive, arg));
             }
         }
 

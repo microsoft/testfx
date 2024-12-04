@@ -694,4 +694,13 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
     <value>Exception during the cancellation of request id '{0}'</value>
     <comment>{0} is the request id</comment>
   </data>
+  <data name="PlatformCommandLineMaxFailedTestsOptionDescription" xml:space="preserve">
+    <value>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</value>
+  </data>
+  <data name="MaxFailedTestsMustBePositive" xml:space="preserve">
+    <value>The option '--max-failed-tests' must be a positive integer. The value '{0}' is not valid.</value>
+  </data>
+  <data name="AbortForMaxFailedTestsDescription" xml:space="preserve">
+    <value>Extension used to support '--max-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</value>
+  </data>
 </root>
