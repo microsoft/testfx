@@ -79,7 +79,8 @@ public class MSBuildTests_Test : AcceptanceTestBase
             .PatchCodeWithReplace("$TargetFrameworks$", isMultiTfm ? $"<TargetFrameworks>{tfm}</TargetFrameworks>" : $"<TargetFramework>{tfm}</TargetFramework>")
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
         string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
@@ -107,7 +108,8 @@ public class MSBuildTests_Test : AcceptanceTestBase
             .PatchCodeWithReplace("$TargetFrameworks$", isMultiTfm ? $"<TargetFrameworks>{tfm}</TargetFrameworks>" : $"<TargetFramework>{tfm}</TargetFramework>")
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
         string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
 
@@ -146,7 +148,8 @@ public class MSBuildTests_Test : AcceptanceTestBase
             .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFrameworks>{TargetFrameworks.NetCurrent.Arguments}</TargetFrameworks>")
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
         await DotnetCli.RunAsync(
             $"test --arch x86 -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"",
@@ -177,7 +180,8 @@ public class MSBuildTests_Test : AcceptanceTestBase
             .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent.Arguments}</TargetFramework>")
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"test --arch {incompatibleArchitecture} -p:TestingPlatformDotnetTestSupport=True \"{testAsset.TargetAssetPath}\"",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
@@ -219,7 +223,8 @@ public class MSBuildTests_Test : AcceptanceTestBase
             .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFrameworks>{TargetFrameworks.NetCurrent.Arguments}</TargetFrameworks>")
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
         await DotnetCli.RunAsync(
             $"test -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"",
@@ -268,7 +273,8 @@ public class MSBuildTests_Test : AcceptanceTestBase
             .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{tfm}</TargetFramework>")
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformShowTestsFailure=True -p:TestingPlatformCaptureOutput=False -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} {testAsset.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
         Assert.Contains("error test failed: TestMethod2 (", compilationResult.StandardOutput);
@@ -295,8 +301,8 @@ public class MSBuildTests_Test : AcceptanceTestBase
         <!-- Platform and TrxReport.Abstractions are only needed because Internal.Framework relies on a preview version that we want to override with currently built one -->
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingInternalFrameworkVersion$" />
+        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingInternalFrameworkVersion$" />
     </ItemGroup>
 </Project>
 

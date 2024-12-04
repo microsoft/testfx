@@ -20,6 +20,10 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)test\Utilities\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Internal.Analyzers\MSTest.Internal.Analyzers.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

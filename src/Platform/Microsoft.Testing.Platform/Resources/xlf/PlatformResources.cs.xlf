@@ -219,6 +219,11 @@
         <target state="translated">Zprostředkovatel {0} (UID: {1}) selhal s chybou: {2}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExceptionDuringCancellationWarningMessage">
+        <source>Exception during the cancellation of request id '{0}'</source>
+        <target state="new">Exception during the cancellation of request id '{0}'</target>
+        <note>{0} is the request id</note>
+      </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
         <target state="translated">Ukončovací kód</target>
@@ -269,6 +274,11 @@
       <trans-unit id="FailedWithWarnings">
         <source>failed with {0} warning(s)</source>
         <target state="translated">selhalo s {0} upozorněním(i).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FinishedTestSession">
+        <source>Finished test session.</source>
+        <target state="new">Finished test session.</target>
         <note />
       </trans-unit>
       <trans-unit id="ForTest">
@@ -638,6 +648,16 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
         <target state="translated">Objekt pro vytváření filtru provádění testů serveru</target>
         <note />
       </trans-unit>
+      <trans-unit id="ServerTestHostDescription">
+        <source>The 'ITestHost' implementation used when running server mode.</source>
+        <target state="new">The 'ITestHost' implementation used when running server mode.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDisplayName">
+        <source>Server mode test host</source>
+        <target state="new">Server mode test host</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
         <target state="translated">Nelze najít službu typu {0}.</target>
@@ -691,6 +711,16 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
         <target state="translated">Spouští se server. Naslouchání na portu {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSession">
+        <source>Starting test session.</source>
+        <target state="new">Starting test session.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSessionWithLogFilePath">
+        <source>Starting test session. The log file path is '{0}'.</source>
+        <target state="new">Starting test session. The log file path is '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -901,6 +931,11 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
         <source>The communication protocol '{0}' is not supported</source>
         <target state="translated">Komunikační protokol {0} není podporován.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="UnobservedTaskExceptionWarningMessage">
+        <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+        <target state="new">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</target>
+        <note>{0} is the exception that was unhandled/unobserved</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>

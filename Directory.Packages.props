@@ -17,6 +17,7 @@
     <MicrosoftNETTestSdkVersion>17.12.0</MicrosoftNETTestSdkVersion>
     <MicrosoftPlaywrightVersion>1.49.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>17.12.0</MicrosoftTestingExtensionsFakesVersion>
+    <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
     <!-- CVE-2017-0247 -->
     <SystemNetWebSocketsClientVersion>4.3.1</SystemNetWebSocketsClientVersion>
     <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
@@ -41,7 +42,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(MicrosoftCodeAnalysisVersion)" />
     <PackageVersion Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.553101" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingInternalFrameworkVersion)" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingExtensionsRetryVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />

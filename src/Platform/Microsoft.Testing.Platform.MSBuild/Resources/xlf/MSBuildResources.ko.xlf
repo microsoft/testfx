@@ -34,11 +34,11 @@ You can resolve the problem by installing the '{1}' .NET.
 
 The specified framework can be found at:
   - https://aka.ms/dotnet-download</source>
-        <target state="new">Could not find '{0}' host for the '{1}' architecture.
+        <target state="translated">'{1}' 아키텍처에 대한 '{0}' 호스트를 찾을 수 없습니다.
 
-You can resolve the problem by installing the '{1}' .NET.
+'{1}' .NET을 설치하여 문제를 해결할 수 있습니다.
 
-The specified framework can be found at:
+다음 위치에서 지정된 프레임워크를 찾을 수 있습니다.
   - https://aka.ms/dotnet-download</target>
         <note />
       </trans-unit>

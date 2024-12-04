@@ -20,7 +20,8 @@ public class MSBuildTests : AcceptanceTestBase
                 .PatchCodeWithReplace("$TargetFrameworks$", tfm)
                 .PatchCodeWithReplace("$JsonContent$", ConfigurationContent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:normal -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
@@ -58,7 +59,8 @@ public class MSBuildTests : AcceptanceTestBase
                 .PatchCodeWithReplace("$TargetFrameworks$", tfm)
                 .PatchCodeWithReplace("$JsonContent$", ConfigurationContent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
 
         File.Delete(Path.Combine(testAsset.TargetAssetPath, "testconfig.json"));
 
@@ -95,8 +97,8 @@ public class MSBuildTests : AcceptanceTestBase
         <!-- Platform and TrxReport.Abstractions are only needed because Internal.Framework relies on a preview version that we want to override with currently built one -->
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingInternalFrameworkVersion$" />
+        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingInternalFrameworkVersion$" />
     </ItemGroup>
 </Project>
 

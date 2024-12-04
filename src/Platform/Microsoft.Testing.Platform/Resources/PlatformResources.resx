@@ -674,4 +674,27 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="MoreTestsRunning" xml:space="preserve">
     <value>and {0} more</value>
   </data>
+  <data name="StartingTestSession" xml:space="preserve">
+    <value>Starting test session.</value>
+  </data>
+  <data name="StartingTestSessionWithLogFilePath" xml:space="preserve">
+    <value>Starting test session. The log file path is '{0}'.</value>
+  </data>
+  <data name="FinishedTestSession" xml:space="preserve">
+    <value>Finished test session.</value>
+  </data>
+  <data name="ServerTestHostDisplayName" xml:space="preserve">
+    <value>Server mode test host</value>
+  </data>
+  <data name="ServerTestHostDescription" xml:space="preserve">
+    <value>The 'ITestHost' implementation used when running server mode.</value>
+  </data>
+  <data name="UnobservedTaskExceptionWarningMessage" xml:space="preserve">
+    <value>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</value>
+    <comment>{0} is the exception that was unhandled/unobserved</comment>
+  </data>
+  <data name="ExceptionDuringCancellationWarningMessage" xml:space="preserve">
+    <value>Exception during the cancellation of request id '{0}'</value>
+    <comment>{0} is the request id</comment>
+  </data>
 </root>

@@ -20,6 +20,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines the TestClassInfo object.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public class TestClassInfo
 {
     private readonly Lock _testClassExecuteSyncObject = new();

@@ -77,7 +77,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
         string? extensionInformation = null;
-        IPlatformOutputDevice platformOutputDevice = ServiceProvider.GetPlatformOutputDevice();
+        var outputDevice = (ProxyOutputDevice)ServiceProvider.GetOutputDevice();
         IConfiguration configuration = ServiceProvider.GetConfiguration();
         try
         {
@@ -203,7 +203,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                         displayErrorMessageBuilder.AppendLine(CultureInfo.InvariantCulture, $"Provider '{extension.DisplayName}' (UID: {extension.Uid}) failed with error: {errorMessage}");
                     }
 
-                    await platformOutputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(displayErrorMessageBuilder.ToString()));
+                    await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(displayErrorMessageBuilder.ToString()));
                     await _logger.LogErrorAsync(logErrorMessageBuilder.ToString());
                     return ExitCodes.InvalidPlatformSetup;
                 }
@@ -306,7 +306,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 await messageBusProxy.DisableAsync();
             }
 
-            await platformOutputDevice.DisplayAfterSessionEndRunAsync();
+            await outputDevice.DisplayAfterSessionEndRunAsync();
 
             // We collect info about the extensions before the dispose to avoid possible issue with cleanup.
             if (telemetryInformation.IsEnabled)
@@ -322,7 +322,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
             if (!_testHostGracefullyClosed && !abortRun.IsCancellationRequested)
             {
-                await platformOutputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode)));
+                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode)));
             }
 
             await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}')' in '{consoleRunStarted.Elapsed}'");
