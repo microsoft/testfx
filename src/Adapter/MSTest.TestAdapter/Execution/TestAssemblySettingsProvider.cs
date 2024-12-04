@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
-internal class TestAssemblySettingsProvider : MarshalByRefObject
+internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
 {
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.

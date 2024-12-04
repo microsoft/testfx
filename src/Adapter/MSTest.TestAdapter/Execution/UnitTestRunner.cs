@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// The runner that runs a single unit test. Also manages the assembly and class cleanup methods at the end of the run.
 /// </summary>
-internal class UnitTestRunner : MarshalByRefObject
+internal sealed class UnitTestRunner : MarshalByRefObject
 {
     private readonly ConcurrentDictionary<string, TestMethodInfo> _fixtureTests = new();
     private readonly TypeCache _typeCache;

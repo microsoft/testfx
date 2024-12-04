@@ -13,7 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// <summary>
 /// Enumerates through an assembly to get a set of test methods.
 /// </summary>
-internal class AssemblyEnumeratorWrapper
+internal sealed class AssemblyEnumeratorWrapper
 {
     /// <summary>
     /// Assembly name for UTF.

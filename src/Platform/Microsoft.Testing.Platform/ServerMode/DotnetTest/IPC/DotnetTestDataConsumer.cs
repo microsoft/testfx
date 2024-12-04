@@ -172,8 +172,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         long? duration = null;
         string? reason = string.Empty;
         ExceptionMessage[]? exceptions = null;
-        string? errorStackTrace = string.Empty;
-
         TestNodeStateProperty nodeState = testNodeUpdateMessage.TestNode.Properties.Single<TestNodeStateProperty>();
         string? standardOutput = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
         string? standardError = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
@@ -245,7 +243,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         }
     }
 
-    public record TestNodeDetails(byte? State, long? Duration, string? Reason, ExceptionMessage[]? Exceptions, string? StandardOutput, string? StandardError);
+    public sealed record TestNodeDetails(byte? State, long? Duration, string? Reason, ExceptionMessage[]? Exceptions, string? StandardOutput, string? StandardError);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

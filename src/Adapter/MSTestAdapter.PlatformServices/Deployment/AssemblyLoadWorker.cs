@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 /// Utility function for Assembly related info
 /// The caller is supposed to create AppDomain and create instance of given class in there.
 /// </summary>
-internal class AssemblyLoadWorker : MarshalByRefObject
+internal sealed class AssemblyLoadWorker : MarshalByRefObject
 {
     private readonly IAssemblyUtility _assemblyUtility;
 

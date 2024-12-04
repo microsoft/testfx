@@ -17,7 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// <summary>
 /// Enumerates through the type looking for Valid Test Methods to execute.
 /// </summary>
-internal class TypeEnumerator
+internal sealed class TypeEnumerator
 {
     private readonly Type _type;
     private readonly string _assemblyFilePath;
@@ -52,7 +52,7 @@ internal class TypeEnumerator
     /// </summary>
     /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> list of test cases.</returns>
-    internal virtual ICollection<UnitTestElement>? Enumerate(out ICollection<string> warnings)
+    internal ICollection<UnitTestElement>? Enumerate(out ICollection<string> warnings)
     {
         warnings = new Collection<string>();
 

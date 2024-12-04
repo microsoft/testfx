@@ -51,4 +51,4 @@ internal sealed class ExceptionFlattener
     }
 }
 
-internal record FlatException(string? ErrorMessage, string? ErrorType, string? StackTrace);
+internal sealed record FlatException(string? ErrorMessage, string? ErrorType, string? StackTrace);

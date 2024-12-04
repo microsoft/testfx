@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.MSBuild.Serializers;
 
-internal record ModuleInfoRequest(string FrameworkDescription, string ProcessArchitecture, string TestResultFolder) : IRequest;
+internal sealed record ModuleInfoRequest(string FrameworkDescription, string ProcessArchitecture, string TestResultFolder) : IRequest;
 
 internal sealed class ModuleInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
 {

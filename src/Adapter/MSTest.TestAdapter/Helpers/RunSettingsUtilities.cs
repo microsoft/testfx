@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
-internal class RunSettingsUtilities
+internal static class RunSettingsUtilities
 {
     /// <summary>
     /// Gets the settings to be used while creating XmlReader for runsettings.

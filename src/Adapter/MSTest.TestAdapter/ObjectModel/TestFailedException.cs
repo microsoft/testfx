@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// Internal class to indicate Test Execution failure.
 /// </summary>
 [Serializable]
-internal class TestFailedException : Exception
+internal sealed class TestFailedException : Exception
 {
     public TestFailedException(UnitTestOutcome outcome, string errorMessage)
         : this(outcome, errorMessage, null, null)
