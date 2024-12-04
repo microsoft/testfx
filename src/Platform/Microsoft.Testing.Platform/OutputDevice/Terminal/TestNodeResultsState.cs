@@ -28,28 +28,33 @@ internal sealed class TestNodeResultsState
 
     public void RemoveRunningTestNode(string uid) => _testNodeProgressStates.TryRemove(uid, out _);
 
-    private void UpdateSummaryDetail(int maxCount)
-        => _summaryDetail.Text = _testNodeProgressStates.Count > maxCount
-            ? $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.MoreTestsRunning, _testNodeProgressStates.Count - maxCount)}"
-            : string.Empty;
-
     public TestDetailState? GetFirstRunningTask() => _testNodeProgressStates.FirstOrDefault().Value;
 
     public IEnumerable<TestDetailState> GetRunningTasks(int maxCount)
     {
-        UpdateSummaryDetail(maxCount);
+
+        bool tooManyItems = _testNodeProgressStates.Count > maxCount;
 
         IEnumerable<TestDetailState> sortedDetails = _testNodeProgressStates
             .Select(d => d.Value)
-            .OrderBy(d => d.Stopwatch?.Elapsed ?? TimeSpan.Zero)
-            .Take(maxCount);
+            .OrderBy(d => d.Stopwatch?.Elapsed ?? TimeSpan.Zero);
+
+        if (tooManyItems)
+        {
+            // Note: If there's too many items to display, the summary will take up one line.
+            // As such, we can only take maxCount - 1 items.
+            int itemsToTake = maxCount - 1;
+            _summaryDetail.Text =
+                $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.MoreTestsRunning, _testNodeProgressStates.Count - itemsToTake)}";
+            sortedDetails = sortedDetails.Take(itemsToTake);
+        }
 
         foreach (TestDetailState? detail in sortedDetails)
         {
             yield return detail;
         }
 
-        if (!RoslynString.IsNullOrEmpty(_summaryDetail.Text))
+        if (tooManyItems)
         {
             yield return _summaryDetail;
         }
