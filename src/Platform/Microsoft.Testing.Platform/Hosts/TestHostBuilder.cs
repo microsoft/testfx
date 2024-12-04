@@ -236,7 +236,10 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.TryAddService(proxyOutputDevice);
         serviceProvider.TryAddService(proxyOutputDevice.OriginalOutputDevice);
 
-        TestHost.AddDataConsumer(serviceProvider => new AbortForMaxFailedTestsExtension(serviceProvider));
+        TestHost.AddDataConsumer(
+            serviceProvider => new AbortForMaxFailedTestsExtension(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetTestApplicationCancellationTokenSource()));
 
         // Create the test framework capabilities
         ITestFrameworkCapabilities testFrameworkCapabilities = TestFramework.TestFrameworkCapabilitiesFactory(serviceProvider);
