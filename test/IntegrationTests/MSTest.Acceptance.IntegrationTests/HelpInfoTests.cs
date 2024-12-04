@@ -59,6 +59,8 @@ Options:
         Display .NET test application information.
     --list-tests
         List available tests.
+    --max-failed-tests
+        Specifies a maximum number of test failures that, when exceeded, will abort the test run.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
     --results-directory

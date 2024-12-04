@@ -51,12 +51,8 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
 
         // If we are called, the extension is enabled, which means _maxFailedTests.HasValue was true. So null suppression is safe.
         int maxFailed = _maxFailedTests!.Value;
-        if (node.TestNode.Properties.Single<TestNodeStateProperty>() is FailedTestNodeStateProperty)
-        {
-            Interlocked.Increment(ref _failCount);
-        }
-
-        if (_failCount > maxFailed)
+        if (node.TestNode.Properties.Single<TestNodeStateProperty>() is FailedTestNodeStateProperty &&
+            Interlocked.Increment(ref _failCount) > maxFailed)
         {
             _cancellationTokenSource.Cancel();
         }
