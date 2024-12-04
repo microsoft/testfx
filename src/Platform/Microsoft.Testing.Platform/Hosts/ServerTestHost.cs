@@ -660,6 +660,11 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     {
         // Note: The lifetime of the _reader/_writer should be currently handled by the RunAsync()
         // We could consider creating a stateful engine that has the lifetime == server connection UP.
+        if (!ServiceProvider.GetUnhandledExceptionsPolicy().FastFailOnFailure)
+        {
+            AppDomain.CurrentDomain.UnhandledException -= OnCurrentDomainUnhandledException;
+            TaskScheduler.UnobservedTaskException -= OnTaskSchedulerUnobservedTaskException;
+        }
     }
 
     internal async Task SendTestUpdateCompleteAsync(Guid runId)

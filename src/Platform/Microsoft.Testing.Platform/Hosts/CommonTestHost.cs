@@ -69,7 +69,11 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
             await DisposeServiceProviderAsync(ServiceProvider, isProcessShutdown: true);
             await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>());
             await DisposeHelper.DisposeAsync(PushOnlyProtocol);
-            await DisposeHelper.DisposeAsync(ServiceProvider.GetTestApplicationCancellationTokenSource());
+
+            // This is intentional that we are not disposing the CTS.
+            // An unobserved task exception could be raised after the dispose, and we want to use OutputDevice there
+            // which needs CTS down the path.
+            // await DisposeHelper.DisposeAsync(ServiceProvider.GetTestApplicationCancellationTokenSource());
         }
 
         if (testApplicationCancellationToken.IsCancellationRequested)
