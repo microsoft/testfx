@@ -4,4 +4,4 @@
 namespace Microsoft.Testing.Platform.ServerMode.Json;
 
 // This object is needed to reuse jsonite's serialization shared code.
-internal class JsoniteProperties : Dictionary<string, object>;
+internal sealed class JsoniteProperties : Dictionary<string, object>;

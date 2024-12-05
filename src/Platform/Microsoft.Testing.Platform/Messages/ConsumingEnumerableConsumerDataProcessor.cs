@@ -10,7 +10,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Messages;
 
-internal class AsyncConsumerDataProcessor : IDisposable
+internal sealed class AsyncConsumerDataProcessor : IDisposable
 {
     // The default underlying collection is a ConcurrentQueue<T> object, which provides first in, first out (FIFO) behavior.
     private readonly BlockingCollection<(IDataProducer DataProducer, IData Data)> _payloads = [];

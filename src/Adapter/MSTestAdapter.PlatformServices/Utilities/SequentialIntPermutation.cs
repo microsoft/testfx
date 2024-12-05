@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// Permutation of integers from 0 to (numberOfObjects - 1) returned by increment of 1.
 /// Used to get sequential permutation for data row access in data driven test.
 /// </summary>
-internal class SequentialIntPermutation : IEnumerable<int>
+internal sealed class SequentialIntPermutation : IEnumerable<int>
 {
     private readonly int _numberOfObjects;
 

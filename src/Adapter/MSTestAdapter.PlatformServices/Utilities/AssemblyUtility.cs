@@ -3,9 +3,9 @@
 
 #if !WINDOWS_UWP
 
+using System.Diagnostics.CodeAnalysis;
 #if NETFRAMEWORK
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
@@ -19,6 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 /// <summary>
 /// Utility for assembly specific functionality.
 /// </summary>
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class AssemblyUtility
 #if NETFRAMEWORK
     : IAssemblyUtility

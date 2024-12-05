@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Security;
@@ -13,6 +14,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for mocking")]
 internal class ReflectHelper : MarshalByRefObject
 {
 #pragma warning disable RS0030 // Do not use banned APIs

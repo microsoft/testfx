@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 [Serializable]
-internal class TestAssemblySettings
+internal sealed class TestAssemblySettings
 {
     public TestAssemblySettings() => Workers = -1;
 

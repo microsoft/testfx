@@ -12,7 +12,7 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
-internal class TrxCompareToolCommandLine : IToolCommandLineOptionsProvider
+internal sealed class TrxCompareToolCommandLine : IToolCommandLineOptionsProvider
 {
     public const string BaselineTrxOptionName = "baseline-trx";
     public const string TrxToCompareOptionName = "trx-to-compare";

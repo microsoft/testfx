@@ -7,7 +7,7 @@ namespace Analyzer.Utilities;
 /// Acts as a good alternative to <see cref="System.Runtime.CompilerServices.ConditionalWeakTable{TKey, TValue}"/>
 /// when the cached value has a cyclic reference to the key preventing early garbage collection of entries.
 /// </summary>
-internal class BoundedCacheWithFactory<TKey, TValue>
+internal sealed class BoundedCacheWithFactory<TKey, TValue>
     where TKey : class
 {
     // Bounded weak reference cache.

@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers;
 
-internal class TestAdapterInformationRequest : IRequest
+internal sealed class TestAdapterInformationRequest : IRequest
 {
     public TestAdapterInformationRequest(string testAdapterId, string testAdapterVersion)
     {
@@ -19,7 +19,7 @@ internal class TestAdapterInformationRequest : IRequest
     public string TestAdapterVersion { get; }
 }
 
-internal class TestAdapterInformationRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class TestAdapterInformationRequestSerializer : BaseSerializer, INamedPipeSerializer
 {
     public int Id => 2;
 

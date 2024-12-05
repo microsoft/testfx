@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.MSBuild.Serializers;
 
-internal record FailedTestInfoRequest(
+internal sealed record FailedTestInfoRequest(
     string DisplayName,
     bool IsCanceled,
     string? Duration,
@@ -17,7 +17,7 @@ internal record FailedTestInfoRequest(
     string? CodeFilePath,
     int LineNumber) : IRequest;
 
-internal class FailedTestInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class FailedTestInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
 {
     public int Id => 2;
 

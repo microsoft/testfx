@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// Internal class to indicate type inspection failure.
 /// </summary>
 [Serializable]
-internal class TypeInspectionException : Exception
+internal sealed class TypeInspectionException : Exception
 {
     public TypeInspectionException()
         : base()

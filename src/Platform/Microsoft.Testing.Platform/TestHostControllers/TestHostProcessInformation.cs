@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.TestHostControllers;
 
-internal class TestHostProcessInformation : ITestHostProcessInformation
+internal sealed class TestHostProcessInformation : ITestHostProcessInformation
 {
     private readonly int? _exitCode;
     private readonly bool? _hasExitedGracefully;

@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-internal class SystemRuntimeFeature : IRuntimeFeature
+internal sealed class SystemRuntimeFeature : IRuntimeFeature
 {
 #if NETCOREAPP
     public bool IsDynamicCodeSupported => RuntimeFeature.IsDynamicCodeSupported;
