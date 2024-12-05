@@ -35,7 +35,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             useServerModeOutputDevice
                 ? new ServerModePerCallOutputDevice(serviceProvider)
                 : null,
-            serviceProvider.GetService<IPoliciesService>());
+            serviceProvider.GetRequiredService<IPoliciesService>());
     }
 
     public static TerminalOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider)
