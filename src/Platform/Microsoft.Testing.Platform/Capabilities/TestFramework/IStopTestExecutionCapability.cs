@@ -12,5 +12,5 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 /// </remarks>
 public interface IStopTestExecutionCapability : ITestFrameworkCapability
 {
-    public CancellationTokenSource CancellationTokenSource { get; }
+    Task StopTestExecutionAsync(CancellationToken cancellationToken);
 }

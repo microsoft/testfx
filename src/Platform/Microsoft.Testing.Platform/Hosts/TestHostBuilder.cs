@@ -246,7 +246,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         TestHost.AddDataConsumer(
             serviceProvider => new AbortForMaxFailedTestsExtension(
                 serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetTestFrameworkCapabilities().GetCapability<IStopTestExecutionCapability>()?.CancellationTokenSource));
+                serviceProvider.GetTestFrameworkCapabilities().GetCapability<IStopTestExecutionCapability>(),
+                serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken));
 
         // If command line is not valid we return immediately.
         ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(
