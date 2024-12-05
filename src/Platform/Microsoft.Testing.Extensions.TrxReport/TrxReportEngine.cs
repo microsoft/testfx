@@ -16,6 +16,7 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
@@ -28,13 +29,7 @@ internal sealed partial class TrxReportEngine
     private static readonly Regex InvalidXmlCharReplace = BuildInvalidXmlCharReplace();
     private static readonly MatchEvaluator InvalidXmlEvaluator = ReplaceInvalidCharacterWithUniCodeEscapeSequence;
 
-    private static readonly Type[] FailedStates =
-    [
-        typeof(FailedTestNodeStateProperty),
-        typeof(CancelledTestNodeStateProperty),
-        typeof(ErrorTestNodeStateProperty),
-        typeof(TimeoutTestNodeStateProperty)
-    ];
+    private static readonly Type[] FailedStates = TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties;
 
     private static readonly HashSet<char> InvalidFileNameChars =
     [
