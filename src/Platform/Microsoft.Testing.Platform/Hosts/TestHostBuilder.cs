@@ -236,17 +236,17 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.TryAddService(proxyOutputDevice);
         serviceProvider.TryAddService(proxyOutputDevice.OriginalOutputDevice);
 
-        TestHost.AddDataConsumer(
-            serviceProvider => new AbortForMaxFailedTestsExtension(
-                serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetTestApplicationCancellationTokenSource()));
-
         // Create the test framework capabilities
         ITestFrameworkCapabilities testFrameworkCapabilities = TestFramework.TestFrameworkCapabilitiesFactory(serviceProvider);
         if (testFrameworkCapabilities is IAsyncInitializableExtension testFrameworkCapabilitiesAsyncInitializable)
         {
             await testFrameworkCapabilitiesAsyncInitializable.InitializeAsync();
         }
+
+        TestHost.AddDataConsumer(
+            serviceProvider => new AbortForMaxFailedTestsExtension(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetTestFrameworkCapabilities().GetCapability<IStopTestExecutionCapability>()?.CancellationTokenSource));
 
         // If command line is not valid we return immediately.
         ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(

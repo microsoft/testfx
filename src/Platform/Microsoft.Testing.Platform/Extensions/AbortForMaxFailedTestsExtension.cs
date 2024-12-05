@@ -6,18 +6,17 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Extensions;
 
 internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
 {
-    private readonly ITestApplicationCancellationTokenSource _cancellationTokenSource;
+    private readonly CancellationTokenSource? _cancellationTokenSource;
     private readonly int? _maxFailedTests;
 
     private int _failCount;
 
-    public AbortForMaxFailedTestsExtension(ICommandLineOptions commandLineOptions, ITestApplicationCancellationTokenSource cancellationTokenSource)
+    public AbortForMaxFailedTestsExtension(ICommandLineOptions commandLineOptions, CancellationTokenSource? cancellationTokenSource)
     {
         _cancellationTokenSource = cancellationTokenSource;
         if (commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MaxFailedTestsOptionKey, out string[]? args) &&
@@ -43,20 +42,21 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
     public string Description { get; } = PlatformResources.AbortForMaxFailedTestsDescription;
 
     /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(_maxFailedTests.HasValue);
+    public Task<bool> IsEnabledAsync() => Task.FromResult(_maxFailedTests.HasValue && _cancellationTokenSource is not null);
 
-    public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+    public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         var node = (TestNodeUpdateMessage)value;
 
-        // If we are called, the extension is enabled, which means _maxFailedTests.HasValue was true. So null suppression is safe.
-        int maxFailed = _maxFailedTests!.Value;
+        // If we are called, the extension is enabled, which means both _maxFailedTests and _cancellationTokenSource are not null.
+        RoslynDebug.Assert(_maxFailedTests is not null);
+        RoslynDebug.Assert(_cancellationTokenSource is not null);
+
+        int maxFailed = _maxFailedTests.Value;
         if (node.TestNode.Properties.Single<TestNodeStateProperty>() is FailedTestNodeStateProperty &&
             Interlocked.Increment(ref _failCount) > maxFailed)
         {
-            _cancellationTokenSource.Cancel();
+            await _cancellationTokenSource.CancelAsync();
         }
-
-        return Task.CompletedTask;
     }
 }

@@ -1,4 +1,6 @@
 #nullable enable
+Microsoft.Testing.Platform.Capabilities.TestFramework.IStopTestExecutionCapability
+Microsoft.Testing.Platform.Capabilities.TestFramework.IStopTestExecutionCapability.CancellationTokenSource.get -> System.Threading.CancellationTokenSource!
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.TestMetadataProperty(string! key) -> void
 Microsoft.Testing.Platform.OutputDevice.ErrorMessageOutputDeviceData
 Microsoft.Testing.Platform.OutputDevice.ErrorMessageOutputDeviceData.ErrorMessageOutputDeviceData(string! message) -> void
