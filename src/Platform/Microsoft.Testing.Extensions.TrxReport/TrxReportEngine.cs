@@ -29,8 +29,6 @@ internal sealed partial class TrxReportEngine
     private static readonly Regex InvalidXmlCharReplace = BuildInvalidXmlCharReplace();
     private static readonly MatchEvaluator InvalidXmlEvaluator = ReplaceInvalidCharacterWithUniCodeEscapeSequence;
 
-    private static readonly Type[] FailedStates = TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties;
-
     private static readonly HashSet<char> InvalidFileNameChars =
     [
         '\"',
@@ -464,7 +462,7 @@ internal sealed partial class TrxReportEngine
             string outcome = "Passed";
             TestNodeStateProperty? testState = testNode.Properties.SingleOrDefault<TestNodeStateProperty>();
             if (testState is { } state
-                && FailedStates.Contains(testState.GetType()))
+                && TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Contains(testState.GetType()))
             {
                 outcome = resultSummaryOutcome = "Failed";
             }
