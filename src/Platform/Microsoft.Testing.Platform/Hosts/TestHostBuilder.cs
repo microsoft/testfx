@@ -206,7 +206,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Set the concrete command line options to the proxy.
         commandLineOptionsProxy.SetCommandLineOptions(commandLineHandler);
 
-        // This needs to be before output device because output device will use it.
         var policiesService = new PoliciesService();
         serviceProvider.AddService(policiesService);
 
@@ -326,7 +325,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             proxyOutputDevice,
             serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetCommandLineOptions(),
-            serviceProvider.GetEnvironment());
+            serviceProvider.GetEnvironment(),
+            policiesService);
         serviceProvider.AddService(testApplicationResult);
 
         // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//

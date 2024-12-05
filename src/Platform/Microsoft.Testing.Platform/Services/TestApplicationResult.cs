@@ -13,19 +13,41 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class TestApplicationResult(
-    IOutputDevice outputService,
-    ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
-    ICommandLineOptions commandLineOptions,
-    IEnvironment environment) : ITestApplicationProcessExitCode, IOutputDeviceDataProducer
+internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, IOutputDeviceDataProducer
 {
-    private readonly IOutputDevice _outputService = outputService;
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
-    private readonly ICommandLineOptions _commandLineOptions = commandLineOptions;
-    private readonly IEnvironment _environment = environment;
+    private readonly IOutputDevice _outputService;
+    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
+    private readonly ICommandLineOptions _commandLineOptions;
+    private readonly IEnvironment _environment;
+    private readonly PoliciesService _policiesService;
     private readonly List<TestNode> _failedTests = [];
     private int _totalRanTests;
     private bool _testAdapterTestSessionFailure;
+    private bool _testExecutionStopped;
+
+    public TestApplicationResult(
+        IOutputDevice outputService,
+        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
+        ICommandLineOptions commandLineOptions,
+        IEnvironment environment,
+        PoliciesService policiesService)
+    {
+        _outputService = outputService;
+        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
+        _commandLineOptions = commandLineOptions;
+        _environment = environment;
+        policiesService.RegisterOnStopTestExecution(
+            async cancellationToken =>
+            {
+                // How to make the message more clear that it's due to --max-failed-tests?
+                // The way we are currently abstracting is too generic that any one could use IStopTestExecutionCapability for whatever other reason.
+                // So, we can't here "hardcode" the message to be specific to --max-failed-tests.
+                // Do we want to introduce a "reason" parameter in IStopTestExecutionCapability.StopTestExecutionAsync?
+                // TODO: Localize
+                await _outputService.DisplayAsync(this, new TextOutputDeviceData("Test session was stopped."));
+                _testExecutionStopped = true;
+            });
+    }
 
     /// <inheritdoc />
     public string Uid { get; } = nameof(TestApplicationResult);
@@ -81,6 +103,7 @@ internal sealed class TestApplicationResult(
     public int GetProcessExitCode()
     {
         int exitCode = ExitCodes.Success;
+        exitCode = exitCode == ExitCodes.Success && _testExecutionStopped ? ExitCodes.TestExecutionStopped : exitCode;
         exitCode = exitCode == ExitCodes.Success && _testAdapterTestSessionFailure ? ExitCodes.TestAdapterTestSessionFailure : exitCode;
         exitCode = exitCode == ExitCodes.Success && _failedTests.Count > 0 ? ExitCodes.AtLeastOneTestFailed : exitCode;
         exitCode = exitCode == ExitCodes.Success && _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested ? ExitCodes.TestSessionAborted : exitCode;
