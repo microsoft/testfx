@@ -19,7 +19,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
-    private readonly PoliciesService _policiesService;
     private readonly List<TestNode> _failedTests = [];
     private int _totalRanTests;
     private bool _testAdapterTestSessionFailure;
