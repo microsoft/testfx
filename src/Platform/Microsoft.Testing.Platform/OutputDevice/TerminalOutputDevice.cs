@@ -160,6 +160,7 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
             UseAnsi = !noAnsi,
+            ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
         });
 
