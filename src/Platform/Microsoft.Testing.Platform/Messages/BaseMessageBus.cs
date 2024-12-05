@@ -12,7 +12,7 @@ internal abstract class BaseMessageBus : IMessageBus, IDisposable
 
     public abstract Task InitAsync();
 
-    public abstract Task DrainDataAsync(bool forceIfCancelled = false);
+    public abstract Task DrainDataAsync();
 
     public abstract Task DisableAsync();
 

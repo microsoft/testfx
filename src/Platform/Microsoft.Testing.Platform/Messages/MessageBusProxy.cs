@@ -33,10 +33,10 @@ internal sealed class MessageBusProxy : BaseMessageBus, IMessageBus
         await _messageBus.PublishAsync(dataProducer, data);
     }
 
-    public override async Task DrainDataAsync(bool forceIfCancelled = false)
+    public override async Task DrainDataAsync()
     {
         EnsureMessageBusAvailable();
-        await _messageBus.DrainDataAsync(forceIfCancelled);
+        await _messageBus.DrainDataAsync();
     }
 
     public override async Task DisableAsync()
