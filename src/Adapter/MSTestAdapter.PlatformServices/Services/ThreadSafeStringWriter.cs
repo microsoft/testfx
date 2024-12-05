@@ -177,7 +177,7 @@ public class ThreadSafeStringWriter : StringWriter
     /// <summary>
     /// This StringBuilder puts locks around all the methods to avoid conflicts when writing or reading from multiple threads.
     /// </summary>
-    private class ThreadSafeStringBuilder
+    private sealed class ThreadSafeStringBuilder
     {
         private readonly StringBuilder _stringBuilder = new();
         private readonly Lock _instanceLockObject = new();

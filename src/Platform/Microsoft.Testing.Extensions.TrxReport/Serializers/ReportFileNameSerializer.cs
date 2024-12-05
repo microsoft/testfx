@@ -11,7 +11,7 @@ internal sealed class ReportFileNameRequest(string fileName) : IRequest
     public string FileName { get; } = fileName;
 }
 
-internal class ReportFileNameRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class ReportFileNameRequestSerializer : BaseSerializer, INamedPipeSerializer
 {
     public int Id => 1;
 

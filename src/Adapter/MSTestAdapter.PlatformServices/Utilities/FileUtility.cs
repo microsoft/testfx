@@ -3,6 +3,7 @@
 
 #if !WINDOWS_UWP
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
@@ -11,6 +12,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for mocking")]
 internal class FileUtility
 {
     private readonly AssemblyUtility _assemblyUtility;

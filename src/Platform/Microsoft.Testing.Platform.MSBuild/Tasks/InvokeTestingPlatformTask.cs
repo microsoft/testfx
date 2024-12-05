@@ -420,7 +420,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         throw new NotImplementedException($"Request '{request.GetType()}' not supported.");
     }
 
-    private class MSBuildLogger : Logging.ILogger
+    private sealed class MSBuildLogger : Logging.ILogger
     {
         public bool IsEnabled(LogLevel logLevel) => false;
 

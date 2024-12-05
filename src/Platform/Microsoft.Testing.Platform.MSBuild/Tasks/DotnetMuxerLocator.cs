@@ -10,7 +10,7 @@ using Microsoft.Win32;
 
 namespace Microsoft.Testing.Platform.MSBuild.Tasks;
 
-internal class DotnetMuxerLocator
+internal sealed class DotnetMuxerLocator
 {
     private readonly string _muxerName;
     private readonly Process _currentProcess;

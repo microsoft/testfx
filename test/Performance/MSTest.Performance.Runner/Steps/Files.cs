@@ -3,4 +3,4 @@
 
 namespace MSTest.Performance.Runner.Steps;
 
-internal record Files(string[] FilesCollection) : IPayload;
+internal sealed record Files(string[] FilesCollection) : IPayload;

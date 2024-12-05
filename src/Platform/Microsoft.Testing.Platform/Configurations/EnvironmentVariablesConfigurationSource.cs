@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal class EnvironmentVariablesConfigurationSource(IEnvironment environmentVariables) : IConfigurationSource
+internal sealed class EnvironmentVariablesConfigurationSource(IEnvironment environmentVariables) : IConfigurationSource
 {
     private readonly IEnvironment _environmentVariables = environmentVariables;
 

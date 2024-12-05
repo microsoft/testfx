@@ -7,7 +7,6 @@ using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
@@ -73,9 +72,6 @@ public partial /* for codegen regx */ class TestingPlatformClientFactory
 
         return new TestingPlatformClient(new(tcpClient.GetStream()), tcpClient, processHandler);
     }
-
-    [GeneratedRegex(@"Starting server. Listening on port '(\d+)'")]
-    private static partial Regex ParsePort();
 }
 
 public sealed class ProcessConfiguration

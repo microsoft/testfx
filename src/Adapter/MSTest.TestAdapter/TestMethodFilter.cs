@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
-internal class TestMethodFilter
+internal sealed class TestMethodFilter
 {
     /// <summary>
     /// Supported properties for filtering.

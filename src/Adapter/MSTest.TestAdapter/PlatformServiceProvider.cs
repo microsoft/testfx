@@ -15,7 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// <summary>
 /// The main service provider class that exposes all the platform services available.
 /// </summary>
-internal class PlatformServiceProvider : IPlatformServiceProvider
+internal sealed class PlatformServiceProvider : IPlatformServiceProvider
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
