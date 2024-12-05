@@ -45,7 +45,11 @@ internal sealed class TestNodeResultsState
             // As such, we can only take maxCount - 1 items.
             int itemsToTake = maxCount - 1;
             _summaryDetail.Text =
-                $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.MoreTestsRunning, sortedDetails.Count - itemsToTake)}";
+                itemsToTake == 0
+                    // Note: If itemsToTake is 0, then we only show two lines, the project summary and the number of running tests.
+                    ? string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, sortedDetails.Count)
+                    // If itemsToTake is larger, then we show the project summary, active tests, and the number of active tests that are not shown.
+                    : $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, sortedDetails.Count - itemsToTake)}";
             sortedDetails = sortedDetails.Take(itemsToTake).ToList();
         }
 
