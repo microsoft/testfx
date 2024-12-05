@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
@@ -17,7 +18,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// <summary>
 /// Enumerates through the type looking for Valid Test Methods to execute.
 /// </summary>
-internal sealed class TypeEnumerator
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
+internal class TypeEnumerator
 {
     private readonly Type _type;
     private readonly string _assemblyFilePath;
@@ -52,7 +54,7 @@ internal sealed class TypeEnumerator
     /// </summary>
     /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> list of test cases.</returns>
-    internal ICollection<UnitTestElement>? Enumerate(out ICollection<string> warnings)
+    internal virtual ICollection<UnitTestElement>? Enumerate(out ICollection<string> warnings)
     {
         warnings = new Collection<string>();
 
