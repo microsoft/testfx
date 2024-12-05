@@ -28,6 +28,7 @@ public class Program
         {
             // To attach to the children
             Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
+
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 
             // Test MSTest
@@ -37,7 +38,7 @@ public class Program
             // testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new DummyAdapter());
 
             // Custom test host controller extension
-            testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
+            // testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
 
             // Enable Trx
             // testApplicationBuilder.AddTrxReportProvider();
@@ -50,7 +51,7 @@ public class Program
         else
         {
             Environment.SetEnvironmentVariable("TESTSERVERMODE", "0");
-            using TestingPlatformClient client = await TestingPlatformClientFactory.StartAsServerAndConnectAsync(Environment.ProcessPath!, enableDiagnostic: true);
+            using TestingPlatformClient client = await TestingPlatformClientFactory.StartAsServerAndConnectToTheClientAsync(Environment.ProcessPath!);
 
             await client.InitializeAsync();
             List<TestNodeUpdate> testNodeUpdates = new();
