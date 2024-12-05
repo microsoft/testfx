@@ -30,7 +30,12 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             nonServerOutputDevice = GetDefaultTerminalOutputDevice(serviceProvider);
         }
 
-        return new ProxyOutputDevice(nonServerOutputDevice, useServerModeOutputDevice ? new ServerModePerCallOutputDevice(serviceProvider) : null);
+        return new ProxyOutputDevice(
+            nonServerOutputDevice,
+            useServerModeOutputDevice
+                ? new ServerModePerCallOutputDevice(serviceProvider)
+                : null,
+            serviceProvider.GetService<IPoliciesService>());
     }
 
     public static TerminalOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider)

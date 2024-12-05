@@ -206,6 +206,10 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Set the concrete command line options to the proxy.
         commandLineOptionsProxy.SetCommandLineOptions(commandLineHandler);
 
+        // This needs to be before output device because output device will use it.
+        var policiesService = new PoliciesService();
+        serviceProvider.AddService(policiesService);
+
         bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
         bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
 
@@ -247,6 +251,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             serviceProvider => new AbortForMaxFailedTestsExtension(
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetTestFrameworkCapabilities().GetCapability<IStopTestExecutionCapability>(),
+                policiesService,
                 serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken));
 
         // If command line is not valid we return immediately.

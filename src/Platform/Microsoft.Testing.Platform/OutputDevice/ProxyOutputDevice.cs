@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
@@ -11,10 +12,14 @@ internal sealed class ProxyOutputDevice : IOutputDevice
 {
     private readonly ServerModePerCallOutputDevice? _serverModeOutputDevice;
 
-    public ProxyOutputDevice(IPlatformOutputDevice originalOutputDevice, ServerModePerCallOutputDevice? serverModeOutputDevice)
+    public ProxyOutputDevice(IPlatformOutputDevice originalOutputDevice, ServerModePerCallOutputDevice? serverModeOutputDevice, IPoliciesService policiesService)
     {
         OriginalOutputDevice = originalOutputDevice;
         _serverModeOutputDevice = serverModeOutputDevice;
+        policiesService.RegisterOnStopTestExecution(
+            async ct => await DisplayAsync(
+                /*TODO: pass 'this' and implement IOutputDeviceDataProducer*/null!,
+                new TextOutputDeviceData(/*TODO: Localize*/"Test session is being stopped.")));
     }
 
     internal IPlatformOutputDevice OriginalOutputDevice { get; }
