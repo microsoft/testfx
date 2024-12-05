@@ -32,13 +32,8 @@ internal sealed class TestNodeResultsState
 
     public IEnumerable<TestDetailState> GetRunningTasks(int maxCount)
     {
-        // Note: Do not show tasks that complete in less than 1s, to avoid refreshing the UI too often.
-        // Tests that took more than 1s to complete are much more likely to be longer running.
-        var minimumTime = TimeSpan.FromSeconds(1);
-
         var sortedDetails = _testNodeProgressStates
             .Select(d => d.Value)
-            .Where(d => d.Stopwatch?.Elapsed > minimumTime)
             .OrderBy(d => d.Stopwatch?.Elapsed ?? TimeSpan.Zero)
             .ToList();
 
