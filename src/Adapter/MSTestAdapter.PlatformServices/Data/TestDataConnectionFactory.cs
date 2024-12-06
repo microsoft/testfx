@@ -64,12 +64,12 @@ internal class TestDataConnectionFactory
 
     #region TestDataConnectionFactories
 
-    private class XmlTestDataConnectionFactory : TestDataConnectionFactory
+    private sealed class XmlTestDataConnectionFactory : TestDataConnectionFactory
     {
         public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders) => new XmlDataConnection(connectionString, dataFolders);
     }
 
-    private class CsvTestDataConnectionFactory : TestDataConnectionFactory
+    private sealed class CsvTestDataConnectionFactory : TestDataConnectionFactory
     {
         public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders) => new CsvDataConnection(connectionString, dataFolders);
     }

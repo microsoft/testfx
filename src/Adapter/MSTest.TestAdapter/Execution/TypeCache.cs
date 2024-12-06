@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines type cache which reflects upon a type and cache its test artifacts.
 /// </summary>
-internal class TypeCache : MarshalByRefObject
+internal sealed class TypeCache : MarshalByRefObject
 {
     /// <summary>
     /// Test context property name.

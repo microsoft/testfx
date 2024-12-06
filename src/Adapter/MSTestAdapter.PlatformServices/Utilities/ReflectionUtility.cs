@@ -6,6 +6,7 @@
 #if NETFRAMEWORK
 using System.Collections;
 #endif
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -13,6 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 /// <summary>
 /// Utility for reflection API's.
 /// </summary>
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class ReflectionUtility
 {
     /// <summary>

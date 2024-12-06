@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.Testing.Platform.MSBuild;
 
-internal class StackTraceHelper
+internal static class StackTraceHelper
 {
     private static Regex? s_regex;
 

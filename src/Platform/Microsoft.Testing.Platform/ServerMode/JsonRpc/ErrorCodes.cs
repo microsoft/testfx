@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Microsoft.Testing.Platform.ServerMode;
 
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:Fields should be private", Justification = "Common pattern to use public static readonly fields")]
-internal class ErrorCodes
+internal sealed class ErrorCodes
 {
     #region JSON-RPC error codes
     // JSON-RPC specific error codes.

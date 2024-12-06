@@ -20,6 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// <summary>
 /// Enumerates through all types in the assembly in search of valid test methods.
 /// </summary>
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class AssemblyEnumerator : MarshalByRefObject
 {
     /// <summary>

@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.ServerMode;
 
 namespace Microsoft.Testing.Platform.TestHostControllers;
 
-internal class PassiveNodeDataConsumer : IDataConsumer, IDisposable
+internal sealed class PassiveNodeDataConsumer : IDataConsumer, IDisposable
 {
     private const string FileType = "file";
     private readonly PassiveNode? _passiveNode;

@@ -25,7 +25,7 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// <summary>
 /// Implementation of output device that writes to terminal with progress and optionally with ANSI.
 /// </summary>
-internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
+internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,
     ITestSessionLifetimeHandler,
@@ -192,7 +192,7 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     ];
 
     /// <inheritdoc />
-    public virtual string Uid { get; } = nameof(TerminalOutputDevice);
+    public string Uid { get; } = nameof(TerminalOutputDevice);
 
     /// <inheritdoc />
     public string Version { get; } = AppVersion.DefaultSemVer;
@@ -204,7 +204,7 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     public string Description { get; } = "Test Platform default console service";
 
     /// <inheritdoc />
-    public virtual Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     private async Task LogDebugAsync(string message)
     {
@@ -214,7 +214,7 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
         }
     }
 
-    public virtual async Task DisplayBannerAsync(string? bannerMessage)
+    public async Task DisplayBannerAsync(string? bannerMessage)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 

@@ -10,7 +10,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal class PassiveNode : IDisposable
+internal sealed class PassiveNode : IDisposable
 {
     private readonly IMessageHandlerFactory _messageHandlerFactory;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;

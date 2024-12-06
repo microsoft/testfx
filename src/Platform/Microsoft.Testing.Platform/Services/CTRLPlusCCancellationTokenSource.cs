@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal class CTRLPlusCCancellationTokenSource : ITestApplicationCancellationTokenSource, IDisposable
+internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancellationTokenSource, IDisposable
 {
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly ILogger? _logger;

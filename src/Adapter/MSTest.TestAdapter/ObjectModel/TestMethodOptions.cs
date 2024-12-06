@@ -10,4 +10,4 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// <summary>
 ///  A facade service for options passed to a test method.
 /// </summary>
-internal record TestMethodOptions(TimeoutInfo TimeoutInfo, ExpectedExceptionBaseAttribute? ExpectedException, ITestContext? TestContext, bool CaptureDebugTraces, TestMethodAttribute? Executor);
+internal sealed record TestMethodOptions(TimeoutInfo TimeoutInfo, ExpectedExceptionBaseAttribute? ExpectedException, ITestContext? TestContext, bool CaptureDebugTraces, TestMethodAttribute? Executor);

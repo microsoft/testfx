@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
-internal class ReflectionOperations2 : ReflectionOperations, IReflectionOperations2
+internal sealed class ReflectionOperations2 : ReflectionOperations, IReflectionOperations2
 {
     public ReflectionOperations2()
     {
