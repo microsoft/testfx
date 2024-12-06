@@ -207,7 +207,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         commandLineOptionsProxy.SetCommandLineOptions(commandLineHandler);
 
         // This is needed by output device.
-        var policiesService = new PoliciesService();
+        var policiesService = new StopPoliciesService();
         serviceProvider.AddService(policiesService);
 
         bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
@@ -730,8 +730,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
         var abortForMaxFailedTestsExtension = new AbortForMaxFailedTestsExtension(
             serviceProvider.GetCommandLineOptions(),
-            serviceProvider.GetTestFrameworkCapabilities().GetCapability<IStopGracefullyTestExecutionCapability>(),
-            serviceProvider.GetRequiredService<PoliciesService>(),
+            serviceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>(),
+            serviceProvider.GetRequiredService<StopPoliciesService>(),
             serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken);
 
         if (await abortForMaxFailedTestsExtension.IsEnabledAsync())

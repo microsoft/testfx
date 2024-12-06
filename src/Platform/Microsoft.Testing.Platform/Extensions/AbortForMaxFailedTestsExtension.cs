@@ -15,12 +15,16 @@ namespace Microsoft.Testing.Platform.Extensions;
 internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
 {
     private readonly int? _maxFailedTests;
-    private readonly IStopGracefullyTestExecutionCapability? _capability;
-    private readonly PoliciesService _policiesService;
-    private readonly CancellationToken _cancellationToken;
+    private readonly IGracefulStopTestExecutionCapability? _capability;
+    private readonly StopPoliciesService _policiesService;
+    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private int _failCount;
 
-    public AbortForMaxFailedTestsExtension(ICommandLineOptions commandLineOptions, IStopGracefullyTestExecutionCapability? capability, PoliciesService policiesService, CancellationToken cancellationToken)
+    public AbortForMaxFailedTestsExtension(
+        ICommandLineOptions commandLineOptions,
+        IGracefulStopTestExecutionCapability? capability,
+        StopPoliciesService policiesService,
+        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
     {
         if (commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MaxFailedTestsOptionKey, out string[]? args) &&
             int.TryParse(args[0], out int maxFailedTests) &&
@@ -31,7 +35,7 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
 
         _capability = capability;
         _policiesService = policiesService;
-        _cancellationToken = cancellationToken;
+        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     }
 
     public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage)];
@@ -55,7 +59,7 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
     {
         var node = (TestNodeUpdateMessage)value;
 
-        // If we are called, the extension is enabled, which means both _maxFailedTests and _cancellationTokenSource are not null.
+        // If we are called, the extension is enabled, which means both _maxFailedTests and capability are not null.
         RoslynDebug.Assert(_maxFailedTests is not null);
         RoslynDebug.Assert(_capability is not null);
 
@@ -63,8 +67,8 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
         if (TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Any(t => t == testNodeStateProperty.GetType()) &&
             ++_failCount > _maxFailedTests.Value)
         {
-            await _capability.StopTestExecutionAsync(_cancellationToken);
-            await _policiesService.MaxFailedTestsPolicy.ExecuteCallbacksAsync(_cancellationToken);
+            await _capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken);
+            await _policiesService.MaxFailedTestsPolicy.ExecuteCallbacksAsync(_testApplicationCancellationTokenSource.CancellationToken);
         }
     }
 }

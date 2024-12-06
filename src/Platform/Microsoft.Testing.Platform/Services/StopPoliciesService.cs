@@ -5,13 +5,13 @@ using System.Collections.Concurrent;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class PoliciesService : IPoliciesService
+internal sealed class StopPoliciesService : IStopPoliciesService
 {
     internal sealed class Policy
     {
         private BlockingCollection<Func<CancellationToken, Task>>? _callbacks;
 
-        public bool IsPolicyTriggered { get; private set; }
+        public bool IsTriggered { get; private set; }
 
         public void RegisterCallback(Func<CancellationToken, Task> callback)
             => (_callbacks ??= new()).Add(callback);

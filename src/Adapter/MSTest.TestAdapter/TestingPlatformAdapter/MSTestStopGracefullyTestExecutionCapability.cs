@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-internal sealed class MSTestStopGracefullyTestExecutionCapability : IStopGracefullyTestExecutionCapability
+internal sealed class MSTestStopGracefullyTestExecutionCapability : IGracefulStopTestExecutionCapability
 #pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 {
     private MSTestStopGracefullyTestExecutionCapability()

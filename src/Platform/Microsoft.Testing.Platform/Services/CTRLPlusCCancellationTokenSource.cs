@@ -11,7 +11,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly ILogger? _logger;
 
-    public CTRLPlusCCancellationTokenSource(IConsole? console = null, ILogger? logger = null, PoliciesService? policiesService = null)
+    public CTRLPlusCCancellationTokenSource(IConsole? console = null, ILogger? logger = null, StopPoliciesService? policiesService = null)
     {
         if (console is not null)
         {

@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal interface IPoliciesService
+internal interface IStopPoliciesService
 {
     void RegisterOnMaxFailedTestsCallback(Func<CancellationToken, Task> callback);
 

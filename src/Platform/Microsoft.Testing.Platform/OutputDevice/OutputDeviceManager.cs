@@ -36,7 +36,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             useServerModeOutputDevice
                 ? new ServerModePerCallOutputDevice(
                     serviceProvider.GetService<FileLoggerProvider>(),
-                    serviceProvider.GetRequiredService<IPoliciesService>())
+                    serviceProvider.GetRequiredService<IStopPoliciesService>())
                 : null);
     }
 
@@ -55,5 +55,5 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             serviceProvider.GetFileLoggerInformation(),
             serviceProvider.GetLoggerFactory(),
             serviceProvider.GetClock(),
-            serviceProvider.GetRequiredService<IPoliciesService>());
+            serviceProvider.GetRequiredService<IStopPoliciesService>());
 }

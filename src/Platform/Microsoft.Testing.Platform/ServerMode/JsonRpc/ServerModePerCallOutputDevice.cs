@@ -24,7 +24,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
 
     private static readonly string[] NewLineStrings = { "\r\n", "\n" };
 
-    public ServerModePerCallOutputDevice(FileLoggerProvider? fileLoggerProvider, IPoliciesService policiesService)
+    public ServerModePerCallOutputDevice(FileLoggerProvider? fileLoggerProvider, IStopPoliciesService policiesService)
     {
         _fileLoggerProvider = fileLoggerProvider;
         policiesService.RegisterOnMaxFailedTestsCallback(

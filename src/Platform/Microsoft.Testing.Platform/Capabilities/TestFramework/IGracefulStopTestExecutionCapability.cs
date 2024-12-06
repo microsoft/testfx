@@ -13,7 +13,7 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 /// Test frameworks can choose to run any needed cleanup when cancellation is requested.
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public interface IStopGracefullyTestExecutionCapability : ITestFrameworkCapability
+public interface IGracefulStopTestExecutionCapability : ITestFrameworkCapability
 {
     Task StopTestExecutionAsync(CancellationToken cancellationToken);
 }
