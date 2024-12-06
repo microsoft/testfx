@@ -728,12 +728,16 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             dataConsumersBuilder.Add(pushOnlyProtocolDataConsumer);
         }
 
-        dataConsumersBuilder.Add(
-            new AbortForMaxFailedTestsExtension(
-                serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetTestFrameworkCapabilities().GetCapability<IStopGracefullyTestExecutionCapability>(),
-                serviceProvider.GetRequiredService<PoliciesService>(),
-                serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken));
+        var abortForMaxFailedTestsExtension = new AbortForMaxFailedTestsExtension(
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetTestFrameworkCapabilities().GetCapability<IStopGracefullyTestExecutionCapability>(),
+            serviceProvider.GetRequiredService<PoliciesService>(),
+            serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken);
+
+        if (await abortForMaxFailedTestsExtension.IsEnabledAsync())
+        {
+            dataConsumersBuilder.Add(abortForMaxFailedTestsExtension);
+        }
 
         IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();
 
