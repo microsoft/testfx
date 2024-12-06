@@ -233,9 +233,13 @@ public sealed class TerminalTestReporterTests : TestBase
         startHandle.Set();
         stopHandle.WaitOne();
 
+        // Note: On MacOS the busy indicator is not rendered.
+        bool useBusyIndicator = !RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+        string busyIndicatorString = useBusyIndicator ? "␛]9;4;3;␛\\" : string.Empty;
+
         // Note: The progress is drawn after each completed event.
         string expected = $"""
-            ␛]9;4;3;␛\␛[?25l␛[92mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            {busyIndicatorString}␛[?25l␛[92mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
