@@ -20,6 +20,7 @@ public static class TestApplicationBuilderExtensions
         testApplicationBuilder.AddRunSettingsService(extension);
         testApplicationBuilder.AddTestCaseFilterService(extension);
         testApplicationBuilder.AddTestRunParametersService(extension);
+        testApplicationBuilder.AddMaxFailedTestsService();
         testApplicationBuilder.AddRunSettingsEnvironmentVariableProvider(extension);
         testApplicationBuilder.RegisterTestFramework(
             serviceProvider => new TestFrameworkCapabilities(

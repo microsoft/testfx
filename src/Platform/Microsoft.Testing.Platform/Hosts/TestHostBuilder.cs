@@ -207,7 +207,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         commandLineOptionsProxy.SetCommandLineOptions(commandLineHandler);
 
         // This is needed by output device.
-        var policiesService = new StopPoliciesService();
+        var policiesService = new StopPoliciesService(testApplicationCancellationTokenSource);
         serviceProvider.AddService(policiesService);
 
         bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
