@@ -916,10 +916,15 @@ internal class TypeCache : MarshalByRefObject
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo is Null");
         DebugEx.Assert(testMethodInfo.TestMethod != null, "testMethodInfo.TestMethod is Null");
 
-        object[] attributes = testMethodInfo.TestMethod.GetCustomAttributes(typeof(TestPropertyAttribute), false);
+        IEnumerable<TestPropertyAttribute> attributes = testMethodInfo.TestMethod.GetCustomAttributes<TestPropertyAttribute>(inherit: false);
         DebugEx.Assert(attributes != null, "attributes is null");
 
-        foreach (TestPropertyAttribute attribute in attributes.Cast<TestPropertyAttribute>())
+        if (testMethodInfo.TestMethod.DeclaringType is { } testClass)
+        {
+            attributes = attributes.Concat(testClass.GetCustomAttributes<TestPropertyAttribute>(inherit: false));
+        }
+
+        foreach (TestPropertyAttribute attribute in attributes)
         {
             if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, attribute.Name, attribute.Value))
             {
