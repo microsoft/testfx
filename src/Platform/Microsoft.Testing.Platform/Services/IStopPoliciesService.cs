@@ -9,11 +9,11 @@ internal interface IStopPoliciesService
 
     bool IsAbortTriggered { get; }
 
-    void RegisterOnMaxFailedTestsCallback(Func<CancellationToken, Task> callback);
+    void RegisterOnMaxFailedTestsCallback(Func<int, CancellationToken, Task> callback);
 
     void RegisterOnAbortCallback(Func<Task> callback);
 
-    Task ExecuteMaxFailedTestsCallbacksAsync(CancellationToken cancellationToken);
+    Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken);
 
     Task ExecuteAbortCallbacksAsync();
 }

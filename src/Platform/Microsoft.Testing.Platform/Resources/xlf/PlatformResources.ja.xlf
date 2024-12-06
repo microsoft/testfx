@@ -630,9 +630,9 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <note />
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
-        <source>Test session is aborting due to reaching failures specified by the '--max-failed-tests' option.</source>
-        <target state="new">Test session is aborting due to reaching failures specified by the '--max-failed-tests' option.</target>
-        <note />
+        <source>Test session is aborting due to reaching failures ('{0}') specified by the '--max-failed-tests' option.</source>
+        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--max-failed-tests' option.</target>
+        <note>{0} is the number of max failed tests.</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>

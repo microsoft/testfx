@@ -90,7 +90,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _clock = clock;
 
         policiesService.RegisterOnMaxFailedTestsCallback(
-            async _ => await DisplayAsync(this, new TextOutputDeviceData(PlatformResources.ReachedMaxFailedTestsMessage)));
+            async (maxFailedTests, _) => await DisplayAsync(
+                this,
+                new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
 
         policiesService.RegisterOnAbortCallback(
             () =>

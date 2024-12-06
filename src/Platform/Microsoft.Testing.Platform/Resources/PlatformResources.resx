@@ -704,6 +704,7 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
     <value>Extension used to support '--max-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</value>
   </data>
   <data name="ReachedMaxFailedTestsMessage" xml:space="preserve">
-    <value>Test session is aborting due to reaching failures specified by the '--max-failed-tests' option.</value>
+    <value>Test session is aborting due to reaching failures ('{0}') specified by the '--max-failed-tests' option.</value>
+    <comment>{0} is the number of max failed tests.</comment>
   </data>
 </root>

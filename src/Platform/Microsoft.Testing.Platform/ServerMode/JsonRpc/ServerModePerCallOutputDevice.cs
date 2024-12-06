@@ -28,7 +28,8 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     {
         _fileLoggerProvider = fileLoggerProvider;
         policiesService.RegisterOnMaxFailedTestsCallback(
-            async _ => await DisplayAsync(this, new TextOutputDeviceData(PlatformResources.ReachedMaxFailedTestsMessage)));
+            async (maxFailedTests, _) => await DisplayAsync(
+                this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
     }
 
     internal async Task InitializeAsync(IServerTestHost serverTestHost)

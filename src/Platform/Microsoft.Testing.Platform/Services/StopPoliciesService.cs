@@ -12,7 +12,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
         testApplicationCancellationTokenSource.CancellationToken.Register(async () => await ExecuteAbortCallbacksAsync());
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
 
-    private BlockingCollection<Func<CancellationToken, Task>>? _maxFailedTestsCallbacks;
+    private BlockingCollection<Func<int, CancellationToken, Task>>? _maxFailedTestsCallbacks;
     private BlockingCollection<Func<Task>>? _abortCallbacks;
 
     public bool IsMaxFailedTestsTriggered { get; private set; }
@@ -22,16 +22,16 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     private static void RegisterCallback<T>(ref BlockingCollection<T>? callbacks, T callback)
         => (callbacks ??= new()).Add(callback);
 
-    public async Task ExecuteMaxFailedTestsCallbacksAsync(CancellationToken cancellationToken)
+    public async Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken)
     {
         if (_maxFailedTestsCallbacks is null)
         {
             return;
         }
 
-        foreach (Func<CancellationToken, Task> callback in _maxFailedTestsCallbacks)
+        foreach (Func<int, CancellationToken, Task> callback in _maxFailedTestsCallbacks)
         {
-            await callback.Invoke(cancellationToken);
+            await callback.Invoke(maxFailedTests, cancellationToken);
         }
     }
 
@@ -48,7 +48,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
         }
     }
 
-    public void RegisterOnMaxFailedTestsCallback(Func<CancellationToken, Task> callback)
+    public void RegisterOnMaxFailedTestsCallback(Func<int, CancellationToken, Task> callback)
         => RegisterCallback(ref _maxFailedTestsCallbacks, callback);
 
     public void RegisterOnAbortCallback(Func<Task> callback)

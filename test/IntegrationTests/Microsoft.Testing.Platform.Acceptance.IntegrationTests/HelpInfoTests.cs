@@ -55,8 +55,6 @@ Options:
         Display .NET test application information.
     --list-tests
         List available tests.
-    --max-failed-tests
-        Specifies a maximum number of test failures that, when exceeded, will abort the test run.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
     --results-directory
@@ -220,10 +218,6 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: List available tests\.
-      --max-failed-tests
-        Arity: 1
-        Hidden: False
-        Description: Specifies a maximum number of test failures that, when exceeded, will abort the test run\.
       --minimum-expected-tests
         Arity: 0\.\.1
         Hidden: False
@@ -323,8 +317,6 @@ Options:
         Display .NET test application information.
     --list-tests
         List available tests.
-    --max-failed-tests
-        Specifies a maximum number of test failures that, when exceeded, will abort the test run.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
     --results-directory
@@ -500,10 +492,6 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: List available tests.
-      --max-failed-tests
-        Arity: 1
-        Hidden: False
-        Description: Specifies a maximum number of test failures that, when exceeded, will abort the test run.
       --minimum-expected-tests
         Arity: 0..1
         Hidden: False

@@ -69,7 +69,7 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
             ++_failCount > _maxFailedTests.Value)
         {
             await _capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken);
-            await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(_testApplicationCancellationTokenSource.CancellationToken);
+            await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(_maxFailedTests.Value, _testApplicationCancellationTokenSource.CancellationToken);
         }
     }
 }
