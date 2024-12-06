@@ -9,7 +9,18 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 internal sealed class MSTestStopGracefullyTestExecutionCapability : IStopGracefullyTestExecutionCapability
 #pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 {
-    // TODO:
+    private MSTestStopGracefullyTestExecutionCapability()
+    {
+    }
+
+    public static MSTestStopGracefullyTestExecutionCapability Instance { get; } = new();
+
+    // TODO: Respect this properly to ensure cleanups are run.
+    public bool IsStopRequested { get; private set; }
+
     public Task StopTestExecutionAsync(CancellationToken cancellationToken)
-        => Task.CompletedTask;
+    {
+        IsStopRequested = true;
+        return Task.CompletedTask;
+    }
 }
