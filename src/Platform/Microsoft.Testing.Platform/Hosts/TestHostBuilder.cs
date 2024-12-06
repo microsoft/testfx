@@ -317,7 +317,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Register the ITestApplicationResult
         TestApplicationResult testApplicationResult = new(
             proxyOutputDevice,
-            serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetEnvironment(),
             policiesService);

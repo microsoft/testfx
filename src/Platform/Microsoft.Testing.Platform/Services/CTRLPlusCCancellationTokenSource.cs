@@ -11,7 +11,7 @@ internal class CTRLPlusCCancellationTokenSource : ITestApplicationCancellationTo
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly ILogger? _logger;
 
-    public CTRLPlusCCancellationTokenSource(IConsole? console = null, ILogger? logger = null)
+    public CTRLPlusCCancellationTokenSource(IConsole? console = null, ILogger? logger = null, PoliciesService? policiesService = null)
     {
         if (console is not null)
         {
@@ -19,6 +19,11 @@ internal class CTRLPlusCCancellationTokenSource : ITestApplicationCancellationTo
         }
 
         _logger = logger;
+        if (policiesService is not null)
+        {
+            // TODO: Discuss about what we pass here as cancellation token.
+            _cancellationTokenSource.Token.Register(() => policiesService.AbortPolicy.ExecuteCallbacksAsync(cancellationToken: default).GetAwaiter().GetResult());
+        }
     }
 
     public void CancelAfter(TimeSpan timeout) => _cancellationTokenSource.CancelAfter(timeout);

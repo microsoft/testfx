@@ -11,6 +11,8 @@ internal sealed class PoliciesService : IPoliciesService
     {
         private BlockingCollection<Func<CancellationToken, Task>>? _callbacks;
 
+        public bool IsPolicyTriggered { get; private set; }
+
         public void RegisterCallback(Func<CancellationToken, Task> callback)
             => (_callbacks ??= new()).Add(callback);
 
@@ -35,6 +37,6 @@ internal sealed class PoliciesService : IPoliciesService
     public void RegisterOnMaxFailedTestsCallback(Func<CancellationToken, Task> callback)
         => MaxFailedTestsPolicy.RegisterCallback(callback);
 
-    public void RegisterOnAbortCallback(Func<CancellationToken, Task> callback)
-        => AbortPolicy.RegisterCallback(callback);
+    public void RegisterOnAbortCallback(Func<Task> callback)
+        => AbortPolicy.RegisterCallback(_ => callback());
 }

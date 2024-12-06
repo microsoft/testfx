@@ -7,5 +7,5 @@ internal interface IPoliciesService
 {
     void RegisterOnMaxFailedTestsCallback(Func<CancellationToken, Task> callback);
 
-    void RegisterOnAbortCallback(Func<CancellationToken, Task> callback);
+    void RegisterOnAbortCallback(Func<Task> callback);
 }

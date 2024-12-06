@@ -16,9 +16,9 @@ namespace Microsoft.Testing.Platform.Services;
 internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, IOutputDeviceDataProducer
 {
     private readonly IOutputDevice _outputService;
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
+    private readonly PoliciesService _policiesService;
     private readonly List<TestNode> _failedTests = [];
     private int _totalRanTests;
     private bool _testAdapterTestSessionFailure;
@@ -26,15 +26,15 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 
     public TestApplicationResult(
         IOutputDevice outputService,
-        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
         ICommandLineOptions commandLineOptions,
         IEnvironment environment,
         PoliciesService policiesService)
     {
         _outputService = outputService;
-        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _commandLineOptions = commandLineOptions;
         _environment = environment;
+        _policiesService = policiesService;
+
         policiesService.RegisterOnMaxFailedTestsCallback(
             _ =>
             {
@@ -97,10 +97,11 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     public int GetProcessExitCode()
     {
         int exitCode = ExitCodes.Success;
+        exitCode = exitCode == ExitCodes.Success && _policiesService.MaxFailedTestsPolicy.IsPolicyTriggered ? ExitCodes.TestExecutionStoppedForMaxFailedTests : exitCode;
         exitCode = exitCode == ExitCodes.Success && _testExecutionStopped ? ExitCodes.TestExecutionStopped : exitCode;
         exitCode = exitCode == ExitCodes.Success && _testAdapterTestSessionFailure ? ExitCodes.TestAdapterTestSessionFailure : exitCode;
         exitCode = exitCode == ExitCodes.Success && _failedTests.Count > 0 ? ExitCodes.AtLeastOneTestFailed : exitCode;
-        exitCode = exitCode == ExitCodes.Success && _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested ? ExitCodes.TestSessionAborted : exitCode;
+        exitCode = exitCode == ExitCodes.Success && _policiesService.AbortPolicy.IsPolicyTriggered ? ExitCodes.TestSessionAborted : exitCode;
 
         // If the user has specified the VSTestAdapterMode option, then we don't want to return a non-zero exit code if no tests ran.
         if (!_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey))

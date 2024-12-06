@@ -90,7 +90,14 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
         _clock = clock;
 
         policiesService.RegisterOnMaxFailedTestsCallback(
-                    async _ => await DisplayAsync(this, new TextOutputDeviceData(PlatformResources.ReachedMaxFailedTestsMessage)));
+            async _ => await DisplayAsync(this, new TextOutputDeviceData(PlatformResources.ReachedMaxFailedTestsMessage)));
+
+        policiesService.RegisterOnAbortCallback(
+            () =>
+            {
+                _terminalTestReporter?.StartCancelling();
+                return Task.CompletedTask;
+            });
 
         if (_runtimeFeature.IsDynamicCodeSupported)
         {
@@ -166,8 +173,6 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
             UseAnsi = !noAnsi,
             ShowProgress = shouldShowProgress,
         });
-
-        _testApplicationCancellationTokenSource.CancellationToken.Register(() => _terminalTestReporter.StartCancelling());
 
         return Task.CompletedTask;
     }
