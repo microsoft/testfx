@@ -731,8 +731,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         var abortForMaxFailedTestsExtension = new AbortForMaxFailedTestsExtension(
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>(),
-            serviceProvider.GetRequiredService<StopPoliciesService>(),
-            serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken);
+            serviceProvider.GetRequiredService<IStopPoliciesService>(),
+            serviceProvider.GetTestApplicationCancellationTokenSource());
 
         if (await abortForMaxFailedTestsExtension.IsEnabledAsync())
         {

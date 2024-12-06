@@ -16,14 +16,14 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
 {
     private readonly int? _maxFailedTests;
     private readonly IGracefulStopTestExecutionCapability? _capability;
-    private readonly StopPoliciesService _policiesService;
+    private readonly IStopPoliciesService _policiesService;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private int _failCount;
 
     public AbortForMaxFailedTestsExtension(
         ICommandLineOptions commandLineOptions,
         IGracefulStopTestExecutionCapability? capability,
-        StopPoliciesService policiesService,
+        IStopPoliciesService policiesService,
         ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
     {
         if (commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MaxFailedTestsOptionKey, out string[]? args) &&
@@ -68,7 +68,7 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
             ++_failCount > _maxFailedTests.Value)
         {
             await _capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken);
-            await _policiesService.MaxFailedTestsPolicy.ExecuteCallbacksAsync(_testApplicationCancellationTokenSource.CancellationToken);
+            await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(_testApplicationCancellationTokenSource.CancellationToken);
         }
     }
 }

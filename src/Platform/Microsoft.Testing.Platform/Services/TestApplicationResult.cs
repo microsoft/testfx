@@ -18,7 +18,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     private readonly IOutputDevice _outputService;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
-    private readonly StopPoliciesService _policiesService;
+    private readonly IStopPoliciesService _policiesService;
     private readonly List<TestNode> _failedTests = [];
     private int _totalRanTests;
     private bool _testAdapterTestSessionFailure;
@@ -27,7 +27,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         IOutputDevice outputService,
         ICommandLineOptions commandLineOptions,
         IEnvironment environment,
-        StopPoliciesService policiesService)
+        IStopPoliciesService policiesService)
     {
         _outputService = outputService;
         _commandLineOptions = commandLineOptions;
@@ -89,10 +89,10 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     public int GetProcessExitCode()
     {
         int exitCode = ExitCodes.Success;
-        exitCode = exitCode == ExitCodes.Success && _policiesService.MaxFailedTestsPolicy.IsTriggered ? ExitCodes.TestExecutionStoppedForMaxFailedTests : exitCode;
+        exitCode = exitCode == ExitCodes.Success && _policiesService.IsMaxFailedTestsTriggered ? ExitCodes.TestExecutionStoppedForMaxFailedTests : exitCode;
         exitCode = exitCode == ExitCodes.Success && _testAdapterTestSessionFailure ? ExitCodes.TestAdapterTestSessionFailure : exitCode;
         exitCode = exitCode == ExitCodes.Success && _failedTests.Count > 0 ? ExitCodes.AtLeastOneTestFailed : exitCode;
-        exitCode = exitCode == ExitCodes.Success && _policiesService.AbortPolicy.IsTriggered ? ExitCodes.TestSessionAborted : exitCode;
+        exitCode = exitCode == ExitCodes.Success && _policiesService.IsAbortTriggered ? ExitCodes.TestSessionAborted : exitCode;
 
         // If the user has specified the VSTestAdapterMode option, then we don't want to return a non-zero exit code if no tests ran.
         if (!_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey))

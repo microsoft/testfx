@@ -7,36 +7,50 @@ namespace Microsoft.Testing.Platform.Services;
 
 internal sealed class StopPoliciesService : IStopPoliciesService
 {
-    internal sealed class Policy
+    public StopPoliciesService(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource) =>
+#pragma warning disable VSTHRD101 // Avoid unsupported async delegates
+        testApplicationCancellationTokenSource.CancellationToken.Register(async () => await ExecuteAbortCallbacksAsync());
+#pragma warning restore VSTHRD101 // Avoid unsupported async delegates
+
+    private BlockingCollection<Func<CancellationToken, Task>>? _maxFailedTestsCallbacks;
+    private BlockingCollection<Func<Task>>? _abortCallbacks;
+
+    public bool IsMaxFailedTestsTriggered { get; private set; }
+
+    public bool IsAbortTriggered { get; private set; }
+
+    private static void RegisterCallback<T>(ref BlockingCollection<T>? callbacks, T callback)
+        => (callbacks ??= new()).Add(callback);
+
+    public async Task ExecuteMaxFailedTestsCallbacksAsync(CancellationToken cancellationToken)
     {
-        private BlockingCollection<Func<CancellationToken, Task>>? _callbacks;
-
-        public bool IsTriggered { get; private set; }
-
-        public void RegisterCallback(Func<CancellationToken, Task> callback)
-            => (_callbacks ??= new()).Add(callback);
-
-        public async Task ExecuteCallbacksAsync(CancellationToken cancellationToken)
+        if (_maxFailedTestsCallbacks is null)
         {
-            if (_callbacks is null)
-            {
-                return;
-            }
+            return;
+        }
 
-            foreach (Func<CancellationToken, Task> callback in _callbacks)
-            {
-                await callback.Invoke(cancellationToken);
-            }
+        foreach (Func<CancellationToken, Task> callback in _maxFailedTestsCallbacks)
+        {
+            await callback.Invoke(cancellationToken);
         }
     }
 
-    internal Policy MaxFailedTestsPolicy { get; } = new();
+    public async Task ExecuteAbortCallbacksAsync()
+    {
+        if (_abortCallbacks is null)
+        {
+            return;
+        }
 
-    internal Policy AbortPolicy { get; } = new();
+        foreach (Func<Task> callback in _abortCallbacks)
+        {
+            await callback.Invoke();
+        }
+    }
 
     public void RegisterOnMaxFailedTestsCallback(Func<CancellationToken, Task> callback)
-        => MaxFailedTestsPolicy.RegisterCallback(callback);
+        => RegisterCallback(ref _maxFailedTestsCallbacks, callback);
 
     public void RegisterOnAbortCallback(Func<Task> callback)
-        => AbortPolicy.RegisterCallback(_ => callback());
+        => RegisterCallback(ref _abortCallbacks, callback);
 }
