@@ -34,7 +34,7 @@ internal sealed class TestNodeResultsState
     {
         var sortedDetails = _testNodeProgressStates
             .Select(d => d.Value)
-            .OrderBy(d => d.Stopwatch?.Elapsed ?? TimeSpan.Zero)
+            .OrderByDescending(d => d.Stopwatch?.Elapsed ?? TimeSpan.Zero)
             .ToList();
 
         bool tooManyItems = sortedDetails.Count > maxCount;

@@ -31,6 +31,18 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     internal Func<IStopwatch> CreateStopwatch { get; set; } = SystemStopwatch.StartNew;
 
+    internal event EventHandler OnProgressStartUpdate
+    {
+        add => _terminalWithProgress.OnProgressStartUpdate += value;
+        remove => _terminalWithProgress.OnProgressStartUpdate -= value;
+    }
+
+    internal event EventHandler OnProgressStopUpdate
+    {
+        add => _terminalWithProgress.OnProgressStopUpdate += value;
+        remove => _terminalWithProgress.OnProgressStopUpdate -= value;
+    }
+
     private readonly ConcurrentDictionary<string, TestProgressState> _assemblies = new();
 
     private readonly List<TestRunArtifact> _artifacts = new();
