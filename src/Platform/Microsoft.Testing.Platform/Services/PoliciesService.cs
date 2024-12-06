@@ -7,21 +7,34 @@ namespace Microsoft.Testing.Platform.Services;
 
 internal sealed class PoliciesService : IPoliciesService
 {
-    private BlockingCollection<Func<CancellationToken, Task>>? _onStopTestExecutionCallbacks;
-
-    public void RegisterOnStopTestExecution(Func<CancellationToken, Task> callback)
-        => (_onStopTestExecutionCallbacks ??= new()).Add(callback);
-
-    internal async Task ExecuteOnStopTestExecutionCallbacks(CancellationToken cancellationToken)
+    internal sealed class Policy
     {
-        if (_onStopTestExecutionCallbacks is null)
-        {
-            return;
-        }
+        private BlockingCollection<Func<CancellationToken, Task>>? _callbacks;
 
-        foreach (Func<CancellationToken, Task> callback in _onStopTestExecutionCallbacks)
+        public void RegisterCallback(Func<CancellationToken, Task> callback)
+            => (_callbacks ??= new()).Add(callback);
+
+        public async Task ExecuteCallbacksAsync(CancellationToken cancellationToken)
         {
-            await callback.Invoke(cancellationToken);
+            if (_callbacks is null)
+            {
+                return;
+            }
+
+            foreach (Func<CancellationToken, Task> callback in _callbacks)
+            {
+                await callback.Invoke(cancellationToken);
+            }
         }
     }
+
+    internal Policy MaxFailedTestsPolicy { get; } = new();
+
+    internal Policy AbortPolicy { get; } = new();
+
+    public void RegisterOnMaxFailedTestsCallback(Func<CancellationToken, Task> callback)
+        => MaxFailedTestsPolicy.RegisterCallback(callback);
+
+    public void RegisterOnAbortCallback(Func<CancellationToken, Task> callback)
+        => AbortPolicy.RegisterCallback(callback);
 }

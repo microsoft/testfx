@@ -206,6 +206,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Set the concrete command line options to the proxy.
         commandLineOptionsProxy.SetCommandLineOptions(commandLineHandler);
 
+        // This is needed by output device.
         var policiesService = new PoliciesService();
         serviceProvider.AddService(policiesService);
 
@@ -245,13 +246,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         {
             await testFrameworkCapabilitiesAsyncInitializable.InitializeAsync();
         }
-
-        TestHost.AddDataConsumer(
-            serviceProvider => new AbortForMaxFailedTestsExtension(
-                serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetTestFrameworkCapabilities().GetCapability<IStopTestExecutionCapability>(),
-                policiesService,
-                serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken));
 
         // If command line is not valid we return immediately.
         ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(
@@ -738,6 +732,13 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         {
             dataConsumersBuilder.Add(pushOnlyProtocolDataConsumer);
         }
+
+        dataConsumersBuilder.Add(
+            new AbortForMaxFailedTestsExtension(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetTestFrameworkCapabilities().GetCapability<IStopGracefullyTestExecutionCapability>(),
+                serviceProvider.GetRequiredService<PoliciesService>(),
+                serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken));
 
         IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();
 

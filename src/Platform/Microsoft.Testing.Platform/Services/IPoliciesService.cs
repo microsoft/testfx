@@ -5,5 +5,7 @@ namespace Microsoft.Testing.Platform.Services;
 
 internal interface IPoliciesService
 {
-    void RegisterOnStopTestExecution(Func<CancellationToken, Task> callback);
+    void RegisterOnMaxFailedTestsCallback(Func<CancellationToken, Task> callback);
+
+    void RegisterOnAbortCallback(Func<CancellationToken, Task> callback);
 }

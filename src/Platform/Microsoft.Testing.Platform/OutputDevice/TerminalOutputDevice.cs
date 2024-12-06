@@ -72,7 +72,8 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     public TerminalOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
-        ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock)
+        ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock,
+        IPoliciesService policiesService)
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _console = console;
@@ -87,6 +88,9 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
         _fileLoggerInformation = fileLoggerInformation;
         _loggerFactory = loggerFactory;
         _clock = clock;
+
+        policiesService.RegisterOnMaxFailedTestsCallback(
+                    async _ => await DisplayAsync(this, new TextOutputDeviceData(PlatformResources.ReachedMaxFailedTestsMessage)));
 
         if (_runtimeFeature.IsDynamicCodeSupported)
         {

@@ -628,6 +628,11 @@ Prend un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « v
         <target state="translated">Le processus aurait dû s’arrêter avant que nous puissions déterminer cette valeur</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReachedMaxFailedTestsMessage">
+        <source>Test session is aborting due to reaching failures specified by the '--max-failed-tests' option.</source>
+        <target state="new">Test session is aborting due to reaching failures specified by the '--max-failed-tests' option.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>
         <target state="translated">Échec de la nouvelle tentative après {0} fois</target>

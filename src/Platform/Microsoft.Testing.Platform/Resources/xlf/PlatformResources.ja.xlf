@@ -629,6 +629,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">この値を決定する前にプロセスを終了する必要があります</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReachedMaxFailedTestsMessage">
+        <source>Test session is aborting due to reaching failures specified by the '--max-failed-tests' option.</source>
+        <target state="new">Test session is aborting due to reaching failures specified by the '--max-failed-tests' option.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>
         <target state="translated">再試行が {0} 回後に失敗しました</target>

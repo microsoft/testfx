@@ -628,6 +628,11 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
         <target state="translated">Proces měl být ukončen před tím, než jsme mohli určit tuto hodnotu.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReachedMaxFailedTestsMessage">
+        <source>Test session is aborting due to reaching failures specified by the '--max-failed-tests' option.</source>
+        <target state="new">Test session is aborting due to reaching failures specified by the '--max-failed-tests' option.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>
         <target state="translated">Opakování se po {0} pokusech nezdařilo.</target>

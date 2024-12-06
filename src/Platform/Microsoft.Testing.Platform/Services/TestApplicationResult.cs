@@ -35,16 +35,11 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _commandLineOptions = commandLineOptions;
         _environment = environment;
-        policiesService.RegisterOnStopTestExecution(
-            async cancellationToken =>
+        policiesService.RegisterOnMaxFailedTestsCallback(
+            _ =>
             {
-                // How to make the message more clear that it's due to --max-failed-tests?
-                // The way we are currently abstracting is too generic that any one could use IStopTestExecutionCapability for whatever other reason.
-                // So, we can't here "hardcode" the message to be specific to --max-failed-tests.
-                // Do we want to introduce a "reason" parameter in IStopTestExecutionCapability.StopTestExecutionAsync?
-                // TODO: Localize
-                await _outputService.DisplayAsync(this, new TextOutputDeviceData("Test session was stopped."));
                 _testExecutionStopped = true;
+                return Task.CompletedTask;
             });
     }
 

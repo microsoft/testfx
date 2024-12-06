@@ -628,6 +628,11 @@ Pobiera jeden argument jako ciąg w formacie &lt;value&gt;[h|m|s], gdzie element
         <target state="translated">Proces powinien zakończyć się przed ustaleniem tej wartości</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReachedMaxFailedTestsMessage">
+        <source>Test session is aborting due to reaching failures specified by the '--max-failed-tests' option.</source>
+        <target state="new">Test session is aborting due to reaching failures specified by the '--max-failed-tests' option.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>
         <target state="translated">Ponowna próba nie powiodła się po {0} razach</target>

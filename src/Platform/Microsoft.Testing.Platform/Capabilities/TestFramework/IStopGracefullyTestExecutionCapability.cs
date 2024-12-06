@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 /// <remarks>
 /// Test frameworks can choose to run any needed cleanup when cancellation is requested.
 /// </remarks>
-public interface IStopTestExecutionCapability : ITestFrameworkCapability
+public interface IStopGracefullyTestExecutionCapability : ITestFrameworkCapability
 {
     Task StopTestExecutionAsync(CancellationToken cancellationToken);
 }

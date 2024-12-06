@@ -15,12 +15,12 @@ namespace Microsoft.Testing.Platform.Extensions;
 internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
 {
     private readonly int? _maxFailedTests;
-    private readonly IStopTestExecutionCapability? _capability;
+    private readonly IStopGracefullyTestExecutionCapability? _capability;
     private readonly PoliciesService _policiesService;
     private readonly CancellationToken _cancellationToken;
     private int _failCount;
 
-    public AbortForMaxFailedTestsExtension(ICommandLineOptions commandLineOptions, IStopTestExecutionCapability? capability, PoliciesService policiesService, CancellationToken cancellationToken)
+    public AbortForMaxFailedTestsExtension(ICommandLineOptions commandLineOptions, IStopGracefullyTestExecutionCapability? capability, PoliciesService policiesService, CancellationToken cancellationToken)
     {
         if (commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MaxFailedTestsOptionKey, out string[]? args) &&
             int.TryParse(args[0], out int maxFailedTests) &&
@@ -59,13 +59,12 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
         RoslynDebug.Assert(_maxFailedTests is not null);
         RoslynDebug.Assert(_capability is not null);
 
-        int maxFailed = _maxFailedTests.Value;
         TestNodeStateProperty testNodeStateProperty = node.TestNode.Properties.Single<TestNodeStateProperty>();
         if (TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Any(t => t == testNodeStateProperty.GetType()) &&
-            Interlocked.Increment(ref _failCount) > maxFailed)
+            ++_failCount > _maxFailedTests.Value)
         {
             await _capability.StopTestExecutionAsync(_cancellationToken);
-            await _policiesService.ExecuteOnStopTestExecutionCallbacks(_cancellationToken);
+            await _policiesService.MaxFailedTestsPolicy.ExecuteCallbacksAsync(_cancellationToken);
         }
     }
 }
