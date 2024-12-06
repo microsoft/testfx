@@ -23,5 +23,4 @@ internal static class ExitCodes
     public const int DependentProcessExited = 11;
     public const int IncompatibleProtocolVersion = 12;
     public const int TestExecutionStoppedForMaxFailedTests = 13;
-    public const int TestExecutionStopped = 14;
 }

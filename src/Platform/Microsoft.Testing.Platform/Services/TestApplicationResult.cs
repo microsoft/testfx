@@ -22,7 +22,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     private readonly List<TestNode> _failedTests = [];
     private int _totalRanTests;
     private bool _testAdapterTestSessionFailure;
-    private bool _testExecutionStopped;
 
     public TestApplicationResult(
         IOutputDevice outputService,
@@ -34,13 +33,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         _commandLineOptions = commandLineOptions;
         _environment = environment;
         _policiesService = policiesService;
-
-        policiesService.RegisterOnMaxFailedTestsCallback(
-            _ =>
-            {
-                _testExecutionStopped = true;
-                return Task.CompletedTask;
-            });
     }
 
     /// <inheritdoc />
@@ -98,7 +90,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     {
         int exitCode = ExitCodes.Success;
         exitCode = exitCode == ExitCodes.Success && _policiesService.MaxFailedTestsPolicy.IsPolicyTriggered ? ExitCodes.TestExecutionStoppedForMaxFailedTests : exitCode;
-        exitCode = exitCode == ExitCodes.Success && _testExecutionStopped ? ExitCodes.TestExecutionStopped : exitCode;
         exitCode = exitCode == ExitCodes.Success && _testAdapterTestSessionFailure ? ExitCodes.TestAdapterTestSessionFailure : exitCode;
         exitCode = exitCode == ExitCodes.Success && _failedTests.Count > 0 ? ExitCodes.AtLeastOneTestFailed : exitCode;
         exitCode = exitCode == ExitCodes.Success && _policiesService.AbortPolicy.IsPolicyTriggered ? ExitCodes.TestSessionAborted : exitCode;
