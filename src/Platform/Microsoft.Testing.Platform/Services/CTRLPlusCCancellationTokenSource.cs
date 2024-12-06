@@ -21,7 +21,6 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
         _logger = logger;
         if (policiesService is not null)
         {
-            // TODO: Discuss about what we pass here as cancellation token.
             _cancellationTokenSource.Token.Register(() => policiesService.AbortPolicy.ExecuteCallbacksAsync(cancellationToken: default).GetAwaiter().GetResult());
         }
     }
