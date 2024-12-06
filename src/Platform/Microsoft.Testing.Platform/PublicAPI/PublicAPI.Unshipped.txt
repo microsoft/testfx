@@ -6,6 +6,16 @@ Microsoft.Testing.Platform.OutputDevice.ErrorMessageOutputDeviceData.Message.get
 Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData
 Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData.Message.get -> string!
 Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData.WarningMessageOutputDeviceData(string! message) -> void
+Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider
+Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.Description.get -> string!
+Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.DisplayName.get -> string!
+Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.GetCommandLineOptions() -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>!
+Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.MaxFailedTestsCommandLineOptionsProvider() -> void
+Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.Uid.get -> string!
+Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.Version.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionCapability
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionCapability.StopTestExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IStopGracefullyTestExecutionCapability

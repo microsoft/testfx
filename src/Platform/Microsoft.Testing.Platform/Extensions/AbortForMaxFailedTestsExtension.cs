@@ -9,6 +9,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestFramework;
 
 namespace Microsoft.Testing.Platform.Extensions;
 
@@ -26,7 +27,7 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
         IStopPoliciesService policiesService,
         ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
     {
-        if (commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MaxFailedTestsOptionKey, out string[]? args) &&
+        if (commandLineOptions.TryGetOptionArgumentList(MaxFailedTestsCommandLineOptionsProvider.MaxFailedTestsOptionKey, out string[]? args) &&
             int.TryParse(args[0], out int maxFailedTests) &&
             maxFailedTests > 0)
         {
