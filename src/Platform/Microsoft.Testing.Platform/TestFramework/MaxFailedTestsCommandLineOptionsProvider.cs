@@ -36,7 +36,8 @@ public sealed class MaxFailedTestsCommandLineOptionsProvider : ICommandLineOptio
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => throw new NotImplementedException();
+    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+        => ValidationResult.ValidTask;
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
