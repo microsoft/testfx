@@ -1,6 +1,4 @@
 #nullable enable
-Microsoft.Testing.Platform.Capabilities.TestFramework.IStopGracefullyTestExecutionCapability
-Microsoft.Testing.Platform.Capabilities.TestFramework.IStopGracefullyTestExecutionCapability.StopTestExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.TestMetadataProperty(string! key) -> void
 Microsoft.Testing.Platform.OutputDevice.ErrorMessageOutputDeviceData
 Microsoft.Testing.Platform.OutputDevice.ErrorMessageOutputDeviceData.ErrorMessageOutputDeviceData(string! message) -> void
@@ -8,6 +6,8 @@ Microsoft.Testing.Platform.OutputDevice.ErrorMessageOutputDeviceData.Message.get
 Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData
 Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData.Message.get -> string!
 Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData.WarningMessageOutputDeviceData(string! message) -> void
+[TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IStopGracefullyTestExecutionCapability
+[TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IStopGracefullyTestExecutionCapability.StopTestExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.init -> void

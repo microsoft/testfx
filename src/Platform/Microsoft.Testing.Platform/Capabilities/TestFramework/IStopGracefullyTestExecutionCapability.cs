@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 
 /// <summary>
@@ -10,6 +12,7 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 /// <remarks>
 /// Test frameworks can choose to run any needed cleanup when cancellation is requested.
 /// </remarks>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IStopGracefullyTestExecutionCapability : ITestFrameworkCapability
 {
     Task StopTestExecutionAsync(CancellationToken cancellationToken);

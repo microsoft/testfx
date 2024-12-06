@@ -25,7 +25,8 @@ public static class TestApplicationBuilderExtensions
             serviceProvider => new TestFrameworkCapabilities(
                 new VSTestBridgeExtensionBaseCapabilities(),
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                new MSTestBannerCapability(serviceProvider.GetRequiredService<IPlatformInformation>())),
+                new MSTestBannerCapability(serviceProvider.GetRequiredService<IPlatformInformation>()),
+                new MSTestStopGracefullyTestExecutionCapability()),
 #pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             (capabilities, serviceProvider) => new MSTestBridgedTestFramework(extension, getTestAssemblies, serviceProvider, capabilities));
     }
