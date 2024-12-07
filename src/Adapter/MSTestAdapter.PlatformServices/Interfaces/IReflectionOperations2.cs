@@ -7,19 +7,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 
 internal interface IReflectionOperations2 : IReflectionOperations
 {
-    IEnumerable<ConstructorInfo> GetDeclaredConstructors(Type classType);
+    ConstructorInfo[] GetDeclaredConstructors(Type classType);
 
     MethodInfo? GetDeclaredMethod(Type dynamicDataDeclaringType, string dynamicDataSourceName);
 
-    IEnumerable<MethodInfo> GetDeclaredMethods(Type classType);
+    MethodInfo[] GetDeclaredMethods(Type classType);
 
-    IEnumerable<PropertyInfo> GetDeclaredProperties(Type type);
+    PropertyInfo[] GetDeclaredProperties(Type type);
 
     PropertyInfo? GetDeclaredProperty(Type type, string propertyName);
 
     Type[] GetDefinedTypes(Assembly assembly);
 
-    IEnumerable<MethodInfo> GetRuntimeMethods(Type type);
+    MethodInfo[] GetRuntimeMethods(Type type);
 
     MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters);
 

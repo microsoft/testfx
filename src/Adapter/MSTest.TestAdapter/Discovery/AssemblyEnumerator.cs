@@ -83,7 +83,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
-        IReadOnlyList<Type> types = GetTypes(assembly, assemblyFileName, warningMessages);
+        Type[] types = GetTypes(assembly, assemblyFileName, warningMessages);
         bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
         TestIdGenerationStrategy testIdGenerationStrategy = ReflectHelper.GetTestIdGenerationStrategy(assembly);
 
