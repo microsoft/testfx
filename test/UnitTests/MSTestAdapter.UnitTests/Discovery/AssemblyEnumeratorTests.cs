@@ -123,7 +123,7 @@ public class AssemblyEnumeratorTests : TestContainer
         var reflectedTypes = new Type[] { typeof(DummyTestClass) };
 
         // Setup mocks
-        mockAssembly.Setup(a => a.DefinedTypes).Throws(new ReflectionTypeLoadException(reflectedTypes, null));
+        mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(reflectedTypes, null));
 
         IReadOnlyList<Type> types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
 
@@ -137,8 +137,8 @@ public class AssemblyEnumeratorTests : TestContainer
         var exceptions = new Exception[] { new("DummyLoaderException") };
 
         // Setup mocks
-        mockAssembly.Setup(a => a.DefinedTypes).Throws(new ReflectionTypeLoadException(null, exceptions));
-        mockAssembly.Setup(a => a.DefinedTypes).Throws(new ReflectionTypeLoadException(null, exceptions));
+        mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(null, exceptions));
+        mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(null, exceptions));
 
         IReadOnlyList<Type> types = AssemblyEnumerator.GetTypes(mockAssembly.Object, "DummyAssembly", _warnings);
 
