@@ -68,10 +68,11 @@ public sealed class TestApplicationResultTests : TestBase
     public async Task GetProcessExitCodeAsync_If_Canceled_Returns_TestSessionAborted()
     {
         Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
+        // CTS should not be created in SetupGet so that the mocked ITestApplicationCancellationTokenSource returns the same instance on every access
+        // which is the case in the real production implementation.
+        CancellationTokenSource cancellationTokenSource = new();
         testApplicationCancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(() =>
         {
-            CancellationTokenSource cancellationTokenSource = new();
-
             cancellationTokenSource.Cancel();
             return cancellationTokenSource.Token;
         });

@@ -7,10 +7,22 @@ namespace Microsoft.Testing.Platform.Services;
 
 internal sealed class StopPoliciesService : IStopPoliciesService
 {
-    public StopPoliciesService(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource) =>
+    public StopPoliciesService(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
+    {
+        // This happens in mocked tests because the test will do the Cancel on the first CancellationToken property access.
+        // In theory, cancellation may happen in practice fast enough before StopPoliciesService is created.
+        // TODO: Do we have a race here? i.e, IsCancellationRequested is seen as false, then cancel happen before the CT.Register happens?
+        if (testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
+        {
+            _ = ExecuteAbortCallbacksAsync();
+        }
+        else
+        {
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
-        testApplicationCancellationTokenSource.CancellationToken.Register(async () => await ExecuteAbortCallbacksAsync());
+            testApplicationCancellationTokenSource.CancellationToken.Register(async () => await ExecuteAbortCallbacksAsync());
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
+        }
+    }
 
     private BlockingCollection<Func<int, CancellationToken, Task>>? _maxFailedTestsCallbacks;
     private BlockingCollection<Func<Task>>? _abortCallbacks;
