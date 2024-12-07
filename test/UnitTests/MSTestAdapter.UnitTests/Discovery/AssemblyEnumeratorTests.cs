@@ -101,7 +101,7 @@ public class AssemblyEnumeratorTests : TestContainer
         TypeInfo[] expectedTypes = [typeof(DummyTestClass).GetTypeInfo(), typeof(DummyTestClass).GetTypeInfo()];
 
         // Setup mocks
-        mockAssembly.Setup(a => a.DefinedTypes).Returns(expectedTypes);
+        mockAssembly.Setup(a => a.GetTypes()).Returns(expectedTypes);
 
         IReadOnlyList<Type> types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
         Verify(expectedTypes.SequenceEqual(types));
@@ -237,7 +237,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(DummyTestClass)]);
-        mockAssembly.Setup(a => a.DefinedTypes)
+        mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(DummyTestClass).GetTypeInfo()]);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
@@ -256,7 +256,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(DummyTestClass)]);
-        mockAssembly.Setup(a => a.DefinedTypes)
+        mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(DummyTestClass).GetTypeInfo()]);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
@@ -278,7 +278,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(DummyTestClass)]);
-        mockAssembly.Setup(a => a.DefinedTypes)
+        mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(DummyTestClass).GetTypeInfo()]);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
@@ -300,7 +300,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(DummyTestClass), typeof(DummyTestClass)]);
-        mockAssembly.Setup(a => a.DefinedTypes)
+        mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(DummyTestClass).GetTypeInfo(), typeof(DummyTestClass).GetTypeInfo()]);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
@@ -323,7 +323,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(InternalTestClass)]);
-        mockAssembly.Setup(a => a.DefinedTypes)
+        mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(InternalTestClass).GetTypeInfo()]);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
@@ -345,7 +345,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(InternalTestClass)]);
-        mockAssembly.Setup(a => a.DefinedTypes)
+        mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(InternalTestClass).GetTypeInfo()]);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
@@ -365,7 +365,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(InternalTestClass)]);
-        mockAssembly.Setup(a => a.DefinedTypes)
+        mockAssembly.Setup(a => a.GetTypes())
             .Returns([typeof(InternalTestClass).GetTypeInfo()]);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
