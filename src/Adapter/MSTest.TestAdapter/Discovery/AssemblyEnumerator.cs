@@ -411,6 +411,16 @@ internal class AssemblyEnumerator : MarshalByRefObject
     {
         foreach (ITestDataSource dataSource in testDataSources)
         {
+            // When reaching this point the global setup is to expand the parameterized tests but each data source
+            // could decide not to expand so we need to respect it.
+            if (dataSource is IExpandableDataSource { ExpandDataSource: false })
+            {
+                // TODO: Improve multi-source design!
+                // Ideally we would want to consider each data source separately but when one source cannot be expanded,
+                // we will run all sources from the given method so we need to bail-out "globally".
+                return false;
+            }
+
             IEnumerable<object?[]>? data;
 
             // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.

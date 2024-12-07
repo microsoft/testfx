@@ -1,7 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Immutable;
+
 using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace MSTest.IntegrationTests;
 
@@ -15,8 +18,8 @@ public class DynamicDataTests : CLITestBase
         string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath);
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        ImmutableArray<TestCase> testCases = DiscoverTests(assemblyPath, testCaseFilter: "ClassName~DynamicDataTests");
+        ImmutableArray<TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -62,8 +65,8 @@ public class DynamicDataTests : CLITestBase
         string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "TestCategory~DynamicDataWithCategory");
-        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
+        ImmutableArray<TestCase> testCases = DiscoverTests(assemblyPath, "TestCategory~DynamicDataWithCategory");
+        ImmutableArray<TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.ContainsTestsPassed(
@@ -71,6 +74,35 @@ public class DynamicDataTests : CLITestBase
             "DynamicDataTestWithTestCategory (\"John;Doe\",LibProjectReferencedByDataSourceTest.User)",
             "DynamicDataTestWithTestCategory (\"Jane;Doe\",LibProjectReferencedByDataSourceTest.User)");
 
+        VerifyE2E.FailedTestCount(testResults, 0);
+    }
+
+    public void ExecuteNonExpandableDynamicDataTests()
+    {
+        // Arrange
+        string assemblyPath = GetAssetFullPath(TestAssetName);
+
+        // Act
+        ImmutableArray<TestCase> testCases = DiscoverTests(assemblyPath, testCaseFilter: "ClassName~DisableExpansionTests");
+        ImmutableArray<TestResult> testResults = RunTests(testCases);
+
+        // Assert
+        Verify(testCases.Length == 5);
+
+        VerifyE2E.TestsPassed(
+            testResults,
+            "TestPropertySourceOnCurrentType (1,a)",
+            "TestPropertySourceOnCurrentType (2,b)",
+            "TestMethodSourceOnCurrentType (1,a)",
+            "TestMethodSourceOnCurrentType (2,b)",
+            "TestPropertySourceOnDifferentType (3,c)",
+            "TestPropertySourceOnDifferentType (3,c)",
+            "TestMethodSourceOnDifferentType (4,d)",
+            "TestMethodSourceOnDifferentType (4,d)",
+            "TestPropertyWithTwoSourcesButOnlyOneDisablingExpansion (1,a)",
+            "TestPropertyWithTwoSourcesButOnlyOneDisablingExpansion (2,b)",
+            "TestPropertyWithTwoSourcesButOnlyOneDisablingExpansion (3,c)",
+            "TestPropertyWithTwoSourcesButOnlyOneDisablingExpansion (4,d)");
         VerifyE2E.FailedTestCount(testResults, 0);
     }
 }
