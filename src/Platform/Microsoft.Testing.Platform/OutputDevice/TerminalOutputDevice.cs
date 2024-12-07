@@ -72,7 +72,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public TerminalOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
-        ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock)
+        ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock,
+        IStopPoliciesService policiesService)
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _console = console;
@@ -87,6 +88,18 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _fileLoggerInformation = fileLoggerInformation;
         _loggerFactory = loggerFactory;
         _clock = clock;
+
+        policiesService.RegisterOnMaxFailedTestsCallback(
+            async (maxFailedTests, _) => await DisplayAsync(
+                this,
+                new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
+
+        policiesService.RegisterOnAbortCallback(
+            () =>
+            {
+                _terminalTestReporter?.StartCancelling();
+                return Task.CompletedTask;
+            });
 
         if (_runtimeFeature.IsDynamicCodeSupported)
         {
@@ -162,8 +175,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             UseAnsi = !noAnsi,
             ShowProgress = shouldShowProgress,
         });
-
-        _testApplicationCancellationTokenSource.CancellationToken.Register(() => _terminalTestReporter.StartCancelling());
 
         return Task.CompletedTask;
     }

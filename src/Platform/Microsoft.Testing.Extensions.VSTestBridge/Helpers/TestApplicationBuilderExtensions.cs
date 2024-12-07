@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestFramework;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 
@@ -46,6 +47,15 @@ public static class TestApplicationBuilderExtensions
     /// <param name="extension">The extension that will be used as the source of registration for this helper service.</param>
     public static void AddTestRunParametersService(this ITestApplicationBuilder builder, IExtension extension)
         => builder.CommandLine.AddProvider(() => new TestRunParametersCommandLineOptionsProvider(extension));
+
+    /// <summary>
+    /// Registers the command-line options provider for '--max-failed-tests'.
+    /// </summary>
+    /// <param name="builder">The test application builder.</param>
+    public static void AddMaxFailedTestsService(this ITestApplicationBuilder builder)
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        => builder.CommandLine.AddProvider(() => new MaxFailedTestsCommandLineOptionsProvider());
+#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
     /// <summary>
     /// Register the environment variable provider.

@@ -206,6 +206,10 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // Set the concrete command line options to the proxy.
         commandLineOptionsProxy.SetCommandLineOptions(commandLineHandler);
 
+        // This is needed by output device.
+        var policiesService = new StopPoliciesService(testApplicationCancellationTokenSource);
+        serviceProvider.AddService(policiesService);
+
         bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
         bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
 
@@ -313,9 +317,9 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // Register the ITestApplicationResult
         TestApplicationResult testApplicationResult = new(
             proxyOutputDevice,
-            serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetCommandLineOptions(),
-            serviceProvider.GetEnvironment());
+            serviceProvider.GetEnvironment(),
+            policiesService);
         serviceProvider.AddService(testApplicationResult);
 
         // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
@@ -722,6 +726,17 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         if (pushOnlyProtocolDataConsumer is not null)
         {
             dataConsumersBuilder.Add(pushOnlyProtocolDataConsumer);
+        }
+
+        var abortForMaxFailedTestsExtension = new AbortForMaxFailedTestsExtension(
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>(),
+            serviceProvider.GetRequiredService<IStopPoliciesService>(),
+            serviceProvider.GetTestApplicationCancellationTokenSource());
+
+        if (await abortForMaxFailedTestsExtension.IsEnabledAsync())
+        {
+            dataConsumersBuilder.Add(abortForMaxFailedTestsExtension);
         }
 
         IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();

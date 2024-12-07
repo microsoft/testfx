@@ -419,6 +419,10 @@ public class TestExecutionManager
         foreach (TestCase currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
+            if (MSTestStopGracefullyTestExecutionCapability.Instance.IsStopRequested)
+            {
+                break;
+            }
 
             // If it is a fixture test, add it to the list of fixture tests and do not execute it.
             // It is executed by test itself.

@@ -15,7 +15,7 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class TestApplicationResultTests : TestBase
 {
     private readonly TestApplicationResult _testApplicationResult
-        = new(new Mock<IOutputDevice>().Object, new Mock<ITestApplicationCancellationTokenSource>().Object, new Mock<ICommandLineOptions>().Object, new Mock<IEnvironment>().Object);
+        = new(new Mock<IOutputDevice>().Object, new Mock<ICommandLineOptions>().Object, new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object);
 
     public TestApplicationResultTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
@@ -68,15 +68,17 @@ public sealed class TestApplicationResultTests : TestBase
     public async Task GetProcessExitCodeAsync_If_Canceled_Returns_TestSessionAborted()
     {
         Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
+        // CTS should not be created in SetupGet so that the mocked ITestApplicationCancellationTokenSource returns the same instance on every access
+        // which is the case in the real production implementation.
+        CancellationTokenSource cancellationTokenSource = new();
         testApplicationCancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(() =>
         {
-            CancellationTokenSource cancellationTokenSource = new();
             cancellationTokenSource.Cancel();
             return cancellationTokenSource.Token;
         });
 
         TestApplicationResult testApplicationResult
-            = new(new Mock<IOutputDevice>().Object, testApplicationCancellationTokenSource.Object, new Mock<ICommandLineOptions>().Object, new Mock<IEnvironment>().Object);
+            = new(new Mock<IOutputDevice>().Object, new Mock<ICommandLineOptions>().Object, new Mock<IEnvironment>().Object, new StopPoliciesService(testApplicationCancellationTokenSource.Object));
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
@@ -108,9 +110,10 @@ public sealed class TestApplicationResultTests : TestBase
     public async Task GetProcessExitCodeAsync_If_MinimumExpectedTests_Violated_Returns_MinimumExpectedTestsPolicyViolation()
     {
         TestApplicationResult testApplicationResult
-            = new(new Mock<IOutputDevice>().Object, new Mock<ITestApplicationCancellationTokenSource>().Object,
-            new CommandLineOption(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, ["2"]),
-            new Mock<IEnvironment>().Object);
+            = new(
+                new Mock<IOutputDevice>().Object,
+                new CommandLineOption(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, ["2"]),
+                new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object);
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
@@ -136,9 +139,10 @@ public sealed class TestApplicationResultTests : TestBase
     public async Task GetProcessExitCodeAsync_OnDiscovery_No_Tests_Discovered_Returns_ZeroTests()
     {
         TestApplicationResult testApplicationResult
-            = new(new Mock<IOutputDevice>().Object, new Mock<ITestApplicationCancellationTokenSource>().Object,
-            new CommandLineOption(PlatformCommandLineProvider.DiscoverTestsOptionKey, []),
-            new Mock<IEnvironment>().Object);
+            = new(
+                new Mock<IOutputDevice>().Object,
+                new CommandLineOption(PlatformCommandLineProvider.DiscoverTestsOptionKey, []),
+                new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object);
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
@@ -154,9 +158,10 @@ public sealed class TestApplicationResultTests : TestBase
     public async Task GetProcessExitCodeAsync_OnDiscovery_Some_Tests_Discovered_Returns_Success()
     {
         TestApplicationResult testApplicationResult
-            = new(new Mock<IOutputDevice>().Object, new Mock<ITestApplicationCancellationTokenSource>().Object,
-            new CommandLineOption(PlatformCommandLineProvider.DiscoverTestsOptionKey, []),
-            new Mock<IEnvironment>().Object);
+            = new(
+                new Mock<IOutputDevice>().Object,
+                new CommandLineOption(PlatformCommandLineProvider.DiscoverTestsOptionKey, []),
+                new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object);
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
@@ -188,12 +193,15 @@ public sealed class TestApplicationResultTests : TestBase
 
         foreach (TestApplicationResult testApplicationResult in new TestApplicationResult[]
         {
-            new(new Mock<IOutputDevice>().Object, new Mock<ITestApplicationCancellationTokenSource>().Object,
+            new(
+                new Mock<IOutputDevice>().Object,
                 new CommandLineOption(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, argument is null ? [] : [argument]),
-                new Mock<IEnvironment>().Object),
-            new(new Mock<IOutputDevice>().Object, new Mock<ITestApplicationCancellationTokenSource>().Object,
+                new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object),
+            new(
+                new Mock<IOutputDevice>().Object,
                 new Mock<ICommandLineOptions>().Object,
-                environment.Object),
+                environment.Object,
+                new Mock<IStopPoliciesService>().Object),
         })
         {
             Assert.AreEqual(expectedExitCode, testApplicationResult.GetProcessExitCode());
