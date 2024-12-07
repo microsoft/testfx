@@ -29,9 +29,10 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
         Guard.NotNullOrWhiteSpace(description);
         ArgumentGuard.Ensure(arity.Max >= arity.Min, nameof(arity), PlatformResources.CommandLineInvalidArityErrorMessage);
 
+        string errorMessage = string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidOptionName, name);
         for (int i = 0; i < name.Length; i++)
         {
-            ArgumentGuard.Ensure(char.IsLetterOrDigit(name[i]) || name[i] == '-' || name[i] == '?', nameof(name), string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidOptionName, name));
+            ArgumentGuard.Ensure(char.IsLetterOrDigit(name[i]) || name[i] == '-' || name[i] == '?', nameof(name), errorMessage);
         }
 
         Name = name;
