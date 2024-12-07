@@ -68,7 +68,7 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
     public Type[] GetDefinedTypes(Assembly assembly)
         => ReflectionDataProvider.Types;
 
-    public IEnumerable<MethodInfo> GetRuntimeMethods(Type type)
+    public MethodInfo[] GetRuntimeMethods(Type type)
         => ReflectionDataProvider.TypeMethods[type];
 
     public MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters) => throw new NotImplementedException();
