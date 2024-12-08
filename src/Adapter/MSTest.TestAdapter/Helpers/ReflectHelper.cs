@@ -437,7 +437,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="attributeProvider">The member to inspect.</param>
     /// <param name="inherit">Look at inheritance chain.</param>
     /// <returns>attributes defined.</returns>
-    private Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider, bool inherit)
+    internal Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider, bool inherit)
     {
         // If the information is cached, then use it otherwise populate the cache using
         // the reflection APIs.
