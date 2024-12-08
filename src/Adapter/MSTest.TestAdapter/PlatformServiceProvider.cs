@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 #if !WINDOWS_UWP
@@ -18,7 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// </summary>
 internal sealed class PlatformServiceProvider : IPlatformServiceProvider
 {
-    private static readonly Action<object?> CancelDelegate = static s => ((CancellationTokenSource)s!).Cancel();
+    private static readonly Action<object?> CancelDelegate = static state => ((TestContextImplementation)state!).Context.CancellationTokenSource.Cancel();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
@@ -226,7 +225,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties)
     {
         var testContextImplementation = new TestContextImplementation(testMethod, writer, properties);
-        TestRunCancellationToken?.Register(static state => ((TestContextImplementation)state!).Context.CancellationTokenSource.Cancel(), testContextImplementation);
+        TestRunCancellationToken?.Register(CancelDelegate, testContextImplementation);
         return testContextImplementation;
     }
 }
