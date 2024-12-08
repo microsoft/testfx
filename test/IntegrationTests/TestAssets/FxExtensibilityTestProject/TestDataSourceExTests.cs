@@ -20,6 +20,12 @@ public class TestDataSourceExTests
         Assert.AreEqual(2, b % 3);
         Assert.AreEqual(0, c % 3);
     }
+
+    [TestMethod]
+    [CustomDisableExpansionTestDataSource]
+    public void CustomDisableExpansionTestDataSourceTestMethod1(int a, int b, int c)
+    {
+    }
 }
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
@@ -34,6 +40,16 @@ public class CustomTestDataSourceAttribute : Attribute, ITestDataSource
 public class CustomEmptyTestDataSourceAttribute : Attribute, ITestDataSource
 {
     public IEnumerable<object[]> GetData(MethodInfo methodInfo) => [];
+
+    public string GetDisplayName(MethodInfo methodInfo, object[] data) => data != null ? string.Format(CultureInfo.CurrentCulture, "{0} ({1})", methodInfo.Name, string.Join(",", data)) : null;
+}
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+public class CustomDisableExpansionTestDataSourceAttribute : Attribute, ITestDataSource, IExpandableDataSource
+{
+    bool IExpandableDataSource.ExpandDataSource => false;
+
+    public IEnumerable<object[]> GetData(MethodInfo methodInfo) => [[1, 2, 3], [4, 5, 6]];
 
     public string GetDisplayName(MethodInfo methodInfo, object[] data) => data != null ? string.Format(CultureInfo.CurrentCulture, "{0} ({1})", methodInfo.Name, string.Join(",", data)) : null;
 }

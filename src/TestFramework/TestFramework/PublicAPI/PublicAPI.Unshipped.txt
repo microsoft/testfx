@@ -1,1 +1,6 @@
 ﻿#nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.ExpandDataSource.get -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.ExpandDataSource.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.IExpandableDataSource
+Microsoft.VisualStudio.TestTools.UnitTesting.IExpandableDataSource.ExpandDataSource.get -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceDiscoveryAttribute.TestDataSourceDiscoveryAttribute(bool expandDataSource) -> void

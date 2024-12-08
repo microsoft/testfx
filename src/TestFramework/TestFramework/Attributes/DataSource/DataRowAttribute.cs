@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Attribute to define in-line data for a test method.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public class DataRowAttribute : Attribute, ITestDataSource
+public class DataRowAttribute : Attribute, ITestDataSource, IExpandableDataSource
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
@@ -54,6 +54,8 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// Gets or sets display name in test results for customization.
     /// </summary>
     public string? DisplayName { get; set; }
+
+    bool IExpandableDataSource.ExpandDataSource => true;
 
     /// <inheritdoc />
     public IEnumerable<object?[]> GetData(MethodInfo methodInfo) => [Data];
