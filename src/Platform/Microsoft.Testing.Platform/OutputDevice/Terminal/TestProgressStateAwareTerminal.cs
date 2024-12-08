@@ -31,6 +31,10 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     private Thread? _refresher;
     private long _counter;
 
+    public event EventHandler? OnProgressStartUpdate;
+
+    public event EventHandler? OnProgressStopUpdate;
+
     /// <summary>
     /// The <see cref="_refresher"/> thread proc.
     /// </summary>
@@ -42,6 +46,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             {
                 lock (_lock)
                 {
+                    OnProgressStartUpdate?.Invoke(this, EventArgs.Empty);
                     _terminal.StartUpdate();
                     try
                     {
@@ -50,6 +55,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                     finally
                     {
                         _terminal.StopUpdate();
+                        OnProgressStopUpdate?.Invoke(this, EventArgs.Empty);
                     }
                 }
             }
@@ -175,7 +181,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             TestProgressState? progress = _progressItems[slotIndex];
             if (progress != null)
             {
-                progress.LastUpdate = _counter;
+                progress.Version = _counter;
             }
         }
     }

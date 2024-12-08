@@ -671,6 +671,12 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="ConfigurationFileNotFound" xml:space="preserve">
     <value>The configuration file '{0}' specified with '--config-file' could not be found.</value>
   </data>
+  <data name="ActiveTestsRunning_MoreTestsCount" xml:space="preserve">
+    <value>and {0} more</value>
+  </data>
+  <data name="ActiveTestsRunning_FullTestsCount" xml:space="preserve">
+    <value>{0} tests running</value>
+  </data>
   <data name="StartingTestSession" xml:space="preserve">
     <value>Starting test session.</value>
   </data>

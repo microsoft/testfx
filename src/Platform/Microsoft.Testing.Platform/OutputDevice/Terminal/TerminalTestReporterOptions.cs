@@ -38,6 +38,11 @@ internal sealed class TerminalTestReporterOptions
     public Func<bool?> ShowProgress { get; init; } = () => true;
 
     /// <summary>
+    /// Gets a value indicating whether the active tests should be visible when the progress is shown.
+    /// </summary>
+    public bool ShowActiveTests { get; init; }
+
+    /// <summary>
     /// Gets a value indicating whether we should use ANSI escape codes or disable them. When true the capabilities of the console are autodetected.
     /// </summary>
     public bool UseAnsi { get; init; }

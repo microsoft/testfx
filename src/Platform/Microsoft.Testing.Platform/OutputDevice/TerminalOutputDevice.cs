@@ -160,6 +160,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
             UseAnsi = !noAnsi,
+            ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
         });
 
@@ -421,7 +422,13 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case InProgressTestNodeStateProperty:
-                        // do nothing.
+                        _terminalTestReporter.TestInProgress(
+                            _assemblyName,
+                            _targetFramework,
+                            _shortArchitecture,
+                            testNodeStateChanged.TestNode.Uid.Value,
+                            testNodeStateChanged.TestNode.DisplayName,
+                            executionId: null);
                         break;
 
                     case ErrorTestNodeStateProperty errorState:
@@ -430,6 +437,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             _targetFramework,
                             _shortArchitecture,
                             executionId: null,
+                            testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Error,
                             duration,
@@ -447,6 +455,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              _targetFramework,
                              _shortArchitecture,
                              executionId: null,
+                             testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Fail,
                              duration,
@@ -464,6 +473,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              _targetFramework,
                              _shortArchitecture,
                              executionId: null,
+                             testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Timeout,
                              duration,
@@ -481,6 +491,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              _targetFramework,
                              _shortArchitecture,
                              executionId: null,
+                             testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Canceled,
                              duration,
@@ -498,6 +509,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             _targetFramework,
                             _shortArchitecture,
                             executionId: null,
+                            testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
                             outcome: TestOutcome.Passed,
                             duration: duration,
@@ -515,6 +527,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             _targetFramework,
                             _shortArchitecture,
                             executionId: null,
+                            testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Skipped,
                             duration,
