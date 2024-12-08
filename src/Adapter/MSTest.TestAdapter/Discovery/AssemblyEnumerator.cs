@@ -356,7 +356,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             string assemblyLocation, string fixtureType)
         {
             string methodName = GetMethodName(methodInfo);
-            string[] hierarchy = [null!, assemblyName, Constants.AssemblyFixturesHierarchyClassName, methodName];
+            string?[] hierarchy = [null, assemblyName, Constants.AssemblyFixturesHierarchyClassName, methodName];
             return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy);
         }
 
@@ -364,7 +364,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             string assemblyLocation, string fixtureType)
         {
             string methodName = GetMethodName(methodInfo);
-            string[] hierarchy = [null!, classFullName, methodName];
+            string?[] hierarchy = [null, classFullName, methodName];
             return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy);
         }
 
@@ -376,7 +376,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 : methodInfo.Name;
         }
 
-        static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy)
+        static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string?[] hierarchy)
         {
             var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, false, null, TestIdGenerationStrategy.FullyQualified);
             return new UnitTestElement(method)
