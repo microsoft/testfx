@@ -51,11 +51,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
         MSTestSettings.PopulateSettings(settings);
 
     /// <summary>
-    /// Gets or sets the run settings to use for current discovery session.
-    /// </summary>
-    public string? RunSettingsXml { get; set; }
-
-    /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
     /// <returns>
@@ -71,9 +66,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// Enumerates through all types in the assembly in search of valid test methods.
     /// </summary>
     /// <param name="assemblyFileName">The assembly file name.</param>
+    /// <param name="runSettingsXml">The xml specifying runsettings.</param>
     /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>A collection of Test Elements.</returns>
-    internal ICollection<UnitTestElement> EnumerateAssembly(string assemblyFileName, out ICollection<string> warnings)
+    internal ICollection<UnitTestElement> EnumerateAssembly(
+        string assemblyFileName,
+        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
+        out ICollection<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
         var warningMessages = new List<string>();
@@ -102,7 +101,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 : TestDataSourceDiscoveryOption.DuringDiscovery);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-        Dictionary<string, object>? testRunParametersFromRunSettings = RunSettingsUtilities.GetTestRunParameters(RunSettingsXml);
+        Dictionary<string, object>? testRunParametersFromRunSettings = RunSettingsUtilities.GetTestRunParameters(runSettingsXml);
         foreach (Type type in types)
         {
             if (type == null)
