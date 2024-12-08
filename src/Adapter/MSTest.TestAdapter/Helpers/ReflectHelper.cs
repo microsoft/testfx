@@ -345,15 +345,6 @@ internal class ReflectHelper : MarshalByRefObject
         GetFirstDerivedAttributeOrDefault<PriorityAttribute>(priorityAttributeProvider, inherit: true)?.Priority;
 
     /// <summary>
-    /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
-    /// else null.
-    /// </summary>
-    /// <param name="ignoreAttributeProvider">The member to inspect.</param>
-    /// <returns>Priority value if defined. Null otherwise.</returns>
-    internal virtual string? GetIgnoreMessage(MemberInfo ignoreAttributeProvider) =>
-        GetFirstDerivedAttributeOrDefault<IgnoreAttribute>(ignoreAttributeProvider, inherit: true)?.IgnoreMessage;
-
-    /// <summary>
     /// Gets the class cleanup lifecycle for the class, if set.
     /// </summary>
     /// <param name="classInfo">The class to inspect.</param>
