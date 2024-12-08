@@ -26,7 +26,7 @@ internal static class SerializerUtilities
         Serializers = [];
         Deserializers = [];
 
-        Serializers[typeof(object)] = new ObjectSerializer<object>(o => new Dictionary<string, object?>());
+        Serializers[typeof(object)] = new ObjectSerializer<object>(_ => new Dictionary<string, object?>());
         Serializers[typeof(KeyValuePair<string, string>)] = new ObjectSerializer<KeyValuePair<string, string>>(o =>
         {
             Dictionary<string, object?> values = new()
@@ -138,7 +138,7 @@ internal static class SerializerUtilities
             [JsonRpcStrings.Description] = res.Description,
         });
 
-        Serializers[typeof(DiscoverResponseArgs)] = new ObjectSerializer<DiscoverResponseArgs>(res => new Dictionary<string, object?> { });
+        Serializers[typeof(DiscoverResponseArgs)] = new ObjectSerializer<DiscoverResponseArgs>(_ => new Dictionary<string, object?>());
 
         Serializers[typeof(RunResponseArgs)] = new ObjectSerializer<RunResponseArgs>(res => new Dictionary<string, object?>
         {
@@ -669,7 +669,7 @@ internal static class SerializerUtilities
             return new CancelRequestArgs(id);
         });
 
-        Deserializers[typeof(ExitRequestArgs)] = new ObjectDeserializer<ExitRequestArgs>(properties => new ExitRequestArgs());
+        Deserializers[typeof(ExitRequestArgs)] = new ObjectDeserializer<ExitRequestArgs>(_ => new ExitRequestArgs());
 
         // Deserialize an error
         Deserializers[typeof(ErrorMessage)] = new ObjectDeserializer<ErrorMessage>(properties =>
