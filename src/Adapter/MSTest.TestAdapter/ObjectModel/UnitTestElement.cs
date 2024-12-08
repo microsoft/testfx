@@ -170,7 +170,7 @@ internal sealed class UnitTestElement
             testCase.SetPropertyValue(Constants.PriorityProperty, Priority.Value);
         }
 
-        if (Traits != null)
+        if (Traits is { Length: > 0 })
         {
             testCase.Traits.AddRange(Traits);
         }
