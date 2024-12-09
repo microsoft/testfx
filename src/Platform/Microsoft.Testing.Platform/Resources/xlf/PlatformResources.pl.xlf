@@ -386,6 +386,16 @@
         <target state="translated">Oczekiwano parametru --client-port, gdy jest używany protokół jsonRpc.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ActiveTestsRunning_MoreTestsCount">
+        <source>and {0} more</source>
+        <target state="new">and {0} more</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_FullTestsCount">
+        <source>{0} tests running</source>
+        <target state="new">{0} tests running</target>
+        <note />
+      </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
         <source>No serializer registered with ID '{0}'</source>
         <target state="translated">Nie zarejestrowano serializatora z identyfikatorem „{0}”</target>
