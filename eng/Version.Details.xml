@@ -25,5 +25,11 @@
       <Uri>https://github.com/microsoft/testanywhere</Uri>
       <Sha>aa2fcc8616d988b234bc1d218465b20c56d0b82f</Sha>
     </Dependency>
+    <!-- Intermediate is necessary for source build. -->
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="10.0.0-beta.24515.3">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>31624193093a13f765ab5382509e693911264509</Sha>
+      <SourceBuild RepoName="arcade" ManagedOnly="true" />
+    </Dependency>
   </ToolsetDependencies>
 </Dependencies>
