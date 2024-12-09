@@ -182,7 +182,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         return _assemblies.GetOrAdd(key, _ =>
         {
             IStopwatch sw = CreateStopwatch();
-            var assemblyRun = new TestProgressState(_counter++, assembly, targetFramework, architecture, sw);
+            var assemblyRun = new TestProgressState(Interlocked.Increment(ref _counter), assembly, targetFramework, architecture, sw);
             int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
             assemblyRun.SlotIndex = slotIndex;
 
@@ -1015,9 +1015,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         if (_options.ShowActiveTests)
         {
-            asm.TestNodeResultsState ??= new(_counter++);
+            asm.TestNodeResultsState ??= new(Interlocked.Increment(ref _counter));
             asm.TestNodeResultsState.AddRunningTestNode(
-                _counter++, testNodeUid, displayName, CreateStopwatch());
+                Interlocked.Increment(ref _counter), testNodeUid, displayName, CreateStopwatch());
         }
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
