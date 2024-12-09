@@ -434,8 +434,7 @@ internal sealed class TestableAssemblyEnumerator : AssemblyEnumerator
 
     internal Mock<TypeEnumerator> MockTypeEnumerator { get; set; }
 
-    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals,
-        TestDataSourceDiscoveryOption discoveryOption, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestIdGenerationStrategy testIdGenerationStrategy)
         => MockTypeEnumerator.Object;
 }
 

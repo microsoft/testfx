@@ -89,9 +89,6 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <summary>
     /// Get the test method info corresponding to the parameter test Element.
     /// </summary>
-    /// <param name="testMethod"> The test Method. </param>
-    /// <param name="testContext"> The test Context. </param>
-    /// <param name="captureDebugTraces"> Indicates whether the test method should capture debug traces.</param>
     /// <returns> The <see cref="TestMethodInfo"/>. </returns>
     public TestMethodInfo? GetTestMethodInfo(TestMethod testMethod, ITestContext testContext, bool captureDebugTraces)
     {
@@ -109,7 +106,29 @@ internal sealed class TypeCache : MarshalByRefObject
         }
 
         // Get the testMethod
-        return ResolveTestMethod(testMethod, testClassInfo, testContext, captureDebugTraces);
+        return ResolveTestMethodInfo(testMethod, testClassInfo, testContext, captureDebugTraces);
+    }
+
+    /// <summary>
+    /// Get the test method info corresponding to the parameter test Element.
+    /// </summary>
+    /// <returns> The <see cref="TestMethodInfo"/>. </returns>
+    public TestMethodInfo? GetTestMethodInfoForDiscovery(TestMethod testMethod)
+    {
+        Guard.NotNull(testMethod);
+
+        // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
+        TestClassInfo? testClassInfo = GetClassInfo(testMethod);
+
+        if (testClassInfo == null)
+        {
+            // This means the class containing the test method could not be found.
+            // Return null so we return a not found result.
+            return null;
+        }
+
+        // Get the testMethod
+        return ResolveTestMethodInfoForDiscovery(testMethod, testClassInfo);
     }
 
     /// <summary>
@@ -762,29 +781,32 @@ internal sealed class TypeCache : MarshalByRefObject
     /// cannot be found, or a function is found that returns non-void, the result is
     /// set to error.
     /// </summary>
-    /// <param name="testMethod"> The test Method. </param>
-    /// <param name="testClassInfo"> The test Class Info. </param>
-    /// <param name="testContext"> The test Context. </param>
-    /// <param name="captureDebugTraces"> Indicates whether the test method should capture debug traces.</param>
     /// <returns>
     /// The TestMethodInfo for the given test method. Null if the test method could not be found.
     /// </returns>
-    private TestMethodInfo? ResolveTestMethod(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext, bool captureDebugTraces)
+    private TestMethodInfo ResolveTestMethodInfo(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext, bool captureDebugTraces)
     {
         DebugEx.Assert(testMethod != null, "testMethod is Null");
         DebugEx.Assert(testClassInfo != null, "testClassInfo is Null");
 
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
 
-        ExpectedExceptionBaseAttribute? expectedExceptionAttribute = _reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod);
         TimeoutInfo timeout = GetTestTimeout(methodInfo, testMethod);
-
+        ExpectedExceptionBaseAttribute? expectedExceptionAttribute = _reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod);
         var testMethodOptions = new TestMethodOptions(timeout, expectedExceptionAttribute, testContext, captureDebugTraces, GetTestMethodAttribute(methodInfo, testClassInfo));
         var testMethodInfo = new TestMethodInfo(methodInfo, testClassInfo, testMethodOptions);
 
         SetCustomProperties(testMethodInfo, testContext);
 
         return testMethodInfo;
+    }
+
+    private TestMethodInfo ResolveTestMethodInfoForDiscovery(TestMethod testMethod, TestClassInfo testClassInfo)
+    {
+        MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
+
+        // Let's build a fake options type as it won't be used.
+        return new TestMethodInfo(methodInfo, testClassInfo, new(TimeoutInfo.FromTimeout(-1), null, null, false, null));
     }
 
     /// <summary>

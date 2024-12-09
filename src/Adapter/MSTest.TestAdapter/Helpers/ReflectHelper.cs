@@ -278,10 +278,21 @@ internal class ReflectHelper : MarshalByRefObject
     /// Gets TestDataSourceDiscovery assembly level attribute.
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>
+    [Obsolete]
     internal static TestDataSourceDiscoveryOption? GetTestDataSourceDiscoveryOption(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceDiscoveryAttribute))
             .OfType<TestDataSourceDiscoveryAttribute>()
             .FirstOrDefault()?.DiscoveryOption;
+
+    /// <summary>
+    /// Gets TestDataSourceOptions assembly level attribute.
+    /// </summary>
+    /// <param name="assembly"> The test assembly. </param>
+    /// <returns> The TestDataSourceOptionsAttribute if set. Null otherwise. </returns>
+    internal static TestDataSourceOptionsAttribute? GetTestDataSourceOptions(Assembly assembly)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceOptionsAttribute))
+            .OfType<TestDataSourceOptionsAttribute>()
+            .FirstOrDefault();
 
     /// <summary>
     /// Get the parallelization behavior for a test method.

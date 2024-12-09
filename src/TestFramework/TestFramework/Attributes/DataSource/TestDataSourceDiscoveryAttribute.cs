@@ -7,6 +7,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Specifies how to discover <see cref="ITestDataSource"/> tests.
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly)]
+#if NET6_0_OR_GREATER
+[Obsolete("Attribute is obsolete and will be removed in v4, instead use 'TestDataSourceOptionsAttribute'.", DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete("Attribute is obsolete and will be removed in v4, instead use 'TestDataSourceOptionsAttribute'.")]
+#endif
 public class TestDataSourceDiscoveryAttribute : Attribute
 {
     /// <summary>
@@ -15,7 +20,8 @@ public class TestDataSourceDiscoveryAttribute : Attribute
     /// <param name="discoveryOption">
     /// The <see cref="TestDataSourceDiscoveryOption"/> to use when discovering <see cref="ITestDataSource"/> tests.
     /// </param>
-    public TestDataSourceDiscoveryAttribute(TestDataSourceDiscoveryOption discoveryOption) => DiscoveryOption = discoveryOption;
+    public TestDataSourceDiscoveryAttribute(TestDataSourceDiscoveryOption discoveryOption)
+        => DiscoveryOption = discoveryOption;
 
     /// <summary>
     /// Gets the discovery option.
