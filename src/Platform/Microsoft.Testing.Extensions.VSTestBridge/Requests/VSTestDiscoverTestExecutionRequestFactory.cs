@@ -55,11 +55,6 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
             throw new InvalidOperationException($"Command line argument {PlatformCommandLineProvider.VSTestAdapterModeOptionKey} is not set but we are in VSTest adapter mode. This is a bug in the adapter.");
         }
 
-        if (_testFrameworkCapabilities.GetCapability<IVSTestFlattenedTestNodesReportCapability>()?.IsSupported != true)
-        {
-            throw new InvalidOperationException($"Skipping test adapter {_testFrameworkAdapter.DisplayName} because it is not {nameof(IVSTestFlattenedTestNodesReportCapability)} capable.");
-        }
-
         if (!_commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             throw new NotSupportedException($"The {nameof(VSTestRunTestExecutionRequestFactory)} does not support creating a {nameof(DiscoverTestExecutionRequest)}.");
