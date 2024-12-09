@@ -15,7 +15,6 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
 
     public static MSTestGracefulStopTestExecutionCapability Instance { get; } = new();
 
-    // TODO: Respect this properly to ensure cleanups are run.
     public bool IsStopRequested { get; private set; }
 
     public Task StopTestExecutionAsync(CancellationToken cancellationToken)
