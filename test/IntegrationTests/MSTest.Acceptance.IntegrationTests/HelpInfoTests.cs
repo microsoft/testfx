@@ -71,6 +71,8 @@ Options:
 Extension options:
     --filter
         Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
+    --maximum-failed-tests
+        Specifies a maximum number of test failures that, when exceeded, will abort the test run.
     --no-ansi
         Disable outputting ANSI escape characters to screen.
     --no-progress
@@ -109,6 +111,10 @@ Extension options:
         Arity: 1
         Hidden: False
         Description: Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
+      --maximum-failed-tests
+        Arity: 1
+        Hidden: False
+        Description: Specifies a maximum number of test failures that, when exceeded, will abort the test run.
       --test-parameter
         Arity: 1..N
         Hidden: False
