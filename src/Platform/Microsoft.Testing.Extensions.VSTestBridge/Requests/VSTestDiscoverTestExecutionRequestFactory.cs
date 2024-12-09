@@ -3,7 +3,6 @@
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
-using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
@@ -49,19 +48,11 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
     }
 
     Task<TestExecutionRequest> ITestExecutionRequestFactory.CreateRequestAsync(Platform.TestHost.TestSessionContext session)
-    {
-        if (!_commandLineService.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey))
-        {
-            throw new InvalidOperationException($"Command line argument {PlatformCommandLineProvider.VSTestAdapterModeOptionKey} is not set but we are in VSTest adapter mode. This is a bug in the adapter.");
-        }
-
-        if (!_commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
-        {
-            throw new NotSupportedException($"The {nameof(VSTestRunTestExecutionRequestFactory)} does not support creating a {nameof(DiscoverTestExecutionRequest)}.");
-        }
-
-        return Task.FromResult<TestExecutionRequest>(new VSTestDiscoverTestExecutionRequest(session, _testExecutionFilter, _assemblyPaths, _discoveryContext, _messageLogger, _discoverySink));
-    }
+        => !_commandLineService.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey)
+            ? throw new InvalidOperationException($"Command line argument {PlatformCommandLineProvider.VSTestAdapterModeOptionKey} is not set but we are in VSTest adapter mode. This is a bug in the adapter.")
+            : !_commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+                ? throw new NotSupportedException($"The {nameof(VSTestRunTestExecutionRequestFactory)} does not support creating a {nameof(DiscoverTestExecutionRequest)}.")
+                : Task.FromResult<TestExecutionRequest>(new VSTestDiscoverTestExecutionRequest(session, _testExecutionFilter, _assemblyPaths, _discoveryContext, _messageLogger, _discoverySink));
 
     public static VSTestDiscoverTestExecutionRequest CreateRequest(
         DiscoverTestExecutionRequest discoverTestExecutionRequest,
