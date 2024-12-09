@@ -49,7 +49,7 @@ public static class TestApplicationBuilderExtensions
         => builder.CommandLine.AddProvider(() => new TestRunParametersCommandLineOptionsProvider(extension));
 
     /// <summary>
-    /// Registers the command-line options provider for '--max-failed-tests'.
+    /// Registers the command-line options provider for '--maximum-failed-tests'.
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     public static void AddMaxFailedTestsService(this ITestApplicationBuilder builder)

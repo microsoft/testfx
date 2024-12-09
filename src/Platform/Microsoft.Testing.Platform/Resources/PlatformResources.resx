@@ -698,13 +698,13 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
     <value>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</value>
   </data>
   <data name="MaxFailedTestsMustBePositive" xml:space="preserve">
-    <value>The option '--max-failed-tests' must be a positive integer. The value '{0}' is not valid.</value>
+    <value>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</value>
   </data>
   <data name="AbortForMaxFailedTestsDescription" xml:space="preserve">
-    <value>Extension used to support '--max-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</value>
+    <value>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</value>
   </data>
   <data name="ReachedMaxFailedTestsMessage" xml:space="preserve">
-    <value>Test session is aborting due to reaching failures ('{0}') specified by the '--max-failed-tests' option.</value>
+    <value>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</value>
     <comment>{0} is the number of max failed tests.</comment>
   </data>
 </root>

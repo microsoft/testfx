@@ -16,7 +16,7 @@ namespace Microsoft.Testing.Platform.TestFramework;
 public sealed class MaxFailedTestsCommandLineOptionsProvider : ICommandLineOptionsProvider
 {
     // TODO: We have 'minimum-expected-tests', so should we use "maximum" instead of "max" here as well for consistency?
-    internal const string MaxFailedTestsOptionKey = "max-failed-tests";
+    internal const string MaxFailedTestsOptionKey = "maximum-failed-tests";
 
     private static readonly IReadOnlyCollection<CommandLineOption> OptionsCache =
     [

@@ -3,8 +3,8 @@
   <file datatype="xml" source-language="en" target-language="es" original="../PlatformResources.resx">
     <body>
       <trans-unit id="AbortForMaxFailedTestsDescription">
-        <source>Extension used to support '--max-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="new">Extension used to support '--max-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
+        <target state="new">Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
         <note />
       </trans-unit>
       <trans-unit id="Aborted">
@@ -377,8 +377,8 @@
         <note />
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
-        <source>The option '--max-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="new">The option '--max-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
+        <target state="new">The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
         <note />
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -629,8 +629,8 @@ Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' 
         <note />
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
-        <source>Test session is aborting due to reaching failures ('{0}') specified by the '--max-failed-tests' option.</source>
-        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--max-failed-tests' option.</target>
+        <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
+        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</target>
         <note>{0} is the number of max failed tests.</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">

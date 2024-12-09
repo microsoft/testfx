@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 
 /// <summary>
 /// A capability to support stopping test execution gracefully, without cancelling/aborting everything.
-/// This is used to support '--max-failed-tests'.
+/// This is used to support '--maximum-failed-tests'.
 /// </summary>
 /// <remarks>
 /// Test frameworks can choose to run any needed cleanup when cancellation is requested.
