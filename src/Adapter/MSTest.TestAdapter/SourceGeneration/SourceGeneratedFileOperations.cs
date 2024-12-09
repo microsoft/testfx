@@ -7,8 +7,6 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
-#pragma warning disable CS0618 // ignore FileOperations deprecation
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration;
 
 internal sealed class SourceGeneratedFileOperations : IFileOperations
