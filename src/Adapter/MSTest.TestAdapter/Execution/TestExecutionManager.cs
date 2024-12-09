@@ -399,7 +399,7 @@ public class TestExecutionManager
             ExecuteTestsWithTestRunner(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner);
         }
 
-        if (MSTestStopGracefullyTestExecutionCapability.Instance.IsStopRequested)
+        if (MSTestGracefulStopTestExecutionCapability.Instance.IsStopRequested)
         {
             testRunner.ForceCleanup();
         }
@@ -424,7 +424,7 @@ public class TestExecutionManager
         foreach (TestCase currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
-            if (MSTestStopGracefullyTestExecutionCapability.Instance.IsStopRequested)
+            if (MSTestGracefulStopTestExecutionCapability.Instance.IsStopRequested)
             {
                 break;
             }
