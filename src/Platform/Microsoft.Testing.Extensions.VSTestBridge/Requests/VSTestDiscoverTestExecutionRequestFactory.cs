@@ -49,13 +49,24 @@ public sealed class VSTestDiscoverTestExecutionRequestFactory : ITestExecutionRe
     }
 
     Task<TestExecutionRequest> ITestExecutionRequestFactory.CreateRequestAsync(Platform.TestHost.TestSessionContext session)
-        => !_commandLineService.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey)
-            ? throw new InvalidOperationException($"Command line argument {PlatformCommandLineProvider.VSTestAdapterModeOptionKey} is not set but we are in VSTest adapter mode. This is a bug in the adapter.")
-             : _testFrameworkCapabilities.GetCapability<IVSTestFlattenedTestNodesReportCapability>()?.IsSupported != true
-                ? throw new InvalidOperationException($"Skipping test adapter {_testFrameworkAdapter.DisplayName} because it is not {nameof(IVSTestFlattenedTestNodesReportCapability)} capable.")
-                : !_commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
-                    ? throw new NotSupportedException($"The {nameof(VSTestRunTestExecutionRequestFactory)} does not support creating a {nameof(DiscoverTestExecutionRequest)}.")
-                    : Task.FromResult<TestExecutionRequest>(new VSTestDiscoverTestExecutionRequest(session, _testExecutionFilter, _assemblyPaths, _discoveryContext, _messageLogger, _discoverySink));
+    {
+        if (!_commandLineService.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey))
+        {
+            throw new InvalidOperationException($"Command line argument {PlatformCommandLineProvider.VSTestAdapterModeOptionKey} is not set but we are in VSTest adapter mode. This is a bug in the adapter.");
+        }
+
+        if (_testFrameworkCapabilities.GetCapability<IVSTestFlattenedTestNodesReportCapability>()?.IsSupported != true)
+        {
+            throw new InvalidOperationException($"Skipping test adapter {_testFrameworkAdapter.DisplayName} because it is not {nameof(IVSTestFlattenedTestNodesReportCapability)} capable.");
+        }
+
+        if (!_commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
+        {
+            throw new NotSupportedException($"The {nameof(VSTestRunTestExecutionRequestFactory)} does not support creating a {nameof(DiscoverTestExecutionRequest)}.");
+        }
+
+        return Task.FromResult<TestExecutionRequest>(new VSTestDiscoverTestExecutionRequest(session, _testExecutionFilter, _assemblyPaths, _discoveryContext, _messageLogger, _discoverySink));
+    }
 
     public static VSTestDiscoverTestExecutionRequest CreateRequest(
         DiscoverTestExecutionRequest discoverTestExecutionRequest,
