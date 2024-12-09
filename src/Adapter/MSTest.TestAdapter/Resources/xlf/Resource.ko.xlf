@@ -203,11 +203,6 @@ Error: {1}</source>
 오류: {1}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTA_ErrorGenericTestMethod">
-        <source>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</source>
-        <target state="translated">UTA015: 제네릭 메서드는 테스트 메서드일 수 없습니다. {0}.{1}에 잘못된 서명이 있습니다.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
         <source>File does not exist: {0}</source>
         <target state="translated">파일이 없습니다. {0}</target>

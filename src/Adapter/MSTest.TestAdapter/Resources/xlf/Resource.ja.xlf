@@ -204,11 +204,6 @@ Error: {1}</source>
 エラー: {1}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTA_ErrorGenericTestMethod">
-        <source>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</source>
-        <target state="translated">UTA015: ジェネリック メソッドがテスト メソッドになることはできません。{0}.{1} のシグネチャは無効です</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
         <source>File does not exist: {0}</source>
         <target state="translated">ファイルが存在しません: {0}</target>
