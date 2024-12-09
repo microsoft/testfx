@@ -21,6 +21,6 @@ public static class TestApplicationBuilderExtensions
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-    public static void AddMaxFailedTestsService(this ITestApplicationBuilder builder, IExtension extension)
+    public static void AddMaximumFailedTestsService(this ITestApplicationBuilder builder, IExtension extension)
         => builder.CommandLine.AddProvider(() => new MaxFailedTestsCommandLineOptionsProvider(extension));
 }

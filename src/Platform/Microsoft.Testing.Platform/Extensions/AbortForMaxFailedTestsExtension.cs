@@ -67,7 +67,7 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
         if (TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Any(t => t == testNodeStateProperty.GetType()) &&
             ++_failCount > _maxFailedTests.Value &&
             // If already triggered, don't do it again.
-            _policiesService.IsMaxFailedTestsTriggered)
+            !_policiesService.IsMaxFailedTestsTriggered)
         {
             await _capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken);
             await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(_maxFailedTests.Value, _testApplicationCancellationTokenSource.CancellationToken);
