@@ -22,7 +22,7 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
     {
         get
         {
-            string? processPath = GetProcessPath(_environment, _process, false);
+            string? processPath = GetProcessPath(_environment, _process);
             return processPath is not null
                 && Path.GetFileNameWithoutExtension(processPath) == "dotnet";
         }
