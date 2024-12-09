@@ -8,6 +8,7 @@ using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -20,7 +21,9 @@ public static class TestApplicationBuilderExtensions
         testApplicationBuilder.AddRunSettingsService(extension);
         testApplicationBuilder.AddTestCaseFilterService(extension);
         testApplicationBuilder.AddTestRunParametersService(extension);
-        testApplicationBuilder.AddMaxFailedTestsService();
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        testApplicationBuilder.AddMaxFailedTestsService(extension);
+#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         testApplicationBuilder.AddRunSettingsEnvironmentVariableProvider(extension);
         testApplicationBuilder.RegisterTestFramework(
             serviceProvider => new TestFrameworkCapabilities(

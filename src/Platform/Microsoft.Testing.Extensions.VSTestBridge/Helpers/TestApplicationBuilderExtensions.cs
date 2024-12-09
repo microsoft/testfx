@@ -49,15 +49,6 @@ public static class TestApplicationBuilderExtensions
         => builder.CommandLine.AddProvider(() => new TestRunParametersCommandLineOptionsProvider(extension));
 
     /// <summary>
-    /// Registers the command-line options provider for '--maximum-failed-tests'.
-    /// </summary>
-    /// <param name="builder">The test application builder.</param>
-    public static void AddMaxFailedTestsService(this ITestApplicationBuilder builder)
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        => builder.CommandLine.AddProvider(() => new MaxFailedTestsCommandLineOptionsProvider());
-#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
-    /// <summary>
     /// Register the environment variable provider.
     /// </summary>
     /// <param name="builder">The test application builder.</param>
