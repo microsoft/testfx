@@ -6,8 +6,10 @@
 
   <Choose>
     <When Condition="'$(DotNetBuildFromSource)' == 'true' or '$(DotNetBuild)' == 'true'">
-    <!-- When building for source build we only want to build the platform, this is the only component shared to dotnet/sdk. -->
-      <ProjectToBuild Include="$(RepoRoot)src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj" />
+      <!-- When building for source build we only want to build the platform, this is the only component shared to dotnet/sdk. -->
+      <ItemGroup>
+        <ProjectToBuild Include="$(RepoRoot)src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj" />
+      </ItemGroup>
     </When>
     <Otherwise>
       <!-- When building all products on windows OS -->
