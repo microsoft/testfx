@@ -35,7 +35,6 @@ public partial class TypeEnumeratorTests
 
         public override Type ReflectedType => _original.ReflectedType;
 
-
         public override IEnumerable<CustomAttributeData> CustomAttributes => _original.CustomAttributes;
 
         public override int MetadataToken => _original.MetadataToken;
@@ -96,8 +95,4 @@ public partial class TypeEnumeratorTests
 
         public override string ToString() => _original.ToString();
     }
-
-    #endregion
 }
-
-#endregion
