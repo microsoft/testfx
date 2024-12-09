@@ -133,7 +133,7 @@ public class DiagnosticTests : AcceptanceTestBase
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY, "Trace" },
             });
 
-        await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern, "Trace");
+        await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]

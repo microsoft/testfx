@@ -41,13 +41,13 @@ public static class VerifyE2E
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests, true);
 
     public static void ContainsTestsPassed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
-        => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests, false);
+        => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests);
 
     public static void ContainsTestsPassed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests);
 
     public static void ContainsTestsFailed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
-        => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests, false);
+        => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests);
 
     public static void ContainsTestsFailed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests);
