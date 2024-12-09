@@ -117,6 +117,16 @@
         <target state="translated">ICommandLineOptions はまだ構築されていません。</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineParserFailedToReadResponseFile">
+        <source>Failed to read response file '{0}'. {1}.</source>
+        <target state="translated">応答ファイル '{0}' を読み取れませんでした。{1}。</target>
+        <note>{1} is the exception</note>
+      </trans-unit>
+      <trans-unit id="CommandLineParserResponseFileNotFound">
+        <source>The response file '{0}' was not found</source>
+        <target state="translated">応答ファイル '{0}' が見つかりませんでした</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">予期しない引数 {0}</target>
@@ -145,6 +155,11 @@
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
         <target state="translated">'CompositeExtensonFactory' の同じインスタンスが既に登録されています</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConfigurationFileNotFound">
+        <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
+        <target state="translated">'--config-file' で指定された構成ファイル '{0}' が見つかりませんでした。</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
@@ -189,9 +204,29 @@
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
+      <trans-unit id="DiscoveredTestsInAssembly">
+        <source>Discovered {0} tests in assembly</source>
+        <target state="translated">アセンブリで {0} つのテストを検出しました。</target>
+        <note>0 is count, the sentence is followed by the path of the assebly</note>
+      </trans-unit>
+      <trans-unit id="DiscoveringTestsFrom">
+        <source>Discovering tests from</source>
+        <target state="translated">からテストを検出しています</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">プロバイダー '{0}' (UID: {1}) が次のエラーで失敗しました: {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExceptionDuringCancellationWarningMessage">
+        <source>Exception during the cancellation of request id '{0}'</source>
+        <target state="translated">要求 ID '{0}' の取り消し中に例外が発生しました</target>
+        <note>{0} is the request id</note>
+      </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="translated">終了コード</target>
         <note />
       </trans-unit>
       <trans-unit id="Expected">
@@ -227,8 +262,8 @@
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
-        <source>failed with {0} errors(s)</source>
-        <target state="translated">{0} エラーで失敗しました</target>
+        <source>failed with {0} error(s)</source>
+        <target state="translated">{0} 件のエラーで失敗しました</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">
@@ -239,6 +274,11 @@
       <trans-unit id="FailedWithWarnings">
         <source>failed with {0} warning(s)</source>
         <target state="translated">{0} 件の警告付きで失敗しました</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FinishedTestSession">
+        <source>Finished test session.</source>
+        <target state="translated">テスト セッションを終了しました。</target>
         <note />
       </trans-unit>
       <trans-unit id="ForTest">
@@ -391,6 +431,11 @@
         <target state="translated">クライアントのポートを指定します。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
+        <source>Specifies a testconfig.json file.</source>
+        <target state="translated">testconfig.json ファイルを指定します。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously.
 Useful for scenario where you don't want to lose any log (i.e. in case of crash).
@@ -484,6 +529,11 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
         <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
         <target state="translated">'--list-tests' と '--minimum-expected-tests' は互換性のないオプションです</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
+        <source>Specifies the minimum number of tests that are expected to run.</source>
+        <target state="translated">実行する必要があるテストの最小数を指定します。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
@@ -594,6 +644,16 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">サーバー テスト実行フィルター ファクトリ</target>
         <note />
       </trans-unit>
+      <trans-unit id="ServerTestHostDescription">
+        <source>The 'ITestHost' implementation used when running server mode.</source>
+        <target state="translated">サーバー モードの実行時に使用される 'ITestHost' 実装。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDisplayName">
+        <source>Server mode test host</source>
+        <target state="translated">サーバー モード テスト ホスト</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
         <target state="translated">'{0}' 型のサービスが見つかりません</target>
@@ -647,6 +707,16 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
         <target state="translated">サーバーを起動しています。ポート '{0}' で聞いています</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSession">
+        <source>Starting test session.</source>
+        <target state="translated">テスト セッションを開始しています。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSessionWithLogFilePath">
+        <source>Starting test session. The log file path is '{0}'.</source>
+        <target state="translated">テスト セッションを開始しています。ログ ファイルのパスが '{0}' です。</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -745,6 +815,16 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
         <target state="translated">VSTest モードは、プロセスごとに 1 つの TestApplicationBuilder のみをサポートします</target>
         <note />
+      </trans-unit>
+      <trans-unit id="TestDiscoverySummary">
+        <source>Discovered {0} tests in {1} assemblies.</source>
+        <target state="translated">{1} アセンブリで {0} つのテストを検出しました。</target>
+        <note>0 is number of tests, 1 is count of assemblies</note>
+      </trans-unit>
+      <trans-unit id="TestDiscoverySummarySingular">
+        <source>Discovered {0} tests.</source>
+        <target state="translated">{0} つのテストが検出されました。</target>
+        <note>0 is number of tests</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>
@@ -847,6 +927,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <source>The communication protocol '{0}' is not supported</source>
         <target state="translated">通信プロトコル '{0}' はサポートされていません</target>
         <note />
+      </trans-unit>
+      <trans-unit id="UnobservedTaskExceptionWarningMessage">
+        <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+        <target state="translated">ハンドルされない例外 [ServerTestHost.OnTaskSchedulerUnobservedTaskException]: {0}</target>
+        <note>{0} is the exception that was unhandled/unobserved</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>

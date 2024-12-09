@@ -171,6 +171,8 @@ public class TempDirectory : IDisposable
       <!-- Do not warn about package downgrade. NuGet uses alphabetical sort as ordering so -dev or -ci are considered downgrades of -preview. -->
       <NoWarn>NU1605</NoWarn>
       <RunAnalyzers>false</RunAnalyzers>
+      <!-- Prevent build warnings/errors on unsupported TFMs -->
+      <CheckEolTargetFramework>false</CheckEolTargetFramework>
     </PropertyGroup>
 </Project>
 """);

@@ -19,6 +19,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Class responsible for execution of tests at assembly level and sending tests via framework handle.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public class TestExecutionManager
 {
     /// <summary>
@@ -300,7 +305,7 @@ public class TestExecutionManager
             [MSTestSettings.CurrentSettings, unitTestElements, (int)sourceSettings.ClassCleanupLifecycle])!;
 
         // Ensures that the cancellation token gets through AppDomain boundary.
-        _testRunCancellationToken?.Register(testRunner.Cancel);
+        _testRunCancellationToken?.Register(static state => ((UnitTestRunner)state!).Cancel(), testRunner);
 
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
         {

@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 
 namespace Microsoft.Testing.Internal.Framework;
 
-internal class TestFrameworkManager(
+internal sealed class TestFrameworkManager(
     Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> testFrameworkFactory,
     Func<IServiceProvider, ITestFrameworkCapabilities> testFrameworkCapabilitiesFactory)
     : ITestFrameworkManager

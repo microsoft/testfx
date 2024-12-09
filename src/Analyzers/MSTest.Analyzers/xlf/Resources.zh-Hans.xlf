@@ -567,16 +567,14 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
-        <source>TestContext property should follow the following layout to be valid:
-- it should be a property
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+        <source>'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
-- it should not be readonly.</source>
-        <target state="translated">TestContext 属性应遵循以下布局才能生效：
-- 它应该是属性
-- 它应为“public”(如果设置了“[assembly: DiscoverInternals]”属性，则应为“internal”)
-- 它不应为“static”
-- 它不应为只读。</target>
+- it should have a setter.</source>
+        <target state="translated">"TestContext" 应该是构造函数中分配的非静态字段或属性，或者对于 MSTest 设置的属性，它应遵循以下布局:
+- 无论是否设置 "[assembly: DiscoverInternals]" 属性，它都应为 "public"。
+- 它不应为 "static"
+- 它应具有一个资源库。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">
@@ -724,6 +722,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseParallelizeAttributeAnalyzerTitle">
         <source>Explicitly enable or disable tests parallelization</source>
         <target state="translated">显式启用或禁用测试并行化</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
+        <target state="translated">使用“Assert.{0}”而不是“Assert.{1}”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsTitle">
+        <source>Use proper 'Assert' methods</source>
+        <target state="translated">使用正确的“断言”方法</target>
         <note />
       </trans-unit>
     </body>

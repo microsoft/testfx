@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Extensions.Telemetry;
 
-internal class AppInsightTelemetryClientFactory : ITelemetryClientFactory
+internal sealed class AppInsightTelemetryClientFactory : ITelemetryClientFactory
 {
     public ITelemetryClient Create(string? currentSessionId, string osVersion)
         => new AppInsightTelemetryClient(currentSessionId, osVersion);

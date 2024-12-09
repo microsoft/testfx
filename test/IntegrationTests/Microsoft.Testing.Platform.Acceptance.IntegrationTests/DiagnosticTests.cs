@@ -110,7 +110,7 @@ public class DiagnosticTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
             });
@@ -127,13 +127,13 @@ public class DiagnosticTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY, "Trace" },
             });
 
-        await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern, "Trace");
+        await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -145,7 +145,7 @@ public class DiagnosticTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX, "MyPrefix" },
@@ -163,7 +163,7 @@ public class DiagnosticTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE, "1" },
@@ -179,7 +179,7 @@ public class DiagnosticTests : AcceptanceTestBase
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--diagnostic",
-            new Dictionary<string, string>
+            new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "0" },
             });
@@ -240,8 +240,8 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         <!-- Platform and TrxReport.Abstractions are only needed because Internal.Framework relies on a preview version that we want to override with currently built one -->
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingInternalFrameworkVersion$" />
+        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingInternalFrameworkVersion$" />
     </ItemGroup>
 </Project>
 
@@ -278,7 +278,8 @@ global using Microsoft.Testing.Extensions;
                 TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
         }
     }
 }

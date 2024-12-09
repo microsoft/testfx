@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !NETFRAMEWORK
+using System.Diagnostics;
+#endif
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
@@ -14,6 +17,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// This service is responsible for platform specific reflection operations.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public class ReflectionOperations : IReflectionOperations
 {
     /// <summary>
@@ -23,11 +31,20 @@ public class ReflectionOperations : IReflectionOperations
     /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
     [return: NotNullIfNotNull(nameof(memberInfo))]
-    public object[]? GetCustomAttributes(MemberInfo memberInfo, bool inherit) =>
+    public object[]? GetCustomAttributes(MemberInfo memberInfo, bool inherit)
 #if NETFRAMEWORK
-        ReflectionUtility.GetCustomAttributes(memberInfo, inherit).ToArray();
+         => ReflectionUtility.GetCustomAttributes(memberInfo, inherit).ToArray();
 #else
-        memberInfo.GetCustomAttributes(inherit);
+    {
+        object[] attributes = memberInfo.GetCustomAttributes(typeof(Attribute), inherit);
+
+        // Ensures that when the return of this method is used here:
+        // https://github.com/microsoft/testfx/blob/e101a9d48773cc935c7b536d25d378d9a3211fee/src/Adapter/MSTest.TestAdapter/Helpers/ReflectHelper.cs#L461
+        // then we are already Attribute[] to avoid LINQ Cast and extra array allocation.
+        // This assert is solely for performance. Nothing "functional" will go wrong if the assert failed.
+        Debug.Assert(attributes is Attribute[], $"Expected Attribute[], found '{attributes.GetType()}'.");
+        return attributes;
+    }
 #endif
 
     /// <summary>
@@ -55,6 +72,6 @@ public class ReflectionOperations : IReflectionOperations
 #if NETFRAMEWORK
         ReflectionUtility.GetCustomAttributes(assembly, type).ToArray();
 #else
-        assembly.GetCustomAttributes(type).ToArray<object>();
+        assembly.GetCustomAttributes(type, inherit: true);
 #endif
 }

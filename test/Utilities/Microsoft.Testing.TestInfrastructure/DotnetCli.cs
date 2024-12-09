@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 using Polly;
 using Polly.Contrib.WaitAndRetry;
@@ -29,6 +30,7 @@ public static class DotnetCli
         "MicrosoftInstrumentationEngine_FileLogPath"
     ];
 
+    [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing some runtime bug")]
     private static int s_maxOutstandingCommand = Environment.ProcessorCount;
     private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
 
@@ -50,7 +52,7 @@ public static class DotnetCli
         string args,
         string nugetGlobalPackagesFolder,
         string? workingDirectory = null,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
         int timeoutInSeconds = 50,
@@ -62,7 +64,7 @@ public static class DotnetCli
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
         {
-            environmentVariables ??= new Dictionary<string, string>();
+            environmentVariables ??= new Dictionary<string, string?>();
             foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
             {
                 // Skip all unwanted environment variables.
@@ -121,7 +123,7 @@ public static class DotnetCli
         }
     }
 
-    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
+    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
     {
         if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
         {

@@ -5,6 +5,15 @@
 
   <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">
     <EnableMSTestRunner>true</EnableMSTestRunner>
+
+    <!-- When we are using mstest sdk-style project, we have IsTestingPlatformApplication set to false, thus it's causing issues.
+    Because we are setting this property based on EnableMSTestRunner which is set to false,
+    because of the order of import (mstest testadapter props then ClassicEngine.targets),
+    we need to set IsTestingPlatformApplication to true in ClassicEngine.targets to fix this issue.
+
+    The IsTestingPlatformApplication property is needed for the dotnet test driver to distinguish
+    if we need to run the test project using the new testing platform. -->
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <!-- Extensions -->
@@ -24,6 +33,10 @@
     <!-- Hang dump -->
     <EnableMicrosoftTestingExtensionsHangDump Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHangDump>
     <MicrosoftTestingExtensionsHangDumpVersion Condition=" '$(MicrosoftTestingExtensionsHangDumpVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHangDumpVersion>
+
+    <!-- Fakes -->
+    <EnableMicrosoftTestingExtensionsFakes Condition=" '$(EnableMicrosoftTestingExtensionsFakes)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsFakes>
+    <MicrosoftTestingExtensionsFakesVersion Condition=" '$(MicrosoftTestingExtensionsFakesVersion)' == '' " >$(MicrosoftTestingExtensionsFakesVersion)</MicrosoftTestingExtensionsFakesVersion>
   </PropertyGroup>
 
   <!-- Core -->
@@ -54,24 +67,27 @@
 
   <!-- Extensions (for test applications - not for test libraries) -->
   <ItemGroup Condition=" '$(IsTestApplication)' == 'true' ">
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Sdk="MSTest"
-                      Version="$(MicrosoftTestingExtensionsTrxReportVersion)" VersionOverride="$(MicrosoftTestingExtensionsTrxReportVersion)"
-                      Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " />
     <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Sdk="MSTest"
                       Version="$(MicrosoftTestingExtensionsCrashDumpVersion)" VersionOverride="$(MicrosoftTestingExtensionsCrashDumpVersion)"
                       Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == 'true' " />
-    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Sdk="MSTest"
-                      Version="$(MicrosoftTestingExtensionsHangDumpVersion)" VersionOverride="$(MicrosoftTestingExtensionsHangDumpVersion)"
-                      Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' " />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Sdk="MSTest"
                       Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" VersionOverride="$(MicrosoftTestingExtensionsCodeCoverageVersion)"
                       Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Sdk="MSTest"
+                      Version="$(MicrosoftTestingExtensionsHangDumpVersion)" VersionOverride="$(MicrosoftTestingExtensionsHangDumpVersion)"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.Fakes" Sdk="MSTest"
+                      Version="$(MicrosoftTestingExtensionsFakesVersion)" VersionOverride="$(MicrosoftTestingExtensionsFakesVersion)"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsFakes)' == 'true' " />
     <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Sdk="MSTest"
                       Version="$(MicrosoftTestingExtensionsHotReloadVersion)" VersionOverride="$(MicrosoftTestingExtensionsHotReloadVersion)"
                       Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'true' " />
     <PackageReference Include="Microsoft.Testing.Extensions.Retry" Sdk="MSTest"
                       Version="$(MicrosoftTestingExtensionsRetryVersion)" VersionOverride="$(MicrosoftTestingExtensionsRetryVersion)"
                       Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Sdk="MSTest"
+                      Version="$(MicrosoftTestingExtensionsTrxReportVersion)" VersionOverride="$(MicrosoftTestingExtensionsTrxReportVersion)"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)../Features/Aspire.targets" Condition=" '$(EnableAspireTesting)' == 'true' " />

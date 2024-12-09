@@ -3,16 +3,20 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Net.Sockets;
 
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
@@ -20,7 +24,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, IDisposable
+internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, IDisposable, IOutputDeviceDataProducer
 {
     public const string ProtocolVersion = "1.0.0";
     private readonly Func<TestFrameworkBuilderData, Task<ITestFramework>> _buildTestFrameworkAsync;
@@ -93,13 +97,36 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
     protected override bool RunTestApplicationLifeCycleCallbacks => true;
 
+    public string Uid => nameof(ServerTestHost);
+
+    public string Version => AppVersion.DefaultSemVer;
+
+    public string DisplayName => PlatformResources.ServerTestHostDisplayName;
+
+    public string Description => PlatformResources.ServerTestHostDescription;
+
     private void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
-        => _logger.LogWarning($"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}");
+    {
+        _logger.LogWarning($"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}");
+
+        // Looks like nothing in this message to really be localized?
+        // All are class names, method names, property names, and placeholders. So none is localizable?
+        ServiceProvider.GetOutputDevice().DisplayAsync(
+            this,
+            new WarningMessageOutputDeviceData(
+                $"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}"))
+            .GetAwaiter().GetResult();
+    }
 
     private void OnTaskSchedulerUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
         e.SetObserved();
         _logger.LogWarning($"[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {e.Exception}");
+
+        // Looks like nothing in this message to really be localized?
+        // All are class names, method names, property names, and placeholders. So none is localizable?
+        ServiceProvider.GetOutputDevice().DisplayAsync(this, new WarningMessageOutputDeviceData(PlatformResources.UnobservedTaskExceptionWarningMessage))
+            .GetAwaiter().GetResult();
     }
 
     [MemberNotNull(nameof(_messageHandler))]
@@ -117,13 +144,6 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         {
             await _logger.LogDebugAsync("Starting server mode");
             _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(_testApplicationCancellationTokenSource.CancellationToken);
-
-            // Initialize the ServerLoggerForwarderProvider, it can be null if diagnostic is disabled.
-            ServerLoggerForwarderProvider? serviceLoggerForwarder = ServiceProvider.GetService<ServerLoggerForwarderProvider>();
-            if (serviceLoggerForwarder is not null)
-            {
-                await serviceLoggerForwarder.InitializeAsync(this);
-            }
 
             await HandleMessagesAsync();
 
@@ -268,7 +288,14 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                         Exception? cancellationException = rpcState.CancelRequest();
                         if (cancellationException is null)
                         {
+                            // This is intentionally not using PlatformResources.ExceptionDuringCancellationWarningMessage
+                            // It's meant for troubleshooting and shouldn't be localized.
+                            // The localized message that is user-facing will be displayed in the DisplayAsync call next line.
                             await _logger.LogWarningAsync($"Exception during the cancellation of request id '{args.CancelRequestId}'");
+
+                            await ServiceProvider.GetOutputDevice().DisplayAsync(
+                                this,
+                                new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExceptionDuringCancellationWarningMessage, args.CancelRequestId)));
                         }
                     }
 
@@ -450,13 +477,16 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         DateTimeOffset adapterLoadStart = _clock.UtcNow;
 
+        ProxyOutputDevice outputDevice = ServiceProvider.GetRequiredService<ProxyOutputDevice>();
+        await outputDevice.InitializeAsync(this);
+
         // Build the per request adapter
-        ITestFramework perRequestTestFramework = await _buildTestFrameworkAsync(new(
+        ITestFramework perRequestTestFramework = await _buildTestFrameworkAsync(new TestFrameworkBuilderData(
             perRequestServiceProvider,
             requestFactory,
             invoker,
             filterFactory,
-            new ServerModePerCallOutputDevice(),
+            outputDevice.OriginalOutputDevice,
             [testNodeUpdateProcessor],
             _testFrameworkManager,
             _testSessionManager,
@@ -475,7 +505,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
             // Execute the request
             await ExecuteRequestAsync(
-                perRequestServiceProvider.GetPlatformOutputDevice(),
+                outputDevice,
                 perRequestServiceProvider.GetTestSessionContext(),
                 perRequestServiceProvider,
                 perRequestServiceProvider.GetBaseMessageBus(),
@@ -632,6 +662,11 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     {
         // Note: The lifetime of the _reader/_writer should be currently handled by the RunAsync()
         // We could consider creating a stateful engine that has the lifetime == server connection UP.
+        if (!ServiceProvider.GetUnhandledExceptionsPolicy().FastFailOnFailure)
+        {
+            AppDomain.CurrentDomain.UnhandledException -= OnCurrentDomainUnhandledException;
+            TaskScheduler.UnobservedTaskException -= OnTaskSchedulerUnobservedTaskException;
+        }
     }
 
     internal async Task SendTestUpdateCompleteAsync(Guid runId)
@@ -700,9 +735,11 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         }
     }
 
+    public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
+
     private sealed class RpcInvocationState : IDisposable
     {
-        private readonly object _cancellationTokenSourceLock = new();
+        private readonly Lock _cancellationTokenSourceLock = new();
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private volatile bool _isDisposed;
 

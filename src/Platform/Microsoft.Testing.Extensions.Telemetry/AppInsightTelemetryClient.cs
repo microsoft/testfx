@@ -6,7 +6,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 
 namespace Microsoft.Testing.Extensions.Telemetry;
 
-internal class AppInsightTelemetryClient : ITelemetryClient
+internal sealed class AppInsightTelemetryClient : ITelemetryClient
 {
     // Note: The InstrumentationKey should match the one of dotnet cli.
     private const string InstrumentationKey = "74cc1c9e-3e6e-4d05-b3fc-dde9101d0254";

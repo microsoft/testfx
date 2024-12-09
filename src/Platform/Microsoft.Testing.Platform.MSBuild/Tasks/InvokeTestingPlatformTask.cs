@@ -35,7 +35,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     private readonly CancellationTokenSource _waitForConnections = new();
     private readonly List<NamedPipeServer> _connections = new();
     private readonly StringBuilder _output = new();
-    private readonly object _initLock = new();
+    private readonly Lock _initLock = new();
     private readonly Process _currentProcess = Process.GetCurrentProcess();
     private readonly Architecture _currentProcessArchitecture = RuntimeInformation.ProcessArchitecture;
 
@@ -141,7 +141,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 else
                 {
                     Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
-                    Log.LogError(Resources.MSBuildResources.FullPathToolCalculationFailed, dotnetRunnerName);
+                    Log.LogError(string.Format(CultureInfo.InvariantCulture, Resources.MSBuildResources.IncompatibleArchitecture, dotnetRunnerName, TestArchitecture.ItemSpec));
                     return null;
                 }
             }
@@ -420,7 +420,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         throw new NotImplementedException($"Request '{request.GetType()}' not supported.");
     }
 
-    private class MSBuildLogger : Logging.ILogger
+    private sealed class MSBuildLogger : Logging.ILogger
     {
         public bool IsEnabled(LogLevel logLevel) => false;
 

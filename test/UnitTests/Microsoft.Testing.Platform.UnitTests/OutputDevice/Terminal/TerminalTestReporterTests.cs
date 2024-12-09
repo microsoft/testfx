@@ -42,6 +42,33 @@ public sealed class TerminalTestReporterTests : TestBase
         Assert.That(!terminal.Output.ToString().Contains(" :0"));
     }
 
+    // Code with line when we have symbols
+    [Arguments(
+        "   at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:line 16",
+        $"    at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:16")]
+    // code without line when we don't have symbols
+    [Arguments(
+        "   at TestingPlatformEntryPoint.<Main>(String[])",
+        "    at TestingPlatformEntryPoint.<Main>(String[])")]
+    // stack trace when published as NativeAOT
+    [Arguments(
+        "   at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d",
+        "    at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d")]
+    // spanners that we want to keep, to not lose information
+    [Arguments(
+        "--- End of stack trace from previous location ---",
+        "    --- End of stack trace from previous location ---")]
+    public void StackTraceRegexCapturesLines(string stackTraceLine, string expected)
+    {
+        var terminal = new StringBuilderTerminal();
+        TerminalTestReporter.AppendStackFrame(terminal, stackTraceLine);
+
+        // We add newline after every, but it is hard to put it in the attribute.
+        expected += Environment.NewLine;
+
+        Assert.AreEqual(expected, terminal.Output);
+    }
+
     public void OutputFormattingIsCorrect()
     {
         var stringBuilderConsole = new StringBuilderConsole();
@@ -58,7 +85,7 @@ public sealed class TerminalTestReporterTests : TestBase
 
         DateTimeOffset startTime = DateTimeOffset.MinValue;
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
-        terminalReporter.TestExecutionStarted(startTime, 1);
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
 
         string targetFramework = "net8.0";
         string architecture = "x64";
@@ -85,7 +112,7 @@ public sealed class TerminalTestReporterTests : TestBase
             errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
         terminalReporter.ArtifactAdded(outOfProcess: true, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact1.txt");
         terminalReporter.ArtifactAdded(outOfProcess: false, assembly, targetFramework, architecture, executionId: null, testName: null, @$"{folder}artifact2.txt");
-        terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture, executionId: null);
+        terminalReporter.AssemblyRunCompleted(assembly, targetFramework, architecture, executionId: null, exitCode: null, outputData: null, errorData: null);
         terminalReporter.TestExecutionCompleted(endTime);
 
         string output = stringBuilderConsole.Output;

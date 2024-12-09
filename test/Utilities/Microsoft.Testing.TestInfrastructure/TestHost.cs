@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 using Polly;
@@ -13,6 +14,7 @@ public sealed class TestHost
 {
     private readonly string _testHostModuleName;
 
+    [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing runtime bug")]
     private static int s_maxOutstandingExecutions = Environment.ProcessorCount;
     private static SemaphoreSlim s_maxOutstandingExecutions_semaphore = new(s_maxOutstandingExecutions, s_maxOutstandingExecutions);
 
@@ -41,7 +43,7 @@ public sealed class TestHost
 
     public async Task<TestHostResult> ExecuteAsync(
         string? command = null,
-        Dictionary<string, string>? environmentVariables = null,
+        Dictionary<string, string?>? environmentVariables = null,
         bool disableTelemetry = true,
         int timeoutSeconds = 60)
     {
@@ -53,7 +55,7 @@ public sealed class TestHost
                 throw new InvalidOperationException($"Command should not start with module name '{_testHostModuleName}'.");
             }
 
-            environmentVariables ??= new Dictionary<string, string>();
+            environmentVariables ??= new Dictionary<string, string?>();
 
             if (disableTelemetry)
             {
@@ -69,7 +71,11 @@ public sealed class TestHost
                     continue;
                 }
 
-                environmentVariables.Add(key!, entry.Value!.ToString()!);
+                // We use TryAdd to let tests "overwrite" existing environment variables.
+                // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
+                // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
+                // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
+                environmentVariables.TryAdd(key!, entry!.Value!.ToString()!);
             }
 
             // Define DOTNET_ROOT to point to the dotnet we install for this repository, to avoid

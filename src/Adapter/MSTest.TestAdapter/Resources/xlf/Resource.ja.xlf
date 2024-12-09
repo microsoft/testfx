@@ -178,9 +178,9 @@ but received {4} argument(s), with types '{5}'.</source>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
-        <source>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, public and must not be read-only. For example: public TestContext TestContext.</source>
-        <target state="translated">UTA031: クラス {0} は有効な TestContext プロパティを含んでいません。TestContext は、型 TestContext でなければなりません。また、non-static および public である必要があり、読み取り専用に指定することはできません。例: public TestContext TestContext。</target>
-        <note></note>
+        <source>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</source>
+        <target state="translated">UTA031: クラス {0} に有効な TestContext プロパティがありません。TestContext は TestContext 型で、非静的である必要があり、public である必要があります。たとえば、public TestContext TestContext です。</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorNonPublicTestClass">
         <source>UTA001: TestClass attribute defined on non-public class {0}</source>

@@ -3,6 +3,7 @@
 
 #if !WINDOWS_UWP
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
@@ -11,6 +12,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for mocking")]
 internal class FileUtility
 {
     private readonly AssemblyUtility _assemblyUtility;
@@ -182,19 +184,14 @@ internal class FileUtility
 
     public virtual List<string> AddFilesFromDirectory(string directoryPath, Func<string, bool>? ignoreDirectory, bool ignoreIOExceptions)
     {
-        var fileContents = new List<string>();
+        var files = new List<string>();
 
         try
         {
-            string[] files = GetFilesInADirectory(directoryPath);
-            fileContents.AddRange(files);
+            files.AddRange(GetFilesInADirectory(directoryPath));
         }
-        catch (IOException)
+        catch (IOException) when (ignoreIOExceptions)
         {
-            if (!ignoreIOExceptions)
-            {
-                throw;
-            }
         }
 
         foreach (string subDirectoryPath in GetDirectoriesInADirectory(directoryPath))
@@ -204,14 +201,10 @@ internal class FileUtility
                 continue;
             }
 
-            List<string> subDirectoryContents = AddFilesFromDirectory(subDirectoryPath, ignoreDirectory, true);
-            if (subDirectoryContents.Count > 0)
-            {
-                fileContents.AddRange(subDirectoryContents);
-            }
+            files.AddRange(AddFilesFromDirectory(subDirectoryPath, ignoreDirectory, true));
         }
 
-        return fileContents;
+        return files;
     }
 
     public static string TryConvertPathToRelative(string path, string rootDir)

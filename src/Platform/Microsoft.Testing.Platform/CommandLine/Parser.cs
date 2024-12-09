@@ -33,6 +33,9 @@ internal static class CommandLineParser
     ///     * A POSIX convention lets you omit the delimiter when you are specifying a single-character option alias, i.e. myapp -vquiet.
     /// </summary>
     public static CommandLineParseResult Parse(string[] args, IEnvironment environment)
+        => Parse(args.ToList(), environment);
+
+    private static CommandLineParseResult Parse(List<string> args, IEnvironment environment)
     {
         List<OptionRecord> options = [];
         List<string> errors = [];
@@ -41,8 +44,14 @@ internal static class CommandLineParser
         string? currentArg = null;
         string? toolName = null;
         List<string> currentOptionArguments = [];
-        for (int i = 0; i < args.Length; i++)
+        for (int i = 0; i < args.Count; i++)
         {
+            if (args[i].StartsWith('@') && ResponseFileHelper.TryReadResponseFile(args[i].Substring(1), errors, out string[]? newArguments))
+            {
+                args.InsertRange(i + 1, newArguments);
+                continue;
+            }
+
             bool argumentHandled = false;
             currentArg = args[i];
 
@@ -118,7 +127,7 @@ internal static class CommandLineParser
             options.Add(new(currentOption, currentOptionArguments.ToArray()));
         }
 
-        return new CommandLineParseResult(toolName, options, errors, args);
+        return new CommandLineParseResult(toolName, options, errors);
 
         static void ParseOptionAndSeparators(string arg, out string? currentOption, out string? currentArg)
         {

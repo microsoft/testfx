@@ -16,13 +16,13 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     /// <summary>
     /// Protects access to state shared between the logger callbacks and the rendering thread.
     /// </summary>
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     private readonly ITerminal _terminal;
     private readonly Func<bool?> _showProgress;
     private readonly bool _writeProgressImmediatelyAfterOutput;
     private readonly int _updateEvery;
-    private TestProgressState?[] _progressItems = Array.Empty<TestProgressState>();
+    private TestProgressState?[] _progressItems = [];
     private bool? _showProgressCached;
 
     /// <summary>
@@ -122,24 +122,35 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         {
             lock (_lock)
             {
-                _terminal.StartUpdate();
-                _terminal.EraseProgress();
-                write(_terminal);
-                if (_writeProgressImmediatelyAfterOutput)
+                try
                 {
-                    _terminal.RenderProgress(_progressItems);
+                    _terminal.StartUpdate();
+                    _terminal.EraseProgress();
+                    write(_terminal);
+                    if (_writeProgressImmediatelyAfterOutput)
+                    {
+                        _terminal.RenderProgress(_progressItems);
+                    }
                 }
-
-                _terminal.StopUpdate();
+                finally
+                {
+                    _terminal.StopUpdate();
+                }
             }
         }
         else
         {
             lock (_lock)
             {
-                _terminal.StartUpdate();
-                write(_terminal);
-                _terminal.StopUpdate();
+                try
+                {
+                    _terminal.StartUpdate();
+                    write(_terminal);
+                }
+                finally
+                {
+                    _terminal.StopUpdate();
+                }
             }
         }
     }

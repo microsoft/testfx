@@ -2,18 +2,22 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
 public sealed class CommandLine : IDisposable
 {
     private static int s_totalProcessesAttempt;
+    [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing some runtime issue")]
+    private static int s_maxOutstandingCommand = Environment.ProcessorCount;
+    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
+
+    public static int TotalProcessesAttempt => s_totalProcessesAttempt;
 
     private readonly List<string> _errorOutputLines = new();
     private readonly List<string> _standardOutputLines = new();
     private IProcessHandle? _process;
-
-    public static int TotalProcessesAttempt => s_totalProcessesAttempt;
 
     public ReadOnlyCollection<string> StandardOutputLines => _standardOutputLines.AsReadOnly();
 
@@ -22,9 +26,6 @@ public sealed class CommandLine : IDisposable
     public string StandardOutput => string.Join(Environment.NewLine, _standardOutputLines);
 
     public string ErrorOutput => string.Join(Environment.NewLine, _errorOutputLines);
-
-    private static int s_maxOutstandingCommand = Environment.ProcessorCount;
-    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
 
     public static int MaxOutstandingCommands
     {
@@ -40,7 +41,7 @@ public sealed class CommandLine : IDisposable
 
     public async Task RunAsync(
         string commandLine,
-        IDictionary<string, string>? environmentVariables = null)
+        IDictionary<string, string?>? environmentVariables = null)
     {
         int exitCode = await RunAsyncAndReturnExitCodeAsync(commandLine, environmentVariables);
         if (exitCode != 0)
@@ -56,7 +57,7 @@ public sealed class CommandLine : IDisposable
 
     public async Task<int> RunAsyncAndReturnExitCodeAsync(
         string commandLine,
-        IDictionary<string, string>? environmentVariables = null,
+        IDictionary<string, string?>? environmentVariables = null,
         string? workingDirectory = null,
         bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false,
         int timeoutInSeconds = 60)

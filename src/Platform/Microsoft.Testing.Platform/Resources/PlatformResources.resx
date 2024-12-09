@@ -567,7 +567,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <comment>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</comment>
   </data>
   <data name="FailedWithErrors" xml:space="preserve">
-    <value>failed with {0} errors(s)</value>
+    <value>failed with {0} error(s)</value>
   </data>
   <data name="FailedWithErrorsAndWarnings" xml:space="preserve">
     <value>failed with {0} error(s) and {1} warning(s)</value>
@@ -636,5 +636,62 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="StandardOutput" xml:space="preserve">
     <value>Standard output</value>
+  </data>
+  <data name="DiscoveringTestsFrom" xml:space="preserve">
+    <value>Discovering tests from</value>
+  </data>
+  <data name="TestDiscoverySummary" xml:space="preserve">
+    <value>Discovered {0} tests in {1} assemblies.</value>
+    <comment>0 is number of tests, 1 is count of assemblies</comment>
+  </data>
+  <data name="DiscoveredTestsInAssembly" xml:space="preserve">
+    <value>Discovered {0} tests in assembly</value>
+    <comment>0 is count, the sentence is followed by the path of the assebly</comment>
+  </data>
+  <data name="TestDiscoverySummarySingular" xml:space="preserve">
+    <value>Discovered {0} tests.</value>
+    <comment>0 is number of tests</comment>
+  </data>
+  <data name="ExitCode" xml:space="preserve">
+    <value>Exit code</value>
+  </data>
+  <data name="CommandLineParserResponseFileNotFound" xml:space="preserve">
+    <value>The response file '{0}' was not found</value>
+  </data>
+  <data name="CommandLineParserFailedToReadResponseFile" xml:space="preserve">
+    <value>Failed to read response file '{0}'. {1}.</value>
+    <comment>{1} is the exception</comment>
+  </data>
+  <data name="PlatformCommandLineMinimumExpectedTestsOptionDescription" xml:space="preserve">
+    <value>Specifies the minimum number of tests that are expected to run.</value>
+  </data>
+  <data name="PlatformCommandLineConfigFileOptionDescription" xml:space="preserve">
+    <value>Specifies a testconfig.json file.</value>
+  </data>
+  <data name="ConfigurationFileNotFound" xml:space="preserve">
+    <value>The configuration file '{0}' specified with '--config-file' could not be found.</value>
+  </data>
+  <data name="StartingTestSession" xml:space="preserve">
+    <value>Starting test session.</value>
+  </data>
+  <data name="StartingTestSessionWithLogFilePath" xml:space="preserve">
+    <value>Starting test session. The log file path is '{0}'.</value>
+  </data>
+  <data name="FinishedTestSession" xml:space="preserve">
+    <value>Finished test session.</value>
+  </data>
+  <data name="ServerTestHostDisplayName" xml:space="preserve">
+    <value>Server mode test host</value>
+  </data>
+  <data name="ServerTestHostDescription" xml:space="preserve">
+    <value>The 'ITestHost' implementation used when running server mode.</value>
+  </data>
+  <data name="UnobservedTaskExceptionWarningMessage" xml:space="preserve">
+    <value>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</value>
+    <comment>{0} is the exception that was unhandled/unobserved</comment>
+  </data>
+  <data name="ExceptionDuringCancellationWarningMessage" xml:space="preserve">
+    <value>Exception during the cancellation of request id '{0}'</value>
+    <comment>{0} is the request id</comment>
   </data>
 </root>

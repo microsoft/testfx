@@ -6,6 +6,7 @@
       <group targetFramework="netstandard2.0">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
+        <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
       </group>
       <group targetFramework="netcoreapp3.1">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
@@ -20,6 +21,10 @@
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
       </group>
       <group targetFramework="net8.0">
+        <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
+        <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
+      </group>
+      <group targetFramework="net9.0">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
       </group>
@@ -68,6 +73,14 @@
     <file src="net8.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net8.0\" />
     <file src="net8.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\net8.0\" />
     <file src="net8.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\net8.0\" />
+
+    <!-- net9.0 -->
+    <file src="net9.0\build\common\MSTest.TestAdapter.props" target="build\net9.0\MSTest.TestAdapter.props" />
+    <file src="net9.0\build\net\MSTest.TestAdapter.targets" target="build\net9.0\MSTest.TestAdapter.targets" />
+    <file src="net9.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\net9.0\" />
+    <file src="net9.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net9.0\" />
+    <file src="net9.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\net9.0\" />
+    <file src="net9.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\net9.0\" />
 
     <!-- Localization -->
     <!-- All TFMs share the same resx + TestAdapter depends on PlatformServices + TestFramework so all resources are available -->

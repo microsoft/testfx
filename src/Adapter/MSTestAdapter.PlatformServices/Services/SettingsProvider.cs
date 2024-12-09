@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !WINDOWS_UWP
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Xml;
 
 using Microsoft.Testing.Platform.Configurations;
@@ -11,31 +14,30 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// Class to read settings from the runsettings xml for the desktop.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public class MSTestSettingsProvider : ISettingsProvider
 {
 #if !WINDOWS_UWP
     /// <summary>
-    /// Member variable for Adapter settings.
-    /// </summary>
-    private static MSTestAdapterSettings? s_settings;
-
-    /// <summary>
     /// Gets settings provided to the adapter.
     /// </summary>
+    [field: AllowNull]
+    [field: MaybeNull]
+    [AllowNull]
     public static MSTestAdapterSettings Settings
     {
-        get
-        {
-            s_settings ??= new MSTestAdapterSettings();
-
-            return s_settings;
-        }
+        get => field ??= new MSTestAdapterSettings();
+        private set;
     }
 
     /// <summary>
     /// Reset the settings to its default.
     /// </summary>
-    public static void Reset() => s_settings = null;
+    public static void Reset() => Settings = null;
 #endif
 
     internal static void Load(IConfiguration configuration)
@@ -55,7 +57,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     {
 #if !WINDOWS_UWP
         Guard.NotNull(reader);
-        s_settings = MSTestAdapterSettings.ToSettings(reader);
+        Settings = MSTestAdapterSettings.ToSettings(reader);
 #endif
     }
 

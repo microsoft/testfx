@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Text;
 
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -122,7 +123,7 @@ internal sealed class NonAnsiTerminal : ITerminal
     {
         if (_isBatching)
         {
-            throw new InvalidOperationException("Console is already in batching mode.");
+            throw new InvalidOperationException(PlatformResources.ConsoleIsAlreadyInBatchingMode);
         }
 
         _stringBuilder.Clear();

@@ -20,6 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// <summary>
 /// Enumerates through all types in the assembly in search of valid test methods.
 /// </summary>
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class AssemblyEnumerator : MarshalByRefObject
 {
     /// <summary>
@@ -50,11 +51,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
         MSTestSettings.PopulateSettings(settings);
 
     /// <summary>
-    /// Gets or sets the run settings to use for current discovery session.
-    /// </summary>
-    public string? RunSettingsXml { get; set; }
-
-    /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
     /// <returns>
@@ -70,9 +66,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// Enumerates through all types in the assembly in search of valid test methods.
     /// </summary>
     /// <param name="assemblyFileName">The assembly file name.</param>
+    /// <param name="runSettingsXml">The xml specifying runsettings.</param>
     /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>A collection of Test Elements.</returns>
-    internal ICollection<UnitTestElement> EnumerateAssembly(string assemblyFileName, out ICollection<string> warnings)
+    internal ICollection<UnitTestElement> EnumerateAssembly(
+        string assemblyFileName,
+        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
+        out ICollection<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
         var warningMessages = new List<string>();
@@ -82,7 +82,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
-        IReadOnlyList<Type> types = GetTypes(assembly, assemblyFileName, warningMessages);
+        Type[] types = GetTypes(assembly, assemblyFileName, warningMessages);
         bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
         TestIdGenerationStrategy testIdGenerationStrategy = ReflectHelper.GetTestIdGenerationStrategy(assembly);
 
@@ -100,6 +100,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 ? TestDataSourceDiscoveryOption.DuringExecution
                 : TestDataSourceDiscoveryOption.DuringDiscovery);
 #pragma warning restore CS0618 // Type or member is obsolete
+
+        Dictionary<string, object>? testRunParametersFromRunSettings = RunSettingsUtilities.GetTestRunParameters(runSettingsXml);
         foreach (Type type in types)
         {
             if (type == null)
@@ -107,7 +109,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 continue;
             }
 
-            List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, RunSettingsXml, type, warningMessages, discoverInternals,
+            List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, testRunParametersFromRunSettings, type, warningMessages, discoverInternals,
                 testDataSourceDiscovery, testIdGenerationStrategy, fixturesTests);
             tests.AddRange(testsInType);
         }
@@ -205,7 +207,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
     private List<UnitTestElement> DiscoverTestsInType(
         string assemblyFileName,
-        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
+        Dictionary<string, object>? testRunParametersFromRunSettings,
         Type type,
         List<string> warningMessages,
         bool discoverInternals,
@@ -214,7 +216,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         HashSet<string> fixturesTests)
     {
         IDictionary<string, object> tempSourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
-        tempSourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(tempSourceLevelParameters)
+        tempSourceLevelParameters = testRunParametersFromRunSettings?.ConcatWithOverwrites(tempSourceLevelParameters)
             ?? tempSourceLevelParameters
             ?? new Dictionary<string, object>();
         var sourceLevelParameters = tempSourceLevelParameters.ToDictionary(x => x.Key, x => (object?)x.Value);
@@ -285,10 +287,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
-        if (test.TestMethod.DataType == DynamicDataType.None)
-        {
-            return false;
-        }
+        DynamicDataType originalDataType = test.TestMethod.DataType;
 
         // PERF: For perf we started setting DataType in TypeEnumerator, so when it is None we will not reach this line.
         // But if we do run this code, we still reset it to None, because the code that determines if this is data drive test expects the value to be None
@@ -297,14 +296,21 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // If you remove this line and acceptance tests still pass you are okay.
         test.TestMethod.DataType = DynamicDataType.None;
 
-        return testMethodInfo.Value != null && TryProcessTestDataSourceTests(test, testMethodInfo.Value, tests);
+        // The data source tests that we can process currently are those using attributes that
+        // implement ITestDataSource (i.e, DataRow and DynamicData attributes).
+        // However, for DataSourceAttribute, we currently don't have anyway to process it during discovery.
+        // (Note: this method is only called under discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
+        // So we want to return false from this method for non ITestDataSource (whether it's None or DataSourceAttribute). Otherwise, the test
+        // will be completely skipped which is wrong behavior.
+        return originalDataType == DynamicDataType.ITestDataSource &&
+            testMethodInfo.Value != null &&
+            TryProcessITestDataSourceTests(test, testMethodInfo.Value, tests);
     }
 
     private static void AddFixtureTests(TestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> fixtureTests)
     {
         string assemblyName = testMethodInfo.Parent.Parent.Assembly.GetName().Name!;
         string assemblyLocation = testMethodInfo.Parent.Parent.Assembly.Location;
-        string className = testMethodInfo.Parent.ClassType.Name;
         string classFullName = testMethodInfo.Parent.ClassType.FullName!;
 
         // Check if fixtures for this assembly has already been added.
@@ -315,13 +321,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Add AssemblyInitialize and AssemblyCleanup fixture tests if they exist.
             if (testMethodInfo.Parent.Parent.AssemblyInitializeMethod is not null)
             {
-                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName, className,
+                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName,
                     classFullName, assemblyLocation, Constants.AssemblyInitializeFixtureTrait));
             }
 
             if (testMethodInfo.Parent.Parent.AssemblyCleanupMethod is not null)
             {
-                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName, className,
+                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName,
                     classFullName, assemblyLocation, Constants.AssemblyCleanupFixtureTrait));
             }
         }
@@ -334,18 +340,18 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Add ClassInitialize and ClassCleanup fixture tests if they exist.
             if (testMethodInfo.Parent.ClassInitializeMethod is not null)
             {
-                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassInitializeMethod, assemblyName, className, classFullName,
+                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassInitializeMethod, classFullName,
                     assemblyLocation, Constants.ClassInitializeFixtureTrait));
             }
 
             if (testMethodInfo.Parent.ClassCleanupMethod is not null)
             {
-                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassCleanupMethod, assemblyName, className, classFullName,
+                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassCleanupMethod, classFullName,
                     assemblyLocation, Constants.ClassCleanupFixtureTrait));
             }
         }
 
-        static UnitTestElement GetAssemblyFixtureTest(MethodInfo methodInfo, string assemblyName, string className, string classFullName,
+        static UnitTestElement GetAssemblyFixtureTest(MethodInfo methodInfo, string assemblyName, string classFullName,
             string assemblyLocation, string fixtureType)
         {
             string methodName = GetMethodName(methodInfo);
@@ -353,7 +359,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy);
         }
 
-        static UnitTestElement GetClassFixtureTest(MethodInfo methodInfo, string assemblyName, string className, string classFullName,
+        static UnitTestElement GetClassFixtureTest(MethodInfo methodInfo, string classFullName,
             string assemblyLocation, string fixtureType)
         {
             string methodName = GetMethodName(methodInfo);
@@ -381,7 +387,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
+    private static bool TryProcessITestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
     {
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
@@ -390,7 +396,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         try
         {
-            return ProcessTestDataSourceTests(test, new(testMethodInfo.MethodInfo, test.DisplayName), testDataSources, tests);
+            return ProcessITestDataSourceTests(test, new(testMethodInfo.MethodInfo, test.DisplayName), testDataSources, tests);
         }
         catch (Exception ex)
         {
@@ -400,7 +406,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool ProcessTestDataSourceTests(UnitTestElement test, ReflectionTestMethodInfo methodInfo, IEnumerable<ITestDataSource> testDataSources,
+    private static bool ProcessITestDataSourceTests(UnitTestElement test, ReflectionTestMethodInfo methodInfo, IEnumerable<ITestDataSource> testDataSources,
         List<UnitTestElement> tests)
     {
         foreach (ITestDataSource dataSource in testDataSources)
@@ -409,23 +415,22 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
             // Any change made here should be reflected in TestMethodRunner.ExecuteDataSourceBasedTests as well.
-            try
-            {
-                data = dataSource.GetData(methodInfo);
+            data = dataSource.GetData(methodInfo);
 
-                if (!data.Any())
-                {
-                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", dataSource.GetType().Name));
-                }
-            }
-            catch (ArgumentException) when (MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+            if (!data.Any())
             {
+                if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+                {
+                    throw dataSource.GetExceptionForEmptyDataSource(methodInfo);
+                }
+
                 UnitTestElement discoveredTest = test.Clone();
                 // Make the test not data driven, because it had no data.
                 discoveredTest.TestMethod.DataType = DynamicDataType.None;
                 discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
 
                 tests.Add(discoveredTest);
+
                 continue;
             }
 

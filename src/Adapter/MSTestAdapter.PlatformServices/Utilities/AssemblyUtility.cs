@@ -3,6 +3,7 @@
 
 #if !WINDOWS_UWP
 
+using System.Diagnostics.CodeAnalysis;
 #if NETFRAMEWORK
 using System.Diagnostics;
 using System.Globalization;
@@ -18,34 +19,34 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 /// <summary>
 /// Utility for assembly specific functionality.
 /// </summary>
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class AssemblyUtility
 #if NETFRAMEWORK
     : IAssemblyUtility
 #endif
 {
-#if NETFRAMEWORK
-    private static HashSet<string>? s_cultures;
-#endif
     private readonly string[] _assemblyExtensions = [".dll", ".exe"];
 
 #if NETFRAMEWORK
     /// <summary>
     /// Gets all supported culture names in Keys.
     /// </summary>
+    [field: AllowNull]
+    [field: MaybeNull]
     private static HashSet<string> Cultures
     {
         get
         {
-            if (s_cultures == null)
+            if (field == null)
             {
-                s_cultures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                field = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 foreach (CultureInfo? info in CultureInfo.GetCultures(CultureTypes.AllCultures))
                 {
-                    s_cultures.Add(info.Name);
+                    field.Add(info.Name);
                 }
             }
 
-            return s_cultures;
+            return field;
         }
     }
 

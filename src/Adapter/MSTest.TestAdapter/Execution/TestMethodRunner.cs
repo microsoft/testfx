@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// This class is responsible to running tests and converting framework TestResults to adapter TestResults.
 /// </summary>
-internal class TestMethodRunner
+internal sealed class TestMethodRunner
 {
     /// <summary>
     /// Test context which needs to be passed to the various methods of the test.
@@ -311,19 +311,18 @@ internal class TestMethodRunner
                 {
                     isDataDriven = true;
                     IEnumerable<object?[]>? dataSource;
-                    try
-                    {
-                        // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
-                        // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
-                        dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
 
-                        if (!dataSource.Any())
-                        {
-                            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", testDataSource.GetType().Name));
-                        }
-                    }
-                    catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+                    // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
+                    // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
+                    dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
+
+                    if (!dataSource.Any())
                     {
+                        if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+                        {
+                            throw testDataSource.GetExceptionForEmptyDataSource(_testMethodInfo.MethodInfo);
+                        }
+
                         var inconclusiveResult = new TestResult
                         {
                             Outcome = UTF.UnitTestOutcome.Inconclusive,

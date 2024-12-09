@@ -8,8 +8,8 @@ namespace Microsoft.Testing.TestInfrastructure;
 public class DotnetMuxer : IDisposable
 {
     private static readonly string Root = RootFinder.Find();
-    private static readonly IDictionary<string, string> DefaultEnvironmentVariables
-        = new Dictionary<string, string>
+    private static readonly IDictionary<string, string?> DefaultEnvironmentVariables
+        = new Dictionary<string, string?>
         {
                 { "DOTNET_ROOT", $"{Root}/.dotnet" },
                 { "DOTNET_INSTALL_DIR", $"{Root}/.dotnet" },
@@ -18,21 +18,21 @@ public class DotnetMuxer : IDisposable
         };
 
     private readonly string _dotnet;
-    private readonly IDictionary<string, string> _environmentVariables;
+    private readonly IDictionary<string, string?> _environmentVariables;
     private readonly CommandLine _commandLine;
     private bool _isDisposed;
 
     public DotnetMuxer()
         : this(
               DefaultEnvironmentVariables,
-              new Dictionary<string, string>(),
+              new Dictionary<string, string?>(),
               mergeDefaultEnvironmentVariables: true,
               useDefaultArtifactsPackages: true)
     {
     }
 
     public DotnetMuxer(
-        IDictionary<string, string> environmentVariables,
+        IDictionary<string, string?> environmentVariables,
         bool mergeEnvironmentVariables = true,
         bool useDefaultArtifactPackages = true)
         : this(
@@ -44,8 +44,8 @@ public class DotnetMuxer : IDisposable
     }
 
     private DotnetMuxer(
-        IDictionary<string, string> defaultEnvironmentVariables,
-        IDictionary<string, string> environmentVariables,
+        IDictionary<string, string?> defaultEnvironmentVariables,
+        IDictionary<string, string?> environmentVariables,
         bool mergeDefaultEnvironmentVariables = true,
         bool useDefaultArtifactsPackages = true)
     {
@@ -98,7 +98,7 @@ public class DotnetMuxer : IDisposable
     public async Task<int> ExecuteAsync(
         string arguments,
         string? workingDirectory,
-        IDictionary<string, string> environmentVariables,
+        IDictionary<string, string?> environmentVariables,
         int timeoutInSeconds = 60)
         => await _commandLine.RunAsyncAndReturnExitCodeAsync(
             $"{_dotnet} {arguments}",
@@ -107,22 +107,22 @@ public class DotnetMuxer : IDisposable
             cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
             timeoutInSeconds: timeoutInSeconds);
 
-    private IDictionary<string, string> MergeEnvironmentVariables(
-        IDictionary<string, string> environmentVariables1,
-        IDictionary<string, string> environmentVariables2)
+    private IDictionary<string, string?> MergeEnvironmentVariables(
+        IDictionary<string, string?> environmentVariables1,
+        IDictionary<string, string?> environmentVariables2)
     {
         if (environmentVariables1.Count == 0)
         {
-            return new Dictionary<string, string>(environmentVariables2);
+            return new Dictionary<string, string?>(environmentVariables2);
         }
 
         if (environmentVariables2.Count == 0)
         {
-            return new Dictionary<string, string>(environmentVariables1);
+            return new Dictionary<string, string?>(environmentVariables1);
         }
 
-        IDictionary<string, string> mergedEnvironmentVariables = new Dictionary<string, string>(environmentVariables1);
-        foreach (KeyValuePair<string, string> kvp in environmentVariables2)
+        IDictionary<string, string?> mergedEnvironmentVariables = new Dictionary<string, string?>(environmentVariables1);
+        foreach (KeyValuePair<string, string?> kvp in environmentVariables2)
         {
             mergedEnvironmentVariables[kvp.Key] = kvp.Value;
         }

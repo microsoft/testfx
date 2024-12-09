@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines type cache which reflects upon a type and cache its test artifacts.
 /// </summary>
-internal class TypeCache : MarshalByRefObject
+internal sealed class TypeCache : MarshalByRefObject
 {
     /// <summary>
     /// Test context property name.
@@ -259,24 +259,43 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
     private TestClassInfo CreateClassInfo(Type classType, TestMethod testMethod)
     {
-        IEnumerable<ConstructorInfo> constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
-        ConstructorInfo? constructor = constructors.FirstOrDefault(ctor => ctor.GetParameters().Length == 0 && ctor.IsPublic);
-        bool isParameterLessConstructor;
+        ConstructorInfo[] constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
+        (ConstructorInfo CtorInfo, bool IsParameterless)? selectedConstructor = null;
 
-        if (classType.GetConstructor([typeof(TestContext)]) is { } testContextCtor)
+        foreach (ConstructorInfo ctor in constructors)
         {
-            constructor = testContextCtor;
-            isParameterLessConstructor = false;
+            if (!ctor.IsPublic)
+            {
+                continue;
+            }
+
+            ParameterInfo[] parameters = ctor.GetParameters();
+
+            // There are just 2 ctor shapes that we know, so the code is quite simple,
+            // but if we add more, add a priority to the search, and short-circuit this search so we only iterate
+            // through the collection once, to avoid re-allocating GetParameters multiple times.
+            if (parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext))
+            {
+                selectedConstructor = (ctor, IsParameterless: false);
+
+                // This is the preferred constructor, no point in searching for more.
+                break;
+            }
+
+            if (parameters.Length == 0)
+            {
+                // Otherwise take the first parameterless constructor we can find.
+                selectedConstructor ??= (ctor, IsParameterless: true);
+            }
         }
-        else if (classType.GetConstructor([]) is { } parameterLessCtor)
-        {
-            constructor = parameterLessCtor;
-            isParameterLessConstructor = true;
-        }
-        else
+
+        if (selectedConstructor is null)
         {
             throw new TypeInspectionException(string.Format(CultureInfo.CurrentCulture, Resource.UTA_NoValidConstructor, testMethod.FullClassName));
         }
+
+        ConstructorInfo constructor = selectedConstructor.Value.CtorInfo;
+        bool isParameterLessConstructor = selectedConstructor.Value.IsParameterless;
 
         PropertyInfo? testContextProperty = ResolveTestContext(classType);
 
@@ -380,7 +399,7 @@ internal class TypeCache : MarshalByRefObject
 
         assemblyInfo = new TestAssemblyInfo(assembly);
 
-        IReadOnlyList<Type> types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName!, null);
+        Type[] types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName!, null);
 
         foreach (Type t in types)
         {
@@ -418,7 +437,7 @@ internal class TypeCache : MarshalByRefObject
                     TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
                     if (timeoutAttribute != null)
                     {
-                        if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+                        if (!timeoutAttribute.HasCorrectTimeout)
                         {
                             string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                             throw new TypeInspectionException(message);
@@ -437,7 +456,7 @@ internal class TypeCache : MarshalByRefObject
                     TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
                     if (timeoutAttribute != null)
                     {
-                        if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+                        if (!timeoutAttribute.HasCorrectTimeout)
                         {
                             string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                             throw new TypeInspectionException(message);
@@ -578,7 +597,7 @@ internal class TypeCache : MarshalByRefObject
             TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
             if (timeoutAttribute != null)
             {
-                if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+                if (!timeoutAttribute.HasCorrectTimeout)
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                     throw new TypeInspectionException(message);
@@ -611,7 +630,7 @@ internal class TypeCache : MarshalByRefObject
             TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
             if (timeoutAttribute != null)
             {
-                if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+                if (!timeoutAttribute.HasCorrectTimeout)
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                     throw new TypeInspectionException(message);
@@ -677,7 +696,7 @@ internal class TypeCache : MarshalByRefObject
             TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
             if (timeoutAttribute != null)
             {
-                if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+                if (!timeoutAttribute.HasCorrectTimeout)
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                     throw new TypeInspectionException(message);
@@ -708,7 +727,7 @@ internal class TypeCache : MarshalByRefObject
             TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
             if (timeoutAttribute != null)
             {
-                if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+                if (!timeoutAttribute.HasCorrectTimeout)
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                     throw new TypeInspectionException(message);
@@ -875,7 +894,7 @@ internal class TypeCache : MarshalByRefObject
 
         if (timeoutAttribute != null)
         {
-            if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
+            if (!timeoutAttribute.HasCorrectTimeout)
             {
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, testMethod.FullClassName, testMethod.Name);
                 throw new TypeInspectionException(message);

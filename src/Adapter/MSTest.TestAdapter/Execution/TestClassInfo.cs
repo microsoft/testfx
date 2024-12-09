@@ -20,13 +20,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines the TestClassInfo object.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public class TestClassInfo
 {
-    private readonly object _testClassExecuteSyncObject = new();
-    private MethodInfo? _classCleanupMethod;
-    private MethodInfo? _classInitializeMethod;
-    private MethodInfo? _testCleanupMethod;
-    private MethodInfo? _testInitializeMethod;
+    private readonly Lock _testClassExecuteSyncObject = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestClassInfo"/> class.
@@ -84,17 +85,16 @@ public class TestClassInfo
     /// </summary>
     public MethodInfo? ClassInitializeMethod
     {
-        get => _classInitializeMethod;
-
+        get;
         internal set
         {
-            if (_classInitializeMethod != null)
+            if (field != null)
             {
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            _classInitializeMethod = value;
+            field = value;
         }
     }
 
@@ -157,17 +157,16 @@ public class TestClassInfo
     /// </summary>
     public MethodInfo? ClassCleanupMethod
     {
-        get => _classCleanupMethod;
-
+        get;
         internal set
         {
-            if (_classCleanupMethod != null)
+            if (field != null)
             {
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassClean, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            _classCleanupMethod = value;
+            field = value;
         }
     }
 
@@ -200,17 +199,17 @@ public class TestClassInfo
     /// </summary>
     public MethodInfo? TestInitializeMethod
     {
-        get => _testInitializeMethod;
+        get;
 
         internal set
         {
-            if (_testInitializeMethod != null)
+            if (field != null)
             {
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            _testInitializeMethod = value;
+            field = value;
         }
     }
 
@@ -219,17 +218,16 @@ public class TestClassInfo
     /// </summary>
     public MethodInfo? TestCleanupMethod
     {
-        get => _testCleanupMethod;
-
+        get;
         internal set
         {
-            if (_testCleanupMethod != null)
+            if (field != null)
             {
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClean, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            _testCleanupMethod = value;
+            field = value;
         }
     }
 

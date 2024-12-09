@@ -15,7 +15,7 @@ public class DictionaryHelperTests : TestContainer
 
         var overwrite = new Dictionary<string, string>();
 
-        IDictionary<string, string> actual = source.ConcatWithOverwrites(overwrite, nameof(source), nameof(overwrite));
+        IDictionary<string, string> actual = source.ConcatWithOverwrites(overwrite);
         var expected = new Dictionary<string, string>();
 
         actual.ToList().Sort();
@@ -33,10 +33,10 @@ public class DictionaryHelperTests : TestContainer
 
         Dictionary<string, string> overwrite = null;
 
-        IDictionary<string, string> actual = source.ConcatWithOverwrites(overwrite, nameof(source), nameof(overwrite));
+        IDictionary<string, string> actual = source.ConcatWithOverwrites(overwrite);
 
-        IOrderedEnumerable<KeyValuePair<string, string>> sortedActual = from entry in actual orderby entry.Key ascending select entry;
-        IOrderedEnumerable<KeyValuePair<string, string>> sortedSource = from entry in source orderby entry.Key ascending select entry;
+        IOrderedEnumerable<KeyValuePair<string, string>> sortedActual = from entry in actual orderby entry.Key select entry;
+        IOrderedEnumerable<KeyValuePair<string, string>> sortedSource = from entry in source orderby entry.Key select entry;
         Verify(sortedActual.SequenceEqual(sortedSource));
     }
 
@@ -50,10 +50,10 @@ public class DictionaryHelperTests : TestContainer
             ["bbb"] = "overwrite",
         };
 
-        IDictionary<string, string> actual = source.ConcatWithOverwrites(overwrite, nameof(source), nameof(overwrite));
+        IDictionary<string, string> actual = source.ConcatWithOverwrites(overwrite);
 
-        IOrderedEnumerable<KeyValuePair<string, string>> sortedActual = from entry in actual orderby entry.Key ascending select entry;
-        IOrderedEnumerable<KeyValuePair<string, string>> sortedOverwrite = from entry in overwrite orderby entry.Key ascending select entry;
+        IOrderedEnumerable<KeyValuePair<string, string>> sortedActual = from entry in actual orderby entry.Key select entry;
+        IOrderedEnumerable<KeyValuePair<string, string>> sortedOverwrite = from entry in overwrite orderby entry.Key select entry;
         Verify(sortedActual.SequenceEqual(sortedOverwrite));
     }
 
@@ -71,7 +71,7 @@ public class DictionaryHelperTests : TestContainer
             ["ccc"] = "overwrite",
         };
 
-        IDictionary<string, string> actual = source.ConcatWithOverwrites(overwrite, nameof(source), nameof(overwrite));
+        IDictionary<string, string> actual = source.ConcatWithOverwrites(overwrite);
         var expected = new Dictionary<string, string>
         {
             // this is only present in source, take it
@@ -84,8 +84,8 @@ public class DictionaryHelperTests : TestContainer
             ["bbb"] = "overwrite",
         };
 
-        IOrderedEnumerable<KeyValuePair<string, string>> sortedActual = from entry in actual orderby entry.Key ascending select entry;
-        IOrderedEnumerable<KeyValuePair<string, string>> sortedExpected = from entry in expected orderby entry.Key ascending select entry;
+        IOrderedEnumerable<KeyValuePair<string, string>> sortedActual = from entry in actual orderby entry.Key select entry;
+        IOrderedEnumerable<KeyValuePair<string, string>> sortedExpected = from entry in expected orderby entry.Key select entry;
         Verify(sortedActual.SequenceEqual(sortedExpected));
     }
 }

@@ -361,11 +361,10 @@ The type declaring these methods should also respect the following rules:
     <value>TestCleanup method should have valid layout</value>
   </data>
   <data name="TestContextShouldBeValidDescription" xml:space="preserve">
-    <value>TestContext property should follow the following layout to be valid:
-- it should be a property
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+    <value>'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
-- it should not be readonly.</value>
+- it should have a setter.</value>
   </data>
   <data name="TestContextShouldBeValidMessageFormat" xml:space="preserve">
     <value>Property 'TestContext' should be valid</value>
@@ -528,5 +527,11 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="DoNotUseShadowingTitle" xml:space="preserve">
     <value>Do not use shadowing</value>
+  </data>
+  <data name="UseProperAssertMethodsTitle" xml:space="preserve">
+    <value>Use proper 'Assert' methods</value>
+  </data>
+  <data name="UseProperAssertMethodsMessageFormat" xml:space="preserve">
+    <value>Use 'Assert.{0}' instead of 'Assert.{1}'</value>
   </data>
 </root>

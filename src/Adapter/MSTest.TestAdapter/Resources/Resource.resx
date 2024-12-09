@@ -160,7 +160,7 @@
     <value>(Failed to get the message for an exception of type {0} due to an exception.)</value>
   </data>
   <data name="UTA_ErrorInValidTestContextSignature" xml:space="preserve">
-    <value>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, public and must not be read-only. For example: public TestContext TestContext.</value>
+    <value>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</value>
   </data>
   <data name="UTA_ErrorNonPublicTestClass" xml:space="preserve">
     <value>UTA001: TestClass attribute defined on non-public class {0}</value>

@@ -246,22 +246,16 @@ public class MethodInfoExtensionsTests : TestContainer
 
     #region HasCorrectTimeout tests
 
-    public void HasCorrectTimeoutShouldReturnFalseForMethodsWithoutTimeoutAttribute()
-    {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethod");
-        Verify(!methodInfo.HasCorrectTimeout());
-    }
-
     public void HasCorrectTimeoutShouldReturnFalseForMethodsWithInvalidTimeoutAttribute()
     {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodWithInvalidTimeout");
-        Verify(!methodInfo.HasCorrectTimeout());
+        var timeoutAttribute = new UTF.TimeoutAttribute(-11);
+        Verify(!timeoutAttribute.HasCorrectTimeout);
     }
 
     public void HasCorrectTimeoutShouldReturnTrueForMethodsWithTimeoutAttribute()
     {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodWithTimeout");
-        Verify(methodInfo.HasCorrectTimeout());
+        var timeoutAttribute = new UTF.TimeoutAttribute(11);
+        Verify(timeoutAttribute.HasCorrectTimeout);
     }
 
     #endregion

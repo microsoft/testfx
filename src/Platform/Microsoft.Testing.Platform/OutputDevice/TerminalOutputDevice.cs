@@ -25,7 +25,7 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// <summary>
 /// Implementation of output device that writes to terminal with progress and optionally with ANSI.
 /// </summary>
-internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
+internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,
     ITestSessionLifetimeHandler,
@@ -183,7 +183,7 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     ];
 
     /// <inheritdoc />
-    public virtual string Uid { get; } = nameof(TerminalOutputDevice);
+    public string Uid { get; } = nameof(TerminalOutputDevice);
 
     /// <inheritdoc />
     public string Version { get; } = AppVersion.DefaultSemVer;
@@ -195,7 +195,7 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     public string Description { get; } = "Test Platform default console service";
 
     /// <inheritdoc />
-    public virtual Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     private async Task LogDebugAsync(string message)
     {
@@ -205,7 +205,7 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
         }
     }
 
-    public virtual async Task DisplayBannerAsync(string? bannerMessage)
+    public async Task DisplayBannerAsync(string? bannerMessage)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
@@ -287,7 +287,7 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
 
         // Start test execution here, rather than in ShowBanner, because then we know
         // if we are a testHost controller or not, and if we should show progress bar.
-        _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1);
+        _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1, isDiscovery: false);
         _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _shortArchitecture, executionId: null);
         if (_logger is not null && _logger.IsEnabled(LogLevel.Trace))
         {
@@ -323,7 +323,7 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
         {
             if (!_firstCallTo_OnSessionStartingAsync)
             {
-                _terminalTestReporter.AssemblyRunCompleted(_assemblyName, _targetFramework, _shortArchitecture, executionId: null);
+                _terminalTestReporter.AssemblyRunCompleted(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, exitCode: null, outputData: null, errorData: null);
                 _terminalTestReporter.TestExecutionCompleted(_clock.UtcNow);
             }
         }
@@ -367,43 +367,30 @@ internal partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
         {
             switch (data)
             {
-                case FormattedTextOutputDeviceData formattedTextOutputDeviceData:
-                    if (formattedTextOutputDeviceData.ForegroundColor is SystemConsoleColor color)
-                    {
-                        switch (color.ConsoleColor)
-                        {
-                            case ConsoleColor.Red:
-                                _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
-                                break;
-                            case ConsoleColor.Yellow:
-                                _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding);
-                                break;
-                            default:
-                                _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text, color, formattedTextOutputDeviceData.Padding);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        _terminalTestReporter.WriteMessage(formattedTextOutputDeviceData.Text, padding: formattedTextOutputDeviceData.Padding);
-                    }
-
+                case FormattedTextOutputDeviceData formattedTextData:
+                    await LogDebugAsync(formattedTextData.Text);
+                    _terminalTestReporter.WriteMessage(formattedTextData.Text, formattedTextData.ForegroundColor as SystemConsoleColor, formattedTextData.Padding);
                     break;
 
-                case TextOutputDeviceData textOutputDeviceData:
-                    {
-                        await LogDebugAsync(textOutputDeviceData.Text);
-                        _terminalTestReporter.WriteMessage(textOutputDeviceData.Text);
-                        break;
-                    }
+                case TextOutputDeviceData textData:
+                    await LogDebugAsync(textData.Text);
+                    _terminalTestReporter.WriteMessage(textData.Text);
+                    break;
+
+                case WarningMessageOutputDeviceData warningData:
+                    await LogDebugAsync(warningData.Message);
+                    _terminalTestReporter.WriteWarningMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, warningData.Message, null);
+                    break;
+
+                case ErrorMessageOutputDeviceData errorData:
+                    await LogDebugAsync(errorData.Message);
+                    _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, errorData.Message, null);
+                    break;
 
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
-                    {
-                        await LogDebugAsync(exceptionOutputDeviceData.Exception.ToString());
-                        _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, exceptionOutputDeviceData.Exception);
-
-                        break;
-                    }
+                    await LogDebugAsync(exceptionOutputDeviceData.Exception.ToString());
+                    _terminalTestReporter.WriteErrorMessage(_assemblyName, _targetFramework, _shortArchitecture, executionId: null, exceptionOutputDeviceData.Exception);
+                    break;
             }
         }
     }

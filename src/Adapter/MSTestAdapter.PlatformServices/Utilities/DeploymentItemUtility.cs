@@ -17,7 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 /// <summary>
 /// The deployment utility.
 /// </summary>
-internal class DeploymentItemUtility
+internal sealed class DeploymentItemUtility
 {
     // REVIEW: it would be better if this was a ReflectionHelper, because helper is able to cache. But we don't have reflection helper here, because this is platform services dll.
     private readonly ReflectionUtility _reflectionUtility;

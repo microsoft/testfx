@@ -117,6 +117,16 @@
         <target state="translated">Obiekt ICommandLineOptions nie został jeszcze skompilowany.</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineParserFailedToReadResponseFile">
+        <source>Failed to read response file '{0}'. {1}.</source>
+        <target state="translated">Niepowodzenie odczytu pliku odpowiedzi „{0}”. {1}.</target>
+        <note>{1} is the exception</note>
+      </trans-unit>
+      <trans-unit id="CommandLineParserResponseFileNotFound">
+        <source>The response file '{0}' was not found</source>
+        <target state="translated">Nie znaleziono pliku odpowiedzi „{0}”</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">Nieoczekiwany argument {0}</target>
@@ -145,6 +155,11 @@
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
         <target state="translated">To samo wystąpienie elementu „CompositeExtensonFactory” jest już zarejestrowane</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConfigurationFileNotFound">
+        <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
+        <target state="translated">Nie można odnaleźć pliku konfiguracji „{0}” określonego za pomocą parametru „--config-file”.</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
@@ -189,9 +204,29 @@
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
+      <trans-unit id="DiscoveredTestsInAssembly">
+        <source>Discovered {0} tests in assembly</source>
+        <target state="translated">Odnaleziono testy ({0}) w zestawach</target>
+        <note>0 is count, the sentence is followed by the path of the assebly</note>
+      </trans-unit>
+      <trans-unit id="DiscoveringTestsFrom">
+        <source>Discovering tests from</source>
+        <target state="translated">Odnajdywanie testów w</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">Dostawca „{0}” (UID:{1}) nie powiódł się z powodu błędu: {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExceptionDuringCancellationWarningMessage">
+        <source>Exception during the cancellation of request id '{0}'</source>
+        <target state="translated">Wyjątek podczas anulowania '{0}' identyfikatora żądania</target>
+        <note>{0} is the request id</note>
+      </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="translated">Kod zakończenia</target>
         <note />
       </trans-unit>
       <trans-unit id="Expected">
@@ -227,8 +262,8 @@
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
-        <source>failed with {0} errors(s)</source>
-        <target state="translated">zakończono niepowodzeniem z następującą liczbą błędów: {0}</target>
+        <source>failed with {0} error(s)</source>
+        <target state="translated">zakończono niepowodzeniem, z następującą liczbą błędów: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">
@@ -239,6 +274,11 @@
       <trans-unit id="FailedWithWarnings">
         <source>failed with {0} warning(s)</source>
         <target state="translated">zakończono niepowodzeniem, z ostrzeżeniami w liczbie: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FinishedTestSession">
+        <source>Finished test session.</source>
+        <target state="translated">Zakończono sesję testą.</target>
         <note />
       </trans-unit>
       <trans-unit id="ForTest">
@@ -391,6 +431,11 @@
         <target state="translated">Określ port klienta.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
+        <source>Specifies a testconfig.json file.</source>
+        <target state="translated">Określa plik testconfig.json.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously.
 Useful for scenario where you don't want to lose any log (i.e. in case of crash).
@@ -483,6 +528,11 @@ Dostępne wartości to „Trace”, „Debug”, „Information”, „Warning�
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
         <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
         <target state="translated">Opcje „--list-tests” i „--minimum-expected-tests” są niezgodne</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
+        <source>Specifies the minimum number of tests that are expected to run.</source>
+        <target state="translated">Określa minimalną liczbę testów, które mają zostać uruchomione.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
@@ -593,6 +643,16 @@ Pobiera jeden argument jako ciąg w formacie &lt;value&gt;[h|m|s], gdzie element
         <target state="translated">Fabryka filtrów wykonywania testów serwera</target>
         <note />
       </trans-unit>
+      <trans-unit id="ServerTestHostDescription">
+        <source>The 'ITestHost' implementation used when running server mode.</source>
+        <target state="translated">Implementacja "ITestHost" używana podczas uruchamiania trybu serwera.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDisplayName">
+        <source>Server mode test host</source>
+        <target state="translated">Host testów trybu serwera</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
         <target state="translated">Nie można odnaleźć usługi typu „{0}”</target>
@@ -646,6 +706,16 @@ Pobiera jeden argument jako ciąg w formacie &lt;value&gt;[h|m|s], gdzie element
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
         <target state="translated">Uruchamianie serwera. Nasłuchiwanie na porcie „{0}”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSession">
+        <source>Starting test session.</source>
+        <target state="translated">Rozpoczynanie sesji testowej.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSessionWithLogFilePath">
+        <source>Starting test session. The log file path is '{0}'.</source>
+        <target state="translated">Rozpoczynanie sesji testowej. Ścieżka pliku dziennika jest '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -744,6 +814,16 @@ Prawidłowe wartości to „Normalne”, „Szczegółowe”. Wartość domyśln
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
         <target state="translated">Tryb VSTest obsługuje tylko jeden element TestApplicationBuilder na proces</target>
         <note />
+      </trans-unit>
+      <trans-unit id="TestDiscoverySummary">
+        <source>Discovered {0} tests in {1} assemblies.</source>
+        <target state="translated">Odnaleziono testy ({0}) w zestawach {1}.</target>
+        <note>0 is number of tests, 1 is count of assemblies</note>
+      </trans-unit>
+      <trans-unit id="TestDiscoverySummarySingular">
+        <source>Discovered {0} tests.</source>
+        <target state="translated">Odnaleziono testy ({0}).</target>
+        <note>0 is number of tests</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>
@@ -846,6 +926,11 @@ Prawidłowe wartości to „Normalne”, „Szczegółowe”. Wartość domyśln
         <source>The communication protocol '{0}' is not supported</source>
         <target state="translated">Protokół komunikacyjny „{0}” nie jest obsługiwany</target>
         <note />
+      </trans-unit>
+      <trans-unit id="UnobservedTaskExceptionWarningMessage">
+        <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Nieobsługiwany wyjątek: {0}</target>
+        <note>{0} is the exception that was unhandled/unobserved</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>

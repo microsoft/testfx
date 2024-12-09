@@ -18,7 +18,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <NuspecFile Condition=" '$(OS)' == 'Windows_NT' ">MSTest.TestAdapter.nuspec</NuspecFile>
-    <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.TestAdapter.Linux.nuspec</NuspecFile>
+    <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.TestAdapter.NonWindows.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
     <PackageId>MSTest.TestAdapter</PackageId>
     <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
@@ -49,10 +49,15 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.VSTestBridge\Microsoft.Testing.Extensions.VSTestBridge.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Internal.Analyzers\MSTest.Internal.Analyzers.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Condition="'$(TargetFramework)'=='netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)'=='$(UwpMinimum)'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -80,6 +85,7 @@
     <NuspecProperty Include="ArtifactsBinDir=$(ArtifactsBinDir)" />
     <NuspecProperty Include="Configuration=$(Configuration)" />
     <NuspecProperty Include="TestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'))" />
+    <NuspecProperty Include="SystemThreadingTasksExtensionsVersion=$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>
 
   <ItemGroup>

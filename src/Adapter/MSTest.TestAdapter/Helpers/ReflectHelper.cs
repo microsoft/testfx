@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Security;
@@ -13,6 +14,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for mocking")]
 internal class ReflectHelper : MarshalByRefObject
 {
 #pragma warning disable RS0030 // Do not use banned APIs
@@ -341,15 +343,6 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>Priority value if defined. Null otherwise.</returns>
     internal virtual int? GetPriority(MemberInfo priorityAttributeProvider) =>
         GetFirstDerivedAttributeOrDefault<PriorityAttribute>(priorityAttributeProvider, inherit: true)?.Priority;
-
-    /// <summary>
-    /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
-    /// else null.
-    /// </summary>
-    /// <param name="ignoreAttributeProvider">The member to inspect.</param>
-    /// <returns>Priority value if defined. Null otherwise.</returns>
-    internal virtual string? GetIgnoreMessage(MemberInfo ignoreAttributeProvider) =>
-        GetFirstDerivedAttributeOrDefault<IgnoreAttribute>(ignoreAttributeProvider, inherit: true)?.IgnoreMessage;
 
     /// <summary>
     /// Gets the class cleanup lifecycle for the class, if set.

@@ -39,7 +39,7 @@
       </trans-unit>
       <trans-unit id="ReplaceWithDisposeFix">
         <source>Replace TestCleanup with Dispose method</source>
-        <target state="new">Replace TestCleanup with Dispose method</target>
+        <target state="translated">TestCleanup を Dispose メソッドに置換する</target>
         <note />
       </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
@@ -74,12 +74,17 @@
       </trans-unit>
       <trans-unit id="UseAssertThrowsExceptionOnLastStatementFix">
         <source>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</source>
-        <target state="new">Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</target>
+        <target state="translated">'[ExpectedException]' 属性の代わりに 'Assert.ThrowsException&lt;T&gt;' を使用してください</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">'[TestMethod]' の追加</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseProperAssertMethodsFix">
+        <source>Use '{0}'</source>
+        <target state="translated">'{0}' を使用します</target>
         <note />
       </trans-unit>
     </body>

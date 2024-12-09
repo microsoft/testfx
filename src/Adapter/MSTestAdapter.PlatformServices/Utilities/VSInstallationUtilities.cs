@@ -10,6 +10,11 @@ using static System.String;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public static class VSInstallationUtilities
 {
     /// <summary>
@@ -27,8 +32,6 @@ public static class VSInstallationUtilities
     /// </summary>
     private const string PortableVsTestManifestFilename = "Portable.VsTest.Manifest";
 
-    private static string? s_vsInstallPath;
-
     private static bool s_vsInstallPathEvaluated;
 
     /// <summary>
@@ -44,14 +47,14 @@ public static class VSInstallationUtilities
             {
                 try
                 {
-                    s_vsInstallPath = null;
+                    field = null;
 
                     // Use the Setup API to find the installation folder for currently running VS instance.
                     if (new SetupConfiguration() is ISetupConfiguration setupConfiguration)
                     {
                         ISetupInstance currentConfiguration = setupConfiguration.GetInstanceForCurrentProcess();
                         string currentInstallationPath = currentConfiguration.GetInstallationPath();
-                        s_vsInstallPath = Path.Combine(currentInstallationPath, @"Common7\IDE");
+                        field = Path.Combine(currentInstallationPath, @"Common7\IDE");
                     }
                 }
                 catch
@@ -65,7 +68,7 @@ public static class VSInstallationUtilities
                 }
             }
 
-            return s_vsInstallPath;
+            return field;
         }
     }
 

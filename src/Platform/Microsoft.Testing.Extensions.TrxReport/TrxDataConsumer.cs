@@ -230,7 +230,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
         {
             if (!_adapterSupportTrxCapability)
             {
-                await _outputDisplay.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateYellowConsoleColorText(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFramework.DisplayName, _testFramework.Uid)));
+                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFramework.DisplayName, _testFramework.Uid)));
             }
 
             ApplicationStateGuard.Ensure(_testStartTime is not null);

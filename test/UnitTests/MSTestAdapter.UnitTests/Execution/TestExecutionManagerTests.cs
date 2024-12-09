@@ -576,6 +576,9 @@ public class TestExecutionManagerTests : TestContainer
             var originalReflectionOperation = new ReflectionOperations2();
             var originalFileOperation = new FileOperations();
 
+            testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
+                .Returns((Type classType) => originalReflectionOperation.GetDeclaredConstructors(classType));
+
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
                 Returns((Assembly asm, Type type) => type.FullName.Equals(typeof(ParallelizeAttribute).FullName, StringComparison.Ordinal)
@@ -631,6 +634,9 @@ public class TestExecutionManagerTests : TestContainer
 
             var originalReflectionOperation = new ReflectionOperations2();
             var originalFileOperation = new FileOperations();
+
+            testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
+                .Returns((Type classType) => originalReflectionOperation.GetDeclaredConstructors(classType));
 
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
@@ -729,6 +735,9 @@ public class TestExecutionManagerTests : TestContainer
 
             var originalReflectionOperation = new ReflectionOperations2();
             var originalFileOperation = new FileOperations();
+
+            testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
+                .Returns((Type classType) => originalReflectionOperation.GetDeclaredConstructors(classType));
 
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
