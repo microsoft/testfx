@@ -16,7 +16,7 @@ internal sealed class MaxFailedTestsCommandLineOptionsProvider(IExtension extens
 
     private static readonly IReadOnlyCollection<CommandLineOption> OptionsCache =
     [
-        new(MaxFailedTestsOptionKey, PlatformResources.PlatformCommandLineMaxFailedTestsOptionDescription, ArgumentArity.ExactlyOne, isHidden: false/*TODO: Should we pass isBuiltIn: true??*/),
+        new(MaxFailedTestsOptionKey, PlatformResources.PlatformCommandLineMaxFailedTestsOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
     ];
 
     public string Uid => extension.Uid;
