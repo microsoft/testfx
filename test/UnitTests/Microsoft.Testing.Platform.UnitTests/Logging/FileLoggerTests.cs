@@ -50,7 +50,7 @@ public class FileLoggerTests : TestBase, IDisposable
     {
         using TempDirectory tempDirectory = new(nameof(Write_IfMalformedUTF8_ShouldNotCrash));
         using FileLogger fileLogger = new(
-            new FileLoggerOptions(tempDirectory.Path, "Test", fileName: null, true),
+            new FileLoggerOptions(tempDirectory.Path, "Test", fileName: null),
             LogLevel.Trace,
             new SystemClock(),
             new SystemTask(),

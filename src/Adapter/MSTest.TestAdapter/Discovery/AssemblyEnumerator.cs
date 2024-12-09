@@ -51,11 +51,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
         MSTestSettings.PopulateSettings(settings);
 
     /// <summary>
-    /// Gets or sets the run settings to use for current discovery session.
-    /// </summary>
-    public string? RunSettingsXml { get; set; }
-
-    /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
     /// <returns>
@@ -71,9 +66,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// Enumerates through all types in the assembly in search of valid test methods.
     /// </summary>
     /// <param name="assemblyFileName">The assembly file name.</param>
+    /// <param name="runSettingsXml">The xml specifying runsettings.</param>
     /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>A collection of Test Elements.</returns>
-    internal ICollection<UnitTestElement> EnumerateAssembly(string assemblyFileName, out ICollection<string> warnings)
+    internal ICollection<UnitTestElement> EnumerateAssembly(
+        string assemblyFileName,
+        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
+        out ICollection<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
         var warningMessages = new List<string>();
@@ -101,6 +100,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 ? TestDataSourceDiscoveryOption.DuringExecution
                 : TestDataSourceDiscoveryOption.DuringDiscovery);
 #pragma warning restore CS0618 // Type or member is obsolete
+
+        Dictionary<string, object>? testRunParametersFromRunSettings = RunSettingsUtilities.GetTestRunParameters(runSettingsXml);
         foreach (Type type in types)
         {
             if (type == null)
@@ -108,7 +109,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 continue;
             }
 
-            List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, RunSettingsXml, type, warningMessages, discoverInternals,
+            List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, testRunParametersFromRunSettings, type, warningMessages, discoverInternals,
                 testDataSourceDiscovery, testIdGenerationStrategy, fixturesTests);
             tests.AddRange(testsInType);
         }
@@ -206,7 +207,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
     private List<UnitTestElement> DiscoverTestsInType(
         string assemblyFileName,
-        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
+        Dictionary<string, object>? testRunParametersFromRunSettings,
         Type type,
         List<string> warningMessages,
         bool discoverInternals,
@@ -215,7 +216,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         HashSet<string> fixturesTests)
     {
         IDictionary<string, object> tempSourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
-        tempSourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(tempSourceLevelParameters)
+        tempSourceLevelParameters = testRunParametersFromRunSettings?.ConcatWithOverwrites(tempSourceLevelParameters)
             ?? tempSourceLevelParameters
             ?? new Dictionary<string, object>();
         var sourceLevelParameters = tempSourceLevelParameters.ToDictionary(x => x.Key, x => (object?)x.Value);
@@ -310,7 +311,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
     {
         string assemblyName = testMethodInfo.Parent.Parent.Assembly.GetName().Name!;
         string assemblyLocation = testMethodInfo.Parent.Parent.Assembly.Location;
-        string className = testMethodInfo.Parent.ClassType.Name;
         string classFullName = testMethodInfo.Parent.ClassType.FullName!;
 
         // Check if fixtures for this assembly has already been added.
@@ -321,13 +321,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Add AssemblyInitialize and AssemblyCleanup fixture tests if they exist.
             if (testMethodInfo.Parent.Parent.AssemblyInitializeMethod is not null)
             {
-                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName, className,
+                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName,
                     classFullName, assemblyLocation, Constants.AssemblyInitializeFixtureTrait));
             }
 
             if (testMethodInfo.Parent.Parent.AssemblyCleanupMethod is not null)
             {
-                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName, className,
+                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName,
                     classFullName, assemblyLocation, Constants.AssemblyCleanupFixtureTrait));
             }
         }
@@ -340,18 +340,18 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Add ClassInitialize and ClassCleanup fixture tests if they exist.
             if (testMethodInfo.Parent.ClassInitializeMethod is not null)
             {
-                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassInitializeMethod, assemblyName, className, classFullName,
+                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassInitializeMethod, classFullName,
                     assemblyLocation, Constants.ClassInitializeFixtureTrait));
             }
 
             if (testMethodInfo.Parent.ClassCleanupMethod is not null)
             {
-                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassCleanupMethod, assemblyName, className, classFullName,
+                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassCleanupMethod, classFullName,
                     assemblyLocation, Constants.ClassCleanupFixtureTrait));
             }
         }
 
-        static UnitTestElement GetAssemblyFixtureTest(MethodInfo methodInfo, string assemblyName, string className, string classFullName,
+        static UnitTestElement GetAssemblyFixtureTest(MethodInfo methodInfo, string assemblyName, string classFullName,
             string assemblyLocation, string fixtureType)
         {
             string methodName = GetMethodName(methodInfo);
@@ -359,7 +359,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy);
         }
 
-        static UnitTestElement GetClassFixtureTest(MethodInfo methodInfo, string assemblyName, string className, string classFullName,
+        static UnitTestElement GetClassFixtureTest(MethodInfo methodInfo, string classFullName,
             string assemblyLocation, string fixtureType)
         {
             string methodName = GetMethodName(methodInfo);
