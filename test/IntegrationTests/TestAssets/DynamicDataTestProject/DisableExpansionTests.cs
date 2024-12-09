@@ -9,31 +9,31 @@ namespace DynamicDataTestProject;
 public sealed class DisableExpansionTests
 {
     [TestMethod]
-    [DynamicData(nameof(PropertySource), ExpandDataSource = false)]
+    [DynamicData(nameof(PropertySource), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
     public void TestPropertySourceOnCurrentType(int a, string s)
     {
     }
 
     [TestMethod]
-    [DynamicData(nameof(MethodSource), DynamicDataSourceType.Method, ExpandDataSource = false)]
+    [DynamicData(nameof(MethodSource), DynamicDataSourceType.Method, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
     public void TestMethodSourceOnCurrentType(int a, string s)
     {
     }
 
     [TestMethod]
-    [DynamicData(nameof(PropertySource), typeof(DataSourceHelper), ExpandDataSource = false)]
+    [DynamicData(nameof(PropertySource), typeof(DataSourceHelper), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
     public void TestPropertySourceOnDifferentType(int a, string s)
     {
     }
 
     [TestMethod]
-    [DynamicData(nameof(MethodSource), typeof(DataSourceHelper), DynamicDataSourceType.Method, ExpandDataSource = false)]
+    [DynamicData(nameof(MethodSource), typeof(DataSourceHelper), DynamicDataSourceType.Method, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
     public void TestMethodSourceOnDifferentType(int a, string s)
     {
     }
 
     [TestMethod]
-    [DynamicData(nameof(PropertySource), ExpandDataSource = false)]
+    [DynamicData(nameof(PropertySource), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
     [DynamicData(nameof(PropertySource), typeof(DataSourceHelper))]
     public void TestPropertyWithTwoSourcesButOnlyOneDisablingExpansion(int a, string s)
     {

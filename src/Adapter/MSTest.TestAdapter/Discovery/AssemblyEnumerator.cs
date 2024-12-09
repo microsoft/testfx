@@ -91,15 +91,24 @@ internal class AssemblyEnumerator : MarshalByRefObject
         DataRowAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
         DynamicDataAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
 
-        TestDataSourceDiscoveryOption testDataSourceDiscovery = ReflectHelper.GetTestDataSourceDiscoveryOption(assembly)
+        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = ReflectHelper.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
+        {
+            // When strategy is auto we want to unfold
+            TestDataSourceUnfoldingStrategy.Auto => TestDataSourceUnfoldingStrategy.Unfold,
+            // When strategy is set, let's use it
+            { } value => value,
+            // When the attribute is not set, let's look at the legacy attribute
 #pragma warning disable CS0618 // Type or member is obsolete
-
-            // When using legacy strategy, there is no point in trying to "read" data during discovery
-            // as the ID generator will ignore it.
-            ?? (testIdGenerationStrategy == TestIdGenerationStrategy.Legacy
-                ? TestDataSourceDiscoveryOption.DuringExecution
-                : TestDataSourceDiscoveryOption.DuringDiscovery);
+            null => (ReflectHelper.GetTestDataSourceDiscoveryOption(assembly), testIdGenerationStrategy) switch
+            {
+                (TestDataSourceDiscoveryOption.DuringExecution, _) => TestDataSourceUnfoldingStrategy.Fold,
+                // When using legacy strategy, there is no point in trying to "read" data during discovery
+                // as the ID generator will ignore it.
+                (null, TestIdGenerationStrategy.Legacy) => TestDataSourceUnfoldingStrategy.Fold,
+                _ => TestDataSourceUnfoldingStrategy.Unfold,
+            },
 #pragma warning restore CS0618 // Type or member is obsolete
+        };
 
         Dictionary<string, object>? testRunParametersFromRunSettings = RunSettingsUtilities.GetTestRunParameters(runSettingsXml);
         foreach (Type type in types)
@@ -110,7 +119,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, testRunParametersFromRunSettings, type, warningMessages, discoverInternals,
-                testDataSourceDiscovery, testIdGenerationStrategy, fixturesTests);
+                dataSourcesUnfoldingStrategy, testIdGenerationStrategy, fixturesTests);
             tests.AddRange(testsInType);
         }
 
@@ -194,15 +203,14 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The reflected assembly name.</param>
     /// <param name="discoverInternals">True to discover test classes which are declared internal in
     /// addition to test classes which are declared public.</param>
-    /// <param name="discoveryOption"><see cref="TestDataSourceDiscoveryOption"/> to use when generating tests.</param>
     /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
     /// <returns>a TypeEnumerator instance.</returns>
-    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestIdGenerationStrategy testIdGenerationStrategy)
     {
         var typeValidator = new TypeValidator(ReflectHelper, discoverInternals);
         var testMethodValidator = new TestMethodValidator(ReflectHelper, discoverInternals);
 
-        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, discoveryOption, testIdGenerationStrategy);
+        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, testIdGenerationStrategy);
     }
 
     private List<UnitTestElement> DiscoverTestsInType(
@@ -211,7 +219,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         Type type,
         List<string> warningMessages,
         bool discoverInternals,
-        TestDataSourceDiscoveryOption discoveryOption,
+        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy,
         TestIdGenerationStrategy testIdGenerationStrategy,
         HashSet<string> fixturesTests)
     {
@@ -227,7 +235,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         try
         {
             typeFullName = type.FullName;
-            TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, discoveryOption, testIdGenerationStrategy);
+            TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
             ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string> warningsFromTypeEnumerator);
             warningMessages.AddRange(warningsFromTypeEnumerator);
 
@@ -235,17 +243,15 @@ internal class AssemblyEnumerator : MarshalByRefObject
             {
                 foreach (UnitTestElement test in unitTestCases)
                 {
-                    if (discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
+                    if (_typeCache.GetTestMethodInfoForDiscovery(test.TestMethod) is { } testMethodInfo)
                     {
-                        Lazy<TestMethodInfo?> testMethodInfo = GetTestMethodInfo(sourceLevelParameters, test);
-
                         // Add fixture tests like AssemblyInitialize, AssemblyCleanup, ClassInitialize, ClassCleanup.
-                        if (MSTestSettings.CurrentSettings.ConsiderFixturesAsSpecialTests && testMethodInfo.Value is not null)
+                        if (MSTestSettings.CurrentSettings.ConsiderFixturesAsSpecialTests)
                         {
-                            AddFixtureTests(testMethodInfo.Value, tests, fixturesTests);
+                            AddFixtureTests(testMethodInfo, tests, fixturesTests);
                         }
 
-                        if (DynamicDataAttached(test, testMethodInfo, tests))
+                        if (TryUnfoldITestDataSources(test, testMethodInfo, dataSourcesUnfoldingStrategy, tests))
                         {
                             continue;
                         }
@@ -265,46 +271,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
 
         return tests;
-    }
-
-    private Lazy<TestMethodInfo?> GetTestMethodInfo(IDictionary<string, object?> sourceLevelParameters, UnitTestElement test) =>
-        new(() =>
-        {
-            // NOTE: From this place we don't have any path that would let the user write a message on the TestContext and we don't do
-            // anything with what would be printed anyway so we can simply use a simple StringWriter.
-            using var writer = new StringWriter();
-            TestMethod testMethod = test.TestMethod;
-            MSTestAdapter.PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);
-            return _typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
-        });
-
-    private static bool DynamicDataAttached(UnitTestElement test, Lazy<TestMethodInfo?> testMethodInfo, List<UnitTestElement> tests)
-    {
-        // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
-        // Since we depend on those properties, if they don't exist, we bail out early.
-        if (!test.TestMethod.HasManagedMethodAndTypeProperties)
-        {
-            return false;
-        }
-
-        DynamicDataType originalDataType = test.TestMethod.DataType;
-
-        // PERF: For perf we started setting DataType in TypeEnumerator, so when it is None we will not reach this line.
-        // But if we do run this code, we still reset it to None, because the code that determines if this is data drive test expects the value to be None
-        // and only sets it when needed.
-        //
-        // If you remove this line and acceptance tests still pass you are okay.
-        test.TestMethod.DataType = DynamicDataType.None;
-
-        // The data source tests that we can process currently are those using attributes that
-        // implement ITestDataSource (i.e, DataRow and DynamicData attributes).
-        // However, for DataSourceAttribute, we currently don't have anyway to process it during discovery.
-        // (Note: this method is only called under discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
-        // So we want to return false from this method for non ITestDataSource (whether it's None or DataSourceAttribute). Otherwise, the test
-        // will be completely skipped which is wrong behavior.
-        return originalDataType == DynamicDataType.ITestDataSource &&
-            testMethodInfo.Value != null &&
-            TryProcessITestDataSourceTests(test, testMethodInfo.Value, tests);
     }
 
     private static void AddFixtureTests(TestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> fixtureTests)
@@ -387,8 +353,15 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool TryProcessITestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
+    private static bool TryUnfoldITestDataSources(UnitTestElement test, TestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, List<UnitTestElement> tests)
     {
+        // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
+        // Since we depend on those properties, if they don't exist, we bail out early.
+        if (!test.TestMethod.HasManagedMethodAndTypeProperties)
+        {
+            return false;
+        }
+
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
         // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
@@ -396,7 +369,18 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         try
         {
-            return ProcessITestDataSourceTests(test, new(testMethodInfo.MethodInfo, test.DisplayName), testDataSources, tests);
+            foreach (ITestDataSource dataSource in testDataSources)
+            {
+                if (!TryUnfoldITestDataSource(dataSource, dataSourcesUnfoldingStrategy, test, new(testMethodInfo.MethodInfo, test.DisplayName), tests))
+                {
+                    // TODO: Improve multi-source design!
+                    // Ideally we would want to consider each data source separately but when one source cannot be expanded,
+                    // we will run all sources from the given method so we need to bail-out "globally".
+                    return false;
+                }
+            }
+
+            return true;
         }
         catch (Exception ex)
         {
@@ -406,90 +390,92 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool ProcessITestDataSourceTests(UnitTestElement test, ReflectionTestMethodInfo methodInfo, IEnumerable<ITestDataSource> testDataSources,
-        List<UnitTestElement> tests)
+    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests)
     {
-        foreach (ITestDataSource dataSource in testDataSources)
+        var unfoldingCapability = dataSource as ITestDataSourceUnfoldingCapability;
+
+        // If the global strategy is to fold and local has no strategy or uses Auto then return false
+        if (dataSourcesUnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold
+            && (unfoldingCapability is null || unfoldingCapability.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Auto))
         {
-            // When reaching this point the global setup is to expand the parameterized tests but each data source
-            // could decide not to expand so we need to respect it.
-            if (dataSource is IExpandableDataSource { ExpandDataSource: false })
+            return false;
+        }
+
+        // If the data source specifies the unfolding strategy as fold then return false
+        if (unfoldingCapability?.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold)
+        {
+            return false;
+        }
+
+        // Otherwise, unfold the data source and verify it can be serialized.
+        IEnumerable<object?[]>? data;
+
+        // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
+        // Any change made here should be reflected in TestMethodRunner.ExecuteDataSourceBasedTests as well.
+        data = dataSource.GetData(methodInfo);
+
+        if (!data.Any())
+        {
+            if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
             {
-                // TODO: Improve multi-source design!
-                // Ideally we would want to consider each data source separately but when one source cannot be expanded,
-                // we will run all sources from the given method so we need to bail-out "globally".
+                throw dataSource.GetExceptionForEmptyDataSource(methodInfo);
+            }
+
+            UnitTestElement discoveredTest = test.Clone();
+            // Make the test not data driven, because it had no data.
+            discoveredTest.TestMethod.DataType = DynamicDataType.None;
+            discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
+
+            tests.Add(discoveredTest);
+
+            return true;
+        }
+
+        var testDisplayNameFirstSeen = new Dictionary<string, int>();
+        var discoveredTests = new List<UnitTestElement>();
+        int index = 0;
+
+        foreach (object?[] d in data)
+        {
+            UnitTestElement discoveredTest = test.Clone();
+            discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+
+            // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
+#pragma warning disable CS0618 // Type or member is obsolete
+            if (test.TestMethod.TestIdGenerationStrategy == TestIdGenerationStrategy.DisplayName
+                && testDisplayNameFirstSeen.TryGetValue(discoveredTest.DisplayName!, out int firstIndexSeen))
+            {
+                string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstIndexSeen, index, discoveredTest.DisplayName);
+                warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
+
+                // Duplicated display name so bail out. Caller will handle adding the original test.
+                return false;
+            }
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            try
+            {
+                discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
+                discoveredTest.TestMethod.DataType = DynamicDataType.ITestDataSource;
+            }
+            catch (SerializationException ex)
+            {
+                string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
+                warning += Environment.NewLine;
+                warning += ex.ToString();
+                warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
+
+                // Serialization failed for the type, bail out. Caller will handle adding the original test.
                 return false;
             }
 
-            IEnumerable<object?[]>? data;
-
-            // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
-            // Any change made here should be reflected in TestMethodRunner.ExecuteDataSourceBasedTests as well.
-            data = dataSource.GetData(methodInfo);
-
-            if (!data.Any())
-            {
-                if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
-                {
-                    throw dataSource.GetExceptionForEmptyDataSource(methodInfo);
-                }
-
-                UnitTestElement discoveredTest = test.Clone();
-                // Make the test not data driven, because it had no data.
-                discoveredTest.TestMethod.DataType = DynamicDataType.None;
-                discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
-
-                tests.Add(discoveredTest);
-
-                continue;
-            }
-
-            var testDisplayNameFirstSeen = new Dictionary<string, int>();
-            var discoveredTests = new List<UnitTestElement>();
-            int index = 0;
-
-            foreach (object?[] d in data)
-            {
-                UnitTestElement discoveredTest = test.Clone();
-                discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
-
-                // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
-#pragma warning disable CS0618 // Type or member is obsolete
-                if (test.TestMethod.TestIdGenerationStrategy == TestIdGenerationStrategy.DisplayName
-                    && testDisplayNameFirstSeen.TryGetValue(discoveredTest.DisplayName!, out int firstIndexSeen))
-                {
-                    string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstIndexSeen, index, discoveredTest.DisplayName);
-                    warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
-
-                    // Duplicated display name so bail out. Caller will handle adding the original test.
-                    return false;
-                }
-#pragma warning restore CS0618 // Type or member is obsolete
-
-                try
-                {
-                    discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
-                    discoveredTest.TestMethod.DataType = DynamicDataType.ITestDataSource;
-                }
-                catch (SerializationException ex)
-                {
-                    string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
-                    warning += Environment.NewLine;
-                    warning += ex.ToString();
-                    warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
-
-                    // Serialization failed for the type, bail out. Caller will handle adding the original test.
-                    return false;
-                }
-
-                discoveredTests.Add(discoveredTest);
-                testDisplayNameFirstSeen[discoveredTest.DisplayName!] = index++;
-            }
-
-            tests.AddRange(discoveredTests);
+            discoveredTests.Add(discoveredTest);
+            testDisplayNameFirstSeen[discoveredTest.DisplayName!] = index++;
         }
+
+        tests.AddRange(discoveredTests);
 
         return true;
     }

@@ -6,6 +6,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// The supported discovery modes for <see cref="ITestDataSource"/> tests.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete("Type is obsolete and will be removed in v4, instead use 'TestDataSourceUnfoldingStrategy'.", DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete("Type is obsolete and will be removed in v4, instead use 'TestDataSourceUnfoldingStrategy'.")]
+#endif
 public enum TestDataSourceDiscoveryOption
 {
     /// <summary>

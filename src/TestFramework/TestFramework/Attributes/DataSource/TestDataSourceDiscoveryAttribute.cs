@@ -7,6 +7,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Specifies how to discover <see cref="ITestDataSource"/> tests.
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly)]
+#if NET6_0_OR_GREATER
+[Obsolete("Attribute is obsolete and will be removed in v4, instead use 'TestDataSourceOptionsAttribute'.", DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete("Attribute is obsolete and will be removed in v4, instead use 'TestDataSourceOptionsAttribute'.")]
+#endif
 public class TestDataSourceDiscoveryAttribute : Attribute
 {
     /// <summary>
@@ -17,21 +22,6 @@ public class TestDataSourceDiscoveryAttribute : Attribute
     /// </param>
     public TestDataSourceDiscoveryAttribute(TestDataSourceDiscoveryOption discoveryOption)
         => DiscoveryOption = discoveryOption;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestDataSourceDiscoveryAttribute"/> class.
-    /// Allows to control parameterized tests expansion. When expanded, each data source entry is considered as a
-    /// different test. Otherwise, multiple results are associated with the same test.
-    /// </summary>
-    /// <param name="expandDataSource">Define whether or not to expand data source during discovery.</param>
-    /// <remarks>
-    /// When a test is expanded, the associated data are serialized using DataContractSerializer which could cause issue
-    /// if your data is not serializable.
-    /// </remarks>
-    public TestDataSourceDiscoveryAttribute(bool expandDataSource)
-        => DiscoveryOption = expandDataSource
-            ? TestDataSourceDiscoveryOption.DuringDiscovery
-            : TestDataSourceDiscoveryOption.DuringExecution;
 
     /// <summary>
     /// Gets the discovery option.
