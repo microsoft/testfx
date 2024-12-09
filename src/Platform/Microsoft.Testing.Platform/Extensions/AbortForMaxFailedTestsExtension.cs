@@ -29,7 +29,7 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
     {
         if (commandLineOptions.TryGetOptionArgumentList(MaxFailedTestsCommandLineOptionsProvider.MaxFailedTestsOptionKey, out string[]? args) &&
             int.TryParse(args[0], out int maxFailedTests) &&
-            maxFailedTests > 0)
+            maxFailedTests >= 0)
         {
             _maxFailedTests = maxFailedTests;
         }

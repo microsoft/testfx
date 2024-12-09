@@ -368,5 +368,5 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         return true;
     }
 
-    internal void ForceCleanup() => _classCleanupManager.ForceCleanup(_typeCache);
+    internal void ForceCleanup() => ClassCleanupManager.ForceCleanup(_typeCache);
 }

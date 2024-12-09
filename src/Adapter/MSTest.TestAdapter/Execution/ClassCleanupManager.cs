@@ -63,7 +63,7 @@ internal sealed class ClassCleanupManager
         }
     }
 
-    internal void ForceCleanup(TypeCache typeCache)
+    internal static void ForceCleanup(TypeCache typeCache)
     {
         IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
         foreach (TestClassInfo classInfo in classInfoCache)

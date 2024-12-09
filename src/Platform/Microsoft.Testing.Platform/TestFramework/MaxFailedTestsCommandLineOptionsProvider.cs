@@ -44,10 +44,12 @@ public sealed class MaxFailedTestsCommandLineOptionsProvider : ICommandLineOptio
         if (commandOption.Name == MaxFailedTestsOptionKey)
         {
             string arg = arguments[0];
-            if (!int.TryParse(arg, out int maxFailedTestsResult) || maxFailedTestsResult <= 0)
-            {
-                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.MaxFailedTestsMustBePositive, arg));
-            }
+            // We consider --maximum-failed-tests 0 as valid.
+            // The idea is that we stop the execution when we *exceed* the max failed tests, not when *reach*.
+            // So zero means, stop execution on the first failure.
+            return int.TryParse(arg, out int maxFailedTestsResult) && maxFailedTestsResult >= 0
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.MaxFailedTestsMustBePositive, arg));
         }
 
         throw ApplicationStateGuard.Unreachable();
