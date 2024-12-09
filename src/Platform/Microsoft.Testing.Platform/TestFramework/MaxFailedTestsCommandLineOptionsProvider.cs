@@ -15,7 +15,6 @@ namespace Microsoft.Testing.Platform.TestFramework;
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class MaxFailedTestsCommandLineOptionsProvider : ICommandLineOptionsProvider
 {
-    // TODO: We have 'minimum-expected-tests', so should we use "maximum" instead of "max" here as well for consistency?
     internal const string MaxFailedTestsOptionKey = "maximum-failed-tests";
 
     private static readonly IReadOnlyCollection<CommandLineOption> OptionsCache =
