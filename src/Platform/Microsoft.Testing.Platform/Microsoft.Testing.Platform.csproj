@@ -93,7 +93,7 @@ This package provides the core platform and the .NET implementation of the proto
   <!-- Version templating -->
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
-    <PackageReference Include="Polyfill" PrivateAssets="all" Condition="'$(DotNetBuildSourceOnly)' != 'true'" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
   <Target Name="GeneratePlatformVersionSourceFile" AfterTargets="PrepareForBuild">
     <PropertyGroup>
