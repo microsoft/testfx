@@ -11,16 +11,6 @@ Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData.WarningMe
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.init -> void
-[TPEXP]Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider
-[TPEXP]Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.Description.get -> string!
-[TPEXP]Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.DisplayName.get -> string!
-[TPEXP]Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.GetCommandLineOptions() -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>!
-[TPEXP]Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
-[TPEXP]Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.MaxFailedTestsCommandLineOptionsProvider() -> void
-[TPEXP]Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.Uid.get -> string!
-[TPEXP]Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
-[TPEXP]Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
-[TPEXP]Microsoft.Testing.Platform.TestFramework.MaxFailedTestsCommandLineOptionsProvider.Version.get -> string!
 [TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.EqualityContract.get -> System.Type!
 [TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.ToString() -> string!
 [TPEXP]virtual Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.PrintMembers(System.Text.StringBuilder! builder) -> bool
