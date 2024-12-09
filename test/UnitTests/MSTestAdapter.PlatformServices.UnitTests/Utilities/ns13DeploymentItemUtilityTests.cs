@@ -389,7 +389,7 @@ public class DeploymentItemUtilityTests : TestContainer
     {
         Verify(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, _defaultDeploymentItemOutputDirectory, out string warning));
 
-        Verify(string.Empty.Equals(warning, StringComparison.Ordinal));
+        Verify(warning is null);
     }
     #endregion
 
