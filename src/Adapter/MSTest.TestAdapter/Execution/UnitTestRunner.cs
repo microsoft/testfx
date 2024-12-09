@@ -367,4 +367,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         notRunnableResult = null;
         return true;
     }
+
+    internal void ForceCleanup() => _classCleanupManager.ForceCleanup(_typeCache);
 }

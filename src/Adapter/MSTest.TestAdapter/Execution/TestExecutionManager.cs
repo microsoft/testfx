@@ -399,6 +399,11 @@ public class TestExecutionManager
             ExecuteTestsWithTestRunner(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner);
         }
 
+        if (MSTestStopGracefullyTestExecutionCapability.Instance.IsStopRequested)
+        {
+            testRunner.ForceCleanup();
+        }
+
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
     }
 
