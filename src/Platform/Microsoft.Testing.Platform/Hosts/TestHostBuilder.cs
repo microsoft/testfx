@@ -380,6 +380,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await TestHostOrchestratorManager.BuildAsync(serviceProvider);
         if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 0 && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
+            policiesService.ProcessRole = TestProcessRole.TestHostOrchestrator;
+            await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostOrchestrator);
             return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, serviceProvider);
         }
 
@@ -415,6 +417,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             if (testHostControllers.RequireProcessRestart)
             {
                 testHostControllerInfo.IsCurrentProcessTestHostController = true;
+                policiesService.ProcessRole = TestProcessRole.TestHostController;
+                await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostController);
                 TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, passiveNode, systemEnvironment, loggerFactory, systemClock);
 
                 await LogTestHostCreatedAsync(
@@ -428,6 +432,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
 
         // ======= TEST HOST MODE ======== //
+        policiesService.ProcessRole = TestProcessRole.TestHost;
+        await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHost);
 
         // Setup the test host working folder.
         // Out of the test host controller extension the current working directory is the test host working directory.

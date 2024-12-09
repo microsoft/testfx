@@ -3,6 +3,8 @@
 
 using System.Collections.Concurrent;
 
+using Microsoft.Testing.Platform.Helpers;
+
 namespace Microsoft.Testing.Platform.Services;
 
 internal sealed class StopPoliciesService : IStopPoliciesService
@@ -37,6 +39,8 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 
     private BlockingCollection<Func<int, CancellationToken, Task>>? _maxFailedTestsCallbacks;
     private BlockingCollection<Func<Task>>? _abortCallbacks;
+
+    internal TestProcessRole? ProcessRole { get; set; }
 
     public bool IsMaxFailedTestsTriggered { get; private set; }
 
@@ -83,7 +87,14 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     }
 
     public void RegisterOnMaxFailedTestsCallback(Func<int, CancellationToken, Task> callback)
-        => RegisterCallback(ref _maxFailedTestsCallbacks, callback);
+    {
+        if (ProcessRole != TestProcessRole.TestHost)
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
+
+        RegisterCallback(ref _maxFailedTestsCallbacks, callback);
+    }
 
     public void RegisterOnAbortCallback(Func<Task> callback)
         => RegisterCallback(ref _abortCallbacks, callback);

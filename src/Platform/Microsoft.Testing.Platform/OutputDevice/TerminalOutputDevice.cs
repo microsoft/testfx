@@ -49,6 +49,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private readonly IFileLoggerInformation? _fileLoggerInformation;
     private readonly ILoggerFactory _loggerFactory;
     private readonly IClock _clock;
+    private readonly IStopPoliciesService _policiesService;
     private readonly string? _longArchitecture;
     private readonly string? _shortArchitecture;
 
@@ -88,11 +89,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _fileLoggerInformation = fileLoggerInformation;
         _loggerFactory = loggerFactory;
         _clock = clock;
-
-        policiesService.RegisterOnMaxFailedTestsCallback(
-            async (maxFailedTests, _) => await DisplayAsync(
-                this,
-                new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
+        _policiesService = policiesService;
 
         policiesService.RegisterOnAbortCallback(
             () =>
@@ -591,4 +588,16 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public void Dispose()
         => _terminalTestReporter?.Dispose();
+
+    public Task HandleProcessRoleAsync(TestProcessRole processRole)
+    {
+        if (processRole == TestProcessRole.TestHost)
+        {
+            _policiesService.RegisterOnMaxFailedTestsCallback(
+                async (maxFailedTests, _) => await DisplayAsync(
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
+        }
+
+        return Task.CompletedTask;
+    }
 }

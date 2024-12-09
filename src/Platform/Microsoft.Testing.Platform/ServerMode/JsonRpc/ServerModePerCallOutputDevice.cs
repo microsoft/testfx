@@ -18,6 +18,7 @@ namespace Microsoft.Testing.Platform.ServerMode;
 internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOutputDeviceDataProducer
 {
     private readonly FileLoggerProvider? _fileLoggerProvider;
+    private readonly IStopPoliciesService _policiesService;
     private readonly ConcurrentBag<ServerLogMessage> _messages = new();
 
     private IServerTestHost? _serverTestHost;
@@ -27,9 +28,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     public ServerModePerCallOutputDevice(FileLoggerProvider? fileLoggerProvider, IStopPoliciesService policiesService)
     {
         _fileLoggerProvider = fileLoggerProvider;
-        policiesService.RegisterOnMaxFailedTestsCallback(
-            async (maxFailedTests, _) => await DisplayAsync(
-                this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
+        _policiesService = policiesService;
     }
 
     internal async Task InitializeAsync(IServerTestHost serverTestHost)
@@ -153,5 +152,17 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         }
 
         return builder.ToString();
+    }
+
+    public Task HandleProcessRoleAsync(TestProcessRole processRole)
+    {
+        if (processRole == TestProcessRole.TestHost)
+        {
+            _policiesService.RegisterOnMaxFailedTestsCallback(
+                async (maxFailedTests, _) => await DisplayAsync(
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
+        }
+
+        return Task.CompletedTask;
     }
 }
