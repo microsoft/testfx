@@ -311,7 +311,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
     {
         string assemblyName = testMethodInfo.Parent.Parent.Assembly.GetName().Name!;
         string assemblyLocation = testMethodInfo.Parent.Parent.Assembly.Location;
-        string className = testMethodInfo.Parent.ClassType.Name;
         string classFullName = testMethodInfo.Parent.ClassType.FullName!;
 
         // Check if fixtures for this assembly has already been added.
@@ -322,13 +321,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Add AssemblyInitialize and AssemblyCleanup fixture tests if they exist.
             if (testMethodInfo.Parent.Parent.AssemblyInitializeMethod is not null)
             {
-                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName, className,
+                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName,
                     classFullName, assemblyLocation, Constants.AssemblyInitializeFixtureTrait));
             }
 
             if (testMethodInfo.Parent.Parent.AssemblyCleanupMethod is not null)
             {
-                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName, className,
+                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName,
                     classFullName, assemblyLocation, Constants.AssemblyCleanupFixtureTrait));
             }
         }
@@ -341,18 +340,18 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Add ClassInitialize and ClassCleanup fixture tests if they exist.
             if (testMethodInfo.Parent.ClassInitializeMethod is not null)
             {
-                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassInitializeMethod, assemblyName, className, classFullName,
+                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassInitializeMethod, classFullName,
                     assemblyLocation, Constants.ClassInitializeFixtureTrait));
             }
 
             if (testMethodInfo.Parent.ClassCleanupMethod is not null)
             {
-                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassCleanupMethod, assemblyName, className, classFullName,
+                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassCleanupMethod, classFullName,
                     assemblyLocation, Constants.ClassCleanupFixtureTrait));
             }
         }
 
-        static UnitTestElement GetAssemblyFixtureTest(MethodInfo methodInfo, string assemblyName, string className, string classFullName,
+        static UnitTestElement GetAssemblyFixtureTest(MethodInfo methodInfo, string assemblyName, string classFullName,
             string assemblyLocation, string fixtureType)
         {
             string methodName = GetMethodName(methodInfo);
@@ -360,7 +359,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy);
         }
 
-        static UnitTestElement GetClassFixtureTest(MethodInfo methodInfo, string assemblyName, string className, string classFullName,
+        static UnitTestElement GetClassFixtureTest(MethodInfo methodInfo, string classFullName,
             string assemblyLocation, string fixtureType)
         {
             string methodName = GetMethodName(methodInfo);
