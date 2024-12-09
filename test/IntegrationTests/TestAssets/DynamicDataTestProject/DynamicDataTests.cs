@@ -22,7 +22,7 @@ public class DynamicDataTests
     public void DynamicDataTest_SourceMethod(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
-    [DynamicData(nameof(ParseUserData), DynamicDataSourceType.Property)]
+    [DynamicData(nameof(ParseUserData))]
     public void DynamicDataTest_SourceProperty(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
@@ -31,8 +31,7 @@ public class DynamicDataTests
     public void DynamicDataTest_SourceMethod_CustomDisplayName(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
-    [DynamicData(nameof(ParseUserData), DynamicDataSourceType.Property,
-        DynamicDataDisplayName = nameof(GetCustomDynamicDataDisplayName))]
+    [DynamicData(nameof(ParseUserData), DynamicDataDisplayName = nameof(GetCustomDynamicDataDisplayName))]
     public void DynamicDataTest_SourceProperty_CustomDisplayName(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
@@ -41,8 +40,7 @@ public class DynamicDataTests
     public void DynamicDataTest_SourceMethod_CustomDisplayNameOtherType(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser); // todo
 
     [DataTestMethod]
-    [DynamicData(nameof(ParseUserData), DynamicDataSourceType.Property,
-        DynamicDataDisplayName = nameof(DataProvider.GetUserDynamicDataDisplayName), DynamicDataDisplayNameDeclaringType = typeof(DataProvider))]
+    [DynamicData(nameof(ParseUserData), DynamicDataDisplayName = nameof(DataProvider.GetUserDynamicDataDisplayName), DynamicDataDisplayNameDeclaringType = typeof(DataProvider))]
     public void DynamicDataTest_SourceProperty_CustomDisplayNameOtherType(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser); // todo
 
     [DataTestMethod]
@@ -50,7 +48,7 @@ public class DynamicDataTests
     public void DynamicDataTest_SourceMethodOtherType(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
-    [DynamicData(nameof(DataProvider.UserDataAndExceptedParsedUser), typeof(DataProvider), DynamicDataSourceType.Property)]
+    [DynamicData(nameof(DataProvider.UserDataAndExceptedParsedUser), typeof(DataProvider))]
     public void DynamicDataTest_SourcePropertyOtherType(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
@@ -59,7 +57,7 @@ public class DynamicDataTests
     public void DynamicDataTest_SourceMethodOtherType_CustomDisplayName(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
-    [DynamicData(nameof(DataProvider.UserDataAndExceptedParsedUser), typeof(DataProvider), DynamicDataSourceType.Property,
+    [DynamicData(nameof(DataProvider.UserDataAndExceptedParsedUser), typeof(DataProvider),
         DynamicDataDisplayName = nameof(GetCustomDynamicDataDisplayName))]
     public void DynamicDataTest_SourcePropertyOtherType_CustomDisplayName(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
@@ -69,7 +67,7 @@ public class DynamicDataTests
     public void DynamicDataTest_SourceMethodOtherType_CustomDisplayNameOtherType(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
-    [DynamicData(nameof(DataProvider.UserDataAndExceptedParsedUser), typeof(DataProvider), DynamicDataSourceType.Property,
+    [DynamicData(nameof(DataProvider.UserDataAndExceptedParsedUser), typeof(DataProvider),
         DynamicDataDisplayName = nameof(DataProvider.GetUserDynamicDataDisplayName), DynamicDataDisplayNameDeclaringType = typeof(DataProvider))]
     public void DynamicDataTest_SourcePropertyOtherType_CustomDisplayNameOtherType(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 

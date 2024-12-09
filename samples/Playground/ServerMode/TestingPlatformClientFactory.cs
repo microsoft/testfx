@@ -50,7 +50,7 @@ public partial /* for codegen regx */ class TestingPlatformClientFactory
         {
             OnStandardOutput = (_, output) => builder.AppendLine(CultureInfo.InvariantCulture, $"OnStandardOutput:\n{output}"),
             OnErrorOutput = (_, output) => builder.AppendLine(CultureInfo.InvariantCulture, $"OnErrorOutput:\n{output}"),
-            OnExit = (processHandle, exitCode) => builder.AppendLine(CultureInfo.InvariantCulture, $"OnExit: exit code '{exitCode}'"),
+            OnExit = (_, exitCode) => builder.AppendLine(CultureInfo.InvariantCulture, $"OnExit: exit code '{exitCode}'"),
 
             Arguments = $"--server --client-host localhost --client-port {((IPEndPoint)tcpListener.LocalEndpoint).Port}",
             // Arguments = $"--server --client-host localhost --client-port {((IPEndPoint)tcpListener.LocalEndpoint).Port} --diagnostic --diagnostic-verbosity trace",
@@ -173,7 +173,7 @@ public static class ProcessFactory
 
         if (config.OnExit != null)
         {
-            process.Exited += (s, e) => config.OnExit.Invoke(processHandle, process.ExitCode);
+            process.Exited += (_, _) => config.OnExit.Invoke(processHandle, process.ExitCode);
         }
 
         if (config.OnStandardOutput != null)
