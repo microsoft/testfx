@@ -1,0 +1,8 @@
+{
+  "solution": {
+    "path": "TestFx.sln",
+    "projects": [
+      "src\\Platform\\Microsoft.Testing.Platform\\Microsoft.Testing.Platform.csproj"
+    ]
+  }
+}
