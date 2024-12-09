@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestFramework;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 
