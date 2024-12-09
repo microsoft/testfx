@@ -7,8 +7,6 @@ using System.Text;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 
-using Moq;
-
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestGroup]
@@ -279,12 +277,29 @@ public sealed class TerminalTestReporterTests : TestBase
 
         public void AddTime(TimeSpan time) => _currentTime += time;
 
-        public IStopwatch CreateStopwatch()
+        public IStopwatch CreateStopwatch() => new MockStopwatch(this, _currentTime);
+
+        internal sealed class MockStopwatch : IStopwatch
         {
-            TimeSpan createTime = _currentTime;
-            var stopwatch = new Mock<IStopwatch>();
-            stopwatch.SetupGet(s => s.Elapsed).Returns(() => _currentTime - createTime);
-            return stopwatch.Object;
+            private readonly StopwatchFactory _factory;
+
+            public MockStopwatch(StopwatchFactory factory, TimeSpan startTime)
+            {
+                _factory = factory;
+                StartTime = startTime;
+            }
+
+            private TimeSpan StartTime { get; }
+
+            public TimeSpan Elapsed => _factory._currentTime - StartTime;
+
+            public void Start()
+            {
+            }
+
+            public void Stop()
+            {
+            }
         }
     }
 
