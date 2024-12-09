@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 
-internal class TestHostOrchestratorManager : ITestHostOrchestratorManager
+internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
 {
     private List<Func<IServiceProvider, ITestHostOrchestrator>>? _factories;
 

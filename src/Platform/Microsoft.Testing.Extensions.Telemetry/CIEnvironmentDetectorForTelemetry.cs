@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Extensions.Telemetry;
 
 // Detection of CI: https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection
 // From: https://github.com/dotnet/sdk/blob/main/src/Cli/dotnet/Telemetry/CIEnvironmentDetectorForTelemetry.cs
-internal class CIEnvironmentDetectorForTelemetry
+internal sealed class CIEnvironmentDetectorForTelemetry
 {
     // Systems that provide boolean values only, so we can simply parse and check for true
     private static readonly string[] BooleanVariables =

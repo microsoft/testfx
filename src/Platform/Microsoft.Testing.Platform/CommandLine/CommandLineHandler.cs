@@ -250,8 +250,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                     ? $"dotnet exec {Path.GetFileName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}"
                     : PlatformResources.HelpTestApplicationRunner;
 
-        async Task<bool> PrintOptionsAsync(IEnumerable<ICommandLineOptionsProvider> optionProviders, int leftPaddingDepth,
-            bool builtInOnly = false)
+        async Task<bool> PrintOptionsAsync(IEnumerable<ICommandLineOptionsProvider> optionProviders, bool builtInOnly = false)
         {
             CommandLineOption[] options =
                 optionProviders
@@ -292,11 +291,11 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                 .ToArray();
             // By default, only system options are built-in but some extensions (e.g. retry) are considered as built-in too,
             // so we need to union the 2 collections before printing the options.
-            await PrintOptionsAsync(SystemCommandLineOptionsProviders.Union(nonToolsExtensionProviders), 1, builtInOnly: true);
+            await PrintOptionsAsync(SystemCommandLineOptionsProviders.Union(nonToolsExtensionProviders), builtInOnly: true);
             await outputDevice.DisplayAsync(this, EmptyText);
 
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpExtensionOptions));
-            if (!await PrintOptionsAsync(nonToolsExtensionProviders, 1))
+            if (!await PrintOptionsAsync(nonToolsExtensionProviders))
             {
                 await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpNoExtensionRegistered));
             }

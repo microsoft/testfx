@@ -240,7 +240,7 @@ internal sealed class TrxProcessLifetimeHandler :
     }
 #endif
 
-    private class ExtensionInfo : IExtension
+    private sealed class ExtensionInfo : IExtension
     {
         public ExtensionInfo(string id, string semVer, string displayName, string description)
         {
@@ -261,7 +261,7 @@ internal sealed class TrxProcessLifetimeHandler :
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
     }
 
-    private class TestAdapterInfo : ITestFramework
+    private sealed class TestAdapterInfo : ITestFramework
     {
         public TestAdapterInfo(string id, string semVer)
         {

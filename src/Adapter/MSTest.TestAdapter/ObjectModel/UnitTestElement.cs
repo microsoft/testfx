@@ -16,7 +16,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// </summary>
 [Serializable]
 [DebuggerDisplay("{GetDisplayName()} ({TestMethod.ManagedTypeName})")]
-internal class UnitTestElement
+internal sealed class UnitTestElement
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestElement"/> class.
@@ -170,7 +170,7 @@ internal class UnitTestElement
             testCase.SetPropertyValue(Constants.PriorityProperty, Priority.Value);
         }
 
-        if (Traits != null)
+        if (Traits is { Length: > 0 })
         {
             testCase.Traits.AddRange(Traits);
         }

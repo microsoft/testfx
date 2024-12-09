@@ -221,7 +221,7 @@
       </trans-unit>
       <trans-unit id="ExceptionDuringCancellationWarningMessage">
         <source>Exception during the cancellation of request id '{0}'</source>
-        <target state="new">Exception during the cancellation of request id '{0}'</target>
+        <target state="translated">Excepción durante la cancelación del id. de solicitud '{0}'</target>
         <note>{0} is the request id</note>
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -278,7 +278,7 @@
       </trans-unit>
       <trans-unit id="FinishedTestSession">
         <source>Finished test session.</source>
-        <target state="new">Finished test session.</target>
+        <target state="translated">Finalizó la sesión de prueba.</target>
         <note />
       </trans-unit>
       <trans-unit id="ForTest">
@@ -655,12 +655,12 @@ Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' 
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="new">The 'ITestHost' implementation used when running server mode.</target>
+        <target state="translated">Implementación de 'ITestHost' usada al ejecutar el modo de servidor.</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
         <source>Server mode test host</source>
-        <target state="new">Server mode test host</target>
+        <target state="translated">Host de prueba en modo servidor</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
@@ -720,12 +720,12 @@ Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' 
       </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
-        <target state="new">Starting test session.</target>
+        <target state="translated">Iniciando sesión de prueba.</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingTestSessionWithLogFilePath">
         <source>Starting test session. The log file path is '{0}'.</source>
-        <target state="new">Starting test session. The log file path is '{0}'.</target>
+        <target state="translated">Iniciando sesión de prueba. La ruta de acceso del archivo de registro es '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -939,7 +939,7 @@ Los valores válidos son 'Normal', 'Detallado'. El valor predeterminado es 'Norm
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
-        <target state="new">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</target>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] excepción no controlada: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">

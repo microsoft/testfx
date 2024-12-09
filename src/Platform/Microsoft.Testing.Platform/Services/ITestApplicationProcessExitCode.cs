@@ -19,7 +19,7 @@ internal interface ITestApplicationProcessExitCode : IDataConsumer
     Statistics GetStatistics();
 }
 
-internal class Statistics
+internal sealed class Statistics
 {
     public int TotalRanTests { get; set; }
 

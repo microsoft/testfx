@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines type cache which reflects upon a type and cache its test artifacts.
 /// </summary>
-internal class TypeCache : MarshalByRefObject
+internal sealed class TypeCache : MarshalByRefObject
 {
     /// <summary>
     /// Test context property name.
@@ -259,7 +259,7 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
     private TestClassInfo CreateClassInfo(Type classType, TestMethod testMethod)
     {
-        IEnumerable<ConstructorInfo> constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
+        ConstructorInfo[] constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
         (ConstructorInfo CtorInfo, bool IsParameterless)? selectedConstructor = null;
 
         foreach (ConstructorInfo ctor in constructors)
@@ -399,7 +399,7 @@ internal class TypeCache : MarshalByRefObject
 
         assemblyInfo = new TestAssemblyInfo(assembly);
 
-        IReadOnlyList<Type> types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName!, null);
+        Type[] types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName!, null);
 
         foreach (Type t in types)
         {

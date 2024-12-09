@@ -3,7 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
-internal class AdapterSettingsException : Exception
+internal sealed class AdapterSettingsException : Exception
 {
     internal AdapterSettingsException(string? message)
         : base(message)

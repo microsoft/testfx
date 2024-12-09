@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// The test case discovery sink.
 /// </summary>
-internal class TestCaseDiscoverySink : ITestCaseDiscoverySink
+internal sealed class TestCaseDiscoverySink : ITestCaseDiscoverySink
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestCaseDiscoverySink"/> class.

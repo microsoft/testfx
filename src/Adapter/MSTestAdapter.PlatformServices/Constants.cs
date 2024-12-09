@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
-internal class Constants
+internal static class Constants
 {
 #if NETFRAMEWORK
     /// <summary>

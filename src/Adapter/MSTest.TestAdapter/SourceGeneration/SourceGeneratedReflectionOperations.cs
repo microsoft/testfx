@@ -50,16 +50,16 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
         return attributes.ToArray();
     }
 
-    public IEnumerable<ConstructorInfo> GetDeclaredConstructors(Type classType)
+    public ConstructorInfo[] GetDeclaredConstructors(Type classType)
         => ReflectionDataProvider.TypeConstructors[classType];
 
     public MethodInfo? GetDeclaredMethod(Type dynamicDataDeclaringType, string dynamicDataSourceName)
         => GetDeclaredMethods(dynamicDataDeclaringType).FirstOrDefault(m => m.Name == dynamicDataSourceName);
 
-    public IEnumerable<MethodInfo> GetDeclaredMethods(Type classType)
+    public MethodInfo[] GetDeclaredMethods(Type classType)
         => ReflectionDataProvider.TypeMethods[classType];
 
-    public IEnumerable<PropertyInfo> GetDeclaredProperties(Type type)
+    public PropertyInfo[] GetDeclaredProperties(Type type)
         => ReflectionDataProvider.TypeProperties[type];
 
     public PropertyInfo? GetDeclaredProperty(Type type, string propertyName)
@@ -68,7 +68,7 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
     public Type[] GetDefinedTypes(Assembly assembly)
         => ReflectionDataProvider.Types;
 
-    public IEnumerable<MethodInfo> GetRuntimeMethods(Type type)
+    public MethodInfo[] GetRuntimeMethods(Type type)
         => ReflectionDataProvider.TypeMethods[type];
 
     public MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters) => throw new NotImplementedException();

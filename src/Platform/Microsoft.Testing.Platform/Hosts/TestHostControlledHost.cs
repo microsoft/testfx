@@ -7,7 +7,7 @@ using Microsoft.Testing.Platform.IPC.Models;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal class TestHostControlledHost(NamedPipeClient testHostControllerPipeClient, ITestHost innerTestHost, CancellationToken cancellationToken) : ITestHost, IDisposable
+internal sealed class TestHostControlledHost(NamedPipeClient testHostControllerPipeClient, ITestHost innerTestHost, CancellationToken cancellationToken) : ITestHost, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable

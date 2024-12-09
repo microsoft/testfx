@@ -33,7 +33,7 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
+internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
 {
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
@@ -383,7 +383,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Check if we're in the test host or we should check test controllers extensions
         // Environment variable check should not be needed but in case we will rollback to use only env var we will need it.
         if ((!testHostControllerInfo.HasTestHostController ||
-            systemEnvironment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{testHostControllerInfo.GetTestHostControllerPID(true)}") != "1")
+            systemEnvironment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{testHostControllerInfo.GetTestHostControllerPID()}") != "1")
             && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             PassiveNode? passiveNode = null;
@@ -498,12 +498,11 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             }
 
             // Build the test host
-            ConsoleTestHost consoleHost = CreateConsoleTestHost(
+            ConsoleTestHost consoleHost = TestHostBuilder.CreateConsoleTestHost(
                 serviceProvider,
                 BuildTestFrameworkAsync,
                 (TestFrameworkManager)TestFramework,
-                (TestHostManager)TestHost,
-                _testApplicationModuleInfo);
+                (TestHostManager)TestHost);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
             ITestHost actualTestHost = testControllerConnection is not null
@@ -538,7 +537,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return null;
         }
 
-        string pipeEnvironmentVariable = $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{testHostControllerInfo.GetTestHostControllerPID(true)}";
+        string pipeEnvironmentVariable = $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{testHostControllerInfo.GetTestHostControllerPID()}";
         string pipeName = environment.GetEnvironmentVariable(pipeEnvironmentVariable) ?? throw new InvalidOperationException($"Unexpected null pipe name from environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}'");
 
         // RemoveVariable the environment variable so that it doesn't get passed to the eventually children processes
@@ -567,7 +566,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         return client;
     }
 
-    protected virtual void AddApplicationMetadata(IServiceProvider serviceProvider, Dictionary<string, object> builderMetadata)
+    private void AddApplicationMetadata(IServiceProvider serviceProvider, Dictionary<string, object> builderMetadata)
     {
         ITelemetryInformation telemetryInformation = serviceProvider.GetTelemetryInformation();
         if (!telemetryInformation.IsEnabled)
@@ -644,10 +643,10 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // creations and we could lose interesting diagnostic information.
         List<IDataConsumer> dataConsumersBuilder = [];
 
-        await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.PlatformOutputDisplayService, serviceProvider, dataConsumersBuilder);
-        await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestFactory, serviceProvider, dataConsumersBuilder);
-        await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestInvoker, serviceProvider, dataConsumersBuilder);
-        await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionFilterFactory, serviceProvider, dataConsumersBuilder);
+        await TestHostBuilder.RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.PlatformOutputDisplayService, serviceProvider, dataConsumersBuilder);
+        await TestHostBuilder.RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestFactory, serviceProvider, dataConsumersBuilder);
+        await TestHostBuilder.RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestInvoker, serviceProvider, dataConsumersBuilder);
+        await TestHostBuilder.RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionFilterFactory, serviceProvider, dataConsumersBuilder);
 
         // Create the test framework adapter
         ITestFrameworkCapabilities testFrameworkCapabilities = serviceProvider.GetTestFrameworkCapabilities();
@@ -657,15 +656,12 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AllowTestAdapterFrameworkRegistration = true;
         try
         {
-            await RegisterAsServiceOrConsumerOrBothAsync(new TestFrameworkProxy(testFramework), serviceProvider, dataConsumersBuilder);
+            await TestHostBuilder.RegisterAsServiceOrConsumerOrBothAsync(new TestFrameworkProxy(testFramework), serviceProvider, dataConsumersBuilder);
         }
         finally
         {
             serviceProvider.AllowTestAdapterFrameworkRegistration = false;
         }
-
-        // Virtual callback that allows to the VSTest mode to register custom services needed by the bridge.
-        AfterTestAdapterCreation(serviceProvider);
 
         // Prepare the session lifetime handlers for the notifications
         List<ITestSessionLifetimeHandler> testSessionLifetimeHandlers = [];
@@ -686,11 +682,11 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             {
                 if (testhostExtension.Extension is IDataConsumer)
                 {
-                    await RegisterAsServiceOrConsumerOrBothAsync(testhostExtension.Extension, serviceProvider, dataConsumersBuilder);
+                    await TestHostBuilder.RegisterAsServiceOrConsumerOrBothAsync(testhostExtension.Extension, serviceProvider, dataConsumersBuilder);
                 }
                 else
                 {
-                    await AddServiceIfNotSkippedAsync(testhostExtension.Extension, serviceProvider);
+                    await TestHostBuilder.AddServiceIfNotSkippedAsync(testhostExtension.Extension, serviceProvider);
                 }
             }
         }
@@ -704,7 +700,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 testSessionLifetimeHandlers.Add(handler);
             }
 
-            await RegisterAsServiceOrConsumerOrBothAsync(consumerService, serviceProvider, dataConsumersBuilder);
+            await TestHostBuilder.RegisterAsServiceOrConsumerOrBothAsync(consumerService, serviceProvider, dataConsumersBuilder);
         }
 
         // Register the test session lifetime handlers container
@@ -720,7 +716,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Allow the ITestApplicationProcessExitCode to subscribe as IDataConsumer
         ITestApplicationProcessExitCode testApplicationResult = serviceProvider.GetRequiredService<ITestApplicationProcessExitCode>();
-        await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder);
+        await TestHostBuilder.RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder);
 
         // We register the data consumer handler if we're connected to the dotnet test pipe
         if (pushOnlyProtocolDataConsumer is not null)
@@ -765,39 +761,29 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         return testFramework;
     }
 
-    protected virtual ConsoleTestHost CreateConsoleTestHost(
+    private static ConsoleTestHost CreateConsoleTestHost(
         ServiceProvider serviceProvider,
         Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
         TestFrameworkManager testFrameworkManager,
-        TestHostManager testHostManager,
-        ITestApplicationModuleInfo testApplicationModuleInfo)
+        TestHostManager testHostManager)
         => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager);
 
-    protected virtual bool SkipAddingService(object service) => false;
-
-    protected virtual void AfterTestAdapterCreation(ServiceProvider serviceProvider)
+    private static async Task AddServiceIfNotSkippedAsync(object service, ServiceProvider serviceProvider)
     {
-    }
-
-    private async Task AddServiceIfNotSkippedAsync(object service, ServiceProvider serviceProvider)
-    {
-        if (!SkipAddingService(service))
+        if (service is IExtension extension)
         {
-            if (service is IExtension extension)
-            {
-                if (await extension.IsEnabledAsync())
-                {
-                    serviceProvider.TryAddService(service);
-                }
-            }
-            else
+            if (await extension.IsEnabledAsync())
             {
                 serviceProvider.TryAddService(service);
             }
         }
+        else
+        {
+            serviceProvider.TryAddService(service);
+        }
     }
 
-    private async Task RegisterAsServiceOrConsumerOrBothAsync(object service, ServiceProvider serviceProvider,
+    private static async Task RegisterAsServiceOrConsumerOrBothAsync(object service, ServiceProvider serviceProvider,
         List<IDataConsumer> dataConsumersBuilder)
     {
         if (service is IDataConsumer dataConsumer)
@@ -815,7 +801,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return;
         }
 
-        await AddServiceIfNotSkippedAsync(service, serviceProvider);
+        await TestHostBuilder.AddServiceIfNotSkippedAsync(service, serviceProvider);
     }
 
     private async Task DisplayBannerIfEnabledAsync(ApplicationLoggingState loggingState, ProxyOutputDevice outputDevice,

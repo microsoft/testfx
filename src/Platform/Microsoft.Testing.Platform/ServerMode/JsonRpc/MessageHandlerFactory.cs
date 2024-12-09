@@ -14,7 +14,7 @@ namespace Microsoft.Testing.Platform.ServerMode;
 
 internal sealed partial class ServerModeManager
 {
-    internal class MessageHandlerFactory : IMessageHandlerFactory, IOutputDeviceDataProducer
+    internal sealed class MessageHandlerFactory : IMessageHandlerFactory, IOutputDeviceDataProducer
     {
         private readonly string? _host;
         private readonly int _port;

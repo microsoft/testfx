@@ -3,7 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
-internal class EnvironmentWrapper : IEnvironment
+internal sealed class EnvironmentWrapper : IEnvironment
 {
     public string MachineName => Environment.MachineName;
 }

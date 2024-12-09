@@ -305,7 +305,7 @@ public class TestExecutionManager
             [MSTestSettings.CurrentSettings, unitTestElements, (int)sourceSettings.ClassCleanupLifecycle])!;
 
         // Ensures that the cancellation token gets through AppDomain boundary.
-        _testRunCancellationToken?.Register(testRunner.Cancel);
+        _testRunCancellationToken?.Register(static state => ((UnitTestRunner)state!).Cancel(), testRunner);
 
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
         {

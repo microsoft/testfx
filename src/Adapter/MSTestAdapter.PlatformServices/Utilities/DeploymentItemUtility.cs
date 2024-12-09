@@ -17,7 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 /// <summary>
 /// The deployment utility.
 /// </summary>
-internal class DeploymentItemUtility
+internal sealed class DeploymentItemUtility
 {
     // REVIEW: it would be better if this was a ReflectionHelper, because helper is able to cache. But we don't have reflection helper here, because this is platform services dll.
     private readonly ReflectionUtility _reflectionUtility;
@@ -79,7 +79,7 @@ internal class DeploymentItemUtility
     /// <param name="warning"> The warning message if it is an invalid deployment item. </param>
     /// <returns> Returns true if it is a valid deployment item. </returns>
     [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#", Justification = "Internal method.")]
-    internal static bool IsValidDeploymentItem([NotNullWhen(true)] string? sourcePath, [NotNullWhen(true)] string? relativeOutputDirectory, out string warning)
+    internal static bool IsValidDeploymentItem([NotNullWhen(true)] string? sourcePath, [NotNullWhen(true)] string? relativeOutputDirectory, [NotNullWhen(false)] out string? warning)
     {
         if (StringEx.IsNullOrEmpty(sourcePath))
         {
@@ -105,7 +105,7 @@ internal class DeploymentItemUtility
             return false;
         }
 
-        warning = string.Empty;
+        warning = null;
         return true;
     }
 

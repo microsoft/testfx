@@ -6,4 +6,4 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// <summary>
 /// A warning message that was sent during run.
 /// </summary>
-internal record WarningMessage(string Text) : IProgressMessage;
+internal sealed record WarningMessage(string Text) : IProgressMessage;
