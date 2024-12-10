@@ -5,7 +5,7 @@
   <IgnorePatterns>
      <!-- These are coming in via runtime but the source-build infra isn't able to automatically pick up the right intermediate. -->
     <UsagePattern IdentityGlob="Microsoft.NET.ILLink.Tasks/*9.0.*" />
-    <!-- This is a source only nuget package, there are no dlls present or produced. -->
+    <!-- This is a source only nuget package, there are no dlls coming to the build from this. -->
     <UsagePattern IdentityGlob="Polyfill/*" />
   </IgnorePatterns>
 </UsageData>
