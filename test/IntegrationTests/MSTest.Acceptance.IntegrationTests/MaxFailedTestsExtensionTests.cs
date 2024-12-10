@@ -62,6 +62,7 @@ public sealed class MaxFailedTestsExtensionTests : AcceptanceTestBase
 </Project>
 
 #file UnitTest1.cs
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -98,36 +99,43 @@ public class UnitTest1
     [TestMethod]
     public void Test6()
     {
+        await Task.Delay(10);
     }
 
     [TestMethod]
     public void Test7()
     {
+        await Task.Delay(10);
     }
 
     [TestMethod]
     public void Test8()
     {
+        await Task.Delay(10);
     }
 
     [TestMethod]
     public void Test9()
     {
+        await Task.Delay(10);
     }
 
     [TestMethod]
     public void Test10()
     {
+        await Task.Delay(10);
     }
 
     [TestMethod]
     public void Test11()
     {
+        await Task.Delay(10);
     }
 
     [TestMethod]
-    public void Test12()
+    public async Task Test12()
     {
+        await Task.Delay(10);
     }
 }
 """;
