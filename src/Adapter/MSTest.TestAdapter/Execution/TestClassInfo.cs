@@ -347,6 +347,12 @@ public class TestClassInfo
 
     internal UnitTestResult GetResultOrRunClassInitialize(ITestContext testContext, string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
+        if (_cachedClassInitializeResult is not null)
+        {
+            DebugEx.Assert(IsClassInitializeExecuted, "A cached result should correspond to class init being executed.");
+            return _cachedClassInitializeResult;
+        }
+
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTATestClass
@@ -358,12 +364,6 @@ public class TestClassInfo
             if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
             {
                 return new() { Outcome = ObjectModelUnitTestOutcome.Passed };
-            }
-
-            if (IsClassInitializeExecuted)
-            {
-                DebugEx.Assert(_cachedClassInitializeResult is not null, "If class init was called, we should have cached the result.");
-                return _cachedClassInitializeResult;
             }
 
             UnitTestResult result = new(ObjectModelUnitTestOutcome.Error, "MSTest STATestClass ClassInitialize didn't complete");
