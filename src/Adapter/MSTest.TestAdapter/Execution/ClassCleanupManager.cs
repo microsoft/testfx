@@ -62,4 +62,19 @@ internal sealed class ClassCleanupManager
             ShouldRunEndOfAssemblyCleanup = _remainingTestsByClass.IsEmpty;
         }
     }
+
+    internal static void ForceCleanup(TypeCache typeCache)
+    {
+        IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
+        foreach (TestClassInfo classInfo in classInfoCache)
+        {
+            classInfo.ExecuteClassCleanup();
+        }
+
+        IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
+        foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
+        {
+            assemblyInfo.ExecuteAssemblyCleanup();
+        }
+    }
 }

@@ -49,6 +49,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private readonly IFileLoggerInformation? _fileLoggerInformation;
     private readonly ILoggerFactory _loggerFactory;
     private readonly IClock _clock;
+    private readonly IStopPoliciesService _policiesService;
     private readonly string? _longArchitecture;
     private readonly string? _shortArchitecture;
 
@@ -72,7 +73,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public TerminalOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
-        ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock)
+        ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock,
+        IStopPoliciesService policiesService)
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _console = console;
@@ -87,6 +89,14 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _fileLoggerInformation = fileLoggerInformation;
         _loggerFactory = loggerFactory;
         _clock = clock;
+        _policiesService = policiesService;
+
+        policiesService.RegisterOnAbortCallback(
+            () =>
+            {
+                _terminalTestReporter?.StartCancelling();
+                return Task.CompletedTask;
+            });
 
         if (_runtimeFeature.IsDynamicCodeSupported)
         {
@@ -163,8 +173,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
         });
-
-        _testApplicationCancellationTokenSource.CancellationToken.Register(() => _terminalTestReporter.StartCancelling());
 
         return Task.CompletedTask;
     }
@@ -593,4 +601,16 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public void Dispose()
         => _terminalTestReporter?.Dispose();
+
+    public Task HandleProcessRoleAsync(TestProcessRole processRole)
+    {
+        if (processRole == TestProcessRole.TestHost)
+        {
+            _policiesService.RegisterOnMaxFailedTestsCallback(
+                async (maxFailedTests, _) => await DisplayAsync(
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
+        }
+
+        return Task.CompletedTask;
+    }
 }
