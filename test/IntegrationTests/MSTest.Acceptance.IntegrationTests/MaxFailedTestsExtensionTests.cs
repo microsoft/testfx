@@ -2,14 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
-
-using Polly.Caching;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
