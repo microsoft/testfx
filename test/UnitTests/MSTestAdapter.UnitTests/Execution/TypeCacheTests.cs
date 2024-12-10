@@ -1031,6 +1031,9 @@ public class TypeCacheTests : TestContainer
 
     public void GetTestMethodInfoShouldSetTestContextWithCustomProperty()
     {
+        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
+        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
+        var typeCache = new TypeCache(new ReflectHelper());
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithCustomProperty");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
@@ -1039,7 +1042,7 @@ public class TypeCacheTests : TestContainer
             new ThreadSafeStringWriter(null, "test"),
             new Dictionary<string, object>());
 
-        _typeCache.GetTestMethodInfo(testMethod, testContext, false);
+        typeCache.GetTestMethodInfo(testMethod, testContext, false);
         KeyValuePair<string, object> customProperty = ((IDictionary<string, object>)testContext.Properties).FirstOrDefault(p => p.Key.Equals("WhoAmI", StringComparison.Ordinal));
 
         Verify((object)customProperty is not null);
@@ -1048,6 +1051,9 @@ public class TypeCacheTests : TestContainer
 
     public void GetTestMethodInfoShouldReportWarningIfCustomPropertyHasSameNameAsPredefinedProperties()
     {
+        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
+        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
+        var typeCache = new TypeCache(new ReflectHelper());
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithOwnerAsCustomProperty");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
@@ -1056,7 +1062,7 @@ public class TypeCacheTests : TestContainer
             new ThreadSafeStringWriter(null, "test"),
             new Dictionary<string, object>());
 
-        TestMethodInfo testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, false);
+        TestMethodInfo testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext, false);
 
         Verify(testMethodInfo is not null);
         string expectedMessage = string.Format(
@@ -1070,6 +1076,9 @@ public class TypeCacheTests : TestContainer
 
     public void GetTestMethodInfoShouldReportWarningIfCustomPropertyNameIsEmpty()
     {
+        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
+        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
+        var typeCache = new TypeCache(new ReflectHelper());
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithEmptyCustomPropertyName");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
@@ -1078,7 +1087,7 @@ public class TypeCacheTests : TestContainer
             new ThreadSafeStringWriter(null, "test"),
             new Dictionary<string, object>());
 
-        TestMethodInfo testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, false);
+        TestMethodInfo testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext, false);
 
         Verify(testMethodInfo is not null);
         string expectedMessage = string.Format(
@@ -1091,6 +1100,9 @@ public class TypeCacheTests : TestContainer
 
     public void GetTestMethodInfoShouldReportWarningIfCustomPropertyNameIsNull()
     {
+        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
+        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
+        var typeCache = new TypeCache(new ReflectHelper());
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithNullCustomPropertyName");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
@@ -1099,7 +1111,7 @@ public class TypeCacheTests : TestContainer
             new ThreadSafeStringWriter(null, "test"),
             new Dictionary<string, object>());
 
-        TestMethodInfo testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, false);
+        TestMethodInfo testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext, false);
 
         Verify(testMethodInfo is not null);
         string expectedMessage = string.Format(
@@ -1112,6 +1124,9 @@ public class TypeCacheTests : TestContainer
 
     public void GetTestMethodInfoShouldNotAddDuplicateTestPropertiesToTestContext()
     {
+        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
+        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
+        var typeCache = new TypeCache(new ReflectHelper());
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithDuplicateCustomPropertyNames");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
@@ -1120,7 +1135,7 @@ public class TypeCacheTests : TestContainer
             new ThreadSafeStringWriter(null, "test"),
             new Dictionary<string, object>());
 
-        TestMethodInfo testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, false);
+        TestMethodInfo testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext, false);
 
         Verify(testMethodInfo is not null);
 
