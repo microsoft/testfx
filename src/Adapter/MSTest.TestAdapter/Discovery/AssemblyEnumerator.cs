@@ -371,8 +371,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         try
         {
+            bool isDataDriven = false;
             foreach (ITestDataSource dataSource in testDataSources)
             {
+                isDataDriven = true;
                 if (!TryUnfoldITestDataSource(dataSource, dataSourcesUnfoldingStrategy, test, new(testMethodInfo.MethodInfo, test.DisplayName), tests))
                 {
                     // TODO: Improve multi-source design!
@@ -382,7 +384,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
             }
 
-            return true;
+            return isDataDriven;
         }
         catch (Exception ex)
         {
