@@ -18,11 +18,11 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase
     public async Task TestMaxFailedTestsShouldCallStopTestExecutionAsync()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 1");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2");
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestExecutionStoppedForMaxFailedTests);
 
-        testHostResult.AssertOutputContains("Test session is aborting due to reaching failures ('1') specified by the '--maximum-failed-tests' option.");
+        testHostResult.AssertOutputContains("Test session is aborting due to reaching failures ('2') specified by the '--maximum-failed-tests' option.");
         testHostResult.AssertOutputContainsSummary(failed: 3, passed: 3, skipped: 0);
     }
 
