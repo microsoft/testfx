@@ -37,6 +37,8 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 
         foreach (Func<int, CancellationToken, Task> callback in _maxFailedTestsCallbacks)
         {
+            // For now, we are fine if the callback crashed us. It shouldn't happen for our
+            // current usage anyway and the APIs around this are all internal for now.
             await callback.Invoke(maxFailedTests, cancellationToken);
         }
     }
@@ -52,6 +54,8 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 
         foreach (Func<Task> callback in _abortCallbacks)
         {
+            // For now, we are fine if the callback crashed us. It shouldn't happen for our
+            // current usage anyway and the APIs around this are all internal for now.
             await callback.Invoke();
         }
     }
