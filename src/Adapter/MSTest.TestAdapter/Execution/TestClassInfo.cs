@@ -548,7 +548,7 @@ public class TestClassInfo
     /// </remarks>
     internal void ExecuteClassCleanup()
     {
-         if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
+        if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
             || IsClassCleanupExecuted)
         {
             return;
