@@ -44,7 +44,6 @@ internal static class WellKnownTypeNames
     public const string SystemDescriptionAttribute = "System.ComponentModel.DescriptionAttribute";
     public const string SystemIAsyncDisposable = "System.IAsyncDisposable";
     public const string SystemIDisposable = "System.IDisposable";
-    public const string SystemNullable = "System.Nullable`1";
     public const string SystemReflectionMethodInfo = "System.Reflection.MethodInfo";
     public const string SystemRuntimeCompilerServicesITuple = "System.Runtime.CompilerServices.ITuple";
     public const string SystemThreadingTasksTask = "System.Threading.Tasks.Task";

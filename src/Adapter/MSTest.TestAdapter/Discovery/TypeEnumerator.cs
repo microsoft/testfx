@@ -183,29 +183,43 @@ internal class TypeEnumerator
 
         testElement.Traits = traits.ToArray();
 
-        if (_reflectHelper.GetFirstDerivedAttributeOrDefault<CssIterationAttribute>(method, inherit: true) is CssIterationAttribute cssIteration)
+        Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method, inherit: true);
+        TestMethodAttribute? testMethodAttribute = null;
+
+        // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstDerivedAttributeOrDefault
+        // So, to make sure the first attribute always wins, we loop from end to start.
+        for (int i = attributes.Length - 1; i >= 0; i--)
         {
-            testElement.CssIteration = cssIteration.CssIteration;
+            if (attributes[i] is TestMethodAttribute tma)
+            {
+                testMethodAttribute = tma;
+            }
+            else if (attributes[i] is CssIterationAttribute cssIteration)
+            {
+                testElement.CssIteration = cssIteration.CssIteration;
+            }
+            else if (attributes[i] is CssProjectStructureAttribute cssProjectStructure)
+            {
+                testElement.CssProjectStructure = cssProjectStructure.CssProjectStructure;
+            }
+            else if (attributes[i] is DescriptionAttribute descriptionAttribute)
+            {
+                testElement.Description = descriptionAttribute.Description;
+            }
         }
 
-        if (_reflectHelper.GetFirstDerivedAttributeOrDefault<CssProjectStructureAttribute>(method, inherit: true) is CssProjectStructureAttribute cssProjectStructure)
-        {
-            testElement.CssProjectStructure = cssProjectStructure.CssProjectStructure;
-        }
-
-        if (_reflectHelper.GetFirstDerivedAttributeOrDefault<DescriptionAttribute>(method, inherit: true) is DescriptionAttribute descriptionAttribute)
-        {
-            testElement.Description = descriptionAttribute.Description;
-        }
-
-        WorkItemAttribute[] workItemAttributes = _reflectHelper.GetDerivedAttributes<WorkItemAttribute>(method, inherit: true).ToArray();
-        if (workItemAttributes.Length != 0)
+        IEnumerable<WorkItemAttribute> workItemAttributes = attributes.OfType<WorkItemAttribute>();
+        if (workItemAttributes.Any())
         {
             testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture)).ToArray();
         }
 
+        // In production, we always have a TestMethod attribute because GetTestFromMethod is called under IsValidTestMethod
+        // In unit tests, we may not have the test to have TestMethodAttribute.
+        // TODO: Adjust all unit tests to properly have the attribute and uncomment the assert.
+        // DebugEx.Assert(testMethodAttribute is not null, "Expected to find a 'TestMethod' attribute.");
+
         // get DisplayName from TestMethodAttribute (or any inherited attribute)
-        TestMethodAttribute? testMethodAttribute = _reflectHelper.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(method, inherit: true);
         testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
 
         return testElement;
