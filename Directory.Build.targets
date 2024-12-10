@@ -11,10 +11,10 @@
     <AssemblyFileVersion>14.0.0.0</AssemblyFileVersion>
   </PropertyGroup>
   
-    <!--
+  <!--
     CI source build leg: this needs to build only the current TFM.
   -->
-  <PropertyGroup Condition=" '$(DotNetBuildSourceOnly)' == 'true'">
+  <PropertyGroup Condition=" '$(DotNetBuildSourceOnly)' == 'true' ">
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
   </PropertyGroup>
 </Project>
