@@ -395,7 +395,9 @@ public class AssemblyEnumeratorTests : TestContainer
 
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
+#pragma warning disable CS0618 // Type or member is obsolete
                 typeof(TestDataSourceDiscoveryAttribute),
+#pragma warning restore CS0618 // Type or member is obsolete
                 true))
             .Returns(Array.Empty<Attribute>());
 
@@ -428,7 +430,6 @@ internal sealed class TestableAssemblyEnumerator : AssemblyEnumerator
             reflectHelper.Object,
             typeValidator.Object,
             testMethodValidator.Object,
-            TestDataSourceDiscoveryOption.DuringExecution,
             TestIdGenerationStrategy.FullyQualified);
     }
 
