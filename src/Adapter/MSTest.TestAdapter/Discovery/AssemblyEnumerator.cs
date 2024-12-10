@@ -98,16 +98,18 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // When strategy is set, let's use it
             { } value => value,
             // When the attribute is not set, let's look at the legacy attribute
+#pragma warning disable CS0612 // Type or member is obsolete
 #pragma warning disable CS0618 // Type or member is obsolete
             null => (ReflectHelper.GetTestDataSourceDiscoveryOption(assembly), testIdGenerationStrategy) switch
+#pragma warning restore CS0612 // Type or member is obsolete
             {
                 (TestDataSourceDiscoveryOption.DuringExecution, _) => TestDataSourceUnfoldingStrategy.Fold,
                 // When using legacy strategy, there is no point in trying to "read" data during discovery
                 // as the ID generator will ignore it.
                 (null, TestIdGenerationStrategy.Legacy) => TestDataSourceUnfoldingStrategy.Fold,
+#pragma warning restore CS0618 // Type or member is obsolete
                 _ => TestDataSourceUnfoldingStrategy.Unfold,
             },
-#pragma warning restore CS0618 // Type or member is obsolete
         };
 
         Dictionary<string, object>? testRunParametersFromRunSettings = RunSettingsUtilities.GetTestRunParameters(runSettingsXml);
