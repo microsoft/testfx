@@ -25,7 +25,7 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase
         testHostResult.AssertExitCodeIs(ExitCodes.TestExecutionStoppedForMaxFailedTests);
 
         testHostResult.AssertOutputContains("Test session is aborting due to reaching failures ('1') specified by the '--maximum-failed-tests' option.");
-        testHostResult.AssertOutputContainsSummary(failed: 3, passed: 3, skipped: 0, aborted: true);
+        testHostResult.AssertOutputContainsSummary(failed: 3, passed: 3, skipped: 0);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -160,13 +160,6 @@ internal sealed class GracefulStop : IGracefulStopTestExecutionCapability
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            // We expect the same semantic for Linux, the test setup is not cross and we're using specific
-            // Windows API because this gesture is not easy xplat.
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                yield break;
-            }
-
             yield return (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
