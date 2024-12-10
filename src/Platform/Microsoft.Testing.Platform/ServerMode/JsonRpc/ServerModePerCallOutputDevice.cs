@@ -154,15 +154,13 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         return builder.ToString();
     }
 
-    public Task HandleProcessRoleAsync(TestProcessRole processRole)
+    public async Task HandleProcessRoleAsync(TestProcessRole processRole)
     {
         if (processRole == TestProcessRole.TestHost)
         {
-            _policiesService.RegisterOnMaxFailedTestsCallback(
+            await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
                 async (maxFailedTests, _) => await DisplayAsync(
                     this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
         }
-
-        return Task.CompletedTask;
     }
 }
