@@ -44,13 +44,13 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsFixer : CodeFixProv
             context.RegisterCodeFix(
                 CodeAction.Create(
                     CodeFixResources.ReplaceWithFailAssertionFix,
-                    ct => SwapArgumentsAsync(context.Document, invocationExpr, ct),
+                    ct => UseAssertFailAsync(context.Document, invocationExpr, ct),
                     nameof(PreferAssertFailOverAlwaysFalseConditionsFixer)),
                 context.Diagnostics);
         }
     }
 
-    private static async Task<Document> SwapArgumentsAsync(Document document, InvocationExpressionSyntax invocationExpr, CancellationToken cancellationToken)
+    private static async Task<Document> UseAssertFailAsync(Document document, InvocationExpressionSyntax invocationExpr, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
