@@ -107,15 +107,16 @@ internal sealed class AssemblyEnumeratorWrapper
 
         // This might not be supported if an older version of Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         // assembly is already loaded into the App Domain.
+        string? xml = null;
         try
         {
-            assemblyEnumerator.RunSettingsXml = runSettings?.SettingsXml;
+            xml = runSettings?.SettingsXml;
         }
         catch
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFound);
         }
 
-        return assemblyEnumerator.EnumerateAssembly(fullFilePath, out warnings);
+        return assemblyEnumerator.EnumerateAssembly(fullFilePath, xml, out warnings);
     }
 }

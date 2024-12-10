@@ -226,7 +226,7 @@
       </trans-unit>
       <trans-unit id="ExceptionDuringCancellationWarningMessage">
         <source>Exception during the cancellation of request id '{0}'</source>
-        <target state="new">Exception during the cancellation of request id '{0}'</target>
+        <target state="translated">取消请求 ID 期间出现异常 '{0}'</target>
         <note>{0} is the request id</note>
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -283,7 +283,7 @@
       </trans-unit>
       <trans-unit id="FinishedTestSession">
         <source>Finished test session.</source>
-        <target state="new">Finished test session.</target>
+        <target state="translated">已完成测试会话。</target>
         <note />
       </trans-unit>
       <trans-unit id="ForTest">
@@ -394,6 +394,16 @@
       <trans-unit id="MissingClientPortFoJsonRpc">
         <source>Expected --client-port when jsonRpc protocol is used.</source>
         <target state="translated">使用 jsonRpc 协议时应为 --client-port。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_MoreTestsCount">
+        <source>and {0} more</source>
+        <target state="translated">和其他 {0} 项</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_FullTestsCount">
+        <source>{0} tests running</source>
+        <target state="translated">正在运行 {0} 测试</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
@@ -665,12 +675,12 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="new">The 'ITestHost' implementation used when running server mode.</target>
+        <target state="translated">运行服务器模式时使用的 “ITestHost” 实现。</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
         <source>Server mode test host</source>
-        <target state="new">Server mode test host</target>
+        <target state="translated">服务器模式测试主机</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
@@ -730,12 +740,12 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
-        <target state="new">Starting test session.</target>
+        <target state="translated">正在启动测试会话。</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingTestSessionWithLogFilePath">
         <source>Starting test session. The log file path is '{0}'.</source>
-        <target state="new">Starting test session. The log file path is '{0}'.</target>
+        <target state="translated">正在启动测试会话。日志文件路径 '{0}'。</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -949,7 +959,7 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
-        <target state="new">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</target>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] 未经处理的异常： {0}</target>
         <note>{0} is the exception that was unhandled/unobserved</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">

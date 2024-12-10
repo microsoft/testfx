@@ -29,6 +29,8 @@ public class TestClassInfo
 {
     private readonly Lock _testClassExecuteSyncObject = new();
 
+    private UnitTestResult? _cachedClassInitializeResult;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TestClassInfo"/> class.
     /// </summary>
@@ -354,10 +356,15 @@ public class TestClassInfo
         {
             // For optimization purposes, we duplicate some of the logic of RunClassInitialize here so we don't need to start
             // a thread for nothing.
-            if ((ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
-                || IsClassInitializeExecuted)
+            if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
             {
-                return DoRun();
+                return new() { Outcome = ObjectModelUnitTestOutcome.Passed };
+            }
+
+            if (IsClassInitializeExecuted)
+            {
+                DebugEx.Assert(_cachedClassInitializeResult is not null, "If class init was called, we should have cached the result.");
+                return _cachedClassInitializeResult;
             }
 
             UnitTestResult result = new(ObjectModelUnitTestOutcome.Error, "MSTest STATestClass ClassInitialize didn't complete");
@@ -372,6 +379,7 @@ public class TestClassInfo
             try
             {
                 entryPointThread.Join();
+                _cachedClassInitializeResult = result;
                 return result;
             }
             catch (Exception ex)
@@ -388,7 +396,9 @@ public class TestClassInfo
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
             }
 
-            return DoRun();
+            UnitTestResult result = DoRun();
+            _cachedClassInitializeResult = result;
+            return result;
         }
 
         // Local functions

@@ -198,7 +198,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             }
         }
 
-        return Task.FromResult(errors.Length > 0 ? ValidationResult.Invalid(errors.ToString()) : ValidationResult.Valid());
+        return errors.Length > 0 ? Task.FromResult(ValidationResult.Invalid(errors.ToString())) : ValidationResult.ValidTask;
 
         static void AddError(StringBuilder errors, string variableName, string? expectedValue, string? actualValue)
         {

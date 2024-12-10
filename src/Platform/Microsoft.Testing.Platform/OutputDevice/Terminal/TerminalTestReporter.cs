@@ -31,6 +31,18 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     internal Func<IStopwatch> CreateStopwatch { get; set; } = SystemStopwatch.StartNew;
 
+    internal event EventHandler OnProgressStartUpdate
+    {
+        add => _terminalWithProgress.OnProgressStartUpdate += value;
+        remove => _terminalWithProgress.OnProgressStartUpdate -= value;
+    }
+
+    internal event EventHandler OnProgressStopUpdate
+    {
+        add => _terminalWithProgress.OnProgressStopUpdate += value;
+        remove => _terminalWithProgress.OnProgressStopUpdate -= value;
+    }
+
     private readonly ConcurrentDictionary<string, TestProgressState> _assemblies = new();
 
     private readonly List<TestRunArtifact> _artifacts = new();
@@ -108,10 +120,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
     }
 #endif
 
+    private int _counter;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with custom terminal and manual refresh for testing.
     /// </summary>
-    internal TerminalTestReporter(IConsole console, TerminalTestReporterOptions options)
+    public TerminalTestReporter(IConsole console, TerminalTestReporterOptions options)
     {
         _options = options;
 
@@ -168,7 +182,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         return _assemblies.GetOrAdd(key, _ =>
         {
             IStopwatch sw = CreateStopwatch();
-            var assemblyRun = new TestProgressState(assembly, targetFramework, architecture, sw);
+            var assemblyRun = new TestProgressState(Interlocked.Increment(ref _counter), assembly, targetFramework, architecture, sw);
             int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
             assemblyRun.SlotIndex = slotIndex;
 
@@ -176,7 +190,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         });
     }
 
-    internal void TestExecutionCompleted(DateTimeOffset endTime)
+    public void TestExecutionCompleted(DateTimeOffset endTime)
     {
         _testExecutionEndTime = endTime;
         _terminalWithProgress.StopShowingProgress();
@@ -375,6 +389,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
        string? targetFramework,
        string? architecture,
        string? executionId,
+       string testNodeUid,
        string displayName,
        TestOutcome outcome,
        TimeSpan duration,
@@ -391,6 +406,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             targetFramework,
             architecture,
             executionId,
+            testNodeUid,
             displayName,
             outcome,
             duration,
@@ -406,6 +422,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? targetFramework,
         string? architecture,
         string? executionId,
+        string testNodeUid,
         string displayName,
         TestOutcome outcome,
         TimeSpan duration,
@@ -416,6 +433,11 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? errorOutput)
     {
         TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
+
+        if (_options.ShowActiveTests)
+        {
+            asm.TestNodeResultsState?.RemoveRunningTestNode(testNodeUid);
+        }
 
         switch (outcome)
         {
@@ -802,7 +824,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     /// <summary>
     /// Let the user know that cancellation was triggered.
     /// </summary>
-    internal void StartCancelling()
+    public void StartCancelling()
     {
         _wasCancelled = true;
         _terminalWithProgress.WriteToTerminal(terminal =>
@@ -857,7 +879,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     internal void WriteErrorMessage(string assembly, string? targetFramework, string? architecture, string? executionId, Exception exception)
         => WriteErrorMessage(assembly, targetFramework, architecture, executionId, exception.ToString(), padding: null);
 
-    internal void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
+    public void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
     {
         if (color != null)
         {
@@ -980,4 +1002,24 @@ internal sealed partial class TerminalTestReporter : IDisposable
             ConsoleColor.White => TerminalColor.White,
             _ => TerminalColor.Default,
         };
+
+    public void TestInProgress(
+        string assembly,
+        string? targetFramework,
+        string? architecture,
+        string testNodeUid,
+        string displayName,
+        string? executionId)
+    {
+        TestProgressState asm = _assemblies[$"{assembly}|{targetFramework}|{architecture}|{executionId}"];
+
+        if (_options.ShowActiveTests)
+        {
+            asm.TestNodeResultsState ??= new(Interlocked.Increment(ref _counter));
+            asm.TestNodeResultsState.AddRunningTestNode(
+                Interlocked.Increment(ref _counter), testNodeUid, displayName, CreateStopwatch());
+        }
+
+        _terminalWithProgress.UpdateWorker(asm.SlotIndex);
+    }
 }

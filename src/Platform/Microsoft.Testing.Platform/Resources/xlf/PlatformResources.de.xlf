@@ -226,7 +226,7 @@
       </trans-unit>
       <trans-unit id="ExceptionDuringCancellationWarningMessage">
         <source>Exception during the cancellation of request id '{0}'</source>
-        <target state="new">Exception during the cancellation of request id '{0}'</target>
+        <target state="translated">Ausnahme beim Abbrechen der Anforderungs-ID '{0}'</target>
         <note>{0} is the request id</note>
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -283,7 +283,7 @@
       </trans-unit>
       <trans-unit id="FinishedTestSession">
         <source>Finished test session.</source>
-        <target state="new">Finished test session.</target>
+        <target state="translated">Die Testsitzung wurde beendet.</target>
         <note />
       </trans-unit>
       <trans-unit id="ForTest">
@@ -394,6 +394,16 @@
       <trans-unit id="MissingClientPortFoJsonRpc">
         <source>Expected --client-port when jsonRpc protocol is used.</source>
         <target state="translated">"--client-port" wird erwartet, wenn das jsonRpc-Protokoll verwendet wird.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_MoreTestsCount">
+        <source>and {0} more</source>
+        <target state="new">and {0} more</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_FullTestsCount">
+        <source>{0} tests running</source>
+        <target state="translated">{0} ausgeführten Tests</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
@@ -665,12 +675,12 @@ Nimmt ein Argument als Zeichenfolge im Format &lt;value&gt;[h|m|s], wobei "value
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="new">The 'ITestHost' implementation used when running server mode.</target>
+        <target state="translated">Die implementierung "ITestHost", die beim Ausführen des Servermodus verwendet wird.</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
         <source>Server mode test host</source>
-        <target state="new">Server mode test host</target>
+        <target state="translated">Testhost für Servermodus</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
@@ -730,12 +740,12 @@ Nimmt ein Argument als Zeichenfolge im Format &lt;value&gt;[h|m|s], wobei "value
       </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
-        <target state="new">Starting test session.</target>
+        <target state="translated">Die Testsitzung wird gestartet.</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingTestSessionWithLogFilePath">
         <source>Starting test session. The log file path is '{0}'.</source>
-        <target state="new">Starting test session. The log file path is '{0}'.</target>
+        <target state="translated">Die Testsitzung wird gestartet. Der Protokolldateipfad ist '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -949,7 +959,7 @@ Gültige Werte sind „Normal“, „Detailed“. Der Standardwert ist „Normal
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
-        <target state="new">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</target>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Ausnahmefehler: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">

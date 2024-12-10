@@ -259,7 +259,7 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
     private TestClassInfo CreateClassInfo(Type classType, TestMethod testMethod)
     {
-        IEnumerable<ConstructorInfo> constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
+        ConstructorInfo[] constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
         (ConstructorInfo CtorInfo, bool IsParameterless)? selectedConstructor = null;
 
         foreach (ConstructorInfo ctor in constructors)
@@ -399,7 +399,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
         assemblyInfo = new TestAssemblyInfo(assembly);
 
-        IReadOnlyList<Type> types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName!, null);
+        Type[] types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName!, null);
 
         foreach (Type t in types)
         {
@@ -911,15 +911,20 @@ internal sealed class TypeCache : MarshalByRefObject
     /// </summary>
     /// <param name="testMethodInfo"> The test Method Info. </param>
     /// <param name="testContext"> The test Context. </param>
-    private static void SetCustomProperties(TestMethodInfo testMethodInfo, ITestContext testContext)
+    private void SetCustomProperties(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo is Null");
         DebugEx.Assert(testMethodInfo.TestMethod != null, "testMethodInfo.TestMethod is Null");
 
-        object[] attributes = testMethodInfo.TestMethod.GetCustomAttributes(typeof(TestPropertyAttribute), false);
+        IEnumerable<TestPropertyAttribute> attributes = _reflectionHelper.GetDerivedAttributes<TestPropertyAttribute>(testMethodInfo.TestMethod, inherit: true);
         DebugEx.Assert(attributes != null, "attributes is null");
 
-        foreach (TestPropertyAttribute attribute in attributes.Cast<TestPropertyAttribute>())
+        if (testMethodInfo.TestMethod.DeclaringType is { } testClass)
+        {
+            attributes = attributes.Concat(_reflectionHelper.GetDerivedAttributes<TestPropertyAttribute>(testClass, inherit: true));
+        }
+
+        foreach (TestPropertyAttribute attribute in attributes)
         {
             if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, attribute.Name, attribute.Value))
             {

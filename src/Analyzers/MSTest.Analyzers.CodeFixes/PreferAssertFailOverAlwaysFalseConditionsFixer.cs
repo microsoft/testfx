@@ -9,6 +9,7 @@ using Analyzer.Utilities;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Text;
@@ -44,21 +45,27 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsFixer : CodeFixProv
             context.RegisterCodeFix(
                 CodeAction.Create(
                     CodeFixResources.ReplaceWithFailAssertionFix,
-                    ct => SwapArgumentsAsync(context.Document, invocationExpr, ct),
+                    ct => UseAssertFailAsync(context.Document, invocationExpr, diagnostic.AdditionalLocations, ct),
                     nameof(PreferAssertFailOverAlwaysFalseConditionsFixer)),
                 context.Diagnostics);
         }
     }
 
-    private static async Task<Document> SwapArgumentsAsync(Document document, InvocationExpressionSyntax invocationExpr, CancellationToken cancellationToken)
+    private static async Task<Document> UseAssertFailAsync(Document document, InvocationExpressionSyntax invocationExpr, IReadOnlyList<Location> additionalLocations, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         SyntaxGenerator generator = editor.Generator;
 
-        SyntaxNode newInvocationExpr = generator.InvocationExpression(
+        var newInvocationExpr = (InvocationExpressionSyntax)generator.InvocationExpression(
             generator.MemberAccessExpression(generator.IdentifierName("Assert"), "Fail"));
+
+        if (additionalLocations.Count >= 1)
+        {
+            IEnumerable<ArgumentSyntax> arguments = additionalLocations.Select(location => (ArgumentSyntax)invocationExpr.FindNode(location.SourceSpan));
+            newInvocationExpr = newInvocationExpr.WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(arguments)));
+        }
 
         editor.ReplaceNode(invocationExpr, newInvocationExpr);
 
