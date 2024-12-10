@@ -32,6 +32,8 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
     private const string ActualParameterName = "actual";
     private const string ConditionParameterName = "condition";
     private const string ValueParameterName = "value";
+    private const string MessageParameterName = "message";
+    private const string ParametersParameterName = "parameters";
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.PreferAssertFailOverAlwaysFalseConditionsTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.PreferAssertFailOverAlwaysFalseConditionsMessageFormat), Resources.ResourceManager, typeof(Resources));
@@ -71,8 +73,40 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
             IsAlwaysFalse(operation))
         {
-            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, operation.TargetMethod.Name));
+            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, GetAdditionalLocations(operation), properties: null, operation.TargetMethod.Name));
         }
+    }
+
+    private static ImmutableArray<Location> GetAdditionalLocations(IInvocationOperation operation)
+    {
+        IArgumentOperation? messageArg = operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == MessageParameterName);
+        if (messageArg is null)
+        {
+            return ImmutableArray<Location>.Empty;
+        }
+
+        IArgumentOperation? parametersArg = operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == ParametersParameterName);
+        if (parametersArg is null)
+        {
+            return ImmutableArray.Create(messageArg.Syntax.GetLocation());
+        }
+
+        if (parametersArg.ArgumentKind == ArgumentKind.ParamArray)
+        {
+            ImmutableArray<Location>.Builder builder = ImmutableArray.CreateBuilder<Location>();
+            builder.Add(messageArg.Syntax.GetLocation());
+            if (parametersArg.Value is IArrayCreationOperation { Initializer.ElementValues: { } elements })
+            {
+                foreach (IOperation element in elements)
+                {
+                    builder.Add(element.Syntax.GetLocation());
+                }
+            }
+
+            return builder.ToImmutable();
+        }
+
+        return ImmutableArray.Create(messageArg.Syntax.GetLocation(), parametersArg.Syntax.GetLocation());
     }
 
     private static bool IsAlwaysFalse(IInvocationOperation operation)
