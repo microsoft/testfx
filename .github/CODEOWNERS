@@ -2,6 +2,3 @@
 
 src/Package/MSTest.Sdk @MarcoRossignoli
 src/Platform @MarcoRossignoli @Evangelink
-
-eng/SourceBuildPrebuiltBaseline.xml @dotnet/source-build
-eng/DotNetBuild.props @dotnet/product-construction
