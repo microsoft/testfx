@@ -911,17 +911,17 @@ internal class TypeCache : MarshalByRefObject
     /// </summary>
     /// <param name="testMethodInfo"> The test Method Info. </param>
     /// <param name="testContext"> The test Context. </param>
-    private static void SetCustomProperties(TestMethodInfo testMethodInfo, ITestContext testContext)
+    private void SetCustomProperties(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo is Null");
         DebugEx.Assert(testMethodInfo.TestMethod != null, "testMethodInfo.TestMethod is Null");
 
-        IEnumerable<TestPropertyAttribute> attributes = testMethodInfo.TestMethod.GetCustomAttributes<TestPropertyAttribute>(inherit: false);
+        IEnumerable<TestPropertyAttribute> attributes = _reflectionHelper.GetDerivedAttributes<TestPropertyAttribute>(testMethodInfo.TestMethod, inherit: true);
         DebugEx.Assert(attributes != null, "attributes is null");
 
         if (testMethodInfo.TestMethod.DeclaringType is { } testClass)
         {
-            attributes = attributes.Concat(testClass.GetCustomAttributes<TestPropertyAttribute>(inherit: false));
+            attributes = attributes.Concat(_reflectionHelper.GetDerivedAttributes<TestPropertyAttribute>(testClass, inherit: true));
         }
 
         foreach (TestPropertyAttribute attribute in attributes)

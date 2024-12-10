@@ -384,8 +384,6 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>List of traits.</returns>
     internal virtual IEnumerable<Trait> GetTestPropertiesAsTraits(MemberInfo testPropertyProvider)
     {
-        // TODO: TypeCache.SetCustomProperties is using inherit: false, while we use inherit: true here.
-        // Investigate if that's intended and what the effect of this is!
         IEnumerable<TestPropertyAttribute> testPropertyAttributes = GetDerivedAttributes<TestPropertyAttribute>(testPropertyProvider, inherit: true);
 
         if (testPropertyProvider.DeclaringType is { } testClass)
