@@ -395,6 +395,12 @@ public class AssemblyEnumeratorTests : TestContainer
 
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
+                typeof(TestDataSourceOptionsAttribute),
+                true))
+            .Returns(Array.Empty<Attribute>());
+
+        mockAssembly
+            .Setup(a => a.GetCustomAttributes(
 #pragma warning disable CS0618 // Type or member is obsolete
                 typeof(TestDataSourceDiscoveryAttribute),
 #pragma warning restore CS0618 // Type or member is obsolete
