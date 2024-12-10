@@ -24,7 +24,7 @@ public sealed class MaxFailedTestsExtensionTests : AcceptanceTestBase
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 3");
         testHostResult.AssertExitCodeIs(ExitCodes.TestExecutionStoppedForMaxFailedTests);
 
         int total = int.Parse(Regex.Match(testHostResult.StandardOutput, @"total: (\d+)").Groups[1].Value, CultureInfo.InvariantCulture);
