@@ -8,7 +8,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -339,13 +338,20 @@ public partial class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
-        methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new TestPropertyAttribute("foo", "bar"), new TestPropertyAttribute("fooprime", "barprime"));
-        var testProperties = new List<Trait> { new("foo", "bar"), new("fooprime", "barprime") };
+        methodInfo = new MockedMethodInfoWithExtraAttributes(
+            methodInfo,
+            new TestMethodAttribute(),
+            new TestPropertyAttribute("foo", "bar"),
+            new TestPropertyAttribute("fooprime", "barprime"));
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
         Verify(testElement is not null);
-        Verify(testProperties.SequenceEqual(testElement.Traits));
+        Verify(testElement.Traits.Length == 2);
+        Verify(testElement.Traits[0].Name == "foo");
+        Verify(testElement.Traits[0].Value == "bar");
+        Verify(testElement.Traits[1].Name == "fooprime");
+        Verify(testElement.Traits[1].Value == "barprime");
     }
 
     public void GetTestFromMethodShouldFillTraitsWithTestOwnerPropertyIfPresent()
@@ -353,16 +359,23 @@ public partial class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
-        methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new TestPropertyAttribute("foo", "bar"), new TestPropertyAttribute("fooprime", "barprime"), new OwnerAttribute("mike"));
-
-        var testProperties = new List<Trait> { new("foo", "bar"), new("fooprime", "barprime") };
-        var ownerTrait = new Trait("owner", "mike");
+        methodInfo = new MockedMethodInfoWithExtraAttributes(
+            methodInfo,
+            new TestMethodAttribute(),
+            new TestPropertyAttribute("foo", "bar"),
+            new TestPropertyAttribute("fooprime", "barprime"),
+            new OwnerAttribute("mike"));
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
         Verify(testElement is not null);
-        testProperties.Add(ownerTrait);
-        Verify(testProperties.SequenceEqual(testElement.Traits));
+        Verify(testElement.Traits.Length == 3);
+        Verify(testElement.Traits[0].Name == "foo");
+        Verify(testElement.Traits[0].Value == "bar");
+        Verify(testElement.Traits[1].Name == "fooprime");
+        Verify(testElement.Traits[1].Value == "barprime");
+        Verify(testElement.Traits[2].Name == "Owner");
+        Verify(testElement.Traits[2].Value == "mike");
     }
 
     public void GetTestFromMethodShouldFillTraitsWithTestPriorityPropertyIfPresent()
@@ -372,14 +385,16 @@ public partial class TypeEnumeratorTests : TestContainer
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
         methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new TestPropertyAttribute("foo", "bar"), new TestPropertyAttribute("fooprime", "barprime"), new PriorityAttribute(1));
 
-        var testProperties = new List<Trait> { new("foo", "bar"), new("fooprime", "barprime") };
-        var priorityTrait = new Trait("Priority", "1");
-
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
         Verify(testElement is not null);
-        testProperties.Add(priorityTrait);
-        Verify(testProperties.SequenceEqual(testElement.Traits));
+        Verify(testElement.Traits.Length == 3);
+        Verify(testElement.Traits[0].Name == "foo");
+        Verify(testElement.Traits[0].Value == "bar");
+        Verify(testElement.Traits[1].Name == "fooprime");
+        Verify(testElement.Traits[1].Value == "barprime");
+        Verify(testElement.Traits[2].Name == "Priority");
+        Verify(testElement.Traits[2].Value == "1");
     }
 
     public void GetTestFromMethodShouldSetPriority()
