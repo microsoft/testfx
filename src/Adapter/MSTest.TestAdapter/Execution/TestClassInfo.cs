@@ -358,6 +358,7 @@ public class TestClassInfo
             // a thread for nothing.
             if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
             {
+                IsClassInitializeExecuted = true;
                 return new() { Outcome = ObjectModelUnitTestOutcome.Passed };
             }
 
