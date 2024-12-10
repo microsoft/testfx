@@ -9,14 +9,21 @@ namespace Microsoft.Testing.Platform.Services;
 
 internal sealed class StopPoliciesService : IStopPoliciesService
 {
-    public StopPoliciesService(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource) =>
+    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
+
+    private BlockingCollection<Func<int, CancellationToken, Task>>? _maxFailedTestsCallbacks;
+    private BlockingCollection<Func<Task>>? _abortCallbacks;
+    private int _lastMaxFailedTests;
+
+    public StopPoliciesService(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
+    {
+        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
+
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
         // Note: If cancellation already requested, Register will still invoke the callback.
         testApplicationCancellationTokenSource.CancellationToken.Register(async () => await ExecuteAbortCallbacksAsync());
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
-
-    private BlockingCollection<Func<int, CancellationToken, Task>>? _maxFailedTestsCallbacks;
-    private BlockingCollection<Func<Task>>? _abortCallbacks;
+    }
 
     internal TestProcessRole? ProcessRole { get; set; }
 
@@ -29,6 +36,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 
     public async Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken)
     {
+        _lastMaxFailedTests = maxFailedTests;
         IsMaxFailedTestsTriggered = true;
         if (_maxFailedTestsCallbacks is null)
         {
@@ -60,16 +68,28 @@ internal sealed class StopPoliciesService : IStopPoliciesService
         }
     }
 
-    public void RegisterOnMaxFailedTestsCallback(Func<int, CancellationToken, Task> callback)
+    public async Task RegisterOnMaxFailedTestsCallbackAsync(Func<int, CancellationToken, Task> callback)
     {
         if (ProcessRole != TestProcessRole.TestHost)
         {
             throw ApplicationStateGuard.Unreachable();
         }
 
+        if (IsMaxFailedTestsTriggered)
+        {
+            await callback(_lastMaxFailedTests, _testApplicationCancellationTokenSource.CancellationToken);
+        }
+
         RegisterCallback(ref _maxFailedTestsCallbacks, callback);
     }
 
-    public void RegisterOnAbortCallback(Func<Task> callback)
-        => RegisterCallback(ref _abortCallbacks, callback);
+    public async Task RegisterOnAbortCallbackAsync(Func<Task> callback)
+    {
+        if (IsAbortTriggered)
+        {
+            await callback();
+        }
+
+        RegisterCallback(ref _abortCallbacks, callback);
+    }
 }

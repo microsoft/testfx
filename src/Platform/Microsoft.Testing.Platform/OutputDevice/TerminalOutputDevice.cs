@@ -91,13 +91,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _clock = clock;
         _policiesService = policiesService;
 
-        policiesService.RegisterOnAbortCallback(
-            () =>
-            {
-                _terminalTestReporter?.StartCancelling();
-                return Task.CompletedTask;
-            });
-
         if (_runtimeFeature.IsDynamicCodeSupported)
         {
 #if !NETCOREAPP
@@ -120,8 +113,15 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
+        await _policiesService.RegisterOnAbortCallbackAsync(
+            () =>
+            {
+                _terminalTestReporter?.StartCancelling();
+                return Task.CompletedTask;
+            });
+
         if (_fileLoggerInformation is not null)
         {
             _logger = _loggerFactory.CreateLogger(GetType().ToString());
@@ -172,8 +172,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             UseAnsi = !noAnsi,
             ShowProgress = shouldShowProgress,
         });
-
-        return Task.CompletedTask;
     }
 
     private string GetShortArchitecture(string runtimeIdentifier)
@@ -589,15 +587,13 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public void Dispose()
         => _terminalTestReporter?.Dispose();
 
-    public Task HandleProcessRoleAsync(TestProcessRole processRole)
+    public async Task HandleProcessRoleAsync(TestProcessRole processRole)
     {
         if (processRole == TestProcessRole.TestHost)
         {
-            _policiesService.RegisterOnMaxFailedTestsCallback(
+            await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
                 async (maxFailedTests, _) => await DisplayAsync(
                     this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
         }
-
-        return Task.CompletedTask;
     }
 }

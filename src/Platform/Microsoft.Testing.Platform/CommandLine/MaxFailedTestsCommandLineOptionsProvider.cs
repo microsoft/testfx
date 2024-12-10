@@ -40,10 +40,10 @@ internal sealed class MaxFailedTestsCommandLineOptionsProvider(IExtension extens
         if (commandOption.Name == MaxFailedTestsOptionKey)
         {
             string arg = arguments[0];
-            // We consider --maximum-failed-tests 0 as valid.
-            // The idea is that we stop the execution when we *exceed* the max failed tests, not when *reach*.
-            // So zero means, stop execution on the first failure.
-            return int.TryParse(arg, out int maxFailedTestsResult) && maxFailedTestsResult >= 0
+            // We consider --maximum-failed-tests 0 as invalid.
+            // The idea is that we stop the execution when we *reach* the max failed tests, not when *exceed*.
+            // So the value 1 means, stop execution on the first failure.
+            return int.TryParse(arg, out int maxFailedTestsResult) && maxFailedTestsResult > 0
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.MaxFailedTestsMustBePositive, arg));
         }

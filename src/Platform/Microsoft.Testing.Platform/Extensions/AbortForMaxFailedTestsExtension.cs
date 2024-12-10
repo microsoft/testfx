@@ -28,7 +28,7 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
     {
         if (commandLineOptions.TryGetOptionArgumentList(MaxFailedTestsCommandLineOptionsProvider.MaxFailedTestsOptionKey, out string[]? args) &&
             int.TryParse(args[0], out int maxFailedTests) &&
-            maxFailedTests >= 0)
+            maxFailedTests > 0)
         {
             _maxFailedTests = maxFailedTests;
         }
@@ -65,7 +65,7 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
 
         TestNodeStateProperty testNodeStateProperty = node.TestNode.Properties.Single<TestNodeStateProperty>();
         if (TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Any(t => t == testNodeStateProperty.GetType()) &&
-            ++_failCount > _maxFailedTests.Value &&
+            ++_failCount >= _maxFailedTests.Value &&
             // If already triggered, don't do it again.
             !_policiesService.IsMaxFailedTestsTriggered)
         {
