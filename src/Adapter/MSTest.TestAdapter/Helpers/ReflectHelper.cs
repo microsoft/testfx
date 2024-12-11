@@ -390,6 +390,11 @@ internal class ReflectHelper : MarshalByRefObject
     {
         IEnumerable<TestPropertyAttribute> testPropertyAttributes = GetDerivedAttributes<TestPropertyAttribute>(testPropertyProvider, inherit: true);
 
+        if (testPropertyProvider.DeclaringType is { } testClass)
+        {
+            testPropertyAttributes = testPropertyAttributes.Concat(GetDerivedAttributes<TestPropertyAttribute>(testClass, inherit: true));
+        }
+
         foreach (TestPropertyAttribute testProperty in testPropertyAttributes)
         {
             var testPropertyPair = new Trait(testProperty.Name, testProperty.Value);
