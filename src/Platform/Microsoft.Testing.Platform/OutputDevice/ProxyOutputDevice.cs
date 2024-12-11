@@ -62,4 +62,13 @@ internal sealed class ProxyOutputDevice : IOutputDevice
             await _serverModeOutputDevice.InitializeAsync(serverTestHost);
         }
     }
+
+    internal async Task HandleProcessRoleAsync(TestProcessRole processRole)
+    {
+        await OriginalOutputDevice.HandleProcessRoleAsync(processRole);
+        if (_serverModeOutputDevice is not null)
+        {
+            await _serverModeOutputDevice.HandleProcessRoleAsync(processRole);
+        }
+    }
 }

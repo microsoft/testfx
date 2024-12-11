@@ -399,6 +399,11 @@ public class TestExecutionManager
             ExecuteTestsWithTestRunner(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner);
         }
 
+        if (MSTestGracefulStopTestExecutionCapability.Instance.IsStopRequested)
+        {
+            testRunner.ForceCleanup();
+        }
+
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
     }
 
@@ -419,6 +424,10 @@ public class TestExecutionManager
         foreach (TestCase currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
+            if (MSTestGracefulStopTestExecutionCapability.Instance.IsStopRequested)
+            {
+                break;
+            }
 
             // If it is a fixture test, add it to the list of fixture tests and do not execute it.
             // It is executed by test itself.

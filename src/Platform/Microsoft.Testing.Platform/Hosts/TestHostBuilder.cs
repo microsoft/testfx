@@ -206,6 +206,10 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // Set the concrete command line options to the proxy.
         commandLineOptionsProxy.SetCommandLineOptions(commandLineHandler);
 
+        // This is needed by output device.
+        var policiesService = new StopPoliciesService(testApplicationCancellationTokenSource);
+        serviceProvider.AddService(policiesService);
+
         bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
         bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
 
@@ -313,9 +317,9 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // Register the ITestApplicationResult
         TestApplicationResult testApplicationResult = new(
             proxyOutputDevice,
-            serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetCommandLineOptions(),
-            serviceProvider.GetEnvironment());
+            serviceProvider.GetEnvironment(),
+            policiesService);
         serviceProvider.AddService(testApplicationResult);
 
         // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
@@ -376,6 +380,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await TestHostOrchestratorManager.BuildAsync(serviceProvider);
         if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 0 && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
+            policiesService.ProcessRole = TestProcessRole.TestHostOrchestrator;
+            await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostOrchestrator);
             return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, serviceProvider);
         }
 
@@ -411,6 +417,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             if (testHostControllers.RequireProcessRestart)
             {
                 testHostControllerInfo.IsCurrentProcessTestHostController = true;
+                policiesService.ProcessRole = TestProcessRole.TestHostController;
+                await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostController);
                 TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, passiveNode, systemEnvironment, loggerFactory, systemClock);
 
                 await LogTestHostCreatedAsync(
@@ -424,6 +432,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
 
         // ======= TEST HOST MODE ======== //
+        policiesService.ProcessRole = TestProcessRole.TestHost;
+        await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHost);
 
         // Setup the test host working folder.
         // Out of the test host controller extension the current working directory is the test host working directory.
@@ -722,6 +732,17 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         if (pushOnlyProtocolDataConsumer is not null)
         {
             dataConsumersBuilder.Add(pushOnlyProtocolDataConsumer);
+        }
+
+        var abortForMaxFailedTestsExtension = new AbortForMaxFailedTestsExtension(
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>(),
+            serviceProvider.GetRequiredService<IStopPoliciesService>(),
+            serviceProvider.GetTestApplicationCancellationTokenSource());
+
+        if (await abortForMaxFailedTestsExtension.IsEnabledAsync())
+        {
+            dataConsumersBuilder.Add(abortForMaxFailedTestsExtension);
         }
 
         IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();

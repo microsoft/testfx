@@ -15,4 +15,12 @@ public static class TestApplicationBuilderExtensions
 {
     public static void AddTreeNodeFilterService(this ITestApplicationBuilder testApplicationBuilder, IExtension extension)
         => testApplicationBuilder.CommandLine.AddProvider(() => new TreeNodeFilterCommandLineOptionsProvider(extension));
+
+    /// <summary>
+    /// Registers the command-line options provider for '--maximum-failed-tests'.
+    /// </summary>
+    /// <param name="builder">The test application builder.</param>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public static void AddMaximumFailedTestsService(this ITestApplicationBuilder builder, IExtension extension)
+        => builder.CommandLine.AddProvider(() => new MaxFailedTestsCommandLineOptionsProvider(extension));
 }
