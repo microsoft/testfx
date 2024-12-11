@@ -4,38 +4,47 @@
     <ProductsToBuild Condition=" '$(ProductsToBuild)' == '' ">all</ProductsToBuild>
   </PropertyGroup>
 
-  <!-- When building all products on windows OS -->
-  <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' == 'Windows_NT' ">
-    <ProjectToBuild  Include="$(RepoRoot)TestFx.sln" />
-  </ItemGroup>
+  <Choose>
+    <When Condition=" '$(DotNetBuildSourceOnly)' == 'true' ">
+      <!-- When building for source build we only want to build the platform, this is the only component shared to dotnet/sdk. -->
+      <ItemGroup>
+        <ProjectToBuild Include="$(RepoRoot)src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <!-- When building all products on windows OS -->
+      <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' == 'Windows_NT' ">
+        <ProjectToBuild Include="$(RepoRoot)TestFx.sln" />
+      </ItemGroup>
 
-  <!-- When building all products on non-windows OSes -->
-  <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' != 'Windows_NT' ">
-    <ProjectToBuild Include="$(RepoRoot)src/**/*.csproj" />
-    <ProjectToBuild Include="$(RepoRoot)test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
-    <ProjectToBuild Include="$(RepoRoot)test/UnitTests/Microsoft.Testing.*/Microsoft.Testing.*.csproj" />
-    <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj" />
-    <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
-  </ItemGroup>
+      <!-- When building all products on non-windows OSes -->
+      <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' != 'Windows_NT' ">
+        <ProjectToBuild Include="$(RepoRoot)src/**/*.csproj" />
+        <ProjectToBuild Include="$(RepoRoot)test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
+        <ProjectToBuild Include="$(RepoRoot)test/UnitTests/Microsoft.Testing.*/Microsoft.Testing.*.csproj" />
+        <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj" />
+        <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
+      </ItemGroup>
 
-  <!-- When building MSTest only on windows OS -->
-  <ItemGroup Condition=" '$(ProductsToBuild)' == 'mstest' AND '$(OS)' == 'Windows_NT' ">
-    <ProjectToBuild Include="$(RepoRoot)MSTest.slnf" />
-  </ItemGroup>
+      <!-- When building MSTest only on windows OS -->
+      <ItemGroup Condition=" '$(ProductsToBuild)' == 'mstest' AND '$(OS)' == 'Windows_NT' ">
+        <ProjectToBuild Include="$(RepoRoot)MSTest.slnf" />
+      </ItemGroup>
 
-  <!-- When building MSTest only on non-windows OSes -->
-  <ItemGroup Condition=" '$(ProductsToBuild)' == 'mstest' AND '$(OS)' != 'Windows_NT' ">
-    <ProjectToBuild Include="$(RepoRoot)src/Adapter/**/*.csproj" />
-    <ProjectToBuild Include="$(RepoRoot)src/Analyzers/**/*.csproj" />
-    <ProjectToBuild Include="$(RepoRoot)src/Package/**/*.csproj" />
-    <ProjectToBuild Include="$(RepoRoot)src/TestFramework/**/*.csproj" />
-    <ProjectToBuild Include="$(RepoRoot)test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
-    <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
-  </ItemGroup>
+      <!-- When building MSTest only on non-windows OSes -->
+      <ItemGroup Condition=" '$(ProductsToBuild)' == 'mstest' AND '$(OS)' != 'Windows_NT' ">
+        <ProjectToBuild Include="$(RepoRoot)src/Adapter/**/*.csproj" />
+        <ProjectToBuild Include="$(RepoRoot)src/Analyzers/**/*.csproj" />
+        <ProjectToBuild Include="$(RepoRoot)src/Package/**/*.csproj" />
+        <ProjectToBuild Include="$(RepoRoot)src/TestFramework/**/*.csproj" />
+        <ProjectToBuild Include="$(RepoRoot)test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
+        <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
+      </ItemGroup>
 
-  <!-- When building Microsoft.Testing.Platform only -->
-  <ItemGroup Condition=" '$(ProductsToBuild)' == 'testing-platform' ">
-    <ProjectToBuild Include="$(RepoRoot)Microsoft.Testing.Platform.slnf" />
-  </ItemGroup>
-
+      <!-- When building Microsoft.Testing.Platform only -->
+      <ItemGroup Condition=" '$(ProductsToBuild)' == 'testing-platform' ">
+        <ProjectToBuild Include="$(RepoRoot)Microsoft.Testing.Platform.slnf" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
 </Project>

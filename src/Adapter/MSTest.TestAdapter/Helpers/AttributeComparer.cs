@@ -10,24 +10,5 @@ internal static class AttributeComparer
         // So, this should NOT be refactored to 'attribute is TAttribute'.
         attribute.GetType() == typeof(TAttribute);
 
-    public static bool IsDerived<TAttribute>(Attribute attribute)
-    {
-        Type attributeType = attribute.GetType();
-
-        // IsSubclassOf returns false when the types are equal.
-        if (attributeType == typeof(TAttribute))
-        {
-            return true;
-        }
-
-        // IsAssignableFrom also does this internally, but later falls to check generic
-        // and we don't need that.
-        if (!typeof(TAttribute).IsInterface)
-        {
-            // This returns false when TAttribute is interface (like ITestDataSource).
-            return attributeType.IsSubclassOf(typeof(TAttribute));
-        }
-
-        return typeof(TAttribute).IsAssignableFrom(attributeType);
-    }
+    public static bool IsDerived<TAttribute>(Attribute attribute) => attribute is TAttribute;
 }

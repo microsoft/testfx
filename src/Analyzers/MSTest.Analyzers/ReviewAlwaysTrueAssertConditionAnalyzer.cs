@@ -57,25 +57,24 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzer : DiagnosticAnalyzer
         {
             Compilation compilation = context.Compilation;
             INamedTypeSymbol? assertSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert);
-            INamedTypeSymbol? nullableSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemNullable);
             if (assertSymbol is not null)
             {
-                context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol, nullableSymbol), OperationKind.Invocation);
+                context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol), OperationKind.Invocation);
             }
         });
     }
 
-    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol? nullableSymbol)
+    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol)
     {
         var operation = (IInvocationOperation)context.Operation;
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
-            IsAlwaysTrue(operation, nullableSymbol))
+            IsAlwaysTrue(operation))
         {
             context.ReportDiagnostic(operation.CreateDiagnostic(Rule));
         }
     }
 
-    private static bool IsAlwaysTrue(IInvocationOperation operation, INamedTypeSymbol? nullableSymbol)
+    private static bool IsAlwaysTrue(IInvocationOperation operation)
         => operation.TargetMethod.Name switch
         {
             "IsTrue" => GetConditionArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: true } },
@@ -83,16 +82,16 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzer : DiagnosticAnalyzer
             "AreEqual" => GetEqualityStatus(operation, ExpectedParameterName) == EqualityStatus.Equal,
             "AreNotEqual" => GetEqualityStatus(operation, NotExpectedParameterName) == EqualityStatus.NotEqual,
             "IsNull" => GetValueArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: null } },
-            "IsNotNull" => GetValueArgument(operation) is { } valueArgumentOperation && IsNotNullableType(valueArgumentOperation, nullableSymbol),
+            "IsNotNull" => GetValueArgument(operation) is { } valueArgumentOperation && IsNotNullableType(valueArgumentOperation),
             _ => false,
         };
 
-    private static bool IsNotNullableType(IArgumentOperation valueArgumentOperation, INamedTypeSymbol? nullableSymbol)
+    private static bool IsNotNullableType(IArgumentOperation valueArgumentOperation)
     {
         ITypeSymbol? valueArgType = valueArgumentOperation.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
         return valueArgType is not null
             && valueArgType.NullableAnnotation == NullableAnnotation.NotAnnotated
-            && !SymbolEqualityComparer.IncludeNullability.Equals(valueArgType.OriginalDefinition, nullableSymbol);
+            && valueArgType.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T;
     }
 
     private static IArgumentOperation? GetArgumentWithName(IInvocationOperation operation, string name)

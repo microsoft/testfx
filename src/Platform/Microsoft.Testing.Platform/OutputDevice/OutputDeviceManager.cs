@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
@@ -33,7 +34,9 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
         return new ProxyOutputDevice(
             nonServerOutputDevice,
             useServerModeOutputDevice
-                ? new ServerModePerCallOutputDevice(serviceProvider)
+                ? new ServerModePerCallOutputDevice(
+                    serviceProvider.GetService<FileLoggerProvider>(),
+                    serviceProvider.GetRequiredService<IStopPoliciesService>())
                 : null);
     }
 
@@ -51,5 +54,6 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetFileLoggerInformation(),
             serviceProvider.GetLoggerFactory(),
-            serviceProvider.GetClock());
+            serviceProvider.GetClock(),
+            serviceProvider.GetRequiredService<IStopPoliciesService>());
 }

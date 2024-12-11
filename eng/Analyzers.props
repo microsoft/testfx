@@ -7,7 +7,8 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!-- Source build requires that everything needed for build is source-buildable, so we don't use analyzers for source build. -->
+  <ItemGroup Condition=" '$(DotNetBuildSourceOnly)' != 'true' ">
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" Condition="'$(IsSourceProject)' == 'true'" />
     <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
 

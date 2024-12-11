@@ -183,7 +183,8 @@ internal sealed class NonAnsiTerminal : ITerminal
 
             // Use just ascii here, so we don't put too many restrictions on fonts needing to
             // properly show unicode, or logs being saved in particular encoding.
-            string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
+            TestDetailState? activeTest = p.TestNodeResultsState?.GetFirstRunningTask();
+            string? detail = !RoslynString.IsNullOrWhiteSpace(activeTest?.Text) ? $"- {activeTest.Text}" : null;
             Append('[');
             SetColor(TerminalColor.DarkGreen);
             Append('+');
