@@ -72,7 +72,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     internal ICollection<UnitTestElement> EnumerateAssembly(
         string assemblyFileName,
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
-        out ICollection<string> warnings)
+        out List<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
         var warningMessages = new List<string>();
@@ -228,8 +228,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             typeFullName = type.FullName;
             TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, discoveryOption, testIdGenerationStrategy);
-            ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string> warningsFromTypeEnumerator);
-            warningMessages.AddRange(warningsFromTypeEnumerator);
+            List<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(warningMessages);
 
             if (unitTestCases != null)
             {
