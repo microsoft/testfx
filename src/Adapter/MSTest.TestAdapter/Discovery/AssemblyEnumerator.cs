@@ -72,17 +72,16 @@ internal class AssemblyEnumerator : MarshalByRefObject
     internal ICollection<UnitTestElement> EnumerateAssembly(
         string assemblyFileName,
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
-        out ICollection<string> warnings)
+        List<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
-        var warningMessages = new List<string>();
         var tests = new List<UnitTestElement>();
         // Contains list of assembly/class names for which we have already added fixture tests.
         var fixturesTests = new HashSet<string>();
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
-        Type[] types = GetTypes(assembly, assemblyFileName, warningMessages);
+        Type[] types = GetTypes(assembly, assemblyFileName, warnings);
         bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
         TestIdGenerationStrategy testIdGenerationStrategy = ReflectHelper.GetTestIdGenerationStrategy(assembly);
 
@@ -109,12 +108,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 continue;
             }
 
-            List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, testRunParametersFromRunSettings, type, warningMessages, discoverInternals,
+            List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, testRunParametersFromRunSettings, type, warnings, discoverInternals,
                 testDataSourceDiscovery, testIdGenerationStrategy, fixturesTests);
             tests.AddRange(testsInType);
         }
 
-        warnings = warningMessages;
         return tests;
     }
 
@@ -228,8 +226,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             typeFullName = type.FullName;
             TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, discoveryOption, testIdGenerationStrategy);
-            ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string> warningsFromTypeEnumerator);
-            warningMessages.AddRange(warningsFromTypeEnumerator);
+            List<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(warningMessages);
 
             if (unitTestCases != null)
             {

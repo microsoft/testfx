@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -54,10 +53,8 @@ internal class TypeEnumerator
     /// </summary>
     /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> list of test cases.</returns>
-    internal virtual ICollection<UnitTestElement>? Enumerate(out ICollection<string> warnings)
+    internal virtual List<UnitTestElement>? Enumerate(List<string> warnings)
     {
-        warnings = new Collection<string>();
-
         if (!_typeValidator.IsValidTestClass(_type, warnings))
         {
             return null;
@@ -72,11 +69,11 @@ internal class TypeEnumerator
     /// </summary>
     /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> List of Valid Tests. </returns>
-    internal Collection<UnitTestElement> GetTests(ICollection<string> warnings)
+    internal List<UnitTestElement> GetTests(List<string> warnings)
     {
         bool foundDuplicateTests = false;
         var foundTests = new HashSet<string>();
-        var tests = new Collection<UnitTestElement>();
+        var tests = new List<UnitTestElement>();
 
         // Test class is already valid. Verify methods.
         // PERF: GetRuntimeMethods is used here to get all methods, including non-public, and static methods.
@@ -119,12 +116,11 @@ internal class TypeEnumerator
             currentType = currentType.BaseType;
         }
 
-        return new Collection<UnitTestElement>(
-            tests.GroupBy(
-                t => t.TestMethod.Name,
-                (_, elements) =>
-                    elements.OrderBy(t => inheritanceDepths[t.TestMethod.DeclaringClassFullName ?? t.TestMethod.FullClassName]).First())
-                .ToList());
+        return tests.GroupBy(
+            t => t.TestMethod.Name,
+            (_, elements) =>
+                elements.OrderBy(t => inheritanceDepths[t.TestMethod.DeclaringClassFullName ?? t.TestMethod.FullClassName]).First())
+            .ToList();
     }
 
     /// <summary>

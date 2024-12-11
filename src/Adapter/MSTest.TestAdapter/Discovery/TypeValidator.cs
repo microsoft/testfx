@@ -49,7 +49,7 @@ internal class TypeValidator
     /// <param name="type">The reflected type.</param>
     /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>Return true if it is a valid test class.</returns>
-    internal virtual bool IsValidTestClass(Type type, ICollection<string> warnings)
+    internal virtual bool IsValidTestClass(Type type, List<string> warnings)
     {
         // PERF: We are doing caching reflection here, meaning we will cache every class info in the
         // assembly, this is because when we discover and run we will repeatedly inspect all the types in the assembly, and this
