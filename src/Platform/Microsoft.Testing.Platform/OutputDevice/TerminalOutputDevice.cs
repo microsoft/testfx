@@ -49,6 +49,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private readonly IFileLoggerInformation? _fileLoggerInformation;
     private readonly ILoggerFactory _loggerFactory;
     private readonly IClock _clock;
+    private readonly IStopPoliciesService _policiesService;
     private readonly string? _longArchitecture;
     private readonly string? _shortArchitecture;
 
@@ -72,7 +73,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public TerminalOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
-        ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock)
+        ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock,
+        IStopPoliciesService policiesService)
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _console = console;
@@ -87,6 +89,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _fileLoggerInformation = fileLoggerInformation;
         _loggerFactory = loggerFactory;
         _clock = clock;
+        _policiesService = policiesService;
 
         if (_runtimeFeature.IsDynamicCodeSupported)
         {
@@ -110,8 +113,15 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
+        await _policiesService.RegisterOnAbortCallbackAsync(
+            () =>
+            {
+                _terminalTestReporter?.StartCancelling();
+                return Task.CompletedTask;
+            });
+
         if (_fileLoggerInformation is not null)
         {
             _logger = _loggerFactory.CreateLogger(GetType().ToString());
@@ -160,12 +170,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
             UseAnsi = !noAnsi,
+            ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
         });
-
-        _testApplicationCancellationTokenSource.CancellationToken.Register(() => _terminalTestReporter.StartCancelling());
-
-        return Task.CompletedTask;
     }
 
     private string GetShortArchitecture(string runtimeIdentifier)
@@ -421,7 +428,13 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case InProgressTestNodeStateProperty:
-                        // do nothing.
+                        _terminalTestReporter.TestInProgress(
+                            _assemblyName,
+                            _targetFramework,
+                            _shortArchitecture,
+                            testNodeStateChanged.TestNode.Uid.Value,
+                            testNodeStateChanged.TestNode.DisplayName,
+                            executionId: null);
                         break;
 
                     case ErrorTestNodeStateProperty errorState:
@@ -430,6 +443,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             _targetFramework,
                             _shortArchitecture,
                             executionId: null,
+                            testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Error,
                             duration,
@@ -447,6 +461,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              _targetFramework,
                              _shortArchitecture,
                              executionId: null,
+                             testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Fail,
                              duration,
@@ -464,6 +479,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              _targetFramework,
                              _shortArchitecture,
                              executionId: null,
+                             testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Timeout,
                              duration,
@@ -481,6 +497,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              _targetFramework,
                              _shortArchitecture,
                              executionId: null,
+                             testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Canceled,
                              duration,
@@ -498,6 +515,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             _targetFramework,
                             _shortArchitecture,
                             executionId: null,
+                            testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
                             outcome: TestOutcome.Passed,
                             duration: duration,
@@ -515,6 +533,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             _targetFramework,
                             _shortArchitecture,
                             executionId: null,
+                            testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Skipped,
                             duration,
@@ -580,4 +599,14 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public void Dispose()
         => _terminalTestReporter?.Dispose();
+
+    public async Task HandleProcessRoleAsync(TestProcessRole processRole)
+    {
+        if (processRole == TestProcessRole.TestHost)
+        {
+            await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
+                async (maxFailedTests, _) => await DisplayAsync(
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
+        }
+    }
 }

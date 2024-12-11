@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hans" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortForMaxFailedTestsDescription">
+        <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
+        <target state="new">Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Aborted">
         <source>Aborted</source>
         <target state="translated">已中止</target>
@@ -371,6 +376,11 @@
         <target state="translated">尚未生成 ILoggerFactory。</target>
         <note />
       </trans-unit>
+      <trans-unit id="MaxFailedTestsMustBePositive">
+        <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
+        <target state="new">The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MessageBusNotReady">
         <source>The message bus has not been built yet or is no more usable at this stage.</source>
         <target state="translated">消息总线尚未生成或在此阶段不再可用。</target>
@@ -384,6 +394,16 @@
       <trans-unit id="MissingClientPortFoJsonRpc">
         <source>Expected --client-port when jsonRpc protocol is used.</source>
         <target state="translated">使用 jsonRpc 协议时应为 --client-port。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_MoreTestsCount">
+        <source>and {0} more</source>
+        <target state="translated">和其他 {0} 项</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_FullTestsCount">
+        <source>{0} tests running</source>
+        <target state="translated">正在运行 {0} 测试</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
@@ -525,6 +545,11 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
         <target state="translated">显示 .NET 测试应用程序信息。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
+        <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
+        <target state="new">Specifies a maximum number of test failures that, when exceeded, will abort the test run.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
         <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
         <target state="translated">“--list-tests”和“--minimum-expected-tests”是不兼容的选项</target>
@@ -612,6 +637,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">在我们确定此值之前，流程应该已退出</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ReachedMaxFailedTestsMessage">
+        <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
+        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</target>
+        <note>{0} is the number of max failed tests.</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>

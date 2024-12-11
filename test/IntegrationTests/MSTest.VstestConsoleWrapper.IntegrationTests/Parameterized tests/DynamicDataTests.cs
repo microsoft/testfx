@@ -14,7 +14,7 @@ public class DynamicDataTests : CLITestBase
         // Arrange & Act
         InvokeVsTestForExecution(
             [TestAssetName],
-            testCaseFilter: "DynamicDataTest");
+            testCaseFilter: "ClassName=DataSourceTestProject.DynamicDataTests");
 
         // Assert
         ValidatePassedTests(

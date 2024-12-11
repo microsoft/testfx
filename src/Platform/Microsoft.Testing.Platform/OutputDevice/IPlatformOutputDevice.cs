@@ -15,4 +15,6 @@ internal interface IPlatformOutputDevice : IExtension
     Task DisplayAfterSessionEndRunAsync();
 
     Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data);
+
+    Task HandleProcessRoleAsync(TestProcessRole processRole);
 }

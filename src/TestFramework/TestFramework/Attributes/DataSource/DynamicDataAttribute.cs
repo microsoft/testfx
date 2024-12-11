@@ -33,7 +33,7 @@ public enum DynamicDataSourceType
 /// Attribute to define dynamic data for a test method.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestDataSourceEmptyDataSourceExceptionInfo
+public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestDataSourceEmptyDataSourceExceptionInfo, ITestDataSourceUnfoldingCapability
 {
     private readonly string _dynamicDataSourceName;
     private readonly DynamicDataSourceType _dynamicDataSourceType;
@@ -83,6 +83,9 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// Gets or sets the declaring type used to customize the display name in test results.
     /// </summary>
     public Type? DynamicDataDisplayNameDeclaringType { get; set; }
+
+    /// <inheritdoc />
+    public TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; set; } = TestDataSourceUnfoldingStrategy.Auto;
 
     /// <inheritdoc />
     public IEnumerable<object[]> GetData(MethodInfo methodInfo) => DynamicDataProvider.Instance.GetData(_dynamicDataDeclaringType, _dynamicDataSourceType, _dynamicDataSourceName, methodInfo);

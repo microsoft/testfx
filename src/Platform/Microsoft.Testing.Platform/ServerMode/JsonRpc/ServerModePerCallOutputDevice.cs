@@ -15,17 +15,21 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice
+internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOutputDeviceDataProducer
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly FileLoggerProvider? _fileLoggerProvider;
+    private readonly IStopPoliciesService _policiesService;
     private readonly ConcurrentBag<ServerLogMessage> _messages = new();
 
     private IServerTestHost? _serverTestHost;
 
     private static readonly string[] NewLineStrings = { "\r\n", "\n" };
 
-    public ServerModePerCallOutputDevice(IServiceProvider serviceProvider)
-        => _serviceProvider = serviceProvider;
+    public ServerModePerCallOutputDevice(FileLoggerProvider? fileLoggerProvider, IStopPoliciesService policiesService)
+    {
+        _fileLoggerProvider = fileLoggerProvider;
+        _policiesService = policiesService;
+    }
 
     internal async Task InitializeAsync(IServerTestHost serverTestHost)
     {
@@ -94,7 +98,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice
 
     public async Task DisplayBeforeSessionStartAsync()
     {
-        if (_serviceProvider.GetService<FileLoggerProvider>() is { FileLogger.FileName: { } logFileName })
+        if (_fileLoggerProvider is { FileLogger.FileName: { } logFileName })
         {
             await LogAsync(LogLevel.Trace, string.Format(CultureInfo.InvariantCulture, PlatformResources.StartingTestSessionWithLogFilePath, logFileName), padding: null);
         }
@@ -148,5 +152,15 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice
         }
 
         return builder.ToString();
+    }
+
+    public async Task HandleProcessRoleAsync(TestProcessRole processRole)
+    {
+        if (processRole == TestProcessRole.TestHost)
+        {
+            await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
+                async (maxFailedTests, _) => await DisplayAsync(
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))));
+        }
     }
 }

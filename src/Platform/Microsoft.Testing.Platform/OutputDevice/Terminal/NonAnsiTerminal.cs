@@ -183,7 +183,6 @@ internal sealed class NonAnsiTerminal : ITerminal
 
             // Use just ascii here, so we don't put too many restrictions on fonts needing to
             // properly show unicode, or logs being saved in particular encoding.
-            string? detail = !RoslynString.IsNullOrWhiteSpace(p.Detail) ? $"- {p.Detail}" : null;
             Append('[');
             SetColor(TerminalColor.DarkGreen);
             Append('+');
@@ -225,10 +224,12 @@ internal sealed class NonAnsiTerminal : ITerminal
                 Append(')');
             }
 
-            if (!RoslynString.IsNullOrWhiteSpace(detail))
+            TestDetailState? activeTest = p.TestNodeResultsState?.GetRunningTasks(1).FirstOrDefault();
+            if (!RoslynString.IsNullOrWhiteSpace(activeTest?.Text))
             {
                 Append(" - ");
-                Append(detail);
+                Append(activeTest.Text);
+                Append(' ');
             }
 
             Append(durationString);

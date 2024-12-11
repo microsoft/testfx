@@ -278,10 +278,21 @@ internal class ReflectHelper : MarshalByRefObject
     /// Gets TestDataSourceDiscovery assembly level attribute.
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>
+    [Obsolete]
     internal static TestDataSourceDiscoveryOption? GetTestDataSourceDiscoveryOption(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceDiscoveryAttribute))
             .OfType<TestDataSourceDiscoveryAttribute>()
             .FirstOrDefault()?.DiscoveryOption;
+
+    /// <summary>
+    /// Gets TestDataSourceOptions assembly level attribute.
+    /// </summary>
+    /// <param name="assembly"> The test assembly. </param>
+    /// <returns> The TestDataSourceOptionsAttribute if set. Null otherwise. </returns>
+    internal static TestDataSourceOptionsAttribute? GetTestDataSourceOptions(Assembly assembly)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceOptionsAttribute))
+            .OfType<TestDataSourceOptionsAttribute>()
+            .FirstOrDefault();
 
     /// <summary>
     /// Get the parallelization behavior for a test method.
@@ -345,15 +356,6 @@ internal class ReflectHelper : MarshalByRefObject
         GetFirstDerivedAttributeOrDefault<PriorityAttribute>(priorityAttributeProvider, inherit: true)?.Priority;
 
     /// <summary>
-    /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
-    /// else null.
-    /// </summary>
-    /// <param name="ignoreAttributeProvider">The member to inspect.</param>
-    /// <returns>Priority value if defined. Null otherwise.</returns>
-    internal virtual string? GetIgnoreMessage(MemberInfo ignoreAttributeProvider) =>
-        GetFirstDerivedAttributeOrDefault<IgnoreAttribute>(ignoreAttributeProvider, inherit: true)?.IgnoreMessage;
-
-    /// <summary>
     /// Gets the class cleanup lifecycle for the class, if set.
     /// </summary>
     /// <param name="classInfo">The class to inspect.</param>
@@ -387,6 +389,11 @@ internal class ReflectHelper : MarshalByRefObject
     internal virtual IEnumerable<Trait> GetTestPropertiesAsTraits(MemberInfo testPropertyProvider)
     {
         IEnumerable<TestPropertyAttribute> testPropertyAttributes = GetDerivedAttributes<TestPropertyAttribute>(testPropertyProvider, inherit: true);
+
+        if (testPropertyProvider.DeclaringType is { } testClass)
+        {
+            testPropertyAttributes = testPropertyAttributes.Concat(GetDerivedAttributes<TestPropertyAttribute>(testClass, inherit: true));
+        }
 
         foreach (TestPropertyAttribute testProperty in testPropertyAttributes)
         {
@@ -437,7 +444,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="attributeProvider">The member to inspect.</param>
     /// <param name="inherit">Look at inheritance chain.</param>
     /// <returns>attributes defined.</returns>
-    private Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider, bool inherit)
+    internal Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider, bool inherit)
     {
         // If the information is cached, then use it otherwise populate the cache using
         // the reflection APIs.
