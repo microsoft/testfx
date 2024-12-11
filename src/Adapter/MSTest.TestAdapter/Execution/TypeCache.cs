@@ -383,6 +383,26 @@ internal sealed class TypeCache : MarshalByRefObject
 
     #region AssemblyInfo creation and cache logic.
 
+    private TimeoutInfo? TryGetTimeoutInfo(MethodInfo methodInfo, FixtureKind fixtureKind)
+    {
+        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
+        if (timeoutAttribute != null)
+        {
+            if (!timeoutAttribute.HasCorrectTimeout)
+            {
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
+                throw new TypeInspectionException(message);
+            }
+
+            return TimeoutInfo.FromTimeoutAttribute(timeoutAttribute);
+        }
+
+        var globalTimeout = TimeoutInfo.FromFixtureSettings(fixtureKind);
+        return globalTimeout.Timeout > 0
+            ? globalTimeout
+            : null;
+    }
+
     /// <summary>
     /// Get the assembly info for the parameter type.
     /// </summary>
@@ -403,11 +423,6 @@ internal sealed class TypeCache : MarshalByRefObject
 
         foreach (Type t in types)
         {
-            if (t == null)
-            {
-                continue;
-            }
-
             try
             {
                 // Only examine classes which are TestClass or derives from TestClass attribute
@@ -433,41 +448,12 @@ internal sealed class TypeCache : MarshalByRefObject
                 if (IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
                 {
                     assemblyInfo.AssemblyInitializeMethod = methodInfo;
-
-                    TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
-                    if (timeoutAttribute != null)
-                    {
-                        if (!timeoutAttribute.HasCorrectTimeout)
-                        {
-                            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
-                            throw new TypeInspectionException(message);
-                        }
-
-                        assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = TimeoutInfo.FromTimeoutAttribute(timeoutAttribute);
-                    }
-                    else if (MSTestSettings.CurrentSettings.AssemblyInitializeTimeout > 0)
-                    {
-                        assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = TimeoutInfo.FromFixtureSettings(FixtureKind.AssemblyInitialize);
-                    }
+                    assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyInitialize);
                 }
                 else if (IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
                 {
                     assemblyInfo.AssemblyCleanupMethod = methodInfo;
-                    TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
-                    if (timeoutAttribute != null)
-                    {
-                        if (!timeoutAttribute.HasCorrectTimeout)
-                        {
-                            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
-                            throw new TypeInspectionException(message);
-                        }
-
-                        assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = TimeoutInfo.FromTimeoutAttribute(timeoutAttribute);
-                    }
-                    else if (MSTestSettings.CurrentSettings.AssemblyCleanupTimeout > 0)
-                    {
-                        assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = TimeoutInfo.FromFixtureSettings(FixtureKind.AssemblyCleanup);
-                    }
+                    assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
                 }
             }
         }
@@ -594,20 +580,9 @@ internal sealed class TypeCache : MarshalByRefObject
 
         if (isInitializeMethod)
         {
-            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
-            if (timeoutAttribute != null)
+            if (TryGetTimeoutInfo(methodInfo, FixtureKind.ClassInitialize) is { } timeoutInfo)
             {
-                if (!timeoutAttribute.HasCorrectTimeout)
-                {
-                    string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
-                    throw new TypeInspectionException(message);
-                }
-
-                classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromTimeoutAttribute(timeoutAttribute));
-            }
-            else if (MSTestSettings.CurrentSettings.ClassInitializeTimeout > 0)
-            {
-                classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromFixtureSettings(FixtureKind.ClassInitialize));
+                classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, timeoutInfo);
             }
 
             if (isBase)
@@ -627,20 +602,9 @@ internal sealed class TypeCache : MarshalByRefObject
 
         if (isCleanupMethod)
         {
-            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
-            if (timeoutAttribute != null)
+            if (TryGetTimeoutInfo(methodInfo, FixtureKind.ClassCleanup) is { } timeoutInfo)
             {
-                if (!timeoutAttribute.HasCorrectTimeout)
-                {
-                    string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
-                    throw new TypeInspectionException(message);
-                }
-
-                classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromTimeoutAttribute(timeoutAttribute));
-            }
-            else if (MSTestSettings.CurrentSettings.ClassCleanupTimeout > 0)
-            {
-                classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromFixtureSettings(FixtureKind.ClassCleanup));
+                classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, timeoutInfo);
             }
 
             if (isBase)
@@ -693,20 +657,9 @@ internal sealed class TypeCache : MarshalByRefObject
 
         if (hasTestInitialize)
         {
-            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
-            if (timeoutAttribute != null)
+            if (TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize) is { } timeoutInfo)
             {
-                if (!timeoutAttribute.HasCorrectTimeout)
-                {
-                    string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
-                    throw new TypeInspectionException(message);
-                }
-
-                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromTimeoutAttribute(timeoutAttribute));
-            }
-            else if (MSTestSettings.CurrentSettings.TestInitializeTimeout > 0)
-            {
-                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromFixtureSettings(FixtureKind.TestInitialize));
+                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, timeoutInfo);
             }
 
             if (!isBase)
@@ -724,20 +677,9 @@ internal sealed class TypeCache : MarshalByRefObject
 
         if (hasTestCleanup)
         {
-            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
-            if (timeoutAttribute != null)
+            if (TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup) is { } timeoutInfo)
             {
-                if (!timeoutAttribute.HasCorrectTimeout)
-                {
-                    string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
-                    throw new TypeInspectionException(message);
-                }
-
-                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromTimeoutAttribute(timeoutAttribute));
-            }
-            else if (MSTestSettings.CurrentSettings.TestCleanupTimeout > 0)
-            {
-                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, TimeoutInfo.FromFixtureSettings(FixtureKind.TestCleanup));
+                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, timeoutInfo);
             }
 
             if (!isBase)
