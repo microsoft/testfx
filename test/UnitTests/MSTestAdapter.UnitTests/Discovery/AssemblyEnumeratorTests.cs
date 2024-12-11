@@ -225,7 +225,7 @@ public class AssemblyEnumeratorTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
 
-        Verify(_assemblyEnumerator.EnumerateAssembly("DummyAssembly", null, out _warnings).Count == 0);
+        Verify(_assemblyEnumerator.EnumerateAssembly("DummyAssembly", null, _warnings).Count == 0);
     }
 
     public void EnumerateAssemblyShouldReturnEmptyListWhenNoTestElementsInAType()
@@ -241,9 +241,9 @@ public class AssemblyEnumeratorTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
-            .Returns((ICollection<UnitTestElement>)null);
+            .Returns((List<UnitTestElement>)null);
 
-        Verify(_assemblyEnumerator.EnumerateAssembly("DummyAssembly", null, out _warnings).Count == 0);
+        Verify(_assemblyEnumerator.EnumerateAssembly("DummyAssembly", null, _warnings).Count == 0);
     }
 
     public void EnumerateAssemblyShouldReturnTestElementsForAType()
@@ -260,9 +260,9 @@ public class AssemblyEnumeratorTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
-            .Returns(new Collection<UnitTestElement> { unitTestElement });
+            .Returns(new List<UnitTestElement> { unitTestElement });
 
-        ICollection<UnitTestElement> testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", null, out _warnings);
+        ICollection<UnitTestElement> testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", null, _warnings);
 
         Verify(new Collection<UnitTestElement> { unitTestElement }.SequenceEqual(testElements));
     }
@@ -272,7 +272,7 @@ public class AssemblyEnumeratorTests : TestContainer
         Mock<TestableAssembly> mockAssembly = CreateMockTestableAssembly();
         var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
         var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", false));
-        var expectedTestElements = new Collection<UnitTestElement> { unitTestElement, unitTestElement };
+        var expectedTestElements = new List<UnitTestElement> { unitTestElement, unitTestElement };
 
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes())
@@ -284,7 +284,7 @@ public class AssemblyEnumeratorTests : TestContainer
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
             .Returns(expectedTestElements);
 
-        ICollection<UnitTestElement> testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", null, out _warnings);
+        ICollection<UnitTestElement> testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", null, _warnings);
 
         Verify(expectedTestElements.SequenceEqual(testElements));
     }
@@ -294,7 +294,7 @@ public class AssemblyEnumeratorTests : TestContainer
         Mock<TestableAssembly> mockAssembly = CreateMockTestableAssembly();
         var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
         var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", false));
-        var expectedTestElements = new Collection<UnitTestElement> { unitTestElement, unitTestElement };
+        var expectedTestElements = new List<UnitTestElement> { unitTestElement, unitTestElement };
 
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes())
@@ -306,7 +306,7 @@ public class AssemblyEnumeratorTests : TestContainer
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
             .Returns(expectedTestElements);
 
-        ICollection<UnitTestElement> testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", null, out _warnings);
+        ICollection<UnitTestElement> testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", null, _warnings);
 
         expectedTestElements.Add(unitTestElement);
         expectedTestElements.Add(unitTestElement);
@@ -328,7 +328,7 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns(mockAssembly.Object);
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(warningsFromTypeEnumerator));
 
-        testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", null, out _warnings);
+        testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", null, _warnings);
         Verify(_warnings.Count == 0);
     }
 
@@ -350,7 +350,7 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns(mockAssembly.Object);
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(warningsFromTypeEnumerator));
 
-        testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", null, out _warnings);
+        testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", null, _warnings);
 
         Verify(warningsFromTypeEnumerator.ToList().SequenceEqual(_warnings));
     }
@@ -370,7 +370,7 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns(mockAssembly.Object);
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings)).Throws(exception);
 
-        testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", null, out _warnings);
+        testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", null, _warnings);
 
         Verify(_warnings.ToList().Contains(
             string.Format(
