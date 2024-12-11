@@ -97,37 +97,37 @@ public class UnitTest1
     }
 
     [TestMethod]
-    public void Test6()
+    public async Task Test6()
     {
         await Task.Delay(10);
     }
 
     [TestMethod]
-    public void Test7()
+    public async Task Test7()
     {
         await Task.Delay(10);
     }
 
     [TestMethod]
-    public void Test8()
+    public async Task Test8()
     {
         await Task.Delay(10);
     }
 
     [TestMethod]
-    public void Test9()
+    public async Task Test9()
     {
         await Task.Delay(10);
     }
 
     [TestMethod]
-    public void Test10()
+    public async Task Test10()
     {
         await Task.Delay(10);
     }
 
     [TestMethod]
-    public void Test11()
+    public async Task Test11()
     {
         await Task.Delay(10);
     }
