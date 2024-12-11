@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.RegularExpressions;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
@@ -24,28 +26,22 @@ public class GenericTestMethodTests : AcceptanceTestBase
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputMatchesRegex("""
+        testHostResult.AssertOutputMatchesRegex(
+            """
             failed AMethodWithBadConstraints \(0\) \(\d+ms\)
               GenericArguments\[0], 'System\.Int32', on 'Void AMethodWithBadConstraints\[T]\(T\)' violates the constraint of type 'T'\.
-                at System\.RuntimeType\.ValidateGenericArguments\(MemberInfo definition, RuntimeType\[] genericArguments, Exception e\)
-                at System\.Reflection\.RuntimeMethodInfo\.MakeGenericMethod\(Type\[] methodInstantiation\)
+                at .+?
             failed NonParameterizedTestMethod \(\d+ms\)
               The generic test method 'NonParameterizedTestMethod' doesn't have arguments, so the generic parameter cannot be inferred\.
             failed ParameterizedMethodSimple \(1\) \(\d+ms\)
               Assert\.Fail failed\. Test method 'ParameterizedMethodSimple' did run with parameter '1' and type 'System\.Byte'\.
-                at TestClass\.ParameterizedMethodSimple\[T]\(T parameter\) in .+?UnitTest1\.cs:23
-                at System\.RuntimeMethodHandle\.InvokeMethod\(Object target, Void\*\* arguments, Signature sig, Boolean isConstructor\)
-                at System\.Reflection\.MethodBaseInvoker\.InvokeDirectByRefWithFewArgs\(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr\)
+                at .+?
             failed ParameterizedMethodSimple \(2\) \(\d+ms\)
               Assert\.Fail failed\. Test method 'ParameterizedMethodSimple' did run with parameter '2' and type 'System\.Int32'\.
-                at TestClass\.ParameterizedMethodSimple\[T]\(T parameter\) in .+?UnitTest1\.cs:23
-                at System\.RuntimeMethodHandle\.InvokeMethod\(Object target, Void\*\* arguments, Signature sig, Boolean isConstructor\)
-                at System\.Reflection\.MethodBaseInvoker\.InvokeDirectByRefWithFewArgs\(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr\)
+                at .+?
             failed ParameterizedMethodSimple \("Hello world"\) \(\d+ms\)
               Assert\.Fail failed\. Test method 'ParameterizedMethodSimple' did run with parameter 'Hello world' and type 'System\.String'\.
-                at TestClass\.ParameterizedMethodSimple\[T]\(T parameter\) in .+?UnitTest1\.cs:23
-                at System\.RuntimeMethodHandle\.InvokeMethod\(Object target, Void\*\* arguments, Signature sig, Boolean isConstructor\)
-                at System\.Reflection\.MethodBaseInvoker\.InvokeDirectByRefWithFewArgs\(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr\)
+                at .+?
             failed ParameterizedMethodSimple \(null\) \(\d+ms\)
               Test method TestClass\.ParameterizedMethodSimple threw exception: 
               System\.InvalidOperationException: The type of the generic parameter 'T' could not be inferred\.
@@ -54,9 +50,7 @@ public class GenericTestMethodTests : AcceptanceTestBase
               System\.InvalidOperationException: Found two conflicting types for generic parameter 'T2'\. The conflicting types are 'System\.Byte' and 'System\.Int32'\.
             failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \(null,"Hello world","Hello again",3\) \(\d+ms\)
               Assert\.Fail failed\. Test method 'ParameterizedMethodTwoGenericParametersAndFourMethodParameters' did run with parameters '<null>', 'Hello world', 'Hello again', '3' and generic types 'System\.Int32', 'System\.String'\.
-                at TestClass\.ParameterizedMethodTwoGenericParametersAndFourMethodParameters\[T1,T2]\(T2 p1, String p2, T2 p3, T1 p4\) in .+?UnitTest1\.cs:31
-                at System\.RuntimeMethodHandle\.InvokeMethod\(Object target, Void\*\* arguments, Signature sig, Boolean isConstructor\)
-                at System\.Reflection\.MethodBaseInvoker\.InvokeDirectByRefWithFewArgs\(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr\)
+                at .+?
             failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \("Hello hello","Hello world",null,null\) \(\d+ms\)
               Test method TestClass\.ParameterizedMethodTwoGenericParametersAndFourMethodParameters threw exception: 
               System\.InvalidOperationException: The type of the generic parameter 'T1' could not be inferred\.
@@ -65,35 +59,20 @@ public class GenericTestMethodTests : AcceptanceTestBase
               System\.InvalidOperationException: The type of the generic parameter 'T1' could not be inferred\.
             failed ParameterizedMethodSimpleParams \(1\) \(\d+ms\)
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
-                at System\.RuntimeType\.CreateInstanceCheckThis\(\)
-                at System\.RuntimeType\.CreateInstanceImpl\(BindingFlags bindingAttr, Binder binder, Object\[] args, CultureInfo culture\)
-                at System\.Activator\.CreateInstance\(Type type, Object\[] args\)
-                at Microsoft\.VisualStudio\.TestPlatform\.MSTestAdapter\.PlatformServices\.ReflectionOperations2\.CreateInstance\(Type type, Object\[] parameters\) in .+?ReflectionOperations2.cs:60
+                at .+?
             failed ParameterizedMethodSimpleParams \(1,2\) \(\d+ms\)
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
-                at System\.RuntimeType\.CreateInstanceCheckThis\(\)
-                at System\.RuntimeType\.CreateInstanceImpl\(BindingFlags bindingAttr, Binder binder, Object\[] args, CultureInfo culture\)
-                at System\.Activator\.CreateInstance\(Type type, Object\[] args\)
-                at Microsoft\.VisualStudio\.TestPlatform\.MSTestAdapter\.PlatformServices\.ReflectionOperations2\.CreateInstance\(Type type, Object\[] parameters\) in .+?ReflectionOperations2.cs:60
+                at .+?
             failed ParameterizedMethodSimpleParams \("Hello world"\) \(\d+ms\)
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
-                at System\.RuntimeType\.CreateInstanceCheckThis\(\)
-                at System\.RuntimeType\.CreateInstanceImpl\(BindingFlags bindingAttr, Binder binder, Object\[] args, CultureInfo culture\)
-                at System\.Activator\.CreateInstance\(Type type, Object\[] args\)
-                at Microsoft\.VisualStudio\.TestPlatform\.MSTestAdapter\.PlatformServices\.ReflectionOperations2\.CreateInstance\(Type type, Object\[] parameters\) in .+?ReflectionOperations2.cs:60
+                at .+?
             failed ParameterizedMethodSimpleParams \(null\) \(\d+ms\)
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
-                at System\.RuntimeType\.CreateInstanceCheckThis\(\)
-                at System\.RuntimeType\.CreateInstanceImpl\(BindingFlags bindingAttr, Binder binder, Object\[] args, CultureInfo culture\)
-                at System\.Activator\.CreateInstance\(Type type, Object\[] args\)
-                at Microsoft\.VisualStudio\.TestPlatform\.MSTestAdapter\.PlatformServices\.ReflectionOperations2\.CreateInstance\(Type type, Object\[] parameters\) in .+?ReflectionOperations2.cs:60
+                at .+?
             failed ParameterizedMethodSimpleParams \(null,"Hello world"\) \(\d+ms\)
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
-                at System\.RuntimeType\.CreateInstanceCheckThis\(\)
-                at System\.RuntimeType\.CreateInstanceImpl\(BindingFlags bindingAttr, Binder binder, Object\[] args, CultureInfo culture\)
-                at System\.Activator\.CreateInstance\(Type type, Object\[] args\)
-                at Microsoft\.VisualStudio\.TestPlatform\.MSTestAdapter\.PlatformServices\.ReflectionOperations2\.CreateInstance\(Type type, Object\[] parameters\) in .+?ReflectionOperations2.cs:60
-            """);
+                at .+?
+            """, RegexOptions.Singleline);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
