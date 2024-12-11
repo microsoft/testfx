@@ -486,7 +486,9 @@ public class TestExecutionManager
         IDictionary<TestProperty, object?> tcmProperties,
         IDictionary<string, object> sourceLevelParameters)
     {
-        var testContextProperties = new Dictionary<string, object?>();
+        // This dictionary will have *at least* 8 entries. Those are the sourceLevelParameters
+        // which were originally calculated from TestDeployment.GetDeploymentInformation.
+        var testContextProperties = new Dictionary<string, object?>(capacity: 8);
 
         // Add tcm properties.
         foreach (KeyValuePair<TestProperty, object?> propertyPair in tcmProperties)
