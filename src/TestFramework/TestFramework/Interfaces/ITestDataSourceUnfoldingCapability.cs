@@ -20,7 +20,9 @@ public interface ITestDataSourceUnfoldingCapability
 public enum TestDataSourceUnfoldingStrategy : byte
 {
     /// <summary>
-    /// The application decides whether to unfold the parameterized test.
+    /// MSTest will decide whether to unfold the parameterized test based on value from the assembly level attribute
+    /// <see cref="TestDataSourceOptionsAttribute" />. If no assembly level attribute is specified, then the default
+    /// configuration is to unfold.
     /// </summary>
     Auto,
 

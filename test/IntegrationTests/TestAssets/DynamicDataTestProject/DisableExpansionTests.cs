@@ -35,7 +35,14 @@ public sealed class DisableExpansionTests
     [TestMethod]
     [DynamicData(nameof(PropertySource), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
     [DynamicData(nameof(PropertySource), typeof(DataSourceHelper))]
-    public void TestPropertyWithTwoSourcesButOnlyOneDisablingExpansion(int a, string s)
+    public void TestPropertyWithTwoSourcesAndFirstDisablesExpansion(int a, string s)
+    {
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(PropertySource))]
+    [DynamicData(nameof(PropertySource), typeof(DataSourceHelper), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    public void TestPropertyWithTwoSourcesAndSecondDisablesExpansion(int a, string s)
     {
     }
 

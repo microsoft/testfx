@@ -87,22 +87,26 @@ public class DynamicDataTests : CLITestBase
         ImmutableArray<TestResult> testResults = RunTests(testCases);
 
         // Assert
-        Verify(testCases.Length == 5);
+        Verify(testCases.Length == 6);
 
         VerifyE2E.TestsPassed(
             testResults,
             "TestPropertySourceOnCurrentType (1,a)",
             "TestPropertySourceOnCurrentType (2,b)",
+            "TestPropertySourceOnDifferentType (3,c)",
+            "TestPropertySourceOnDifferentType (4,d)",
+            "TestPropertyWithTwoSourcesAndSecondDisablesExpansion (1,a)",
+            "TestPropertyWithTwoSourcesAndSecondDisablesExpansion (2,b)",
+            "TestPropertyWithTwoSourcesAndSecondDisablesExpansion (3,c)",
+            "TestPropertyWithTwoSourcesAndSecondDisablesExpansion (4,d)",
+            "TestMethodSourceOnDifferentType (3,c)",
+            "TestMethodSourceOnDifferentType (4,d)",
+            "TestPropertyWithTwoSourcesAndFirstDisablesExpansion (1,a)",
+            "TestPropertyWithTwoSourcesAndFirstDisablesExpansion (2,b)",
+            "TestPropertyWithTwoSourcesAndFirstDisablesExpansion (3,c)",
+            "TestPropertyWithTwoSourcesAndFirstDisablesExpansion (4,d)",
             "TestMethodSourceOnCurrentType (1,a)",
-            "TestMethodSourceOnCurrentType (2,b)",
-            "TestPropertySourceOnDifferentType (3,c)",
-            "TestPropertySourceOnDifferentType (3,c)",
-            "TestMethodSourceOnDifferentType (4,d)",
-            "TestMethodSourceOnDifferentType (4,d)",
-            "TestPropertyWithTwoSourcesButOnlyOneDisablingExpansion (1,a)",
-            "TestPropertyWithTwoSourcesButOnlyOneDisablingExpansion (2,b)",
-            "TestPropertyWithTwoSourcesButOnlyOneDisablingExpansion (3,c)",
-            "TestPropertyWithTwoSourcesButOnlyOneDisablingExpansion (4,d)");
+            "TestMethodSourceOnCurrentType (2,b)");
         VerifyE2E.FailedTestCount(testResults, 0);
     }
 }

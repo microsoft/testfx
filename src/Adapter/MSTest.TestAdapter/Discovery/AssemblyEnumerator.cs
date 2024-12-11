@@ -372,16 +372,23 @@ internal class AssemblyEnumerator : MarshalByRefObject
         try
         {
             bool isDataDriven = false;
+            // We need to use a temporary list to avoid adding tests to the main list if we fail to expand any data source.
+            List<UnitTestElement> tempListOfTests = new();
             foreach (ITestDataSource dataSource in testDataSources)
             {
                 isDataDriven = true;
-                if (!TryUnfoldITestDataSource(dataSource, dataSourcesUnfoldingStrategy, test, new(testMethodInfo.MethodInfo, test.DisplayName), tests))
+                if (!TryUnfoldITestDataSource(dataSource, dataSourcesUnfoldingStrategy, test, new(testMethodInfo.MethodInfo, test.DisplayName), tempListOfTests))
                 {
                     // TODO: Improve multi-source design!
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
                     // we will run all sources from the given method so we need to bail-out "globally".
                     return false;
                 }
+            }
+
+            if (isDataDriven && tempListOfTests.Count > 0)
+            {
+                tests.AddRange(tempListOfTests);
             }
 
             return isDataDriven;
