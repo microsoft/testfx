@@ -384,20 +384,24 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
             }
 
+            if (tempListOfTests.Count > 0)
+            {
+                tests.AddRange(tempListOfTests);
+            }
+
             return isDataDriven;
         }
         catch (Exception ex)
         {
             string message = string.Format(CultureInfo.CurrentCulture, Resource.CannotEnumerateIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, ex);
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumerator: {message}");
-            return false;
-        }
-        finally
-        {
+
             if (tempListOfTests.Count > 0)
             {
                 tests.AddRange(tempListOfTests);
             }
+
+            return false;
         }
     }
 
