@@ -396,7 +396,15 @@ public class AssemblyEnumeratorTests : TestContainer
 
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
+                typeof(TestDataSourceOptionsAttribute),
+                true))
+            .Returns(Array.Empty<Attribute>());
+
+        mockAssembly
+            .Setup(a => a.GetCustomAttributes(
+#pragma warning disable CS0618 // Type or member is obsolete
                 typeof(TestDataSourceDiscoveryAttribute),
+#pragma warning restore CS0618 // Type or member is obsolete
                 true))
             .Returns(Array.Empty<Attribute>());
 
@@ -429,14 +437,12 @@ internal sealed class TestableAssemblyEnumerator : AssemblyEnumerator
             reflectHelper.Object,
             typeValidator.Object,
             testMethodValidator.Object,
-            TestDataSourceDiscoveryOption.DuringExecution,
             TestIdGenerationStrategy.FullyQualified);
     }
 
     internal Mock<TypeEnumerator> MockTypeEnumerator { get; set; }
 
-    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals,
-        TestDataSourceDiscoveryOption discoveryOption, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestIdGenerationStrategy testIdGenerationStrategy)
         => MockTypeEnumerator.Object;
 }
 
