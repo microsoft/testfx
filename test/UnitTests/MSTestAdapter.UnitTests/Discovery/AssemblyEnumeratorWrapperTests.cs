@@ -21,7 +21,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
     private readonly AssemblyEnumeratorWrapper _testableAssemblyEnumeratorWrapper;
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    private ICollection<string> _warnings;
+    private List<string> _warnings;
 
     public AssemblyEnumeratorWrapperTests()
     {
