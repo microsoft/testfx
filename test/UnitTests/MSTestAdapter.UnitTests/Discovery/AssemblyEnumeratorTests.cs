@@ -26,7 +26,7 @@ public class AssemblyEnumeratorTests : TestContainer
     private readonly AssemblyEnumerator _assemblyEnumerator;
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    private List<string> _warnings;
+    private readonly List<string> _warnings;
 
     public AssemblyEnumeratorTests()
     {
@@ -348,11 +348,12 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns([typeof(InternalTestClass).GetTypeInfo()]);
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
-        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(warningsFromTypeEnumerator));
+        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
+            .Callback(() => _warnings.AddRange(warningsFromTypeEnumerator));
 
         testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", null, _warnings);
 
-        Verify(warningsFromTypeEnumerator.ToList().SequenceEqual(_warnings));
+        Verify(warningsFromTypeEnumerator.SequenceEqual(_warnings));
     }
 
     public void EnumerateAssemblyShouldHandleExceptionsWhileEnumeratingAType()
