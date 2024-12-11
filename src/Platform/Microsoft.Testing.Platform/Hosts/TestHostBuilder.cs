@@ -738,6 +738,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>(),
             serviceProvider.GetRequiredService<IStopPoliciesService>(),
+            serviceProvider.GetOutputDevice(),
             serviceProvider.GetTestApplicationCancellationTokenSource());
 
         if (await abortForMaxFailedTestsExtension.IsEnabledAsync())

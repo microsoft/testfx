@@ -4,19 +4,22 @@
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Extensions;
 
-internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
+internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer, IOutputDeviceDataProducer
 {
     private readonly int? _maxFailedTests;
     private readonly IGracefulStopTestExecutionCapability? _capability;
     private readonly IStopPoliciesService _policiesService;
+    private readonly IOutputDevice _outputDevice;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private int _failCount;
 
@@ -24,6 +27,7 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
         ICommandLineOptions commandLineOptions,
         IGracefulStopTestExecutionCapability? capability,
         IStopPoliciesService policiesService,
+        IOutputDevice outputDevice,
         ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
     {
         if (commandLineOptions.TryGetOptionArgumentList(MaxFailedTestsCommandLineOptionsProvider.MaxFailedTestsOptionKey, out string[]? args) &&
@@ -35,6 +39,7 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
 
         _capability = capability;
         _policiesService = policiesService;
+        _outputDevice = outputDevice;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     }
 
@@ -53,7 +58,21 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
     public string Description { get; } = PlatformResources.AbortForMaxFailedTestsDescription;
 
     /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(_maxFailedTests.HasValue && _capability is not null);
+    public async Task<bool> IsEnabledAsync()
+    {
+        if (!_maxFailedTests.HasValue)
+        {
+            return false;
+        }
+
+        if (_capability is null)
+        {
+            await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(PlatformResources.AbortForMaxFailedTestsCapabilityNotAvailable));
+            return false;
+        }
+
+        return true;
+    }
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
