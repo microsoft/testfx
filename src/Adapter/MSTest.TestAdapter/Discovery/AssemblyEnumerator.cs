@@ -72,17 +72,16 @@ internal class AssemblyEnumerator : MarshalByRefObject
     internal ICollection<UnitTestElement> EnumerateAssembly(
         string assemblyFileName,
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
-        out ICollection<string> warnings)
+        List<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
-        var warningMessages = new List<string>();
         var tests = new List<UnitTestElement>();
         // Contains list of assembly/class names for which we have already added fixture tests.
         var fixturesTests = new HashSet<string>();
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
-        Type[] types = GetTypes(assembly, assemblyFileName, warningMessages);
+        Type[] types = GetTypes(assembly, assemblyFileName, warnings);
         bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
         TestIdGenerationStrategy testIdGenerationStrategy = ReflectHelper.GetTestIdGenerationStrategy(assembly);
 
@@ -120,12 +119,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 continue;
             }
 
-            List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, testRunParametersFromRunSettings, type, warningMessages, discoverInternals,
+            List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, testRunParametersFromRunSettings, type, warnings, discoverInternals,
                 dataSourcesUnfoldingStrategy, testIdGenerationStrategy, fixturesTests);
             tests.AddRange(testsInType);
         }
 
-        warnings = warningMessages;
         return tests;
     }
 
@@ -238,8 +236,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             typeFullName = type.FullName;
             TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
-            ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string> warningsFromTypeEnumerator);
-            warningMessages.AddRange(warningsFromTypeEnumerator);
+            List<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(warningMessages);
 
             if (unitTestCases != null)
             {
@@ -369,11 +366,12 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
         IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(testMethodInfo.MethodInfo, inherit: false).OfType<ITestDataSource>();
 
+        // We need to use a temporary list to avoid adding tests to the main list if we fail to expand any data source.
+        List<UnitTestElement> tempListOfTests = new();
+
         try
         {
             bool isDataDriven = false;
-            // We need to use a temporary list to avoid adding tests to the main list if we fail to expand any data source.
-            List<UnitTestElement> tempListOfTests = new();
             foreach (ITestDataSource dataSource in testDataSources)
             {
                 isDataDriven = true;
@@ -386,11 +384,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
             }
 
-            if (isDataDriven && tempListOfTests.Count > 0)
-            {
-                tests.AddRange(tempListOfTests);
-            }
-
             return isDataDriven;
         }
         catch (Exception ex)
@@ -398,6 +391,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
             string message = string.Format(CultureInfo.CurrentCulture, Resource.CannotEnumerateIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, ex);
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumerator: {message}");
             return false;
+        }
+        finally
+        {
+            if (tempListOfTests.Count > 0)
+            {
+                tests.AddRange(tempListOfTests);
+            }
         }
     }
 

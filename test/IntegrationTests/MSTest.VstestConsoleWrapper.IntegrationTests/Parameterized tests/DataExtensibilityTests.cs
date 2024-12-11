@@ -13,7 +13,7 @@ public class DataExtensibilityTests : CLITestBase
     {
         InvokeVsTestForExecution([TestAssetName]);
         ValidatePassedTestsContain("CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
-        ValidateFailedTestsContain(false, "FxExtensibilityTestProject.TestDataSourceExTests.CustomTestDataSourceTestMethod1");
+        ValidateFailedTestsContain(false, "FxExtensibilityTestProject.TestDataSourceExTests.CustomEmptyTestDataSourceTestMethod");
     }
 
     public void ExecuteDynamicDataExtensibilityTests()

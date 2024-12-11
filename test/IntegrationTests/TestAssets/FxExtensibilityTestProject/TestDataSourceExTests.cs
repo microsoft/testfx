@@ -13,7 +13,6 @@ public class TestDataSourceExTests
 {
     [TestMethod]
     [CustomTestDataSource]
-    [CustomEmptyTestDataSource]
     public void CustomTestDataSourceTestMethod1(int a, int b, int c)
     {
         Assert.AreEqual(1, a % 3);
@@ -25,6 +24,15 @@ public class TestDataSourceExTests
     [CustomDisableExpansionTestDataSource]
     public void CustomDisableExpansionTestDataSourceTestMethod1(int a, int b, int c)
     {
+    }
+
+    [TestMethod]
+    [CustomEmptyTestDataSource]
+    public void CustomEmptyTestDataSourceTestMethod(int a, int b, int c)
+    {
+        Assert.AreEqual(1, a % 3);
+        Assert.AreEqual(2, b % 3);
+        Assert.AreEqual(0, c % 3);
     }
 }
 

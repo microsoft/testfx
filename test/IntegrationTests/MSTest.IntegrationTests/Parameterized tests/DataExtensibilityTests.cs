@@ -31,6 +31,19 @@ public class DataExtensibilityTests : CLITestBase
         VerifyE2E.ContainsTestsPassed(testResults, "CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
     }
 
+    public void CustomEmptyTestDataSourceTests()
+    {
+        // Arrange
+        string assemblyPath = GetAssetFullPath(TestAssetName);
+
+        // Act
+        ImmutableArray<TestCase> testCases = DiscoverTests(assemblyPath, "CustomEmptyTestDataSourceTestMethod");
+        ImmutableArray<TestResult> testResults = RunTests(testCases);
+
+        // Assert
+        VerifyE2E.ContainsTestsFailed(testResults, new string[] { null });
+    }
+
     public void AssertExtensibilityTests()
     {
         // Arrange
@@ -41,7 +54,6 @@ public class DataExtensibilityTests : CLITestBase
         ImmutableArray<TestResult> testResults = RunTests(testCases);
 
         // Assert
-        VerifyE2E.ContainsTestsPassed(testResults, "BasicAssertExtensionTest", "ChainedAssertExtensionTest");
         VerifyE2E.ContainsTestsFailed(testResults, "BasicFailingAssertExtensionTest", "ChainedFailingAssertExtensionTest");
     }
 

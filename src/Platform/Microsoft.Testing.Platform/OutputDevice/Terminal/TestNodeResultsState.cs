@@ -28,8 +28,6 @@ internal sealed class TestNodeResultsState
 
     public void RemoveRunningTestNode(string uid) => _testNodeProgressStates.TryRemove(uid, out _);
 
-    public TestDetailState? GetFirstRunningTask() => _testNodeProgressStates.FirstOrDefault().Value;
-
     public IEnumerable<TestDetailState> GetRunningTasks(int maxCount)
     {
         var sortedDetails = _testNodeProgressStates
