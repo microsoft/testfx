@@ -22,7 +22,7 @@ The reason for opting-in/out this experience is
 
 We want to design in a way that is future proof and easy to keep backwards compatible.
 
-## Proposed solution
+## Proposals
 
 Make this option configurable in global.json. We chose global.json because it's located on the current directory level or its parent directories and is picked up by the dotnet sdk.
 
@@ -43,11 +43,23 @@ What if we want to support another test runner? We simply can't, with this appro
 
 ### 2. Specify the Test Runner Tool
 
+#### Examples of Usage
 ```json
 {
 "testSdk" :
   {
-    "tool": "vstest/testingplatform"
+    "tool": "testingplatform"
+  }
+}
+```
+
+or 
+
+```json
+{
+"testSdk" :
+  {
+    "tool": "vstest"
   }
 }
 ```
@@ -62,7 +74,7 @@ But if, for some reason, the latest version of the testing platform was broken, 
 {
 "testSdk" :
   {
-    "tool": "vstest/testingplatform",
+    "tool": "testingplatform",
     "version": "1.5.0",
     "allowPrerelease": false
   }
