@@ -14,7 +14,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <item>not generic</item>
 /// </list>
 /// </remarks>
-[AttributeUsage(AttributeTargets.Class)]
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public class TestClassAttribute : Attribute
 {
     /// <summary>
