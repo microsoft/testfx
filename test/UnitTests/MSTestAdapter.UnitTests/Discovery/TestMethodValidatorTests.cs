@@ -62,7 +62,8 @@ public class TestMethodValidatorTests : TestContainer
         _mockMethodInfo.Setup(mi => mi.IsGenericMethodDefinition).Returns(true);
         _mockMethodInfo.Setup(mi => mi.DeclaringType.FullName).Returns("DummyTestClass");
         _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
-
+        _mockMethodInfo.Setup(mi => mi.Attributes).Returns(MethodAttributes.Public);
+        _mockMethodInfo.Setup(mi => mi.ReturnType).Returns(typeof(void));
         _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings);
 
         Verify(_warnings.Count == 0);
