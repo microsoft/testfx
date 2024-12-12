@@ -66,11 +66,11 @@ What if we want to support another test runner? We simply can't, with this appro
 
 #### Unresolved Questions
 
-What if we decide to extract the testing platform as an external tool? We still could support more options.
+What if we decide to use the testing platform as an external tool/service? We still could support more options.
 
 But if, for some reason, the latest version of the testing platform was broken, we will break as well.
 
-### 3. Specify the Test Runner Tool and Version
+### 3. Specify the Test Runner Tool and Other Options
 
 #### Example of Usage
 
@@ -86,7 +86,7 @@ But if, for some reason, the latest version of the testing platform was broken, 
 ```
 
 - `testSdk`: Represents the configuration settings for the test SDK.
-  - `tool`: Specifies the name of the testing tool being used. In this case, it is "testingplatform".
+  - `tool`: Specifies the name of the testing tool being used. In this case, it is `testingplatform`.
   - `version`: Indicates the version of the testing tool. Here, it is set to "1.5.0".
   - `allowPrerelease`: A boolean value that determines whether pre-release versions of the testing tool are allowed. It is set to false, meaning pre-release versions are not permitted.
 
