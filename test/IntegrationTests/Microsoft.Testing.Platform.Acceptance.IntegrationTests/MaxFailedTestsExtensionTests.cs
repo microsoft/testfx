@@ -35,7 +35,7 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase
         });
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
-        testHostResult.AssertOutputContains("The current test framework does not support '--maximum-failed-tests'.");
+        testHostResult.AssertOutputContains("The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
