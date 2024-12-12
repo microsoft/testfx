@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="new">Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <target state="translated">Rozszerzenie używane do obsługi "--maximum-failed-tests". Po osiągnięciu podanego progu niepowodzeń przebieg testu zostanie przerwany.</target>
         <note />
       </trans-unit>
       <trans-unit id="Aborted">
@@ -383,7 +383,7 @@
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="new">The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <target state="translated">Opcja "--maximum-failed-tests" musi być dodatnią liczbą całkowitą. Wartość '{0}' jest nieprawidłowa.</target>
         <note />
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -403,7 +403,7 @@
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_MoreTestsCount">
         <source>and {0} more</source>
-        <target state="new">and {0} more</target>
+        <target state="translated">i {0} więcej</target>
         <note />
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
@@ -552,7 +552,7 @@ Dostępne wartości to „Trace”, „Debug”, „Information”, „Warning�
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="new">Specifies a maximum number of test failures that, when exceeded, will abort the test run.</target>
+        <target state="translated">Określa maksymalną liczbę niepowodzeń testów, które po przekroczeniu spowoduje przerwanie przebiegu testu.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -645,7 +645,7 @@ Pobiera jeden argument jako ciąg w formacie &lt;value&gt;[h|m|s], gdzie element
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</target>
+        <target state="translated">Sesja testowa jest przerywana z powodu błędów ('{0}') określonych przez opcję "--maximum-failed-tests".</target>
         <note>{0} is the number of max failed tests.</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
