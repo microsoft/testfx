@@ -88,36 +88,6 @@ internal static class Constants
 
     internal static readonly TestProperty InnerResultsCountProperty = TestProperty.Register("InnerResultsCount", InnerResultsCountLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestResult));
 
-    internal static readonly TestProperty TestRunIdProperty = TestProperty.Register(TestRunId, TestRunId, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty TestPlanIdProperty = TestProperty.Register(TestPlanId, TestPlanId, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty TestCaseIdProperty = TestProperty.Register(TestCaseId, TestCaseId, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty TestPointIdProperty = TestProperty.Register(TestPointId, TestPointId, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty TestConfigurationIdProperty = TestProperty.Register(TestConfigurationId, TestConfigurationId, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty TestConfigurationNameProperty = TestProperty.Register(TestConfigurationName, TestConfigurationName, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty IsInLabEnvironmentProperty = TestProperty.Register(IsInLabEnvironment, IsInLabEnvironment, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty BuildConfigurationIdProperty = TestProperty.Register(BuildConfigurationId, BuildConfigurationId, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty BuildDirectoryProperty = TestProperty.Register(BuildDirectory, BuildDirectory, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty BuildFlavorProperty = TestProperty.Register(BuildFlavor, BuildFlavor, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty BuildNumberProperty = TestProperty.Register(BuildNumber, BuildNumber, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty BuildPlatformProperty = TestProperty.Register(BuildPlatform, BuildPlatform, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty BuildUriProperty = TestProperty.Register(BuildUri, BuildUri, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty TfsServerCollectionUrlProperty = TestProperty.Register(TfsServerCollectionUrl, TfsServerCollectionUrl, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty TfsTeamProjectProperty = TestProperty.Register(TfsTeamProject, TfsTeamProject, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
     internal static readonly TestProperty TestDynamicDataTypeProperty = TestProperty.Register("MSTest.DynamicDataType", "DynamicDataType", typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty TestDynamicDataProperty = TestProperty.Register("MSTest.DynamicData", "DynamicData", typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
@@ -146,22 +116,6 @@ internal static class Constants
     private const string CssIterationLabel = "CssIteration";
     private const string CssProjectStructureLabel = "CssProjectStructure";
     private const string WorkItemIdsLabel = "WorkItemIds";
-
-    private const string TestRunId = "__Tfs_TestRunId__";
-    private const string TestPlanId = "__Tfs_TestPlanId__";
-    private const string TestCaseId = "__Tfs_TestCaseId__";
-    private const string TestPointId = "__Tfs_TestPointId__";
-    private const string TestConfigurationId = "__Tfs_TestConfigurationId__";
-    private const string TestConfigurationName = "__Tfs_TestConfigurationName__";
-    private const string IsInLabEnvironment = "__Tfs_IsInLabEnvironment__";
-    private const string BuildConfigurationId = "__Tfs_BuildConfigurationId__";
-    private const string BuildDirectory = "__Tfs_BuildDirectory__";
-    private const string BuildFlavor = "__Tfs_BuildFlavor__";
-    private const string BuildNumber = "__Tfs_BuildNumber__";
-    private const string BuildPlatform = "__Tfs_BuildPlatform__";
-    private const string BuildUri = "__Tfs_BuildUri__";
-    private const string TfsServerCollectionUrl = "__Tfs_TfsServerCollectionUrl__";
-    private const string TfsTeamProject = "__Tfs_TeamProject__";
 
     #endregion
 }

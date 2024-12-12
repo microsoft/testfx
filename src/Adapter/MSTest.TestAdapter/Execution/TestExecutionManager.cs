@@ -447,8 +447,7 @@ public class TestExecutionManager
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing test {0}", unitTestElement.TestMethod.Name);
 
             // Run single test passing test context properties to it.
-            IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
-            Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
+            Dictionary<string, object?> testContextProperties = GetTestContextProperties(sourceLevelParameters);
             UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
@@ -488,22 +487,14 @@ public class TestExecutionManager
     /// <summary>
     /// Get test context properties.
     /// </summary>
-    /// <param name="tcmProperties">Tcm properties.</param>
     /// <param name="sourceLevelParameters">Source level parameters.</param>
     /// <returns>Test context properties.</returns>
     private static Dictionary<string, object?> GetTestContextProperties(
-        IDictionary<TestProperty, object?> tcmProperties,
         IDictionary<string, object> sourceLevelParameters)
     {
         // This dictionary will have *at least* 8 entries. Those are the sourceLevelParameters
         // which were originally calculated from TestDeployment.GetDeploymentInformation.
         var testContextProperties = new Dictionary<string, object?>(capacity: 8);
-
-        // Add tcm properties.
-        foreach (KeyValuePair<TestProperty, object?> propertyPair in tcmProperties)
-        {
-            testContextProperties[propertyPair.Key.Id] = propertyPair.Value;
-        }
 
         // Add source level parameters.
         foreach (KeyValuePair<string, object> propertyPair in sourceLevelParameters)
