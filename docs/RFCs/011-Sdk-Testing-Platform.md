@@ -27,7 +27,7 @@ Make this option configurable in global.json. We chose global.json because it's 
 
 Here are some global.json samples:
 
-1.
+1. Boolean
 
 ```json
 {
@@ -42,7 +42,7 @@ What if we want to support another test runner?
 
 We simply can't, with this approach we either use the testing platform, or fallback to vstest if this property was set to false.
 
-2.
+2. Specify the Tool
 
 ```json
 {
@@ -57,23 +57,24 @@ What if we decide to extract the testing platform as an external tool?
 
 We still could support more options.
 
-But if, for some reason, the latest version was broken, we will break as well.
+But if, for some reason, the latest version of the testing platform was broken, we will break as well.
 
-3.
+3. Specify the Tool and Version
 
 ```json
 {
 "testSdk" :
   {
     "tool": "vstest/testingplatform/...",
-    "version": "1.5.0"
+    "version": "1.5.0",
+    "allowPrerelease": false
   }
 }
 ```
 
 Users are allowed to force install a specific version of the tool.
 
-If not specified then we will fallback to the latest version.
+If it's not specified, then we will fallback to the latest version.
 
 ### Default
 
