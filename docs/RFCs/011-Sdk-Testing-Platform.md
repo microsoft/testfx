@@ -24,6 +24,7 @@ Make this option configurable in global.json.
 Here are some global.json samples:
 
 1.
+
 ```json
 {
 "testSdk" :
@@ -38,6 +39,7 @@ What if we want to support another test runner?
 We simply can't, with this approach we either use the testing platform, or fallback to vstest if this property was set to false.
 
 2.
+
 ```json
 {
 "testSdk" :
@@ -54,6 +56,7 @@ We still could support more options.
 But if, for some reason, the latest version was broken, we will break as well.
 
 3.
+
 ```json
 {
 "testSdk" :
