@@ -11,22 +11,28 @@ namespace Microsoft.Testing.Platform.CommandLine;
 
 internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, ITestApplicationModuleInfo testApplicationModuleInfo) : ICommandLineManager
 {
-    private readonly List<Func<ICommandLineOptionsProvider>> _commandLineProviderFactory = [];
+    private readonly List<Func<IServiceProvider, ICommandLineOptionsProvider>> _commandLineProviderFactory = [];
     private readonly IRuntimeFeature _runtimeFeature = runtimeFeature;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
 
     public void AddProvider(Func<ICommandLineOptionsProvider> commandLineProviderFactory)
     {
         Guard.NotNull(commandLineProviderFactory);
+        _commandLineProviderFactory.Add(_ => commandLineProviderFactory());
+    }
+
+    public void AddProvider(Func<IServiceProvider, ICommandLineOptionsProvider> commandLineProviderFactory)
+    {
+        Guard.NotNull(commandLineProviderFactory);
         _commandLineProviderFactory.Add(commandLineProviderFactory);
     }
 
-    internal async Task<CommandLineHandler> BuildAsync(CommandLineParseResult parseResult)
+    internal async Task<CommandLineHandler> BuildAsync(CommandLineParseResult parseResult, IServiceProvider serviceProvider)
     {
         List<ICommandLineOptionsProvider> commandLineOptionsProviders = [];
-        foreach (Func<ICommandLineOptionsProvider> commandLineProviderFactory in _commandLineProviderFactory)
+        foreach (Func<IServiceProvider, ICommandLineOptionsProvider> commandLineProviderFactory in _commandLineProviderFactory)
         {
-            ICommandLineOptionsProvider commandLineOptionsProvider = commandLineProviderFactory();
+            ICommandLineOptionsProvider commandLineOptionsProvider = commandLineProviderFactory(serviceProvider);
             if (!await commandLineOptionsProvider.IsEnabledAsync())
             {
                 continue;

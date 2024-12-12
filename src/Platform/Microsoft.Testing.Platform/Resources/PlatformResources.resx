@@ -713,4 +713,7 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
     <value>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</value>
     <comment>{0} is the number of max failed tests.</comment>
   </data>
+  <data name="AbortForMaxFailedTestsCapabilityNotAvailable" xml:space="preserve">
+    <value>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</value>
+  </data>
 </root>

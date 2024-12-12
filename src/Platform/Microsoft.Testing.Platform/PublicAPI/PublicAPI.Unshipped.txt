@@ -8,6 +8,7 @@ Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData.Message.g
 Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData.WarningMessageOutputDeviceData(string! message) -> void
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionCapability
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionCapability.StopTestExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.CommandLine.ICommandLineManager.AddProvider(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider!>! commandLineProviderFactory) -> void
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.init -> void
