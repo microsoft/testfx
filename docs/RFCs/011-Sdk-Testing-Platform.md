@@ -44,6 +44,7 @@ What if we want to support another test runner? We simply can't, with this appro
 ### 2. Specify the Test Runner Tool
 
 #### Examples of Usage
+
 ```json
 {
 "testSdk" :
@@ -70,6 +71,8 @@ But if, for some reason, the latest version of the testing platform was broken, 
 
 ### 3. Specify the Test Runner Tool and Version
 
+#### Example of Usage
+
 ```json
 {
 "testSdk" :
@@ -81,7 +84,7 @@ But if, for some reason, the latest version of the testing platform was broken, 
 }
 ```
 
-Users are allowed to force install a specific version of the tool. If it's not specified, then we will fallback to the latest version.
+This configuration specifies that the testing platform tool should be used with version 1.5.0, and it does not allow pre-release versions. This provides more control over the test runner tool and ensures compatibility with specific versions. If it's not specified, then we will fallback to the latest version.
 
 ### Default
 
