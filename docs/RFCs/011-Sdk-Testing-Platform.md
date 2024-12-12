@@ -22,13 +22,13 @@ The reason for opting-in/out this experience is
 
 We want to design in a way that is future proof and easy to keep backwards compatible.
 
-### Proposed solution
+## Proposed solution
 
 Make this option configurable in global.json. We chose global.json because it's located on the current directory level or its parent directories and is picked up by the dotnet sdk.
 
 Here are some global.json suggestions:
 
-1. Enable/Disable Testing Platform
+### 1. Enable/Disable Testing Platform
 
 ```json
 {
@@ -43,7 +43,7 @@ What if we want to support another test runner?
 
 We simply can't, with this approach we either use the testing platform, or fallback to vstest if this property was set to false.
 
-2. Specify the Tool
+### 2. Specify the Test Runner Tool
 
 ```json
 {
@@ -60,7 +60,7 @@ We still could support more options.
 
 But if, for some reason, the latest version of the testing platform was broken, we will break as well.
 
-3. Specify the Tool and Version
+### 3. Specify the Test Runner Tool and Version
 
 ```json
 {
