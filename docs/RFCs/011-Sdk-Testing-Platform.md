@@ -30,6 +30,11 @@ Here are some global.json suggestions:
 
 ### 1. Enable/Disable Testing Platform
 
+- `testSdk`: Represents the configuration settings for the test SDK.
+  - `useTestingPlatform`: A boolean value that determines whether to use the Microsoft Testing Platform. If set to `true`, the testing platform will be used; if set to `false`, vstest will be used.
+
+#### Example of Usage
+
 ```json
 {
 "testSdk" :
@@ -39,9 +44,14 @@ Here are some global.json suggestions:
 }
 ```
 
+#### Unresolved Questions
+
 What if we want to support another test runner? We simply can't, with this approach we either use the testing platform, or fallback to vstest if this property was set to false.
 
 ### 2. Specify the Test Runner Tool
+
+- `testSdk`: Represents the configuration settings for the test SDK.
+   - `tool`: Specifies the testing tool to be used. In this case, "testingplatform" is the tool being used.
 
 #### Examples of Usage
 
@@ -65,11 +75,20 @@ or
 }
 ```
 
+#### Unresolved Questions
+
 What if we decide to extract the testing platform as an external tool? We still could support more options.
 
 But if, for some reason, the latest version of the testing platform was broken, we will break as well.
 
 ### 3. Specify the Test Runner Tool and Version
+
+- `testSdk`: This is the main object that contains the configuration for the testing SDK.
+  - `tool`: Specifies the name of the testing tool being used. In this case, it is "testingplatform".
+  - `version`: Indicates the version of the testing tool. Here, it is set to "1.5.0".
+  - `allowPrerelease`: A boolean value that determines whether pre-release versions of the testing tool are allowed. It is set to false, meaning pre-release versions are not permitted.
+
+This provides more control over the test runner tool and ensures compatibility with specific versions. If it's not specified, then we will fallback to the latest version.
 
 #### Example of Usage
 
@@ -83,8 +102,6 @@ But if, for some reason, the latest version of the testing platform was broken, 
   }
 }
 ```
-
-This configuration specifies that the testing platform tool should be used with version 1.5.0, and it does not allow pre-release versions. This provides more control over the test runner tool and ensures compatibility with specific versions. If it's not specified, then we will fallback to the latest version.
 
 ### Default
 
