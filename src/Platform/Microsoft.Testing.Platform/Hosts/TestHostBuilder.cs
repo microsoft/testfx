@@ -247,15 +247,15 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             await testFrameworkCapabilitiesAsyncInitializable.InitializeAsync();
         }
 
+        // Register the test framework capabilities to be used by services
+        serviceProvider.AddService(testFrameworkCapabilities);
+
         // If command line is not valid we return immediately.
         ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(
             loggingState.CommandLineParseResult,
             commandLineHandler.SystemCommandLineOptionsProviders,
             commandLineHandler.ExtensionsCommandLineOptionsProviders,
             commandLineHandler);
-
-        // Register the test framework capabilities to be used by services
-        serviceProvider.AddService(testFrameworkCapabilities);
 
         if (!loggingState.CommandLineParseResult.HasTool && !commandLineValidationResult.IsValid)
         {
