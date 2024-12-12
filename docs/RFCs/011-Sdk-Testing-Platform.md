@@ -39,9 +39,7 @@ Here are some global.json suggestions:
 }
 ```
 
-What if we want to support another test runner?
-
-We simply can't, with this approach we either use the testing platform, or fallback to vstest if this property was set to false.
+What if we want to support another test runner? We simply can't, with this approach we either use the testing platform, or fallback to vstest if this property was set to false.
 
 ### 2. Specify the Test Runner Tool
 
@@ -54,9 +52,7 @@ We simply can't, with this approach we either use the testing platform, or fallb
 }
 ```
 
-What if we decide to extract the testing platform as an external tool?
-
-We still could support more options.
+What if we decide to extract the testing platform as an external tool? We still could support more options.
 
 But if, for some reason, the latest version of the testing platform was broken, we will break as well.
 
@@ -66,21 +62,15 @@ But if, for some reason, the latest version of the testing platform was broken, 
 {
 "testSdk" :
   {
-    "tool": "vstest/testingplatform/...",
+    "tool": "vstest/testingplatform",
     "version": "1.5.0",
     "allowPrerelease": false
   }
 }
 ```
 
-Users are allowed to force install a specific version of the tool.
-
-If it's not specified, then we will fallback to the latest version.
+Users are allowed to force install a specific version of the tool. If it's not specified, then we will fallback to the latest version.
 
 ### Default
 
 - If no test runner was provided in global.json, the default is set to vstest.
-
-## Unresolved questions
-
-None.
