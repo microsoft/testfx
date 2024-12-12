@@ -3,6 +3,7 @@
 
 using System.Collections.Immutable;
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -13,11 +14,13 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Requests;
 /// </summary>
 public sealed class VSTestTestExecutionFilter : ITestExecutionFilter
 {
-    internal VSTestTestExecutionFilter()
-    {
-    }
+    internal VSTestTestExecutionFilter() => TestCases = ImmutableArray<TestCase>.Empty;
 
     internal VSTestTestExecutionFilter(ImmutableArray<TestCase> testCases) => TestCases = testCases;
 
-    public ImmutableArray<TestCase>? TestCases { get; }
+    public ImmutableArray<TestCase> TestCases { get; }
+
+    public bool IsAvailable => !TestCases.IsDefaultOrEmpty;
+
+    public bool MatchesFilter(TestNode testNode) => TestCases.Any(x => x.Id.ToString() == testNode.Uid.Value);
 }

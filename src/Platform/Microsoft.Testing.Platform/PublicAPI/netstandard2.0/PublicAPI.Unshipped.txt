@@ -1,1 +1,12 @@
 #nullable enable
+Microsoft.Testing.Platform.Requests.AggregateFilter
+Microsoft.Testing.Platform.Requests.AggregateFilter.AggregateFilter(params System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>! innerFilters) -> void
+Microsoft.Testing.Platform.Requests.AggregateFilter.InnerFilters.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>!
+Microsoft.Testing.Platform.Requests.AggregateFilter.IsAvailable.get -> bool
+Microsoft.Testing.Platform.Requests.AggregateFilter.MatchesFilter(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> bool
+Microsoft.Testing.Platform.Requests.ITestExecutionFilter.IsAvailable.get -> bool
+Microsoft.Testing.Platform.Requests.ITestExecutionFilter.MatchesFilter(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> bool
+Microsoft.Testing.Platform.Requests.TestNodeUidListFilter.IsAvailable.get -> bool
+Microsoft.Testing.Platform.Requests.TestNodeUidListFilter.MatchesFilter(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> bool
+Microsoft.Testing.Platform.TestHost.ITestHostManager.RegisterTestExecutionFilter(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>! testFilterFactory) -> void
+static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetServices<TService>(this System.IServiceProvider! provider) -> System.Collections.Generic.IEnumerable<TService!>!

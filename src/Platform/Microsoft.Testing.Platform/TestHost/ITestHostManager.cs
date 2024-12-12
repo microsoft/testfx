@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Requests;
 
 namespace Microsoft.Testing.Platform.TestHost;
 
@@ -22,6 +23,12 @@ public interface ITestHostManager
     /// </summary>
     /// <param name="dataConsumerFactory">The factory method for creating the data consumer.</param>
     void AddDataConsumer(Func<IServiceProvider, IDataConsumer> dataConsumerFactory);
+
+    /// <summary>
+    /// Registers a test execution filter.
+    /// </summary>
+    /// <param name="testFilterFactory">The factory method for creating the a test execution filter.</param>
+    void RegisterTestExecutionFilter(Func<IServiceProvider, ITestExecutionFilter> testFilterFactory);
 
     /// <summary>
     /// Adds a data consumer of type T.

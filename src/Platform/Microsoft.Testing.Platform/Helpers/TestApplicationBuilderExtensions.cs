@@ -6,6 +6,8 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Helpers;
 
@@ -14,7 +16,10 @@ namespace Microsoft.Testing.Platform.Helpers;
 public static class TestApplicationBuilderExtensions
 {
     public static void AddTreeNodeFilterService(this ITestApplicationBuilder testApplicationBuilder, IExtension extension)
-        => testApplicationBuilder.CommandLine.AddProvider(() => new TreeNodeFilterCommandLineOptionsProvider(extension));
+    {
+        testApplicationBuilder.CommandLine.AddProvider(() => new TreeNodeFilterCommandLineOptionsProvider(extension));
+        testApplicationBuilder.TestHost.RegisterTestExecutionFilter(sp => new TreeNodeFilter(sp.GetCommandLineOptions()));
+    }
 
     /// <summary>
     /// Registers the command-line options provider for '--maximum-failed-tests'.
