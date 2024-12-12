@@ -31,7 +31,7 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2", environmentVariables: new()
         {
-            ["DO_NOT_ADD_CAPABILITY"] = "1"
+            ["DO_NOT_ADD_CAPABILITY"] = "1",
         });
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
