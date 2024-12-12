@@ -11,7 +11,7 @@ Currently, when we run `dotnet test` in CLI, we use vstest as a test runner/driv
 
 ## Motivation
 
-With `dotnet test`, users should be able to use [Microsoft testing platform](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-platform-intro?tabs=dotnetcli#microsofttestingplatform-pillars) to run their tests for the sake of improving their experience. They should have the option to opt-in/out this new experience.
+With `dotnet test`, users should be able to use [Microsoft Testing Platform](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-platform-intro?tabs=dotnetcli#microsofttestingplatform-pillars) to run their tests for the sake of improving their experience. They should have the option to opt-in/out this new experience.
 
 The reason for opting-in/out this experience is
 
@@ -62,7 +62,7 @@ What if we want to support another test runner? We simply can't, with this appro
 ```
 
 - `testSdk`: Represents the configuration settings for the test SDK.
-   - `tool`: Specifies the testing tool to be used (`vstest` or `testingplatform`). In this case, `testingplatform` is the tool being used.
+  - `tool`: Specifies the testing tool to be used (`vstest` or `testingplatform`). In this case, `testingplatform` is the tool being used.
 
 #### Unresolved Questions
 
