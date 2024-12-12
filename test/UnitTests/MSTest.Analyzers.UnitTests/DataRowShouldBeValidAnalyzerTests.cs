@@ -572,41 +572,58 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
             public class TestClass
             {
                 [TestMethod]
-                [DataRow(0)]
+                [DataRow(0)] // This is an unfortunate false negative that will blow up at runtime.
                 public void AMethodWithBadConstraints<T>(T p) where T : IDisposable
                     => Assert.Fail($"Test method 'AMethodWithBadConstraints' did run with T type being '{typeof(T)}'.");
-
-                [TestMethod]
-                public void NonParameterizedTestMethod<T>()
-                    => Assert.Fail("Test method 'NonParameterizedTestMethod' did run.");
 
                 [TestMethod]
                 [DataRow((byte)1)]
                 [DataRow((int)2)]
                 [DataRow("Hello world")]
-                [DataRow(null)]
+                [{|#0:DataRow(null)|}]
                 public void ParameterizedMethodSimple<T>(T parameter)
                     => Assert.Fail($"Test method 'ParameterizedMethodSimple' did run with parameter '{parameter?.ToString() ?? "<null>"}' and type '{typeof(T)}'.");
 
                 [TestMethod]
-                [|[DataRow((byte)1, "Hello world", (int)2, 3)]|]
+                [{|#1:DataRow((byte)1, "Hello world", (int)2, 3)|}]
                 [DataRow(null, "Hello world", "Hello again", 3)]
-                [DataRow("Hello hello", "Hello world", null, null)]
-                [DataRow(null, null, null, null)]
+                [{|#2:DataRow("Hello hello", "Hello world", null, null)|}]
+                [{|#3:{|#4:DataRow(null, null, null, null)|}|}]
                 public void ParameterizedMethodTwoGenericParametersAndFourMethodParameters<T1, T2>(T2 p1, string p2, T2 p3, T1 p4)
                     => Assert.Fail($"Test method 'ParameterizedMethodTwoGenericParametersAndFourMethodParameters' did run with parameters '{p1?.ToString() ?? "<null>"}', '{p2 ?? "<null>"}', '{p3?.ToString() ?? "<null>"}', '{p4?.ToString() ?? "<null>"}' and generic types '{typeof(T1)}', '{typeof(T2)}'.");
 
                 [TestMethod]
-                [|[DataRow((byte)1)]|]
-                [|[DataRow((byte)1, 2)]|]
-                [|[DataRow("Hello world")]|]
-                [DataRow(null)]
-                [|[DataRow(null, "Hello world")]|]
+                [{|#5:DataRow((byte)1)|}]
+                [{|#6:DataRow((byte)1, 2)|}]
+                [{|#7:DataRow("Hello world")|}]
+                [{|#8:DataRow(null)|}]
+                [{|#9:DataRow(null, "Hello world")|}]
                 public void ParameterizedMethodSimpleParams<T>(params T[] parameter)
                     => Assert.Fail($"Test method 'ParameterizedMethodSimple' did run with parameter '{string.Join(",", parameter)}' and type '{typeof(T)}'.");
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            // /0/Test0.cs(17,6): warning MSTEST0014: The type of the generic parameter 'T' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(0).WithArguments("T"),
+            // /0/Test0.cs(22,6): warning MSTEST0014: Found two conflicting types for generic parameter 'T2'. The conflicting types are 'Byte' and 'Int32'.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentConflictingTypesRule).WithLocation(1).WithArguments("T2", "Byte", "Int32"),
+            // /0/Test0.cs(24,6): warning MSTEST0014: The type of the generic parameter 'T1' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(2).WithArguments("T1"),
+            // /0/Test0.cs(25,6): warning MSTEST0014: The type of the generic parameter 'T1' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(3).WithArguments("T1"),
+            // /0/Test0.cs(25,6): warning MSTEST0014: The type of the generic parameter 'T2' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(4).WithArguments("T2"),
+            // /0/Test0.cs(30,6): warning MSTEST0014: The type of the generic parameter 'T' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(5).WithArguments("T"),
+            // /0/Test0.cs(31,6): warning MSTEST0014: The type of the generic parameter 'T' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(6).WithArguments("T"),
+            // /0/Test0.cs(32,6): warning MSTEST0014: The type of the generic parameter 'T' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(7).WithArguments("T"),
+            // /0/Test0.cs(33,6): warning MSTEST0014: The type of the generic parameter 'T' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(8).WithArguments("T"),
+            // /0/Test0.cs(34,6): warning MSTEST0014: The type of the generic parameter 'T' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(9).WithArguments("T"));
     }
 }

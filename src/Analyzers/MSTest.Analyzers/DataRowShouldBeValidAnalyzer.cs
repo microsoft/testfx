@@ -37,8 +37,19 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor ArgumentTypeMismatchRule = DataRowOnTestMethodRule
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch), Resources.ResourceManager, typeof(Resources)));
 
+    internal static readonly DiagnosticDescriptor GenericTypeArgumentNotResolvedRule = DataRowOnTestMethodRule
+        .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved), Resources.ResourceManager, typeof(Resources)));
+
+    internal static readonly DiagnosticDescriptor GenericTypeArgumentConflictingTypesRule = DataRowOnTestMethodRule
+        .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes), Resources.ResourceManager, typeof(Resources)));
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(DataRowOnTestMethodRule);
+        = ImmutableArray.Create(
+            DataRowOnTestMethodRule,
+            ArgumentCountMismatchRule,
+            ArgumentTypeMismatchRule,
+            GenericTypeArgumentNotResolvedRule,
+            GenericTypeArgumentConflictingTypesRule);
 
     public override void Initialize(AnalysisContext context)
     {
@@ -168,7 +179,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        Dictionary<ITypeSymbol, (ITypeSymbol Symbol, Type SystemType)>? parameterTypesSubstitutions = GetParameterTypeSubstitutions(methodSymbol, constructorArguments);
+        AnalyzeGenericMethod(context, dataRowSyntax, methodSymbol, constructorArguments);
 
         // Check constructor argument types match method parameter types.
         List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices = new();
@@ -181,7 +192,13 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
 
             ITypeSymbol? argumentType = constructorArguments[currentArgumentIndex].Type;
-            ITypeSymbol paramType = GetParameterType(methodSymbol.Parameters, currentArgumentIndex, constructorArguments.Length, parameterTypesSubstitutions);
+            ITypeSymbol paramType = GetParameterType(methodSymbol.Parameters, currentArgumentIndex, constructorArguments.Length);
+            if (paramType.TypeKind == TypeKind.TypeParameter)
+            {
+                // That means the actual type cannot be determined. We should have issued a separate
+                // diagnostic for that in GetParameterTypeSubstitutions call above.
+                continue;
+            }
 
             if (argumentType is not null && !argumentType.IsAssignableTo(paramType, context.Compilation))
             {
@@ -198,11 +215,15 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static Dictionary<ITypeSymbol, (ITypeSymbol Symbol, Type SystemType)>? GetParameterTypeSubstitutions(IMethodSymbol methodSymbol, ImmutableArray<TypedConstant> constructorArguments)
+    private static void AnalyzeGenericMethod(
+        SymbolAnalysisContext context,
+        SyntaxNode dataRowSyntax,
+        IMethodSymbol methodSymbol,
+        ImmutableArray<TypedConstant> constructorArguments)
     {
         if (!methodSymbol.IsGenericMethod)
         {
-            return null;
+            return;
         }
 
         var parameterTypesSubstitutions = new Dictionary<ITypeSymbol, (ITypeSymbol Symbol, Type SystemType)>(SymbolEqualityComparer.Default);
@@ -212,6 +233,11 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             if (parameterType.Kind == SymbolKind.TypeParameter)
             {
                 TypedConstant constructorArgument = constructorArguments[parameter.Ordinal];
+                if (constructorArgument.Type is null)
+                {
+                    // That's an error scenario. The compiler will be complaining about something already.
+                    continue;
+                }
 
                 // This happens for [DataRow(null)] which ends up being resolved
                 // to DataRow(string?[]? stringArrayData) constructor.
@@ -241,7 +267,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
                     }
                     else
                     {
-                        // Report diagnostic.
+                        context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(GenericTypeArgumentConflictingTypesRule, parameterType.Name, existingType.Symbol.Name, constructorArgument.Type.Name));
                     }
                 }
                 else
@@ -255,14 +281,12 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         {
             if (!parameterTypesSubstitutions.ContainsKey(typeParameter))
             {
-                // Report diagnostic.
+                context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(GenericTypeArgumentNotResolvedRule, typeParameter.Name));
             }
         }
-
-        return parameterTypesSubstitutions;
     }
 
-    private static ITypeSymbol GetParameterType(ImmutableArray<IParameterSymbol> parameters, int currentArgumentIndex, int argumentsCount, Dictionary<ITypeSymbol, (ITypeSymbol Symbol, Type SystemType)>? parameterTypesSubstitutions)
+    private static ITypeSymbol GetParameterType(ImmutableArray<IParameterSymbol> parameters, int currentArgumentIndex, int argumentsCount)
     {
         if (currentArgumentIndex >= parameters.Length - 1)
         {
@@ -281,10 +305,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        ITypeSymbol parameterType = parameters[currentArgumentIndex].Type;
-        return parameterTypesSubstitutions?.TryGetValue(parameterType, out (ITypeSymbol Symbol, Type SystemType) substitutedType) == true
-            ? substitutedType.Symbol
-            : parameterType;
+        return parameters[currentArgumentIndex].Type;
     }
 
     private static bool IsArgumentCountMismatch(int constructorArgumentsLength, ImmutableArray<IParameterSymbol> methodParameters)
