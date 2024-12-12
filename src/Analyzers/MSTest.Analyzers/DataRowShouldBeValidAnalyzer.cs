@@ -212,9 +212,15 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             if (parameterType.Kind == SymbolKind.TypeParameter)
             {
                 TypedConstant constructorArgument = constructorArguments[parameter.Ordinal];
-                if (constructorArgument.Kind == TypedConstantKind.Array)
-                {
 
+                // This happens for [DataRow(null)] which ends up being resolved
+                // to DataRow(string?[]? stringArrayData) constructor.
+                // It also happens with [DataRow((object[]?)null)] which resolves
+                // to the params object[] constructor
+                // In this case, the argument is simply "null".
+                if (constructorArgument.Kind == TypedConstantKind.Array && constructorArgument.IsNull)
+                {
+                    continue;
                 }
 
                 object? argumentValue = constructorArgument.Value;
@@ -240,7 +246,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
                 }
                 else
                 {
-                    parameterTypesSubstitutions.Add(parameterType, (parameterType, argumentValue.GetType()));
+                    parameterTypesSubstitutions.Add(parameterType, (constructorArgument.Type, argumentValue.GetType()));
                 }
             }
         }

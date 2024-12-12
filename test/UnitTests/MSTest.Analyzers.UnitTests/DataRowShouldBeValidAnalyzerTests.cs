@@ -589,7 +589,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                     => Assert.Fail($"Test method 'ParameterizedMethodSimple' did run with parameter '{parameter?.ToString() ?? "<null>"}' and type '{typeof(T)}'.");
 
                 [TestMethod]
-                [DataRow((byte)1, "Hello world", (int)2, 3)]
+                [|[DataRow((byte)1, "Hello world", (int)2, 3)]|]
                 [DataRow(null, "Hello world", "Hello again", 3)]
                 [DataRow("Hello hello", "Hello world", null, null)]
                 [DataRow(null, null, null, null)]
@@ -597,11 +597,11 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                     => Assert.Fail($"Test method 'ParameterizedMethodTwoGenericParametersAndFourMethodParameters' did run with parameters '{p1?.ToString() ?? "<null>"}', '{p2 ?? "<null>"}', '{p3?.ToString() ?? "<null>"}', '{p4?.ToString() ?? "<null>"}' and generic types '{typeof(T1)}', '{typeof(T2)}'.");
 
                 [TestMethod]
-                [DataRow((byte)1)]
-                [DataRow((byte)1, 2)]
-                [DataRow("Hello world")]
+                [|[DataRow((byte)1)]|]
+                [|[DataRow((byte)1, 2)]|]
+                [|[DataRow("Hello world")]|]
                 [DataRow(null)]
-                [DataRow(null, "Hello world")]
+                [|[DataRow(null, "Hello world")]|]
                 public void ParameterizedMethodSimpleParams<T>(params T[] parameter)
                     => Assert.Fail($"Test method 'ParameterizedMethodSimple' did run with parameter '{string.Join(",", parameter)}' and type '{typeof(T)}'.");
             }
