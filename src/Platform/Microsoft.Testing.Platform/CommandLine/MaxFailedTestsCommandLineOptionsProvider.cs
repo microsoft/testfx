@@ -3,14 +3,16 @@
 
 using System.Globalization;
 
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class MaxFailedTestsCommandLineOptionsProvider(IExtension extension) : ICommandLineOptionsProvider
+internal sealed class MaxFailedTestsCommandLineOptionsProvider(IExtension extension, IServiceProvider serviceProvider) : ICommandLineOptionsProvider
 {
     internal const string MaxFailedTestsOptionKey = "maximum-failed-tests";
 
@@ -44,10 +46,15 @@ internal sealed class MaxFailedTestsCommandLineOptionsProvider(IExtension extens
             // The idea is that we stop the execution when we *reach* the max failed tests, not when *exceed*.
             // So the value 1 means, stop execution on the first failure.
             return int.TryParse(arg, out int maxFailedTestsResult) && maxFailedTestsResult > 0
-                ? ValidationResult.ValidTask
+                ? ValidateCapabilityAsync()
                 : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.MaxFailedTestsMustBePositive, arg));
         }
 
         throw ApplicationStateGuard.Unreachable();
     }
+
+    private Task<ValidationResult> ValidateCapabilityAsync()
+        => serviceProvider.GetTestFrameworkCapabilities().Capabilities.OfType<IGracefulStopTestExecutionCapability>().Any()
+            ? ValidationResult.ValidTask
+            : ValidationResult.InvalidTask(PlatformResources.AbortForMaxFailedTestsCapabilityNotAvailable);
 }

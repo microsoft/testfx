@@ -201,7 +201,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
         // Build the command line service - we need special treatment because is possible that an extension query it during the creation.
         // Add Retry default argument commandlines
-        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(loggingState.CommandLineParseResult);
+        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(loggingState.CommandLineParseResult, serviceProvider);
 
         // Set the concrete command line options to the proxy.
         commandLineOptionsProxy.SetCommandLineOptions(commandLineHandler);
@@ -738,7 +738,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>(),
             serviceProvider.GetRequiredService<IStopPoliciesService>(),
-            serviceProvider.GetOutputDevice(),
             serviceProvider.GetTestApplicationCancellationTokenSource());
 
         if (await abortForMaxFailedTestsExtension.IsEnabledAsync())
