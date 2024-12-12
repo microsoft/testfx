@@ -21,8 +21,9 @@ We want to design in a way we won't break users and it should be backwards compa
 
 Make this option configurable in global.json.
 
-Here is a global.json sample:
+Here are some global.json samples:
 
+1.
 ```json
 {
 "testSdk" :
@@ -31,6 +32,23 @@ Here is a global.json sample:
   }
 }
 ```
+
+What if we want to support another test runner?
+We simply can't, with this approach we either use the testing platform, or fallback to vstest if this property was set to false.
+
+2.
+```json
+{
+"testSdk" :
+  {
+    "testRunner": "vstest/testingplatform"
+  }
+}
+```
+
+What if we decide to extract the testing platform as an external tool?
+We still could support more options.
+But if, for some reason, the latest version was broken, we will break as well.
 
 ### Defaults
 
