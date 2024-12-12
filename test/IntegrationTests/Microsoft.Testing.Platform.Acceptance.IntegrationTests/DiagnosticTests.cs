@@ -9,17 +9,17 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+[TestClass]
 public class DiagnosticTests : AcceptanceTestBase
 {
     private const string AssetName = "DiagnosticTest";
 
     private readonly TestAssetFixture _testAssetFixture;
 
-    public DiagnosticTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+    public DiagnosticTests(TestAssetFixture testAssetFixture)
+        => _testAssetFixture = testAssetFixture;
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Diag_WhenDiagnosticIsSpecified_ReportIsGeneratedInDefaultLocation(string tfm)
     {
         string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
@@ -31,7 +31,7 @@ public class DiagnosticTests : AcceptanceTestBase
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Diag_WhenDiagnosticAndOutputFilePrefixAreSpecified_ReportIsGeneratedInDefaultLocation(string tfm)
     {
         string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
@@ -43,7 +43,7 @@ public class DiagnosticTests : AcceptanceTestBase
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Diag_WhenDiagnosticAndOutputDirectoryAreSpecified_ReportIsGeneratedInSpecifiedLocation(string tfm)
     {
         string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, "test1");
@@ -57,7 +57,7 @@ public class DiagnosticTests : AcceptanceTestBase
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Diag_WhenDiagnosticAndOutputFilePrefixAndOutputDirectoryAreSpecified_ReportIsGeneratedInSpecifiedLocation(string tfm)
     {
         string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, "test2");
@@ -71,7 +71,7 @@ public class DiagnosticTests : AcceptanceTestBase
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Diag_WhenDiagnosticOutputFilePrefixButNotDiagnosticIsSpecified_ReportGenerationFails(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
@@ -81,7 +81,7 @@ public class DiagnosticTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("'--diagnostic-output-fileprefix' requires '--diagnostic' to be provided");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Diag_WhenDiagnosticOutputDirectoryButNotDiagnosticIsSpecified_ReportGenerationFails(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
@@ -91,7 +91,7 @@ public class DiagnosticTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("'--diagnostic-output-directory' requires '--diagnostic' to be provided");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Diag_WhenDiagnosticFilePrefixAndDiagnosticOutputDirectoryButNotDiagnosticAreSpecified_ReportGenerationFails(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
@@ -101,7 +101,7 @@ public class DiagnosticTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("'--diagnostic-output-directory' requires '--diagnostic' to be provided");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Diag_EnableWithEnvironmentVariables_Succeeded(string tfm)
     {
         string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
@@ -118,7 +118,7 @@ public class DiagnosticTests : AcceptanceTestBase
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Diag_EnableWithEnvironmentVariables_Verbosity_Succeeded(string tfm)
     {
         string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
@@ -136,7 +136,7 @@ public class DiagnosticTests : AcceptanceTestBase
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Diag_EnableWithEnvironmentVariables_CustomPrefix_Succeeded(string tfm)
     {
         string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
@@ -154,7 +154,7 @@ public class DiagnosticTests : AcceptanceTestBase
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Diag_EnableWithEnvironmentVariables_SynchronousWrite_Succeeded(string tfm)
     {
         string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
@@ -172,7 +172,7 @@ public class DiagnosticTests : AcceptanceTestBase
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern, flushType: "sync");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Diag_EnableWithEnvironmentVariables_Disable_Succeeded(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
@@ -223,7 +223,7 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string TestCode = """
 #file DiagnosticTest.csproj
@@ -255,7 +255,7 @@ return await app.RunAsync();
 #file UnitTest1.cs
 namespace DiagnosticTest;
 
-[TestGroup]
+[TestClass]
 public class UnitTest1
 {
     public void TestMethod1()

@@ -13,9 +13,8 @@ using Moq;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.CommandLine;
 
-[TestGroup]
-public sealed class RunSettingsCommandLineOptionsProviderTests(ITestExecutionContext testExecutionContext)
-    : TestBase(testExecutionContext)
+[TestClass]
+public sealed class RunSettingsCommandLineOptionsProviderTests
 {
     public async Task RunSettingsOption_WhenFileDoesNotExist_IsNotValid()
     {

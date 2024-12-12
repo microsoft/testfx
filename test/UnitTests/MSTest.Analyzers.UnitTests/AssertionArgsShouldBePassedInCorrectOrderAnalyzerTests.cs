@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.UnitTests;
 
-[TestGroup]
-public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
 {
     public async Task WhenUsingLiterals()
     {

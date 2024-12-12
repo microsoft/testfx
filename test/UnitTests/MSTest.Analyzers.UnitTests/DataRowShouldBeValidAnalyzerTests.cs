@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class DataRowShouldBeValidAnalyzerTests
 {
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgument_NoDiagnostic()
     {

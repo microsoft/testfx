@@ -6,14 +6,15 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class ProtocolTests : TestBase
+[TestClass]
+public sealed class ProtocolTests
 {
     public ProtocolTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
     }
 
+    [TestMethod]
     public void TestResultMessagesSerializeDeserialize()
     {
         var success = new SuccessfulTestResultMessage("uid", "displayName", 1, 100, "reason", "standardOutput", "errorOutput", "sessionUid");

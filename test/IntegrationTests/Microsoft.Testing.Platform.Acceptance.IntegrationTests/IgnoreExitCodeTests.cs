@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+[TestClass]
 public class IgnoreExitCodeTests : AcceptanceTestBase
 {
     private const string AssetName = "TestProject";
@@ -86,7 +86,7 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
     private readonly AcceptanceFixture _acceptanceFixture;
 
     public IgnoreExitCodeTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
+        => _acceptanceFixture = acceptanceFixture;
 
     public static IEnumerable<TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration, string CommandLine, string EnvironmentVariable)>> GetBuildMatrix()
     {
@@ -97,7 +97,7 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
         }
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrix))]
+    [DynamicData(nameof(GetBuildMatrix))]
     public async Task If_IgnoreExitCode_Specified_Should_Return_Success_ExitCode(string tfm, BuildConfiguration buildConfiguration, string commandLine, string environmentVariable)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -107,7 +107,7 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
         string assetPath = generator.TargetAssetPath;
-        string globalPackagesPath = _acceptanceFixture.NuGetGlobalPackagesFolder.Path;
+        string globalPackagesPath = _AcceptanceFixture.NuGetGlobalPackagesFolder.Path;
         await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {assetPath} -r {RID}", globalPackagesPath);
         await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {assetPath} -c {buildConfiguration} -r {RID}", globalPackagesPath);
         var host = TestInfrastructure.TestHost.LocateFrom(assetPath, AssetName, tfm, buildConfiguration: buildConfiguration);

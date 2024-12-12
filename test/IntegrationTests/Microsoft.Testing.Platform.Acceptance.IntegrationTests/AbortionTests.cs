@@ -8,17 +8,17 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+[TestClass]
 public class AbortionTests : AcceptanceTestBase
 {
     private const string AssetName = "Abort";
     private readonly TestAssetFixture _testAssetFixture;
 
-    public AbortionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+    public AbortionTests(TestAssetFixture testAssetFixture)
+        => _testAssetFixture = testAssetFixture;
 
     // We retry because sometime the Canceling the session message is not showing up.
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task AbortWithCTRLPlusC_TestHost_Succeeded(string tfm)
     {
         // We expect the same semantic for Linux, the test setup is not cross and we're using specific
@@ -44,7 +44,7 @@ public class AbortionTests : AcceptanceTestBase
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
 #file Abort.csproj

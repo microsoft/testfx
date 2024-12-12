@@ -5,16 +5,16 @@ using System.Diagnostics;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+[TestClass]
 public class ExitOnProcessExitTests : AcceptanceTestBase
 {
     private const string AssetName = "ExecutionTests";
     private readonly TestAssetFixture _testAssetFixture;
 
-    public ExitOnProcessExitTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+    public ExitOnProcessExitTests(TestAssetFixture testAssetFixture)
+        => _testAssetFixture = testAssetFixture;
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public void ExitOnProcessExit_Succeed(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
@@ -61,7 +61,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string TestCode = """
 #file ExecutionTests.csproj

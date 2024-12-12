@@ -9,8 +9,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class AvoidExpectedExceptionAttributeAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
 {
     public async Task WhenUsed_Diagnostic()
     {

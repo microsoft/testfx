@@ -11,8 +11,8 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class TestApplicationResultTests : TestBase
+[TestClass]
+public sealed class TestApplicationResultTests
 {
     private readonly TestApplicationResult _testApplicationResult
         = new(new Mock<IOutputDevice>().Object, new Mock<ICommandLineOptions>().Object, new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object);
@@ -50,7 +50,7 @@ public sealed class TestApplicationResultTests : TestBase
         Assert.AreEqual(ExitCodes.ZeroTests, _testApplicationResult.GetProcessExitCode());
     }
 
-    [ArgumentsProvider(nameof(FailedState))]
+    [DynamicData(nameof(FailedState))]
     public async Task GetProcessExitCodeAsync_If_Failed_Tests_Returns_AtLeastOneTestFailed(TestNodeStateProperty testNodeStateProperty)
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
@@ -175,17 +175,18 @@ public sealed class TestApplicationResultTests : TestBase
         Assert.AreEqual(ExitCodes.Success, testApplicationResult.GetProcessExitCode());
     }
 
-    [Arguments("8", ExitCodes.Success)]
-    [Arguments("8;2", ExitCodes.Success)]
-    [Arguments("8;", ExitCodes.Success)]
-    [Arguments("8;2;", ExitCodes.Success)]
-    [Arguments("5", ExitCodes.ZeroTests)]
-    [Arguments("5;7", ExitCodes.ZeroTests)]
-    [Arguments("5;", ExitCodes.ZeroTests)]
-    [Arguments("5;7;", ExitCodes.ZeroTests)]
-    [Arguments(";", ExitCodes.ZeroTests)]
-    [Arguments(null, ExitCodes.ZeroTests)]
-    [Arguments("", ExitCodes.ZeroTests)]
+    [DataRow("8", ExitCodes.Success)]
+    [DataRow("8;2", ExitCodes.Success)]
+    [DataRow("8;", ExitCodes.Success)]
+    [DataRow("8;2;", ExitCodes.Success)]
+    [DataRow("5", ExitCodes.ZeroTests)]
+    [DataRow("5;7", ExitCodes.ZeroTests)]
+    [DataRow("5;", ExitCodes.ZeroTests)]
+    [DataRow("5;7;", ExitCodes.ZeroTests)]
+    [DataRow(";", ExitCodes.ZeroTests)]
+    [DataRow(null, ExitCodes.ZeroTests)]
+    [DataRow("", ExitCodes.ZeroTests)]
+    [TestMethod]
     public void GetProcessExitCodeAsync_IgnoreExitCodes(string argument, int expectedExitCode)
     {
         Mock<IEnvironment> environment = new();

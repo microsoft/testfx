@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class TestClassShouldBeValidAnalyzerTests
 {
     public async Task WhenClassIsPublicAndTestClass_NoDiagnostic()
     {
@@ -52,8 +52,8 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
-    [Arguments("private")]
-    [Arguments("internal")]
+    [DataRow("private")]
+    [DataRow("internal")]
     public async Task WhenClassIsInnerAndNotPublicTestClass_Diagnostic(string accessibility)
     {
         string code = $$"""

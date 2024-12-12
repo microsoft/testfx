@@ -9,8 +9,8 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class LoggerTests : TestBase
+[TestClass]
+public sealed class LoggerTests
 {
     private static readonly Func<string, Exception?, string> Formatter =
         (state, exception) =>
@@ -38,14 +38,16 @@ public class LoggerTests : TestBase
         return new Logger<string>(mockLoggerFactory.Object);
     }
 
-    [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
+    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
+    [TestMethod]
     public void Logger_CheckEnabled(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
         Logger<string> logger = CreateLogger(defaultLogLevel);
         Assert.AreEqual(logger.IsEnabled(currentLogLevel), LogTestHelpers.IsLogEnabled(defaultLogLevel, currentLogLevel));
     }
 
-    [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
+    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
+    [TestMethod]
     public void Logger_Log_FormattedStringIsCorrect(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
         Logger<string> logger = CreateLogger(defaultLogLevel);
@@ -56,7 +58,7 @@ public class LoggerTests : TestBase
             LogTestHelpers.GetExpectedLogCallTimes(defaultLogLevel, currentLogLevel));
     }
 
-    [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
+    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
     public async ValueTask Logger_LogAsync_FormattedStringIsCorrect(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
         Logger<string> logger = CreateLogger(defaultLogLevel);

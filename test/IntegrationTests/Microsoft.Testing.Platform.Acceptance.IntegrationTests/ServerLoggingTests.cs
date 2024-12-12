@@ -9,17 +9,17 @@ using MSTest.Acceptance.IntegrationTests.Messages.V100;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+[TestClass]
 public sealed partial class ServerLoggingTests : ServerModeTestsBase
 {
     private readonly TestAssetFixture _testAssetFixture;
 
-    public ServerLoggingTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+    public ServerLoggingTests(TestAssetFixture testAssetFixture)
+        => _testAssetFixture = testAssetFixture;
 
     public async Task RunningInServerJsonRpcModeShouldHaveOutputDeviceLogsPushedToTestExplorer()
     {
-        string tfm = TargetFrameworks.NetCurrent.Arguments;
+        string tfm = TargetFrameworks.NetCurrent;
         string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "ServerLoggingTests", tfm);
         using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(testHost);
@@ -61,9 +61,9 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        private const string AssetName = "TestAssetFixture";
+        private const string AssetName = "AssetFixture";
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 

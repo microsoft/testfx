@@ -6,16 +6,16 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+[TestClass]
 public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceTestBase
 {
     private const string AssetName = "EnvironmentVariablesConfigurationProvider";
     private readonly TestAssetFixture _testAssetFixture;
 
-    public EnvironmentVariablesConfigurationProviderTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+    public EnvironmentVariablesConfigurationProviderTests(TestAssetFixture testAssetFixture)
+        => _testAssetFixture = testAssetFixture;
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task SetEnvironmentVariable_ShouldSucceed(string currentTfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
@@ -24,8 +24,8 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture)
-        : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture
+        : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
 #file EnvironmentVariablesConfigurationProvider.csproj

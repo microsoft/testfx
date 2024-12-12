@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.IO;
 using System.Text;
 
 using Microsoft.Testing.Platform.Helpers;
@@ -11,8 +12,8 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class FileLoggerTests : TestBase, IDisposable
+[TestClass]
+public sealed class FileLoggerTests
 {
     private const string LogFolder = "aaa";
     private const string LogPrefix = "bbb";
@@ -33,8 +34,7 @@ public class FileLoggerTests : TestBase, IDisposable
     private readonly Mock<IFileStreamFactory> _mockFileStreamFactory = new();
     private readonly MemoryStream _memoryStream;
 
-    public FileLoggerTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
+    public FileLoggerTests()
     {
         _mockStream.Setup(x => x.Dispose());
 #if NETCOREAPP
@@ -46,6 +46,7 @@ public class FileLoggerTests : TestBase, IDisposable
         _mockStream.Setup(x => x.Stream).Returns(_memoryStream);
     }
 
+    [TestMethod]
     public void Write_IfMalformedUTF8_ShouldNotCrash()
     {
         using TempDirectory tempDirectory = new(nameof(Write_IfMalformedUTF8_ShouldNotCrash));
@@ -60,6 +61,7 @@ public class FileLoggerTests : TestBase, IDisposable
         fileLogger.Log(LogLevel.Trace, "\uD886", null, LoggingExtensions.Formatter, "Category");
     }
 
+    [TestMethod]
     public void FileLogger_NullFileSyncFlush_FileStreamCreated()
     {
         // First return is to compute the expected file name. It's ok that first time is greater
@@ -98,6 +100,7 @@ public class FileLoggerTests : TestBase, IDisposable
         Assert.AreEqual(expectedFileName, fileLoggerName);
     }
 
+    [TestMethod]
     public void FileLogger_NullFileSyncFlush_FileStreamCreationThrows()
     {
         // First return is to compute the expected file name. It's ok that first time is greater
@@ -111,7 +114,7 @@ public class FileLoggerTests : TestBase, IDisposable
             .Throws<IOException>()
             .Returns(_mockStream.Object);
 
-        Assert.Throws<InvalidOperationException>(() => _ = new FileLogger(
+        Assert.ThrowsException<InvalidOperationException>(() => _ = new FileLogger(
             new(LogFolder, LogPrefix, fileName: null, syncFlush: true),
             LogLevel.Trace,
             _mockClock.Object,
@@ -121,10 +124,11 @@ public class FileLoggerTests : TestBase, IDisposable
             _mockFileStreamFactory.Object));
     }
 
-    [Arguments(true, true)]
-    [Arguments(true, false)]
-    [Arguments(false, true)]
-    [Arguments(false, false)]
+    [DataRow(true, true)]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
+    [DataRow(false, false)]
+    [TestMethod]
     public void FileLogger_ValidFileName_FileStreamCreatedSuccessfully(bool syncFlush, bool fileExists)
     {
         string expectedPath = Path.Combine(LogFolder, FileName);
@@ -152,7 +156,8 @@ public class FileLoggerTests : TestBase, IDisposable
         Assert.AreEqual(FileName, fileLoggerName);
     }
 
-    [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
+    [TestMethod]
+    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
     public async Task Log_WhenSyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
         _mockFileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(false);
@@ -186,7 +191,8 @@ public class FileLoggerTests : TestBase, IDisposable
         }
     }
 
-    [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
+    [TestMethod]
+    [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
     public async Task Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
         _mockFileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(false);
@@ -218,6 +224,4 @@ public class FileLoggerTests : TestBase, IDisposable
             Assert.AreEqual(0, _memoryStream.Length);
         }
     }
-
-    public void Dispose() => _memoryStream.Dispose();
 }

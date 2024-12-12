@@ -9,14 +9,14 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class ServerTelemetryTests : TestBase
+[TestClass]
+public sealed class ServerTelemetryTests
 {
     private readonly ServerTelemetry _serverTelemetry;
     private readonly Mock<IServerTestHost> _serverTestHost = new();
 
     public ServerTelemetryTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext) => _serverTelemetry = new(_serverTestHost.Object);
+        => _serverTelemetry = new(_serverTestHost.Object);
 
     public async Task LogEvent_ForDiscovery()
     {

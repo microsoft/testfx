@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests
 {
     public async Task WhenTestMethodIsNotIgnored_NoDiagnostic()
     {

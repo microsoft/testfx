@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.UnitTests;
 
-[TestGroup]
-public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
 {
     public async Task WhenUsingConditionalsAccess_In_Assert_Equal()
     {

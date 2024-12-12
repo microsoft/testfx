@@ -13,8 +13,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.UnitTests;
 
-[TestGroup]
-public sealed class UseAsyncSuffixTestFixtureMethodSuppressorTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class UseAsyncSuffixTestFixtureMethodSuppressorTests
 {
     public async Task AsyncTestFixtureMethodsWithoutSuffix_DiagnosticIsSuppressed()
     {

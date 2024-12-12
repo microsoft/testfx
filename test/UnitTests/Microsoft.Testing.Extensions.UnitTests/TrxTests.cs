@@ -20,8 +20,8 @@ using TestNodeUid = Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
-[TestGroup]
-public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public class TrxTests
 {
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<ICommandLineOptions> _commandLineOptionsMock = new();
@@ -33,6 +33,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
     private readonly Dictionary<TestNodeUid, List<SessionFileArtifact>> _artifactsByTestNode = new();
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = new();
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsyncWithNullAdapterSupportTrxCapability_TrxDoesNotContainClassName()
     {
         // Arrange
@@ -51,6 +52,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         Assert.IsFalse(trxContent.Contains(@"className="));
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsyncWithNotExecutedTests_TrxExecutedTestsCountHasIt()
     {
         // Arrange
@@ -69,6 +71,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         Assert.IsTrue(trxContent.Contains(@"notExecuted=""1"""));
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsyncWithTimeoutTests_TrxTimeoutTestsCountHasIt()
     {
         // Arrange
@@ -87,6 +90,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         Assert.IsTrue(trxContent.Contains(@"timeout=""1"""));
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithArgumentTrxReportFileName_FileIsCorrectlyGenerated()
     {
         // Arrange
@@ -105,6 +109,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         AssertTrxOutcome(xml, "Completed");
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithInvalidArgumentValueForTrxReportFileName_FileIsGeneratedWithNormalizedName()
     {
         // Arrange
@@ -123,6 +128,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         AssertTrxOutcome(xml, "Completed");
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithTestHostCrash_ResultSummaryOutcomeIsFailed()
     {
         // Arrange
@@ -139,6 +145,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         AssertTrxOutcome(xml, "Failed");
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithTestSkipped_ResultSummaryOutcomeIsCompleted()
     {
         // Arrange
@@ -155,6 +162,7 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         AssertTrxOutcome(xml, "Completed");
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithTestFailed_WithStandardErrorTrxMessage_TrxContainsStdErr()
     {
         // Arrange
@@ -184,9 +192,10 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
       </Output>
     </UnitTestResult>
  ";
-        Assert.That(Regex.IsMatch(trxContent, trxContentsPattern));
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithTestFailed_WithoutStandardErrorTrxMessage_TrxContainsStdOut()
     {
         // Arrange
@@ -211,9 +220,10 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
       </Output>
     </UnitTestResult>
  ";
-        Assert.That(Regex.IsMatch(trxContent, trxContentsPattern));
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithTestFailed_WithoutStandardErrorTrxMessage_TrxContainsErrorInfo()
     {
         // Arrange
@@ -241,9 +251,10 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
       </Output>
     </UnitTestResult>
  ";
-        Assert.That(Regex.IsMatch(trxContent, trxContentsPattern));
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_PassedTestWithTestCategory_TrxContainsTestCategory()
     {
         // Arrange
@@ -267,9 +278,10 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         <TestCategoryItem TestCategory=""category1"" />
       </TestCategory>
  ";
-        Assert.That(Regex.IsMatch(trxContent, trxContentsPattern));
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_FailedTestWithTestCategory_TrxContainsTestCategory()
     {
         // Arrange
@@ -293,9 +305,10 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         <TestCategoryItem TestCategory=""category1"" />
       </TestCategory>
  ";
-        Assert.That(Regex.IsMatch(trxContent, trxContentsPattern));
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithAdapterSupportTrxCapability_TrxContainsClassName()
     {
         // Arrange
@@ -314,9 +327,10 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         XDocument xml = GetTrxContent(memoryStream);
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
-        Assert.That(trxContent.Contains(@"className=""TrxFullyQualifiedTypeName"), trxContent);
+        Assert.IsTrue(trxContent.Contains(@"className=""TrxFullyQualifiedTypeName"), trxContent);
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithArtifactsByTestNode_TrxContainsResultFile()
     {
         // Arrange
@@ -340,9 +354,10 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
       </ResultFiles>
     </UnitTestResult>
  ";
-        Assert.That(Regex.IsMatch(trxContent, trxContentsPattern));
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithArtifactsByExtension_TrxContainsCollectorDataEntries()
     {
         // Arrange
@@ -372,9 +387,10 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
       </Collector>
     </CollectorDataEntries>
  ";
-        Assert.That(Regex.IsMatch(trxContent, trxContentsPattern));
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
     }
 
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_FileAlreadyExists_WillRetry()
     {
         // Arrange
@@ -422,7 +438,6 @@ public class TrxTests(ITestExecutionContext testExecutionContext) : TestBase(tes
         Assert.IsNotNull(resultSummary);
         XAttribute? outcome = resultSummary.FirstAttribute;
         Assert.IsNotNull(outcome);
-        Assert.IsNotNull(outcome.Value);
         Assert.IsTrue(outcome.Value.Equals(expectedOutcome, StringComparison.Ordinal));
     }
 

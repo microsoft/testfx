@@ -8,18 +8,14 @@ using MSTest.Acceptance.IntegrationTests.Messages.V100;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class ServerModeTests : ServerModeTestsBase
+[TestClass]
+public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _fixture;
-
-    public ServerModeTests(ITestExecutionContext testExecutionContext, TestAssetFixture fixture)
-        : base(testExecutionContext) => _fixture = fixture;
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task DiscoverAndRun(string tfm)
     {
-        using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(TestHost.LocateFrom(_fixture.ProjectPath, "MSTestProject", tfm, buildConfiguration: BuildConfiguration.Release));
+        using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(TestHost.LocateFrom(AssetFixture.ProjectPath, "MSTestProject", tfm, buildConfiguration: BuildConfiguration.Release));
         LogsCollector logs = new();
         jsonClient.RegisterLogListener(logs);
         TelemetryCollector telemetry = new();
@@ -47,10 +43,11 @@ public sealed class ServerModeTests : ServerModeTestsBase
         Assert.AreEqual(0, jsonClient.ExitCode);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task WhenClientDies_Server_ShouldClose_Gracefully(string tfm)
     {
-        using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(TestHost.LocateFrom(_fixture.ProjectPath, "MSTestProject", tfm, buildConfiguration: BuildConfiguration.Release));
+        using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(TestHost.LocateFrom(AssetFixture.ProjectPath, "MSTestProject", tfm, buildConfiguration: BuildConfiguration.Release));
         LogsCollector logs = new();
         jsonClient.RegisterLogListener(logs);
         TelemetryCollector telemetry = new();
@@ -70,8 +67,7 @@ public sealed class ServerModeTests : ServerModeTestsBase
         Assert.AreEqual(3, exitCode);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "MSTestProject";
 

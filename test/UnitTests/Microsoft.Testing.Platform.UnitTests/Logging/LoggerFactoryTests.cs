@@ -8,8 +8,8 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class LoggerFactoryTests : TestBase
+[TestClass]
+public sealed class LoggerFactoryTests
 {
     private readonly Mock<ILogger> _mockLogger = new();
     private readonly Mock<IMonitor> _mockMonitor = new();
@@ -28,6 +28,7 @@ public class LoggerFactoryTests : TestBase
         ];
     }
 
+    [TestMethod]
     public void LoggerFactory_LoggerCreatedOnlyOnce()
     {
         using LoggerFactory loggerFactory = new(_loggerProviders, LogLevel.Information, _mockMonitor.Object);

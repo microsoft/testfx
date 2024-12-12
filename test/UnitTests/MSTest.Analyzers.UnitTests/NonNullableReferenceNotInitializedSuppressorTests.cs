@@ -13,8 +13,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.UnitTests;
 
-[TestGroup]
-public sealed class NonNullableReferenceNotInitializedSuppressorTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class NonNullableReferenceNotInitializedSuppressorTests
 {
     public async Task TestContextPropertyOnTestClass_DiagnosticIsSuppressed()
     {

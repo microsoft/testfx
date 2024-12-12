@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
 {
     public async Task WhenIsNullAssertion_ValueParameterIsNullable_NoDiagnostic()
     {

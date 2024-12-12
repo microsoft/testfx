@@ -6,18 +6,18 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+[TestClass]
 public class MaxFailedTestsExtensionTests : AcceptanceTestBase
 {
     private const string AssetName = nameof(MaxFailedTestsExtensionTests);
     private readonly TestAssetFixture _testAssetFixture;
 
-    public MaxFailedTestsExtensionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+    public MaxFailedTestsExtensionTests(TestAssetFixture testAssetFixture)
+        => _testAssetFixture = testAssetFixture;
 
     public async Task TestMaxFailedTestsShouldCallStopTestExecutionAsync()
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2");
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestExecutionStoppedForMaxFailedTests);
@@ -28,7 +28,7 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase
 
     public async Task WhenCapabilityIsMissingShouldFail()
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2", environmentVariables: new()
         {
             ["DO_NOT_ADD_CAPABILITY"] = "1",
@@ -39,7 +39,7 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
 #file MaxFailedTestsExtensionTests.csproj

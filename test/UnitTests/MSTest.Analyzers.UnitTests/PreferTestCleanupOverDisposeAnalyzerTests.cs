@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class PreferTestCleanupOverDisposeAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class PreferTestCleanupOverDisposeAnalyzerTests
 {
     public async Task WhenTestClassHasDispose_Diagnostic()
     {

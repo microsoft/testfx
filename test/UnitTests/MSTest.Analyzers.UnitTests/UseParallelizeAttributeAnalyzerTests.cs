@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public class UseParallelizeAttributeAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public class UseParallelizeAttributeAnalyzerTests
 {
     public async Task WhenNoAttributeSpecified_Diagnostic() => await VerifyCS.VerifyAnalyzerAsync(
             string.Empty,

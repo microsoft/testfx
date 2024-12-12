@@ -8,15 +8,15 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+[TestClass]
 public sealed class CrashDumpTests : AcceptanceTestBase
 {
     private readonly TestAssetFixture _testAssetFixture;
 
-    public CrashDumpTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+    public CrashDumpTests(TestAssetFixture testAssetFixture)
+        => _testAssetFixture = testAssetFixture;
 
-    [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
     public async Task CrashDump_DefaultSetting_CreateDump(string tfm)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -42,16 +42,16 @@ public sealed class CrashDumpTests : AcceptanceTestBase
         }
 
         string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --crashdump-filename customdumpname.dmp --results-directory {resultDirectory}");
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         Assert.IsTrue(Directory.GetFiles(resultDirectory, "customdumpname.dmp", SearchOption.AllDirectories).SingleOrDefault() is not null, "Dump file not found");
     }
 
-    [Arguments("Mini")]
-    [Arguments("Heap")]
-    [Arguments("Triage")]
-    [Arguments("Full")]
+    [DataRow("Mini")]
+    [DataRow("Heap")]
+    [DataRow("Triage")]
+    [DataRow("Full")]
     public async Task CrashDump_Formats_CreateDump(string format)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -61,7 +61,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase
         }
 
         string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --crashdump-type {format} --results-directory {resultDirectory}");
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         string? dumpFile = Directory.GetFiles(resultDirectory, "CrashDump.dll_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
@@ -72,14 +72,14 @@ public sealed class CrashDumpTests : AcceptanceTestBase
     public async Task CrashDump_InvalidFormat_ShouldFail()
     {
         string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump  --crashdump-type invalid --results-directory {resultDirectory}");
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Option '--crashdump-type' has invalid arguments: 'invalid' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string AssetName = "CrashDumpFixture";
 

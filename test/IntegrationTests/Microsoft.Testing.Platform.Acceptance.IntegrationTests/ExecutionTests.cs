@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+[TestClass]
 public class ExecutionTests : AcceptanceTestBase
 {
     private const string AssetName = "ExecutionTests";
@@ -16,10 +16,10 @@ public class ExecutionTests : AcceptanceTestBase
 
     private readonly TestAssetFixture _testAssetFixture;
 
-    public ExecutionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+    public ExecutionTests(TestAssetFixture testAssetFixture)
+        => _testAssetFixture = testAssetFixture;
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenListTestsIsSpecified_AllTestsAreFound(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
@@ -37,7 +37,7 @@ FilteredOutTest$
         testHostResult.AssertOutputMatchesRegex(OutputPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenOnlyAssetNameIsSpecified_AllTestsAreRun(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
@@ -49,7 +49,7 @@ FilteredOutTest$
         testHostResult.AssertOutputContains($"! - {_testAssetFixture.TargetAssetPath}");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenListTestsAndFilterAreSpecified_OnlyFilteredTestsAreFound(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
@@ -66,7 +66,7 @@ TestMethod3$
         testHostResult.AssertOutputMatchesRegex(OutputPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenFilterIsSpecified_OnlyFilteredTestsAreRun(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
@@ -78,7 +78,7 @@ TestMethod3$
         testHostResult.AssertOutputContains($"! - {_testAssetFixture.TargetAssetPath}");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenMinimumExpectedTestsIsSpecifiedAndEnoughTestsRun_ResultIsOk(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
@@ -90,7 +90,7 @@ TestMethod3$
         testHostResult.AssertOutputContains($"! - {_testAssetFixture.TargetAssetPath}");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenMinimumExpectedTestsIsSpecifiedAndNotEnoughTestsRun_ResultIsNotOk(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
@@ -102,7 +102,7 @@ TestMethod3$
         testHostResult.AssertOutputContains($" - {_testAssetFixture.TargetAssetPath}");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenListTestsAndMinimumExpectedTestsAreSpecified_DiscoveryFails(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
@@ -114,7 +114,7 @@ TestMethod3$
         Assert.That(testHostResult.StandardOutput.Contains(OutputPattern), $"Output of the test host is:\n{testHostResult}");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_Honor_Request_Complete(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath2, AssetName2, tfm);
@@ -126,7 +126,7 @@ TestMethod3$
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string TestCode = """
 #file ExecutionTests.csproj
@@ -158,7 +158,7 @@ return await app.RunAsync();
 #file UnitTest1.cs
 namespace ExecutionTests;
 
-[TestGroup]
+[TestClass]
 public class UnitTest1
 {
     public void TestMethod1()

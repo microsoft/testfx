@@ -9,14 +9,15 @@ using Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class TerminalTestReporterTests : TestBase
+[TestClass]
+public sealed class TerminalTestReporterTests
 {
     public TerminalTestReporterTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
     }
 
+    [TestMethod]
     public void AppendStackFrameFormatsStackTraceLineCorrectly()
     {
         var terminal = new StringBuilderTerminal();
@@ -43,21 +44,22 @@ public sealed class TerminalTestReporterTests : TestBase
     }
 
     // Code with line when we have symbols
-    [Arguments(
+    [DataRow(
         "   at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:line 16",
         $"    at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:16")]
     // code without line when we don't have symbols
-    [Arguments(
+    [DataRow(
         "   at TestingPlatformEntryPoint.<Main>(String[])",
         "    at TestingPlatformEntryPoint.<Main>(String[])")]
     // stack trace when published as NativeAOT
-    [Arguments(
+    [DataRow(
         "   at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d",
         "    at BenchmarkTest.ExceptionThrower.<Nested1>d__2.MoveNext() + 0x9d")]
     // spanners that we want to keep, to not lose information
-    [Arguments(
+    [DataRow(
         "--- End of stack trace from previous location ---",
         "    --- End of stack trace from previous location ---")]
+    [TestMethod]
     public void StackTraceRegexCapturesLines(string stackTraceLine, string expected)
     {
         var terminal = new StringBuilderTerminal();
@@ -69,6 +71,7 @@ public sealed class TerminalTestReporterTests : TestBase
         Assert.AreEqual(expected, terminal.Output);
     }
 
+    [TestMethod]
     public void OutputFormattingIsCorrect()
     {
         var stringBuilderConsole = new StringBuilderConsole();
@@ -167,6 +170,7 @@ public sealed class TerminalTestReporterTests : TestBase
         Assert.AreEqual(expected, ShowEscape(output));
     }
 
+    [TestMethod]
     public void OutputProgressFrameIsCorrect()
     {
         var stringBuilderConsole = new StringBuilderConsole();

@@ -8,13 +8,13 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+[TestClass]
 public class UnhandledExceptionPolicyTests : AcceptanceTestBase
 {
     private readonly TestAssetFixture _testAssetFixture;
 
-    public UnhandledExceptionPolicyTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+    public UnhandledExceptionPolicyTests(TestAssetFixture testAssetFixture)
+        => _testAssetFixture = testAssetFixture;
 
     public enum Mode
     {
@@ -37,7 +37,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
         }
     }
 
-    [ArgumentsProvider(nameof(ModeProvider))]
+    [DynamicData(nameof(ModeProvider))]
     public async Task UnhandledExceptionPolicy_ConfigFile_UnobservedTaskException_ShouldCrashProcessIfEnabled(Mode mode, string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "UnhandledExceptionPolicyTests", tfm);
@@ -93,7 +93,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
         }
     }
 
-    [ArgumentsProvider(nameof(ModeProvider))]
+    [DynamicData(nameof(ModeProvider))]
     public async Task UnhandledExceptionPolicy_EnvironmentVariable_UnhandledException_ShouldCrashProcessIfEnabled(Mode mode, string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "UnhandledExceptionPolicyTests", tfm);
@@ -152,7 +152,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string AssetName = "UnhandledExceptionPolicyTests";
 

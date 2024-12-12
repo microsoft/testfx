@@ -11,14 +11,9 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class IPCTests : TestBase
+[TestClass]
+public sealed class IPCTests
 {
-    private readonly ITestExecutionContext _testExecutionContext;
-
-    public IPCTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext) => _testExecutionContext = testExecutionContext;
-
     public async Task SingleConnectionNamedPipeServer_MultipleConnection_Fails()
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
@@ -184,7 +179,7 @@ public sealed class IPCTests : TestBase
         }
 
 #pragma warning disable CA1806 // Do not ignore method results
-        IOException exception = Assert.Throws<IOException>(() =>
+        IOException exception = Assert.ThrowsException<IOException>(() =>
              new NamedPipeServer(
                 pipeNameDescription,
                 async _ => await Task.FromResult(VoidResponse.CachedInstance),

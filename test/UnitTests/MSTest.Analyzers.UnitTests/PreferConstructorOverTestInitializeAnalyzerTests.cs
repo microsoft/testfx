@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class PreferConstructorOverTestInitializeAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class PreferConstructorOverTestInitializeAnalyzerTests
 {
     public async Task WhenTestClassHasCtor_NoDiagnostic()
     {

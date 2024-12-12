@@ -3,11 +3,16 @@
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestFixture(TestFixtureSharingStrategy.PerTestApplication)]
-public sealed class AcceptanceFixture : IDisposable
+[TestClass]
+public static class AcceptanceFixture
 {
-    public TempDirectory NuGetGlobalPackagesFolder { get; } = new(".packages");
+    public static TempDirectory NuGetGlobalPackagesFolder { get; private set; } = null!;
 
-    public void Dispose()
+    [AssemblyInitialize]
+    public static void AssemblyInitialize(TestContext context)
+        => NuGetGlobalPackagesFolder = new(".packages");
+
+    [AssemblyCleanup]
+    public static void AssemblyCleanup()
         => NuGetGlobalPackagesFolder.Dispose();
 }

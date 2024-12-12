@@ -8,8 +8,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 namespace MSTest.Analyzers.Test;
 
 // NOTE: tests in this class are intentionally not using the [|...|] markup syntax so that we test the arguments
-[TestGroup]
-public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class UseProperAssertMethodsAnalyzerTests
 {
     public async Task WhenAssertIsTrueWithEqualsNullArgument()
     {

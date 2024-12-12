@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
 {
     public async Task WhenTestClassHasTestMethod_NoDiagnostic()
     {

@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.UnitTests;
 
-[TestGroup]
-public sealed class PublicTypeShouldBeTestClassAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class PublicTypeShouldBeTestClassAnalyzerTests
 {
     public async Task WhenClassIsPublicAndNotTestClass_Diagnostic()
     {

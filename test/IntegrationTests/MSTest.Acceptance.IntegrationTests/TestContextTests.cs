@@ -6,17 +6,13 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class TestContextTests : AcceptanceTestBase
+[TestClass]
+public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public TestContextTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
+    [TestMethod]
     public async Task TestContextsAreCorrectlySet()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextCtor");
 
         // Assert
@@ -24,9 +20,10 @@ public sealed class TestContextTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 5, skipped: 0);
     }
 
+    [TestMethod]
     public async Task TestContext_TestData_PropertyContainsExpectedValue()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextData");
 
         // Assert
@@ -34,9 +31,10 @@ public sealed class TestContextTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 3, skipped: 0);
     }
 
+    [TestMethod]
     public async Task TestContext_TestException_PropertyContainsExpectedValue()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextException");
 
         // Assert
@@ -46,9 +44,10 @@ public sealed class TestContextTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Test method TestContextExceptionFailingInTestMethod.TestFailingInTestMethod threw exception:");
     }
 
+    [TestMethod]
     public async Task TestContext_TestDisplayName_PropertyContainsExpectedValue()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextDisplayName");
 
         // Assert
@@ -56,8 +55,7 @@ public sealed class TestContextTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestTestContext";
 
@@ -240,7 +238,7 @@ public class TestContextDataFromDynamicData
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetData), DynamicDataSourceType.Method)]
+    [TestMethod, DynamicData(nameof(GetData), DynamicDataSourceType.Method)]
     public void Test(int i, string s)
     {
         AssertTestContextData();
@@ -368,7 +366,7 @@ public class TestContextDisplayName
     }
 
     [TestMethod("Custom name")]
-    [DynamicData(nameof(Data))]
+    [TestMethod, DynamicData(nameof(Data))]
     public void TestCustomNameDynamicData(bool b)
     {
         Assert.AreEqual("Custom name (True)", TestContext.TestDisplayName);

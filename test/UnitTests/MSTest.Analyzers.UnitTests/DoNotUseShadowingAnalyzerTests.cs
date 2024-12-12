@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class DoNotUseShadowingAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class DoNotUseShadowingAnalyzerTests
 {
     public async Task WhenTestClassHaveShadowingMethod_Diagnostic()
     {

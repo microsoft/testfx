@@ -12,16 +12,11 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 
-[TestGroup]
-public sealed class ObjectModelConvertersTests : TestBase
+[TestClass]
+public sealed class ObjectModelConvertersTests
 {
     private static readonly IClientInfo TestClient = new ClientInfoService("UnitTest", string.Empty);
     private static readonly IClientInfo VSTestClient = new ClientInfoService(WellKnownClients.VisualStudio, string.Empty);
-
-    public ObjectModelConvertersTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
 
     public void ToTestNode_WhenTestCaseHasDisplayName_TestNodeDisplayNameUsesIt()
     {

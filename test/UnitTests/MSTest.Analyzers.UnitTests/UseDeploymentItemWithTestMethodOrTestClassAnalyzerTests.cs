@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzerTests
 {
     public async Task WhenTestClassHasDeploymentItem_NoDiagnostic()
     {

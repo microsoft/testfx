@@ -13,8 +13,8 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class TelemetryManagerTests : TestBase
+[TestClass]
+public sealed class TelemetryManagerTests
 {
     public TelemetryManagerTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
@@ -22,14 +22,14 @@ public sealed class TelemetryManagerTests : TestBase
     }
 
     // When set to 1 or true it should suppress the message.
-    [Arguments(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "1")]
-    [Arguments(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "true")]
-    [Arguments(EnvironmentVariableConstants.DOTNET_NOLOGO, "1")]
-    [Arguments(EnvironmentVariableConstants.DOTNET_NOLOGO, "true")]
+    [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "1")]
+    [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "true")]
+    [DataRow(EnvironmentVariableConstants.DOTNET_NOLOGO, "1")]
+    [DataRow(EnvironmentVariableConstants.DOTNET_NOLOGO, "true")]
 
     // When set to 0 it should write the message.
-    [Arguments(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "0")]
-    [Arguments(EnvironmentVariableConstants.DOTNET_NOLOGO, "0")]
+    [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "0")]
+    [DataRow(EnvironmentVariableConstants.DOTNET_NOLOGO, "0")]
     public async Task TelemetryManager_UsingNoLogoShouldSuppressTelemetryMessage(string variable, string value)
     {
         // Arrange
@@ -75,14 +75,14 @@ public sealed class TelemetryManagerTests : TestBase
     }
 
     // When set to 1 or true it should suppress the message.
-    [Arguments(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1")]
-    [Arguments(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "true")]
-    [Arguments(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "1")]
-    [Arguments(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "true")]
+    [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1")]
+    [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "true")]
+    [DataRow(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "1")]
+    [DataRow(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "true")]
 
     // When set to 0 it should write the message.
-    [Arguments(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "0")]
-    [Arguments(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "0")]
+    [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "0")]
+    [DataRow(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "0")]
     public async Task TelemetryManager_UsingTelemetryOptOutShouldDisableTelemetry(string variable, string value)
     {
         // Arrange

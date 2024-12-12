@@ -24,10 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.Testing.Internal.Framework" />
     <Using Include="Microsoft.Testing.Platform.Builder" />
     <Using Include="Microsoft.Testing.Platform.Extensions" />
     <Using Include="Microsoft.Testing.TestInfrastructure" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">

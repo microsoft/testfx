@@ -15,8 +15,8 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class ServerTests : TestBase
+[TestClass]
+public sealed class ServerTests
 {
     public ServerTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)

@@ -9,8 +9,8 @@ using TestNode = Microsoft.Testing.Platform.Extensions.Messages.TestNode;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class JsonTests : TestBase
+[TestClass]
+public sealed class JsonTests
 {
     private readonly Json _json;
 
@@ -113,6 +113,7 @@ public class JsonTests : TestBase
         Assert.AreEqual("""[{"name":"Thomas","children":[{"name":"Ruth","children":null}]},[2],3]""", actual);
     }
 
+    [TestMethod]
     public void DeserializePerson()
     {
         // Arrange
@@ -137,6 +138,7 @@ public class JsonTests : TestBase
         Assert.IsNull(actual.Children![0].Children);
     }
 
+    [TestMethod]
     public void DeserializePersonList()
     {
         // Arrange

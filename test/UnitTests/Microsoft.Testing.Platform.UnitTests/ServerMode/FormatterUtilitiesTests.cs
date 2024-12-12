@@ -11,19 +11,20 @@ using TestNodeUid = Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class FormatterUtilitiesTests : TestBase
+[TestClass]
+public sealed class FormatterUtilitiesTests
 {
     private readonly IMessageFormatter _formatter = FormatterUtilities.CreateFormatter();
 
     public FormatterUtilitiesTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext) =>
+        =>
 #if NETCOREAPP
         Assert.AreEqual("System.Text.Json", _formatter.Id);
 #else
         Assert.AreEqual("Jsonite", _formatter.Id);
 #endif
 
+    [TestMethod]
     public void CanDeserializeTaskResponse()
     {
 #pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
@@ -47,7 +48,7 @@ public class FormatterUtilitiesTests : TestBase
         Assert.AreEqual(null, response.Result);
     }
 
-    [ArgumentsProvider(memberName: nameof(SerializerUtilities.SerializerTypes), memberType: typeof(SerializerUtilities),
+    [DynamicData(memberName: nameof(SerializerUtilities.SerializerTypes), memberType: typeof(SerializerUtilities),
         TestArgumentsEntryProviderMethodName = nameof(FormatSerializerTypes))]
     public async Task SerializeDeserialize_Succeed(Type type)
     {
@@ -71,8 +72,9 @@ public class FormatterUtilitiesTests : TestBase
         static bool HasCustomDeserializeAssert(Type type) => type == typeof(TestNode);
     }
 
-    [Arguments(typeof(DiscoverRequestArgs))]
-    [Arguments(typeof(RunRequestArgs))]
+    [DataRow(typeof(DiscoverRequestArgs))]
+    [DataRow(typeof(RunRequestArgs))]
+    [TestMethod]
     public void DeserializeSpecificTypes(Type type)
     {
         string json = CreateSerializedInstance(type);

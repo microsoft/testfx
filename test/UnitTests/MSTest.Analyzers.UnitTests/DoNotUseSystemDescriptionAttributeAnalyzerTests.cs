@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
 {
     public async Task WhenTestMethodHasMicrosoftDescriptionAttribute_NoDiagnostic()
     {

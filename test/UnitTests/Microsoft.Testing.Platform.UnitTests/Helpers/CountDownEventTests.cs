@@ -5,14 +5,10 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class CountDownEventTests : TestBase
+[TestClass]
+public sealed class CountDownEventTests
 {
-    public CountDownEventTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
+    [TestMethod]
     public async Task CountDownEvent_WaitAsync_Succeeded()
     {
         CountdownEvent countdownEvent = new(3);
@@ -36,6 +32,7 @@ public class CountDownEventTests : TestBase
         Assert.IsTrue(await waiter1);
     }
 
+    [TestMethod]
     public async Task CountDownEvent_WaitAsyncCanceled_Succeeded()
     {
         CountdownEvent countdownEvent = new(1);
@@ -43,9 +40,10 @@ public class CountDownEventTests : TestBase
         CancellationToken cancelToken = cts.Token;
         var waiter = Task.Run(() => countdownEvent.WaitAsync(cancelToken), cancelToken);
         await cts.CancelAsync();
-        await Assert.ThrowsAsync<OperationCanceledException>(async () => await waiter);
+        await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () => await waiter);
     }
 
+    [TestMethod]
     public async Task CountDownEvent_WaitAsyncCanceledByTimeout_Succeeded()
     {
         CountdownEvent countdownEvent = new(1);

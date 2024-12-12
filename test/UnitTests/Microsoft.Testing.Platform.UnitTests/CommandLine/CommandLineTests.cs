@@ -1,19 +1,21 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection;
+
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class CommandLineTests : TestBase
+[TestClass]
+public sealed class CommandLineTests
 {
     // The test method ParserTests is parameterized and one of the parameter needs to be CommandLineParseResult.
     // The test method has to be public to be run, but CommandLineParseResult is internal.
     // So, we introduce this wrapper to be used instead so that the test method can be made public.
-    public class CommandLineParseResultWrapper
+    public sealed class CommandLineParseResultWrapper
     {
         internal CommandLineParseResultWrapper(string? toolName, IReadOnlyList<OptionRecord> options, IReadOnlyList<string> errors)
             => Result = new CommandLineParseResult(toolName, options, errors);
@@ -21,12 +23,8 @@ public sealed class CommandLineTests : TestBase
         internal CommandLineParseResult Result { get; }
     }
 
-    public CommandLineTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
-    [ArgumentsProvider(nameof(ParserTestsData), TestArgumentsEntryProviderMethodName = nameof(ParserTestDataFormat))]
+    [TestMethod]
+    [DynamicData(nameof(ParserTestsData), DynamicDataSourceType.Method, DynamicDataDisplayName = nameof(ParserTestDataFormat))]
     public void ParserTests(int testNum, string[] args, (string RspFileName, string RspFileContent)[]? rspFiles, CommandLineParseResultWrapper parseResultWrapper)
     {
         try
@@ -54,13 +52,13 @@ public sealed class CommandLineTests : TestBase
         }
     }
 
-    internal static TestArgumentsEntry<(int TestNum, string[] Args, (string RspFileName, string RspFileContent)[]? RspFiles, CommandLineParseResultWrapper ParseResult)> ParserTestDataFormat(TestArgumentsContext ctx)
+    internal static string ParserTestDataFormat(MethodInfo methodInfo, object?[]? data)
     {
-        (int TestNum, string[] Args, (string RspFileName, string RspFileContent)[]? RspFiles, CommandLineParseResultWrapper ParseResult) item = ((int, string[], (string, string)[], CommandLineParseResultWrapper))ctx.Arguments;
+        (int TestNum, string[] Args, (string RspFileName, string RspFileContent)[]? RspFiles, CommandLineParseResultWrapper ParseResult) item = ((int)data![0]!, (string[])data[1]!, ((string, string)[])data[2]!, (CommandLineParseResultWrapper)data[3]!);
 
         return item.TestNum == 13
-            ? new(item, $"\"--option1\", $@\" \"\" \\{{Environment.NewLine}} \"\" \" {item.TestNum}")
-            : new(item, $"{item.Args.Aggregate((a, b) => $"{a} {b}")} {item.TestNum}");
+            ? $"\"--option1\", $@\" \"\" \\{{Environment.NewLine}} \"\" \" {item.TestNum}"
+            : $"{item.Args.Aggregate((a, b) => $"{a} {b}")} {item.TestNum}";
     }
 
     internal static IEnumerable<(int TestNum, string[] Args, (string RspFileName, string RspFileContent)[]? RspFiles, CommandLineParseResultWrapper ParseResult)> ParserTestsData()
@@ -204,6 +202,7 @@ public sealed class CommandLineTests : TestBase
         }.ToArray(), []));
     }
 
+    [TestMethod]
     public void CommandLineOptionWithNumber_IsSupported()
     {
         _ = new CommandLineOption("123", "sample", ArgumentArity.ZeroOrOne, false);

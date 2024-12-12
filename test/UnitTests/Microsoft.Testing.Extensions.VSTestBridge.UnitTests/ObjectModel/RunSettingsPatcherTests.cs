@@ -14,8 +14,8 @@ using Moq;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 
-[TestGroup]
-public class RunSettingsPatcherTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public class RunSettingsPatcherTests
 {
     private readonly Mock<IConfiguration> _configuration = new();
     private readonly Mock<ICommandLineOptions> _commandLineOptions = new();

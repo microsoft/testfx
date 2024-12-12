@@ -8,15 +8,15 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+[TestClass]
 public sealed class HangDumpOutputTests : AcceptanceTestBase
 {
     private readonly TestAssetFixture _testAssetFixture;
 
-    public HangDumpOutputTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+    public HangDumpOutputTests(TestAssetFixture testAssetFixture)
+        => _testAssetFixture = testAssetFixture;
 
-    [Arguments("Mini")]
+    [DataRow("Mini")]
     public async Task HangDump_Outputs_HangingTests_EvenWhenHangingTestsHaveTheSameDisplayName(string format)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -31,7 +31,7 @@ public sealed class HangDumpOutputTests : AcceptanceTestBase
         // to currently executing tests. When first test with name Test1 completed we removed that entry, but Class2.Test1 was still
         // running. Solution is to use a more unique identifier.
         string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), format);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--hangdump --hangdump-timeout 8s --hangdump-type {format} --results-directory {resultDirectory} --no-progress",
             new Dictionary<string, string?>
@@ -44,9 +44,9 @@ public sealed class HangDumpOutputTests : AcceptanceTestBase
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        private const string AssetName = "TestAssetFixture";
+        private const string AssetName = "AssetFixture";
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 

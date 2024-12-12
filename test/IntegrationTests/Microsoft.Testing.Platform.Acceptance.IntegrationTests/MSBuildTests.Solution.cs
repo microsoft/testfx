@@ -5,14 +5,14 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+[TestClass]
 public class MSBuildTests_Solution : AcceptanceTestBase
 {
     private readonly AcceptanceFixture _acceptanceFixture;
     private const string AssetName = "MSTestProject";
 
     public MSBuildTests_Solution(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
+        => _acceptanceFixture = acceptanceFixture;
 
     internal static IEnumerable<TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)>> GetBuildMatrix()
     {
@@ -30,7 +30,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase
         }
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrix))]
+    [DynamicData(nameof(GetBuildMatrix))]
     public async Task MSBuildTests_UseMSBuildTestInfrastructure_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration _, bool isMultiTfm, string command)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -65,9 +65,9 @@ public class MSBuildTests_Solution : AcceptanceTestBase
         }
 
         // Build the solution
-        DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", _AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         restoreResult.AssertOutputNotContains("An approximate best match of");
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -nodeReuse:false {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -nodeReuse:false {solution.SolutionFile}", _AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         if (isMultiTfm)
         {
@@ -122,7 +122,7 @@ return await app.RunAsync();
 #file UnitTest1.cs
 namespace MSBuildTests;
 
-[TestGroup]
+[TestClass]
 public class UnitTest1
 {
     public void TestMethod1()

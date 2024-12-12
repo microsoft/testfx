@@ -10,9 +10,9 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.CommandLine;
 
-[TestGroup]
-public sealed class TestRunParameterCommandLineOptionsProviderTests(ITestExecutionContext testExecutionContext)
-    : TestBase(testExecutionContext)
+[TestClass]
+public sealed class TestRunParameterCommandLineOptionsProviderTests
+
 {
     public async Task TestRunParameterOption_WhenArgumentDoesNotContainEqual_IsNotValid()
     {

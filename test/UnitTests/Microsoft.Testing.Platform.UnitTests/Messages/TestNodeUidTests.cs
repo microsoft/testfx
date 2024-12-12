@@ -7,14 +7,15 @@ using TestNodeUid = Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class TestNodeUidTests : TestBase
+[TestClass]
+public sealed class TestNodeUidTests
 {
     public TestNodeUidTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
     }
 
+    [TestMethod]
     public void TestNodeUid_EqualityChecks_ShouldWorkAsExpected()
     {
         TestNodeUid testNodeUid = "TestNodeUid";
@@ -26,6 +27,7 @@ public class TestNodeUidTests : TestBase
         Assert.IsTrue(testNodeUidString == testNodeUid);
     }
 
+    [TestMethod]
     public void TestNodeUid_NullValue_ShouldFail()
     {
 #pragma warning disable CS0219 // Variable is assigned but its value is never used
@@ -34,14 +36,14 @@ public class TestNodeUidTests : TestBase
         // Assert.Throw<ArgumentNullException>(() => { TestNodeUid testNode = null!; });
 
         // Implicit conversion from a null, empty or whitespace string should throw.
-        Assert.Throws<ArgumentNullException>(() => { TestNodeUid testNode = (string)null!; });
-        Assert.Throws<ArgumentException>(() => { TestNodeUid testNode = string.Empty; });
-        Assert.Throws<ArgumentException>(() => { TestNodeUid testNode = " "; });
+        Assert.ThrowsException<ArgumentNullException>(() => { TestNodeUid testNode = (string)null!; });
+        Assert.ThrowsException<ArgumentException>(() => { TestNodeUid testNode = string.Empty; });
+        Assert.ThrowsException<ArgumentException>(() => { TestNodeUid testNode = " "; });
 
         // Providing null, empty, or whitespace id should throw.
-        Assert.Throws<ArgumentNullException>(() => { TestNodeUid testNode = new(null!); });
-        Assert.Throws<ArgumentException>(() => { TestNodeUid testNode = new(string.Empty); });
-        Assert.Throws<ArgumentException>(() => { TestNodeUid testNode = new(" "); });
+        Assert.ThrowsException<ArgumentNullException>(() => { TestNodeUid testNode = new(null!); });
+        Assert.ThrowsException<ArgumentException>(() => { TestNodeUid testNode = new(string.Empty); });
+        Assert.ThrowsException<ArgumentException>(() => { TestNodeUid testNode = new(" "); });
 #pragma warning restore CS0219 // Variable is assigned but its value is never used
     }
 }

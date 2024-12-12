@@ -10,8 +10,8 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 
-[TestGroup]
-public class MSBuildTests : TestBase
+[TestClass]
+public class MSBuildTests
 {
 #if NET8_0_OR_GREATER
     private readonly Mock<IBuildEngine> _buildEngine;

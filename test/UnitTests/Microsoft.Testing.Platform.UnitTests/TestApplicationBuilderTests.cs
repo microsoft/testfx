@@ -14,8 +14,8 @@ using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class TestApplicationBuilderTests : TestBase
+[TestClass]
+public sealed class TestApplicationBuilderTests
 {
     private readonly ServiceProvider _serviceProvider = new();
 
@@ -76,8 +76,8 @@ public sealed class TestApplicationBuilderTests : TestBase
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestSessionLifetimeHandler).ToString()));
     }
 
-    [Arguments(true)]
-    [Arguments(false)]
+    [DataRow(true)]
+    [DataRow(false)]
     public async Task TestHost_ComposeFactory_ShouldSucceed(bool withParameter)
     {
         TestHostManager testHostManager = new();
@@ -134,8 +134,8 @@ public sealed class TestApplicationBuilderTests : TestBase
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestHostProcessLifetimeHandler).ToString()));
     }
 
-    [Arguments(true)]
-    [Arguments(false)]
+    [DataRow(true)]
+    [DataRow(false)]
     public async Task TestHostController_ComposeFactory_ShouldSucceed(bool withParameter)
     {
         TestHostControllersManager testHostControllerManager = new();
@@ -154,15 +154,16 @@ public sealed class TestApplicationBuilderTests : TestBase
         Assert.AreEqual(((ICompositeExtensionFactory)compositeExtensionFactory).GetInstance(), configuration.EnvironmentVariableProviders[0]);
     }
 
-    [Arguments(true)]
-    [Arguments(false)]
+    [DataRow(true)]
+    [DataRow(false)]
+    [TestMethod]
     public void ComposeFactory_InvalidComposition_ShouldFail(bool withParameter)
     {
         CompositeExtensionFactory<InvalidComposition> compositeExtensionFactory =
             withParameter
             ? new CompositeExtensionFactory<InvalidComposition>(sp => new InvalidComposition(sp))
             : new CompositeExtensionFactory<InvalidComposition>(() => new InvalidComposition());
-        InvalidOperationException invalidOperationException = Assert.Throws<InvalidOperationException>(() => ((ICompositeExtensionFactory)compositeExtensionFactory).GetInstance());
+        InvalidOperationException invalidOperationException = Assert.ThrowsException<InvalidOperationException>(() => ((ICompositeExtensionFactory)compositeExtensionFactory).GetInstance());
         Assert.AreEqual(CompositeExtensionFactory<InvalidComposition>.ValidateCompositionErrorMessage, invalidOperationException.Message);
     }
 

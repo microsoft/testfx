@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class DoNotStoreStaticTestContextAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class DoNotStoreStaticTestContextAnalyzerTests
 {
     public async Task WhenAssemblyInitializeOrClassInitialize_Diagnostic()
     {

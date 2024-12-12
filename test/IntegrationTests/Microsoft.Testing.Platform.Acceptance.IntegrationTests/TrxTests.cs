@@ -9,15 +9,15 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+[TestClass]
 public class TrxTests : AcceptanceTestBase
 {
     private readonly TestAssetFixture _testAssetFixture;
 
-    public TrxTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+    public TrxTests(TestAssetFixture testAssetFixture)
+        => _testAssetFixture = testAssetFixture;
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Trx_WhenReportTrxIsNotSpecified_TrxReportIsNotGenerated(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
@@ -32,7 +32,7 @@ Out of process file artifacts produced:
         testHostResult.AssertOutputDoesNotMatchRegex(outputPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Trx_WhenReportTrxIsSpecified_TrxReportIsGeneratedInDefaultLocation(string tfm)
     {
         string testResultsPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, "TestResults");
@@ -45,7 +45,7 @@ Out of process file artifacts produced:
         await AssertTrxReportWasGeneratedAsync(testHostResult, trxPathPattern, 1);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
     public async Task Trx_WhenTestHostCrash_ErrorIsDisplayedInsideTheTrx(string tfm)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -68,7 +68,7 @@ Out of process file artifacts produced:
         Assert.That(trxContent.Contains("""<ResultSummary outcome="Failed">"""), trxContent);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
     public async Task Trx_WhenSkipTest_ItAppearsAsExpectedInsideTheTrx(string tfm)
     {
         string fileName = Guid.NewGuid().ToString("N");
@@ -91,7 +91,7 @@ Out of process file artifacts produced:
         Assert.That(trxContent.Contains("""<Counters total="2" executed="0" passed="0" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="2" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />"""), trxContent);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
     public async Task Trx_WhenTheTestNameHasInvalidXmlChar_TheTrxCreatedSuccessfully(string tfm)
     {
         string testResultsPath = Path.Combine(_testAssetFixture.TargetAssetPathWithDataRow, "bin", "Release", tfm, "TestResults");
@@ -104,7 +104,7 @@ Out of process file artifacts produced:
         await AssertTrxReportWasGeneratedAsync(testHostResult, trxPathPattern, 2);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
     public async Task Trx_UsingDataDriven_CreatesUnitTestTagForEachOneInsideTheTrx(string tfm)
     {
         string fileName = Guid.NewGuid().ToString("N");
@@ -125,7 +125,7 @@ Out of process file artifacts produced:
         Assert.That(Regex.IsMatch(trxContent, trxContentsPattern));
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Trx_WhenReportTrxIsSpecifiedWithFullPath_TrxReportShouldFail(string tfm)
     {
         string testResultsPath = Path.Combine(_testAssetFixture.TargetAssetPath, "aaa", "Release", tfm, "TestResults");
@@ -139,7 +139,7 @@ Out of process file artifacts produced:
         testHostResult.AssertOutputContains("Option '--report-trx-filename' has invalid arguments: file name argument must not contain path (e.g. --report-trx-filename myreport.trx)");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Trx_WhenReportTrxIsSpecifiedWithRelativePath_TrxReportShouldFail(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
@@ -149,7 +149,7 @@ Out of process file artifacts produced:
         testHostResult.AssertOutputContains("Option '--report-trx-filename' has invalid arguments: file name argument must not contain path (e.g. --report-trx-filename myreport.trx)");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Trx_WhenReportTrxIsNotSpecifiedAndReportTrxPathIsSpecified_ErrorIsDisplayed(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
@@ -159,7 +159,7 @@ Out of process file artifacts produced:
         testHostResult.AssertOutputContains("Error: '--report-trx-filename' requires '--report-trx' to be enabled");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Trx_WhenReportTrxIsSpecifiedAndListTestsIsSpecified_ErrorIsDisplayed(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
@@ -197,7 +197,7 @@ Out of process file artifacts produced:
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string AssetName = "TrxTest";
         public const string AssetNameUsingMSTest = "TrxTestUsingMSTest";
@@ -238,7 +238,7 @@ return await app.RunAsync();
 #file UnitTest1.cs
 namespace TrxTest;
 
-[TestGroup]
+[TestClass]
 public class UnitTest1
 {
     public void TestMethod1()

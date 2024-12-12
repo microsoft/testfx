@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class TestCleanupShouldBeValidAnalyzerTests
 {
     public async Task WhenTestCleanupIsPublic_NoDiagnostic()
     {
@@ -88,10 +88,10 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
             fixedCode);
     }
 
-    [Arguments("protected")]
-    [Arguments("internal")]
-    [Arguments("internal protected")]
-    [Arguments("private")]
+    [DataRow("protected")]
+    [DataRow("internal")]
+    [DataRow("internal protected")]
+    [DataRow("private")]
     public async Task WhenTestCleanupIsNotPublic_Diagnostic(string accessibility)
     {
         string code = $$"""

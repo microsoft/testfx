@@ -9,8 +9,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class UseAttributeOnTestMethodAnalyzerTests
 {
     private static readonly List<(DiagnosticDescriptor Rule, string AttributeUsageExample)> RuleUsageExamples =
     [
@@ -47,7 +47,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
             .Where(tuples => !tuples.tuple1.AttributeUsageExample.Equals(tuples.tuple2.AttributeUsageExample, StringComparison.Ordinal))
             .Select(tuples => (tuples.tuple1.Rule, tuples.tuple1.AttributeUsageExample, tuples.tuple2.Rule, tuples.tuple2.AttributeUsageExample));
 
-    [ArgumentsProvider(nameof(GetAttributeUsageExamples))]
+    [DynamicData(nameof(GetAttributeUsageExamples))]
     public async Task WhenMethodIsMarkedWithTestMethodAndTestAttributes_NoDiagnosticAsync(string attributeUsageExample)
     {
         string code = $$"""
@@ -69,7 +69,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
-    [ArgumentsProvider(nameof(GetAttributeUsageExampleAndRuleTuples))]
+    [DynamicData(nameof(GetAttributeUsageExampleAndRuleTuples))]
     public async Task WhenMethodIsMarkedWithTestAttributeButNotWithTestMethod_DiagnosticAsync(DiagnosticDescriptor rule, string attributeUsageExample)
     {
         string code = $$"""
@@ -106,7 +106,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
         await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic(rule).WithLocation(0), fixedCode);
     }
 
-    [ArgumentsProvider(nameof(GetAttributeUsageExampleAndRuleTuplesForTwoAttributes))]
+    [DynamicData(nameof(GetAttributeUsageExampleAndRuleTuplesForTwoAttributes))]
     public async Task WhenMethodIsMarkedWithMultipleTestAttributesButNotWithTestMethod_DiagnosticOnEachAttributeAsync(
         DiagnosticDescriptor rule1,
         string attributeUsageExample1,
@@ -149,7 +149,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
         await VerifyCS.VerifyCodeFixAsync(code, new[] { VerifyCS.Diagnostic(rule1).WithLocation(0), VerifyCS.Diagnostic(rule2).WithLocation(1) }, fixedCode);
     }
 
-    [ArgumentsProvider(nameof(GetAttributeUsageExamples))]
+    [DynamicData(nameof(GetAttributeUsageExamples))]
     public async Task WhenMethodIsMarkedWithTestAttributeAndCustomTestMethod_NoDiagnosticAsync(string attributeUsageExample)
     {
         string code = $$"""

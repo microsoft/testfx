@@ -12,14 +12,10 @@ using Moq;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
-[TestGroup]
-public sealed class AppInsightsProviderTests : TestBase
+[TestClass]
+public sealed class AppInsightsProviderTests
 {
-    public AppInsightsProviderTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
+    [TestMethod]
     public void Platform_CancellationToken_Cancellation_Should_Exit_Gracefully()
     {
         Mock<IEnvironment> environment = new();
@@ -87,6 +83,7 @@ public sealed class AppInsightsProviderTests : TestBase
         Assert.IsTrue(events.Single() == "Sample");
     }
 
+    [TestMethod]
     public void Timeout_During_Dispose_Should_Exit_Gracefully()
     {
         Mock<IEnvironment> environment = new();

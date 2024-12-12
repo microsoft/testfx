@@ -10,14 +10,9 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class AsynchronousMessageBusTests : TestBase
+[TestClass]
+public sealed class AsynchronousMessageBusTests
 {
-    public AsynchronousMessageBusTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
     public async Task UnexpectedTypePublished_ShouldFail()
     {
         MessageBusProxy proxy = new();

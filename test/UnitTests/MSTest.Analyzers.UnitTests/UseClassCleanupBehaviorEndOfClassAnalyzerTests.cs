@@ -7,8 +7,8 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests
 {
     public async Task UsingClassCleanup_WithoutCleanupBehaviorEndOfClass_AndNotInsideTestClass_NoDiagnostic()
     {
