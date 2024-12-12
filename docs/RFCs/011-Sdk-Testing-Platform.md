@@ -28,7 +28,7 @@ Make this option configurable in global.json. We chose global.json because it's 
 
 Here are some global.json suggestions:
 
-### 1. Enable/Disable Testing Platform
+### 1. Enable/Disable the Testing Platform
 
 #### Example of Usage
 
