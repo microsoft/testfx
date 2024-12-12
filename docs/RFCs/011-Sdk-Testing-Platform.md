@@ -14,7 +14,7 @@ Currently, when we run `dotnet test` in CLI, we use vstest as a test runner/driv
 With `dotnet test`, users should be able to use [Microsoft testing platform](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-platform-intro?tabs=dotnetcli#microsofttestingplatform-pillars) to run their tests for the sake of improving their experience. They should have the option to opt-in/out this new experience.
 
 The reason for opting-in/out this experience is 
-1. if we were to auto-infer if test projects were using vstest or the testing platform is we will end up with many vulnerabilities, thus making it hard to handle this correctly.
+1. autodetecting if test projects are using vstest or the testing platform is complex, and we would end up with many false positives, making it hard to deliver a working and consistent experience.
 2. Mixed mode (i.e. having projects using vstest and testing platform in the same solution) will never work as the two platforms have different command line options and different features, thus the mapping will not work as expected.
 
 ## Note
