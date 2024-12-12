@@ -53,6 +53,21 @@ We still could support more options.
 
 But if, for some reason, the latest version was broken, we will break as well.
 
+3.
+```json
+{
+"testSdk" :
+  {
+    "testRunner": "vstest/testingplatform/...",
+    "version": "1.5.0"
+  }
+}
+```
+
+Users are allowed to force install a specific version of the tool.
+
+If not specified then we will fallback to the latest version.
+
 ### Defaults
 
 - If no test runner was provided in global.json, the default is set to vstest.
