@@ -168,6 +168,8 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        Dictionary<ITypeSymbol, (ITypeSymbol Symbol, Type SystemType)>? parameterTypesSubstitutions = GetParameterTypeSubstitutions(methodSymbol, constructorArguments);
+
         // Check constructor argument types match method parameter types.
         List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices = new();
         for (int currentArgumentIndex = 0; currentArgumentIndex < constructorArguments.Length; currentArgumentIndex++)
@@ -178,9 +180,8 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
-            // TODO: Handle generics parameters
             ITypeSymbol? argumentType = constructorArguments[currentArgumentIndex].Type;
-            ITypeSymbol paramType = GetParameterType(methodSymbol, currentArgumentIndex, constructorArguments.Length);
+            ITypeSymbol paramType = GetParameterType(methodSymbol.Parameters, currentArgumentIndex, constructorArguments.Length, parameterTypesSubstitutions);
 
             if (argumentType is not null && !argumentType.IsAssignableTo(paramType, context.Compilation))
             {
@@ -197,11 +198,69 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static ITypeSymbol GetParameterType(IMethodSymbol methodSymbol, int currentArgumentIndex, int argumentsCount)
+    private static Dictionary<ITypeSymbol, (ITypeSymbol Symbol, Type SystemType)>? GetParameterTypeSubstitutions(IMethodSymbol methodSymbol, ImmutableArray<TypedConstant> constructorArguments)
     {
-        if (currentArgumentIndex >= methodSymbol.Parameters.Length - 1)
+        if (!methodSymbol.IsGenericMethod)
         {
-            IParameterSymbol lastParameter = methodSymbol.Parameters[^1];
+            return null;
+        }
+
+        var parameterTypesSubstitutions = new Dictionary<ITypeSymbol, (ITypeSymbol Symbol, Type SystemType)>(SymbolEqualityComparer.Default);
+        foreach (IParameterSymbol parameter in methodSymbol.Parameters)
+        {
+            ITypeSymbol parameterType = parameter.Type;
+            if (parameterType.Kind == SymbolKind.TypeParameter)
+            {
+                TypedConstant constructorArgument = constructorArguments[parameter.Ordinal];
+                if (constructorArgument.Kind == TypedConstantKind.Array)
+                {
+
+                }
+
+                object? argumentValue = constructorArgument.Value;
+                if (argumentValue is null)
+                {
+                    continue;
+                }
+
+                if (parameterTypesSubstitutions.TryGetValue(parameterType, out (ITypeSymbol Symbol, Type SystemType) existingType))
+                {
+                    if (argumentValue.GetType().IsAssignableTo(existingType.SystemType))
+                    {
+                        continue;
+                    }
+                    else if (existingType.SystemType.IsAssignableTo(argumentValue.GetType()))
+                    {
+                        parameterTypesSubstitutions[parameterType] = (parameterType, argumentValue.GetType());
+                    }
+                    else
+                    {
+                        // Report diagnostic.
+                    }
+                }
+                else
+                {
+                    parameterTypesSubstitutions.Add(parameterType, (parameterType, argumentValue.GetType()));
+                }
+            }
+        }
+
+        foreach (ITypeParameterSymbol typeParameter in methodSymbol.TypeParameters)
+        {
+            if (!parameterTypesSubstitutions.ContainsKey(typeParameter))
+            {
+                // Report diagnostic.
+            }
+        }
+
+        return parameterTypesSubstitutions;
+    }
+
+    private static ITypeSymbol GetParameterType(ImmutableArray<IParameterSymbol> parameters, int currentArgumentIndex, int argumentsCount, Dictionary<ITypeSymbol, (ITypeSymbol Symbol, Type SystemType)>? parameterTypesSubstitutions)
+    {
+        if (currentArgumentIndex >= parameters.Length - 1)
+        {
+            IParameterSymbol lastParameter = parameters[^1];
 
             // When last parameter is params, we want to check that the extra arguments match the type of the array
             if (lastParameter.IsParams)
@@ -210,13 +269,16 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
 
             // When only parameter is array and we have more than one argument, we want to check the array type
-            if (argumentsCount > 1 && methodSymbol.Parameters.Length == 1 && lastParameter.Type.Kind == SymbolKind.ArrayType)
+            if (argumentsCount > 1 && parameters.Length == 1 && lastParameter.Type.Kind == SymbolKind.ArrayType)
             {
                 return ((IArrayTypeSymbol)lastParameter.Type).ElementType;
             }
         }
 
-        return methodSymbol.Parameters[currentArgumentIndex].Type;
+        ITypeSymbol parameterType = parameters[currentArgumentIndex].Type;
+        return parameterTypesSubstitutions?.TryGetValue(parameterType, out (ITypeSymbol Symbol, Type SystemType) substitutedType) == true
+            ? substitutedType.Symbol
+            : parameterType;
     }
 
     private static bool IsArgumentCountMismatch(int constructorArgumentsLength, ImmutableArray<IParameterSymbol> methodParameters)
