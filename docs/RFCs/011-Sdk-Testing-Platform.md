@@ -23,7 +23,7 @@ We want to design in a way that is future proof and easy to keep backwards compa
 
 ### Proposed solution
 
-Make this option configurable in global.json.
+Make this option configurable in global.json. We chose global.json because it's located on the current directory level or its parent directories and is picked up by the dotnet sdk.
 
 Here are some global.json samples:
 
