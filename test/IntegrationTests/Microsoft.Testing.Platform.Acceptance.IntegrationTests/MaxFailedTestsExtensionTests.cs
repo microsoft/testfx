@@ -26,6 +26,18 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 3, passed: 3, skipped: 0);
     }
 
+    public async Task WhenCapabilityIsMissingShouldFail()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2", environmentVariables: new()
+        {
+            ["DO_NOT_ADD_CAPABILITY"] = "1",
+        });
+
+        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertOutputContains("The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.");
+    }
+
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
@@ -127,7 +139,18 @@ internal class DummyAdapter : ITestFramework, IDataProducer
 
 internal class Capabilities : ITestFrameworkCapabilities
 {
-    IReadOnlyCollection<ITestFrameworkCapability> ICapabilities<ITestFrameworkCapability>.Capabilities => [GracefulStop.Instance];
+    IReadOnlyCollection<ITestFrameworkCapability> ICapabilities<ITestFrameworkCapability>.Capabilities
+    {
+        get
+        {
+            if (Environment.GetEnvironmentVariable("DO_NOT_ADD_CAPABILITY") == "1")
+            {
+                return [];
+            }
+
+            return [GracefulStop.Instance];
+        }
+    }
 }
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
