@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="new">Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <target state="translated">Extension utilisée pour prendre en charge '--maximum-failed-tests'. Quand un seuil d’échecs donné est atteint, la série de tests est abandonnée.</target>
         <note />
       </trans-unit>
       <trans-unit id="Aborted">
@@ -383,7 +383,7 @@
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="new">The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <target state="translated">L’option '--maximum-failed-tests' doit être un entier positif. La valeur '{0}' n’est pas valide.</target>
         <note />
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -552,7 +552,7 @@ Les valeurs disponibles sont « Trace », « Debug », « Information », 
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="new">Specifies a maximum number of test failures that, when exceeded, will abort the test run.</target>
+        <target state="translated">Spécifie le nombre maximal d’échecs de tests qui, lorsqu’ils sont dépassés, abandonnent la série de tests.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -645,7 +645,7 @@ Prend un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « v
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</target>
+        <target state="translated">La session de test est en cours d’abandon en raison d’échecs ('{0}') spécifiés par l’option '--maximum-failed-tests'.</target>
         <note>{0} is the number of max failed tests.</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
