@@ -69,7 +69,19 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (methodSymbol.IsGenericMethod || methodSymbol.IsStatic || methodSymbol.IsAbstract || methodSymbol is { ReturnsVoid: true, IsAsync: true }
+        if (methodSymbol.IsGenericMethod)
+        {
+            foreach (ITypeParameterSymbol typeParameter in methodSymbol.TypeParameters)
+            {
+                // If none of the parameters match the type parameter, then that generic type can't be inferred.
+                if (!methodSymbol.Parameters.Any(p => typeParameter.Equals(p.Type, SymbolEqualityComparer.Default)))
+                {
+                    context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ValidTestMethodSignatureRule, methodSymbol.Name));
+                }
+            }
+        }
+
+        if (methodSymbol.IsStatic || methodSymbol.IsAbstract || methodSymbol is { ReturnsVoid: true, IsAsync: true }
             || (!methodSymbol.ReturnsVoid
             && (taskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, taskSymbol))
             && (valueTaskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, valueTaskSymbol))))

@@ -203,11 +203,6 @@ Error: {1}</source>
 错误: {1}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTA_ErrorGenericTestMethod">
-        <source>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</source>
-        <target state="translated">UTA015: 泛型方法不可为测试方法。{0}.{1} 具有无效签名</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
         <source>File does not exist: {0}</source>
         <target state="translated">文件不存在: {0}</target>

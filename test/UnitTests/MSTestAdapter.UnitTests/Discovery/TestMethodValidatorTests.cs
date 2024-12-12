@@ -2,10 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Reflection;
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
@@ -43,6 +41,8 @@ public class TestMethodValidatorTests : TestContainer
         Verify(!_testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings));
     }
 
+    // TODO: Fix this test. It should be returning true, but we get false for a different reason (IsPublic is false)
+    // https://github.com/microsoft/testfx/issues/4207
     public void IsValidTestMethodShouldReturnFalseForGenericTestMethodDefinitions()
     {
         SetupTestMethod();
@@ -53,18 +53,20 @@ public class TestMethodValidatorTests : TestContainer
         Verify(!_testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings));
     }
 
-    public void IsValidTestMethodShouldReportWarningsForGenericTestMethodDefinitions()
+    // TODO: Fix this test. It should be returning true, but we get false for a different reason (IsPublic is false)
+    // https://github.com/microsoft/testfx/issues/4207
+    public void IsValidTestMethodShouldNotReportWarningsForGenericTestMethodDefinitions()
     {
         SetupTestMethod();
 
         _mockMethodInfo.Setup(mi => mi.IsGenericMethodDefinition).Returns(true);
         _mockMethodInfo.Setup(mi => mi.DeclaringType.FullName).Returns("DummyTestClass");
         _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
-
+        _mockMethodInfo.Setup(mi => mi.Attributes).Returns(MethodAttributes.Public);
+        _mockMethodInfo.Setup(mi => mi.ReturnType).Returns(typeof(void));
         _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings);
 
-        Verify(_warnings.Count == 1);
-        Verify(_warnings.Contains(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, "DummyTestClass", "DummyTestMethod")));
+        Verify(_warnings.Count == 0);
     }
 
     public void IsValidTestMethodShouldReturnFalseForNonPublicMethods()
