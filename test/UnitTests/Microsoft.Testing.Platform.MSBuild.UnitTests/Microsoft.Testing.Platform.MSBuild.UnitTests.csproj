@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);net462</TargetFrameworks>
     <UseVSTestRunner>false</UseVSTestRunner>
-    <UseAppHost>true</UseAppHost>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 

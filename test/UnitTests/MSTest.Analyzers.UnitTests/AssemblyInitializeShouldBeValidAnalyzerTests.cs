@@ -10,6 +10,7 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenAssemblyInitializeIsPublic_NoDiagnostic()
     {
         string code = """
@@ -28,6 +29,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyInitializeIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
     {
         string code = """
@@ -48,6 +50,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyInitializeIsInsideAGenericClass_Diagnostic()
     {
         string code = """
@@ -69,6 +72,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
             code);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyInitializeIsInternal_InsidePublicClassWithDiscoverInternals_Diagnostic()
     {
         string code = """
@@ -111,6 +115,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
     [DataRow("internal")]
     [DataRow("internal protected")]
     [DataRow("private")]
+    [TestMethod]
     public async Task WhenAssemblyInitializeIsNotPublic_Diagnostic(string accessibility)
     {
         string code = $$"""
@@ -145,6 +150,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyInitializeIsNotOrdinary_Diagnostic()
     {
         string code = """
@@ -166,6 +172,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
             code);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyInitializeIsGeneric_Diagnostic()
     {
         string code = """
@@ -200,6 +207,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyInitializeIsNotStatic_Diagnostic()
     {
         string code = """
@@ -234,6 +242,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyInitializeDoesNotHaveParameters_Diagnostic()
     {
         string code = """
@@ -268,6 +277,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyInitializeReturnTypeIsNotValid_Diagnostic()
     {
         string code = """
@@ -371,6 +381,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyInitializeReturnTypeIsValid_NoDiagnostic()
     {
         string code = """
@@ -402,6 +413,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyInitializeIsAsyncVoid_Diagnostic()
     {
         string code = """
@@ -440,6 +452,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenMultipleViolations_TheyAllGetFixed()
     {
         string code = """
@@ -478,6 +491,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyInitializeIsNotOnClass_Diagnostic()
     {
         string code = """
@@ -495,6 +509,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyInitializeIsOnClassNotMarkedWithTestClass_Diagnostic()
     {
         string code = """

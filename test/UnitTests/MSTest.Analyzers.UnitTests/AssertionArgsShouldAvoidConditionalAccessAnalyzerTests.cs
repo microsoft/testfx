@@ -10,6 +10,7 @@ namespace MSTest.Analyzers.UnitTests;
 [TestClass]
 public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenUsingConditionalsAccess_In_Assert_Equal()
     {
         string code = """
@@ -99,6 +100,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenUsingConditionalsAccess_In_Assert_Boolean()
     {
         string code = """
@@ -158,6 +160,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenUsingConditionalsAccess_In_NullAssertions_Gives_NoWarning()
     {
         string code = """
@@ -187,6 +190,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenUsingConditionalsAccess_In_CollectionAssert()
     {
         string code = """
@@ -258,6 +262,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenUsingConditionalsAccess_In_StringAssert()
     {
         string code = """

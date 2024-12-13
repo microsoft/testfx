@@ -16,6 +16,7 @@ namespace MSTest.Analyzers.UnitTests;
 [TestClass]
 public sealed class UseAsyncSuffixTestFixtureMethodSuppressorTests
 {
+    [TestMethod]
     public async Task AsyncTestFixtureMethodsWithoutSuffix_DiagnosticIsSuppressed()
     {
         string code = @"
@@ -57,6 +58,7 @@ public class SomeClass
         }.RunAsync();
     }
 
+    [TestMethod]
     public async Task AsyncTestMethodWithSuffix_NoDiagnostic()
     {
         string code = """

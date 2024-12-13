@@ -10,6 +10,7 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class DoNotStoreStaticTestContextAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenAssemblyInitializeOrClassInitialize_Diagnostic()
     {
         string code = """
@@ -87,6 +88,7 @@ public sealed class DoNotStoreStaticTestContextAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenOtherTestContext_NoDiagnostic()
     {
         string code = """

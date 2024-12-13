@@ -20,6 +20,7 @@ public class RunSettingsPatcherTests
     private readonly Mock<IConfiguration> _configuration = new();
     private readonly Mock<ICommandLineOptions> _commandLineOptions = new();
 
+    [TestMethod]
     public void Patch_WhenNoRunSettingsProvided_CreateRunSettingsWithResultsDirectoryElement()
     {
         _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
@@ -30,6 +31,7 @@ public class RunSettingsPatcherTests
             runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/ResultsDirectory")!.Value);
     }
 
+    [TestMethod]
     public void Patch_WithRunSettingsProvidedButMissingResultsDirectory_AddsElement()
     {
         string runSettings = """
@@ -49,6 +51,7 @@ public class RunSettingsPatcherTests
         Assert.IsTrue(bool.Parse(runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/Canary")!.Value));
     }
 
+    [TestMethod]
     public void Patch_WithRunSettingsContainingResultsDirectory_EntryIsNotOverridden()
     {
         string runSettings =
@@ -69,6 +72,7 @@ $"""
         Assert.IsTrue(bool.Parse(runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/Canary")!.Value));
     }
 
+    [TestMethod]
     public void Patch_WhenRunSettingsExists_MergesParameters()
     {
         string runSettings = """
@@ -94,14 +98,15 @@ $"""
             _commandLineOptions.Object);
 
         XElement[] testRunParameters = runSettingsDocument.XPathSelectElements("RunSettings/TestRunParameters/Parameter").ToArray();
-        Assert.AreEqual(testRunParameters[0].Attribute("name")!.Value, "key1");
-        Assert.AreEqual(testRunParameters[0].Attribute("value")!.Value, "value1");
-        Assert.AreEqual(testRunParameters[1].Attribute("name")!.Value, "key2");
-        Assert.AreEqual(testRunParameters[1].Attribute("value")!.Value, "updated-value");
-        Assert.AreEqual(testRunParameters[2].Attribute("name")!.Value, "key3");
-        Assert.AreEqual(testRunParameters[2].Attribute("value")!.Value, "value3");
+        Assert.AreEqual("key1", testRunParameters[0].Attribute("name")!.Value);
+        Assert.AreEqual("value1", testRunParameters[0].Attribute("value")!.Value);
+        Assert.AreEqual("key2", testRunParameters[1].Attribute("name")!.Value);
+        Assert.AreEqual("updated-value", testRunParameters[1].Attribute("value")!.Value);
+        Assert.AreEqual("key3", testRunParameters[2].Attribute("name")!.Value);
+        Assert.AreEqual("value3", testRunParameters[2].Attribute("value")!.Value);
     }
 
+    [TestMethod]
     public void Patch_WhenRunSettingsDoesNotExist_AddParameters()
     {
         string[]? arguments;
@@ -117,9 +122,9 @@ $"""
             _commandLineOptions.Object);
 
         XElement[] testRunParameters = runSettingsDocument.XPathSelectElements("RunSettings/TestRunParameters/Parameter").ToArray();
-        Assert.AreEqual(testRunParameters[0].Attribute("name")!.Value, "key1");
-        Assert.AreEqual(testRunParameters[0].Attribute("value")!.Value, "value1");
-        Assert.AreEqual(testRunParameters[1].Attribute("name")!.Value, "key2");
-        Assert.AreEqual(testRunParameters[1].Attribute("value")!.Value, "value2");
+        Assert.AreEqual("key1", testRunParameters[0].Attribute("name")!.Value);
+        Assert.AreEqual("value1", testRunParameters[0].Attribute("value")!.Value);
+        Assert.AreEqual("key2", testRunParameters[1].Attribute("name")!.Value);
+        Assert.AreEqual("value2", testRunParameters[1].Attribute("value")!.Value);
     }
 }

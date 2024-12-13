@@ -48,6 +48,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
             .Select(tuples => (tuples.tuple1.Rule, tuples.tuple1.AttributeUsageExample, tuples.tuple2.Rule, tuples.tuple2.AttributeUsageExample));
 
     [DynamicData(nameof(GetAttributeUsageExamples))]
+    [TestMethod]
     public async Task WhenMethodIsMarkedWithTestMethodAndTestAttributes_NoDiagnosticAsync(string attributeUsageExample)
     {
         string code = $$"""
@@ -70,6 +71,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
     }
 
     [DynamicData(nameof(GetAttributeUsageExampleAndRuleTuples))]
+    [TestMethod]
     public async Task WhenMethodIsMarkedWithTestAttributeButNotWithTestMethod_DiagnosticAsync(DiagnosticDescriptor rule, string attributeUsageExample)
     {
         string code = $$"""
@@ -107,6 +109,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
     }
 
     [DynamicData(nameof(GetAttributeUsageExampleAndRuleTuplesForTwoAttributes))]
+    [TestMethod]
     public async Task WhenMethodIsMarkedWithMultipleTestAttributesButNotWithTestMethod_DiagnosticOnEachAttributeAsync(
         DiagnosticDescriptor rule1,
         string attributeUsageExample1,
@@ -150,6 +153,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
     }
 
     [DynamicData(nameof(GetAttributeUsageExamples))]
+    [TestMethod]
     public async Task WhenMethodIsMarkedWithTestAttributeAndCustomTestMethod_NoDiagnosticAsync(string attributeUsageExample)
     {
         string code = $$"""

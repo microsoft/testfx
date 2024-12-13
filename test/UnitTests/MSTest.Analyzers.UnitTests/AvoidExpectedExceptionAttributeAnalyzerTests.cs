@@ -12,6 +12,7 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenUsed_Diagnostic()
     {
         string code = """
@@ -121,6 +122,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
         await test.RunAsync(CancellationToken.None);
     }
 
+    [TestMethod]
     public async Task When_Statement_Block_Diagnostic()
     {
         string code = """
@@ -157,6 +159,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task When_Statement_ExpressionBody_Diagnostic()
     {
         string code = """
@@ -189,6 +192,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task When_Expression_Block_Diagnostic()
     {
         string code = """
@@ -229,6 +233,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task When_Expression_ExpressionBody_Diagnostic()
     {
         string code = """
@@ -264,6 +269,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task When_Async_Block_Diagnostic()
     {
         string code = """
@@ -302,6 +308,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task When_Async_ExpressionBody_Diagnostic()
     {
         string code = """
@@ -336,6 +343,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task When_TestMethodIsAsyncButLastStatementIsSynchronous_Diagnostic()
     {
         string code = """
@@ -380,6 +388,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task When_LastStatementHasDeepAwait_Diagnostic()
     {
         string code = """

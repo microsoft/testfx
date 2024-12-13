@@ -10,6 +10,7 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenIsNotNullAssertion_ValueParameterIsNotNullable_NoDiagnostic()
     {
         string code = """
@@ -30,6 +31,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenIsNotNullAssertion_ValueParameterIsNotNullable_Diagnostic()
     {
         string code = """
@@ -50,6 +52,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenIsNotNullAssertion_ValueParameterAsPropertySymbolIsNotNullable_Diagnostic()
     {
         string code = """
@@ -71,6 +74,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenIsNotNullAssertion_ValueParameterAsPropertySymbolIsNullable_NoDiagnostic()
     {
         string code = """
@@ -92,6 +96,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenIsNotNullAssertion_ValueParameterAsReferenceObjectIsNotNullable_Diagnostic()
     {
         string code = """
@@ -117,6 +122,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenIsNotNullAssertion_ValueParameterAsReferenceObjectIsNotNullable_WithoutEnableNullable_NoDiagnostic()
     {
         string code = """
@@ -141,6 +147,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenIsNotNullAssertion_ValueParameterAsReferenceObjectIsNotNullable_NoDiagnostic()
     {
         string code = """
@@ -167,6 +174,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedTrue_NoDiagnostic()
     {
         string code = """
@@ -186,6 +194,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedTrue_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -205,6 +214,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedTrue_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -224,6 +234,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedFalse_Diagnostic()
     {
         string code = """
@@ -243,6 +254,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedFalse_WithMessage_Diagnostic()
     {
         string code = """
@@ -262,6 +274,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedFalse_WithMessageFirst_Diagnostic()
     {
         string code = """
@@ -281,6 +294,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedUnknown_NoDiagnostic()
     {
         string code = """
@@ -302,6 +316,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedUnknown_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -323,6 +338,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseIsPassedUnknown_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -344,6 +360,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedTrue_Diagnostic()
     {
         string code = """
@@ -363,6 +380,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedTrue_WithMessage_Diagnostic()
     {
         string code = """
@@ -382,6 +400,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedTrue_WithMessageFirst_Diagnostic()
     {
         string code = """
@@ -401,6 +420,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedFalse_NoDiagnostic()
     {
         string code = """
@@ -420,6 +440,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedFalse_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -439,6 +460,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedFalse_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -458,6 +480,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedUnknown_NoDiagnostic()
     {
         string code = """
@@ -479,6 +502,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedUnknown_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -500,6 +524,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueIsPassedUnknown_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -521,6 +546,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsNullIsPassedNull_Diagnostic()
     {
         string code = """
@@ -540,6 +566,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsNullIsPassedNull_WithMessage_Diagnostic()
     {
         string code = """
@@ -559,6 +586,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsNullIsPassedNull_WithMessageFirst_Diagnostic()
     {
         string code = """
@@ -578,6 +606,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsNullIsPassedUnknown_NoDiagnostic()
     {
         string code = """
@@ -599,6 +628,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsNullIsPassedUnknown_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -620,6 +650,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsNullIsPassedUnknown_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -641,6 +672,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedEqual_NoDiagnostic()
     {
         string code = """
@@ -660,6 +692,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedEqual_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -679,6 +712,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedEqual_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -698,6 +732,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedEqual_WithMessageSecond_NoDiagnostic()
     {
         string code = """
@@ -717,6 +752,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedNonEqual_Diagnostic()
     {
         string code = """
@@ -736,6 +772,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedNonEqual_WithMessage_Diagnostic()
     {
         string code = """
@@ -755,6 +792,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedNonEqual_WithMessageFirst_Diagnostic()
     {
         string code = """
@@ -774,6 +812,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedNonEqual_WithMessageSecond_Diagnostic()
     {
         string code = """
@@ -793,6 +832,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedUnknown_NoDiagnostic()
     {
         string code = """
@@ -814,6 +854,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedUnknown_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -835,6 +876,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedUnknown_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -856,6 +898,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualIsPassedUnknown_WithMessageSecond_NoDiagnostic()
     {
         string code = """
@@ -877,6 +920,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedEqual_Diagnostic()
     {
         string code = """
@@ -896,6 +940,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedEqual_WithMessage_Diagnostic()
     {
         string code = """
@@ -915,6 +960,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedEqual_WithMessageFirst_Diagnostic()
     {
         string code = """
@@ -934,6 +980,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedEqual_WithMessageSecond_Diagnostic()
     {
         string code = """
@@ -953,6 +1000,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedNonEqual_NoDiagnostic()
     {
         string code = """
@@ -972,6 +1020,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedNonEqual_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -991,6 +1040,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedNonEqual_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -1010,6 +1060,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedNonEqual_WithMessageSecond_NoDiagnostic()
     {
         string code = """
@@ -1029,6 +1080,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedUnknown_NoDiagnostic()
     {
         string code = """
@@ -1050,6 +1102,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedUnknown_WithMessage_NoDiagnostic()
     {
         string code = """
@@ -1071,6 +1124,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedUnknown_WithMessageFirst_NoDiagnostic()
     {
         string code = """
@@ -1092,6 +1146,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualIsPassedUnknown_WithMessageSecond_NoDiagnostic()
     {
         string code = """

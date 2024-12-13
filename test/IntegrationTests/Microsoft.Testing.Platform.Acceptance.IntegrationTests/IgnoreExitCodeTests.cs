@@ -7,7 +7,7 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class IgnoreExitCodeTests : AcceptanceTestBase
+public class IgnoreExitCodeTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "TestProject";
 
@@ -83,21 +83,17 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
 }
 """;
 
-    private readonly AcceptanceFixture _acceptanceFixture;
-
-    public IgnoreExitCodeTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        => _acceptanceFixture = acceptanceFixture;
-
-    public static IEnumerable<TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration, string CommandLine, string EnvironmentVariable)>> GetBuildMatrix()
+    public static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration, string CommandLine, string EnvironmentVariable)> GetBuildMatrix()
     {
-        foreach (TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)> buildConfig in GetBuildMatrixTfmBuildConfiguration())
+        foreach ((string Tfm, BuildConfiguration BuildConfiguration) buildConfig in GetBuildMatrixTfmBuildConfiguration())
         {
-            yield return new TestArgumentsEntry<(string, BuildConfiguration, string, string)>((buildConfig.Arguments.Tfm, buildConfig.Arguments.BuildConfiguration, "--ignore-exit-code 2", string.Empty), $"{buildConfig.Arguments.Tfm},{buildConfig.Arguments.BuildConfiguration},CommandLine");
-            yield return new TestArgumentsEntry<(string, BuildConfiguration, string, string)>((buildConfig.Arguments.Tfm, buildConfig.Arguments.BuildConfiguration, string.Empty, "2"), $"{buildConfig.Arguments.Tfm},{buildConfig.Arguments.BuildConfiguration},EnvironmentVariable");
+            yield return new(buildConfig.Tfm, buildConfig.BuildConfiguration, "--ignore-exit-code 2", string.Empty);
+            yield return new(buildConfig.Tfm, buildConfig.BuildConfiguration, string.Empty, "2");
         }
     }
 
-    [DynamicData(nameof(GetBuildMatrix))]
+    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method)]
+    [TestMethod]
     public async Task If_IgnoreExitCode_Specified_Should_Return_Success_ExitCode(string tfm, BuildConfiguration buildConfiguration, string commandLine, string environmentVariable)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -107,7 +103,7 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
         string assetPath = generator.TargetAssetPath;
-        string globalPackagesPath = _AcceptanceFixture.NuGetGlobalPackagesFolder.Path;
+        string globalPackagesPath = AcceptanceFixture.NuGetGlobalPackagesFolder.Path;
         await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {assetPath} -r {RID}", globalPackagesPath);
         await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {assetPath} -c {buildConfiguration} -r {RID}", globalPackagesPath);
         var host = TestInfrastructure.TestHost.LocateFrom(assetPath, AssetName, tfm, buildConfiguration: buildConfiguration);

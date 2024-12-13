@@ -7,28 +7,26 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class CustomBannerTests : AcceptanceTestBase
+public class CustomBannerTests : AcceptanceTestBase<CustomBannerTests.TestAssetFixture>
 {
     private const string AssetName = "CustomBannerTest";
-    private readonly TestAssetFixture _testAssetFixture;
 
-    public CustomBannerTests(TestAssetFixture testAssetFixture)
-        => _testAssetFixture = testAssetFixture;
-
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task UsingNoBanner_TheBannerDoesNotAppear(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--no-banner");
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputDoesNotContain(TestAssetFixture.CustomBannerPrefix);
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task UsingNoBanner_InTheEnvironmentVars_TheBannerDoesNotAppear(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
             new Dictionary<string, string?>
@@ -40,10 +38,11 @@ public class CustomBannerTests : AcceptanceTestBase
         testHostResult.AssertOutputDoesNotContain(TestAssetFixture.CustomBannerPrefix);
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task UsingDotnetNoLogo_InTheEnvironmentVars_TheBannerDoesNotAppear(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
             new Dictionary<string, string?>
@@ -55,18 +54,18 @@ public class CustomBannerTests : AcceptanceTestBase
         testHostResult.AssertOutputDoesNotContain(TestAssetFixture.CustomBannerPrefix);
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task WithoutUsingNoBanner_TheBannerAppears(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputMatchesRegex($"{TestAssetFixture.CustomBannerPrefix} Platform info: Name: .NET Testing Platform, Version: .+?, Hash: .*?, Date: .+?");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string CustomBannerPrefix = "Custom banner |";
 

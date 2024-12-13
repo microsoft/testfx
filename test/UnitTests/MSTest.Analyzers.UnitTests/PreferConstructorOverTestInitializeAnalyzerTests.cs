@@ -10,6 +10,7 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class PreferConstructorOverTestInitializeAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenTestClassHasCtor_NoDiagnostic()
     {
         string code = """
@@ -27,6 +28,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestInitialize_Diagnostic()
     {
         string code = """
@@ -56,6 +58,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestInitializeAsync_NoDiagnostic()
     {
         string code = """
@@ -76,6 +79,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestInitializeAndCtor_Diagnostic()
     {
         string code = """
@@ -110,6 +114,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestInitializeAndCtorWithBody_Diagnostic()
     {
         string code = """
@@ -150,6 +155,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestInitializeAndCtorWithBothHavingBody_Diagnostic()
     {
         string code = """
@@ -196,6 +202,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestInitializeAndTwoCtor_Diagnostic()
     {
         string code = """

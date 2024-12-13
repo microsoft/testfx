@@ -10,6 +10,8 @@ using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
+using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
+
 namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 
 [TestClass]
@@ -18,6 +20,7 @@ public sealed class ObjectModelConvertersTests
     private static readonly IClientInfo TestClient = new ClientInfoService("UnitTest", string.Empty);
     private static readonly IClientInfo VSTestClient = new ClientInfoService(WellKnownClients.VisualStudio, string.Empty);
 
+    [TestMethod]
     public void ToTestNode_WhenTestCaseHasDisplayName_TestNodeDisplayNameUsesIt()
     {
         TestCase testCase = new("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs")
@@ -29,6 +32,7 @@ public sealed class ObjectModelConvertersTests
         Assert.AreEqual("MyDisplayName", testNode.DisplayName);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestCaseHasNoDisplayName_TestNodeDisplayNameUsesIt()
     {
         TestCase testCase = new("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
@@ -37,6 +41,7 @@ public sealed class ObjectModelConvertersTests
         Assert.AreEqual("SomeFqn", testNode.DisplayName);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultHasCodeFilePath_SetsTestFileLocationProperty()
     {
         TestResult testResult = new(new("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs")
@@ -47,6 +52,7 @@ public sealed class ObjectModelConvertersTests
         Assert.AreEqual("FilePath", testNode.Properties.Single<TestFileLocationProperty>().FilePath);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultOutcomeIsFailed_TestNodePropertiesContainFailedTestNodeStateProperty()
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
@@ -58,12 +64,13 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(false, TestClient);
 
         FailedTestNodeStateProperty[] failedTestNodeStateProperties = testNode.Properties.OfType<FailedTestNodeStateProperty>().ToArray();
-        Assert.IsTrue(failedTestNodeStateProperties.Length == 1);
+        Assert.AreEqual(1, failedTestNodeStateProperties.Length);
         Assert.IsTrue(failedTestNodeStateProperties[0].Exception is VSTestException);
         Assert.AreEqual(testResult.ErrorStackTrace, failedTestNodeStateProperties[0].Exception!.StackTrace);
         Assert.AreEqual(testResult.ErrorMessage, failedTestNodeStateProperties[0].Exception!.Message);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultHasMSTestDiscovererTestCategoryTestProperty_TestNodePropertiesContainTheCategoryInTraits()
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"));
@@ -73,12 +80,13 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(false, VSTestClient);
 
         SerializableNamedKeyValuePairsStringProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<SerializableNamedKeyValuePairsStringProperty>().ToArray();
-        Assert.IsTrue(errorTestNodeStateProperties.Length == 1);
-        Assert.IsTrue(errorTestNodeStateProperties[0].Name == "traits");
-        Assert.IsTrue(errorTestNodeStateProperties[0].Pairs.Length == 1);
-        Assert.IsTrue(errorTestNodeStateProperties[0].Pairs[0].Key == "category1");
+        Assert.AreEqual(1, errorTestNodeStateProperties.Length);
+        Assert.AreEqual("traits", errorTestNodeStateProperties[0].Name);
+        Assert.AreEqual(1, errorTestNodeStateProperties[0].Pairs.Length);
+        Assert.AreEqual("category1", errorTestNodeStateProperties[0].Pairs[0].Key);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultHasMSTestDiscovererTestCategoryTestPropertyWithTrxEnabled_TestNodePropertiesContainTrxCategoriesProperty()
     {
         TestResult testResult = new(new TestCase("assembly.class.SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"));
@@ -88,11 +96,12 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(true, VSTestClient);
 
         TrxCategoriesProperty[] trxCategoriesProperty = testNode.Properties.OfType<TrxCategoriesProperty>().ToArray();
-        Assert.IsTrue(trxCategoriesProperty.Length == 1);
-        Assert.IsTrue(trxCategoriesProperty[0].Categories.Length == 1);
-        Assert.AreEqual(trxCategoriesProperty[0].Categories[0], "category1");
+        Assert.AreEqual(1, trxCategoriesProperty.Length);
+        Assert.AreEqual(1, trxCategoriesProperty[0].Categories.Length);
+        Assert.AreEqual("category1", trxCategoriesProperty[0].Categories[0]);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultHasTestCaseHierarchyTestProperty_TestNodePropertiesContainItInSerializableNamedArrayStringProperty()
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"));
@@ -102,13 +111,14 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(false, VSTestClient);
 
         SerializableNamedArrayStringProperty[] trxCategoriesProperty = testNode.Properties.OfType<SerializableNamedArrayStringProperty>().ToArray();
-        Assert.IsTrue(trxCategoriesProperty.Length == 1);
-        Assert.AreEqual(trxCategoriesProperty[0].Values[0], "assembly");
-        Assert.AreEqual(trxCategoriesProperty[0].Values[1], "class");
-        Assert.AreEqual(trxCategoriesProperty[0].Values[2], "category");
-        Assert.AreEqual(trxCategoriesProperty[0].Values[3], "test");
+        Assert.AreEqual(1, trxCategoriesProperty.Length);
+        Assert.AreEqual("assembly", trxCategoriesProperty[0].Values[0]);
+        Assert.AreEqual("class", trxCategoriesProperty[0].Values[1]);
+        Assert.AreEqual("category", trxCategoriesProperty[0].Values[2]);
+        Assert.AreEqual("test", trxCategoriesProperty[0].Values[3]);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultHasOriginalExecutorUriProperty_TestNodePropertiesContainItInSerializableKeyValuePairStringProperty()
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"));
@@ -120,11 +130,12 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(false, VSTestClient);
 
         SerializableKeyValuePairStringProperty[] serializableKeyValuePairStringProperty = testNode.Properties.OfType<SerializableKeyValuePairStringProperty>().ToArray();
-        Assert.IsTrue(serializableKeyValuePairStringProperty.Length == 3);
-        Assert.AreEqual(serializableKeyValuePairStringProperty[0].Key, VSTestTestNodeProperties.OriginalExecutorUriPropertyName);
-        Assert.AreEqual(serializableKeyValuePairStringProperty[0].Value, "https://vs.com/");
+        Assert.AreEqual(3, serializableKeyValuePairStringProperty.Length);
+        Assert.AreEqual(VSTestTestNodeProperties.OriginalExecutorUriPropertyName, serializableKeyValuePairStringProperty[0].Key);
+        Assert.AreEqual("https://vs.com/", serializableKeyValuePairStringProperty[0].Value);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultHasFullyQualifiedTypeAndTrxEnabled_TestNodeHasFullyQualifiedTypeName()
     {
         TestResult testResult = new(new TestCase("assembly.class.test", new("executor://uri", UriKind.Absolute), "source.cs"));
@@ -135,15 +146,17 @@ public sealed class ObjectModelConvertersTests
         Assert.AreEqual("assembly.class", testNode.Properties.Single<TrxFullyQualifiedTypeNameProperty>().FullyQualifiedTypeName);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultHasNoFullyQualifiedTypeAndTrxEnabled_Throws()
     {
         TestResult testResult = new(new TestCase("test", new("executor://uri", UriKind.Absolute), "source.cs"));
 
-        string errorMessage = Assert.Throws<InvalidOperationException>(() => testResult.ToTestNode(true, TestClient)).Message;
+        string errorMessage = Assert.ThrowsException<InvalidOperationException>(() => testResult.ToTestNode(true, TestClient)).Message;
 
         Assert.IsTrue(errorMessage.Contains("Unable to parse fully qualified type name from test case: "));
     }
 
+    [TestMethod]
     public void ToTestNode_FromTestResult_TestNodePropertiesContainCorrectTimingProperty()
     {
         var startTime = new DateTime(1996, 8, 22, 20, 30, 5);
@@ -162,6 +175,7 @@ public sealed class ObjectModelConvertersTests
         Assert.AreEqual<TimingProperty>(testNode.Properties.OfType<TimingProperty>()[0], testResultTimingProperty);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultOutcomeIsNotFoundWithoutSetErrorMessage_TestNodePropertiesContainErrorTestNodeStatePropertyWithDefaultErrorMessage()
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
@@ -172,12 +186,13 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(false, TestClient);
 
         ErrorTestNodeStateProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<ErrorTestNodeStateProperty>().ToArray();
-        Assert.IsTrue(errorTestNodeStateProperties.Length == 1);
+        Assert.AreEqual(1, errorTestNodeStateProperties.Length);
         Assert.IsTrue(errorTestNodeStateProperties[0].Exception is VSTestException);
         Assert.AreEqual(testResult.ErrorStackTrace, errorTestNodeStateProperties[0].Exception!.StackTrace);
         Assert.IsTrue(errorTestNodeStateProperties[0].Exception!.Message.Contains("Not found"));
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultOutcomeIsSkipped_TestNodePropertiesContainSkippedTestNodeStateProperty()
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
@@ -187,9 +202,10 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(false, TestClient);
 
         SkippedTestNodeStateProperty[] skipTestNodeStateProperties = testNode.Properties.OfType<SkippedTestNodeStateProperty>().ToArray();
-        Assert.IsTrue(skipTestNodeStateProperties.Length == 1);
+        Assert.AreEqual(1, skipTestNodeStateProperties.Length);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultOutcomeIsNone_TestNodePropertiesContainSkippedTestNodeStateProperty()
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
@@ -199,9 +215,10 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(false, TestClient);
 
         SkippedTestNodeStateProperty[] skipTestNodeStateProperties = testNode.Properties.OfType<SkippedTestNodeStateProperty>().ToArray();
-        Assert.IsTrue(skipTestNodeStateProperties.Length == 1);
+        Assert.AreEqual(1, skipTestNodeStateProperties.Length);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultOutcomeIsPassed_TestNodePropertiesContainPassedTestNodeStateProperty()
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
@@ -211,9 +228,10 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(false, TestClient);
 
         PassedTestNodeStateProperty[] passedTestNodeStateProperties = testNode.Properties.OfType<PassedTestNodeStateProperty>().ToArray();
-        Assert.IsTrue(passedTestNodeStateProperties.Length == 1);
+        Assert.AreEqual(1, passedTestNodeStateProperties.Length);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultHasUidAndDisplayNameWithWellKnownClient_TestNodePropertiesContainSerializableKeyValuePairStringPropertyTwice()
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
@@ -224,12 +242,13 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(false, VSTestClient);
 
         SerializableKeyValuePairStringProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<SerializableKeyValuePairStringProperty>().ToArray();
-        Assert.IsTrue(errorTestNodeStateProperties.Length == 2, "Expected 2 SerializableKeyValuePairStringProperty");
-        Assert.IsTrue(errorTestNodeStateProperties[0].Key == "vstest.TestCase.Id");
-        Assert.IsTrue(errorTestNodeStateProperties[1].Key == "vstest.TestCase.FullyQualifiedName");
-        Assert.IsTrue(errorTestNodeStateProperties[1].Value == "SomeFqn");
+        Assert.AreEqual(2, errorTestNodeStateProperties.Length, "Expected 2 SerializableKeyValuePairStringProperty");
+        Assert.AreEqual("vstest.TestCase.Id", errorTestNodeStateProperties[0].Key);
+        Assert.AreEqual("vstest.TestCase.FullyQualifiedName", errorTestNodeStateProperties[1].Key);
+        Assert.AreEqual("SomeFqn", errorTestNodeStateProperties[1].Value);
     }
 
+    [TestMethod]
     public void ToTestNode_WhenTestResultHasTraits_TestNodePropertiesContainIt()
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
@@ -241,10 +260,10 @@ public sealed class ObjectModelConvertersTests
         var testNode = testResult.ToTestNode(false, VSTestClient);
 
         SerializableNamedKeyValuePairsStringProperty[] errorTestNodeStateProperties = testNode.Properties.OfType<SerializableNamedKeyValuePairsStringProperty>().ToArray();
-        Assert.IsTrue(errorTestNodeStateProperties.Length == 1);
-        Assert.IsTrue(errorTestNodeStateProperties[0].Name == "traits");
-        Assert.IsTrue(errorTestNodeStateProperties[0].Pairs.Length == 1);
-        Assert.IsTrue(errorTestNodeStateProperties[0].Pairs[0].Key == "key");
-        Assert.IsTrue(errorTestNodeStateProperties[0].Pairs[0].Value == "value");
+        Assert.AreEqual(1, errorTestNodeStateProperties.Length);
+        Assert.AreEqual("traits", errorTestNodeStateProperties[0].Name);
+        Assert.AreEqual(1, errorTestNodeStateProperties[0].Pairs.Length);
+        Assert.AreEqual("key", errorTestNodeStateProperties[0].Pairs[0].Key);
+        Assert.AreEqual("value", errorTestNodeStateProperties[0].Pairs[0].Value);
     }
 }

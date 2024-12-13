@@ -7,25 +7,20 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceTestBase
+public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceTestBase<EnvironmentVariablesConfigurationProviderTests.TestAssetFixture>
 {
     private const string AssetName = "EnvironmentVariablesConfigurationProvider";
-    private readonly TestAssetFixture _testAssetFixture;
 
-    public EnvironmentVariablesConfigurationProviderTests(TestAssetFixture testAssetFixture)
-        => _testAssetFixture = testAssetFixture;
-
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task SetEnvironmentVariable_ShouldSucceed(string currentTfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture
-        : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
 #file EnvironmentVariablesConfigurationProvider.csproj

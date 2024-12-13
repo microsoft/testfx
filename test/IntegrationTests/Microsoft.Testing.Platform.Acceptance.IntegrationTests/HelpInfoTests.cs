@@ -7,17 +7,13 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class HelpInfoTests : AcceptanceTestBase
+public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public HelpInfoTests(TestAssetFixture testAssetFixture)
-        => _testAssetFixture = testAssetFixture;
-
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Help_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -79,10 +75,11 @@ Extension options:
         testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task HelpShortName_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--?");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -97,12 +94,13 @@ Options:
         testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Help_WhenNoExtensionRegisteredAndUnknownOptionIsSpecified_OutputDefaultHelpContentAndUnknownOption(string tfm)
     {
         const string UnknownOption = "aaa";
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"-{UnknownOption}");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
@@ -118,10 +116,11 @@ Options:
         testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Info_WhenNoExtensionRegistered_OutputDefaultInfoContent(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -132,7 +131,7 @@ Microsoft Testing Platform:
   Version: .+
   Dynamic Code Supported: True
   Runtime information: .+
-  {(tfm != TargetFrameworks.NetFramework[0].Arguments ? "###SKIP###" : $"Runtime location: .+")}
+  {(tfm != TargetFrameworks.NetFramework[0] ? "###SKIP###" : $"Runtime location: .+")}
   Test module: .+{TestAssetFixture.NoExtensionAssetName}.*
 Built-in command line providers:
   PlatformCommandLineProvider
@@ -276,10 +275,11 @@ Registered tools:
         testHostResult.AssertOutputMatchesRegexLines(regexMatchPattern);
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Help_WithAllExtensionsRegistered_OutputFullHelpContent(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -374,10 +374,11 @@ Extension options:
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task HelpShortName_WithAllExtensionsRegistered_OutputFullHelpContent(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("-?");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -392,10 +393,11 @@ Options:
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Info_WithAllExtensionsRegistered_OutputFullInfoContent(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -406,7 +408,7 @@ Microsoft Testing Platform:
   Version: *
   Dynamic Code Supported: True
   Runtime information: *
-  {(tfm != TargetFrameworks.NetFramework[0].Arguments ? "###SKIP###" : $"Runtime location: *")}
+  {(tfm != TargetFrameworks.NetFramework[0] ? "###SKIP###" : $"Runtime location: *")}
   Test module: *{TestAssetFixture.AllExtensionsAssetName}*
 Built-in command line providers:
   PlatformCommandLineProvider
@@ -649,8 +651,7 @@ Registered tools:
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string AllExtensionsAssetName = "AllExtensionsInfoTest";
         public const string NoExtensionAssetName = "NoExtensionInfoTest";

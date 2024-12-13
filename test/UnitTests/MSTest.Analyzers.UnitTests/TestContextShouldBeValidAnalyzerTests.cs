@@ -26,6 +26,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
     [DataRow("TeStCoNtExT", "public")]
     [DataRow("TeStCoNtExT", "internal")]
     [DataRow("TeStCoNtExT", "protected")]
+    [TestMethod]
     public async Task WhenTestContextCaseInsensitiveIsField_Diagnostic(string fieldName, string accessibility)
     {
         string code = $$"""
@@ -68,6 +69,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
     [DataRow("TeStCoNtExT", "public")]
     [DataRow("TeStCoNtExT", "internal")]
     [DataRow("TeStCoNtExT", "protected")]
+    [TestMethod]
     public async Task WhenTestContextCaseInsensitiveIsField_AssignedInConstructor_NoDiagnostic(string fieldName, string accessibility)
     {
         string code = $$"""
@@ -96,6 +98,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
     [DataRow("TESTCONTEXT", "internal")]
     [DataRow("TeStCoNtExT", "private")]
     [DataRow("TeStCoNtExT", "internal")]
+    [TestMethod]
     public async Task WhenTestContextPropertyIsPrivateOrInternal_Diagnostic(string propertyName, string accessibility)
     {
         string code = $$"""
@@ -131,6 +134,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
     [DataRow("TESTCONTEXT", "internal")]
     [DataRow("TeStCoNtExT", "private")]
     [DataRow("TeStCoNtExT", "internal")]
+    [TestMethod]
     public async Task WhenTestContextPropertyIsPrivateOrInternal_AssignedInConstructor_NoDiagnostic(string propertyName, string accessibility)
     {
         string code = $$"""
@@ -153,6 +157,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
 
     [DataRow(true)]
     [DataRow(false)]
+    [TestMethod]
     public async Task WhenTestContextPropertyIsValid_NoDiagnostic(bool discoverInternals)
     {
         string code = $$"""
@@ -170,6 +175,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenDiscoverInternalsTestContextPropertyIsPrivate_Diagnostic()
     {
         string code = """
@@ -202,6 +208,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenDiscoverInternalsTestContextPropertyIsPrivate_AssignedInConstructor_NoDiagnostic()
     {
         string code = """
@@ -224,6 +231,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenDiscoverInternalsTestContextPropertyIsInternal_Diagnostic()
     {
         string code = """
@@ -253,6 +261,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenDiscoverInternalsTestContextPropertyIsInternal_AssignedInConstructor_NoDiagnostic()
     {
         string code = """
@@ -275,6 +284,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenTestContextPropertyIsStatic_Diagnostic()
     {
         string code = $$"""
@@ -303,6 +313,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestContextPropertyIsReadonly_Diagnostic()
     {
         string code = $$"""
@@ -331,6 +342,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestContextPropertyIsReadonly_AssignedInConstructor_NoDiagnostic()
     {
         string code = $$"""
@@ -367,6 +379,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
     [DataRow("TeStCoNtExT", "public")]
     [DataRow("TeStCoNtExT", "internal")]
     [DataRow("TeStCoNtExT", "protected")]
+    [TestMethod]
     public async Task WhenTestContextIsFieldNotOnTestClass_NoDiagnostic(string fieldName, string accessibility)
     {
         string code = $$"""

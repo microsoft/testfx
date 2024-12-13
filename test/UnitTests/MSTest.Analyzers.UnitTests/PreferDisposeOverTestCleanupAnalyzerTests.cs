@@ -10,6 +10,7 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class PreferDisposeOverTestCleanupAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenTestClassHasDispose_NoDiagnostic()
     {
         string code = """
@@ -28,6 +29,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasDisposeAsync_NoDiagnostic()
     {
         string code = """
@@ -48,6 +50,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestCleanup_Diagnostic()
     {
         string code = """
@@ -79,6 +82,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestCleanup_WithAnotherBaseClass_Diagnostic()
     {
         string code = """
@@ -113,6 +117,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestCleanup_AndHasDispose_Diagnostic()
     {
         string code = """
@@ -151,6 +156,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestCleanup_AndHasDisposeInAnotherPartial_Diagnostic()
     {
         // This scenario is currently broken. The test is to document the current behavior
@@ -201,6 +207,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestCleanupTask_Diagnostic()
     {
         string code = """
@@ -223,6 +230,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestCleanupValueTask_Diagnostic()
     {
         string code = """

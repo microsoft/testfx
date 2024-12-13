@@ -9,13 +9,9 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class MSBuildTests_Test : AcceptanceTestBase
+public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSBuildTests";
-    private readonly AcceptanceFixture _acceptanceFixture;
-
-    public MSBuildTests_Test(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        => _acceptanceFixture = acceptanceFixture;
 
     internal static TestArgumentsEntry<(string BuildCommand, string TargetFramework, BuildConfiguration BuildConfiguration, bool TestSucceeded)> FormatBuildMatrixEntry(TestArgumentsContext ctx)
     {
@@ -62,11 +58,13 @@ public class MSBuildTests_Test : AcceptanceTestBase
         }
     }
 
-    [DynamicData(nameof(GetBuildMatrix), TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
+    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method, TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
+    [TestMethod]
     public async Task InvokeTestingPlatform_Target_Should_Execute_Tests_Without_Showing_Error_Detail_SingleTfm(string testCommand, string tfm, BuildConfiguration compilationMode, bool testSucceeded)
         => await InvokeTestingPlatform_Target_Should_Execute_Tests_Without_Showing_Error_Detail(testCommand, tfm, false, [tfm], compilationMode, testSucceeded);
 
-    [DynamicData(nameof(GetBuildMatrixMultiTfm), TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
+    [DynamicData(nameof(GetBuildMatrixMultiTfm), DynamicDataSourceType.Method, TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
+    [TestMethod]
     public async Task InvokeTestingPlatform_Target_Should_Execute_Tests_Without_Showing_Error_Detail_MultiTfm(string testCommand, string multiTfm, BuildConfiguration compilationMode, bool testSucceeded)
         => await InvokeTestingPlatform_Target_Should_Execute_Tests_Without_Showing_Error_Detail(testCommand, multiTfm, true, TargetFrameworks.All.Select(x => x.Arguments).ToArray(), compilationMode, testSucceeded);
 
@@ -83,7 +81,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
             .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
         string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"", _AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
 
         foreach (string tfmToAssert in tfmsToAssert)
         {
@@ -91,13 +89,15 @@ public class MSBuildTests_Test : AcceptanceTestBase
         }
     }
 
-    [DynamicData(nameof(GetBuildMatrix), TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
+    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method, TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
+    [TestMethod]
     public async Task InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_SingleTfm(string testCommand, string tfm, BuildConfiguration compilationMode, bool testSucceeded)
         => await InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_Detail(testCommand, tfm, false, [tfm], compilationMode, testSucceeded);
 
-    [DynamicData(nameof(GetBuildMatrixMultiTfm), TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
+    [DynamicData(nameof(GetBuildMatrixMultiTfm), DynamicDataSourceType.Method, TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
+    [TestMethod]
     public async Task InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_MultiTfm(string testCommand, string multiTfm, BuildConfiguration compilationMode, bool testSucceeded)
-        => await InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_Detail(testCommand, multiTfm, true, TargetFrameworks.All.Select(x => x.Arguments).ToArray(), compilationMode, testSucceeded);
+        => await InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_Detail(testCommand, multiTfm, true, TargetFrameworks.All, compilationMode, testSucceeded);
 
     private async Task InvokeTestingPlatform_Target_Should_Build_Without_Warnings_And_Execute_Passing_Test_And_Pass_TheRun_Detail(string testCommand, string tfm, bool isMultiTfm, string[] tfmsToAssert, BuildConfiguration compilationMode, bool testSucceeded)
     {
@@ -116,10 +116,10 @@ public class MSBuildTests_Test : AcceptanceTestBase
         DotnetMuxerResult compilationResult = testCommand.StartsWith("test", StringComparison.OrdinalIgnoreCase)
             ? await DotnetCli.RunAsync(
                 $"{testCommand} -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\" -- --treenode-filter /*/*/*/TestMethod1 --results-directory \"{testResultFolder}\"",
-                _AcceptanceFixture.NuGetGlobalPackagesFolder.Path)
+                AcceptanceFixture.NuGetGlobalPackagesFolder.Path)
             : await DotnetCli.RunAsync(
                 $"{testCommand} -p:TestingPlatformCommandLineArguments=\"--treenode-filter /*/*/*/TestMethod1 --results-directory \"{testResultFolder}\"\" -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"",
-                _AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         foreach (string tfmToAssert in tfmsToAssert)
         {
@@ -127,6 +127,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
         }
     }
 
+    [TestMethod]
     public async Task Invoke_DotnetTest_With_Arch_Switch_x86_Should_Work()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -153,7 +154,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
         await DotnetCli.RunAsync(
             $"test --arch x86 -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"",
-            _AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             environmentVariables: dotnetRootX86,
             failIfReturnValueIsNotZero: false);
 
@@ -164,6 +165,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
         Assert.IsTrue(Regex.IsMatch(logFileContent, @"\.dotnet\\x86\\dotnet\.exe"), logFileContent);
     }
 
+    [TestMethod]
     public async Task Invoke_DotnetTest_With_Incompatible_Arch()
     {
         Architecture currentArchitecture = RuntimeInformation.ProcessArchitecture;
@@ -184,7 +186,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
             .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"test --arch {incompatibleArchitecture} -p:TestingPlatformDotnetTestSupport=True \"{testAsset.TargetAssetPath}\"",
-            _AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             failIfReturnValueIsNotZero: false);
         // The output looks like:
         /*
@@ -202,6 +204,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
         result.AssertOutputContains("  - https://aka.ms/dotnet-download");
     }
 
+    [TestMethod]
     public async Task Invoke_DotnetTest_With_DOTNET_HOST_PATH_Should_Work()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -228,7 +231,7 @@ public class MSBuildTests_Test : AcceptanceTestBase
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
         await DotnetCli.RunAsync(
             $"test -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false -bl:{binlogFile} \"{testAsset.TargetAssetPath}\"",
-            _AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             environmentVariables: dotnetHostPathEnvVar,
             failIfReturnValueIsNotZero: false);
 
@@ -257,7 +260,8 @@ public class MSBuildTests_Test : AcceptanceTestBase
 
     // We avoid to test the multi-tfm because it's already tested with the above tests and we don't want to have too heavy testing, msbuild is pretty heavy (a lot of processes started due to the no 'nodereuse') and makes tests flaky.
     // We test two functionality for the same reason, we don't want to load too much the CI only for UX reasons.
-    [DynamicData(nameof(GetBuildMatrix), TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
+    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method, TestArgumentsEntryProviderMethodName = nameof(FormatBuildMatrixEntry))]
+    [TestMethod]
     public async Task InvokeTestingPlatform_Target_Showing_Error_And_Do_Not_Capture_The_Output_SingleTfm(string testCommand, string tfm, BuildConfiguration compilationMode, bool testSucceeded)
     {
         // We test only failed but we don't want to have too much argument provider overload.
@@ -276,10 +280,11 @@ public class MSBuildTests_Test : AcceptanceTestBase
             .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
             .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformShowTestsFailure=True -p:TestingPlatformCaptureOutput=False -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} {testAsset.TargetAssetPath}", _AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
-        Assert.Contains("error test failed: TestMethod2 (", compilationResult.StandardOutput);
-        Assert.Contains("Assert.IsTrue: Expected 'true', but got 'false'.", compilationResult.StandardOutput);
-        Assert.Contains(".NET Testing Platform", compilationResult.StandardOutput);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformShowTestsFailure=True -p:TestingPlatformCaptureOutput=False -p:Configuration={compilationMode} -p:nodeReuse=false -bl:{binlogFile} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+
+        compilationResult.AssertOutputContains("error test failed: TestMethod2 (");
+        compilationResult.AssertOutputContains("Assert.IsTrue: Expected 'true', but got 'false'.");
+        compilationResult.AssertOutputContains(".NET Testing Platform");
     }
 
     private const string SourceCode = """

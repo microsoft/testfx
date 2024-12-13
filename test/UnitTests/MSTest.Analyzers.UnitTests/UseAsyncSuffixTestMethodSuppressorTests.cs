@@ -16,6 +16,7 @@ namespace MSTest.Analyzers.UnitTests;
 [TestClass]
 public sealed class UseAsyncSuffixTestMethodSuppressorTests
 {
+    [TestMethod]
     public async Task AsyncTestMethodWithoutSuffix_DiagnosticIsSuppressed()
     {
         string code =
@@ -45,6 +46,7 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
         }.RunAsync();
     }
 
+    [TestMethod]
     public async Task AsyncDataTestMethodWithoutSuffix_DiagnosticIsSuppressed()
     {
         string code =
@@ -73,6 +75,7 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
         }.RunAsync();
     }
 
+    [TestMethod]
     public async Task AsyncTestMethodWithSuffix_NoDiagnostic()
     {
         string code =

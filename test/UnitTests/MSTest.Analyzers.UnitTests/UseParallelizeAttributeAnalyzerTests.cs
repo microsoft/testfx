@@ -10,10 +10,12 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public class UseParallelizeAttributeAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenNoAttributeSpecified_Diagnostic() => await VerifyCS.VerifyAnalyzerAsync(
             string.Empty,
             VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.Rule).WithNoLocation());
 
+    [TestMethod]
     public async Task WhenParallelizeAttributeSet_NoDiagnostic()
     {
         string code = """
@@ -25,6 +27,7 @@ public class UseParallelizeAttributeAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDoNotParallelizeAttributeSet_NoDiagnostic()
     {
         string code = """

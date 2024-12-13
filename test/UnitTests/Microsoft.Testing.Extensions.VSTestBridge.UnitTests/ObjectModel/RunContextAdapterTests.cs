@@ -15,6 +15,7 @@ public class RunContextAdapterTests
     private readonly Mock<ICommandLineOptions> _commandLineOptions = new();
     private readonly Mock<IRunSettings> _runSettings = new();
 
+    [TestMethod]
     public void TestRunDirectory_IsNotNull_If_ResultsDirectory_Is_Provided()
     {
         string runSettings =
@@ -33,6 +34,7 @@ $"""
         Assert.IsNotNull(runContextAdapter.RunSettings);
     }
 
+    [TestMethod]
     public void TestRunDirectory_IsNull_If_ResultsDirectory_IsNot_Provided()
     {
         string runSettings =

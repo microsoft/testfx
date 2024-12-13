@@ -9,20 +9,16 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class ExecutionTests : AcceptanceTestBase
+public class ExecutionTests : AcceptanceTestBase<ExecutionTests.TestAssetFixture>
 {
     private const string AssetName = "ExecutionTests";
     private const string AssetName2 = "ExecutionTests2";
 
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public ExecutionTests(TestAssetFixture testAssetFixture)
-        => _testAssetFixture = testAssetFixture;
-
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Exec_WhenListTestsIsSpecified_AllTestsAreFound(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -37,22 +33,24 @@ FilteredOutTest$
         testHostResult.AssertOutputMatchesRegex(OutputPattern);
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Exec_WhenOnlyAssetNameIsSpecified_AllTestsAreRun(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
-        testHostResult.AssertOutputContains($"! - {_testAssetFixture.TargetAssetPath}");
+        testHostResult.AssertOutputContains($"! - {AssetFixture.TargetAssetPath}");
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Exec_WhenListTestsAndFilterAreSpecified_OnlyFilteredTestsAreFound(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --treenode-filter \"/ExecutionTests/ExecutionTests/UnitTest1/TestMethod*\"");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -66,58 +64,61 @@ TestMethod3$
         testHostResult.AssertOutputMatchesRegex(OutputPattern);
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Exec_WhenFilterIsSpecified_OnlyFilteredTestsAreRun(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--treenode-filter \"/ExecutionTests/ExecutionTests/UnitTest1/TestMethod*\"");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 3, skipped: 0);
-        testHostResult.AssertOutputContains($"! - {_testAssetFixture.TargetAssetPath}");
+        testHostResult.AssertOutputContains($"! - {AssetFixture.TargetAssetPath}");
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Exec_WhenMinimumExpectedTestsIsSpecifiedAndEnoughTestsRun_ResultIsOk(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 4");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
-        testHostResult.AssertOutputContains($"! - {_testAssetFixture.TargetAssetPath}");
+        testHostResult.AssertOutputContains($"! - {AssetFixture.TargetAssetPath}");
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Exec_WhenMinimumExpectedTestsIsSpecifiedAndNotEnoughTestsRun_ResultIsNotOk(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 5");
 
         testHostResult.AssertExitCodeIs(ExitCodes.MinimumExpectedTestsPolicyViolation);
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0, minimumNumberOfTests: 5);
-        testHostResult.AssertOutputContains($" - {_testAssetFixture.TargetAssetPath}");
+        testHostResult.AssertOutputContains($" - {AssetFixture.TargetAssetPath}");
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Exec_WhenListTestsAndMinimumExpectedTestsAreSpecified_DiscoveryFails(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --minimum-expected-tests 4");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
-
-        const string OutputPattern = "Error: '--list-tests' and '--minimum-expected-tests' are incompatible options";
-        Assert.That(testHostResult.StandardOutput.Contains(OutputPattern), $"Output of the test host is:\n{testHostResult}");
+        testHostResult.AssertOutputContains("Error: '--list-tests' and '--minimum-expected-tests' are incompatible options");
     }
 
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Exec_Honor_Request_Complete(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath2, AssetName2, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath2, AssetName2, tfm);
         var stopwatch = Stopwatch.StartNew();
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         stopwatch.Stop();
@@ -125,8 +126,7 @@ TestMethod3$
         Assert.IsTrue(stopwatch.Elapsed.TotalSeconds > 3);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string TestCode = """
 #file ExecutionTests.csproj

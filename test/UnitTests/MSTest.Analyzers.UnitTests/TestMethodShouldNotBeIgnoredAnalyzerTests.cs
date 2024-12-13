@@ -10,6 +10,7 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenTestMethodIsNotIgnored_NoDiagnostic()
     {
         string code = """
@@ -28,6 +29,7 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task UsingIgnoreWithoutTestMethod_NoDiagnostic()
     {
         string code = """
@@ -46,6 +48,7 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodIsIgnored_Diagnostic()
     {
         string code = """
@@ -69,6 +72,7 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests
                 .WithArguments("MyTestMethod"));
     }
 
+    [TestMethod]
     public async Task WhenDerivedTestMethodAttributeIsIgnored_Diagnostic()
     {
         string code = """

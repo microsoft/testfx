@@ -6,13 +6,9 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class MSBuildTests_Solution : AcceptanceTestBase
+public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
 {
-    private readonly AcceptanceFixture _acceptanceFixture;
     private const string AssetName = "MSTestProject";
-
-    public MSBuildTests_Solution(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        => _acceptanceFixture = acceptanceFixture;
 
     internal static IEnumerable<TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)>> GetBuildMatrix()
     {
@@ -31,6 +27,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase
     }
 
     [DynamicData(nameof(GetBuildMatrix))]
+    [TestMethod]
     public async Task MSBuildTests_UseMSBuildTestInfrastructure_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration _, bool isMultiTfm, string command)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -65,9 +62,9 @@ public class MSBuildTests_Solution : AcceptanceTestBase
         }
 
         // Build the solution
-        DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", _AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         restoreResult.AssertOutputNotContains("An approximate best match of");
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -nodeReuse:false {solution.SolutionFile}", _AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -nodeReuse:false {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         if (isMultiTfm)
         {

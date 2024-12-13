@@ -14,6 +14,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.CommandLine;
 public sealed class TestRunParameterCommandLineOptionsProviderTests
 
 {
+    [TestMethod]
     public async Task TestRunParameterOption_WhenArgumentDoesNotContainEqual_IsNotValid()
     {
         // Arrange
@@ -28,6 +29,7 @@ public sealed class TestRunParameterCommandLineOptionsProviderTests
         Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, ExtensionResources.TestRunParameterOptionArgumentIsNotParameter, "something"), result.ErrorMessage);
     }
 
+    [TestMethod]
     public async Task TestRunParameterOption_WhenArgumentContainsEqual_IsValid()
     {
         // Arrange

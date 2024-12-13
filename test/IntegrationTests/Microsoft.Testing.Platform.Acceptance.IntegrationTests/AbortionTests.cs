@@ -9,16 +9,13 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class AbortionTests : AcceptanceTestBase
+public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
 {
     private const string AssetName = "Abort";
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public AbortionTests(TestAssetFixture testAssetFixture)
-        => _testAssetFixture = testAssetFixture;
 
     // We retry because sometime the Canceling the session message is not showing up.
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task AbortWithCTRLPlusC_TestHost_Succeeded(string tfm)
     {
         // We expect the same semantic for Linux, the test setup is not cross and we're using specific
@@ -28,14 +25,14 @@ public class AbortionTests : AcceptanceTestBase
             return;
         }
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
 
         // We check only in netcore for netfx is now showing in CI every time, the same behavior in local something works sometime nope.
         // Manual test works pretty always as expected, looks like the implementation is different, we care more on .NET Core.
-        if (TargetFrameworks.Net.Select(x => x.Arguments).Contains(tfm))
+        if (TargetFrameworks.Net.Contains(tfm))
         {
             testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
         }
@@ -43,8 +40,7 @@ public class AbortionTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 0, aborted: true);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
 #file Abort.csproj

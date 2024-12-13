@@ -7,7 +7,7 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class MaxFailedTestsExtensionTests : AcceptanceTestBase
+public class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedTestsExtensionTests.TestAssetFixture>
 {
     private const string AssetName = nameof(MaxFailedTestsExtensionTests);
     private readonly TestAssetFixture _testAssetFixture;
@@ -15,9 +15,10 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase
     public MaxFailedTestsExtensionTests(TestAssetFixture testAssetFixture)
         => _testAssetFixture = testAssetFixture;
 
+    [TestMethod]
     public async Task TestMaxFailedTestsShouldCallStopTestExecutionAsync()
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2");
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestExecutionStoppedForMaxFailedTests);
@@ -26,9 +27,10 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 3, passed: 3, skipped: 0);
     }
 
+    [TestMethod]
     public async Task WhenCapabilityIsMissingShouldFail()
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2", environmentVariables: new()
         {
             ["DO_NOT_ADD_CAPABILITY"] = "1",
@@ -38,8 +40,7 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
 #file MaxFailedTestsExtensionTests.csproj

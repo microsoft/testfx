@@ -10,6 +10,7 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class PreferTestCleanupOverDisposeAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenTestClassHasDispose_Diagnostic()
     {
         string code = """
@@ -49,6 +50,7 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasDisposeAsync_Diagnostic()
     {
         string code = """
@@ -84,6 +86,7 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestCleanup_NoDiagnostic()
     {
         string code = """

@@ -10,6 +10,7 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class DoNotNegateBooleanAssertionAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenAssertionIsNotNegated_NoDiagnostic()
     {
         string code = """
@@ -41,6 +42,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAssertionIsNegated_Diagnostic()
     {
         string code = """

@@ -9,12 +9,11 @@ using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestDataSource = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestDataSource;
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -36,7 +35,7 @@ public class TestDataSource : ITestDataSource
 #if NETFRAMEWORK
     public IEnumerable<object>? GetData(ITestMethod testMethodInfo, ITestContext testContext)
 #else
-    IEnumerable<object>? ITestDataSource.GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
+    IEnumerable<object>? ITestDataSource.GetData(ITestMethod testMethodInfo, ITestContext testContext)
 #endif
     {
 #if NETFRAMEWORK

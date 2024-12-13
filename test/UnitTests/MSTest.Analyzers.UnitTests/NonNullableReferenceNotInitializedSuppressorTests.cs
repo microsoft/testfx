@@ -16,6 +16,7 @@ namespace MSTest.Analyzers.UnitTests;
 [TestClass]
 public sealed class NonNullableReferenceNotInitializedSuppressorTests
 {
+    [TestMethod]
     public async Task TestContextPropertyOnTestClass_DiagnosticIsSuppressed()
     {
         string code = @"
@@ -43,6 +44,7 @@ public class SomeClass
         }.RunAsync();
     }
 
+    [TestMethod]
     public async Task TestContextPropertyOnNonTestClass_DiagnosticIsNotSuppressed()
     {
         string code = @"

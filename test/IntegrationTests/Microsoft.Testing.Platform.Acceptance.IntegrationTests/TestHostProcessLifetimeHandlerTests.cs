@@ -7,18 +7,15 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase
+public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<TestHostProcessLifetimeHandlerTests.TestAssetFixture>
 {
     private const string AssetName = "TestHostProcessLifetimeHandler";
-    private readonly TestAssetFixture _testAssetFixture;
 
-    public TestHostProcessLifetimeHandlerTests(TestAssetFixture testAssetFixture)
-        => _testAssetFixture = testAssetFixture;
-
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task All_Interface_Methods_ShouldBe_Invoked(string currentTfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         Assert.AreEqual(File.ReadAllText(Path.Combine(testHost.DirectoryName, "BeforeTestHostProcessStartAsync.txt")), "TestHostProcessLifetimeHandler.BeforeTestHostProcessStartAsync");
@@ -26,9 +23,7 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase
         Assert.AreEqual(File.ReadAllText(Path.Combine(testHost.DirectoryName, "OnTestHostProcessExitedAsync.txt")), "TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture
-        : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
 #file TestHostProcessLifetimeHandler.csproj

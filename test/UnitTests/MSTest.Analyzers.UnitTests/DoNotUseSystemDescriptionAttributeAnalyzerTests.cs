@@ -10,6 +10,7 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenTestMethodHasMicrosoftDescriptionAttribute_NoDiagnostic()
     {
         string code = """
@@ -29,6 +30,7 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodHasSystemDescriptionAttribute_Diagnostic()
     {
         string code = """
@@ -48,6 +50,7 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenMethodWithoutTestMethodAttribute_HasSystemDescriptionAttribute_NoDiagnostic()
     {
         string code = """

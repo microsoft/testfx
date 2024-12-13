@@ -10,6 +10,7 @@ namespace MSTest.Analyzers.UnitTests;
 [TestClass]
 public sealed class PublicTypeShouldBeTestClassAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenClassIsPublicAndNotTestClass_Diagnostic()
     {
         string code = """
@@ -34,6 +35,7 @@ public sealed class PublicTypeShouldBeTestClassAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenClassIsPublicAndNotTestClassAndHaveAnotherAttribute_Diagnostic()
     {
         string code = """
@@ -60,6 +62,7 @@ public sealed class PublicTypeShouldBeTestClassAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenClassIsPublicAndNotClass_NoDiagnostic()
     {
         string code = """
@@ -79,6 +82,7 @@ public sealed class PublicTypeShouldBeTestClassAnalyzerTests
            code);
     }
 
+    [TestMethod]
     public async Task WhenClassIsPublicAndAbstract_NoDiagnostic()
     {
         string code = """
@@ -94,6 +98,7 @@ public sealed class PublicTypeShouldBeTestClassAnalyzerTests
            code);
     }
 
+    [TestMethod]
     public async Task WhenClassIsPublicAndStatic_NoDiagnostic()
     {
         string code = """
@@ -109,6 +114,7 @@ public sealed class PublicTypeShouldBeTestClassAnalyzerTests
            code);
     }
 
+    [TestMethod]
     public async Task WhenTypeIsNotPublicAndNotTestClass_NoDiagnostic()
     {
         string code = """

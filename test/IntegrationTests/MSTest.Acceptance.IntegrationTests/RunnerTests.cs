@@ -5,7 +5,6 @@ using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
-using SL = Microsoft.Build.Logging.StructuredLogger;
 using SystemTask = System.Threading.Tasks.Task;
 
 namespace MSTest.Acceptance.IntegrationTests;

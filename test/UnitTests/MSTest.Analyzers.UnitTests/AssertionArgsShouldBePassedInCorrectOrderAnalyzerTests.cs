@@ -10,6 +10,7 @@ namespace MSTest.Analyzers.UnitTests;
 [TestClass]
 public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenUsingLiterals()
     {
         string code = """
@@ -161,6 +162,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task LiteralUsingNamedArgument()
     {
         string code = """
@@ -292,6 +294,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task ConstantValue()
     {
         string code = """
@@ -437,6 +440,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task ActualAsLocalVariableOrNot()
     {
         string code = """
@@ -501,6 +505,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
             code);
     }
 
+    [TestMethod]
     public async Task ActualOrExpectedPrefix()
     {
         string code = """
@@ -702,6 +707,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
     public async Task MethodCalls()
     {
         string code = """

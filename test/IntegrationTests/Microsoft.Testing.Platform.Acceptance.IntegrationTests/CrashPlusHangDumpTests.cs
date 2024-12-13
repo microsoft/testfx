@@ -9,13 +9,9 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class CrashPlusHangDumpTests : AcceptanceTestBase
+public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDumpTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public CrashPlusHangDumpTests(TestAssetFixture testAssetFixture)
-        => _testAssetFixture = testAssetFixture;
-
+    [TestMethod]
     public async Task CrashPlusHangDump_InCaseOfCrash_CreateCrashDump()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -24,8 +20,8 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase
             return;
         }
 
-        string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent);
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--hangdump --hangdump-timeout 5m --crashdump --results-directory {resultDirectory}",
             new Dictionary<string, string?>
@@ -43,6 +39,7 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase
         Assert.IsFalse(Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
     }
 
+    [TestMethod]
     public async Task CrashPlusHangDump_InCaseOfHang_CreateHangDump()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -51,8 +48,8 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase
             return;
         }
 
-        string resultDirectory = Path.Combine(_testAssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent);
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--hangdump --hangdump-timeout 8s --crashdump --results-directory {resultDirectory}",
             new Dictionary<string, string?>
@@ -70,8 +67,7 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase
         Assert.IsTrue(Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string AssetName = "AssetFixture";
 

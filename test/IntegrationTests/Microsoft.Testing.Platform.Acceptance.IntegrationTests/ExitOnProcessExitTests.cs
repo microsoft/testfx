@@ -6,18 +6,15 @@ using System.Diagnostics;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class ExitOnProcessExitTests : AcceptanceTestBase
+public class ExitOnProcessExitTests : AcceptanceTestBase<ExitOnProcessExitTests.TestAssetFixture>
 {
     private const string AssetName = "ExecutionTests";
-    private readonly TestAssetFixture _testAssetFixture;
 
-    public ExitOnProcessExitTests(TestAssetFixture testAssetFixture)
-        => _testAssetFixture = testAssetFixture;
-
-    [DynamicData(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public void ExitOnProcessExit_Succeed(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
         // Create the mutex name used to wait for the PID file created by the test host.
         string waitPid = Guid.NewGuid().ToString("N");
@@ -60,8 +57,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase
         }
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    private sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string TestCode = """
 #file ExecutionTests.csproj

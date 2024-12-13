@@ -10,6 +10,7 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class DoNotUseShadowingAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenTestClassHaveShadowingMethod_Diagnostic()
     {
         string code = """
@@ -29,6 +30,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButDifferentParameters_NoDiagnostic()
     {
         string code = """
@@ -48,6 +50,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButBothArePrivate_NoDiagnostic()
     {
         string code = """
@@ -67,6 +70,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButBaseMethodIsPrivate_NoDiagnostic()
     {
         string code = """
@@ -86,6 +90,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButDerivedMethodIsPrivate_Diagnostic()
     {
         string code = """
@@ -105,6 +110,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButDerivedMethodIsProtected_AndBaseMethodIsInternal_Diagnostic()
     {
         string code = """
@@ -124,6 +130,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveSamePropertyAsBaseClassMethod__ButBasePropertyIsProtected_AndDerivedPropertyIsInternal_Diagnostic()
     {
         string code = """
@@ -143,6 +150,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveSamePropertyAsBaseClassMethod_ButBothArePrivate_NoDiagnostic()
     {
         string code = """
@@ -162,6 +170,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveSamePropertyAsBaseClassMethod_ButBasePropertyIsPrivate_NoDiagnostic()
     {
         string code = """
@@ -181,6 +190,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveSamePropertyAsBaseClassMethod_ButDerivedPropertyIsPrivate_Diagnostic()
     {
         string code = """
@@ -200,6 +210,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_ButOneIsGeneric_NoDiagnostic()
     {
         string code = """
@@ -231,6 +242,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveSameMethodAsBaseClassMethod_WithParameters_Diagnostic()
     {
         string code = """
@@ -250,6 +262,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveOverrideProperty_NoDiagnostic()
     {
         string code = """
@@ -269,6 +282,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassOverrideMethodFromBaseClass_NoDiagnostic()
     {
         string code = """
@@ -288,6 +302,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveShadowingProperty_Diagnostic()
     {
         string code = """
@@ -307,6 +322,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveShadowingMethod_WithoutNewModifier_Diagnostic()
     {
         string code = """
@@ -326,6 +342,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHaveShadowingProperty_WithoutNewModifier_Diagnostic()
     {
         string code = """
@@ -345,6 +362,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassAndBaseClassHaveStaticCtor_NoDiagnostic()
     {
         string code = """

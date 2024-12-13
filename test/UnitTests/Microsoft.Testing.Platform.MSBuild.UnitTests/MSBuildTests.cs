@@ -11,15 +11,14 @@ using Moq;
 namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 
 [TestClass]
-public class MSBuildTests
+public sealed class MSBuildTests
 {
 #if NET8_0_OR_GREATER
     private readonly Mock<IBuildEngine> _buildEngine;
     private readonly List<BuildErrorEventArgs> _errors;
 #endif
 
-    public MSBuildTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
+    public MSBuildTests()
     {
 #if NET8_0_OR_GREATER
         _buildEngine = new Mock<IBuildEngine>();
@@ -28,6 +27,7 @@ public class MSBuildTests
 #endif
     }
 
+    [TestMethod]
     public void Verify_Correct_Registration_Order_For_WellKnown_Extensions()
     {
 #if !NET8_0_OR_GREATER

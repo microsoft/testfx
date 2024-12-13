@@ -8,15 +8,12 @@ using SL = Microsoft.Build.Logging.StructuredLogger;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase
+public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAssetFixture>
 {
-    private readonly AcceptanceFixture _acceptanceFixture;
     private const string AssetName = "MSBuildTests";
 
-    public MSBuildTests_KnownExtensionRegistration(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        => _acceptanceFixture = acceptanceFixture;
-
     [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    [TestMethod]
     public async Task Microsoft_Testing_Platform_Extensions_ShouldBe_Correctly_Registered(string tfm, BuildConfiguration compilationMode, Verb verb)
     {
         TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -26,8 +23,8 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
-        await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj", _AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
