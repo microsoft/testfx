@@ -43,10 +43,11 @@ Here is a global.json sample:
 ```
 
 It contains the properties below:
+
 - test: Contains configuration related to the test settings.
 - runner: Specifies the test runner details.
 - name: The name of the test runner to be used, in this case, "MicrosoftTestingPlatform".
- 
+
 #### 2. Example 2
 
 ```json
