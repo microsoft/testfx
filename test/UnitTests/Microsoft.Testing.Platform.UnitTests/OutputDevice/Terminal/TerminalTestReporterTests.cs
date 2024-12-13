@@ -30,9 +30,9 @@ public sealed class TerminalTestReporterTests
         TerminalTestReporter.AppendStackFrame(terminal, firstStackTraceLine);
 
 #if NETCOREAPP
-        StringAssert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly() in ", terminal.Output);
+        StringAssert.Contains(terminal.Output, "    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly() in ");
 #else
-        StringAssert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly()", terminal.Output);
+        StringAssert.Contains(terminal.Output, "    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly()");
 #endif
         // Line number without the respective file
         Assert.IsFalse(terminal.Output.ToString().Contains(" :0"));

@@ -21,12 +21,12 @@ public sealed class NopLoggerTests
 
     private static int s_formatterCalls;
 
-    [DynamicData(nameof(LogTestHelpers.GetLogLevels), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(LogTestHelpers.GetLogLevelsForDynamicData), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
     [TestMethod]
     public void NopLogger_CheckDisabled(LogLevel logLevel)
         => Assert.IsFalse(_nopLogger.IsEnabled(logLevel));
 
-    [DynamicData(nameof(LogTestHelpers.GetLogLevels), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(LogTestHelpers.GetLogLevelsForDynamicData), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
     [TestMethod]
     public void NopLogger_Log_NoFormatterCalls(LogLevel logLevel)
     {
@@ -34,7 +34,7 @@ public sealed class NopLoggerTests
         Assert.AreEqual(0, s_formatterCalls);
     }
 
-    [DynamicData(nameof(LogTestHelpers.GetLogLevels), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(LogTestHelpers.GetLogLevelsForDynamicData), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
     [TestMethod]
     public async ValueTask NopLogger_LogAsync_NoFormatterCalls(LogLevel logLevel)
     {

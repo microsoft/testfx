@@ -35,11 +35,11 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
     internal static IEnumerable<(DiagnosticDescriptor Rule, string AttributeUsageExample)> GetAttributeUsageExampleAndRuleTuples()
         => RuleUsageExamples.Select(tuple => (tuple.Rule, tuple.AttributeUsageExample));
 
-    internal static IEnumerable<string> GetAttributeUsageExamples()
-        => RuleUsageExamples.Select(tuple => tuple.AttributeUsageExample);
+    internal static IEnumerable<object[]> GetAttributeUsageExamples()
+        => RuleUsageExamples.Select(tuple => new object[] { tuple.AttributeUsageExample });
 
     // This generates all possible combinations of any two tuples (Rule, AttributeUsageExample) with the exception of the
-    // combaination where the two tuples are equal. The result is flattened in a new tuple created from the elements of the
+    // combination where the two tuples are equal. The result is flattened in a new tuple created from the elements of the
     // previous two tuples.
     internal static IEnumerable<(DiagnosticDescriptor Rule1, string AttributeUsageExample1, DiagnosticDescriptor Rule2, string AttributeUsageExample2)> GetAttributeUsageExampleAndRuleTuplesForTwoAttributes()
         => RuleUsageExamples
@@ -47,7 +47,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
             .Where(tuples => !tuples.tuple1.AttributeUsageExample.Equals(tuples.tuple2.AttributeUsageExample, StringComparison.Ordinal))
             .Select(tuples => (tuples.tuple1.Rule, tuples.tuple1.AttributeUsageExample, tuples.tuple2.Rule, tuples.tuple2.AttributeUsageExample));
 
-    [DynamicData(nameof(GetAttributeUsageExamples))]
+    [DynamicData(nameof(GetAttributeUsageExamples), DynamicDataSourceType.Method)]
     [TestMethod]
     public async Task WhenMethodIsMarkedWithTestMethodAndTestAttributes_NoDiagnosticAsync(string attributeUsageExample)
     {
@@ -70,7 +70,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
-    [DynamicData(nameof(GetAttributeUsageExampleAndRuleTuples))]
+    [DynamicData(nameof(GetAttributeUsageExampleAndRuleTuples), DynamicDataSourceType.Method)]
     [TestMethod]
     public async Task WhenMethodIsMarkedWithTestAttributeButNotWithTestMethod_DiagnosticAsync(DiagnosticDescriptor rule, string attributeUsageExample)
     {
@@ -108,7 +108,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic(rule).WithLocation(0), fixedCode);
     }
 
-    [DynamicData(nameof(GetAttributeUsageExampleAndRuleTuplesForTwoAttributes))]
+    [DynamicData(nameof(GetAttributeUsageExampleAndRuleTuplesForTwoAttributes), DynamicDataSourceType.Method)]
     [TestMethod]
     public async Task WhenMethodIsMarkedWithMultipleTestAttributesButNotWithTestMethod_DiagnosticOnEachAttributeAsync(
         DiagnosticDescriptor rule1,
@@ -152,7 +152,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, new[] { VerifyCS.Diagnostic(rule1).WithLocation(0), VerifyCS.Diagnostic(rule2).WithLocation(1) }, fixedCode);
     }
 
-    [DynamicData(nameof(GetAttributeUsageExamples))]
+    [DynamicData(nameof(GetAttributeUsageExamples), DynamicDataSourceType.Method)]
     [TestMethod]
     public async Task WhenMethodIsMarkedWithTestAttributeAndCustomTestMethod_NoDiagnosticAsync(string attributeUsageExample)
     {

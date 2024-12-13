@@ -52,13 +52,13 @@ public sealed class CommandLineTests
         }
     }
 
-    internal static string ParserTestDataFormat(MethodInfo methodInfo, object?[]? data)
+    public static string ParserTestDataFormat(MethodInfo methodInfo, object?[]? data)
     {
-        (int TestNum, string[] Args, (string RspFileName, string RspFileContent)[]? RspFiles, CommandLineParseResultWrapper ParseResult) item = ((int)data![0]!, (string[])data[1]!, ((string, string)[])data[2]!, (CommandLineParseResultWrapper)data[3]!);
+        (int testNum, string[] args, (string RspFileName, string RspFileContent)[]? rspFiles, CommandLineParseResultWrapper parseResult) = ((int)data![0]!, (string[])data[1]!, ((string, string)[])data[2]!, (CommandLineParseResultWrapper)data[3]!);
 
-        return item.TestNum == 13
-            ? $"\"--option1\", $@\" \"\" \\{{Environment.NewLine}} \"\" \" {item.TestNum}"
-            : $"{item.Args.Aggregate((a, b) => $"{a} {b}")} {item.TestNum}";
+        return testNum == 13
+            ? $"\"--option1\", $@\" \"\" \\{{Environment.NewLine}} \"\" \" {testNum}"
+            : $"{args.Aggregate((a, b) => $"{a} {b}")} {testNum}";
     }
 
     internal static IEnumerable<(int TestNum, string[] Args, (string RspFileName, string RspFileContent)[]? RspFiles, CommandLineParseResultWrapper ParseResult)> ParserTestsData()

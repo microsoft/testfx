@@ -18,6 +18,9 @@ public sealed class FormatterUtilitiesTests
 {
     private readonly IMessageFormatter _formatter = FormatterUtilities.CreateFormatter();
 
+    public static IEnumerable<object[]> SerializerTypesForDynamicData
+        => SerializerUtilities.SerializerTypes.Select(x => new object[] { x });
+
     public FormatterUtilitiesTests()
         =>
 #if NETCOREAPP
@@ -50,8 +53,7 @@ public sealed class FormatterUtilitiesTests
         Assert.IsNull(response.Result);
     }
 
-    [DynamicData(nameof(SerializerUtilities.SerializerTypes), typeof(SerializerUtilities),
-        DynamicDataDisplayName = nameof(FormatSerializerTypes))]
+    [DynamicData(nameof(SerializerTypesForDynamicData), DynamicDataDisplayName = nameof(FormatSerializerTypes))]
     [TestMethod]
     public async Task SerializeDeserialize_Succeed(Type type)
     {
@@ -132,7 +134,7 @@ public sealed class FormatterUtilitiesTests
         }
     }
 
-    internal static string? FormatSerializerTypes(MethodInfo methodInfo, object?[]? data)
+    public static string? FormatSerializerTypes(MethodInfo methodInfo, object?[]? data)
         => data is not null
             ? (data[0] as Type)?.Name
             : null;

@@ -10,9 +10,9 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestProject";
 
-    internal static IEnumerable<TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)>> GetBuildMatrix()
+    internal static IEnumerable<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)> GetBuildMatrix()
     {
-        foreach (TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)> entry in GetBuildMatrixSingleAndMultiTfmBuildConfiguration())
+        foreach ((string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm) entry in GetBuildMatrixSingleAndMultiTfmBuildConfiguration())
         {
             foreach (string command in new string[]
             {
@@ -20,13 +20,12 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
                 "test --no-restore",
             })
             {
-                yield return new TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)>(
-                (entry.Arguments.SingleTfmOrMultiTfm, entry.Arguments.BuildConfiguration, entry.Arguments.IsMultiTfm, command), $"{(entry.Arguments.IsMultiTfm ? "multitfm" : entry.Arguments.SingleTfmOrMultiTfm)},{entry.Arguments.BuildConfiguration},{command}");
+                yield return new(entry.SingleTfmOrMultiTfm, entry.BuildConfiguration, entry.IsMultiTfm, command);
             }
         }
     }
 
-    [DynamicData(nameof(GetBuildMatrix))]
+    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method)]
     [TestMethod]
     public async Task MSBuildTests_UseMSBuildTestInfrastructure_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration _, bool isMultiTfm, string command)
     {

@@ -12,7 +12,6 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.CommandLine;
 
 [TestClass]
 public sealed class TestRunParameterCommandLineOptionsProviderTests
-
 {
     [TestMethod]
     public async Task TestRunParameterOption_WhenArgumentDoesNotContainEqual_IsNotValid()

@@ -5,8 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Microsoft.Testing.Internal.Framework" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Internal.Framework.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.TestAnywhereAdapter" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>

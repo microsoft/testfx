@@ -16,7 +16,7 @@ using TestNodeUid = Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
-public sealed class ServerDataConsumerServiceTests
+public sealed class ServerDataConsumerServiceTests : IDisposable
 {
     private readonly PerRequestServerDataConsumer _service;
     private readonly ServiceProvider _serviceProvider = new();
@@ -192,9 +192,9 @@ public sealed class ServerDataConsumerServiceTests
         {
             await idleUpdateTaskAsync.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
         }
-
-        _service.Dispose();
     }
+
+    void IDisposable.Dispose() => _service.Dispose();
 
     private sealed class DataProducer : IDataProducer
     {

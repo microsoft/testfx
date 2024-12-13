@@ -66,7 +66,7 @@ public sealed class ConfigurationManagerTests
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() =>
             new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
-        await Assert.ThrowsExceptionAsync<Exception>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<OptionRecord>(), Array.Empty<string>())));
+        await Assert.ThrowsExceptionAsync<NullReferenceException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<OptionRecord>(), Array.Empty<string>())));
     }
 
     [TestMethod]

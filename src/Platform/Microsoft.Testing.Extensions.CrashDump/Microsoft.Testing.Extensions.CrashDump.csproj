@@ -42,7 +42,6 @@ This package extends Microsoft Testing Platform to provide a crash dump function
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Internal.Framework" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HangDump" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>

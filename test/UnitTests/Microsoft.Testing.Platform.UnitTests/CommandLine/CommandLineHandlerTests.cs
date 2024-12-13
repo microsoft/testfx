@@ -38,8 +38,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        StringAssert.Contains("Invalid command line arguments:", result.ErrorMessage);
-        StringAssert.Contains("Unexpected argument 'a'", result.ErrorMessage);
+        StringAssert.Contains(result.ErrorMessage, "Invalid command line arguments:");
+        StringAssert.Contains(result.ErrorMessage, "Unexpected argument 'a'");
     }
 
     [TestMethod]

@@ -13,7 +13,7 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSBuildTests";
 
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
     [TestMethod]
     public async Task When_GenerateTestingPlatformEntryPoint_IsFalse_NoEntryPointInjected(string tfm, BuildConfiguration compilationMode, Verb verb)
     {
@@ -35,7 +35,7 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
         Assert.AreNotEqual(0, compilationResult.ExitCode);
     }
 
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
     [TestMethod]
     public async Task GenerateCSharpEntryPointAndVerifyTheCacheUsage(string tfm, BuildConfiguration compilationMode, Verb verb)
         => await GenerateAndVerifyLanguageSpecificEntryPoint(nameof(GenerateCSharpEntryPointAndVerifyTheCacheUsage), CSharpSourceCode, "cs", tfm, compilationMode, verb,
@@ -60,7 +60,7 @@ internal sealed class TestingPlatformEntryPoint
     }
 }'", "Csc");
 
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
     [TestMethod]
     public async Task GenerateVBEntryPointAndVerifyTheCacheUsage(string tfm, BuildConfiguration compilationMode, Verb verb)
         => await GenerateAndVerifyLanguageSpecificEntryPoint(nameof(GenerateVBEntryPointAndVerifyTheCacheUsage), VBSourceCode, "vb", tfm, compilationMode, verb,
@@ -88,7 +88,7 @@ Module TestingPlatformEntryPoint
 
 End Module'", "Vbc");
 
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
     [TestMethod]
     public async Task GenerateFSharpEntryPointAndVerifyTheCacheUsage(string tfm, BuildConfiguration compilationMode, Verb verb)
         => await GenerateAndVerifyLanguageSpecificEntryPoint(nameof(GenerateFSharpEntryPointAndVerifyTheCacheUsage), FSharpSourceCode, "fs", tfm, compilationMode, verb,

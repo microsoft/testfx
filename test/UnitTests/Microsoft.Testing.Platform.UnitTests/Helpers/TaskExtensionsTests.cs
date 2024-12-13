@@ -36,7 +36,7 @@ public sealed class TaskExtensionsTests
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
         cancellationTokenSource.Cancel();
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
-        OperationCanceledException exception = await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () => await task);
+        OperationCanceledException exception = await Assert.ThrowsExceptionAsync<TaskCanceledException>(async () => await task);
         Assert.AreEqual(cancelToken, exception.CancellationToken);
     }
 
@@ -49,7 +49,7 @@ public sealed class TaskExtensionsTests
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
         cancellationTokenSource.Cancel();
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
-        OperationCanceledException exception = await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () => await task);
+        OperationCanceledException exception = await Assert.ThrowsExceptionAsync<TaskCanceledException>(async () => await task);
         Assert.AreEqual(cancelToken, exception.CancellationToken);
     }
 
@@ -74,7 +74,7 @@ public sealed class TaskExtensionsTests
             async () =>
             {
                 ManualResetEvent waitException = new(false);
-                await Assert.ThrowsExceptionAsync<OperationCanceledException>(async ()
+                await Assert.ThrowsExceptionAsync<TaskCanceledException>(async ()
                     => await Task.Run(async () =>
                     {
                         await Task.Delay(TimeSpan.FromSeconds(10));
