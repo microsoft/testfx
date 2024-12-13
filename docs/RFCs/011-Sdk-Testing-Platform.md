@@ -30,7 +30,7 @@ Here is a global.json sample:
 
 ### Examples of Usage
 
-1. Example 1
+#### 1. Example 1
 
 ```json 
 {
@@ -51,7 +51,7 @@ Here is a global.json sample:
  */
 ```
 
-2. Example 2
+#### 2. Example 2
 
 ```json
 {
