@@ -142,3 +142,9 @@ override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Thre
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ThreadSafeStringWriter.Write(char[]! buffer, int index, int count) -> void
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ThreadSafeStringWriter.Write(string? value) -> void
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ThreadSafeStringWriter.WriteLine(string? value) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetDisplayName(string? displayName) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetException(System.Exception? exception) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetTestData(object?[]? data) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetDisplayName(string? displayName) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetException(System.Exception? exception) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetTestData(object?[]? data) -> void
