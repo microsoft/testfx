@@ -1,19 +1,6 @@
-﻿#nullable enable
-Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.UnfoldingStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.UnfoldingStrategy.set -> void
+#nullable enable
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, System.Type! dynamicDataDeclaringType) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, System.Type! dynamicDataDeclaringType, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.UnfoldingStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.UnfoldingStrategy.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.AutoDetect = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
-Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceUnfoldingCapability
-Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceUnfoldingCapability.UnfoldingStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceOptionsAttribute
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceOptionsAttribute.TestDataSourceOptionsAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy unfoldingStrategy) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceOptionsAttribute.UnfoldingStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy.Auto = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy.Fold = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy.Unfold = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
