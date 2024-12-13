@@ -238,7 +238,7 @@ public class TestContextDataFromDynamicData
     }
 
     [TestMethod]
-    [TestMethod, DynamicData(nameof(GetData), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetData), DynamicDataSourceType.Method)]
     public void Test(int i, string s)
     {
         AssertTestContextData();
@@ -366,7 +366,7 @@ public class TestContextDisplayName
     }
 
     [TestMethod("Custom name")]
-    [TestMethod, DynamicData(nameof(Data))]
+    [DynamicData(nameof(Data))]
     public void TestCustomNameDynamicData(bool b)
     {
         Assert.AreEqual("Custom name (True)", TestContext.TestDisplayName);

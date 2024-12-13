@@ -24,8 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers" />
     <Using Include="Microsoft.Testing.Platform.Builder" />
     <Using Include="Microsoft.Testing.Platform.Extensions" />
+    <Using Include="Microsoft.Testing.Platform.Helpers" />
     <Using Include="Microsoft.Testing.TestInfrastructure" />
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>

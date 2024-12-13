@@ -3,9 +3,6 @@
 
 using System.Diagnostics;
 
-using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]

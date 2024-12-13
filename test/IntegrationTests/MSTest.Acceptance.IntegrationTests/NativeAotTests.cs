@@ -71,7 +71,7 @@ public class UnitTest1
     }
 
     [TestMethod]
-    [TestMethod, DynamicData(nameof(Data))]
+    [DynamicData(nameof(Data))]
     public void TestMethod3(int a, int b)
     {
     }

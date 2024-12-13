@@ -124,8 +124,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class TestClass
 {
     [TestMethod]
-    [TestMethod, DynamicData(nameof(AdditionalData))]
-    [TestMethod, DynamicData(nameof(AdditionalData2))]
+    [DynamicData(nameof(AdditionalData))]
+    [DynamicData(nameof(AdditionalData2))]
     public void Test(int i)
     {
     }

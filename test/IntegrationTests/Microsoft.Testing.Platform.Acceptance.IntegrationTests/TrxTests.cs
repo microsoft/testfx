@@ -4,9 +4,6 @@
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
-using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
