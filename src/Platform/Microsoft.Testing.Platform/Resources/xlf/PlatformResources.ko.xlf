@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
-        <target state="new">The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</target>
+        <target state="translated">현재 테스트 프레임워크는 '--maximum-failed-tests' 기능에 필요한 'IGracefulStopTestExecutionCapability'를 구현하지 않습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
