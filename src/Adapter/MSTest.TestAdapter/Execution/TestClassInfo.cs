@@ -346,6 +346,11 @@ public class TestClassInfo
 
     internal UnitTestResult GetResultOrRunClassInitialize(ITestContext testContext, string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
+        if (IsClassInitializeExecuted)
+        {
+            return new UnitTestResult(ObjectModelUnitTestOutcome.Passed, null);
+        }
+
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTATestClass
