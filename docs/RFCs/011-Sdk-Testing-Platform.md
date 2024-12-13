@@ -32,7 +32,7 @@ Here is a global.json sample:
 
 1. Example 1
 
-```json
+```json 
 {
   "test" : {	
     "runner": {
@@ -40,7 +40,6 @@ Here is a global.json sample:
     }
   }
 }
-```
 
 /**
  * JSON Configuration for the testing platform.
@@ -50,7 +49,8 @@ Here is a global.json sample:
  *   - runner: Specifies the test runner details.
  *     - name: The name of the test runner to be used, in this case, "MicrosoftTestingPlatform".
  */
- 
+```
+
 2. Example 2
 
 ```json
