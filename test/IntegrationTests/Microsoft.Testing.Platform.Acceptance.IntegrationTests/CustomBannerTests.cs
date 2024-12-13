@@ -101,7 +101,7 @@ public class Program
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(
             sp => new TestFrameworkCapabilities(new DummyBannerMessageOwnerCapability(sp)),
-            (_,__) => new DummyTestAdapter());
+            (_,__) => new DummyTestFramework());
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
@@ -132,15 +132,15 @@ internal sealed class DummyBannerMessageOwnerCapability : IBannerMessageOwnerCap
 }
 #pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
-public class DummyTestAdapter : ITestFramework
+public class DummyTestFramework : ITestFramework
 {
-    public string Uid => nameof(DummyTestAdapter);
+    public string Uid => nameof(DummyTestFramework);
 
     public string Version => "2.0.0";
 
-    public string DisplayName => nameof(DummyTestAdapter);
+    public string DisplayName => nameof(DummyTestFramework);
 
-    public string Description => nameof(DummyTestAdapter);
+    public string Description => nameof(DummyTestFramework);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

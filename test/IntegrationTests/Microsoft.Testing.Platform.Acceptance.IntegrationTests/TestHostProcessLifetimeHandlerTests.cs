@@ -61,7 +61,7 @@ public class Startup
     public static async Task<int> Main(string[] args)
     {
         var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
-        testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestAdapter());
+        testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestFramework());
         testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(_ => new TestHostProcessLifetimeHandler());
         using ITestApplication app = await testApplicationBuilder.BuildAsync();
         return await app.RunAsync();
@@ -102,15 +102,15 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
     }
 }
 
-public class DummyTestAdapter : ITestFramework, IDataProducer
+public class DummyTestFramework : ITestFramework, IDataProducer
 {
-    public string Uid => nameof(DummyTestAdapter);
+    public string Uid => nameof(DummyTestFramework);
 
     public string Version => "2.0.0";
 
-    public string DisplayName => nameof(DummyTestAdapter);
+    public string DisplayName => nameof(DummyTestFramework);
 
-    public string Description => nameof(DummyTestAdapter);
+    public string Description => nameof(DummyTestFramework);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

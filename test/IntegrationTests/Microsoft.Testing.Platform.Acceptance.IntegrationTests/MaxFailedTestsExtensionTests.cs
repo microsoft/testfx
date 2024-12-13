@@ -75,11 +75,11 @@ internal sealed class Program
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-        var adapter = new DummyAdapter();
-        builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => adapter);
+        var testFramework = new DummyTestFramework();
+        builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => testFramework);
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        builder.AddMaximumFailedTestsService(adapter);
+        builder.AddMaximumFailedTestsService(testFramework);
 #pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         using ITestApplication app = await builder.BuildAsync();
@@ -87,9 +87,9 @@ internal sealed class Program
     }
 }
 
-internal class DummyAdapter : ITestFramework, IDataProducer
+internal class DummyTestFramework : ITestFramework, IDataProducer
 {
-    public string Uid => nameof(DummyAdapter);
+    public string Uid => nameof(DummyTestFramework);
 
     public string Version => string.Empty;
 

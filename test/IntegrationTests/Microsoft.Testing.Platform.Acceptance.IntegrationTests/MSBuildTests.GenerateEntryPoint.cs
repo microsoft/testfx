@@ -158,15 +158,15 @@ let main args =
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="A" >
-        <DisplayName>DummyAdapter</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration</TypeFullName>
+        <DisplayName>DummyTestFramework</DisplayName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="B" >
-        <DisplayName>DummyAdapter2</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration2</TypeFullName>
+        <DisplayName>DummyTestFramework2</DisplayName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration2</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
@@ -181,7 +181,6 @@ let main args =
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
 </Project>
 
@@ -195,15 +194,15 @@ using Microsoft.Testing.Platform.Requests;
 
 namespace MyNamespaceRoot.Level1.Level2;
 
-public static class DummyAdapterRegistration
+public static class DummyTestFrameworkRegistration
 {
     public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] args)
     {
-        testApplicationBuilder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyAdapter());
+        testApplicationBuilder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
     }
 }
 
-public static class DummyAdapterRegistration2
+public static class DummyTestFrameworkRegistration2
 {
     public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] args)
     {
@@ -211,9 +210,9 @@ public static class DummyAdapterRegistration2
     }
 }
 
-internal sealed class DummyAdapter : ITestFramework, IDataProducer
+internal sealed class DummyTestFramework : ITestFramework, IDataProducer
 {
-    public string Uid => nameof(DummyAdapter);
+    public string Uid => nameof(DummyTestFramework);
 
     public string Version => string.Empty;
 
@@ -249,15 +248,15 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="A" >
-        <DisplayName>DummyAdapter</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration</TypeFullName>
+        <DisplayName>DummyTestFramework</DisplayName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="B" >
-        <DisplayName>DummyAdapter2</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration2</TypeFullName>
+        <DisplayName>DummyTestFramework2</DisplayName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration2</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
@@ -269,7 +268,6 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
 </Project>
 
@@ -284,18 +282,18 @@ Imports Microsoft.Testing.Platform.Extensions
 Imports Microsoft.Testing.Platform
 
 Namespace MyNamespaceRoot.Level1.Level2
-  Public Module DummyAdapterRegistration
+  Public Module DummyTestFrameworkRegistration
     Public Sub AddExtensions(builder As ITestApplicationBuilder, args As String())
-      builder.RegisterTestFramework(Function() New Capabilities(), Function(cap, services) New DummyAdapter())
+      builder.RegisterTestFramework(Function() New Capabilities(), Function(cap, services) New DummyTestFramework())
     End Sub
   End Module
 
-  Public Module DummyAdapterRegistration2
+  Public Module DummyTestFrameworkRegistration2
     Public Sub AddExtensions(builder As ITestApplicationBuilder, args As String())
     End Sub
   End Module
 
-  Class DummyAdapter
+  Class DummyTestFramework
     Implements ITestFramework
     Implements IDataProducer
 
@@ -375,15 +373,15 @@ End Namespace
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="A" >
-        <DisplayName>DummyAdapter</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration</TypeFullName>
+        <DisplayName>DummyTestFramework</DisplayName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="B" >
-        <DisplayName>DummyAdapter2</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration2</TypeFullName>
+        <DisplayName>DummyTestFramework2</DisplayName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration2</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
@@ -419,11 +417,11 @@ type Capabilities () =
     interface ITestFrameworkCapabilities with
         member _.Capabilities = [||]
 
-type DummyAdapter() =
+type DummyTestFramework() =
     let dataProducer = {
         new IDataProducer with
             member _.DataTypesProduced = [| typedefof<TestNodeUpdateMessage> |]
-            member _.Uid = nameof(DummyAdapter)
+            member _.Uid = nameof(DummyTestFramework)
             member _.Version = ""
             member _.DisplayName = ""
             member _.Description = ""
@@ -432,7 +430,7 @@ type DummyAdapter() =
         }
 
     interface ITestFramework with
-        member _.Uid = nameof(DummyAdapter)
+        member _.Uid = nameof(DummyTestFramework)
         member _.Version = ""
         member _.DisplayName = ""
         member _.Description = ""
@@ -449,11 +447,11 @@ type DummyAdapter() =
             context.Complete()
             }
 
-module DummyAdapterRegistration =
+module DummyTestFrameworkRegistration =
     let AddExtensions (testApplicationBuilder : ITestApplicationBuilder, args: string[]) =
-        testApplicationBuilder.RegisterTestFramework((fun _ -> Capabilities()), (fun _ _ -> DummyAdapter())) |> ignore
+        testApplicationBuilder.RegisterTestFramework((fun _ -> Capabilities()), (fun _ _ -> DummyTestFramework())) |> ignore
 
-module DummyAdapterRegistration2 =
+module DummyTestFrameworkRegistration2 =
     let AddExtensions (_, _) = ()
 
 """;

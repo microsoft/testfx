@@ -74,11 +74,11 @@ internal sealed class Program
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-        builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyAdapter());
+        builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
         using ITestApplication app = await builder.BuildAsync();
         _ = Task.Run(() =>
         {
-            DummyAdapter.FireCancel.Wait();
+            DummyTestFramework.FireCancel.Wait();
 
             if (!GenerateConsoleCtrlEvent(ConsoleCtrlEvent.CTRL_C, 0))
             {
@@ -101,10 +101,10 @@ internal sealed class Program
 
 }
 
-internal class DummyAdapter : ITestFramework, IDataProducer
+internal class DummyTestFramework : ITestFramework, IDataProducer
 {
     public static readonly ManualResetEventSlim FireCancel = new ManualResetEventSlim(false);
-    public string Uid => nameof(DummyAdapter);
+    public string Uid => nameof(DummyTestFramework);
 
     public string Version => string.Empty;
 

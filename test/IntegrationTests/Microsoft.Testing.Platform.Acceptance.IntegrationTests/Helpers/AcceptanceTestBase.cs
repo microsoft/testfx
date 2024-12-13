@@ -59,7 +59,6 @@ public class UnitTest1
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
         MicrosoftTestingEnterpriseExtensionsVersion = ExtractVersionFromXmlFile(versionsPropsFileDoc, "MicrosoftTestingExtensionsRetryVersion");
-        MicrosoftTestingInternalFrameworkVersion = ExtractVersionFromXmlFile(directoryPackagesPropsFileDoc, "MicrosoftTestingInternalFrameworkVersion");
         MSTestEngineVersion = ExtractVersionFromXmlFile(versionsPropsFileDoc, "MSTestEngineVersion");
     }
 
@@ -83,8 +82,6 @@ public class UnitTest1
     public static string MicrosoftTestingPlatformVersion { get; private set; }
 
     public static string MicrosoftTestingEnterpriseExtensionsVersion { get; private set; }
-
-    public static string MicrosoftTestingInternalFrameworkVersion { get; private set; }
 
     [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Fine in this context")]

@@ -302,42 +302,50 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
-        <!-- Platform and TrxReport.Abstractions are only needed because Internal.Framework relies on a preview version that we want to override with currently built one -->
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingInternalFrameworkVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingInternalFrameworkVersion$" />
     </ItemGroup>
 </Project>
 
 #file Program.cs
-using MSBuildTests;
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.AddTestFramework(new MSBuild_Tests.SourceGeneratedTestNodesBuilder());
-builder.AddMSBuild();
-using ITestApplication app = await builder.BuildAsync();
-return await app.RunAsync();
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Services;
 
-#file UnitTest1.cs
-namespace MSBuildTests;
-
-[TestClass]
-public class UnitTest1
+public class Program
 {
-    public void TestMethod1()
+    public static async Task<int> Main(string[] args)
     {
-        Assert.IsTrue(true);
-    }
-
-    public void TestMethod2()
-    {
-        Assert.IsTrue($AssertValue$);
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.RegisterTestFramework(
+            sp => new TestFrameworkCapabilities(),
+            (_,__) => new DummyTestFramework());
+        using ITestApplication app = await builder.BuildAsync();
+        return await app.RunAsync();
     }
 }
 
-#file Usings.cs
-global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Internal.Framework;
-global using Microsoft.Testing.Platform.MSBuild;
+public class DummyTestFramework : ITestFramework
+{
+    public string Uid => nameof(DummyTestFramework);
+
+    public string Version => "2.0.0";
+
+    public string DisplayName => nameof(DummyTestFramework);
+
+    public string Description => nameof(DummyTestFramework);
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
+        => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
+        => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+    public Task ExecuteRequestAsync(ExecuteRequestContext context)
+    {
+       context.Complete();
+       return Task.CompletedTask;
+    }
+}
 """;
 }

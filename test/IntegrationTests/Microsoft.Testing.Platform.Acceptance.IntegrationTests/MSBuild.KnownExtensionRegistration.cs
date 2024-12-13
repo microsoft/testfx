@@ -52,8 +52,8 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="A" >
-        <DisplayName>DummyAdapter</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration</TypeFullName>
+        <DisplayName>DummyTestFramework</DisplayName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
@@ -90,17 +90,17 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 
 namespace MyNamespaceRoot.Level1.Level2;
 
-public static class DummyAdapterRegistration
+public static class DummyTestFrameworkRegistration
 {
     public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] args)
     {
-        testApplicationBuilder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyAdapter());
+        testApplicationBuilder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
     }
 }
 
-internal sealed class DummyAdapter : ITestFramework, IDataProducer
+internal sealed class DummyTestFramework : ITestFramework, IDataProducer
 {
-    public string Uid => nameof(DummyAdapter);
+    public string Uid => nameof(DummyTestFramework);
 
     public string Version => string.Empty;
 
