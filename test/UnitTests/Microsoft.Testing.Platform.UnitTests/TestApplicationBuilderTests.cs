@@ -29,6 +29,7 @@ public sealed class TestApplicationBuilderTests
         _serviceProvider.AddService(configuration);
     }
 
+    [TestMethod]
     public async Task TestApplicationLifecycleCallbacks_DuplicatedId_ShouldFail()
     {
         TestHostManager testHostManager = new();
@@ -38,6 +39,7 @@ public sealed class TestApplicationBuilderTests
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(ApplicationLifecycleCallbacks).ToString()));
     }
 
+    [TestMethod]
     public async Task DataConsumer_DuplicatedId_ShouldFail()
     {
         TestHostManager testHostManager = new();
@@ -47,6 +49,7 @@ public sealed class TestApplicationBuilderTests
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(Consumer).ToString()));
     }
 
+    [TestMethod]
     public async Task DataConsumer_DuplicatedIdWithCompositeFactory_ShouldFail()
     {
         TestHostManager testHostManager = new();
@@ -57,6 +60,7 @@ public sealed class TestApplicationBuilderTests
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(Consumer).ToString()));
     }
 
+    [TestMethod]
     public async Task TestSessionLifetimeHandle_DuplicatedId_ShouldFail()
     {
         TestHostManager testHostManager = new();
@@ -66,6 +70,7 @@ public sealed class TestApplicationBuilderTests
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestSessionLifetimeHandler).ToString()));
     }
 
+    [TestMethod]
     public async Task TestSessionLifetimeHandle_DuplicatedIdWithCompositeFactory_ShouldFail()
     {
         TestHostManager testHostManager = new();
@@ -78,6 +83,7 @@ public sealed class TestApplicationBuilderTests
 
     [DataRow(true)]
     [DataRow(false)]
+    [TestMethod]
     public async Task TestHost_ComposeFactory_ShouldSucceed(bool withParameter)
     {
         TestHostManager testHostManager = new();
@@ -96,6 +102,7 @@ public sealed class TestApplicationBuilderTests
         Assert.AreEqual(compositeExtensions[0].GetInstance(), sessionLifetimeHandle[0]);
     }
 
+    [TestMethod]
     public async Task TestHostControllerEnvironmentVariableProvider_DuplicatedId_ShouldFail()
     {
         TestHostControllersManager testHostControllerManager = new();
@@ -105,6 +112,7 @@ public sealed class TestApplicationBuilderTests
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestHostEnvironmentVariableProvider).ToString()));
     }
 
+    [TestMethod]
     public async Task TestHostControllerEnvironmentVariableProvider_DuplicatedIdWithCompositeFactory_ShouldFail()
     {
         TestHostControllersManager testHostControllerManager = new();
@@ -115,6 +123,7 @@ public sealed class TestApplicationBuilderTests
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestHostEnvironmentVariableProvider).ToString()));
     }
 
+    [TestMethod]
     public async Task TestHostControllerProcessLifetimeHandler_DuplicatedId_ShouldFail()
     {
         TestHostControllersManager testHostControllerManager = new();
@@ -124,6 +133,7 @@ public sealed class TestApplicationBuilderTests
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestHostProcessLifetimeHandler).ToString()));
     }
 
+    [TestMethod]
     public async Task TestHostControllerProcessLifetimeHandler_DuplicatedIdWithCompositeFactory_ShouldFail()
     {
         TestHostControllersManager testHostControllerManager = new();
@@ -136,6 +146,7 @@ public sealed class TestApplicationBuilderTests
 
     [DataRow(true)]
     [DataRow(false)]
+    [TestMethod]
     public async Task TestHostController_ComposeFactory_ShouldSucceed(bool withParameter)
     {
         TestHostControllersManager testHostControllerManager = new();

@@ -30,6 +30,7 @@ public sealed class TelemetryManagerTests
     // When set to 0 it should write the message.
     [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "0")]
     [DataRow(EnvironmentVariableConstants.DOTNET_NOLOGO, "0")]
+    [TestMethod]
     public async Task TelemetryManager_UsingNoLogoShouldSuppressTelemetryMessage(string variable, string value)
     {
         // Arrange
@@ -83,6 +84,7 @@ public sealed class TelemetryManagerTests
     // When set to 0 it should write the message.
     [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "0")]
     [DataRow(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "0")]
+    [TestMethod]
     public async Task TelemetryManager_UsingTelemetryOptOutShouldDisableTelemetry(string variable, string value)
     {
         // Arrange
@@ -131,6 +133,7 @@ public sealed class TelemetryManagerTests
         }
     }
 
+    [TestMethod]
     public async Task TelemetryManager_SentinelIsWrittenPerUserAndAvoidsShowingNoticeOnSubsequentRuns()
     {
         // Arrange
@@ -193,6 +196,7 @@ public sealed class TelemetryManagerTests
         fileSystemMock.Verify(f => f.NewFileStream(path, It.IsAny<FileMode>(), It.IsAny<FileAccess>()), Times.Never);
     }
 
+    [TestMethod]
     public async Task TelemetryManager_SentinelIsWrittenOnlyWhenUserWouldSeeTheMessage()
     {
         // Arrange
@@ -262,6 +266,7 @@ public sealed class TelemetryManagerTests
         fileSystemMock.Verify(f => f.NewFileStream(path, It.IsAny<FileMode>(), It.IsAny<FileAccess>()), Times.Once);
     }
 
+    [TestMethod]
     public async Task TelemetryManager_UsingNoBannerCommandLine_ShouldSuppressTelemetryMessage()
     {
         TestApplicationOptions options = new();

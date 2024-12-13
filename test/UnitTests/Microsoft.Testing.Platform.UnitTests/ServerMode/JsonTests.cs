@@ -36,6 +36,7 @@ public sealed class JsonTests
         _json = new Json(serializers, deserializers);
     }
 
+    [TestMethod]
     public async Task Serialize_TestNodeAsync()
     {
         // Arrange
@@ -55,6 +56,7 @@ public sealed class JsonTests
         Assert.AreEqual("""{"uid":"11111","display-name":"test","hello":"my friend","node-type":"group"}""", actual);
     }
 
+    [TestMethod]
     public async Task Serialize_Array()
     {
         // Arrange
@@ -67,6 +69,7 @@ public sealed class JsonTests
         Assert.AreEqual("[1,2,3]", actual);
     }
 
+    [TestMethod]
     public async Task Serialize_DateTimeOffset()
     {
         // Arrange
@@ -79,6 +82,7 @@ public sealed class JsonTests
         Assert.AreEqual("2023-01-01T01:01:01.0010000+00:00", actual.Trim('"'));
     }
 
+    [TestMethod]
     public async Task Serialize_ArrayOfObjects()
     {
         // Arrange

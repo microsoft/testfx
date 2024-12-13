@@ -8,11 +8,6 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class PropertyBagTests
 {
-    public PropertyBagTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
     [TestMethod]
     public void Ctors_CorrectlyInit()
     {
@@ -146,7 +141,7 @@ public sealed class PropertyBagTests
             list.Remove(prop);
         }
 
-        Assert.IsEmpty(list);
+        Assert.AreEqual(0, list.Count);
 
         list = property.AsEnumerable().ToList();
         foreach (IProperty prop in property)
@@ -154,7 +149,7 @@ public sealed class PropertyBagTests
             list.Remove(prop);
         }
 
-        Assert.IsEmpty(list);
+        Assert.AreEqual(0, list.Count);
     }
 
     [TestMethod]

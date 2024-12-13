@@ -22,6 +22,7 @@ public sealed class TestApplicationResultTests
     {
     }
 
+    [TestMethod]
     public async Task GetProcessExitCodeAsync_If_All_Skipped_Returns_ZeroTestsRan()
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
@@ -36,6 +37,7 @@ public sealed class TestApplicationResultTests
         Assert.AreEqual(ExitCodes.ZeroTests, _testApplicationResult.GetProcessExitCode());
     }
 
+    [TestMethod]
     public async Task GetProcessExitCodeAsync_If_No_Tests_Ran_Returns_ZeroTestsRan()
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
@@ -51,6 +53,7 @@ public sealed class TestApplicationResultTests
     }
 
     [DynamicData(nameof(FailedState))]
+    [TestMethod]
     public async Task GetProcessExitCodeAsync_If_Failed_Tests_Returns_AtLeastOneTestFailed(TestNodeStateProperty testNodeStateProperty)
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
@@ -65,6 +68,7 @@ public sealed class TestApplicationResultTests
         Assert.AreEqual(ExitCodes.AtLeastOneTestFailed, _testApplicationResult.GetProcessExitCode());
     }
 
+    [TestMethod]
     public async Task GetProcessExitCodeAsync_If_Canceled_Returns_TestSessionAborted()
     {
         Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
@@ -92,6 +96,7 @@ public sealed class TestApplicationResultTests
         Assert.AreEqual(ExitCodes.TestSessionAborted, testApplicationResult.GetProcessExitCode());
     }
 
+    [TestMethod]
     public async Task GetProcessExitCodeAsync_If_TestAdapter_Returns_TestAdapterTestSessionFailure()
     {
         await _testApplicationResult.SetTestAdapterTestSessionFailureAsync("Adapter error");
@@ -107,6 +112,7 @@ public sealed class TestApplicationResultTests
         Assert.AreEqual(ExitCodes.TestAdapterTestSessionFailure, _testApplicationResult.GetProcessExitCode());
     }
 
+    [TestMethod]
     public async Task GetProcessExitCodeAsync_If_MinimumExpectedTests_Violated_Returns_MinimumExpectedTestsPolicyViolation()
     {
         TestApplicationResult testApplicationResult
@@ -136,6 +142,7 @@ public sealed class TestApplicationResultTests
         Assert.AreEqual(ExitCodes.MinimumExpectedTestsPolicyViolation, testApplicationResult.GetProcessExitCode());
     }
 
+    [TestMethod]
     public async Task GetProcessExitCodeAsync_OnDiscovery_No_Tests_Discovered_Returns_ZeroTests()
     {
         TestApplicationResult testApplicationResult
@@ -155,6 +162,7 @@ public sealed class TestApplicationResultTests
         Assert.AreEqual(ExitCodes.ZeroTests, testApplicationResult.GetProcessExitCode());
     }
 
+    [TestMethod]
     public async Task GetProcessExitCodeAsync_OnDiscovery_Some_Tests_Discovered_Returns_Success()
     {
         TestApplicationResult testApplicationResult

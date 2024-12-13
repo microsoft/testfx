@@ -30,6 +30,7 @@ public sealed class ServerTests
     private static bool IsHotReloadEnabled(SystemEnvironment environment) => environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_WATCH) == "1"
         || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
 
+    [TestMethod]
     public async Task ServerCanBeStartedAndAborted_TcpIp() => await RetryHelper.RetryAsync(
                 async () =>
                 {
@@ -51,6 +52,7 @@ public sealed class ServerTests
                     Assert.AreEqual(ExitCodes.TestSessionAborted, await serverTask);
                 }, 3, TimeSpan.FromSeconds(10));
 
+    [TestMethod]
     public async Task ServerCanInitialize()
     {
         using var server = TcpServer.Create();
@@ -126,6 +128,7 @@ public sealed class ServerTests
         Assert.AreEqual(0, result);
     }
 
+    [TestMethod]
     public async Task DiscoveryRequestCanBeCanceled()
     {
         using var server = TcpServer.Create();

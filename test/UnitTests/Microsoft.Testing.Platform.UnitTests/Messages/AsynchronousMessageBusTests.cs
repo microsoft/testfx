@@ -13,6 +13,7 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class AsynchronousMessageBusTests
 {
+    [TestMethod]
     public async Task UnexpectedTypePublished_ShouldFail()
     {
         MessageBusProxy proxy = new();
@@ -32,6 +33,7 @@ public sealed class AsynchronousMessageBusTests
         await Assert.ThrowsAsync<InvalidOperationException>(proxy.DrainDataAsync);
     }
 
+    [TestMethod]
     public async Task DrainDataAsync_Loop_ShouldFail()
     {
         MessageBusProxy proxy = new();
@@ -62,6 +64,7 @@ public sealed class AsynchronousMessageBusTests
         consumerB.StopConsume();
     }
 
+    [TestMethod]
     public async Task MessageBus_WhenConsumerProducesAndConsumesTheSameType_ShouldNotConsumeWhatProducedByItself()
     {
         MessageBusProxy proxy = new();
@@ -92,6 +95,7 @@ public sealed class AsynchronousMessageBusTests
         Assert.AreEqual(consumerB.ConsumedData[0], consumerAData);
     }
 
+    [TestMethod]
     public async Task Consumers_ConsumeData_ShouldNotMissAnyPayload()
     {
         int totalConsumers = Environment.ProcessorCount;

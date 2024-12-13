@@ -14,6 +14,7 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class IPCTests
 {
+    [TestMethod]
     public async Task SingleConnectionNamedPipeServer_MultipleConnection_Fails()
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
@@ -77,6 +78,7 @@ public sealed class IPCTests
         pipeNameDescription.Dispose();
     }
 
+    [TestMethod]
     public async Task SingleConnectionNamedPipeServer_RequestReplySerialization_Succeeded()
     {
         Queue<BaseMessage> receivedMessages = new();
@@ -161,6 +163,7 @@ public sealed class IPCTests
         pipeNameDescription.Dispose();
     }
 
+    [TestMethod]
     public async Task ConnectionNamedPipeServer_MultipleConnection_Succeded()
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));

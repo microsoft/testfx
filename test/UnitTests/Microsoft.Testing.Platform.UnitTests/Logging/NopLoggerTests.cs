@@ -35,6 +35,7 @@ public sealed class NopLoggerTests
     }
 
     [DynamicData(nameof(LogTestHelpers.GetLogLevels), typeof(LogTestHelpers))]
+    [TestMethod]
     public async ValueTask NopLogger_LogAsync_NoFormatterCalls(LogLevel logLevel)
     {
         await _nopLogger.LogAsync(logLevel, Message, _exception, Formatter);

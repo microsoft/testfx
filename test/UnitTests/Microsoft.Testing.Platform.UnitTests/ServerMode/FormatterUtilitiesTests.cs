@@ -50,6 +50,7 @@ public sealed class FormatterUtilitiesTests
 
     [DynamicData(memberName: nameof(SerializerUtilities.SerializerTypes), memberType: typeof(SerializerUtilities),
         TestArgumentsEntryProviderMethodName = nameof(FormatSerializerTypes))]
+    [TestMethod]
     public async Task SerializeDeserialize_Succeed(Type type)
     {
         object instanceToSerialize = CreateInstance(type);

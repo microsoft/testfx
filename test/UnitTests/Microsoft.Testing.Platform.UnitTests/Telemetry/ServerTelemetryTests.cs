@@ -18,6 +18,7 @@ public sealed class ServerTelemetryTests
     public ServerTelemetryTests(ITestExecutionContext testExecutionContext)
         => _serverTelemetry = new(_serverTestHost.Object);
 
+    [TestMethod]
     public async Task LogEvent_ForDiscovery()
     {
         Dictionary<string, object> metadata = new()
@@ -30,6 +31,7 @@ public sealed class ServerTelemetryTests
         _serverTestHost.Verify(s => s.SendTelemetryEventUpdateAsync(new TelemetryEventArgs(TelemetryEvents.TestsDiscoveryEventName, metadata)));
     }
 
+    [TestMethod]
     public async Task LogEvent_ForRun()
     {
         Dictionary<string, object> metadata = new()

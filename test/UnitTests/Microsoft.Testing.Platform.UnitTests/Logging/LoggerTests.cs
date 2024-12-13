@@ -59,6 +59,7 @@ public sealed class LoggerTests
     }
 
     [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
+    [TestMethod]
     public async ValueTask Logger_LogAsync_FormattedStringIsCorrect(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
         Logger<string> logger = CreateLogger(defaultLogLevel);
