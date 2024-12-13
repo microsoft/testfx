@@ -32,7 +32,7 @@ Here is a global.json sample:
 
 #### 1. Example 1
 
-```json 
+```json
 {
   "test" : {	
     "runner": {
@@ -55,7 +55,7 @@ Here is a global.json sample:
 
 ```json
 {
-  "test" : {	
+  "test" : {
     "runner": {
       "name": "VSTest"
     }
