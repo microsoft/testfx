@@ -8,6 +8,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 /// <summary>
 /// A host that loads the test source.This can be in isolation for desktop using an AppDomain or just loading the source in the current context.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public interface ITestSourceHost : IDisposable
 {
     /// <summary>

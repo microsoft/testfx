@@ -22,4 +22,5 @@ internal static class ExitCodes
     public const int TestAdapterTestSessionFailure = 10;
     public const int DependentProcessExited = 11;
     public const int IncompatibleProtocolVersion = 12;
+    public const int TestExecutionStoppedForMaxFailedTests = 13;
 }

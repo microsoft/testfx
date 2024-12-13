@@ -66,6 +66,9 @@ tab_width = 4
 # Do not set end_of_line property, this is causing issues with Linux,
 # see https://github.com/dotnet/roslyn/issues/55526
 
+# MSTESTOBS: Type or member is obsolete
+dotnet_diagnostic.MSTESTOBS.severity = none
+
 #### .NET Coding Conventions ####
 
 ## Organize usings
@@ -211,6 +214,7 @@ dotnet_diagnostic.CA1827.severity = warning             # CA1827: Do not use Cou
 dotnet_diagnostic.CA1836.severity = warning             # CA1836: Prefer IsEmpty over Count
 dotnet_diagnostic.CA1840.severity = warning             # CA1840: Use 'Environment.CurrentManagedThreadId'
 dotnet_diagnostic.CA1852.severity = warning             # CA1852: Seal internal types
+dotnet_code_quality.CA1852.ignore_internalsvisibleto = true
 dotnet_diagnostic.CA1854.severity = warning             # CA1854: Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
 # Disabled as it's making the code complex to deal with when multi targeting
 dotnet_diagnostic.CA1863.severity = none                # CA1863: Use 'CompositeFormat'

@@ -82,6 +82,11 @@
         <target state="translated">Добавить "[TestMethod]"</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseProperAssertMethodsFix">
+        <source>Use '{0}'</source>
+        <target state="translated">Использовать "{0}"</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -15,8 +15,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// <summary>
 /// The main service provider class that exposes all the platform services available.
 /// </summary>
-internal class PlatformServiceProvider : IPlatformServiceProvider
+internal sealed class PlatformServiceProvider : IPlatformServiceProvider
 {
+    private static readonly Action<object?> CancelDelegate = static state => ((TestContextImplementation)state!).Context.CancellationTokenSource.Cancel();
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
     /// </summary>
@@ -223,7 +225,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties)
     {
         var testContextImplementation = new TestContextImplementation(testMethod, writer, properties);
-        TestRunCancellationToken?.Register(testContextImplementation.Context.CancellationTokenSource.Cancel);
+        TestRunCancellationToken?.Register(CancelDelegate, testContextImplementation);
         return testContextImplementation;
     }
 }

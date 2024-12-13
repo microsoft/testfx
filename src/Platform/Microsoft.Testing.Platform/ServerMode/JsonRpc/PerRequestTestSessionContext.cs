@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal class PerRequestTestSessionContext(CancellationToken rpcCancellationToken, CancellationToken testApplicationcancellationToken) : ITestSessionContext, IDisposable
+internal sealed class PerRequestTestSessionContext(CancellationToken rpcCancellationToken, CancellationToken testApplicationcancellationToken) : ITestSessionContext, IDisposable
 {
     private readonly CancellationTokenSource _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(rpcCancellationToken, testApplicationcancellationToken);
 

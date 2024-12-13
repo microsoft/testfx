@@ -4,7 +4,8 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// Attribute for data driven test where data can be specified in-line.
+/// This attribute doesn't currently provide any different functionality compared to <see cref="TestMethodAttribute"/>. It's only
+/// present for backward compatibility. Using <see cref="TestMethodAttribute"/> is recommended, even for parameterized tests.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
 public class DataTestMethodAttribute : TestMethodAttribute

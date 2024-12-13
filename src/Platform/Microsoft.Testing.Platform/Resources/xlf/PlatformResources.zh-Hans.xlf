@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hans" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortForMaxFailedTestsDescription">
+        <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
+        <target state="new">Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Aborted">
         <source>Aborted</source>
         <target state="translated">已中止</target>
@@ -159,7 +164,7 @@
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
         <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
-        <target state="new">The configuration file '{0}' specified with '--config-file' could not be found.</target>
+        <target state="translated">找不到使用 ‘--config-file’ 指定的配置文件“{0}”。</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
@@ -219,6 +224,11 @@
         <target state="translated">提供程序 '{0}' (UID: {1}) 失败，出现错误: {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExceptionDuringCancellationWarningMessage">
+        <source>Exception during the cancellation of request id '{0}'</source>
+        <target state="translated">取消请求 ID 期间出现异常 '{0}'</target>
+        <note>{0} is the request id</note>
+      </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
         <target state="translated">退出代码</target>
@@ -269,6 +279,11 @@
       <trans-unit id="FailedWithWarnings">
         <source>failed with {0} warning(s)</source>
         <target state="translated">失败，出现 {0} 警告</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FinishedTestSession">
+        <source>Finished test session.</source>
+        <target state="translated">已完成测试会话。</target>
         <note />
       </trans-unit>
       <trans-unit id="ForTest">
@@ -361,6 +376,11 @@
         <target state="translated">尚未生成 ILoggerFactory。</target>
         <note />
       </trans-unit>
+      <trans-unit id="MaxFailedTestsMustBePositive">
+        <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
+        <target state="new">The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MessageBusNotReady">
         <source>The message bus has not been built yet or is no more usable at this stage.</source>
         <target state="translated">消息总线尚未生成或在此阶段不再可用。</target>
@@ -374,6 +394,16 @@
       <trans-unit id="MissingClientPortFoJsonRpc">
         <source>Expected --client-port when jsonRpc protocol is used.</source>
         <target state="translated">使用 jsonRpc 协议时应为 --client-port。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_MoreTestsCount">
+        <source>and {0} more</source>
+        <target state="translated">和其他 {0} 项</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_FullTestsCount">
+        <source>{0} tests running</source>
+        <target state="translated">正在运行 {0} 测试</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
@@ -423,7 +453,7 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
         <source>Specifies a testconfig.json file.</source>
-        <target state="new">Specifies a testconfig.json file.</target>
+        <target state="translated">指定 testconfig.json 文件。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
@@ -515,6 +545,11 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
         <target state="translated">显示 .NET 测试应用程序信息。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
+        <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
+        <target state="new">Specifies a maximum number of test failures that, when exceeded, will abort the test run.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
         <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
         <target state="translated">“--list-tests”和“--minimum-expected-tests”是不兼容的选项</target>
@@ -522,7 +557,7 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
         <source>Specifies the minimum number of tests that are expected to run.</source>
-        <target state="new">Specifies the minimum number of tests that are expected to run.</target>
+        <target state="translated">指定预期运行的最小测试数。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
@@ -603,6 +638,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">在我们确定此值之前，流程应该已退出</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReachedMaxFailedTestsMessage">
+        <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
+        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</target>
+        <note>{0} is the number of max failed tests.</note>
+      </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>
         <target state="translated">{0} 次之后重试失败</target>
@@ -631,6 +671,16 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
         <source>Server test execution filter factory</source>
         <target state="translated">服务器测试执行筛选工厂</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDescription">
+        <source>The 'ITestHost' implementation used when running server mode.</source>
+        <target state="translated">运行服务器模式时使用的 “ITestHost” 实现。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDisplayName">
+        <source>Server mode test host</source>
+        <target state="translated">服务器模式测试主机</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
@@ -686,6 +736,16 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
         <target state="translated">正在启动服务器。正在侦听端口“{0}”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSession">
+        <source>Starting test session.</source>
+        <target state="translated">正在启动测试会话。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSessionWithLogFilePath">
+        <source>Starting test session. The log file path is '{0}'.</source>
+        <target state="translated">正在启动测试会话。日志文件路径 '{0}'。</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -896,6 +956,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <source>The communication protocol '{0}' is not supported</source>
         <target state="translated">不支持通信协议“{0}”</target>
         <note />
+      </trans-unit>
+      <trans-unit id="UnobservedTaskExceptionWarningMessage">
+        <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] 未经处理的异常： {0}</target>
+        <note>{0} is the exception that was unhandled/unobserved</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>

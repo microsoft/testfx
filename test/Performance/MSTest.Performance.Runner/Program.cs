@@ -41,7 +41,7 @@ internal class EntryPoint
 
         pipelineRunner.AddPipeline("Default", "Scenario1_PerfView", [OSPlatform.Windows], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
             .NextStep(() => new PerfviewRunner(" /BufferSizeMB:1024 ", "Scenario1_PerfView.zip", includeScenario: true))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -49,7 +49,7 @@ internal class EntryPoint
 
         pipelineRunner.AddPipeline("Default", "Scenario1_DotnetTrace", [OSPlatform.Windows], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
             .NextStep(() => new DotnetTrace("--profile cpu-sampling", "DotnetTrace_CPU_Sampling.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -58,14 +58,14 @@ internal class EntryPoint
         // C:\Program Files\Microsoft Visual Studio\2022\Preview\Team Tools\DiagnosticsHub\Collector\AgentConfigs
         pipelineRunner.AddPipeline("Default", "Scenario1_DotNetObjectAllocBase", [OSPlatform.Windows], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
             .NextStep(() => new VSDiagnostics("DotNetObjectAllocLow.json", "Scenario1_DotNetObjectAllocBase.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
         pipelineRunner.AddPipeline("Default", "Scenario1_CpuUsageLow", [OSPlatform.Windows], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
             .NextStep(() => new VSDiagnostics("CpuUsageHigh.json", "Scenario1_CpuUsageLow.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -73,7 +73,7 @@ internal class EntryPoint
 
         pipelineRunner.AddPipeline("Default", "Scenario1_ConcurrencyVisualizer", [OSPlatform.Windows], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
             .NextStep(() => new ConcurrencyVisualizer("Scenario1_ConcurrencyVisualizer.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
@@ -81,7 +81,7 @@ internal class EntryPoint
 
         pipelineRunner.AddPipeline("Default", "Scenario1_PlainProcess", [OSPlatform.Windows], parametersBag =>
         Pipeline
-            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
             .NextStep(() => new PlainProcess("Scenario1_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))

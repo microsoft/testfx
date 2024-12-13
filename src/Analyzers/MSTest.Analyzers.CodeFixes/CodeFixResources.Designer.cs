@@ -203,5 +203,14 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseAttributeOnTestMethodFix", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;{0}&apos;.
+        /// </summary>
+        internal static string UseProperAssertMethodsFix {
+            get {
+                return ResourceManager.GetString("UseProperAssertMethodsFix", resourceCulture);
+            }
+        }
     }
 }

@@ -11,7 +11,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal class TestFrameworkBuilderData(ServiceProvider serviceProvider, ITestExecutionRequestFactory testExecutionRequestFactory,
+internal sealed class TestFrameworkBuilderData(ServiceProvider serviceProvider, ITestExecutionRequestFactory testExecutionRequestFactory,
     ITestFrameworkInvoker testExecutionRequestInvoker, ITestExecutionFilterFactory testExecutionFilterFactory,
     IPlatformOutputDevice platformOutputDisplayService, IEnumerable<IDataConsumer> serverPerCallConsumers,
     TestFrameworkManager testFrameworkManager, TestHostManager testSessionManager, MessageBusProxy messageBusProxy,

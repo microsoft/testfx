@@ -21,6 +21,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// Since we don't want to put our assemblies to GAC and they are not in tests dir, we use custom way to resolve them.
 /// </summary>
 #if NETFRAMEWORK
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public
 #else
 internal sealed
@@ -84,7 +89,7 @@ class AssemblyResolver :
     /// <summary>
     /// lock for the loaded assemblies cache.
     /// </summary>
-    private readonly object _syncLock = new();
+    private readonly Lock _syncLock = new();
 
     private static List<string>? s_currentlyLoading;
     private bool _disposed;

@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="es" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortForMaxFailedTestsDescription">
+        <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
+        <target state="new">Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Aborted">
         <source>Aborted</source>
         <target state="translated">Anulado</target>
@@ -159,7 +164,7 @@
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
         <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
-        <target state="new">The configuration file '{0}' specified with '--config-file' could not be found.</target>
+        <target state="translated">No se ha encontrado el archivo de configuración "{0}" especificado con "--config-file".</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
@@ -219,6 +224,11 @@
         <target state="translated">Error del proveedor "{0}" (UID: {1}) con el error: {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExceptionDuringCancellationWarningMessage">
+        <source>Exception during the cancellation of request id '{0}'</source>
+        <target state="translated">Excepción durante la cancelación del id. de solicitud '{0}'</target>
+        <note>{0} is the request id</note>
+      </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
         <target state="translated">Código de salida</target>
@@ -269,6 +279,11 @@
       <trans-unit id="FailedWithWarnings">
         <source>failed with {0} warning(s)</source>
         <target state="translated">error con {0} advertencias</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FinishedTestSession">
+        <source>Finished test session.</source>
+        <target state="translated">Finalizó la sesión de prueba.</target>
         <note />
       </trans-unit>
       <trans-unit id="ForTest">
@@ -361,6 +376,11 @@
         <target state="translated">ILoggerFactory aún no se ha compilado.</target>
         <note />
       </trans-unit>
+      <trans-unit id="MaxFailedTestsMustBePositive">
+        <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
+        <target state="new">The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MessageBusNotReady">
         <source>The message bus has not been built yet or is no more usable at this stage.</source>
         <target state="translated">El bus de mensajes aún no se ha compilado o ya no se puede usar en esta fase.</target>
@@ -374,6 +394,16 @@
       <trans-unit id="MissingClientPortFoJsonRpc">
         <source>Expected --client-port when jsonRpc protocol is used.</source>
         <target state="translated">Se esperaba --client-port cuando se usa el protocolo jsonRpc.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_MoreTestsCount">
+        <source>and {0} more</source>
+        <target state="translated">y {0} más</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_FullTestsCount">
+        <source>{0} tests running</source>
+        <target state="translated">{0} pruebas en ejecución</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
@@ -423,7 +453,7 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
         <source>Specifies a testconfig.json file.</source>
-        <target state="new">Specifies a testconfig.json file.</target>
+        <target state="translated">Especifica un archivo testconfig.json.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
@@ -515,6 +545,11 @@ Los valores disponibles son 'Seguimiento', 'Depurar', 'Información', 'Advertenc
         <target state="translated">Muestre la información de la aplicación de prueba de .NET.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
+        <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
+        <target state="new">Specifies a maximum number of test failures that, when exceeded, will abort the test run.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
         <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
         <target state="translated">“--list-tests” y “--minimum-expected-tests” son opciones incompatibles</target>
@@ -522,7 +557,7 @@ Los valores disponibles son 'Seguimiento', 'Depurar', 'Información', 'Advertenc
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
         <source>Specifies the minimum number of tests that are expected to run.</source>
-        <target state="new">Specifies the minimum number of tests that are expected to run.</target>
+        <target state="translated">Especifica el número mínimo de pruebas que se espera que se ejecuten.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
@@ -603,6 +638,11 @@ Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' 
         <target state="translated">El proceso debería haberse terminado para poder determinar este valor</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReachedMaxFailedTestsMessage">
+        <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
+        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</target>
+        <note>{0} is the number of max failed tests.</note>
+      </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>
         <target state="translated">Error al reintentar después de {0} veces</target>
@@ -631,6 +671,16 @@ Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' 
       <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
         <source>Server test execution filter factory</source>
         <target state="translated">Fábrica de filtros de ejecución de pruebas de servidor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDescription">
+        <source>The 'ITestHost' implementation used when running server mode.</source>
+        <target state="translated">Implementación de 'ITestHost' usada al ejecutar el modo de servidor.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDisplayName">
+        <source>Server mode test host</source>
+        <target state="translated">Host de prueba en modo servidor</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
@@ -686,6 +736,16 @@ Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' 
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
         <target state="translated">Iniciando el servidor. Escuchando en el puerto '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSession">
+        <source>Starting test session.</source>
+        <target state="translated">Iniciando sesión de prueba.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSessionWithLogFilePath">
+        <source>Starting test session. The log file path is '{0}'.</source>
+        <target state="translated">Iniciando sesión de prueba. La ruta de acceso del archivo de registro es '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -896,6 +956,11 @@ Los valores válidos son 'Normal', 'Detallado'. El valor predeterminado es 'Norm
         <source>The communication protocol '{0}' is not supported</source>
         <target state="translated">No se admite el protocolo de comunicación '{0}'</target>
         <note />
+      </trans-unit>
+      <trans-unit id="UnobservedTaskExceptionWarningMessage">
+        <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] excepción no controlada: {0}</target>
+        <note>{0} is the exception that was unhandled/unobserved</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>

@@ -14,11 +14,10 @@ internal sealed class SourceGeneratedFileOperations : IFileOperations
     // Not great, but the inner class does some complicated stuff on checking if files exist, better would be to extract the functionality to a class that provides it to both these implementations.
     private readonly FileOperations _fileOperationsInner = new(skipSourceGeneratorCheck: true);
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-    public SourceGeneratedReflectionDataProvider ReflectionDataProvider { get; set; }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+    // null is allowed here because the ReflectionDataProvider is set by the source generator.
+    public SourceGeneratedReflectionDataProvider ReflectionDataProvider { get; set; } = null!;
 
-    public object? CreateNavigationSession(string source) =>
+    public object CreateNavigationSession(string source) =>
         // locations are in static metadata, nothing to do here.
         // But don't return null so the consumer thinks we are doing something.
         new();
@@ -28,18 +27,18 @@ internal sealed class SourceGeneratedFileOperations : IFileOperations
         // locations are in static metadata, nothing to do here.
     }
 
-    public bool DoesFileExist(string assemblyFileName) => ((IFileOperations)_fileOperationsInner).DoesFileExist(assemblyFileName);
+    public bool DoesFileExist(string assemblyFileName) => _fileOperationsInner.DoesFileExist(assemblyFileName);
 
-    public string GetFullFilePath(string assemblyFileName) => ((IFileOperations)_fileOperationsInner).GetFullFilePath(assemblyFileName);
+    public string GetFullFilePath(string assemblyFileName) => _fileOperationsInner.GetFullFilePath(assemblyFileName);
 
     public void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string? fileName)
-        => ReflectionDataProvider!.GetNavigationData(className, methodName, out minLineNumber, out fileName);
+        => ReflectionDataProvider.GetNavigationData(className, methodName, out minLineNumber, out fileName);
 
-    public string? GetAssemblyPath(Assembly assembly)
+    public string GetAssemblyPath(Assembly assembly)
         => throw new NotSupportedException("Only tests within the same assembly are allowed in source gen mode");
 
     public Assembly LoadAssembly(string assemblyName, bool isReflectionOnly) => isReflectionOnly
             ? throw new InvalidOperationException("Reflection only mode is not allowed")
-            : ReflectionDataProvider!.GetAssembly(assemblyName);
+            : ReflectionDataProvider.GetAssembly(assemblyName);
 }
 #endif

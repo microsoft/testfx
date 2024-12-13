@@ -3,6 +3,8 @@
 
 #if !WINDOWS_UWP
 
+using System.Diagnostics.CodeAnalysis;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
@@ -10,6 +12,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 /// <summary>
 /// The test run directories.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 [Serializable]
 public class TestRunDirectories
 {
@@ -35,28 +42,43 @@ public class TestRunDirectories
         RootDeploymentDirectory = rootDirectory;
     }
 
+    [MemberNotNull(nameof(InDirectory), nameof(OutDirectory), nameof(InMachineNameDirectory))]
+    private void OnRootDeploymentDirectoryUpdated()
+    {
+        InDirectory = Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix);
+        OutDirectory = Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix);
+        InMachineNameDirectory = Path.Combine(InDirectory, Environment.MachineName);
+    }
+
     /// <summary>
     /// Gets or sets the root deployment directory.
     /// </summary>
-    public string RootDeploymentDirectory { get; set; }
+    public string RootDeploymentDirectory
+    {
+        get => field;
+        // TODO: Remove the setter as a breaking change and simplify the code.
+        [MemberNotNull(nameof(InDirectory), nameof(OutDirectory), nameof(InMachineNameDirectory))]
+        set
+        {
+            field = value;
+            OnRootDeploymentDirectoryUpdated();
+        }
+    }
 
     /// <summary>
     /// Gets the In directory.
     /// </summary>
-    public string InDirectory
-        => Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix);
+    public string InDirectory { get; private set; }
 
     /// <summary>
     /// Gets the Out directory.
     /// </summary>
-    public string OutDirectory
-        => Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix);
+    public string OutDirectory { get; private set; }
 
     /// <summary>
     /// Gets In\MachineName directory.
     /// </summary>
-    public string InMachineNameDirectory
-        => Path.Combine(Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix), Environment.MachineName);
+    public string InMachineNameDirectory { get; private set; }
 }
 
 #endif

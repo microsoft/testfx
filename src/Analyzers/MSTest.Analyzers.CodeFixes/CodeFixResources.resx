@@ -165,4 +165,7 @@
   <data name="UseAssertThrowsExceptionOnLastStatementFix" xml:space="preserve">
     <value>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</value>
   </data>
+  <data name="UseProperAssertMethodsFix" xml:space="preserve">
+    <value>Use '{0}'</value>
+  </data>
 </root>

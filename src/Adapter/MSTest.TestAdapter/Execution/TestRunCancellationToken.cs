@@ -8,13 +8,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// <summary>
 /// Cancellation token supporting cancellation of a test run.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public class TestRunCancellationToken
 {
     /// <summary>
     /// Callbacks to be invoked when canceled.
     /// Needs to be a concurrent collection, see https://github.com/microsoft/testfx/issues/3953.
     /// </summary>
-    private readonly ConcurrentBag<Action> _registeredCallbacks = new();
+    private readonly ConcurrentBag<(Action<object?>, object?)> _registeredCallbacks = new();
 
     public TestRunCancellationToken()
         : this(CancellationToken.None)
@@ -38,9 +43,9 @@ public class TestRunCancellationToken
 
             if (!previousValue && value)
             {
-                foreach (Action callBack in _registeredCallbacks)
+                foreach ((Action<object?> callBack, object? state) in _registeredCallbacks)
                 {
-                    callBack.Invoke();
+                    callBack.Invoke(state);
                 }
             }
         }
@@ -55,7 +60,9 @@ public class TestRunCancellationToken
     /// Registers a callback method to be invoked when canceled.
     /// </summary>
     /// <param name="callback">Callback delegate for handling cancellation.</param>
-    public void Register(Action callback) => _registeredCallbacks.Add(callback);
+    public void Register(Action callback) => _registeredCallbacks.Add((_ => callback(), null));
+
+    internal void Register(Action<object?> callback, object? state) => _registeredCallbacks.Add((callback, state));
 
     /// <summary>
     /// Unregister the callback method.

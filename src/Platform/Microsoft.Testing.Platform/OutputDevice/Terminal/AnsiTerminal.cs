@@ -45,7 +45,7 @@ internal sealed class AnsiTerminal : ITerminal
     private readonly bool _useBusyIndicator;
     private readonly StringBuilder _stringBuilder = new();
     private bool _isBatching;
-    private AnsiTerminalTestProgressFrame _currentFrame = new(Array.Empty<TestProgressState>(), 0, 0);
+    private AnsiTerminalTestProgressFrame _currentFrame = new(0, 0);
 
     public AnsiTerminal(IConsole console, string? baseDirectory)
     {
@@ -274,27 +274,20 @@ internal sealed class AnsiTerminal : ITerminal
     /// </summary>
     public void EraseProgress()
     {
-        if (_currentFrame.ProgressCount == 0)
+        if (_currentFrame.RenderedLines == null || _currentFrame.RenderedLines.Count == 0)
         {
             return;
         }
 
-        AppendLine($"{AnsiCodes.CSI}{_currentFrame.ProgressCount + 2}{AnsiCodes.MoveUpToLineStart}");
+        AppendLine($"{AnsiCodes.CSI}{_currentFrame.RenderedLines.Count + 2}{AnsiCodes.MoveUpToLineStart}");
         Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInDisplay}");
         _currentFrame.Clear();
     }
 
     public void RenderProgress(TestProgressState?[] progress)
     {
-        AnsiTerminalTestProgressFrame newFrame = new(progress, Width, Height);
-
-        // Do not render delta but clear everything if Terminal width or height have changed.
-        if (newFrame.Width != _currentFrame.Width || newFrame.Height != _currentFrame.Height)
-        {
-            EraseProgress();
-        }
-
-        newFrame.Render(_currentFrame, this);
+        AnsiTerminalTestProgressFrame newFrame = new(Width, Height);
+        newFrame.Render(_currentFrame, progress, terminal: this);
 
         _currentFrame = newFrame;
     }

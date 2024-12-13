@@ -13,6 +13,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// Internal implementation of TraceListenerManager exposed to the user.
 /// Responsible for performing Add(), Remove(), Close(), Dispose() operations on traceListener object.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public class TraceListenerManager : ITraceListenerManager
 {
 #if !WINDOWS_UWP && !WIN_UI

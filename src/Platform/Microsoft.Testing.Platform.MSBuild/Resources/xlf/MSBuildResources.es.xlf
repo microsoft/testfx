@@ -34,11 +34,11 @@ You can resolve the problem by installing the '{1}' .NET.
 
 The specified framework can be found at:
   - https://aka.ms/dotnet-download</source>
-        <target state="new">Could not find '{0}' host for the '{1}' architecture.
+        <target state="translated">No se encontró el host "{0}" para la arquitectura "{1}".
 
-You can resolve the problem by installing the '{1}' .NET.
+Para resolver el problema, instale "{1}" .NET.
 
-The specified framework can be found at:
+El marco de trabajo especificado se puede encontrar en:
   - https://aka.ms/dotnet-download</target>
         <note />
       </trans-unit>

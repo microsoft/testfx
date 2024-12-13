@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ja" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortForMaxFailedTestsDescription">
+        <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
+        <target state="new">Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Aborted">
         <source>Aborted</source>
         <target state="translated">中止されました</target>
@@ -159,7 +164,7 @@
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
         <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
-        <target state="new">The configuration file '{0}' specified with '--config-file' could not be found.</target>
+        <target state="translated">'--config-file' で指定された構成ファイル '{0}' が見つかりませんでした。</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
@@ -219,6 +224,11 @@
         <target state="translated">プロバイダー '{0}' (UID: {1}) が次のエラーで失敗しました: {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExceptionDuringCancellationWarningMessage">
+        <source>Exception during the cancellation of request id '{0}'</source>
+        <target state="translated">要求 ID '{0}' の取り消し中に例外が発生しました</target>
+        <note>{0} is the request id</note>
+      </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
         <target state="translated">終了コード</target>
@@ -269,6 +279,11 @@
       <trans-unit id="FailedWithWarnings">
         <source>failed with {0} warning(s)</source>
         <target state="translated">{0} 件の警告付きで失敗しました</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FinishedTestSession">
+        <source>Finished test session.</source>
+        <target state="translated">テスト セッションを終了しました。</target>
         <note />
       </trans-unit>
       <trans-unit id="ForTest">
@@ -361,6 +376,11 @@
         <target state="translated">ILoggerFactory はまだ構築されていません。</target>
         <note />
       </trans-unit>
+      <trans-unit id="MaxFailedTestsMustBePositive">
+        <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
+        <target state="new">The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MessageBusNotReady">
         <source>The message bus has not been built yet or is no more usable at this stage.</source>
         <target state="translated">メッセージ バスはまだ構築されていないか、この段階ではこれ以上使用できません。</target>
@@ -374,6 +394,16 @@
       <trans-unit id="MissingClientPortFoJsonRpc">
         <source>Expected --client-port when jsonRpc protocol is used.</source>
         <target state="translated">jsonRpc プロトコルを使用する場合、--client-port が必要です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_MoreTestsCount">
+        <source>and {0} more</source>
+        <target state="translated">その他 {0} 件</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_FullTestsCount">
+        <source>{0} tests running</source>
+        <target state="translated">{0} テストを実行しています</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
@@ -423,7 +453,7 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
         <source>Specifies a testconfig.json file.</source>
-        <target state="new">Specifies a testconfig.json file.</target>
+        <target state="translated">testconfig.json ファイルを指定します。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
@@ -516,6 +546,11 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
         <target state="translated">.NET テスト アプリケーション情報を表示します。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
+        <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
+        <target state="new">Specifies a maximum number of test failures that, when exceeded, will abort the test run.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
         <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
         <target state="translated">'--list-tests' と '--minimum-expected-tests' は互換性のないオプションです</target>
@@ -523,7 +558,7 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
         <source>Specifies the minimum number of tests that are expected to run.</source>
-        <target state="new">Specifies the minimum number of tests that are expected to run.</target>
+        <target state="translated">実行する必要があるテストの最小数を指定します。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
@@ -604,6 +639,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">この値を決定する前にプロセスを終了する必要があります</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReachedMaxFailedTestsMessage">
+        <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
+        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</target>
+        <note>{0} is the number of max failed tests.</note>
+      </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>
         <target state="translated">再試行が {0} 回後に失敗しました</target>
@@ -632,6 +672,16 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
         <source>Server test execution filter factory</source>
         <target state="translated">サーバー テスト実行フィルター ファクトリ</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDescription">
+        <source>The 'ITestHost' implementation used when running server mode.</source>
+        <target state="translated">サーバー モードの実行時に使用される 'ITestHost' 実装。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDisplayName">
+        <source>Server mode test host</source>
+        <target state="translated">サーバー モード テスト ホスト</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
@@ -687,6 +737,16 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
         <target state="translated">サーバーを起動しています。ポート '{0}' で聞いています</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSession">
+        <source>Starting test session.</source>
+        <target state="translated">テスト セッションを開始しています。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSessionWithLogFilePath">
+        <source>Starting test session. The log file path is '{0}'.</source>
+        <target state="translated">テスト セッションを開始しています。ログ ファイルのパスが '{0}' です。</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -897,6 +957,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <source>The communication protocol '{0}' is not supported</source>
         <target state="translated">通信プロトコル '{0}' はサポートされていません</target>
         <note />
+      </trans-unit>
+      <trans-unit id="UnobservedTaskExceptionWarningMessage">
+        <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+        <target state="translated">ハンドルされない例外 [ServerTestHost.OnTaskSchedulerUnobservedTaskException]: {0}</target>
+        <note>{0} is the exception that was unhandled/unobserved</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>

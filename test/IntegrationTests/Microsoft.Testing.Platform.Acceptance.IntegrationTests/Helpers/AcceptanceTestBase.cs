@@ -57,18 +57,13 @@ public class UnitTest1
         var cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
 
-        var versionsPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
-#if MSTEST_DOWNLOADED
-        MSTestVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestVersion");
-        MicrosoftTestingPlatformVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestVersion");
-        MicrosoftTestingEnterpriseExtensionsVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.");
-        MSTestEngineVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.Engine");
-#else
+        var versionsPropsFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
+        var directoryPackagesPropsFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
-        MicrosoftTestingEnterpriseExtensionsVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MicrosoftTestingInternalFrameworkVersion");
-        MSTestEngineVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestEngineVersion");
-#endif
+        MicrosoftTestingEnterpriseExtensionsVersion = ExtractVersionFromXmlFile(versionsPropsFileDoc, "MicrosoftTestingExtensionsRetryVersion");
+        MicrosoftTestingInternalFrameworkVersion = ExtractVersionFromXmlFile(directoryPackagesPropsFileDoc, "MicrosoftTestingInternalFrameworkVersion");
+        MSTestEngineVersion = ExtractVersionFromXmlFile(versionsPropsFileDoc, "MSTestEngineVersion");
     }
 
     protected AcceptanceTestBase(ITestExecutionContext testExecutionContext)
@@ -76,7 +71,14 @@ public class UnitTest1
     {
     }
 
-    internal static string RID { get; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
+    internal static string RID { get; }
+        = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "win-x64"
+            : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                ? "linux-x64"
+                : RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                    ? "osx-x64"
+                    : throw new NotSupportedException("Current OS is not supported");
 
     public static string MSTestVersion { get; private set; }
 
@@ -87,6 +89,8 @@ public class UnitTest1
     public static string MicrosoftTestingPlatformVersion { get; private set; }
 
     public static string MicrosoftTestingEnterpriseExtensionsVersion { get; private set; }
+
+    public static string MicrosoftTestingInternalFrameworkVersion { get; private set; }
 
     internal static IEnumerable<TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration, Verb Verb)>> GetBuildMatrixTfmBuildVerbConfiguration()
     {
@@ -174,7 +178,7 @@ public class UnitTest1
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
     }
 
-    private static string ExtractVersionFromVersionPropsFile(XDocument versionPropsXmlDocument, string entryName)
+    private static string ExtractVersionFromXmlFile(XDocument versionPropsXmlDocument, string entryName)
     {
         XElement[] matches = versionPropsXmlDocument.Descendants(entryName).ToArray();
         return matches.Length != 1

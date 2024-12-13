@@ -25,6 +25,10 @@
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" Condition=" '$(TargetFramework)' != '$(NetStandardNetFrameworkHolder)' " />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" Condition=" '$(TargetFramework)' != '$(NetStandardNetFrameworkHolder)' " />
     <ProjectReference Include="$(RepoRoot)test\Utilities\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Internal.Analyzers\MSTest.Internal.Analyzers.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == '$(NetStandardNetFrameworkHolder)' ">

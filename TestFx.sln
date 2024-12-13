@@ -209,6 +209,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Testing.Platform.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extensions.MSBuild", "src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj", "{8CE782A2-7374-4916-9C69-1F87E51A64A9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.Internal.Analyzers", "src\Analyzers\MSTest.Internal.Analyzers\MSTest.Internal.Analyzers.csproj", "{4A93E1A2-B61E-31B2-33F2-478156A9B5E7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -483,6 +485,10 @@ Global
 		{8CE782A2-7374-4916-9C69-1F87E51A64A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8CE782A2-7374-4916-9C69-1F87E51A64A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8CE782A2-7374-4916-9C69-1F87E51A64A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A93E1A2-B61E-31B2-33F2-478156A9B5E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A93E1A2-B61E-31B2-33F2-478156A9B5E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A93E1A2-B61E-31B2-33F2-478156A9B5E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A93E1A2-B61E-31B2-33F2-478156A9B5E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -567,6 +573,7 @@ Global
 		{573C617F-6BB2-403A-AD87-E00A7FD537F0} = {BB874DF1-44FE-415A-B634-A6B829107890}
 		{F422398C-72CD-43EA-AC8E-E0DBD08E5563} = {BB874DF1-44FE-415A-B634-A6B829107890}
 		{8CE782A2-7374-4916-9C69-1F87E51A64A9} = {6AEE1440-FDF0-4729-8196-B24D0E333550}
+		{4A93E1A2-B61E-31B2-33F2-478156A9B5E7} = {E7F15C9C-3928-47AD-8462-64FD29FFCA54}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}

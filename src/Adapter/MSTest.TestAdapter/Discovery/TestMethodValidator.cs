@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
@@ -13,6 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// <summary>
 /// Determines if a method is a valid test method.
 /// </summary>
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class TestMethodValidator
 {
     private readonly ReflectHelper _reflectHelper;

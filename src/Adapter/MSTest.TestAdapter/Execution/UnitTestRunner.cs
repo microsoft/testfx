@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// The runner that runs a single unit test. Also manages the assembly and class cleanup methods at the end of the run.
 /// </summary>
-internal class UnitTestRunner : MarshalByRefObject
+internal sealed class UnitTestRunner : MarshalByRefObject
 {
     private readonly ConcurrentDictionary<string, TestMethodInfo> _fixtureTests = new();
     private readonly TypeCache _typeCache;
@@ -169,6 +169,7 @@ internal class UnitTestRunner : MarshalByRefObject
                 else
                 {
                     UnitTestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContext, assemblyInitializeResult.StandardOut!, assemblyInitializeResult.StandardError!, assemblyInitializeResult.DebugTrace!, assemblyInitializeResult.TestContextMessages!);
+                    DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
                     if (classInitializeResult.Outcome != UnitTestOutcome.Passed)
                     {
                         result = [classInitializeResult];
@@ -340,31 +341,27 @@ internal class UnitTestRunner : MarshalByRefObject
             }
         }
 
-        string? ignoreMessage = null;
-        bool isIgnoreAttributeOnClass =
-            _reflectHelper.IsNonDerivedAttributeDefined<IgnoreAttribute>(testMethodInfo.Parent.ClassType, false);
-        bool isIgnoreAttributeOnMethod =
-            _reflectHelper.IsNonDerivedAttributeDefined<IgnoreAttribute>(testMethodInfo.TestMethod, false);
+        IgnoreAttribute? ignoreAttributeOnClass =
+            _reflectHelper.GetFirstNonDerivedAttributeOrDefault<IgnoreAttribute>(testMethodInfo.Parent.ClassType, inherit: false);
+        string? ignoreMessage = ignoreAttributeOnClass?.IgnoreMessage;
 
-        if (isIgnoreAttributeOnClass)
+        IgnoreAttribute? ignoreAttributeOnMethod =
+            _reflectHelper.GetFirstNonDerivedAttributeOrDefault<IgnoreAttribute>(testMethodInfo.TestMethod, inherit: false);
+
+        if (StringEx.IsNullOrEmpty(ignoreMessage) && ignoreAttributeOnMethod is not null)
         {
-            ignoreMessage = _reflectHelper.GetIgnoreMessage(testMethodInfo.Parent.ClassType);
+            ignoreMessage = ignoreAttributeOnMethod.IgnoreMessage;
         }
 
-        if (StringEx.IsNullOrEmpty(ignoreMessage) && isIgnoreAttributeOnMethod)
+        if (ignoreAttributeOnClass is not null || ignoreAttributeOnMethod is not null)
         {
-            ignoreMessage = _reflectHelper.GetIgnoreMessage(testMethodInfo.TestMethod);
-        }
-
-        if (isIgnoreAttributeOnClass || isIgnoreAttributeOnMethod)
-        {
-            {
-                notRunnableResult = [new UnitTestResult(UnitTestOutcome.Ignored, ignoreMessage)];
-                return false;
-            }
+            notRunnableResult = [new UnitTestResult(UnitTestOutcome.Ignored, ignoreMessage)];
+            return false;
         }
 
         notRunnableResult = null;
         return true;
     }
+
+    internal void ForceCleanup() => ClassCleanupManager.ForceCleanup(_typeCache);
 }

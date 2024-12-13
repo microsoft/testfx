@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="cs" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortForMaxFailedTestsDescription">
+        <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
+        <target state="new">Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Aborted">
         <source>Aborted</source>
         <target state="translated">Přerušeno</target>
@@ -119,12 +124,12 @@
       </trans-unit>
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
-        <target state="new">Failed to read response file '{0}'. {1}.</target>
+        <target state="translated">Čtení souboru odpovědí {0} selhalo. {1}.</target>
         <note>{1} is the exception</note>
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
         <source>The response file '{0}' was not found</source>
-        <target state="new">The response file '{0}' was not found</target>
+        <target state="translated">Soubor odpovědí {0} nebyl nalezen.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
@@ -159,7 +164,7 @@
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
         <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
-        <target state="new">The configuration file '{0}' specified with '--config-file' could not be found.</target>
+        <target state="translated">Nebyl nalezen konfigurační soubor {0} zadaný pomocí parametru --config-file.</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
@@ -219,6 +224,11 @@
         <target state="translated">Zprostředkovatel {0} (UID: {1}) selhal s chybou: {2}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExceptionDuringCancellationWarningMessage">
+        <source>Exception during the cancellation of request id '{0}'</source>
+        <target state="translated">Výjimka při rušení ID žádosti '{0}'</target>
+        <note>{0} is the request id</note>
+      </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
         <target state="translated">Ukončovací kód</target>
@@ -269,6 +279,11 @@
       <trans-unit id="FailedWithWarnings">
         <source>failed with {0} warning(s)</source>
         <target state="translated">selhalo s {0} upozorněním(i).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FinishedTestSession">
+        <source>Finished test session.</source>
+        <target state="translated">Testovací relace byla dokončena.</target>
         <note />
       </trans-unit>
       <trans-unit id="ForTest">
@@ -361,6 +376,11 @@
         <target state="translated">Rozhraní ILoggerFactory ještě nebylo sestaveno.</target>
         <note />
       </trans-unit>
+      <trans-unit id="MaxFailedTestsMustBePositive">
+        <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
+        <target state="new">The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MessageBusNotReady">
         <source>The message bus has not been built yet or is no more usable at this stage.</source>
         <target state="translated">Sběrnice zpráv ještě nebyla sestavena nebo už není v této fázi použitelná.</target>
@@ -374,6 +394,16 @@
       <trans-unit id="MissingClientPortFoJsonRpc">
         <source>Expected --client-port when jsonRpc protocol is used.</source>
         <target state="translated">Při použití protokolu jsonRpc byl očekáván parametr --client-port.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_MoreTestsCount">
+        <source>and {0} more</source>
+        <target state="new">and {0} more</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_FullTestsCount">
+        <source>{0} tests running</source>
+        <target state="translated">{0} spuštěné testy</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
@@ -423,7 +453,7 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
         <source>Specifies a testconfig.json file.</source>
-        <target state="new">Specifies a testconfig.json file.</target>
+        <target state="translated">Určuje soubor testconfig.json.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
@@ -515,6 +545,11 @@ Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</ta
         <target state="translated">Umožňuje zobrazit informace o testovací aplikaci .NET.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
+        <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
+        <target state="new">Specifies a maximum number of test failures that, when exceeded, will abort the test run.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
         <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
         <target state="translated">--list-tests a --minimum-expected-tests jsou nekompatibilní možnosti.</target>
@@ -522,7 +557,7 @@ Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</ta
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
         <source>Specifies the minimum number of tests that are expected to run.</source>
-        <target state="new">Specifies the minimum number of tests that are expected to run.</target>
+        <target state="translated">Určuje minimální počet testů, jejichž spuštění se očekává.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
@@ -603,6 +638,11 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
         <target state="translated">Proces měl být ukončen před tím, než jsme mohli určit tuto hodnotu.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ReachedMaxFailedTestsMessage">
+        <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
+        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</target>
+        <note>{0} is the number of max failed tests.</note>
+      </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>
         <target state="translated">Opakování se po {0} pokusech nezdařilo.</target>
@@ -631,6 +671,16 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
       <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
         <source>Server test execution filter factory</source>
         <target state="translated">Objekt pro vytváření filtru provádění testů serveru</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDescription">
+        <source>The 'ITestHost' implementation used when running server mode.</source>
+        <target state="translated">Implementace ITestHost použitá při spuštění režimu serveru</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDisplayName">
+        <source>Server mode test host</source>
+        <target state="translated">Testovací hostitel režimu serveru</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
@@ -686,6 +736,16 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
         <target state="translated">Spouští se server. Naslouchání na portu {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSession">
+        <source>Starting test session.</source>
+        <target state="translated">Spouští se testovací relace.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSessionWithLogFilePath">
+        <source>Starting test session. The log file path is '{0}'.</source>
+        <target state="translated">Spouští se testovací relace. Cesta k souboru protokolu je '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -896,6 +956,11 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
         <source>The communication protocol '{0}' is not supported</source>
         <target state="translated">Komunikační protokol {0} není podporován.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="UnobservedTaskExceptionWarningMessage">
+        <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Neošetřená výjimka: {0}</target>
+        <note>{0} is the exception that was unhandled/unobserved</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>

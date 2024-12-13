@@ -19,6 +19,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Class responsible for execution of tests at assembly level and sending tests via framework handle.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public class TestExecutionManager
 {
     /// <summary>
@@ -300,7 +305,7 @@ public class TestExecutionManager
             [MSTestSettings.CurrentSettings, unitTestElements, (int)sourceSettings.ClassCleanupLifecycle])!;
 
         // Ensures that the cancellation token gets through AppDomain boundary.
-        _testRunCancellationToken?.Register(testRunner.Cancel);
+        _testRunCancellationToken?.Register(static state => ((UnitTestRunner)state!).Cancel(), testRunner);
 
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
         {
@@ -394,6 +399,11 @@ public class TestExecutionManager
             ExecuteTestsWithTestRunner(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner);
         }
 
+        if (MSTestGracefulStopTestExecutionCapability.Instance.IsStopRequested)
+        {
+            testRunner.ForceCleanup();
+        }
+
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
     }
 
@@ -414,6 +424,10 @@ public class TestExecutionManager
         foreach (TestCase currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
+            if (MSTestGracefulStopTestExecutionCapability.Instance.IsStopRequested)
+            {
+                break;
+            }
 
             // If it is a fixture test, add it to the list of fixture tests and do not execute it.
             // It is executed by test itself.
@@ -481,7 +495,9 @@ public class TestExecutionManager
         IDictionary<TestProperty, object?> tcmProperties,
         IDictionary<string, object> sourceLevelParameters)
     {
-        var testContextProperties = new Dictionary<string, object?>();
+        // This dictionary will have *at least* 8 entries. Those are the sourceLevelParameters
+        // which were originally calculated from TestDeployment.GetDeploymentInformation.
+        var testContextProperties = new Dictionary<string, object?>(capacity: 8);
 
         // Add tcm properties.
         foreach (KeyValuePair<TestProperty, object?> propertyPair in tcmProperties)

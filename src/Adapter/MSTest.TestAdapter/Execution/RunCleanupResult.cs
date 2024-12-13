@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// Result of the run cleanup operation.
 /// </summary>
 [Serializable]
-internal class RunCleanupResult
+internal sealed class RunCleanupResult
 {
     /// <summary>
     /// Gets or sets the standard out of the cleanup methods.

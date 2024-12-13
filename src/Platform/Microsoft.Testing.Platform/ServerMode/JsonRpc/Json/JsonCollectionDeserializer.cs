@@ -10,7 +10,7 @@ internal abstract class JsonCollectionDeserializer<TCollection> : JsonDeserializ
     internal abstract TCollection CreateObject(Json json, JsonElement element);
 }
 
-internal class JsonCollectionDeserializer<TCollection, TItem>(Func<JsonElement, TCollection> createCollection, Action<TCollection, TItem> addItem) : JsonCollectionDeserializer<TCollection>
+internal sealed class JsonCollectionDeserializer<TCollection, TItem>(Func<JsonElement, TCollection> createCollection, Action<TCollection, TItem> addItem) : JsonCollectionDeserializer<TCollection>
     where TCollection : ICollection<TItem>
 {
     private readonly Func<JsonElement, TCollection> _createCollection = createCollection;

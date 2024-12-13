@@ -12,7 +12,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
 [ExcludeFromCodeCoverage] // Helper copied from VSTest source code
-internal class FilterExpressionWrapper
+internal sealed class FilterExpressionWrapper
 {
     /// <summary>
     /// FilterExpression corresponding to filter criteria.

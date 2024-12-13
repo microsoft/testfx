@@ -671,4 +671,46 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="ConfigurationFileNotFound" xml:space="preserve">
     <value>The configuration file '{0}' specified with '--config-file' could not be found.</value>
   </data>
+  <data name="ActiveTestsRunning_MoreTestsCount" xml:space="preserve">
+    <value>and {0} more</value>
+  </data>
+  <data name="ActiveTestsRunning_FullTestsCount" xml:space="preserve">
+    <value>{0} tests running</value>
+  </data>
+  <data name="StartingTestSession" xml:space="preserve">
+    <value>Starting test session.</value>
+  </data>
+  <data name="StartingTestSessionWithLogFilePath" xml:space="preserve">
+    <value>Starting test session. The log file path is '{0}'.</value>
+  </data>
+  <data name="FinishedTestSession" xml:space="preserve">
+    <value>Finished test session.</value>
+  </data>
+  <data name="ServerTestHostDisplayName" xml:space="preserve">
+    <value>Server mode test host</value>
+  </data>
+  <data name="ServerTestHostDescription" xml:space="preserve">
+    <value>The 'ITestHost' implementation used when running server mode.</value>
+  </data>
+  <data name="UnobservedTaskExceptionWarningMessage" xml:space="preserve">
+    <value>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</value>
+    <comment>{0} is the exception that was unhandled/unobserved</comment>
+  </data>
+  <data name="ExceptionDuringCancellationWarningMessage" xml:space="preserve">
+    <value>Exception during the cancellation of request id '{0}'</value>
+    <comment>{0} is the request id</comment>
+  </data>
+  <data name="PlatformCommandLineMaxFailedTestsOptionDescription" xml:space="preserve">
+    <value>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</value>
+  </data>
+  <data name="MaxFailedTestsMustBePositive" xml:space="preserve">
+    <value>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</value>
+  </data>
+  <data name="AbortForMaxFailedTestsDescription" xml:space="preserve">
+    <value>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</value>
+  </data>
+  <data name="ReachedMaxFailedTestsMessage" xml:space="preserve">
+    <value>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</value>
+    <comment>{0} is the number of max failed tests.</comment>
+  </data>
 </root>

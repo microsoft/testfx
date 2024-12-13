@@ -11,4 +11,12 @@ coverage:
     - "eng/src/::src/"
 
 comment:
-  layout: "diff"
+  layout: "diff, flags, files"
+
+flags:
+  production:
+    paths:
+      - src/
+  test:
+    paths:
+      - test/

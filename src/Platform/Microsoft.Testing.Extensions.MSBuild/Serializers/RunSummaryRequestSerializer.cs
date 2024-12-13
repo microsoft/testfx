@@ -6,14 +6,14 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.MSBuild.Serializers;
 
-internal record RunSummaryInfoRequest(
+internal sealed record RunSummaryInfoRequest(
     int Total,
     int TotalFailed,
     int TotalPassed,
     int TotalSkipped,
     string? Duration) : IRequest;
 
-internal class RunSummaryInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class RunSummaryInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
 {
     public int Id => 3;
 

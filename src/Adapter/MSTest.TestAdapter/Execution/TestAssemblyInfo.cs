@@ -18,19 +18,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines TestAssembly Info object.
 /// </summary>
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public class TestAssemblyInfo
 {
-    private readonly object _assemblyInfoExecuteSyncObject;
+    private readonly Lock _assemblyInfoExecuteSyncObject = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestAssemblyInfo"/> class.
     /// </summary>
     /// <param name="assembly">Sets the <see cref="Assembly"/> this class is representing. </param>
     internal TestAssemblyInfo(Assembly assembly)
-    {
-        _assemblyInfoExecuteSyncObject = new object();
-        Assembly = assembly;
-    }
+        => Assembly = assembly;
 
     /// <summary>
     /// Gets <c>AssemblyInitialize</c> method for the assembly.

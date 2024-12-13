@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
@@ -11,13 +11,16 @@
 
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" />
+    <PackageReference Include="StreamJsonRpc" />
     <PackageReference Include="Microsoft.Testing.Extensions.Retry" />
+
+    <Compile Include="$(RepoRoot)test\IntegrationTests\MSTest.Acceptance.IntegrationTests\ServerMode\**\*.cs" Link="ServerMode\%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
 
   <!-- Packages needed for the test assets but that we don't want to reference -->
   <ItemGroup>
-    <PackageDownload Include="Microsoft.Testing.Extensions.HotReload" Version="[$(MicrosoftTestingInternalFrameworkVersion)]" />
-    <PackageDownload Include="Microsoft.Testing.Extensions.Retry" Version="[$(MicrosoftTestingInternalFrameworkVersion)]" />
+    <PackageDownload Include="Microsoft.Testing.Extensions.HotReload" Version="[$(MicrosoftTestingExtensionsRetryVersion)]" />
+    <PackageDownload Include="Microsoft.Testing.Extensions.Retry" Version="[$(MicrosoftTestingExtensionsRetryVersion)]" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,8 +39,8 @@
     <Copy SkipUnchangedFiles="true" SourceFiles="@(MicrosoftTestingInternalFrameworkPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
     <Copy SkipUnchangedFiles="true" SourceFiles="@(MicrosoftTestingInternalFrameworkSourceGenerationPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
 
-    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.hotreload\$(MicrosoftTestingInternalFrameworkVersion)\microsoft.testing.extensions.hotreload.$(MicrosoftTestingInternalFrameworkVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.hotreload.$(MicrosoftTestingInternalFrameworkVersion).nupkg" />
-    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.retry\$(MicrosoftTestingInternalFrameworkVersion)\microsoft.testing.extensions.retry.$(MicrosoftTestingInternalFrameworkVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.retry.$(MicrosoftTestingInternalFrameworkVersion).nupkg" />
+    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.hotreload\$(MicrosoftTestingExtensionsRetryVersion)\microsoft.testing.extensions.hotreload.$(MicrosoftTestingExtensionsRetryVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.hotreload.$(MicrosoftTestingExtensionsRetryVersion).nupkg" />
+    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.retry\$(MicrosoftTestingExtensionsRetryVersion)\microsoft.testing.extensions.retry.$(MicrosoftTestingExtensionsRetryVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.retry.$(MicrosoftTestingExtensionsRetryVersion).nupkg" />
   </Target>
 
 </Project>

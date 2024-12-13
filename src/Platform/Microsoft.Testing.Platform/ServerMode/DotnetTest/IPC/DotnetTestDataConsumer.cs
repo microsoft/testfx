@@ -10,7 +10,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.IPC;
 
-internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
+internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 {
     private readonly DotnetTestConnection? _dotnetTestConnection;
     private readonly IEnvironment _environment;
@@ -172,8 +172,6 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         long? duration = null;
         string? reason = string.Empty;
         ExceptionMessage[]? exceptions = null;
-        string? errorStackTrace = string.Empty;
-
         TestNodeStateProperty nodeState = testNodeUpdateMessage.TestNode.Properties.Single<TestNodeStateProperty>();
         string? standardOutput = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
         string? standardError = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
@@ -245,7 +243,7 @@ internal class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         }
     }
 
-    public record TestNodeDetails(byte? State, long? Duration, string? Reason, ExceptionMessage[]? Exceptions, string? StandardOutput, string? StandardError);
+    public sealed record TestNodeDetails(byte? State, long? Duration, string? Reason, ExceptionMessage[]? Exceptions, string? StandardOutput, string? StandardError);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

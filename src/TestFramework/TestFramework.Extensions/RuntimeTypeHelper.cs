@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Provides method signature discovery for generic methods.
 /// </summary>
-internal class RuntimeTypeHelper
+internal sealed class RuntimeTypeHelper
 {
     /// <summary>
     /// Compares the method signatures of these two methods.

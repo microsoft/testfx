@@ -15,7 +15,7 @@ internal sealed partial class ServerTestHost
     /// This is done to minimize the number of RPC messages sent.
     /// </summary>
     /// <remarks>The caller needs to ensure thread-safety.</remarks>
-    internal class TestNodeStateChangeAggregator(Guid runId)
+    internal sealed class TestNodeStateChangeAggregator(Guid runId)
     {
         // Note: Currently there's no cascading node changes we need to deal with.
         private readonly List<TestNodeUpdateMessage> _stateChanges = [];

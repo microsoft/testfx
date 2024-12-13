@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
-internal class DeploymentUtility : DeploymentUtilityBase
+internal sealed class DeploymentUtility : DeploymentUtilityBase
 {
     public DeploymentUtility()
         : base()
@@ -104,7 +104,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
 
 #if NETFRAMEWORK
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    protected void ProcessNewStorage(string testSource, IList<DeploymentItem> deploymentItems, IList<string> warnings)
+    public void ProcessNewStorage(string testSource, IList<DeploymentItem> deploymentItems, IList<string> warnings)
     {
         // Add deployment items and process .config files only for storages we have not processed before.
         if (!DeploymentItemUtility.IsValidDeploymentItem(testSource, string.Empty, out string? errorMessage))
@@ -136,7 +136,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
         }
     }
 
-    protected IEnumerable<DeploymentItem> GetSatellites(IEnumerable<DeploymentItem> deploymentItems, string testSource, IList<string> warnings)
+    public IEnumerable<DeploymentItem> GetSatellites(IEnumerable<DeploymentItem> deploymentItems, string testSource, IList<string> warnings)
     {
         List<DeploymentItem> satellites = [];
         foreach (DeploymentItem item in deploymentItems)
