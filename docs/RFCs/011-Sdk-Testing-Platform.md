@@ -22,75 +22,49 @@ The reason for opting-in/out this experience is
 
 We want to design in a way that is future proof and easy to keep backwards compatible.
 
-## Proposals
+## Proposal
 
 Make this option configurable in global.json. We chose global.json because it's located on the current directory level or its parent directories and is picked up by the dotnet sdk.
 
-Here are some global.json suggestions:
+Here is a global.json sample:
 
-### 1. Enable/Disable the Testing Platform
+### Examples of Usage
 
-#### Example of Usage
+1. Example 1
 
 ```json
 {
-"testSdk" :
-  {
-    "useTestingPlatform": true
+  "test" : {	
+    "runner": {
+      "name": "MicrosoftTestingPlatform"
+    }
   }
 }
 ```
 
-- `testSdk`: Represents the configuration settings for the test SDK.
-  - `useTestingPlatform`: A boolean value that determines whether to use the Microsoft Testing Platform. If set to `true`, the testing platform will be used; if set to `false`, vstest will be used.
-
-#### Unresolved Questions
-
-What if we want to support another test runner? We simply can't, with this approach we either use the testing platform, or fallback to vstest if this property was set to false.
-
-### 2. Specify the Test Runner Tool
-
-#### Examples of Usage
+/**
+ * JSON Configuration for the testing platform.
+ *
+ * Properties:
+ * - test: Contains configuration related to the test settings.
+ *   - runner: Specifies the test runner details.
+ *     - name: The name of the test runner to be used, in this case, "MicrosoftTestingPlatform".
+ */
+ 
+2. Example 2
 
 ```json
 {
-"testSdk" :
-  {
-    "tool": "testingplatform"
+  "test" : {	
+    "runner": {
+      "name": "VSTest"
+    }
   }
 }
 ```
 
-- `testSdk`: Represents the configuration settings for the test SDK.
-  - `tool`: Specifies the testing tool to be used (`vstest` or `testingplatform`). In this case, `testingplatform` is the tool being used.
-
-#### Unresolved Questions
-
-What if we decide to use the testing platform as an external tool/service? We still could support more options.
-
-But if, for some reason, the latest version of the testing platform was broken, we will break as well.
-
-### 3. Specify the Test Runner Tool and Other Options
-
-#### Example of Usage
-
-```json
-{
-"testSdk" :
-  {
-    "tool": "testingplatform",
-    "version": "1.5.0",
-    "allowPrerelease": false
-  }
-}
-```
-
-- `testSdk`: Represents the configuration settings for the test SDK.
-  - `tool`: Specifies the name of the testing tool being used. In this case, it is `testingplatform`.
-  - `version`: Indicates the version of the testing tool. Here, it is set to "1.5.0".
-  - `allowPrerelease`: A boolean value that determines whether pre-release versions of the testing tool are allowed. It is set to false, meaning pre-release versions are not permitted.
-
-This provides more control over the test runner tool and ensures compatibility with specific versions. If it's not specified, then we will fallback to the latest version.
+This design is extendable. If later on we decided to support dotnet test as an external dotnet tool.
+We can simply add the type/source property and other options as well.
 
 ### Default
 
