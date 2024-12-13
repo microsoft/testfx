@@ -445,7 +445,7 @@ internal sealed class TypeCache : MarshalByRefObject
             try
             {
                 // Only examine classes which are TestClass or derives from TestClass attribute
-                if (!_reflectionHelper.IsDerivedAttributeDefined<TestClassAttribute>(t, inherit: true))
+                if (!_reflectionHelper.IsDerivedAttributeDefined<TestClassAttribute>(t, inherit: false))
                 {
                     continue;
                 }
