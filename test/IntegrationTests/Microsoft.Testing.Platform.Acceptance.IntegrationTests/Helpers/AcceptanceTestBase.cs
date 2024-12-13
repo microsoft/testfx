@@ -86,7 +86,7 @@ public class UnitTest1
 
     public static string MicrosoftTestingInternalFrameworkVersion { get; private set; }
 
-    [ClassInitialize]
+    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Fine in this context")]
     public static async Task ClassInitialize(TestContext testContext)
     {
