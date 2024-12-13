@@ -145,6 +145,7 @@ TestMethod3$
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 
 public class Program
@@ -152,9 +153,11 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        var dummyTestFramework = new DummyTestFramework();
         builder.RegisterTestFramework(
             sp => new TestFrameworkCapabilities(),
-            (_,__) => new DummyTestFramework());
+            (_,__) => dummyTestFramework);
+        builder.AddTreeNodeFilterService(dummyTestFramework);
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
@@ -184,37 +187,6 @@ public class DummyTestFramework : ITestFramework
        return Task.CompletedTask;
     }
 }
-
-#file UnitTest1.cs
-namespace ExecutionTests;
-
-[TestClass]
-public class UnitTest1
-{
-    public void TestMethod1()
-    {
-        Assert.IsTrue(true);
-    }
-
-    public void TestMethod2()
-    {
-        Assert.IsTrue(true);
-    }
-
-    public void TestMethod3()
-    {
-        Assert.IsTrue(true);
-    }
-
-    public void FilteredOutTest()
-    {
-        Assert.IsTrue(true);
-    }
-}
-
-#file Usings.cs
-global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Extensions;
 """;
 
         private const string TestCode2 = """

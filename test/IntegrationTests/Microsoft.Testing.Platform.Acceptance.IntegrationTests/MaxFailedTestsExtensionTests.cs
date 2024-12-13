@@ -7,10 +7,6 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedTestsExtensionTests.TestAssetFixture>
 {
     private const string AssetName = nameof(MaxFailedTestsExtensionTests);
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public MaxFailedTestsExtensionTests(TestAssetFixture testAssetFixture)
-        => _testAssetFixture = testAssetFixture;
 
     [TestMethod]
     public async Task TestMaxFailedTestsShouldCallStopTestExecutionAsync()

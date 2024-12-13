@@ -65,8 +65,6 @@ Extension options:
     --output
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
-    --treenode-filter
-        Use a tree filter to filter down the tests to execute
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
@@ -256,15 +254,6 @@ Registered command line providers:
         Hidden: False
         Description: Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
-  TestingFrameworkExtension
-    Name: Microsoft Testing Framework
-    Version: .+
-    Description: Microsoft Testing Framework\. This framework allows you to test your code anywhere in any mode \(all OSes, all platforms, all configurations\.\.\.\)\.
-    Options:
-      --treenode-filter
-        Arity: 1
-        Hidden: False
-        Description: Use a tree filter to filter down the tests to execute
 Registered tools:
   There are no registered tools\.
 """;
@@ -364,8 +353,6 @@ Extension options:
         Enable generating TRX report
     --report-trx-filename
         The name of the generated TRX report
-    --treenode-filter
-        Use a tree filter to filter down the tests to execute
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
@@ -562,6 +549,15 @@ Registered command line providers:
         Description: Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
         Default type is 'Full'
+  MSBuildCommandLineProvider
+    Name: MSBuildCommandLineProvider
+    Version: 1.6.0-dev
+    Description: Extension used to pass parameters from MSBuild node and the hosts
+    Options:
+      --internal-msbuild-node
+        Arity: 1
+        Hidden: True
+        Description: Used to pass the MSBuild node handle
   RetryCommandLineOptionsProvider
     Name: Retry failed tests
     Version: *
@@ -601,15 +597,6 @@ Registered command line providers:
         Hidden: False
         Description: Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
-  TestingFrameworkExtension
-    Name: Microsoft Testing Framework
-    Version: *
-    Description: Microsoft Testing Framework. This framework allows you to test your code anywhere in any mode (all OSes, all platforms, all configurations...).
-    Options:
-      --treenode-filter
-        Arity: 1
-        Hidden: False
-        Description: Use a tree filter to filter down the tests to execute
   TrxReportGeneratorCommandLine
     Name: TRX report generator
     Version: *
@@ -662,6 +649,7 @@ Registered tools:
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
         <LangVersion>preview</LangVersion>
+        <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />

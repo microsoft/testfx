@@ -60,7 +60,7 @@ Out of process file artifacts produced:
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
         string trxContent = File.ReadAllText(trxFile);
         Assert.IsTrue(Regex.IsMatch(trxContent, @"Test host process pid: .* crashed\."), trxContent);
-        StringAssert.Contains("""<ResultSummary outcome="Failed">""", trxContent, trxContent);
+        StringAssert.Contains(trxContent, """<ResultSummary outcome="Failed">""", trxContent);
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
@@ -78,12 +78,12 @@ Out of process file artifacts produced:
         string trxContent = File.ReadAllText(trxFile);
 
         // check if the tests have been added to Results, TestDefinitions, TestEntries and ResultSummary.
-        StringAssert.Contains(@"<UnitTestResult ", trxContent, trxContent);
-        StringAssert.Contains(@"outcome=""NotExecuted""", trxContent, trxContent);
-        StringAssert.Contains(@"<UnitTest name=""TestMethod1", trxContent, trxContent);
-        StringAssert.Contains(@"<TestEntry ", trxContent, trxContent);
-        StringAssert.Contains("""<ResultSummary outcome="Failed">""", trxContent, trxContent);
-        StringAssert.Contains("""<Counters total="2" executed="0" passed="0" failed="0" error="0" timeout="0" aborted="0" inconclusive="0", trxContentpassedButRunAborted="0" notRunnable="0" notExecuted="2" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />""", trxContent, trxContent);
+        StringAssert.Contains(trxContent, @"<UnitTestResult ", trxContent);
+        StringAssert.Contains(trxContent, @"outcome=""NotExecuted""", trxContent);
+        StringAssert.Contains(trxContent, @"<UnitTest name=""TestMethod1", trxContent);
+        StringAssert.Contains(trxContent, @"<TestEntry ", trxContent);
+        StringAssert.Contains(trxContent, """<ResultSummary outcome="Failed">""", trxContent);
+        StringAssert.Contains(trxContent, """<Counters total="2" executed="0" passed="0" failed="0" error="0" timeout="0" aborted="0" inconclusive="0", passedButRunAborted="0" notRunnable="0" notExecuted="2" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />""", trxContent);
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
@@ -222,8 +222,11 @@ Out of process file artifacts produced:
 </Project>
 
 #file Program.cs
+using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Services;
 
@@ -233,7 +236,7 @@ public class Program
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(
-            sp => new TestFrameworkCapabilities(),
+            sp => new TestFrameworkCapabilities(new TrxReportCapability()),
             (_,__) => new DummyTestFramework());
         builder.AddCrashDumpProvider();
         builder.AddTrxReportProvider();
@@ -242,7 +245,15 @@ public class Program
     }
 }
 
-public class DummyTestFramework : ITestFramework
+public class TrxReportCapability : ITrxReportCapability
+{
+    bool ITrxReportCapability.IsSupported { get; } = true;
+    void ITrxReportCapability.Enable()
+    {
+    }
+}
+
+public class DummyTestFramework : ITestFramework, IDataProducer
 {
     public string Uid => nameof(DummyTestFramework);
 
@@ -252,21 +263,26 @@ public class DummyTestFramework : ITestFramework
 
     public string Description => nameof(DummyTestFramework);
 
+    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
+
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
         => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
         => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
-    public Task ExecuteRequestAsync(ExecuteRequestContext context)
+
+    public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         if (Environment.GetEnvironmentVariable("CRASHPROCESS") == "1")
         {
             Environment.FailFast("CRASHPROCESS");
         }
 
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "0", DisplayName = "Test", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
         context.Complete();
-        return Task.CompletedTask;
     }
 }
 """;
@@ -282,6 +298,7 @@ public class DummyTestFramework : ITestFramework
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <EnableMSTestRunner>true</EnableMSTestRunner>
+        <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />

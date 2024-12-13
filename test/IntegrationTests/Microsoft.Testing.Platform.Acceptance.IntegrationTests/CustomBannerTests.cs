@@ -124,7 +124,7 @@ internal sealed class DummyBannerMessageOwnerCapability : IBannerMessageOwnerCap
         sb.Append($", Hash: {platformInformation.CommitHash}");
         sb.Append($", Date: {platformInformation.BuildDate}");
 
-        return Task.FromResult(sb.ToString());
+        return Task.FromResult<string?>(sb.ToString());
     }
 }
 #pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.

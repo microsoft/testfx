@@ -39,20 +39,20 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
         Assert.AreEqual(
             $$"""
             Log { LogLevel = Information, Message = Connecting to client host '127.0.0.1' port '{{port}}' }
-            Log { LogLevel = Trace, Message = Starting test session. Log file path is '{{logPath}}'. }
+            Log { LogLevel = Trace, Message = Starting test session. The log file path is '{{logPath}}'. }
             Log { LogLevel = Error, Message = System.Exception: This is an exception output }
-            Log { LogLevel = Error, Message =    This is a red output with padding set to 3 }
-            Log { LogLevel = Warning, Message =   This is a yellow output with padding set to 2 }
+            Log { LogLevel = Information, Message =    This is a red output with padding set to 3 }
+            Log { LogLevel = Information, Message =   This is a yellow output with padding set to 2 }
             Log { LogLevel = Information, Message =  This is a blue output with padding set to 1 }
             Log { LogLevel = Information, Message = This is normal text output. }
-            Log { LogLevel = Trace, Message = Finished test session }
-            Log { LogLevel = Trace, Message = Starting test session. Log file path is '{{logPath}}'. }
+            Log { LogLevel = Trace, Message = Finished test session. }
+            Log { LogLevel = Trace, Message = Starting test session. The log file path is '{{logPath}}'. }
             Log { LogLevel = Error, Message = System.Exception: This is an exception output }
-            Log { LogLevel = Error, Message =    This is a red output with padding set to 3 }
-            Log { LogLevel = Warning, Message =   This is a yellow output with padding set to 2 }
+            Log { LogLevel = Information, Message =    This is a red output with padding set to 3 }
+            Log { LogLevel = Information, Message =   This is a yellow output with padding set to 2 }
             Log { LogLevel = Information, Message =  This is a blue output with padding set to 1 }
             Log { LogLevel = Information, Message = This is normal text output. }
-            Log { LogLevel = Trace, Message = Finished test session }
+            Log { LogLevel = Trace, Message = Finished test session. }
             """, logsString);
     }
 

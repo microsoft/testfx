@@ -36,8 +36,6 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
 
         string projectContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "MSBuildTests.csproj", SearchOption.AllDirectories).Single());
         string programSourceContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "Program.cs", SearchOption.AllDirectories).Single());
-        string unitTestSourceContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "UnitTest1.cs", SearchOption.AllDirectories).Single());
-        string usingsSourceContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "Usings.cs", SearchOption.AllDirectories).Single());
         string nugetConfigContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "NuGet.config", SearchOption.AllDirectories).Single());
 
         // Create a solution with 3 projects
@@ -50,8 +48,6 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
             CSharpProject project = solution.CreateCSharpProject($"TestProject{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : [singleTfmOrMultiTfm]);
             File.WriteAllText(project.ProjectFile, projectContent);
             project.AddOrUpdateFileContent("Program.cs", programSourceContent.PatchCodeWithReplace("$ProjectName$", $"TestProject{i}"));
-            project.AddOrUpdateFileContent("UnitTest1.cs", unitTestSourceContent);
-            project.AddOrUpdateFileContent("Usings.cs", usingsSourceContent);
 
             CSharpProject project2 = solution.CreateCSharpProject($"Project{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : [singleTfmOrMultiTfm]);
             project.AddProjectReference(project2.ProjectFile);
@@ -132,8 +128,10 @@ public class DummyTestFramework : ITestFramework
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
         => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
         => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+
     public Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
        context.Complete();

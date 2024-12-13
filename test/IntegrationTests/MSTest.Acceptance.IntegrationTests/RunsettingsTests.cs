@@ -63,20 +63,20 @@ public sealed class RunSettingsTests : AcceptanceTestBase<RunSettingsTests.TestA
 
     [TestMethod]
     [DynamicData(nameof(LocalizationTestCases), DynamicDataSourceType.Method)]
-    public async Task UnsupportedRunSettingsEntriesAreFlagged_Localization((string? TestingPlatformUILanguage, string? DotnetCLILanguage, string? VSLang, string? ExpectedLocale) testArgument)
+    public async Task UnsupportedRunSettingsEntriesAreFlagged_Localization(string? testingPlatformUILanguage, string? dotnetCLILanguage, string? vsLang, string? expectedLocale)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", environmentVariables: new()
         {
-            ["TESTINGPLATFORM_UI_LANGUAGE"] = testArgument.TestingPlatformUILanguage,
-            ["DOTNET_CLI_UI_LANGUAGE"] = testArgument.DotnetCLILanguage,
-            ["VSLANG"] = testArgument.VSLang is null ? null : new CultureInfo(testArgument.VSLang).LCID.ToString(CultureInfo.CurrentCulture),
+            ["TESTINGPLATFORM_UI_LANGUAGE"] = testingPlatformUILanguage,
+            ["DOTNET_CLI_UI_LANGUAGE"] = dotnetCLILanguage,
+            ["VSLANG"] = vsLang is null ? null : new CultureInfo(vsLang).LCID.ToString(CultureInfo.CurrentCulture),
         });
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
 
-        switch (testArgument.ExpectedLocale)
+        switch (expectedLocale)
         {
             case "fr-FR":
                 testHostResult.AssertOutputContains("Les loggers Runsettings ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");

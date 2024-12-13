@@ -188,17 +188,17 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "0" },
             });
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputDoesNotContain("Diagnostic file");
 
         testHostResult = await testHost.ExecuteAsync("--diagnostic");
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputContains("Diagnostic file");
     }
 
     private async Task<string> AssertDiagnosticReportWasGeneratedAsync(TestHostResult testHostResult, string diagPathPattern, string level = "Trace", string flushType = "async")
     {
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string outputPattern = $"""
 Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
