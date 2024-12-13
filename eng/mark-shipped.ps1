@@ -26,17 +26,11 @@ function Set-AsShipped([Parameter(Mandatory)][string]$Directory) {
         }
     }
 
-    $shipped | Sort-Object | Where-Object { -notin $removed } | Out-File $shippedFilePath -Encoding utf8
-    "" | Out-File $unshippedFilePath -Encoding utf8
+    $shipped | Sort-Object | Where-Object { $_ -notin $removed } | Out-File $shippedFilePath -Encoding utf8
+    "#nullable enable" | Out-File $unshippedFilePath -Encoding utf8
 }
 
-try {
-    foreach ($file in Get-ChildItem "$PSScriptRoot\..\src" -Recurse -Include "PublicApi.Shipped.txt") {
-        $Directory = Split-Path -parent $file
-        MarkShipped $Directory
-    }
-}
-catch {
-    Write-Host $_.Exception
-    exit 1
+foreach ($file in Get-ChildItem "$PSScriptRoot\..\src" -Recurse -Include "PublicApi.Shipped.txt") {
+    $Directory = Split-Path -parent $file
+    Set-AsShipped $Directory
 }
