@@ -36,6 +36,9 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// Checks to see if a member or type is decorated with the given attribute. The type is checked exactly. If attribute is derived (inherits from) a class, e.g. [MyTestClass] from [TestClass] it won't match if you look for [TestClass]. The inherit parameter does not impact this checking.
     /// </summary>
+    /// <remarks>
+    /// Note that because derived attribute types are not considered, <typeparamref name="TAttribute"/> should be sealed.
+    /// </remarks>
     /// <typeparam name="TAttribute">Attribute to search for by fully qualified name.</typeparam>
     /// <param name="memberInfo">Member/Type to test.</param>
     /// <param name="inherit">Inspect inheritance chain of the member or class. E.g. if parent class has this attribute defined.</param>
