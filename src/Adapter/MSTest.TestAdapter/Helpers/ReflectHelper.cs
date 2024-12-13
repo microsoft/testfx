@@ -158,7 +158,7 @@ internal class ReflectHelper : MarshalByRefObject
     public override object InitializeLifetimeService() => null!;
 
     /// <summary>
-    /// Gets first attribute that matches the type (but is not derived from it). Use this together with attribute that does not allow multiple.
+    /// Gets first attribute that matches the type (but is not derived from it). Use this together with attribute that is both sealed and does not allow multiple.
     /// In such case there cannot be more attributes, and this will avoid the cost of
     /// checking for more than one attribute.
     /// </summary>
@@ -166,7 +166,6 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="attributeProvider">The type, assembly or method.</param>
     /// <param name="inherit">If we should inspect parents of this type.</param>
     /// <returns>The attribute that is found or null.</returns>
-    /// <exception cref="InvalidOperationException">Throws when multiple attributes are found (the attribute must allow multiple).</exception>
     public TAttribute? GetFirstNonDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit)
     where TAttribute : Attribute
     {
