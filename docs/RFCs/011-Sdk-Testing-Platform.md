@@ -34,23 +34,19 @@ Here is a global.json sample:
 
 ```json
 {
-  "test" : {	
+  "test" : {
     "runner": {
       "name": "MicrosoftTestingPlatform"
     }
   }
 }
-
-/**
- * JSON Configuration for the testing platform.
- *
- * Properties:
- * - test: Contains configuration related to the test settings.
- *   - runner: Specifies the test runner details.
- *     - name: The name of the test runner to be used, in this case, "MicrosoftTestingPlatform".
- */
 ```
 
+It contains the properties below:
+  - test: Contains configuration related to the test settings.
+  - runner: Specifies the test runner details.
+  - name: The name of the test runner to be used, in this case, "MicrosoftTestingPlatform".
+ 
 #### 2. Example 2
 
 ```json
