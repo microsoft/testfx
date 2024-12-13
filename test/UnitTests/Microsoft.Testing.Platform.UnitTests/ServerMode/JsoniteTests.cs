@@ -6,11 +6,6 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class JsoniteTests
 {
-    public JsoniteTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
     [TestMethod]
     public void Serialize_DateTimeOffset()
     {

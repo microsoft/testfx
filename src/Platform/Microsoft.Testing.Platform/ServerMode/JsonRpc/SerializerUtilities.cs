@@ -218,10 +218,10 @@ internal static class SerializerUtilities
 #if NETCOREAPP
                         properties[namedKvpStringProperty.Name] = namedKvpStringProperty.Pairs;
 #else
-                        Jsonite.JsonArray collection = [];
+                        JsonArray collection = [];
                         foreach (KeyValuePair<string, string> item in namedKvpStringProperty.Pairs)
                         {
-                            Jsonite.JsonObject o = new()
+                            JsonObject o = new()
                             {
                                 { item.Key, item.Value },
                             };
@@ -419,10 +419,10 @@ internal static class SerializerUtilities
 #if NETCOREAPP
                 values[JsonRpcStrings.EnvironmentVariables] = ev.EnvironmentVariables;
 #else
-                Jsonite.JsonArray collection = [];
+                JsonArray collection = [];
                 foreach (KeyValuePair<string, string?> item in ev.EnvironmentVariables)
                 {
-                    Jsonite.JsonObject o = new()
+                    JsonObject o = new()
                     {
                         { item.Key, item.Value },
                     };

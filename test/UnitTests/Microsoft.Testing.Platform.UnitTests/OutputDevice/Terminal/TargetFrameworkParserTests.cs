@@ -8,11 +8,6 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class TargetFrameworkParserTests
 {
-    public TargetFrameworkParserTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
     // known 2 digit versions
     [DataRow(".NET Framework 4.7.0", "net47")]
     [DataRow(".NET Framework 4.8.0", "net48")]

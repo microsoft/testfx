@@ -16,8 +16,7 @@ public sealed class LoggerFactoryTests
     private readonly Mock<IDisposableLoggerProvider> _mockLoggerProvider = new();
     private readonly ILoggerProvider[] _loggerProviders;
 
-    public LoggerFactoryTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
+    public LoggerFactoryTests()
     {
         _mockMonitor.Setup(x => x.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object);
         _mockLoggerProvider.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(_mockLogger.Object);

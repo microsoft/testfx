@@ -206,7 +206,7 @@ public abstract class TestContext
     {
         DebugEx.Assert(Properties is not null, "Properties is null");
 #if WINDOWS_UWP || WIN_UI
-        if (!((System.Collections.Generic.IDictionary<string, object>)Properties).TryGetValue(name, out object? propertyValue))
+        if (!((IDictionary<string, object>)Properties).TryGetValue(name, out object? propertyValue))
         {
             return null;
         }

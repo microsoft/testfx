@@ -195,7 +195,7 @@ internal sealed class FastFilter
         {
             if (!_filterDictionaryBuilder.TryGetValue(name, out ImmutableHashSet<string>.Builder? values))
             {
-                values = ImmutableHashSet.CreateBuilder<string>(StringComparer.OrdinalIgnoreCase);
+                values = ImmutableHashSet.CreateBuilder(StringComparer.OrdinalIgnoreCase);
                 _filterDictionaryBuilder.Add(name, values);
             }
 

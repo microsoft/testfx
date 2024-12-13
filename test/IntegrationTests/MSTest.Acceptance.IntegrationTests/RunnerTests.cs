@@ -36,7 +36,7 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
             $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
-        SL.Build binLog = Serialization.Read(binlogFile);
+        Build binLog = Serialization.Read(binlogFile);
         Assert.AreNotEqual(0, binLog.FindChildrenRecursive<AddItem>()
             .Count(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
 
@@ -133,7 +133,7 @@ return await app.RunAsync();
         await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         await DotnetCli.RunAsync($"{verb} -bl:{binlogFile} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
-        SL.Build binLog = Serialization.Read(binlogFile);
+        Build binLog = Serialization.Read(binlogFile);
         Assert.IsFalse(binLog.FindChildrenRecursive<AddItem>()
             .Any(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
     }

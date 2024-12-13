@@ -18,8 +18,7 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class ServerTests
 {
-    public ServerTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
+    public ServerTests()
     {
         if (IsHotReloadEnabled(new SystemEnvironment()))
         {

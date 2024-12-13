@@ -12,11 +12,6 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class TerminalTestReporterTests
 {
-    public TerminalTestReporterTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
     [TestMethod]
     public void AppendStackFrameFormatsStackTraceLineCorrectly()
     {
@@ -35,12 +30,12 @@ public sealed class TerminalTestReporterTests
         TerminalTestReporter.AppendStackFrame(terminal, firstStackTraceLine);
 
 #if NETCOREAPP
-        Assert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly() in ", terminal.Output);
+        StringAssert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly() in ", terminal.Output);
 #else
-        Assert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly()", terminal.Output);
+        StringAssert.Contains("    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly()", terminal.Output);
 #endif
         // Line number without the respective file
-        Assert.That(!terminal.Output.ToString().Contains(" :0"));
+        Assert.IsFalse(terminal.Output.ToString().Contains(" :0"));
     }
 
     // Code with line when we have symbols

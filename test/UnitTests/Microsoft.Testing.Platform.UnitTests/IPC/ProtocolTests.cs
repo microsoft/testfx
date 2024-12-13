@@ -9,11 +9,6 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class ProtocolTests
 {
-    public ProtocolTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
     [TestMethod]
     public void TestResultMessagesSerializeDeserialize()
     {

@@ -14,8 +14,7 @@ public sealed class JsonTests
 {
     private readonly Json _json;
 
-    public JsonTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
+    public JsonTests()
     {
         Dictionary<Type, JsonSerializer> serializers = new();
         Dictionary<Type, JsonDeserializer> deserializers = new();
@@ -46,7 +45,7 @@ public sealed class JsonTests
         {
             DisplayName = "test",
             Properties = bag,
-            Uid = new Extensions.Messages.TestNodeUid("11111"),
+            Uid = new TestNodeUid("11111"),
         };
 
         // Act

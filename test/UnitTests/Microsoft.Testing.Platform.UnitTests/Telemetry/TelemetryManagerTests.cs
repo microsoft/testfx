@@ -16,11 +16,6 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class TelemetryManagerTests
 {
-    public TelemetryManagerTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
     // When set to 1 or true it should suppress the message.
     [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "1")]
     [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "true")]

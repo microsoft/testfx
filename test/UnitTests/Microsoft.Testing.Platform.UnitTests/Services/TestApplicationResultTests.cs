@@ -17,19 +17,14 @@ public sealed class TestApplicationResultTests
     private readonly TestApplicationResult _testApplicationResult
         = new(new Mock<IOutputDevice>().Object, new Mock<ICommandLineOptions>().Object, new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object);
 
-    public TestApplicationResultTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
     [TestMethod]
     public async Task GetProcessExitCodeAsync_If_All_Skipped_Returns_ZeroTestsRan()
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode
+            new TestNode
             {
-                Uid = new Extensions.Messages.TestNodeUid("id"),
+                Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
                 Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
             }), CancellationToken.None);
@@ -42,9 +37,9 @@ public sealed class TestApplicationResultTests
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode
+            new TestNode
             {
-                Uid = new Extensions.Messages.TestNodeUid("id"),
+                Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
                 Properties = new PropertyBag(),
             }), CancellationToken.None);
@@ -52,15 +47,15 @@ public sealed class TestApplicationResultTests
         Assert.AreEqual(ExitCodes.ZeroTests, _testApplicationResult.GetProcessExitCode());
     }
 
-    [DynamicData(nameof(FailedState))]
     [TestMethod]
+    [DynamicData(nameof(FailedState), DynamicDataSourceType.Method)]
     public async Task GetProcessExitCodeAsync_If_Failed_Tests_Returns_AtLeastOneTestFailed(TestNodeStateProperty testNodeStateProperty)
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode
+            new TestNode
             {
-                Uid = new Extensions.Messages.TestNodeUid("id"),
+                Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
                 Properties = new PropertyBag(testNodeStateProperty),
             }), CancellationToken.None);
@@ -86,9 +81,9 @@ public sealed class TestApplicationResultTests
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode
+            new TestNode
             {
-                Uid = new Extensions.Messages.TestNodeUid("id"),
+                Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
                 Properties = new PropertyBag(),
             }), CancellationToken.None);
@@ -102,9 +97,9 @@ public sealed class TestApplicationResultTests
         await _testApplicationResult.SetTestAdapterTestSessionFailureAsync("Adapter error");
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode
+            new TestNode
             {
-                Uid = new Extensions.Messages.TestNodeUid("id"),
+                Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
                 Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
             }), CancellationToken.None);
@@ -123,18 +118,18 @@ public sealed class TestApplicationResultTests
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode
+            new TestNode
             {
-                Uid = new Extensions.Messages.TestNodeUid("id"),
+                Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
                 Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
             }), CancellationToken.None);
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode
+            new TestNode
             {
-                Uid = new Extensions.Messages.TestNodeUid("id"),
+                Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
                 Properties = new PropertyBag(InProgressTestNodeStateProperty.CachedInstance),
             }), CancellationToken.None);
@@ -153,9 +148,9 @@ public sealed class TestApplicationResultTests
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode
+            new TestNode
             {
-                Uid = new Extensions.Messages.TestNodeUid("id"),
+                Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
             }), CancellationToken.None);
 
@@ -173,9 +168,9 @@ public sealed class TestApplicationResultTests
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
-            new Extensions.Messages.TestNode
+            new TestNode
             {
-                Uid = new Extensions.Messages.TestNodeUid("id"),
+                Uid = new TestNodeUid("id"),
                 DisplayName = "DisplayName",
                 Properties = new PropertyBag(DiscoveredTestNodeStateProperty.CachedInstance),
             }), CancellationToken.None);
@@ -217,12 +212,12 @@ public sealed class TestApplicationResultTests
         }
     }
 
-    internal static IEnumerable<TestNodeStateProperty> FailedState()
+    internal static IEnumerable<object[]> FailedState()
     {
-        yield return new FailedTestNodeStateProperty();
-        yield return new ErrorTestNodeStateProperty();
-        yield return new CancelledTestNodeStateProperty();
-        yield return new TimeoutTestNodeStateProperty();
+        yield return new[] { new FailedTestNodeStateProperty() };
+        yield return new[] { new ErrorTestNodeStateProperty() };
+        yield return new[] { new CancelledTestNodeStateProperty() };
+        yield return new[] { new TimeoutTestNodeStateProperty() };
     }
 
     private sealed class CommandLineOption : ICommandLineOptions

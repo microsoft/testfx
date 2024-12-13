@@ -80,7 +80,7 @@ public sealed class AppInsightsProviderTests
 #endif
 
         // We expect to not consume the second event because we exit the inner loop for the cancellation token
-        Assert.IsTrue(events.Single() == "Sample");
+        Assert.AreEqual("Sample", events.Single());
     }
 
     [TestMethod]

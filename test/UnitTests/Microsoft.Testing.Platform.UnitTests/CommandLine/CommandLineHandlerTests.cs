@@ -259,7 +259,7 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsTrue(result);
-        Assert.IsFalse(optionValue is null);
+        Assert.IsNotNull(optionValue);
         Assert.AreEqual(optionValue?.Length, 2);
         Assert.AreEqual("value1", optionValue?[0]);
         Assert.AreEqual("value2", optionValue?[1]);
@@ -287,7 +287,7 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result);
-        Assert.IsTrue(optionValue is null);
+        Assert.IsNull(optionValue);
     }
 
     private sealed class ExtensionCommandLineProviderMockReservedOptions : ICommandLineOptionsProvider

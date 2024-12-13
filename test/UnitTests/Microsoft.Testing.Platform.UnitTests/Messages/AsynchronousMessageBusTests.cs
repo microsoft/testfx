@@ -30,7 +30,7 @@ public sealed class AsynchronousMessageBusTests
         // Fire consume with a good message
         await proxy.PublishAsync(new DummyProducer("DummyProducer", typeof(InvalidTypePublished.ValidDataToProduce)), new InvalidTypePublished.ValidDataToProduce());
         consumer.Published.WaitOne(TimeoutHelper.DefaultHangTimeoutMilliseconds);
-        await Assert.ThrowsAsync<InvalidOperationException>(proxy.DrainDataAsync);
+        await Assert.ThrowsExceptionAsync<InvalidOperationException>(proxy.DrainDataAsync);
     }
 
     [TestMethod]
@@ -56,7 +56,7 @@ public sealed class AsynchronousMessageBusTests
         }
         catch (InvalidOperationException ex)
         {
-            Assert.That(ex.Message.Contains("Publisher/Consumer loop detected during the drain after"));
+            StringAssert.Contains("Publisher/Consumer loop detected during the drain after", ex.Message);
         }
 
         // Prevent loop to continue
@@ -88,11 +88,11 @@ public sealed class AsynchronousMessageBusTests
         await proxy.DrainDataAsync();
 
         // assert
-        Assert.AreEqual(consumerA.ConsumedData.Count, 1);
-        Assert.AreEqual(consumerA.ConsumedData[0], consumerBData);
+        Assert.AreEqual(1, consumerA.ConsumedData.Count);
+        Assert.AreEqual(consumerBData, consumerA.ConsumedData[0]);
 
-        Assert.AreEqual(consumerB.ConsumedData.Count, 1);
-        Assert.AreEqual(consumerB.ConsumedData[0], consumerAData);
+        Assert.AreEqual(1, consumerB.ConsumedData.Count);
+        Assert.AreEqual(consumerAData, consumerB.ConsumedData[0]);
     }
 
     [TestMethod]

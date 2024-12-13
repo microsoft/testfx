@@ -171,12 +171,12 @@ public class WellKnownTypeProvider
     }
 
     /// <summary>
-    /// Determines if <paramref name="typeSymbol"/> is a <see cref="System.Threading.Tasks.Task{TResult}"/> with its type
+    /// Determines if <paramref name="typeSymbol"/> is a <see cref="Task{TResult}"/> with its type
     /// argument satisfying <paramref name="typeArgumentPredicate"/>.
     /// </summary>
-    /// <param name="typeSymbol">Type potentially representing a <see cref="System.Threading.Tasks.Task{TResult}"/>.</param>
+    /// <param name="typeSymbol">Type potentially representing a <see cref="Task{TResult}"/>.</param>
     /// <param name="typeArgumentPredicate">Predicate to check the <paramref name="typeSymbol"/>'s type argument.</param>
-    /// <returns>True if <paramref name="typeSymbol"/> is a <see cref="System.Threading.Tasks.Task{TResult}"/> with its
+    /// <returns>True if <paramref name="typeSymbol"/> is a <see cref="Task{TResult}"/> with its
     /// type argument satisfying <paramref name="typeArgumentPredicate"/>, false otherwise.</returns>
     internal bool IsTaskOfType([NotNullWhen(returnValue: true)] ITypeSymbol? typeSymbol, Func<ITypeSymbol, bool> typeArgumentPredicate)
         => typeSymbol != null

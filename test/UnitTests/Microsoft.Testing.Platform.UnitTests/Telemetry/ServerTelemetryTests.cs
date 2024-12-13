@@ -15,7 +15,7 @@ public sealed class ServerTelemetryTests
     private readonly ServerTelemetry _serverTelemetry;
     private readonly Mock<IServerTestHost> _serverTestHost = new();
 
-    public ServerTelemetryTests(ITestExecutionContext testExecutionContext)
+    public ServerTelemetryTests()
         => _serverTelemetry = new(_serverTestHost.Object);
 
     [TestMethod]

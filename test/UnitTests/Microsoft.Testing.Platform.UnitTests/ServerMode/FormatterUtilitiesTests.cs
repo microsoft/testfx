@@ -3,6 +3,8 @@
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
+using System.Reflection;
+
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 
@@ -16,7 +18,7 @@ public sealed class FormatterUtilitiesTests
 {
     private readonly IMessageFormatter _formatter = FormatterUtilities.CreateFormatter();
 
-    public FormatterUtilitiesTests(ITestExecutionContext testExecutionContext)
+    public FormatterUtilitiesTests()
         =>
 #if NETCOREAPP
         Assert.AreEqual("System.Text.Json", _formatter.Id);
@@ -45,11 +47,11 @@ public sealed class FormatterUtilitiesTests
 
         var response = (ResponseMessage)msg;
         Assert.AreEqual(1, response.Id);
-        Assert.AreEqual(null, response.Result);
+        Assert.IsNull(response.Result);
     }
 
-    [DynamicData(memberName: nameof(SerializerUtilities.SerializerTypes), memberType: typeof(SerializerUtilities),
-        TestArgumentsEntryProviderMethodName = nameof(FormatSerializerTypes))]
+    [DynamicData(nameof(SerializerUtilities.SerializerTypes), typeof(SerializerUtilities),
+        DynamicDataDisplayName = nameof(FormatSerializerTypes))]
     [TestMethod]
     public async Task SerializeDeserialize_Succeed(Type type)
     {
@@ -96,7 +98,7 @@ public sealed class FormatterUtilitiesTests
             }
             else
             {
-                Assert.AreEqual(actual, expected);
+                Assert.AreEqual(expected, actual);
             }
         }
     }
@@ -130,7 +132,10 @@ public sealed class FormatterUtilitiesTests
         }
     }
 
-    internal static TestArgumentsEntry<Type> FormatSerializerTypes(TestArgumentsContext testArgumentsContext) => new((Type)testArgumentsContext.Arguments, ((Type)testArgumentsContext.Arguments).Name);
+    internal static string? FormatSerializerTypes(MethodInfo methodInfo, object?[]? data)
+        => data is not null
+            ? (data[0] as Type)?.Name
+            : null;
 
     private static void AssertSerialize(Type type, string instanceSerialized)
     {

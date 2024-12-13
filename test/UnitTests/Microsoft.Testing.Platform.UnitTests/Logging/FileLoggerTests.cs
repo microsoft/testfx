@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
-using System.IO;
 using System.Text;
 
 using Microsoft.Testing.Platform.Helpers;
@@ -13,7 +12,7 @@ using Moq;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
-public sealed class FileLoggerTests
+public sealed class FileLoggerTests : IDisposable
 {
     private const string LogFolder = "aaa";
     private const string LogPrefix = "bbb";
@@ -224,4 +223,7 @@ public sealed class FileLoggerTests
             Assert.AreEqual(0, _memoryStream.Length);
         }
     }
+
+    void IDisposable.Dispose()
+        => _memoryStream.Dispose();
 }
