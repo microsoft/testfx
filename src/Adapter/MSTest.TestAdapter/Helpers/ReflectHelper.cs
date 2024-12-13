@@ -60,28 +60,6 @@ internal class ReflectHelper : MarshalByRefObject
     }
 
     /// <summary>
-    /// Checks to see if a member or type is decorated with the given attribute. The type is checked exactly. If attribute is derived (inherits from) a class, e.g. [MyTestClass] from [TestClass] it won't match if you look for [TestClass]. The inherit parameter does not impact this checking.
-    /// </summary>
-    /// <typeparam name="TAttribute">Attribute to search for by fully qualified name.</typeparam>
-    /// <param name="type">Type to test.</param>
-    /// <param name="inherit">Inspect inheritance chain of the member or class. E.g. if parent class has this attribute defined.</param>
-    /// <returns>True if the attribute of the specified type is defined on this member or a class.</returns>
-    public virtual bool IsNonDerivedAttributeDefined<TAttribute>(Type type, bool inherit)
-        where TAttribute : Attribute
-        => IsNonDerivedAttributeDefined<TAttribute>((MemberInfo)type, inherit);
-
-    /// <summary>
-    /// Checks to see if a member or type is decorated with the given attribute, or an attribute that derives from it. e.g. [MyTestClass] from [TestClass] will match if you look for [TestClass]. The inherit parameter does not impact this checking.
-    /// </summary>
-    /// <typeparam name="TAttribute">Attribute to search for.</typeparam>
-    /// <param name="type">Type to test.</param>
-    /// <param name="inherit">Inspect inheritance chain of the member or class. E.g. if parent class has this attribute defined.</param>
-    /// <returns>True if the attribute of the specified type is defined on this member or a class.</returns>
-    public virtual bool IsDerivedAttributeDefined<TAttribute>(Type type, bool inherit)
-        where TAttribute : Attribute
-        => IsDerivedAttributeDefined<TAttribute>((MemberInfo)type, inherit);
-
-    /// <summary>
     /// Checks to see if a member or type is decorated with the given attribute, or an attribute that derives from it. e.g. [MyTestClass] from [TestClass] will match if you look for [TestClass]. The inherit parameter does not impact this checking.
     /// </summary>
     /// <typeparam name="TAttribute">Attribute to search for.</typeparam>
