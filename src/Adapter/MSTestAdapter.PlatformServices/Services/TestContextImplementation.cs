@@ -9,6 +9,7 @@ using System.Data.Common;
 using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
@@ -49,6 +50,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// Properties.
     /// </summary>
     private readonly Dictionary<string, object?> _properties;
+    private readonly IMessageLogger? _messageLogger;
 
     /// <summary>
     /// Specifies whether the writer is disposed or not.
@@ -71,6 +73,17 @@ public class TestContextImplementation : TestContext, ITestContext
     /// </summary>
     private DataRow? _dataRow;
 #endif
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
+    /// </summary>
+    /// <param name="testMethod">The test method.</param>
+    /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
+    /// <param name="properties">Properties/configuration passed in.</param>
+    /// <param name="messageLogger">The message logger to use.</param>
+    internal TestContextImplementation(ITestMethod testMethod, StringWriter stringWriter, IDictionary<string, object?> properties, IMessageLogger messageLogger)
+        : this(testMethod, stringWriter, properties)
+        => _messageLogger = messageLogger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
@@ -357,5 +370,7 @@ public class TestContextImplementation : TestContext, ITestContext
     public void SetDisplayName(string? displayName)
         => TestDisplayName = displayName;
 
+    public override void DisplayMessage(MessageLevel messageLevel, string message)
+        => _messageLogger?.SendMessage(messageLevel.ToTestMessageLevel(), message);
     #endregion
 }

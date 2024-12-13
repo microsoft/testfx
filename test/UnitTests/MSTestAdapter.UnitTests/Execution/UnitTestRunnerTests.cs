@@ -85,12 +85,12 @@ public class UnitTestRunnerTests : TestContainer
     #region RunSingleTest tests
 
     public void RunSingleTestShouldThrowIfTestMethodIsNull() =>
-        VerifyThrows<ArgumentNullException>(() => _unitTestRunner.RunSingleTest(null, null));
+        VerifyThrows<ArgumentNullException>(() => _unitTestRunner.RunSingleTest(null, null, null));
 
     public void RunSingleTestShouldThrowIfTestRunParametersIsNull()
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
-        VerifyThrows<ArgumentNullException>(() => _unitTestRunner.RunSingleTest(testMethod, null));
+        VerifyThrows<ArgumentNullException>(() => _unitTestRunner.RunSingleTest(testMethod, null, null));
     }
 
     public void RunSingleTestShouldReturnTestResultIndicateATestNotFoundIfTestMethodCannotBeFound()
@@ -100,7 +100,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters, null);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -117,7 +117,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters, null);
 
         string expectedMessage = string.Format(
             CultureInfo.InvariantCulture,
@@ -140,7 +140,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters, null);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -157,7 +157,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters, null);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -174,7 +174,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters, null);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -191,7 +191,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters, null);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -208,7 +208,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters, null);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -225,7 +225,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters, null);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -241,7 +241,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters, null);
 
         string expectedMessage = string.Format(
             CultureInfo.InvariantCulture,
@@ -264,7 +264,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters, null);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -282,7 +282,7 @@ public class UnitTestRunnerTests : TestContainer
             .Returns(Assembly.GetExecutingAssembly());
 
         // Asserting in the test method execution flow itself.
-        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        UnitTestResult[] results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters, null);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -308,7 +308,7 @@ public class UnitTestRunnerTests : TestContainer
         DummyTestClassWithInitializeMethods.AssemblyInitializeMethodBody = () => validator <<= 2;
         DummyTestClassWithInitializeMethods.ClassInitializeMethodBody = () => validator >>= 2;
 
-        _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        _unitTestRunner.RunSingleTest(testMethod, _testRunParameters, null);
 
         Verify(validator == 1);
     }
