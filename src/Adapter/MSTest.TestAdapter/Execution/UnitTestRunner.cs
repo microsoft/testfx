@@ -173,9 +173,12 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 }
                 else
                 {
-                    UnitTestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContext, assemblyInitializeResult?.StandardOut ?? string.Empty,
+                    UnitTestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(
+                        testContext,
+                        assemblyInitializeResult?.StandardOut ?? string.Empty,
                         assemblyInitializeResult?.StandardError ?? string.Empty,
-                        assemblyInitializeResult?.DebugTrace ?? string.Empty, assemblyInitializeResult?.TestContextMessages ?? string.Empty);
+                        assemblyInitializeResult?.DebugTrace ?? string.Empty,
+                        assemblyInitializeResult?.TestContextMessages ?? string.Empty);
                     DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
                     if (classInitializeResult.Outcome != UnitTestOutcome.Passed)
                     {
