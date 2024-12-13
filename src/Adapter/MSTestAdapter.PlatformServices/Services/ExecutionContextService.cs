@@ -55,7 +55,8 @@ internal static class ExecutionContextService
         // TODO: Log (trace/debug) the execution context scope and the current execution context.
         // This would be particularly useful if we have a strange context issue to understand what is being set or not,
         // What we manage to capture and what we don't, etc.
-        if (GetScopedExecutionContext(executionContextScope) is not { } executionContext)
+        int a = 1;
+        if (a == 1 || GetScopedExecutionContext(executionContextScope) is not { } executionContext)
         {
             // We don't have any execution context (that's usually the case when it is being suppressed), so we can run the action directly.
             action();
@@ -88,6 +89,12 @@ internal static class ExecutionContextService
     /// </summary>
     private static void SaveExecutionContext(IExecutionContextScope executionContextScope)
     {
+        int a = 1;
+        if (a == 1)
+        {
+            return;
+        }
+
         var capturedContext = ExecutionContext.Capture();
         switch (executionContextScope)
         {

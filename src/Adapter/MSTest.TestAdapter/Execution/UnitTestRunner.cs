@@ -160,15 +160,22 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 _fixtureTests.TryAdd(testMethod.AssemblyName, testMethodInfo);
                 _fixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo);
 
-                UnitTestResult assemblyInitializeResult = RunAssemblyInitializeIfNeeded(testMethodInfo, testContext);
+                UnitTestResult? assemblyInitializeResult = null;
 
-                if (assemblyInitializeResult.Outcome != UnitTestOutcome.Passed)
+                if (!testMethodInfo.Parent.Parent.IsAssemblyInitializeExecuted)
+                {
+                    assemblyInitializeResult = RunAssemblyInitializeIfNeeded(testMethodInfo, testContext);
+                }
+
+                if (assemblyInitializeResult != null && assemblyInitializeResult.Outcome != UnitTestOutcome.Passed)
                 {
                     result = [assemblyInitializeResult];
                 }
                 else
                 {
-                    UnitTestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContext, assemblyInitializeResult.StandardOut!, assemblyInitializeResult.StandardError!, assemblyInitializeResult.DebugTrace!, assemblyInitializeResult.TestContextMessages!);
+                    UnitTestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContext, assemblyInitializeResult?.StandardOut ?? string.Empty,
+                        assemblyInitializeResult?.StandardError ?? string.Empty,
+                        assemblyInitializeResult?.DebugTrace ?? string.Empty, assemblyInitializeResult?.TestContextMessages ?? string.Empty);
                     DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
                     if (classInitializeResult.Outcome != UnitTestOutcome.Passed)
                     {
