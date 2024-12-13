@@ -1,21 +1,18 @@
-[CmdletBinding(PositionalBinding=$false)]
-param ()
-
 Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
-function MarkShipped([string]$dir) {
-    $shippedFilePath = Join-Path $dir "PublicAPI.Shipped.txt"
-    $shipped = Get-Content $shippedFilePath
+function Set-AsShipped([Parameter(Mandatory)][string]$Directory) {
+    $shippedFilePath = "$Directory/PublicAPI.Shipped.txt"
+    $shipped = Get-Content $shippedFilePath -Encoding utf8
     if ($null -eq $shipped) {
         $shipped = @()
     }
 
-    $unshippedFilePath = Join-Path $dir "PublicAPI.Unshipped.txt"
+    $unshippedFilePath = "$Directory/PublicAPI.Unshipped.txt"
     $unshipped = Get-Content $unshippedFilePath
     $removed = @()
     $removedPrefix = "*REMOVED*";
-    Write-Host "Processing $dir"
+    Write-Host "Processing $Directory"
 
     foreach ($item in $unshipped) {
         if ($item.Length -gt 0) {
@@ -29,23 +26,17 @@ function MarkShipped([string]$dir) {
         }
     }
 
-    $shipped | Sort-Object | Where-Object { -not $removed.Contains($_) } | Out-File $shippedFilePath -Encoding Ascii
-    "" | Out-File $unshippedFilePath -Encoding Ascii
+    $shipped | Sort-Object | Where-Object { -notin $removed } | Out-File $shippedFilePath -Encoding utf8
+    "" | Out-File $unshippedFilePath -Encoding utf8
 }
 
 try {
-    Push-Location "$PSScriptRoot\..\src"
-
-    foreach ($file in Get-ChildItem -re -in "PublicApi.Shipped.txt") {
-        $dir = Split-Path -parent $file
-        MarkShipped $dir
+    foreach ($file in Get-ChildItem "$PSScriptRoot\..\src" -Recurse -Include "PublicApi.Shipped.txt") {
+        $Directory = Split-Path -parent $file
+        MarkShipped $Directory
     }
 }
 catch {
-    Write-Host $_
     Write-Host $_.Exception
     exit 1
-}
-finally {
-    Pop-Location
 }
