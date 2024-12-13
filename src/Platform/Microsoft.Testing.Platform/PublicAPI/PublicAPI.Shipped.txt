@@ -1,3 +1,4 @@
+#nullable enable
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability.GetBannerMessageAsync() -> System.Threading.Tasks.Task<string?>!
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionCapability
