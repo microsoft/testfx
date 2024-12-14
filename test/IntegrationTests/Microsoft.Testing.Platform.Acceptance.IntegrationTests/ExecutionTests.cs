@@ -22,10 +22,8 @@ public class ExecutionTests : AcceptanceTestBase<ExecutionTests.TestAssetFixture
 
         const string OutputPattern = """
 The following Tests are available:
-TestMethod1
-TestMethod2
-TestMethod3
-FilteredOutTest$
+Test1
+Test2$
 """;
         testHostResult.AssertOutputMatchesRegex(OutputPattern);
     }
@@ -39,7 +37,7 @@ FilteredOutTest$
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
         testHostResult.AssertOutputContains($"! - {AssetFixture.TargetAssetPath}");
     }
 
@@ -48,15 +46,13 @@ FilteredOutTest$
     public async Task Exec_WhenListTestsAndFilterAreSpecified_OnlyFilteredTestsAreFound(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --treenode-filter \"/ExecutionTests/ExecutionTests/UnitTest1/TestMethod*\"");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --treenode-filter \"<whatever>\"");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = """
 The following Tests are available:
-TestMethod1
-TestMethod2
-TestMethod3$
+Test1$
 """;
         testHostResult.AssertOutputMatchesRegex(OutputPattern);
     }
@@ -66,11 +62,11 @@ TestMethod3$
     public async Task Exec_WhenFilterIsSpecified_OnlyFilteredTestsAreRun(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--treenode-filter \"/ExecutionTests/ExecutionTests/UnitTest1/TestMethod*\"");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--treenode-filter \"<whatever>\"");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 3, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
         testHostResult.AssertOutputContains($"! - {AssetFixture.TargetAssetPath}");
     }
 
@@ -79,11 +75,11 @@ TestMethod3$
     public async Task Exec_WhenMinimumExpectedTestsIsSpecifiedAndEnoughTestsRun_ResultIsOk(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 4");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 2");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
         testHostResult.AssertOutputContains($"! - {AssetFixture.TargetAssetPath}");
     }
 
@@ -92,11 +88,11 @@ TestMethod3$
     public async Task Exec_WhenMinimumExpectedTestsIsSpecifiedAndNotEnoughTestsRun_ResultIsNotOk(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 5");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 3");
 
         testHostResult.AssertExitCodeIs(ExitCodes.MinimumExpectedTestsPolicyViolation);
 
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0, minimumNumberOfTests: 5);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0, minimumNumberOfTests: 3);
         testHostResult.AssertOutputContains($" - {AssetFixture.TargetAssetPath}");
     }
 
@@ -105,7 +101,7 @@ TestMethod3$
     public async Task Exec_WhenListTestsAndMinimumExpectedTestsAreSpecified_DiscoveryFails(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --minimum-expected-tests 4");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --minimum-expected-tests 2");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Error: '--list-tests' and '--minimum-expected-tests' are incompatible options");
@@ -144,6 +140,8 @@ TestMethod3$
 #file Program.cs
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
@@ -153,27 +151,47 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-        var dummyTestFramework = new DummyTestFramework();
+        MyExtension myExtension = new();
         builder.RegisterTestFramework(
             sp => new TestFrameworkCapabilities(),
-            (_,__) => dummyTestFramework);
-        builder.AddTreeNodeFilterService(dummyTestFramework);
+            (_,sp) => new DummyTestFramework(sp, myExtension));
+        builder.AddTreeNodeFilterService(myExtension);
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
 }
 
-public class DummyTestFramework : ITestFramework
+public class MyExtension : IExtension
 {
-    public string Uid => nameof(DummyTestFramework);
-
-    public string Version => "2.0.0";
-
-    public string DisplayName => nameof(DummyTestFramework);
-
-    public string Description => nameof(DummyTestFramework);
-
+    public string Uid => "MyExtension";
+    public string Version => "1.0.0";
+    public string DisplayName => "My Extension";
+    public string Description => "My Extension Description";
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+}
+
+public class DummyTestFramework : ITestFramework, IDataProducer
+{
+    private IServiceProvider _sp;
+    private MyExtension _myExtension;
+
+    public DummyTestFramework(IServiceProvider sp, MyExtension myExtension)
+    {
+        _sp = sp;
+        _myExtension = myExtension;
+    }
+
+    public string Uid => _myExtension.Uid;
+
+    public string Version => _myExtension.Version;
+
+    public string DisplayName => _myExtension.DisplayName;
+
+    public string Description => _myExtension.Description;
+
+    public Type[] DataTypesProduced => [typeof(TestNodeUpdateMessage)];
+
+    public Task<bool> IsEnabledAsync() => _myExtension.IsEnabledAsync();
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
         => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
@@ -181,10 +199,24 @@ public class DummyTestFramework : ITestFramework
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
         => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
 
-    public Task ExecuteRequestAsync(ExecuteRequestContext context)
+    public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "0", DisplayName = "Test1", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
+
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "0", DisplayName = "Test1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+
+        if (!_sp.GetCommandLineOptions().TryGetOptionArgumentList("--treenode-filter", out _))
+        {
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "1", DisplayName = "Test2", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
+
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "1", DisplayName = "Test2", Properties = new(PassedTestNodeStateProperty.CachedInstance) })); 
+        }
+
        context.Complete();
-       return Task.CompletedTask;
     }
 }
 """;
