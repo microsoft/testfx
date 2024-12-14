@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
+using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
@@ -85,6 +85,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Action action)
         where T : Exception
         => ThrowsException<T>(action, string.Empty, null);
@@ -110,6 +111,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Action action, string message)
         where T : Exception
         => ThrowsException<T>(action, message, null);
@@ -131,6 +133,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Func<object?> action)
         where T : Exception
         => ThrowsException<T>(action, string.Empty, null);
@@ -156,6 +159,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Func<object?> action, string message)
         where T : Exception
         => ThrowsException<T>(action, message, null);
@@ -184,6 +188,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Func<object?> action, string message, params object?[]? parameters)
         where T : Exception
 #pragma warning disable IDE0053 // Use expression body for lambda expression
@@ -215,7 +220,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and format appropriately.")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Action action, string message, params object?[]? parameters)
         where T : Exception
         => ThrowsException<T>(action, isStrictType: true, message, parameters: parameters);
@@ -334,6 +339,7 @@ public sealed partial class Assert
     /// <returns>
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action)
         where T : Exception
         => await ThrowsExceptionAsync<T>(action, string.Empty, null)
@@ -356,6 +362,7 @@ public sealed partial class Assert
     /// <returns>
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message)
         where T : Exception
         => await ThrowsExceptionAsync<T>(action, message, null)
@@ -381,6 +388,7 @@ public sealed partial class Assert
     /// <returns>
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message, params object?[]? parameters)
         where T : Exception
         => await ThrowsExceptionAsync<T>(action, true, message, parameters: parameters)
