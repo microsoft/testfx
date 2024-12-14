@@ -83,7 +83,7 @@ Out of process file artifacts produced:
         StringAssert.Contains(trxContent, @"<UnitTest name=""TestMethod1", trxContent);
         StringAssert.Contains(trxContent, @"<TestEntry ", trxContent);
         StringAssert.Contains(trxContent, """<ResultSummary outcome="Failed">""", trxContent);
-        StringAssert.Contains(trxContent, """<Counters total="2" executed="0" passed="0" failed="0" error="0" timeout="0" aborted="0" inconclusive="0", passedButRunAborted="0" notRunnable="0" notExecuted="2" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />""", trxContent);
+        StringAssert.Contains(trxContent, """<Counters total="2" executed="0" passed="0" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="2" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />""", trxContent);
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]

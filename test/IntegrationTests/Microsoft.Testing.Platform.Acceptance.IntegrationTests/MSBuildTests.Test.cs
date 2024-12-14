@@ -19,19 +19,9 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     {
         foreach (string tfm in TargetFrameworks.All)
         {
-            foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
+            foreach ((string buildCommand, _, BuildConfiguration buildConfiguration, bool testSucceeded) in GetBuildMatrixMultiTfm())
             {
-                foreach (bool testSucceeded in new bool[] { true, false })
-                {
-                    foreach (string buildCommand in new string[]
-                    {
-                        "build -t:Test",
-                        "test -p:TestingPlatformDotnetTestSupport=True",
-                    })
-                    {
-                        yield return (buildCommand, tfm, compilationMode, testSucceeded);
-                    }
-                }
+                yield return (buildCommand, tfm, buildConfiguration, testSucceeded);
             }
         }
     }
@@ -42,14 +32,8 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         {
             foreach (bool testSucceeded in new bool[] { true, false })
             {
-                foreach (string buildCommand in new string[]
-                    {
-                        "build -t:Test",
-                        "test -p:TestingPlatformDotnetTestSupport=True",
-                    })
-                {
-                    yield return (buildCommand, TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode, testSucceeded);
-                }
+                yield return ("build -t:Test", TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode, testSucceeded);
+                yield return ("test -p:TestingPlatformDotnetTestSupport=True", TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode, testSucceeded);
             }
         }
     }
@@ -301,8 +285,10 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 #file Program.cs
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 
 public class Program
@@ -310,27 +296,47 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        MyExtension myExtension = new();
         builder.RegisterTestFramework(
             sp => new TestFrameworkCapabilities(),
-            (_,__) => new DummyTestFramework());
+            (_,sp) => new DummyTestFramework(sp, myExtension));
+        builder.AddTreeNodeFilterService(myExtension);
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
 }
 
+public class MyExtension : IExtension
+{
+    public string Uid => "MyExtension";
+    public string Version => "1.0.0";
+    public string DisplayName => "My Extension";
+    public string Description => "My Extension Description";
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+}
+
 public class DummyTestFramework : ITestFramework, IDataProducer
 {
-    public string Uid => nameof(DummyTestFramework);
+    private IServiceProvider _sp;
+    private MyExtension _myExtension;
 
-    public string Version => "2.0.0";
+    public DummyTestFramework(IServiceProvider sp, MyExtension myExtension)
+    {
+        _sp = sp;
+        _myExtension = myExtension;
+    }
 
-    public string DisplayName => nameof(DummyTestFramework);
+    public string Uid => _myExtension.Uid;
 
-    public string Description => nameof(DummyTestFramework);
+    public string Version => _myExtension.Version;
+
+    public string DisplayName => _myExtension.DisplayName;
+
+    public string Description => _myExtension.Description;
 
     public Type[] DataTypesProduced => [typeof(TestNodeUpdateMessage)];
 
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    public Task<bool> IsEnabledAsync() => _myExtension.IsEnabledAsync();
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
         => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
@@ -346,11 +352,14 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
             new TestNode { Uid = "1", DisplayName = "Test1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode { Uid = "2", DisplayName = "Test2", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
+        if (!_sp.GetCommandLineOptions().TryGetOptionArgumentList("--treenode-filter", out _))
+        {
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode { Uid = "2", DisplayName = "Test2", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode { Uid = "2", DisplayName = "Test2", Properties = new($AssertValue$ ? PassedTestNodeStateProperty.CachedInstance : new FailedTestNodeStateProperty()) }));
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode { Uid = "2", DisplayName = "Test2", Properties = new($AssertValue$ ? PassedTestNodeStateProperty.CachedInstance : new FailedTestNodeStateProperty()) }));
+        }
 
        context.Complete();
     }
