@@ -301,6 +301,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 #file Program.cs
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Services;
 
@@ -317,7 +318,7 @@ public class Program
     }
 }
 
-public class DummyTestFramework : ITestFramework
+public class DummyTestFramework : ITestFramework, IDataProducer
 {
     public string Uid => nameof(DummyTestFramework);
 
@@ -327,16 +328,31 @@ public class DummyTestFramework : ITestFramework
 
     public string Description => nameof(DummyTestFramework);
 
+    public Type[] DataTypesProduced => [typeof(TestNodeUpdateMessage)];
+
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
         => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
         => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
-    public Task ExecuteRequestAsync(ExecuteRequestContext context)
+
+    public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode { Uid = "1", DisplayName = "Test1", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
+
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode { Uid = "1", DisplayName = "Test1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode { Uid = "2", DisplayName = "Test2", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
+
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode { Uid = "2", DisplayName = "Test2", Properties = new($AssertValue$ ? PassedTestNodeStateProperty.CachedInstance : new FailedTestNodeStateProperty()) }));
+
        context.Complete();
-       return Task.CompletedTask;
     }
 }
 """;
