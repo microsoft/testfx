@@ -318,16 +318,16 @@ public class MSTestAdapterSettingsTests : TestContainer
     {
         // Arrange
         var configDictionary = new Dictionary<string, string>
-    {
-        { "mstest:deployment:enabled", "true" },
-        { "mstest:deployment:deployTestSourceDependencies", "true" },
-        { "mstest:deployment:deleteDeploymentDirectoryAfterTestRunIsComplete", "false" },
-        { "mstest:assemblyResolution:0:path", "C:\\project\\dependencies" },
-        { "mstest:assemblyResolution:0:includeSubDirectories", "true" },
-        { "mstest:assemblyResolution:1:path", "C:\\project\\libs" },
-        { "mstest:assemblyResolution:1:includeSubDirectories", "false" },
-        { "mstest:assemblyResolution:2:path", "C:\\project\\plugins" },
-    };
+        {
+            { "mstest:deployment:enabled", "true" },
+            { "mstest:deployment:deployTestSourceDependencies", "true" },
+            { "mstest:deployment:deleteDeploymentDirectoryAfterTestRunIsComplete", "false" },
+            { "mstest:assemblyResolution:0:path", "C:\\project\\dependencies" },
+            { "mstest:assemblyResolution:0:includeSubDirectories", "true" },
+            { "mstest:assemblyResolution:1:path", "C:\\project\\libs" },
+            { "mstest:assemblyResolution:1:includeSubDirectories", "false" },
+            { "mstest:assemblyResolution:2:path", "C:\\project\\plugins" },
+        };
 
         var mockConfig = new Mock<IConfiguration>();
         mockConfig.Setup(config => config[It.IsAny<string>()])
