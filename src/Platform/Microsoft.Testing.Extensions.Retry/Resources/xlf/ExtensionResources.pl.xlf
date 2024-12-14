@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="pl" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="FailedToCreateRetryDirectoryBecauseOfCollision">
+        <source>Failed to create retries directory due to collisions in '{0}' despite re-trying.</source>
+        <target state="translated">Nie można utworzyć katalogu ponownych prób z powodu kolizji w katalogu „{0}” mimo ponownej próby.</target>
+        <note>'{0}' is the directory where collisions happen</note>
+      </trans-unit>
+      <trans-unit id="FailureThresholdPolicy">
+        <source>Failure threshold policy is enabled, failed tests will not be restarted.</source>
+        <target state="translated">Zasady progu błędów są włączone, a testy zakończone niepowodzeniem nie zostaną ponownie uruchomione.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailureThresholdPolicyMaxCount">
+        <source>Maximum failed tests threshold is {0} and {1} tests failed</source>
+        <target state="translated">Próg maksymalnej liczby testów zakończonych niepowodzeniem to {0} i liczba testów zakończonych niepowodzeniem wyniosła {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailureThresholdPolicyMaxPercentage">
+        <source>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</source>
+        <target state="translated">Wartość procentowa progu niepowodzenia wynosi {0}% i {1}% testów nie powiodło się ({2}/{3})</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MoveFiles">
+        <source>
+=====================
+Moving last attempt asset files to the default result directory
+=====================
+</source>
+        <target state="translated">
+=====================
+Przeniesienie plików zasobów ostatniej próby do domyślnego katalogu wyników
+=====================
+</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MovingFileToLocation">
+        <source>Moving file '{0}' to '{1}'</source>
+        <target state="translated">Przenoszenie pliku „{0}” do {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
+        <source>Failed to start process '{0}'</source>
+        <target state="translated">Nie można uruchomić procesu „{0}”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsExtensionDescription">
+        <source>Retry failed tests feature allows to restart test execution upon failure.</source>
+        <target state="translated">Funkcja ponawiania testów zakończonych niepowodzeniem umożliwia ponowne uruchomienie wykonywania testu po niepowodzeniu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsExtensionDisplayName">
+        <source>Retry failed tests</source>
+        <target state="translated">Ponów próbę testów zakończonych niepowodzeniem</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
+        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">Ponawianie testów zakończonych niepowodzeniem działa tylko z konstruktorami typu „Microsoft.Testing.Platform.Builder.TestApplicationBuilder”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
+        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
+        <target state="translated">Wyłącz mechanizm ponawiania prób, jeśli procent testów zakończonych niepowodzeniem jest większy niż określona wartość</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
+        <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
+        <target state="translated">Wyłącz mechanizm ponawiania prób, jeśli liczba testów zakończonych niepowodzeniem jest większa niż określona wartość</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
+        <source>Retry failed tests feature is not supported in hot reload mode</source>
+        <target state="translated">Funkcja ponownych testów zakończonych niepowodzeniem nie jest obsługiwana w trybie ponownego ładowania na gorąco</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsNotSupportedInServerModeErrorMessage">
+        <source>Retry failed tests feature is not supported in server mode</source>
+        <target state="translated">Funkcja ponawiania testów zakończonych niepowodzeniem nie jest obsługiwana w trybie serwera</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsOptionDescription">
+        <source>Enable retry failed tests</source>
+        <target state="translated">Włącz testy zakończone niepowodzeniem ponowień</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
+        <source>Option '{0}' requires option '{1}' to be specified</source>
+        <target state="translated">Opcja „{0}” wymaga określenia opcji „{1}”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a single integer argument</source>
+        <target state="translated">Opcja „{0}” oczekuje argumentu pojedynczej liczby całkowitej</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
+        <source>Options '{0}' and '{1}' cannot be used together</source>
+        <target state="translated">Opcji „{0}” i „{1}” nie można używać razem</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
+        <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
+        <target state="translated">Proces hosta testowego zakończył się, zanim usługa ponawiania próby mogła nawiązać z nim połączenie. Kod zakończenia: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteCompletedSuccessfully">
+        <source>
+=====================
+Tests suite completed successfully in {0} attempts
+=====================</source>
+        <target state="translated">
+=====================
+Pomyślnie ukończono zestaw testów w {0} próbach
+=====================</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteFailed">
+        <source>
+=====================
+Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
+=====================
+</source>
+        <target state="translated">
+=====================
+Zestaw testów nie powiódł się, łączna liczba testów zakończonych niepowodzeniem: {0}, kod zakończenia: {1}, próba: {2}/{3}
+=====================
+</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteFailedInAllAttempts">
+        <source>
+=====================
+Tests suite failed in all {0} attempts
+=====================</source>
+        <target state="translated">
+=====================
+Zestaw testów nie powiódł się we wszystkich {0} próbach
+=====================</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteFailedWithWrongExitCode">
+        <source>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</source>
+        <target state="translated">Zestaw testów nie powiódł się. Kod zakończenia jest inny niż 2 (testy zakończone niepowodzeniem). Błąd związany z nieoczekiwanym warunkiem. Kod zakończenia „{0}”</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

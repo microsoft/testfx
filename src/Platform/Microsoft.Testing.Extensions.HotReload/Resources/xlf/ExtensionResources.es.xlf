@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="es" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="HotReloadHandlerUnsupportedFrameworkErrorMessage">
+        <source>Hot reload is only supported on .NET 6.0 or greater</source>
+        <target state="translated">La recarga activa solo se admite en .NET 6.0 o posterior</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HotReloadSessionCompleted">
+        <source>Hot reload test session completed</source>
+        <target state="translated">Sesión de prueba de recarga activa completada</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HotReloadSessionStarted">
+        <source>Hot reload test session started</source>
+        <target state="translated">Se inició la sesión de prueba de recarga activa</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
