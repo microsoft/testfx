@@ -40,7 +40,7 @@ public sealed class CountDownEventTests
         CancellationToken cancelToken = cts.Token;
         var waiter = Task.Run(() => countdownEvent.WaitAsync(cancelToken), cancelToken);
         await cts.CancelAsync();
-        await Assert.ThrowsExceptionAsync<TaskCanceledException>(async () => await waiter);
+        await Assert.ThrowsAsync<TaskCanceledException>(async () => await waiter);
     }
 
     [TestMethod]
