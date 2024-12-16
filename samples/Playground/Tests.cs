@@ -15,13 +15,16 @@ public class TestClass
     public TestContext TestContext { get; set; }
 
     [TestMethod]
-    public void Test() => TestContext.AddResultFile(@"c:\hello2");
+    [DynamicData(nameof(Data))]
+    public void Test3(int a, int b)
+        => Assert.AreNotEqual(a, b);
 
-    [TestMethod]
-    public void Test2() => Assert.AreEqual(0, 1, "few");
-
-    [TestMethod]
-    public void Test3()
+    public static IEnumerable<(int A, int B)> Data
     {
+        get
+        {
+            yield return (1, 2);
+            yield return (3, 4);
+        }
     }
 }

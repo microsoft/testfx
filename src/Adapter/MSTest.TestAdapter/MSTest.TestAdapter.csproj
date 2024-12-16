@@ -57,7 +57,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Condition="'$(TargetFramework)'=='netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)'=='$(UwpMinimum)'" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
+    <PackageReference Include="System.ValueTuple" Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
   </ItemGroup>
 
   <ItemGroup>
@@ -81,11 +82,12 @@
   </ItemGroup>
 
   <ItemGroup Label="NuGet">
-    <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
     <NuspecProperty Include="ArtifactsBinDir=$(ArtifactsBinDir)" />
     <NuspecProperty Include="Configuration=$(Configuration)" />
-    <NuspecProperty Include="TestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'))" />
+    <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
     <NuspecProperty Include="SystemThreadingTasksExtensionsVersion=$(SystemThreadingTasksExtensionsVersion)" />
+    <NuspecProperty Include="SystemValueTupleVersion=$(SystemValueTupleVersion)" />
+    <NuspecProperty Include="TestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'))" />
   </ItemGroup>
 
   <ItemGroup>

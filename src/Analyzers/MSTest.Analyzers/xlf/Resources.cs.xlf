@@ -251,6 +251,16 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Typ argumentu DataRow by měl odpovídat typu parametru metody. V indexech dochází k neshodě: {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
+        <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
+        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved">
+        <source>The type of the generic parameter '{0}' could not be inferred.</source>
+        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
         <source>DataRow should only be set on a test method</source>
         <target state="translated">Objekt DataRow by měl být nastaven pouze pro testovací metodu</target>
@@ -629,19 +639,19 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
-- it should not be generic
+- it should may be generic as long as type parameters can be inferred and argument types are compatible
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">Testovací metody (metody označené atributem [TestMethod]) by měly respektovat následující rozložení, které MSTest považuje za platné:
-– musí být public (nebo internal, pokud je nastaven atribut [assembly: DiscoverInternals]),
-– musí být static,
-– nesmí být obecné,
-– nesmí být abstract,
-– návratový typ by měl být void, Task nebo ValueTask,
-– nesmí být async void,
-– nesmí být speciální metodou (finalizační metoda, operátor...).</target>
+        <target state="new">Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static'
+- it should may be generic as long as type parameters can be inferred and argument types are compatible
+- it should not be 'abstract'
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">

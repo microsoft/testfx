@@ -170,6 +170,12 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
                 public void [|MyTestMethod|]<T>()
                 {
                 }
+
+                [TestMethod]
+                [DataRow(0)]
+                public void MyTestMethod<T>(T t)
+                {
+                }
             }
             """;
 
@@ -181,6 +187,12 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
             {
                 [TestMethod]
                 public void MyTestMethod()
+                {
+                }
+
+                [TestMethod]
+                [DataRow(0)]
+                public void MyTestMethod<T>(T t)
                 {
                 }
             }

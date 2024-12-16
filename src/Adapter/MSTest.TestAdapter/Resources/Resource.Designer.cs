@@ -315,6 +315,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The type of the generic parameter &apos;{0}&apos; could not be inferred..
+        /// </summary>
+        internal static string GenericParameterCantBeInferred {
+            get {
+                return ResourceManager.GetString("GenericParameterCantBeInferred", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The generic test method &apos;{0}&apos; doesn&apos;t have arguments, so the generic parameter cannot be inferred..
+        /// </summary>
+        internal static string GenericParameterCantBeInferredBecauseNoArguments {
+            get {
+                return ResourceManager.GetString("GenericParameterCantBeInferredBecauseNoArguments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found two conflicting types for generic parameter &apos;{0}&apos;. The conflicting types are &apos;{1}&apos; and &apos;{2}&apos;..
+        /// </summary>
+        internal static string GenericParameterConflict {
+            get {
+                return ResourceManager.GetString("GenericParameterConflict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid value &apos;{0}&apos; specified for &apos;ClassCleanupLifecycle&apos;. Supported scopes are {1}..
         /// </summary>
         internal static string InvalidClassCleanupLifecycleValue {
@@ -600,15 +627,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string UTA_EndOfInnerExceptionTrace {
             get {
                 return ResourceManager.GetString("UTA_EndOfInnerExceptionTrace", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature.
-        /// </summary>
-        internal static string UTA_ErrorGenericTestMethod {
-            get {
-                return ResourceManager.GetString("UTA_ErrorGenericTestMethod", resourceCulture);
             }
         }
         

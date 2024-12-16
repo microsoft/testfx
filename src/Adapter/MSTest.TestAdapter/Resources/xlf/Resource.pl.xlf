@@ -71,6 +71,21 @@ ale liczba odebranych argumentów to {4} z typami „{5}”.</target>
         <target state="translated">Test „{0}” przekroczył okres limitu czasu na wykonanie.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="GenericParameterCantBeInferred">
+        <source>The type of the generic parameter '{0}' could not be inferred.</source>
+        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
+        <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
+        <target state="new">The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GenericParameterConflict">
+        <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
+        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
         <target state="translated">Nieprawidłowa wartość „{0}” dla wpisu runsettings „{1}”. Ustawienie zostanie zignorowane.</target>
@@ -201,11 +216,6 @@ ale liczba odebranych argumentów to {4} z typami „{5}”.</target>
 Error: {1}</source>
         <target state="translated">Nie można załadować typów ze źródła testów „{0}”. Niektóre lub wszystkie testy w tym źródle mogły nie zostać odnalezione.
 Błąd: {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_ErrorGenericTestMethod">
-        <source>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</source>
-        <target state="translated">UTA015: Metoda ogólna nie może być metodą testową. {0}{1} ma nieprawidłową sygnaturę</target>
         <note></note>
       </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
