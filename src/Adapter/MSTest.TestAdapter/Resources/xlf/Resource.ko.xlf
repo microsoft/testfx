@@ -71,6 +71,21 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">'{0}' 테스트가 실행 시간 제한을 초과했습니다.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="GenericParameterCantBeInferred">
+        <source>The type of the generic parameter '{0}' could not be inferred.</source>
+        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
+        <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
+        <target state="new">The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GenericParameterConflict">
+        <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
+        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
         <target state="translated">runsettings 항목 '{1}'에 대해 '{0}' 값이 잘못되었습니다. 설정은 무시됩니다.</target>
@@ -201,11 +216,6 @@ but received {4} argument(s), with types '{5}'.</source>
 Error: {1}</source>
         <target state="translated">테스트 소스 '{0}'에서 형식을 로드할 수 없습니다. 이 소스의 일부 또는 모든 테스트를 검색할 수 없습니다.
 오류: {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_ErrorGenericTestMethod">
-        <source>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</source>
-        <target state="translated">UTA015: 제네릭 메서드는 테스트 메서드일 수 없습니다. {0}.{1}에 잘못된 서명이 있습니다.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">

@@ -71,6 +71,21 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <target state="translated">Le test '{0}' a dépassé le délai d'attente de l'exécution.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="GenericParameterCantBeInferred">
+        <source>The type of the generic parameter '{0}' could not be inferred.</source>
+        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
+        <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
+        <target state="new">The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GenericParameterConflict">
+        <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
+        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
         <target state="translated">Valeur non valide '{0}' pour l’entrée runsettings '{1}', le paramètre sera ignoré.</target>
@@ -201,11 +216,6 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
 Error: {1}</source>
         <target state="translated">Impossible de charger les types à partir de la source de tests '{0}'. Une partie ou l'ensemble des tests de cette source ne peuvent pas être découverts.
 Erreur : {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_ErrorGenericTestMethod">
-        <source>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</source>
-        <target state="translated">UTA015 : une méthode générique ne peut pas être une méthode de test. {0}.{1} a une signature non valide</target>
         <note></note>
       </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">

@@ -164,6 +164,12 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
                 public void [|MyTestMethod|]<T>()
                 {
                 }
+
+                [TestMethod]
+                [DataRow(0)]
+                public void MyTestMethod<T>(T t)
+                {
+                }
             }
             """;
 
@@ -175,6 +181,12 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             {
                 [TestMethod]
                 public void MyTestMethod()
+                {
+                }
+
+                [TestMethod]
+                [DataRow(0)]
+                public void MyTestMethod<T>(T t)
                 {
                 }
             }
