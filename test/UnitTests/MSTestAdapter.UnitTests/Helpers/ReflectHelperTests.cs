@@ -381,6 +381,4 @@ public class DummyTestClass
     {
     }
 }
-
-
 #endregion
