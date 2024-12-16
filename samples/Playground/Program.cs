@@ -8,11 +8,12 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Messages;
+#if NETCOREAPP
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
+using MSTest.Acceptance.IntegrationTests.Messages.V100;
+#endif
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using MSTest.Acceptance.IntegrationTests.Messages.V100;
 
 namespace Playground;
 
@@ -25,8 +26,10 @@ public class Program
 
         if (Environment.GetEnvironmentVariable("TESTSERVERMODE") != "1")
         {
+#if NETCOREAPP
             // To attach to the children
             Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
+#endif
 
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 
@@ -49,6 +52,9 @@ public class Program
         }
         else
         {
+#if NETFRAMEWORK
+            throw new NotSupportedException("Server mode is not supported on .NET Framework");
+#else
             Environment.SetEnvironmentVariable("TESTSERVERMODE", "0");
             using TestingPlatformClient client = await TestingPlatformClientFactory.StartAsServerAndConnectToTheClientAsync(Environment.ProcessPath!);
 
@@ -67,6 +73,7 @@ public class Program
             await client.ExitAsync();
 
             return 0;
+#endif
         }
     }
 }

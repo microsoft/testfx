@@ -7,14 +7,17 @@
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
         <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
+        <dependency id="System.ValueTuple" version="$SystemValueTupleVersion$" />
       </group>
       <group targetFramework="net462">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
         <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
+        <dependency id="System.ValueTuple" version="$SystemValueTupleVersion$" />
       </group>
       <group targetFramework="uap10.0">
         <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
+        <dependency id="System.ValueTuple" version="$SystemValueTupleVersion$" />
       </group>
       <group targetFramework="netcoreapp3.1">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />

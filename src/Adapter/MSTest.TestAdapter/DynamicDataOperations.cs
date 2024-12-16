@@ -1,15 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-#if NET471_OR_GREATER || NETCOREAPP
 using System.Collections;
-using System.Runtime.CompilerServices;
-#endif
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+#if NET471_OR_GREATER || NETCOREAPP
+using System.Runtime.CompilerServices;
+#endif
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
@@ -129,12 +129,12 @@ internal class DynamicDataOperations : IDynamicDataOperations
             return true;
         }
 
-#if NETCOREAPP || NET471_OR_GREATER
         if (dataSource is IEnumerable enumerable)
         {
             List<object[]> objects = new();
             foreach (object? entry in enumerable)
             {
+#if NET471_OR_GREATER || NETCOREAPP
                 if (entry is not ITuple tuple
                     || (objects.Count > 0 && objects[^1].Length != tuple.Length))
                 {
@@ -149,14 +149,71 @@ internal class DynamicDataOperations : IDynamicDataOperations
                 }
 
                 objects.Add(array);
+#else
+                Type type = entry.GetType();
+                if (!IsTupleOrValueTuple(entry.GetType(), out int tupleSize)
+                    || (objects.Count > 0 && objects[objects.Count - 1].Length != tupleSize))
+                {
+                    data = null;
+                    return false;
+                }
+
+                object[] array = new object[tupleSize];
+                for (int i = 0; i < tupleSize; i++)
+                {
+                    array[i] = type.GetField($"Item{i + 1}")?.GetValue(entry)!;
+                }
+
+                objects.Add(array);
+#endif
             }
 
             data = objects;
             return true;
         }
-#endif
 
         data = null;
         return false;
     }
+
+#if !NET471_OR_GREATER && !NETCOREAPP
+    private static bool IsTupleOrValueTuple(Type type, out int tupleSize)
+    {
+        tupleSize = 0;
+        if (!type.IsGenericType)
+        {
+            return false;
+        }
+
+        Type genericTypeDefinition = type.GetGenericTypeDefinition();
+
+        if (genericTypeDefinition == typeof(Tuple<>) ||
+            genericTypeDefinition == typeof(Tuple<,>) ||
+            genericTypeDefinition == typeof(Tuple<,,>) ||
+            genericTypeDefinition == typeof(Tuple<,,,>) ||
+            genericTypeDefinition == typeof(Tuple<,,,,>) ||
+            genericTypeDefinition == typeof(Tuple<,,,,,>) ||
+            genericTypeDefinition == typeof(Tuple<,,,,,,>) ||
+            genericTypeDefinition == typeof(Tuple<,,,,,,,>))
+        {
+            tupleSize = type.GetGenericArguments().Length;
+            return true;
+        }
+
+        if (genericTypeDefinition == typeof(ValueTuple<>) ||
+            genericTypeDefinition == typeof(ValueTuple<,>) ||
+            genericTypeDefinition == typeof(ValueTuple<,,>) ||
+            genericTypeDefinition == typeof(ValueTuple<,,,>) ||
+            genericTypeDefinition == typeof(ValueTuple<,,,,>) ||
+            genericTypeDefinition == typeof(ValueTuple<,,,,,>) ||
+            genericTypeDefinition == typeof(ValueTuple<,,,,,,>) ||
+            genericTypeDefinition == typeof(ValueTuple<,,,,,,,>))
+        {
+            tupleSize = type.GetGenericArguments().Length;
+            return true;
+        }
+
+        return false;
+    }
+#endif
 }
