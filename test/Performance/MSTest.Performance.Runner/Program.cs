@@ -5,10 +5,14 @@ using System.CommandLine;
 using System.Runtime.InteropServices;
 
 using Microsoft.Testing.TestInfrastructure;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using MSTest.Performance.Runner.Steps;
 
 using DotnetMuxer = MSTest.Performance.Runner.Steps.DotnetMuxer;
+
+// TODO: this should not be required
+[assembly: Parallelize(Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.MethodLevel, Workers = 0)]
 
 namespace MSTest.Performance.Runner;
 
