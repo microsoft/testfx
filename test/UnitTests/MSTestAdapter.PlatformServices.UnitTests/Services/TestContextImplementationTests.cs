@@ -7,6 +7,8 @@ using System.Data.Common;
 #endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -389,4 +391,24 @@ public class TestContextImplementationTests : TestContainer
         Verify(resultFiles.Contains("C:\\files\\myfile2.txt"));
     }
 #endif
+
+    public void DisplayMessageShouldForwardToIMessageLogger()
+    {
+        var messageLoggerMock = new Mock<IMessageLogger>();
+        var list = new List<(TestMessageLevel, string)>();
+
+        messageLoggerMock
+            .Setup(l => l.SendMessage(It.IsAny<TestMessageLevel>(), It.IsAny<string>()))
+            .Callback((TestMessageLevel testMessageLevel, string message) => list.Add((testMessageLevel, message)));
+
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties, messageLoggerMock.Object);
+        _testContextImplementation.DisplayMessage(MessageLevel.Informational, "InfoMessage");
+        _testContextImplementation.DisplayMessage(MessageLevel.Warning, "WarningMessage");
+        _testContextImplementation.DisplayMessage(MessageLevel.Error, "ErrorMessage");
+
+        Assert.AreEqual(3, list.Count);
+        Assert.AreEqual((TestMessageLevel.Informational, "InfoMessage"), list[0]);
+        Assert.AreEqual((TestMessageLevel.Warning, "WarningMessage"), list[1]);
+        Assert.AreEqual((TestMessageLevel.Error, "ErrorMessage"), list[2]);
+    }
 }
