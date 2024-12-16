@@ -230,50 +230,52 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         foreach (IParameterSymbol parameter in methodSymbol.Parameters)
         {
             ITypeSymbol parameterType = parameter.Type;
-            if (parameterType.Kind == SymbolKind.TypeParameter)
+            if (parameterType.Kind != SymbolKind.TypeParameter)
             {
-                TypedConstant constructorArgument = constructorArguments[parameter.Ordinal];
-                if (constructorArgument.Type is null)
+                continue;
+            }
+
+            TypedConstant constructorArgument = constructorArguments[parameter.Ordinal];
+            if (constructorArgument.Type is null)
+            {
+                // That's an error scenario. The compiler will be complaining about something already.
+                continue;
+            }
+
+            // This happens for [DataRow(null)] which ends up being resolved
+            // to DataRow(string?[]? stringArrayData) constructor.
+            // It also happens with [DataRow((object[]?)null)] which resolves
+            // to the params object[] constructor
+            // In this case, the argument is simply "null".
+            if (constructorArgument.Kind == TypedConstantKind.Array && constructorArgument.IsNull)
+            {
+                continue;
+            }
+
+            object? argumentValue = constructorArgument.Value;
+            if (argumentValue is null)
+            {
+                continue;
+            }
+
+            if (parameterTypesSubstitutions.TryGetValue(parameterType, out (ITypeSymbol Symbol, Type SystemType) existingType))
+            {
+                if (argumentValue.GetType().IsAssignableTo(existingType.SystemType))
                 {
-                    // That's an error scenario. The compiler will be complaining about something already.
                     continue;
                 }
-
-                // This happens for [DataRow(null)] which ends up being resolved
-                // to DataRow(string?[]? stringArrayData) constructor.
-                // It also happens with [DataRow((object[]?)null)] which resolves
-                // to the params object[] constructor
-                // In this case, the argument is simply "null".
-                if (constructorArgument.Kind == TypedConstantKind.Array && constructorArgument.IsNull)
+                else if (existingType.SystemType.IsAssignableTo(argumentValue.GetType()))
                 {
-                    continue;
-                }
-
-                object? argumentValue = constructorArgument.Value;
-                if (argumentValue is null)
-                {
-                    continue;
-                }
-
-                if (parameterTypesSubstitutions.TryGetValue(parameterType, out (ITypeSymbol Symbol, Type SystemType) existingType))
-                {
-                    if (argumentValue.GetType().IsAssignableTo(existingType.SystemType))
-                    {
-                        continue;
-                    }
-                    else if (existingType.SystemType.IsAssignableTo(argumentValue.GetType()))
-                    {
-                        parameterTypesSubstitutions[parameterType] = (parameterType, argumentValue.GetType());
-                    }
-                    else
-                    {
-                        context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(GenericTypeArgumentConflictingTypesRule, parameterType.Name, existingType.Symbol.Name, constructorArgument.Type.Name));
-                    }
+                    parameterTypesSubstitutions[parameterType] = (parameterType, argumentValue.GetType());
                 }
                 else
                 {
-                    parameterTypesSubstitutions.Add(parameterType, (constructorArgument.Type, argumentValue.GetType()));
+                    context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(GenericTypeArgumentConflictingTypesRule, parameterType.Name, existingType.Symbol.Name, constructorArgument.Type.Name));
                 }
+            }
+            else
+            {
+                parameterTypesSubstitutions.Add(parameterType, (constructorArgument.Type, argumentValue.GetType()));
             }
         }
 

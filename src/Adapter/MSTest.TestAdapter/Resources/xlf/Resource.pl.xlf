@@ -71,6 +71,21 @@ ale liczba odebranych argumentów to {4} z typami „{5}”.</target>
         <target state="translated">Test „{0}” przekroczył okres limitu czasu na wykonanie.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="GenericParameterCantBeInferred">
+        <source>The type of the generic parameter '{0}' could not be inferred."</source>
+        <target state="new">The type of the generic parameter '{0}' could not be inferred."</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
+        <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
+        <target state="new">The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GenericParameterConflict">
+        <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
+        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
         <target state="translated">Nieprawidłowa wartość „{0}” dla wpisu runsettings „{1}”. Ustawienie zostanie zignorowane.</target>

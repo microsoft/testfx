@@ -213,8 +213,7 @@ internal static class MethodInfoExtensions
             // [TestMethod]
             // public void MyTestMethod<T>() { }
 
-            // TODO: Localize.
-            throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, $"The generic test method '{methodInfo.Name}' doesn't have arguments, so the generic parameter cannot be inferred.");
+            throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterCantBeInferredBecauseNoArguments, methodInfo.Name));
         }
 
         Type[] genericDefinitions = methodInfo.GetGenericArguments();
@@ -228,50 +227,42 @@ internal static class MethodInfoExtensions
         for (int i = 0; i < parameters.Length; i++)
         {
             Type parameterType = parameters[i].ParameterType;
-            if (parameterType.IsGenericMethodParameter())
+            if (!parameterType.IsGenericMethodParameter() || arguments[i] is null)
             {
-                if (arguments[i] is null)
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                Type substitution = arguments[i]!/*Very strange nullability warning*/.GetType();
-                int mapIndexForParameter = GetMapIndexForParameterType(parameterType, map);
-                Type? existingSubstitution = map[mapIndexForParameter].Substitution;
+            Type substitution = arguments[i]!/*Very strange nullability warning*/.GetType();
+            int mapIndexForParameter = GetMapIndexForParameterType(parameterType, map);
+            Type? existingSubstitution = map[mapIndexForParameter].Substitution;
 
-                if (existingSubstitution is null || substitution.IsAssignableFrom(existingSubstitution))
-                {
-                    map[mapIndexForParameter] = (parameterType, substitution);
-                }
-                else if (existingSubstitution.IsAssignableFrom(substitution))
-                {
-                    // Do nothing. We already have a good existing substitution.
-                }
-                else
-                {
-                    // TODO: Localize.
-                    throw new InvalidOperationException($"Found two conflicting types for generic parameter '{parameterType.Name}'. The conflicting types are '{existingSubstitution}' and '{substitution}'.");
-                }
+            if (existingSubstitution is null || substitution.IsAssignableFrom(existingSubstitution))
+            {
+                map[mapIndexForParameter] = (parameterType, substitution);
+            }
+            else if (existingSubstitution.IsAssignableFrom(substitution))
+            {
+                // Do nothing. We already have a good existing substitution.
+            }
+            else
+            {
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterConflict, parameterType.Name, existingSubstitution, substitution));
             }
         }
 
         for (int i = 0; i < map.Length; i++)
         {
             // TODO: Better to throw? or tolerate and transform to typeof(object)?
-            Type substitution = map[i].Substitution ?? throw new InvalidOperationException($"The type of the generic parameter '{map[i].GenericDefinition.Name}' could not be inferred.");
+            // This is reachable in the following case for example:
+            // [DataRow(null)]
+            // public void TestMethod<T>(T t) { }
+            Type substitution = map[i].Substitution ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterCantBeInferred), map[i].GenericDefinition.Name));
             genericDefinitions[i] = substitution;
         }
 
         try
         {
-            MethodInfo constructed = methodInfo.MakeGenericMethod(genericDefinitions);
-            if (constructed.ContainsGenericParameters)
-            {
-                // TODO: Localize.
-                throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, $"The generic test method '{methodInfo}' is not supported. Generic type parameters can only be the top level type. For example, 'T' is supported but 'T[]' is not.");
-            }
-
-            return constructed;
+            return methodInfo.MakeGenericMethod(genericDefinitions);
         }
         catch (Exception e)
         {

@@ -414,4 +414,13 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="DuplicateConfigurationError" xml:space="preserve">
     <value>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</value>
   </data>
+  <data name="GenericParameterCantBeInferred" xml:space="preserve">
+    <value>The type of the generic parameter '{0}' could not be inferred."</value>
+  </data>
+  <data name="GenericParameterCantBeInferredBecauseNoArguments" xml:space="preserve">
+    <value>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</value>
+  </data>
+  <data name="GenericParameterConflict" xml:space="preserve">
+    <value>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</value>
+  </data>
 </root>
