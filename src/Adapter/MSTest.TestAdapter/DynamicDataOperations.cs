@@ -26,6 +26,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
         switch (_dynamicDataSourceType)
         {
             case DynamicDataSourceType.AutoDetect:
+#pragma warning disable IDE0045 // Convert to conditional expression - it becomes less readable.
                 if (PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataPropertyInfo)
                 {
                     obj = GetDataFromProperty(dynamicDataPropertyInfo);
@@ -38,6 +39,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
                 {
                     throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.DynamicDataSourceShouldExistAndBeValid, _dynamicDataSourceName, _dynamicDataDeclaringType.FullName));
                 }
+#pragma warning restore IDE0045 // Convert to conditional expression
 
                 break;
             case DynamicDataSourceType.Property:
