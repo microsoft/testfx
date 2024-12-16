@@ -517,7 +517,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule).WithLocation(2).WithArguments("MyTestClass", "GetData"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule).WithLocation(3).WithArguments("SomeClass", "GetSomeData"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule).WithLocation(4).WithArguments("MyTestClass", "GetData"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule).WithLocation(5).WithArguments("SomeClass", "GetSomeData"));
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule).WithLocation(5).WithArguments("MyTestClass", "GetData"));
     }
 
     public async Task WhenMemberKindIsMixedUp_Diagnostic()

@@ -36,7 +36,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
                 }
                 else
                 {
-                    // throw
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.DynamicDataSourceShouldExistAndBeValid, _dynamicDataSourceName, _dynamicDataDeclaringType.FullName));
                 }
 
                 break;

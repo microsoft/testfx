@@ -252,6 +252,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The dynamic data source &apos;{0}&apos; in type &apos;{1}&apos; should exist and be a property or a method..
+        /// </summary>
+        internal static string DynamicDataSourceShouldExistAndBeValid {
+            get {
+                return ResourceManager.GetString("DynamicDataSourceShouldExistAndBeValid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}: {1}.
         /// </summary>
         internal static string EnumeratorLoadTypeErrorFormat {

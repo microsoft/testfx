@@ -423,4 +423,7 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="GenericParameterConflict" xml:space="preserve">
     <value>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</value>
   </data>
+  <data name="DynamicDataSourceShouldExistAndBeValid" xml:space="preserve">
+    <value>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</value>
+  </data>
 </root>
