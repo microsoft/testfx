@@ -255,7 +255,7 @@ internal static class MethodInfoExtensions
             // This is reachable in the following case for example:
             // [DataRow(null)]
             // public void TestMethod<T>(T t) { }
-            Type substitution = map[i].Substitution ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterCantBeInferred), map[i].GenericDefinition.Name));
+            Type substitution = map[i].Substitution ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterCantBeInferred, map[i].GenericDefinition.Name));
             genericDefinitions[i] = substitution;
         }
 
