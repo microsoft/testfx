@@ -1,7 +1,7 @@
-﻿#if NETCOREAPP
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETCOREAPP
 #pragma warning disable CA1837 // Use 'Environment.ProcessId'
 #pragma warning disable CA1416 // Validate platform compatibility
 

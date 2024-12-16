@@ -17,10 +17,9 @@ public class TestClass
     [TestMethod]
     [DynamicData(nameof(Data))]
     public void Test3(int a, int b)
-    {
-    }
+        => Assert.AreNotEqual(a, b);
 
-    public static IEnumerable<(int, int)> Data
+    public static IEnumerable<(int A, int B)> Data
     {
         get
         {
