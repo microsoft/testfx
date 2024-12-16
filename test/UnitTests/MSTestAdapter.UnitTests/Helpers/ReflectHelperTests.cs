@@ -5,6 +5,7 @@ using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -284,6 +285,30 @@ public class ReflectHelperTests : TestContainer
         Verify(nonInheritedAttributes.Length == 1);
     }
 
+    public void ResolveExpectedExceptionShouldThrowWhenAttributeIsDefinedTwice_DifferentConcreteType()
+    {
+        MethodInfo testMethodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestMethod1));
+
+        // Don't mock. Use the real ReflectionOperations2.
+        _testablePlatformServiceProvider.MockReflectionOperations = null;
+
+        TypeInspectionException ex = Assert.ThrowsException<TypeInspectionException>(
+            () => ReflectHelper.Instance.ResolveExpectedExceptionHelper(testMethodInfo, new("DummyName", "DummyFullClassName", "DummyAssemblyName", isAsync: false)));
+        Assert.AreEqual("The test method DummyFullClassName.DummyName has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.", ex.Message);
+    }
+
+    public void ResolveExpectedExceptionShouldThrowWhenAttributeIsDefinedTwice_SameConcreteType()
+    {
+        MethodInfo testMethodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestMethod2));
+
+        // Don't mock. Use the real ReflectionOperations2.
+        _testablePlatformServiceProvider.MockReflectionOperations = null;
+
+        TypeInspectionException ex = Assert.ThrowsException<TypeInspectionException>(
+            () => ReflectHelper.Instance.ResolveExpectedExceptionHelper(testMethodInfo, new("DummyName", "DummyFullClassName", "DummyAssemblyName", isAsync: false)));
+        Assert.AreEqual("The test method DummyFullClassName.DummyName has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.", ex.Message);
+    }
+
     internal class AttributeMockingHelper
     {
         public AttributeMockingHelper(Mock<IReflectionOperations2> mockReflectionOperations) => _mockReflectionOperations = mockReflectionOperations;
@@ -338,4 +363,30 @@ public class ReflectHelperTests : TestContainer
 
 public class TestableExtendedTestMethod : TestMethodAttribute;
 
+public class DummyTestClass
+{
+    private class MyExpectedException1Attribute : ExpectedExceptionBaseAttribute
+    {
+        protected internal override void Verify(Exception exception) => throw new NotImplementedException();
+    }
+
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+    public class MyExpectedException2Attribute : ExpectedExceptionBaseAttribute
+    {
+        protected internal override void Verify(Exception exception) => throw new NotImplementedException();
+    }
+
+    [ExpectedException(typeof(Exception))]
+    [MyExpectedException1]
+
+    public void DummyTestMethod1()
+    {
+    }
+
+    [MyExpectedException2]
+    [MyExpectedException2]
+    public void DummyTestMethod2()
+    {
+    }
+}
 #endregion
