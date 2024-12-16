@@ -72,6 +72,21 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">テスト '{0}' は実行タイムアウトを超えました。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="GenericParameterCantBeInferred">
+        <source>The type of the generic parameter '{0}' could not be inferred.</source>
+        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
+        <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
+        <target state="new">The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GenericParameterConflict">
+        <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
+        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
         <target state="translated">runsettings エントリ '{1}' の値 '{0}' は無効です。設定は無視されます。</target>
@@ -202,11 +217,6 @@ but received {4} argument(s), with types '{5}'.</source>
 Error: {1}</source>
         <target state="translated">テスト ソース '{0}' から型を読み込むことができません。このソース内の一部またはすべてのテストが見つからない可能性があります。
 エラー: {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_ErrorGenericTestMethod">
-        <source>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</source>
-        <target state="translated">UTA015: ジェネリック メソッドがテスト メソッドになることはできません。{0}.{1} のシグネチャは無効です</target>
         <note></note>
       </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
