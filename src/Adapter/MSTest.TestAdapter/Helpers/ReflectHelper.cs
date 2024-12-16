@@ -123,11 +123,11 @@ internal class ReflectHelper : MarshalByRefObject
     {
         DebugEx.Assert(methodInfo != null, "MethodInfo should be non-null");
 
-        // Get the expected exception attribute
-        ExpectedExceptionBaseAttribute? expectedException;
+        IEnumerable<ExpectedExceptionBaseAttribute> expectedExceptions;
+
         try
         {
-            expectedException = GetFirstDerivedAttributeOrDefault<ExpectedExceptionBaseAttribute>(methodInfo, inherit: true);
+            expectedExceptions = GetDerivedAttributes<ExpectedExceptionBaseAttribute>(methodInfo, inherit: true);
         }
         catch (Exception ex)
         {
@@ -142,7 +142,21 @@ internal class ReflectHelper : MarshalByRefObject
             throw new TypeInspectionException(errorMessage);
         }
 
-        return expectedException ?? null;
+        // Verify that there is only one attribute (multiple attributes derived from
+        // ExpectedExceptionBaseAttribute are not allowed on a test method)
+        // This is needed EVEN IF the attribute doesn't allow multiple.
+        // See https://github.com/microsoft/testfx/issues/4331
+        if (expectedExceptions.Count() > 1)
+        {
+            string errorMessage = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_MultipleExpectedExceptionsOnTestMethod,
+                testMethod.FullClassName,
+                testMethod.Name);
+            throw new TypeInspectionException(errorMessage);
+        }
+
+        return expectedExceptions.FirstOrDefault();
     }
 
     /// <summary>
