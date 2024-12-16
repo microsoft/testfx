@@ -212,7 +212,6 @@ internal static class MethodInfoExtensions
             // An example where this could happen is:
             // [TestMethod]
             // public void MyTestMethod<T>() { }
-
             throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterCantBeInferredBecauseNoArguments, methodInfo.Name));
         }
 
