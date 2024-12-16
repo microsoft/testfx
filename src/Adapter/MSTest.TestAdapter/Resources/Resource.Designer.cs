@@ -315,7 +315,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The type of the generic parameter &apos;{0}&apos; could not be inferred.&quot;.
+        ///   Looks up a localized string similar to The type of the generic parameter &apos;{0}&apos; could not be inferred..
         /// </summary>
         internal static string GenericParameterCantBeInferred {
             get {
