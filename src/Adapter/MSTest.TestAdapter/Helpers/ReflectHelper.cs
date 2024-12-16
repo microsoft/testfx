@@ -292,7 +292,6 @@ internal class ReflectHelper : MarshalByRefObject
     /// Gets TestDataSourceDiscovery assembly level attribute.
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>
-    [Obsolete]
     internal static TestDataSourceDiscoveryOption? GetTestDataSourceDiscoveryOption(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceDiscoveryAttribute))
             .OfType<TestDataSourceDiscoveryAttribute>()
