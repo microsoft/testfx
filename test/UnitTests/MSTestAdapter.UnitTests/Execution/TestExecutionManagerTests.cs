@@ -32,25 +32,6 @@ public class TestExecutionManagerTests : TestContainer
     private readonly TestExecutionManager _testExecutionManager;
     private readonly Mock<IMessageLogger> _mockMessageLogger;
 
-    private readonly TestProperty[] _tcmKnownProperties =
-    [
-        TestAdapterConstants.TestRunIdProperty,
-        TestAdapterConstants.TestPlanIdProperty,
-        TestAdapterConstants.BuildConfigurationIdProperty,
-        TestAdapterConstants.BuildDirectoryProperty,
-        TestAdapterConstants.BuildFlavorProperty,
-        TestAdapterConstants.BuildNumberProperty,
-        TestAdapterConstants.BuildPlatformProperty,
-        TestAdapterConstants.BuildUriProperty,
-        TestAdapterConstants.TfsServerCollectionUrlProperty,
-        TestAdapterConstants.TfsTeamProjectProperty,
-        TestAdapterConstants.IsInLabEnvironmentProperty,
-        TestAdapterConstants.TestCaseIdProperty,
-        TestAdapterConstants.TestConfigurationIdProperty,
-        TestAdapterConstants.TestConfigurationNameProperty,
-        TestAdapterConstants.TestPointIdProperty,
-    ];
-
     private TestableRunContextTestExecutionTests _runContext;
     private List<string> _callers;
     private int _enqueuedParallelTestsCount;
@@ -280,27 +261,6 @@ public class TestExecutionManagerTests : TestContainer
 
         Verify(DummyTestClass.TestContextProperties.ToList().Contains(
             new KeyValuePair<string, object>("webAppUrl", "http://localhost")));
-    }
-
-    public void RunTestsForTestShouldPassInTcmPropertiesAsPropertiesToTheTest()
-    {
-        TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
-        object[] propertiesValue = [32, 534, 5, "sample build directory", "sample build flavor", "132456", "sample build platform", "http://sampleBuildUti/", "http://samplecollectionuri/", "sample team project", false, 1401, 54, "sample configuration name", 345];
-        SetTestCaseProperties(testCase, propertiesValue);
-
-        TestCase[] tests = [testCase];
-        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-            """
-            <RunSettings>
-              <RunConfiguration>
-                <DisableAppDomain>True</DisableAppDomain>
-              </RunConfiguration>
-            </RunSettings>
-            """);
-
-        _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
-
-        VerifyTcmProperties(DummyTestClass.TestContextProperties, testCase);
     }
 
     public void RunTestsForTestShouldPassInDeploymentInformationAsPropertiesToTheTest()
@@ -860,27 +820,6 @@ public class TestExecutionManagerTests : TestContainer
         _callers ??= [];
 
         _callers.Add(caller);
-    }
-
-    private void VerifyTcmProperties(IDictionary<string, object> tcmProperties, TestCase testCase)
-    {
-        foreach (TestProperty property in _tcmKnownProperties)
-        {
-            Verify(testCase.GetPropertyValue(property).Equals(tcmProperties[property.Id]));
-        }
-    }
-
-    private void SetTestCaseProperties(TestCase testCase, object[] propertiesValue)
-    {
-        System.Collections.IEnumerator tcmKnownPropertiesEnumerator = _tcmKnownProperties.GetEnumerator();
-
-        System.Collections.IEnumerator propertiesValueEnumerator = propertiesValue.GetEnumerator();
-        while (tcmKnownPropertiesEnumerator.MoveNext() && propertiesValueEnumerator.MoveNext())
-        {
-            object property = tcmKnownPropertiesEnumerator.Current;
-            object value = propertiesValueEnumerator.Current;
-            testCase.SetPropertyValue(property as TestProperty, value);
-        }
     }
 
     #endregion
