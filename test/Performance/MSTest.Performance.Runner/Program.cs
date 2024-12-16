@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MSTest.Performance.Runner.Steps;
 
 using DotnetMuxer = MSTest.Performance.Runner.Steps.DotnetMuxer;
+using ExecutionScope = MSTest.Performance.Runner.Steps.ExecutionScope;
 
 // TODO: this should not be required
 [assembly: Parallelize(Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.MethodLevel, Workers = 0)]
