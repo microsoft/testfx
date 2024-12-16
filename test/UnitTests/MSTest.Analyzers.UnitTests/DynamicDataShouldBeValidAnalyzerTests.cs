@@ -40,7 +40,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
 
                 [DynamicData("SomeData", typeof(SomeClass), DynamicDataSourceType.Property)]
                 [TestMethod]
-                public void TestMethod2Auto(object[] o)
+                public void TestMethod2Property(object[] o)
                 {
                 }
 
@@ -62,7 +62,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
                 {
                 }
 
-                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeData", DynamicDataSourceType.Property)]
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeData", dynamicDataSourceType: DynamicDataSourceType.Property)]
                 [TestMethod]
                 public void TestMethod4Property(object[] o)
                 {
@@ -82,13 +82,13 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
 
                 [DynamicData("GetSomeData", typeof(SomeClass), DynamicDataSourceType.Method)]
                 [TestMethod]
-                public void TestMethod12(object[] o)
+                public void TestMethod12Method(object[] o)
                 {
                 }
 
                 [DynamicData("GetSomeData", typeof(SomeClass))]
                 [TestMethod]
-                public void TestMethod12(object[] o)
+                public void TestMethod12Auto(object[] o)
                 {
                 }
 
@@ -547,7 +547,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
                 {
                 }
 
-                [{|#3:DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "GetSomeData", DynamicDataSourceType.Property)|}]
+                [{|#3:DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "GetSomeData", dynamicDataSourceType: DynamicDataSourceType.Property)|}]
                 [TestMethod]
                 public void TestMethod4(object[] o)
                 {
