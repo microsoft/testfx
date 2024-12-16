@@ -551,7 +551,7 @@ Registered command line providers:
         Default type is 'Full'
   MSBuildCommandLineProvider
     Name: MSBuildCommandLineProvider
-    Version: 1.6.0-dev
+    Version: *
     Description: Extension used to pass parameters from MSBuild node and the hosts
     Options:
       --internal-msbuild-node
