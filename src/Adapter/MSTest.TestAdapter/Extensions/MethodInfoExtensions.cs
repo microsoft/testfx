@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -74,7 +75,7 @@ internal static class MethodInfoExtensions
         DebugEx.Assert(method != null, "method should not be null.");
 
         return
-            method is { IsAbstract: false, IsStatic: false, IsGenericMethod: false } &&
+            method is { IsAbstract: false, IsStatic: false } &&
             (method.IsPublic || (discoverInternals && method.IsAssembly)) &&
             (method.GetParameters().Length == 0 || ignoreParameterLength) &&
             method.IsValidReturnType(); // Match return type Task for async methods only. Else return type void.
@@ -160,6 +161,11 @@ internal static class MethodInfoExtensions
 
             try
             {
+                if (methodInfo.IsGenericMethod)
+                {
+                    methodInfo = ConstructGenericMethod(methodInfo, arguments);
+                }
+
                 invokeResult = methodInfo.Invoke(classInstance, arguments);
             }
             catch (Exception ex) when (ex is TargetParameterCountException or ArgumentException)
@@ -187,5 +193,94 @@ internal static class MethodInfoExtensions
         {
             valueTask.GetAwaiter().GetResult();
         }
+    }
+
+    // Scenarios to test:
+    //
+    // [DataRow(null, "Hello")]
+    // [DataRow("Hello", null)]
+    // public void TestMethod<T>(T t1, T t2) { }
+    //
+    // [DataRow(0, "Hello")]
+    // public void TestMethod<T1, T2>(T2 p0, T1, p1) { }
+    private static MethodInfo ConstructGenericMethod(MethodInfo methodInfo, object?[]? arguments)
+    {
+        DebugEx.Assert(methodInfo.IsGenericMethod, "ConstructGenericMethod should only be called for a generic method.");
+
+        if (arguments is null)
+        {
+            // An example where this could happen is:
+            // [TestMethod]
+            // public void MyTestMethod<T>() { }
+            throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterCantBeInferredBecauseNoArguments, methodInfo.Name));
+        }
+
+        Type[] genericDefinitions = methodInfo.GetGenericArguments();
+        var map = new (Type GenericDefinition, Type? Substitution)[genericDefinitions.Length];
+        for (int i = 0; i < map.Length; i++)
+        {
+            map[i] = (genericDefinitions[i], null);
+        }
+
+        ParameterInfo[] parameters = methodInfo.GetParameters();
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            Type parameterType = parameters[i].ParameterType;
+            if (!parameterType.IsGenericMethodParameter() || arguments[i] is null)
+            {
+                continue;
+            }
+
+            Type substitution = arguments[i]!/*Very strange nullability warning*/.GetType();
+            int mapIndexForParameter = GetMapIndexForParameterType(parameterType, map);
+            Type? existingSubstitution = map[mapIndexForParameter].Substitution;
+
+            if (existingSubstitution is null || substitution.IsAssignableFrom(existingSubstitution))
+            {
+                map[mapIndexForParameter] = (parameterType, substitution);
+            }
+            else if (existingSubstitution.IsAssignableFrom(substitution))
+            {
+                // Do nothing. We already have a good existing substitution.
+            }
+            else
+            {
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterConflict, parameterType.Name, existingSubstitution, substitution));
+            }
+        }
+
+        for (int i = 0; i < map.Length; i++)
+        {
+            // TODO: Better to throw? or tolerate and transform to typeof(object)?
+            // This is reachable in the following case for example:
+            // [DataRow(null)]
+            // public void TestMethod<T>(T t) { }
+            Type substitution = map[i].Substitution ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterCantBeInferred, map[i].GenericDefinition.Name));
+            genericDefinitions[i] = substitution;
+        }
+
+        try
+        {
+            return methodInfo.MakeGenericMethod(genericDefinitions);
+        }
+        catch (Exception e)
+        {
+            // The caller catches ArgumentExceptions and will lose the original exception details.
+            // We transform the exception to TestFailedException here to preserve its details.
+            throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, e.TryGetMessage(), e.TryGetStackTraceInformation(), e);
+        }
+    }
+
+    private static int GetMapIndexForParameterType(Type parameterType, (Type GenericDefinition, Type? Substitution)[] map)
+    {
+        for (int i = 0; i < map.Length; i++)
+        {
+            if (parameterType == map[i].GenericDefinition)
+            {
+                return i;
+            }
+        }
+
+        throw ApplicationStateGuard.Unreachable();
     }
 }

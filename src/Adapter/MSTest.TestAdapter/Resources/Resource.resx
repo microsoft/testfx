@@ -175,9 +175,6 @@
     <value>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.
 Error: {1}</value>
   </data>
-  <data name="UTA_ErrorGenericTestMethod" xml:space="preserve">
-    <value>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</value>
-  </data>
   <data name="TestAssembly_FileDoesNotExist" xml:space="preserve">
     <value>File does not exist: {0}</value>
   </data>
@@ -416,5 +413,14 @@ but received {4} argument(s), with types '{5}'.</value>
   </data>
   <data name="DuplicateConfigurationError" xml:space="preserve">
     <value>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</value>
+  </data>
+  <data name="GenericParameterCantBeInferred" xml:space="preserve">
+    <value>The type of the generic parameter '{0}' could not be inferred.</value>
+  </data>
+  <data name="GenericParameterCantBeInferredBecauseNoArguments" xml:space="preserve">
+    <value>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</value>
+  </data>
+  <data name="GenericParameterConflict" xml:space="preserve">
+    <value>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</value>
   </data>
 </root>

@@ -312,6 +312,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Found two conflicting types for generic parameter &apos;{0}&apos;. The conflicting types are &apos;{1}&apos; and &apos;{2}&apos;..
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The type of the generic parameter &apos;{0}&apos; could not be inferred..
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DataRow should only be set on a test method.
         /// </summary>
         internal static string DataRowShouldBeValidMessageFormat_OnTestMethod {
@@ -852,11 +870,11 @@ namespace MSTest.Analyzers {
         ///   Looks up a localized string similar to Test methods, methods marked with the &apos;[TestMethod]&apos; attribute, should respect the following layout to be considered valid by MSTest:
         ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
         ///- it should not be &apos;static&apos;
-        ///- it should not be generic
+        ///- it should may be generic as long as type parameters can be inferred and argument types are compatible
         ///- it should not be &apos;abstract&apos;
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- it should not be &apos;async void&apos;
-        ///- it should not be a special method (finalizer, operator...)..
+        ///- it should not be a special me [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string TestMethodShouldBeValidDescription {
             get {
