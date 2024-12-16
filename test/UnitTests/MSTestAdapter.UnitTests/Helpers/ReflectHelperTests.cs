@@ -288,6 +288,10 @@ public class ReflectHelperTests : TestContainer
     public void ResolveExpectedExceptionShouldThrowWhenAttributeIsDefinedTwice_DifferentConcreteType()
     {
         MethodInfo testMethodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestMethod1));
+
+        // Don't mock. Use the real ReflectionOperations2.
+        _testablePlatformServiceProvider.MockReflectionOperations = null;
+
         TypeInspectionException ex = Assert.ThrowsException<TypeInspectionException>(
             () => ReflectHelper.Instance.ResolveExpectedExceptionHelper(testMethodInfo, new("DummyName", "DummyFullClassName", "DummyAssemblyName", isAsync: false)));
         Assert.AreEqual("The test method DummyFullClassName.DummyName has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.", ex.Message);
@@ -296,6 +300,10 @@ public class ReflectHelperTests : TestContainer
     public void ResolveExpectedExceptionShouldThrowWhenAttributeIsDefinedTwice_SameConcreteType()
     {
         MethodInfo testMethodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestMethod2));
+
+        // Don't mock. Use the real ReflectionOperations2.
+        _testablePlatformServiceProvider.MockReflectionOperations = null;
+
         TypeInspectionException ex = Assert.ThrowsException<TypeInspectionException>(
             () => ReflectHelper.Instance.ResolveExpectedExceptionHelper(testMethodInfo, new("DummyName", "DummyFullClassName", "DummyAssemblyName", isAsync: false)));
         Assert.AreEqual("The test method DummyFullClassName.DummyName has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.", ex.Message);
