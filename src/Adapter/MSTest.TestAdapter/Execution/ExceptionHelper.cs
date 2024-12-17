@@ -109,9 +109,7 @@ internal static class ExceptionHelper
 
         StringBuilder result = new(stackTrace.Length);
 
-        SpanLineEnumerator stackFrames = stackTrace.EnumerateLines();
-
-        foreach (ReadOnlySpan<char> stackFrame in stackFrames)
+        foreach (ReadOnlySpan<char> stackFrame in stackTrace.EnumerateLines())
         {
             if (stackFrame.Length == 0)
             {
@@ -201,7 +199,7 @@ internal static class ExceptionHelper
             return CreateStackTraceInformation(ex.InnerException, checkInnerExceptions, stackTraceString);
         }
 
-        string stackTrace = TrimStackTrace(stackTraceString);
+        string stackTrace = TrimStackTrace(stackTraceString.AsSpan());
 
         return !StringEx.IsNullOrEmpty(stackTrace) ? new StackTraceInformation(stackTrace, null, 0, 0) : null;
     }
