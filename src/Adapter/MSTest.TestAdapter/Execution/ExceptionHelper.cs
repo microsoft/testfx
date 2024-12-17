@@ -98,29 +98,30 @@ internal static class ExceptionHelper
     /// <returns>
     /// The trimmed stack trace removing traces of the framework and adapter from the stack.
     /// </returns>
-    internal static string TrimStackTrace(string stackTrace)
+    internal static string TrimStackTrace(ReadOnlySpan<char> stackTrace)
     {
         if (stackTrace.Length == 0)
         {
-            return stackTrace;
+            return string.Empty;
         }
 
         StringBuilder result = new(stackTrace.Length);
-        string[] stackFrames = Regex.Split(stackTrace, Environment.NewLine);
+        MemoryExtensions.SpanSplitEnumerator<char> stackFrames = stackTrace.Split(Environment.NewLine.AsSpan());
 
-        foreach (string stackFrame in stackFrames)
+        foreach (Range frameRange in stackFrames)
         {
-            if (StringEx.IsNullOrEmpty(stackFrame))
+            ReadOnlySpan<char> frame = stackTrace[frameRange];
+            if (frame.Length == 0)
             {
                 continue;
             }
 
             // Add the frame to the result if it does not refer to
             // the assertion class in the test framework
-            bool hasReference = HasReferenceToUTF(stackFrame);
+            bool hasReference = HasReferenceToUTF(frame);
             if (!hasReference)
             {
-                result.Append(stackFrame);
+                result.Append(frameRange);
                 result.Append(Environment.NewLine);
             }
         }
@@ -212,11 +213,11 @@ internal static class ExceptionHelper
     /// <returns>
     /// True if the framework or the adapter methods are in the stack frame.
     /// </returns>
-    internal static bool HasReferenceToUTF(string stackFrame)
+    internal static bool HasReferenceToUTF(ReadOnlySpan<char> stackFrame)
     {
         foreach (string type in TypesToBeExcluded)
         {
-            if (stackFrame.IndexOf(type, StringComparison.Ordinal) > -1)
+            if (stackFrame.IndexOf(type.AsSpan(), StringComparison.Ordinal) > -1)
             {
                 return true;
             }
