@@ -3,12 +3,9 @@
 
 using System.Globalization;
 using System.Text;
-using System.Text.RegularExpressions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using Polyfills;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 

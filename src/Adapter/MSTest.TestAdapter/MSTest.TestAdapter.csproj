@@ -150,6 +150,7 @@
 
   <ItemGroup>
     <Using Include="Polyfills" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- SDK bottom import -->
