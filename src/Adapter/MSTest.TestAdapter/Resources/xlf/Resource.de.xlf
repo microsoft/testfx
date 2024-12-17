@@ -66,11 +66,6 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <target state="translated">"[DynamicData]"-Element "{0}.{1}" muss "IEnumerable"&lt;"object[]&gt;", "IEnumerable&lt;Tuple&gt;" oder "IEnumerable&lt;ValueTuple&gt;" zurückgeben.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
-        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
-        <target state="new">The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">Der Test "{0}" hat das Ausführungstimeout überschritten.</target>

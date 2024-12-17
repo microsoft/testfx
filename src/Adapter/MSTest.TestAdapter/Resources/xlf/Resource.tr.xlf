@@ -66,11 +66,6 @@ ancak, '{5}' türüyle {4} argüman aldı.</target>
         <target state="translated">'[DynamicData]' başvurulan üyesi '{0}.{1}' şu değerleri döndürmelidir: 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` veya 'IEnumerable&lt;ValueTuple&gt;'</target>
         <note />
       </trans-unit>
-      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
-        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
-        <target state="new">The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">'{0}' testi yürütme zaman aşımı süresini aştı.</target>

@@ -67,11 +67,6 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">'[DynamicData]' の参照されるメンバー '{0}.{1}' は、'IEnumerable&lt;object[]&gt;'、'IEnumerable&lt;Tuple&gt;`、'IEnumerable&lt;ValueTuple&gt;' のいずれかを返す必要があります</target>
         <note />
       </trans-unit>
-      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
-        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
-        <target state="new">The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">テスト '{0}' は実行タイムアウトを超えました。</target>
