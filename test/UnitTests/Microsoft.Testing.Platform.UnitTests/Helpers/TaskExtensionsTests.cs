@@ -15,7 +15,7 @@ public sealed class TaskExtensionsTests
 
     [TestMethod]
     public async Task TimeoutAfterAsync_CancellationToken_Succeeds()
-        => await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+        => await Assert.ThrowsAsync<OperationCanceledException>(async () =>
             await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(
                 TimeSpan.FromSeconds(30),
                 new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token));
@@ -36,7 +36,7 @@ public sealed class TaskExtensionsTests
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
         cancellationTokenSource.Cancel();
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
-        OperationCanceledException exception = await Assert.ThrowsAsync<TaskCanceledException>(async () => await task);
+        OperationCanceledException exception = await Assert.ThrowsAsync<OperationCanceledException>(async () => await task);
         Assert.AreEqual(cancelToken, exception.CancellationToken);
     }
 
@@ -49,7 +49,7 @@ public sealed class TaskExtensionsTests
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
         cancellationTokenSource.Cancel();
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
-        OperationCanceledException exception = await Assert.ThrowsAsync<TaskCanceledException>(async () => await task);
+        OperationCanceledException exception = await Assert.ThrowsAsync<OperationCanceledException>(async () => await task);
         Assert.AreEqual(cancelToken, exception.CancellationToken);
     }
 
@@ -74,7 +74,7 @@ public sealed class TaskExtensionsTests
             async () =>
             {
                 ManualResetEvent waitException = new(false);
-                await Assert.ThrowsAsync<TaskCanceledException>(async ()
+                await Assert.ThrowsAsync<OperationCanceledException>(async ()
                     => await Task.Run(async () =>
                     {
                         await Task.Delay(TimeSpan.FromSeconds(10));
