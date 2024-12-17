@@ -1,12 +1,13 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿#pragma warning disable IDE0073 // The file header does not match the required text
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
+#pragma warning restore IDE0073 // The file header does not match the required text
 
 using System.Globalization;
 
 using Microsoft.Testing.Extensions.Policy;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
-using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 

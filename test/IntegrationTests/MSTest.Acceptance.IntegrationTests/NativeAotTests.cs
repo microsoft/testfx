@@ -104,7 +104,6 @@ public class UnitTest1
                     "NativeAotTests",
                     SourceCode
                     .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                    .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
                     .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                     .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion),

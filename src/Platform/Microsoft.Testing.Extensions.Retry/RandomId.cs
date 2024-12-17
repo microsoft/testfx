@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 // Copy from https://github.com/microsoft/testfx/blob/b769496b8992bf8f51e000f7a5626b5ec6bb3d27/test/Utilities/Microsoft.Testing.TestInfrastructure/RandomId.cs
-
 using System.Security.Cryptography;
 
 namespace Microsoft.Testing.Extensions;

@@ -17,8 +17,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
             SourceCode
                 .PatchCodeWithReplace("$TargetFrameworks$", tfm)
                 .PatchCodeWithReplace("$JsonContent$", ConfigurationContent)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:normal -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
@@ -56,8 +55,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
             SourceCode
                 .PatchCodeWithReplace("$TargetFrameworks$", tfm)
                 .PatchCodeWithReplace("$JsonContent$", ConfigurationContent)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
         File.Delete(Path.Combine(testAsset.TargetAssetPath, "testconfig.json"));
 
