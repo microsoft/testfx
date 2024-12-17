@@ -6,17 +6,13 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class CancellationTests : AcceptanceTestBase
+[TestClass]
+public sealed class CancellationTests : AcceptanceTestBase<CancellationTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public CancellationTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
+    [TestMethod]
     public async Task WhenCancelingTestContextTokenInAssemblyInit_MessageIsAsExpected()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
         {
             ["ASSEMBLYINIT_CANCEL"] = "1",
@@ -28,9 +24,10 @@ public sealed class CancellationTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Failed!");
     }
 
+    [TestMethod]
     public async Task WhenCancelingTestContextTokenInClassInit_MessageIsAsExpected()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
         {
             ["CLASSINIT_CANCEL"] = "1",
@@ -42,9 +39,10 @@ public sealed class CancellationTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Failed!");
     }
 
+    [TestMethod]
     public async Task WhenCancelingTestContextTokenInTestInit_MessageIsAsExpected()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
         {
             ["TESTINIT_CANCEL"] = "1",
@@ -56,9 +54,10 @@ public sealed class CancellationTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Failed!");
     }
 
+    [TestMethod]
     public async Task WhenCancelingTestContextTokenInTestCleanup_MessageIsAsExpected()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
         {
             ["TESTCLEANUP_CANCEL"] = "1",
@@ -70,9 +69,10 @@ public sealed class CancellationTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Failed!");
     }
 
+    [TestMethod]
     public async Task WhenCancelingTestContextTokenInTestMethod_MessageIsAsExpected()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
         {
             ["TESTMETHOD_CANCEL"] = "1",
@@ -84,8 +84,7 @@ public sealed class CancellationTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Failed!");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestCancellation";
 

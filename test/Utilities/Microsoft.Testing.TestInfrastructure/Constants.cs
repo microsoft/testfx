@@ -3,6 +3,9 @@
 
 using System.Runtime.InteropServices;
 
+// TODO: this should not be required
+[assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
+
 namespace Microsoft.Testing.TestInfrastructure;
 
 public static class Constants

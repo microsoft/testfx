@@ -4,9 +4,9 @@
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
     <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --retry-failed-tests 3</TestRunnerAdditionalArguments>
     <UseVSTestRunner>false</UseVSTestRunner>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
     <OutputType>Exe</OutputType>
-    <UseAppHost>true</UseAppHost>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,21 +24,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.Testing.Internal.Framework" />
+    <Using Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers" />
     <Using Include="Microsoft.Testing.Platform.Builder" />
     <Using Include="Microsoft.Testing.Platform.Extensions" />
+    <Using Include="Microsoft.Testing.Platform.Helpers" />
     <Using Include="Microsoft.Testing.TestInfrastructure" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">
-    <ItemGroup>
-      <MicrosoftTestingInternalFrameworkPackage Include="$(PkgMicrosoft_Testing_Internal_Framework)\microsoft.testing.internal.framework.*.nupkg" />
-      <MicrosoftTestingInternalFrameworkSourceGenerationPackage Include="$(PkgMicrosoft_Testing_Internal_Framework_SourceGeneration)\microsoft.testing.internal.framework.sourcegeneration.*.nupkg" />
-    </ItemGroup>
-
-    <Copy SkipUnchangedFiles="true" SourceFiles="@(MicrosoftTestingInternalFrameworkPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
-    <Copy SkipUnchangedFiles="true" SourceFiles="@(MicrosoftTestingInternalFrameworkSourceGenerationPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
-
     <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.hotreload\$(MicrosoftTestingExtensionsRetryVersion)\microsoft.testing.extensions.hotreload.$(MicrosoftTestingExtensionsRetryVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.hotreload.$(MicrosoftTestingExtensionsRetryVersion).nupkg" />
     <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.retry\$(MicrosoftTestingExtensionsRetryVersion)\microsoft.testing.extensions.retry.$(MicrosoftTestingExtensionsRetryVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.retry.$(MicrosoftTestingExtensionsRetryVersion).nupkg" />
   </Target>

@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class DynamicDataShouldBeValidAnalyzerTests
 {
+    [TestMethod]
     public async Task ValidUsages_NoDiagnostic()
     {
         string code = """
@@ -290,6 +291,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataSourceMemberDoesNotExist_Diagnostic()
     {
         string code = """
@@ -364,6 +366,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithLocation(7).WithArguments("SomeClass", "MemberNotFound"));
     }
 
+    [TestMethod]
     public async Task WhenAppliedToNonTestMethod_Diagnostic()
     {
         string code = """
@@ -406,6 +409,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithLocation(3));
     }
 
+    [TestMethod]
     public async Task WhenDataSourceMemberFoundMultipleTimes_Diagnostic()
     {
         string code = """
@@ -458,6 +462,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule).WithLocation(3).WithArguments("SomeClass", "GetSomeData"));
     }
 
+    [TestMethod]
     public async Task WhenMemberKindIsMixedUp_Diagnostic()
     {
         string code = """
@@ -538,6 +543,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(7).WithArguments("SomeClass", "SomeData"));
     }
 
+    [TestMethod]
     public async Task WhenDataSourceReturnTypeIsInvalid_Diagnostic()
     {
         string code = """
@@ -678,6 +684,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(15).WithArguments("SomeClass", "GetSomeDataArray"));
     }
 
+    [TestMethod]
     public async Task MemberIsNotStatic_Diagnostic()
     {
         string code = """
@@ -711,6 +718,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DataMemberSignatureRule).WithLocation(1).WithArguments("MyTestClass", "GetData"));
     }
 
+    [TestMethod]
     public async Task MemberIsNotPublic_NoDiagnostic()
     {
         string code = """
@@ -741,6 +749,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task MethodHasParameters_Diagnostic()
     {
         string code = """
@@ -774,6 +783,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DataMemberSignatureRule).WithLocation(1).WithArguments("MyTestClass", "GetData2"));
     }
 
+    [TestMethod]
     public async Task MethodIsGeneric_Diagnostic()
     {
         string code = """
@@ -799,6 +809,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DataMemberSignatureRule).WithLocation(0).WithArguments("MyTestClass", "GetData"));
     }
 
+    [TestMethod]
     public async Task WhenDisplayMemberIsValid_NoDiagnostic()
     {
         string code = """
@@ -873,6 +884,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDisplayMemberIsNotFound_Diagnostic()
     {
         string code = """
@@ -924,6 +936,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithLocation(3).WithArguments("SomeClass", "MemberNotFound"));
     }
 
+    [TestMethod]
     public async Task WhenDisplayMemberIsNotPublic_Diagnostic()
     {
         string code = """
@@ -979,6 +992,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DisplayMethodSignatureRule).WithLocation(3).WithArguments("SomeClass", "GetSomeDisplayName"));
     }
 
+    [TestMethod]
     public async Task WhenDisplayMemberIsNotStatic_Diagnostic()
     {
         string code = """
@@ -1034,6 +1048,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DisplayMethodSignatureRule).WithLocation(3).WithArguments("SomeClass", "GetSomeDisplayName"));
     }
 
+    [TestMethod]
     public async Task WhenDisplayMemberDoesNotReturnString_Diagnostic()
     {
         string code = """
@@ -1089,6 +1104,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DisplayMethodSignatureRule).WithLocation(3).WithArguments("SomeClass", "GetSomeDisplayName"));
     }
 
+    [TestMethod]
     public async Task WhenDisplayMemberInvalidParameters_Diagnostic()
     {
         string code = """

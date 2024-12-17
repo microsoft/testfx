@@ -16,7 +16,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
-    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -36,7 +36,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
-    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -48,8 +48,8 @@ public sealed partial class Assert
     /// The second value to compare. This is the value produced by the code under test.
     /// </param>
     /// <param name="comparer">
-    /// The <see cref="System.Collections.Generic.IEqualityComparer{T}"/> implementation to use when comparing keys,
-    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing keys,
+    /// or null to use the default <see cref="EqualityComparer{T}"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
@@ -60,7 +60,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
-    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -98,8 +98,8 @@ public sealed partial class Assert
     /// The second value to compare. This is the value produced by the code under test.
     /// </param>
     /// <param name="comparer">
-    /// The <see cref="System.Collections.Generic.IEqualityComparer{T}"/> implementation to use when comparing keys,
-    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing keys,
+    /// or null to use the default <see cref="EqualityComparer{T}"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
@@ -116,7 +116,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
-    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -157,8 +157,8 @@ public sealed partial class Assert
     /// The second value to compare. This is the value produced by the code under test.
     /// </param>
     /// <param name="comparer">
-    /// The <see cref="System.Collections.Generic.IEqualityComparer{T}"/> implementation to use when comparing keys,
-    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing keys,
+    /// or null to use the default <see cref="EqualityComparer{T}"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
@@ -204,7 +204,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
-    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -224,7 +224,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
-    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -250,7 +250,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
-    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -308,7 +308,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
     /// if the two values are equal.
-    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -342,8 +342,8 @@ public sealed partial class Assert
     /// The second value to compare. This is the value produced by the code under test.
     /// </param>
     /// <param name="comparer">
-    /// The <see cref="System.Collections.Generic.IEqualityComparer{T}"/> implementation to use when comparing keys,
-    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing keys,
+    /// or null to use the default <see cref="EqualityComparer{T}"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
@@ -354,7 +354,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
     /// if the two values are equal.
-    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -393,8 +393,8 @@ public sealed partial class Assert
     /// The second value to compare. This is the value produced by the code under test.
     /// </param>
     /// <param name="comparer">
-    /// The <see cref="System.Collections.Generic.IEqualityComparer{T}"/> implementation to use when comparing keys,
-    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing keys,
+    /// or null to use the default <see cref="EqualityComparer{T}"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
@@ -410,7 +410,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
     /// if the two values are equal.
-    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The equality is computed using the default <see cref="EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -452,8 +452,8 @@ public sealed partial class Assert
     /// The second value to compare. This is the value produced by the code under test.
     /// </param>
     /// <param name="comparer">
-    /// The <see cref="System.Collections.Generic.IEqualityComparer{T}"/> implementation to use when comparing keys,
-    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing keys,
+    /// or null to use the default <see cref="EqualityComparer{T}"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>

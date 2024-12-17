@@ -10,50 +10,40 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class RunSettingsTests : AcceptanceTestBase
+[TestClass]
+public sealed class RunSettingsTests : AcceptanceTestBase<RunSettingsTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public RunSettingsTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
-    internal static IEnumerable<TestArgumentsEntry<string>> TfmList()
-    {
-        yield return TargetFrameworks.NetCurrent;
-        yield return TargetFrameworks.NetFramework.First();
-    }
-
-    internal static IEnumerable<TestArgumentsEntry<(string? TestingPlatformUILanguage, string? DotnetCLILanguage, string? VSLang, string ExpectedLocale)>> LocalizationTestCases()
+    internal static IEnumerable<(string? TestingPlatformUILanguage, string? DotnetCLILanguage, string? VSLang, string ExpectedLocale)> LocalizationTestCases()
     {
         // Show that TestingPlatformUILanguage is respected.
-        yield return new TestArgumentsEntry<(string?, string?, string?, string)>(("fr-FR", null, null, "fr-FR"), "TestingPlatformUILanguage: fr-FR, expected: fr-FR");
+        yield return new("fr-FR", null, null, "fr-FR");
 
         // Show that TestingPlatformUILanguage takes precedence over DotnetCLILanguage.
-        yield return new TestArgumentsEntry<(string?, string?, string?, string)>(("fr-FR", "it-IT", null, "fr-FR"), "TestingPlatformUILanguage: fr-FR, CLI: it-IT, expected: fr-FR");
+        yield return new("fr-FR", "it-IT", null, "fr-FR");
 
         // Show that DotnetCLILanguage is respected.
-        yield return new TestArgumentsEntry<(string?, string?, string?, string)>((null, "it-IT", null, "it-IT"), "CLI: it-IT, expected: it-IT");
+        yield return new(null, "it-IT", null, "it-IT");
 
         // Show that DotnetCLILanguage takes precedence over VSLang.
-        yield return new TestArgumentsEntry<(string?, string?, string?, string)>((null, "it-IT", "fr-FR", "it-IT"), "CLI: it-IT, VSLang: fr-FR, expected: it-IT");
+        yield return new(null, "it-IT", "fr-FR", "it-IT");
 
         // Show that VSLang is respected.
-        yield return new TestArgumentsEntry<(string?, string?, string?, string)>((null, null, "it-IT", "it-IT"), "VSLang: it-IT, expected: it-IT");
+        yield return new(null, null, "it-IT", "it-IT");
 
         // Show that TestingPlatformUILanguage takes precedence over everything.
-        yield return new TestArgumentsEntry<(string?, string?, string?, string)>(("fr-FR", "it-IT", "it-IT", "fr-FR"), "TestingPlatformUILanguage: fr-FR, CLI: it-IT, VSLang: it-IT, expected: fr-FR");
+        yield return new("fr-FR", "it-IT", "it-IT", "fr-FR");
     }
 
-    [ArgumentsProvider(nameof(TfmList))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task UnsupportedRunSettingsEntriesAreFlagged(string tfm)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && tfm == TargetFrameworks.NetFramework.First().Arguments)
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && tfm == TargetFrameworks.NetFramework.First())
         {
             return;
         }
 
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
 
         // Assert
@@ -71,21 +61,22 @@ public sealed class RunSettingsTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Runsettings attribute 'TreatNoTestsAsError' is not supported by Microsoft.Testing.Platform and will be ignored");
     }
 
-    [ArgumentsProvider(nameof(LocalizationTestCases))]
-    public async Task UnsupportedRunSettingsEntriesAreFlagged_Localization((string? TestingPlatformUILanguage, string? DotnetCLILanguage, string? VSLang, string? ExpectedLocale) testArgument)
+    [TestMethod]
+    [DynamicData(nameof(LocalizationTestCases), DynamicDataSourceType.Method)]
+    public async Task UnsupportedRunSettingsEntriesAreFlagged_Localization(string? testingPlatformUILanguage, string? dotnetCLILanguage, string? vsLang, string? expectedLocale)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", environmentVariables: new()
         {
-            ["TESTINGPLATFORM_UI_LANGUAGE"] = testArgument.TestingPlatformUILanguage,
-            ["DOTNET_CLI_UI_LANGUAGE"] = testArgument.DotnetCLILanguage,
-            ["VSLANG"] = testArgument.VSLang is null ? null : new CultureInfo(testArgument.VSLang).LCID.ToString(CultureInfo.CurrentCulture),
+            ["TESTINGPLATFORM_UI_LANGUAGE"] = testingPlatformUILanguage,
+            ["DOTNET_CLI_UI_LANGUAGE"] = dotnetCLILanguage,
+            ["VSLANG"] = vsLang is null ? null : new CultureInfo(vsLang).LCID.ToString(CultureInfo.CurrentCulture),
         });
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
 
-        switch (testArgument.ExpectedLocale)
+        switch (expectedLocale)
         {
             case "fr-FR":
                 testHostResult.AssertOutputContains("Les loggers Runsettings ne sont pas pris en charge par Microsoft.Testing.Platform et seront ignorés");
@@ -100,8 +91,7 @@ public sealed class RunSettingsTests : AcceptanceTestBase
         }
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestRunSettings";
 

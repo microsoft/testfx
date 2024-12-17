@@ -9,17 +9,13 @@ using Moq;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 
-[TestGroup]
-public class RunContextAdapterTests : TestBase
+[TestClass]
+public class RunContextAdapterTests
 {
     private readonly Mock<ICommandLineOptions> _commandLineOptions = new();
     private readonly Mock<IRunSettings> _runSettings = new();
 
-    public RunContextAdapterTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
+    [TestMethod]
     public void TestRunDirectory_IsNotNull_If_ResultsDirectory_Is_Provided()
     {
         string runSettings =
@@ -38,6 +34,7 @@ $"""
         Assert.IsNotNull(runContextAdapter.RunSettings);
     }
 
+    [TestMethod]
     public void TestRunDirectory_IsNull_If_ResultsDirectory_IsNot_Provided()
     {
         string runSettings =

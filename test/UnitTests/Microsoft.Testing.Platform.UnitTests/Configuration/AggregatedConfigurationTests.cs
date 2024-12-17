@@ -13,21 +13,24 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class AggregatedConfigurationTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class AggregatedConfigurationTests
 {
     private const string ExpectedPath = "a/b/c";
     private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
     private readonly Mock<IFileSystem> _fileSystemMock = new();
 
-    [Arguments(PlatformConfigurationConstants.PlatformResultDirectory)]
-    [Arguments(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
-    [Arguments(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
-    public void IndexerTest_DirectoryNotSetAndNoConfigurationProviders_DirectoryIsNull(string key) => Assert.IsNull(new AggregatedConfiguration([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object)[key]);
+    [TestMethod]
+    [DataRow(PlatformConfigurationConstants.PlatformResultDirectory)]
+    [DataRow(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
+    [DataRow(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
+    public void IndexerTest_DirectoryNotSetAndNoConfigurationProviders_DirectoryIsNull(string key)
+        => Assert.IsNull(new AggregatedConfiguration([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object)[key]);
 
-    [Arguments(PlatformConfigurationConstants.PlatformResultDirectory)]
-    [Arguments(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
-    [Arguments(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
+    [TestMethod]
+    [DataRow(PlatformConfigurationConstants.PlatformResultDirectory)]
+    [DataRow(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
+    [DataRow(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
     public void IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNull(string key)
     {
         Mock<IConfigurationProvider> mockProvider = new();
@@ -36,15 +39,17 @@ public class AggregatedConfigurationTests(ITestExecutionContext testExecutionCon
         Assert.IsNull(aggregatedConfiguration[key]);
     }
 
-    [Arguments(PlatformConfigurationConstants.PlatformResultDirectory)]
-    [Arguments(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
-    [Arguments(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
+    [TestMethod]
+    [DataRow(PlatformConfigurationConstants.PlatformResultDirectory)]
+    [DataRow(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
+    [DataRow(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
     public void IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNotNull(string key)
     {
         AggregatedConfiguration aggregatedConfiguration = new([new FakeConfigurationProvider(ExpectedPath)], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object);
         Assert.AreEqual(ExpectedPath, aggregatedConfiguration[key]);
     }
 
+    [TestMethod]
     public void IndexerTest_ResultDirectorySet_DirectoryIsNotNull()
     {
         AggregatedConfiguration aggregatedConfiguration = new([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object);
@@ -53,6 +58,7 @@ public class AggregatedConfigurationTests(ITestExecutionContext testExecutionCon
         Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
     }
 
+    [TestMethod]
     public void IndexerTest_CurrentWorkingDirectorySet_DirectoryIsNotNull()
     {
         AggregatedConfiguration aggregatedConfiguration = new([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object);
@@ -61,6 +67,7 @@ public class AggregatedConfigurationTests(ITestExecutionContext testExecutionCon
         Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
     }
 
+    [TestMethod]
     public void IndexerTest_TestHostWorkingDirectorySet_DirectoryIsNotNull()
     {
         AggregatedConfiguration aggregatedConfiguration = new([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object);
@@ -69,6 +76,7 @@ public class AggregatedConfigurationTests(ITestExecutionContext testExecutionCon
         Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformTestHostWorkingDirectory]);
     }
 
+    [TestMethod]
     public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDirectoryFromCommandLineProvider()
     {
         Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new();
@@ -90,6 +98,7 @@ public class AggregatedConfigurationTests(ITestExecutionContext testExecutionCon
         Assert.AreEqual("a" + Path.DirectorySeparatorChar + "b", aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
     }
 
+    [TestMethod]
     public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDirectoryFromStore()
     {
         Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new();
@@ -111,6 +120,7 @@ public class AggregatedConfigurationTests(ITestExecutionContext testExecutionCon
         Assert.AreEqual("a" + Path.DirectorySeparatorChar + "b", aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
     }
 
+    [TestMethod]
     public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDefaultDirectory()
     {
         Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new();
