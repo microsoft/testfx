@@ -10,7 +10,7 @@
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>10.0.0-beta.24604.4</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
     <MicrosoftTestingExtensionsCodeCoverageVersion>17.13.1</MicrosoftTestingExtensionsCodeCoverageVersion>
     <!-- comment to facilitate merge conflicts -->
-    <MicrosoftTestingExtensionsRetryVersion>1.5.0-preview.24608.1</MicrosoftTestingExtensionsRetryVersion>
+    <MicrosoftTestingExtensionsRetryVersion>1.5.0</MicrosoftTestingExtensionsRetryVersion>
     <MSTestEngineVersion>1.0.0-alpha.24473.2</MSTestEngineVersion>
   </PropertyGroup>
 </Project>
