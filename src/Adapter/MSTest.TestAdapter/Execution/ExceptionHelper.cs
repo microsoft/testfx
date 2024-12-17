@@ -77,17 +77,21 @@ internal static class ExceptionHelper
         bool first = true;
         while (stackTraces.Count != 0)
         {
-            result.AppendFormat(
-                    CultureInfo.CurrentCulture,
-                    "{0} {1}{2}",
-                    first ? string.Empty : (Resource.UTA_EndOfInnerExceptionTrace + Environment.NewLine),
-                    stackTraces.Pop(),
-                    Environment.NewLine);
+            if (!first)
+            {
+                result.Append(s_utaEndOfInnerExceptionTrace);
+            }
+
+            result.Append(' ');
+            result.AppendLine(stackTraces.Pop());
+
             first = false;
         }
 
         return CreateStackTraceInformation(ex, true, result.ToString());
     }
+
+    static string s_utaEndOfInnerExceptionTrace = Resource.UTA_EndOfInnerExceptionTrace + Environment.NewLine;
 
     /// <summary>
     /// Removes all stack frames that refer to Microsoft.VisualStudio.TestTools.UnitTesting.Assertion.
