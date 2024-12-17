@@ -8,6 +8,8 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using Polyfills;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
@@ -106,23 +108,23 @@ internal static class ExceptionHelper
         }
 
         StringBuilder result = new(stackTrace.Length);
-        MemoryExtensions.SpanSplitEnumerator<char> stackFrames = stackTrace.Split(Environment.NewLine.AsSpan());
 
-        foreach (Range frameRange in stackFrames)
+        SpanLineEnumerator stackFrames = stackTrace.EnumerateLines();
+
+        foreach (ReadOnlySpan<char> stackFrame in stackFrames)
         {
-            ReadOnlySpan<char> frame = stackTrace[frameRange];
-            if (frame.Length == 0)
+            if (stackFrame.Length == 0)
             {
                 continue;
             }
 
             // Add the frame to the result if it does not refer to
             // the assertion class in the test framework
-            bool hasReference = HasReferenceToUTF(frame);
+            bool hasReference = HasReferenceToUTF(stackFrame);
             if (!hasReference)
             {
-                result.Append(frameRange);
-                result.Append(Environment.NewLine);
+                result.Append(stackFrame);
+                result.AppendLine();
             }
         }
 

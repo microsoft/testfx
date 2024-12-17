@@ -41,7 +41,7 @@
   <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</AssemblyName>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
     <!-- Force NuGet package dependencies to be copied to the output directory so we can embed AdapterUtilities in our NuGet. -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
@@ -57,6 +57,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" />
+    <PackageReference Include="System.Memory" Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
     <PackageReference Include="System.Threading.Tasks.Extensions" Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
     <PackageReference Include="System.ValueTuple" Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
   </ItemGroup>

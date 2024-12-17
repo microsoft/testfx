@@ -48,6 +48,7 @@
     <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
     <PackageVersion Include="Polyfill" Version="7.5.0" />
+    <PackageVersion Include="System.Memory" Version="4.6.0" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
     <!-- CVE-2019-0820 -->
     <PackageVersion Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />
