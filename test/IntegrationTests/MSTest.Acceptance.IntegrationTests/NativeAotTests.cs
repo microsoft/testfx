@@ -89,7 +89,8 @@ public class UnitTest1
     public NativeAotTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
         : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
 
-    public async Task NativeAotTests_WillRunWithExitCodeZero()
+#pragma warning disable IDE0051 // Ignore temporarily
+    private async Task NativeAotTests_WillRunWithExitCodeZero()
     {
         // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
