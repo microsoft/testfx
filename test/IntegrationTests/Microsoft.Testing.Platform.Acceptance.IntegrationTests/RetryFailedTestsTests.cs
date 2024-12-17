@@ -221,6 +221,7 @@ public class Program
             (_,__) => new DummyTestFramework());
         builder.AddCrashDumpProvider();
         builder.AddTrxReportProvider();
+        builder.AddRetryProvider();
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
@@ -269,7 +270,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         else
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(FailedTestNodeStateProperty.CachedInstance) }));
+                new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(new FailedTestNodeStateProperty()) }));
         }
 
         if (await TestMethod2(fail, resultDir))
@@ -280,7 +281,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         else
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(FailedTestNodeStateProperty.CachedInstance) }));
+                new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(new FailedTestNodeStateProperty()) }));
         }
 
         if (await TestMethod3(fail, resultDir))
@@ -291,7 +292,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         else
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(FailedTestNodeStateProperty.CachedInstance) }));
+                new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(new FailedTestNodeStateProperty()) }));
         }
         
         context.Complete();
