@@ -28,6 +28,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 #endif
 public class TestExecutionManager
 {
+    private sealed class RemotingMessageLogger : MarshalByRefObject, IMessageLogger
+    {
+        private readonly IMessageLogger _realMessageLogger;
+
+        public RemotingMessageLogger(IMessageLogger messageLogger)
+            => _realMessageLogger = messageLogger;
+
+        public void SendMessage(TestMessageLevel testMessageLevel, string message)
+            => _realMessageLogger.SendMessage(testMessageLevel, message);
+    }
+
     /// <summary>
     /// Dictionary for test run parameters.
     /// </summary>
@@ -451,7 +462,10 @@ public class TestExecutionManager
             // Run single test passing test context properties to it.
             IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
             Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
-            UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties, testExecutionRecorder);
+
+            // testRunner is in a different app domain. We cannot pass the testExecutionRecorder directly.
+            // Instead, we pass a proxy (remoting object) that is marshallable by ref.
+            UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties, new RemotingMessageLogger(testExecutionRecorder));
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
 
