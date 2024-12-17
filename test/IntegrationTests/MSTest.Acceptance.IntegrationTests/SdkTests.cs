@@ -65,16 +65,16 @@ namespace MSTestSdkTest
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
-        compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net9\.0\)");
+        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net9\.0\)");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
-        compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net7\.0\)");
-        compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net6\.0\)");
+        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
+        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net7\.0\)");
+        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net6\.0\)");
 #endif
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net462\)");
+            compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net462\)");
         }
     }
 
@@ -92,16 +92,16 @@ namespace MSTestSdkTest
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
-        compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net9\.0|x64\]");
+        compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net9\.0|x64\]");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net8\.0|x64\]");
-        compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net7\.0|x64\]");
-        compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net6\.0|x64\]");
+        compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net8\.0|x64\]");
+        compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net7\.0|x64\]");
+        compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net6\.0|x64\]");
 #endif
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net462|x64\]");
+            compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net462|x64\]");
         }
     }
 
@@ -312,7 +312,7 @@ namespace MSTestSdkTest
                     retryCount: 0,
                     timeoutInSeconds: 180);
                 compilationResult.AssertOutputContains("Generating native code");
-                compilationResult.AssertOutputNotContains("warning");
+                compilationResult.AssertOutputDoesNotContain("warning");
 
                 var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, "net9.0", verb: Verb.publish);
                 TestHostResult testHostResult = await testHost.ExecuteAsync();

@@ -65,23 +65,23 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
 
         // Build the solution
         DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        restoreResult.AssertOutputNotContains("An approximate best match of");
+        restoreResult.AssertOutputDoesNotContain("An approximate best match of");
         DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -m:1 -nodeReuse:false {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         if (isMultiTfm)
         {
             foreach (string tfm in singleTfmOrMultiTfm.Split(';'))
             {
-                testResult.AssertOutputRegEx($@"Tests succeeded: '.*TestProject0\..*' \[{tfm}\|x64\]");
-                testResult.AssertOutputRegEx($@"Tests succeeded: '.*TestProject1\..*' \[{tfm}\|x64\]");
-                testResult.AssertOutputRegEx($@"Tests succeeded: '.*TestProject2\..*' \[{tfm}\|x64\]");
+                testResult.AssertOutputMatchesRegex($@"Tests succeeded: '.*TestProject0\..*' \[{tfm}\|x64\]");
+                testResult.AssertOutputMatchesRegex($@"Tests succeeded: '.*TestProject1\..*' \[{tfm}\|x64\]");
+                testResult.AssertOutputMatchesRegex($@"Tests succeeded: '.*TestProject2\..*' \[{tfm}\|x64\]");
             }
         }
         else
         {
-            testResult.AssertOutputRegEx($@"Tests succeeded: '.*TestProject0\..*' \[{singleTfmOrMultiTfm}\|x64\]");
-            testResult.AssertOutputRegEx($@"Tests succeeded: '.*TestProject1\..*' \[{singleTfmOrMultiTfm}\|x64\]");
-            testResult.AssertOutputRegEx($@"Tests succeeded: '.*TestProject2\..*' \[{singleTfmOrMultiTfm}\|x64\]");
+            testResult.AssertOutputMatchesRegex($@"Tests succeeded: '.*TestProject0\..*' \[{singleTfmOrMultiTfm}\|x64\]");
+            testResult.AssertOutputMatchesRegex($@"Tests succeeded: '.*TestProject1\..*' \[{singleTfmOrMultiTfm}\|x64\]");
+            testResult.AssertOutputMatchesRegex($@"Tests succeeded: '.*TestProject2\..*' \[{singleTfmOrMultiTfm}\|x64\]");
         }
     }
 }

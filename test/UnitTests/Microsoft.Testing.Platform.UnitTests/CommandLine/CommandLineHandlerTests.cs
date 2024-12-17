@@ -75,7 +75,7 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        StringAssert.Contains("Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'", result.ErrorMessage);
+        StringAssert.Contains(result.ErrorMessage, "Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'");
     }
 
     [TestMethod]

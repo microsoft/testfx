@@ -79,10 +79,13 @@ internal static class AcceptanceAssert
         }
     }
 
-    public static void AssertOutputMatchesRegex(this TestHostResult testHostResult, string pattern, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    public static void AssertOutputMatchesRegex(this TestHostResult testHostResult, [StringSyntax("Regex")] string pattern, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.IsTrue(Regex.IsMatch(testHostResult.StandardOutput, pattern), GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
-    public static void AssertOutputDoesNotMatchRegex(this TestHostResult testHostResult, string pattern, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    public static void AssertOutputMatchesRegex(this TestHostResult testHostResult, [StringSyntax("Regex")] string pattern, RegexOptions regexOptions, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+        => Assert.IsTrue(Regex.IsMatch(testHostResult.StandardOutput, pattern, regexOptions), GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
+
+    public static void AssertOutputDoesNotMatchRegex(this TestHostResult testHostResult, [StringSyntax("Regex")] string pattern, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.IsFalse(Regex.IsMatch(testHostResult.StandardOutput, pattern), GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
     public static void AssertOutputContains(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
@@ -91,10 +94,10 @@ internal static class AcceptanceAssert
     public static void AssertOutputContains(this DotnetMuxerResult dotnetMuxerResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => StringAssert.Contains(dotnetMuxerResult.StandardOutput, value, GenerateFailedAssertionMessage(dotnetMuxerResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber), StringComparison.Ordinal);
 
-    public static void AssertOutputNotContains(this DotnetMuxerResult dotnetMuxerResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    public static void AssertOutputDoesNotContain(this DotnetMuxerResult dotnetMuxerResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.IsFalse(dotnetMuxerResult.StandardOutput.Contains(value, StringComparison.Ordinal), GenerateFailedAssertionMessage(dotnetMuxerResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
-    public static void AssertOutputRegEx(this DotnetMuxerResult dotnetMuxerResult, string pattern, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    public static void AssertOutputMatchesRegex(this DotnetMuxerResult dotnetMuxerResult, [StringSyntax("Regex")] string pattern, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.IsTrue(Regex.IsMatch(dotnetMuxerResult.StandardOutput, pattern), GenerateFailedAssertionMessage(dotnetMuxerResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
     public static void AssertOutputDoesNotContain(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)

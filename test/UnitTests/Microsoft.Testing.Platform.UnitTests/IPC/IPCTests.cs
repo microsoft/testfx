@@ -169,7 +169,7 @@ public sealed class IPCTests
     }
 
     [TestMethod]
-    public async Task ConnectionNamedPipeServer_MultipleConnection_Succeded()
+    public async Task ConnectionNamedPipeServer_MultipleConnection_Succeeds()
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
@@ -186,7 +186,6 @@ public sealed class IPCTests
                 _testContext.CancellationTokenSource.Token));
         }
 
-#pragma warning disable CA1806 // Do not ignore method results
         IOException exception = Assert.ThrowsException<IOException>(() =>
              new NamedPipeServer(
                 pipeNameDescription,
@@ -196,8 +195,7 @@ public sealed class IPCTests
                 new SystemTask(),
                 maxNumberOfServerInstances: 3,
                 _testContext.CancellationTokenSource.Token));
-        StringAssert.Contains("All pipe instances are busy.", exception.Message);
-#pragma warning restore CA1806 // Do not ignore method results
+        StringAssert.Contains(exception.Message, "All pipe instances are busy.");
 
         List<Task> waitConnectionTask = new();
         int connectionCompleted = 0;

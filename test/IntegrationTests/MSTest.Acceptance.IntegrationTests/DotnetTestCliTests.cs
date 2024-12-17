@@ -28,6 +28,6 @@ public class DotnetTestCliTests : AcceptanceTestBase<NopAssetFixture>
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -m:1 -nodeReuse:false {generator.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         // There is whitespace difference in output in parent and public repo that depends on the version of the dotnet SDK used.
-        compilationResult.AssertOutputRegEx(@"Passed!\s+-\s+Failed:\s+0,\s+Passed:\s+1,\s+Skipped:\s+0,\s+Total:\s+1");
+        compilationResult.AssertOutputMatchesRegex(@"Passed!\s+-\s+Failed:\s+0,\s+Passed:\s+1,\s+Skipped:\s+0,\s+Total:\s+1");
     }
 }

@@ -586,6 +586,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenMethodIsGeneric()
     {
         string code = """

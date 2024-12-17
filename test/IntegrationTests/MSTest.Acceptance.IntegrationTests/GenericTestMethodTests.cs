@@ -9,19 +9,13 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class GenericTestMethodTests : AcceptanceTestBase
+[TestClass]
+public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
-    public GenericTestMethodTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
-        AcceptanceFixture globalFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
+    [TestMethod]
     public async Task TestDifferentGenericMethodTestCases()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.GetAssetPath("GenericTestMethodTests"), "GenericTestMethodTests", TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.GetAssetPath("GenericTestMethodTests"), "GenericTestMethodTests", TargetFrameworks.NetCurrent);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
@@ -75,8 +69,7 @@ public class GenericTestMethodTests : AcceptanceTestBase
             """, RegexOptions.Singleline);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
