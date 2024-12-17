@@ -79,7 +79,7 @@ internal static class ExceptionHelper
         {
             if (!first)
             {
-                result.Append(s_utaEndOfInnerExceptionTrace);
+                result.Append(utaEndOfInnerExceptionTrace);
             }
 
             result.Append(' ');
@@ -91,7 +91,7 @@ internal static class ExceptionHelper
         return CreateStackTraceInformation(ex, true, result.ToString());
     }
 
-    static readonly string s_utaEndOfInnerExceptionTrace = Resource.UTA_EndOfInnerExceptionTrace + Environment.NewLine;
+    private static readonly string utaEndOfInnerExceptionTrace = Resource.UTA_EndOfInnerExceptionTrace + Environment.NewLine;
 
     /// <summary>
     /// Removes all stack frames that refer to Microsoft.VisualStudio.TestTools.UnitTesting.Assertion.
