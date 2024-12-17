@@ -5,6 +5,7 @@
 using System.Collections;
 using System.Runtime.CompilerServices;
 #endif
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -27,6 +28,11 @@ public enum DynamicDataSourceType
     /// Data is declared in method.
     /// </summary>
     Method = 1,
+
+    /// <summary>
+    /// The data source type is auto-detected.
+    /// </summary>
+    AutoDetect = 2,
 }
 
 /// <summary>
@@ -49,10 +55,23 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// <param name="dynamicDataSourceType">
     /// Specifies whether the data is stored as property or in method.
     /// </param>
-    public DynamicDataAttribute(string dynamicDataSourceName, DynamicDataSourceType dynamicDataSourceType = DynamicDataSourceType.Property)
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public DynamicDataAttribute(string dynamicDataSourceName, DynamicDataSourceType dynamicDataSourceType)
     {
         _dynamicDataSourceName = dynamicDataSourceName;
         _dynamicDataSourceType = dynamicDataSourceType;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.
+    /// </summary>
+    /// <param name="dynamicDataSourceName">
+    /// The name of method or property having test data.
+    /// </param>
+    public DynamicDataAttribute(string dynamicDataSourceName)
+    {
+        _dynamicDataSourceName = dynamicDataSourceName;
+        _dynamicDataSourceType = DynamicDataSourceType.AutoDetect;
     }
 
     /// <summary>
@@ -69,8 +88,23 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// <param name="dynamicDataSourceType">
     /// Specifies whether the data is stored as property or in method.
     /// </param>
-    public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType = DynamicDataSourceType.Property)
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType)
         : this(dynamicDataSourceName, dynamicDataSourceType) => _dynamicDataDeclaringType = dynamicDataDeclaringType;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class when the test data is present in a class different
+    /// from test method's class.
+    /// </summary>
+    /// <param name="dynamicDataSourceName">
+    /// The name of method or property having test data.
+    /// </param>
+    /// <param name="dynamicDataDeclaringType">
+    /// The declaring type of property or method having data. Useful in cases when declaring type is present in a class different from
+    /// test method's class. If null, declaring type defaults to test method's class type.
+    /// </param>
+    public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType)
+        : this(dynamicDataSourceName) => _dynamicDataDeclaringType = dynamicDataDeclaringType;
 
     internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; set; }
 

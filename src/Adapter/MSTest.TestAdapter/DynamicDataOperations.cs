@@ -25,36 +25,35 @@ internal class DynamicDataOperations : IDynamicDataOperations
 
         switch (_dynamicDataSourceType)
         {
+            case DynamicDataSourceType.AutoDetect:
+#pragma warning disable IDE0045 // Convert to conditional expression - it becomes less readable.
+                if (PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataPropertyInfo)
+                {
+                    obj = GetDataFromProperty(dynamicDataPropertyInfo);
+                }
+                else if (PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataMethodInfo)
+                {
+                    obj = GetDataFromMethod(dynamicDataMethodInfo);
+                }
+                else
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.DynamicDataSourceShouldExistAndBeValid, _dynamicDataSourceName, _dynamicDataDeclaringType.FullName));
+                }
+#pragma warning restore IDE0045 // Convert to conditional expression
+
+                break;
             case DynamicDataSourceType.Property:
                 PropertyInfo property = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(_dynamicDataDeclaringType, _dynamicDataSourceName)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {_dynamicDataSourceName}");
-                if (property.GetGetMethod(true) is not { IsStatic: true })
-                {
-                    throw new NotSupportedException(
-                        string.Format(
-                            CultureInfo.InvariantCulture,
-                            FrameworkMessages.DynamicDataInvalidPropertyLayout,
-                            property.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{property.Name}" : property.Name));
-                }
 
-                obj = property.GetValue(null, null);
+                obj = GetDataFromProperty(property);
                 break;
 
             case DynamicDataSourceType.Method:
                 MethodInfo method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(_dynamicDataDeclaringType, _dynamicDataSourceName)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {_dynamicDataSourceName}");
-                if (!method.IsStatic
-                    || method.ContainsGenericParameters
-                    || method.GetParameters().Length > 0)
-                {
-                    throw new NotSupportedException(
-                        string.Format(
-                            CultureInfo.InvariantCulture,
-                            FrameworkMessages.DynamicDataInvalidPropertyLayout,
-                            method.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{method.Name}" : method.Name));
-                }
 
-                obj = method.Invoke(null, null);
+                obj = GetDataFromMethod(method);
                 break;
         }
 
@@ -80,6 +79,38 @@ internal class DynamicDataOperations : IDynamicDataOperations
 
         // Data is valid, return it.
         return data;
+    }
+
+    private static object? GetDataFromMethod(MethodInfo method)
+    {
+        if (!method.IsStatic
+            || method.ContainsGenericParameters
+            || method.GetParameters().Length > 0)
+        {
+            throw new NotSupportedException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    FrameworkMessages.DynamicDataInvalidPropertyLayout,
+                    method.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{method.Name}" : method.Name));
+        }
+
+        // Note: the method is static and takes no parameters.
+        return method.Invoke(null, null);
+    }
+
+    private static object? GetDataFromProperty(PropertyInfo property)
+    {
+        if (property.GetGetMethod(true) is not { IsStatic: true })
+        {
+            throw new NotSupportedException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    FrameworkMessages.DynamicDataInvalidPropertyLayout,
+                    property.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{property.Name}" : property.Name));
+        }
+
+        // Note: the property getter is static.
+        return property.GetValue(null, null);
     }
 
     /// <inheritdoc />

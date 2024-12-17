@@ -22,8 +22,16 @@ public class DynamicDataTests
     public void DynamicDataTest_SourceMethod(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
-    [DynamicData(nameof(ParseUserData))]
+    [DynamicData(nameof(GetParseUserData))]
+    public void DynamicDataTest_SourceMethodAuto(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
+
+    [DataTestMethod]
+    [DynamicData(nameof(ParseUserData), DynamicDataSourceType.Property)]
     public void DynamicDataTest_SourceProperty(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
+
+    [DataTestMethod]
+    [DynamicData(nameof(ParseUserData))]
+    public void DynamicDataTest_SourcePropertyAuto(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
     [DynamicData(nameof(GetParseUserData), DynamicDataSourceType.Method,

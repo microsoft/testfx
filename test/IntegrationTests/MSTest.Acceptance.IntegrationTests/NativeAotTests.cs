@@ -85,6 +85,7 @@ public class UnitTest1
 """;
 
     [TestMethod]
+    [Ignore("https://github.com/microsoft/testfx/issues/4369")]
     public async Task NativeAotTests_WillRunWithExitCodeZero()
     {
         // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.

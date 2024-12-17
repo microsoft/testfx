@@ -20,6 +20,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
     private const int DynamicDataSourceTypeProperty = 0;
     private const int DynamicDataSourceTypeMethod = 1;
+    private const int DynamicDataSourceTypeAutoDetect = 2;
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.DynamicDataShouldBeValidTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.DynamicDataShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
@@ -144,7 +145,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol itupleTypeSymbol)
     {
         string? memberName = null;
-        int dataSourceType = 0;
+        int dataSourceType = DynamicDataSourceTypeAutoDetect;
         INamedTypeSymbol declaringType = methodSymbol.ContainingType;
         foreach (TypedConstant argument in attributeData.ConstructorArguments)
         {
@@ -192,14 +193,14 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
         ISymbol member = potentialMembers[0];
 
         // If the member is a property and the data source type is not set to property, report a diagnostic.
-        if (member.Kind == SymbolKind.Property && dataSourceType is not DynamicDataSourceTypeProperty)
+        if (member.Kind == SymbolKind.Property && dataSourceType is not (DynamicDataSourceTypeProperty or DynamicDataSourceTypeAutoDetect))
         {
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(SourceTypePropertyRule, declaringType.Name, memberName));
             return;
         }
 
         // If the member is a method and the data source type is not set to method, report a diagnostic.
-        if (member.Kind == SymbolKind.Method && dataSourceType is not DynamicDataSourceTypeMethod)
+        if (member.Kind == SymbolKind.Method && dataSourceType is not (DynamicDataSourceTypeMethod or DynamicDataSourceTypeAutoDetect))
         {
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(SourceTypeMethodRule, declaringType.Name, memberName));
             return;
