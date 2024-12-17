@@ -77,12 +77,14 @@ internal static class ExceptionHelper
         bool first = true;
         while (stackTraces.Count != 0)
         {
-            result.AppendFormat(
-                    CultureInfo.CurrentCulture,
-                    "{0} {1}{2}",
-                    first ? string.Empty : (Resource.UTA_EndOfInnerExceptionTrace + Environment.NewLine),
-                    stackTraces.Pop(),
-                    Environment.NewLine);
+            if (!first)
+            {
+                result.AppendLine(Resource.UTA_EndOfInnerExceptionTrace);
+            }
+
+            result.Append(' ');
+            result.AppendLine(stackTraces.Pop());
+
             first = false;
         }
 
