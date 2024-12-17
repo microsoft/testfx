@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class DoNotNegateBooleanAssertionAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class DoNotNegateBooleanAssertionAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenAssertionIsNotNegated_NoDiagnostic()
     {
         string code = """
@@ -41,6 +42,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests(ITestExecutionConte
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAssertionIsNegated_Diagnostic()
     {
         string code = """

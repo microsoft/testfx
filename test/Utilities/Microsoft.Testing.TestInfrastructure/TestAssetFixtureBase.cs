@@ -3,24 +3,37 @@
 
 using System.Collections.Concurrent;
 
-using Microsoft.Testing.Internal.Framework;
-
 namespace Microsoft.Testing.TestInfrastructure;
 
-public abstract class TestAssetFixtureBase : IDisposable, IAsyncInitializable
+public interface ITestAssetFixture : IDisposable
+{
+    Task InitializeAsync();
+}
+
+public sealed class NopAssetFixture : ITestAssetFixture
+{
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    public void Dispose()
+    {
+    }
+}
+
+public abstract class TestAssetFixtureBase : ITestAssetFixture
 {
     private readonly ConcurrentDictionary<string /* asset ID */, TestAsset> _testAssets = new();
     private readonly TempDirectory _nugetGlobalPackagesDirectory;
     private bool _disposedValue;
 
-    protected TestAssetFixtureBase(TempDirectory nugetGlobalPackagesDirectory) => _nugetGlobalPackagesDirectory = nugetGlobalPackagesDirectory;
+    protected TestAssetFixtureBase(TempDirectory nugetGlobalPackagesDirectory)
+        => _nugetGlobalPackagesDirectory = nugetGlobalPackagesDirectory;
 
     public string GetAssetPath(string assetID)
         => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)
             ? throw new ArgumentNullException(nameof(assetID), $"Cannot find target path for test asset '{assetID}'")
             : testAsset.TargetAssetPath;
 
-    public async Task InitializeAsync(InitializationContext context)
+    public async Task InitializeAsync()
 #if NET
         => await Parallel.ForEachAsync(GetAssetsToGenerate(), async (asset, _) =>
         {

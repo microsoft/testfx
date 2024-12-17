@@ -9,16 +9,13 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class AbortionTests : AcceptanceTestBase
+[TestClass]
+public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
 {
     private const string AssetName = "Abort";
-    private readonly TestAssetFixture _testAssetFixture;
 
-    public AbortionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task AbortWithCTRLPlusC_CancellingTests(string tfm)
     {
         // We expect the same semantic for Linux, the test setup is not cross and we're using specific
@@ -28,7 +25,7 @@ public sealed class AbortionTests : AcceptanceTestBase
             return;
         }
 
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
         string fileCreationPath = Path.Combine(testHost.DirectoryName, "fileCreation");
         File.WriteAllText(fileCreationPath, string.Empty);
@@ -43,8 +40,7 @@ public sealed class AbortionTests : AcceptanceTestBase
         testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
 #file Abort.csproj

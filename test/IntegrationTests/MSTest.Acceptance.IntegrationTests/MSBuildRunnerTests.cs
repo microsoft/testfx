@@ -6,19 +6,15 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class MSBuildRunnerTests : AcceptanceTestBase
+[TestClass]
+public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestProject";
     private const string DotnetTestVerb = "test";
-    private readonly AcceptanceFixture _acceptanceFixture;
 
-    public MSBuildRunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
-
-    internal static IEnumerable<TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)>> GetBuildMatrix()
+    internal static IEnumerable<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)> GetBuildMatrix()
     {
-        foreach (TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)> entry in GetBuildMatrixSingleAndMultiTfmBuildConfiguration())
+        foreach ((string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm) entry in GetBuildMatrixSingleAndMultiTfmBuildConfiguration())
         {
             foreach (string command in new string[]
             {
@@ -26,13 +22,13 @@ public class MSBuildRunnerTests : AcceptanceTestBase
                 DotnetTestVerb,
             })
             {
-                yield return new TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)>(
-                (entry.Arguments.SingleTfmOrMultiTfm, entry.Arguments.BuildConfiguration, entry.Arguments.IsMultiTfm, command), $"{(entry.Arguments.IsMultiTfm ? "multitfm" : entry.Arguments.SingleTfmOrMultiTfm)},{entry.Arguments.BuildConfiguration},{command}");
+                yield return new(entry.SingleTfmOrMultiTfm, entry.BuildConfiguration, entry.IsMultiTfm, command);
             }
         }
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrix))]
+    [TestMethod]
+    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method)]
     public async Task MSBuildTestTarget_SingleAndMultiTfm_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration buildConfiguration, bool isMultiTfm, string command)
     {
         // Get the template project
@@ -68,24 +64,24 @@ public class MSBuildRunnerTests : AcceptanceTestBase
         }
 
         // Build the solution
-        DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        restoreResult.AssertOutputNotContains("An approximate best match of");
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -m:1 -nodeReuse:false {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        restoreResult.AssertOutputDoesNotContain("An approximate best match of");
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -m:1 -nodeReuse:false {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         if (isMultiTfm)
         {
             foreach (string tfm in singleTfmOrMultiTfm.Split(';'))
             {
-                testResult.AssertOutputRegEx($@"Tests succeeded: '.*TestProject0\..*' \[{tfm}\|x64\]");
-                testResult.AssertOutputRegEx($@"Tests succeeded: '.*TestProject1\..*' \[{tfm}\|x64\]");
-                testResult.AssertOutputRegEx($@"Tests succeeded: '.*TestProject2\..*' \[{tfm}\|x64\]");
+                testResult.AssertOutputMatchesRegex($@"Tests succeeded: '.*TestProject0\..*' \[{tfm}\|x64\]");
+                testResult.AssertOutputMatchesRegex($@"Tests succeeded: '.*TestProject1\..*' \[{tfm}\|x64\]");
+                testResult.AssertOutputMatchesRegex($@"Tests succeeded: '.*TestProject2\..*' \[{tfm}\|x64\]");
             }
         }
         else
         {
-            testResult.AssertOutputRegEx($@"Tests succeeded: '.*TestProject0\..*' \[{singleTfmOrMultiTfm}\|x64\]");
-            testResult.AssertOutputRegEx($@"Tests succeeded: '.*TestProject1\..*' \[{singleTfmOrMultiTfm}\|x64\]");
-            testResult.AssertOutputRegEx($@"Tests succeeded: '.*TestProject2\..*' \[{singleTfmOrMultiTfm}\|x64\]");
+            testResult.AssertOutputMatchesRegex($@"Tests succeeded: '.*TestProject0\..*' \[{singleTfmOrMultiTfm}\|x64\]");
+            testResult.AssertOutputMatchesRegex($@"Tests succeeded: '.*TestProject1\..*' \[{singleTfmOrMultiTfm}\|x64\]");
+            testResult.AssertOutputMatchesRegex($@"Tests succeeded: '.*TestProject2\..*' \[{singleTfmOrMultiTfm}\|x64\]");
         }
     }
 }

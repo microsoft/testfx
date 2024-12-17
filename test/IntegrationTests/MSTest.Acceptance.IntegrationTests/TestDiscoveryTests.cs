@@ -7,21 +7,16 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class TestDiscoveryTests : AcceptanceTestBase
+[TestClass]
+public class TestDiscoveryTests : AcceptanceTestBase<TestDiscoveryTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
     private const string AssetName = "TestDiscovery";
 
-    // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
-    public TestDiscoveryTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
-        AcceptanceFixture globalFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task DiscoverTests_FindsAllTests(string currentTfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests");
 
@@ -30,10 +25,11 @@ public class TestDiscoveryTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Test2");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task DiscoverTests_WithFilter_FindsOnlyFilteredOnes(string currentTfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --filter Name=Test1");
 
@@ -42,8 +38,7 @@ public class TestDiscoveryTests : AcceptanceTestBase
         testHostResult.AssertOutputDoesNotContain("Test2");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 

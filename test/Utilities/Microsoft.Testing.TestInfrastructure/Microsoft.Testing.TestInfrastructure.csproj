@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
@@ -7,18 +7,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Internal.Framework" />
+    <PackageReference Include="MSTest.Analyzers" />
+    <PackageReference Include="MSTest.TestFramework" />
     <PackageReference Include="Polly" />
     <PackageReference Include="Polly.Contrib.WaitAndRetry" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- This is not a test project despite it references Microsoft.Testing.Internal.Framework -->
-    <ProjectCapability Remove="TestContainer" />
-    <ProjectCapability Remove="TestingPlatformServer" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
     <Using Include="Polyfills" />
   </ItemGroup>
 

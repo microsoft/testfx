@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests
 {
+    [TestMethod]
     public async Task UsingClassCleanup_WithoutCleanupBehaviorEndOfClass_AndNotInsideTestClass_NoDiagnostic()
     {
         string code = """
@@ -27,6 +28,7 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task UsingClassCleanup_WithoutCleanupBehaviorEndOfClass_AndInsideTestClass_Diagnostic()
     {
         string code = """
@@ -45,6 +47,7 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task UsingClassCleanup_WithCleanupBehaviorEndOfClass_NoDiagnostic()
     {
         string code = """
@@ -63,6 +66,7 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task UsingClassCleanup_WithCleanupBehaviorEndOfAssembly_Diagnostic()
     {
         string code = """
@@ -81,6 +85,7 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task UsingClassCleanup_WithoutCleanupBehavior_Diagnostic()
     {
         string code = """
@@ -99,6 +104,7 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task UsingClassCleanup_WithoutCleanupBehaviorAndWithInheritanceBehavior_Diagnostic()
     {
         string code = """
@@ -117,6 +123,7 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task UsingClassCleanup_WithCleanupBehaviorEndOFAssemblyAndWithInheritanceBehavior_Diagnostic()
     {
         string code = """
@@ -135,6 +142,7 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task UsingClassCleanup_WithCleanupBehaviorEndOFClassAndWithInheritanceBehavior_NoDiagnostic()
     {
         string code = """
@@ -153,6 +161,7 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task UsingClassCleanup_InsideTestClass_WithClassCleanupExecutionWithEndOfClassBehavior_NoDiagnostic()
     {
         string code = """
@@ -172,6 +181,7 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task UsingClassCleanup_InsideTestClass_WithClassCleanupExecutionWithEndOfAsseblyBehavior_Diagnostic()
     {
         string code = """
@@ -191,6 +201,7 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task UsingClassCleanup_InsideTestClass_WithClassCleanupExecutionWithEndOfClassBehavior_WithCleanupBehaviorEndOfAssembly_Diagnostic()
     {
         string code = """
@@ -210,6 +221,7 @@ public sealed class UseClassCleanupBehaviorEndOfClassAnalyzerTests(ITestExecutio
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task UsingClassCleanup_InsideTestClass_WithClassCleanupExecutionWithEndOfAssemblyBehavior_WithCleanupBehaviorEndOfClass_NoDiagnostic()
     {
         string code = """

@@ -7,8 +7,8 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class DataSourceTests : AcceptanceTestBase
+[TestClass]
+public sealed class DataSourceTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string SourceCode = """
 #file DataSourceTests.csproj
@@ -83,11 +83,7 @@ num1,num2,expectedSum
 1,1,1
 """;
 
-    private readonly AcceptanceFixture _acceptanceFixture;
-
-    public DataSourceTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
-
+    [TestMethod]
     public async Task TestDataSourceFromAppConfig()
     {
         if (!OperatingSystem.IsWindows())
@@ -105,7 +101,7 @@ num1,num2,expectedSum
 
         await DotnetCli.RunAsync(
             $"build {generator.TargetAssetPath} -c Release",
-            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             retryCount: 0);
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "DataSourceTests", "net472");

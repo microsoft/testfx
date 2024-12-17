@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class DataRowShouldBeValidAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgument_NoDiagnostic()
     {
         string code = """
@@ -29,6 +30,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndWithDataTestMethodAttribute_NoDiagnostic()
     {
         string code = """
@@ -48,6 +50,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndWithDerivedTestMethodAttribute_NoDiagnostic()
     {
         string code = """
@@ -71,6 +74,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithThreeArguments_NoDiagnostic()
     {
         string code = """
@@ -90,6 +94,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithThreeArgumentsAndMethodHasParamsArgument_NoDiagnostic()
     {
         string code = """
@@ -109,6 +114,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithThreeArgumentsAndMethodHasArrayArgument_NoDiagnostic()
     {
         string code = """
@@ -128,6 +134,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowPassesOneItemAndParameterExpectsArray_Diagnostic()
     {
         string code = """
@@ -151,6 +158,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments((0, 0)));
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasThreeArgumentsAndMethodHasAnIntegerAndAnArrayArgument_Diagnostic()
     {
         string code = """
@@ -174,6 +182,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments(3, 2));
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndMethodHasAPrimitiveTypeAndAParamsArgument_NoDiagnostic()
     {
         string code = """
@@ -193,6 +202,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithThreeArgumentsAndMethodHasAPrimitiveTypeAndAParamsArgument_NoDiagnostic()
     {
         string code = """
@@ -212,6 +222,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndMethodHasAPrimitiveTypeAndAParamsStringArgument_NoDiagnostic()
     {
         string code = """
@@ -231,6 +242,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndMethodHasAPrimitiveTypeAndADefaultArgument_NoDiagnostic()
     {
         string code = """
@@ -252,6 +264,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndIntegersAreAssignableToDoubles_NoDiagnostic()
     {
         string code = """
@@ -271,6 +284,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndCharsAreAssignableToIntegers_NoDiagnostic()
     {
         string code = """
@@ -290,6 +304,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndNullsAreAssignableToIntegers_NoDiagnostic()
     {
         string code = """
@@ -309,6 +324,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasOneNullArgumentAndMethodHasNoArguments_Diagnostic()
     {
         string code = """
@@ -332,6 +348,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments(1, 0));
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsNotSetOnATestMethod_Diagnostic()
     {
         string code = """
@@ -351,6 +368,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.DataRowOnTestMethodRule).WithLocation(0));
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasNoArgsButMethodHasOneArgument_Diagnostic()
     {
         string code = """
@@ -375,6 +393,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments(0, 1));
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasArgumentMismatchWithTestMethod_Diagnostic()
     {
         string code = """
@@ -399,6 +418,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments(3, 4));
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasArgumentMismatchWithTestMethod2_Diagnostic()
     {
         string code = """
@@ -423,6 +443,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments(3, 2));
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasArgumentMismatchWithTestMethod3_Diagnostic()
     {
         string code = """
@@ -447,6 +468,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments(3, 2));
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasTypeMismatchWithTestMethod_Diagnostic()
     {
         string code = """
@@ -471,6 +493,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments((2, 2)));
     }
 
+    [TestMethod]
     public async Task DefaultArguments()
     {
         string code = """
@@ -508,6 +531,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
             VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(2).WithArguments(1, 5));
     }
 
+    [TestMethod]
     public async Task Testfx_2606_NullArgumentForArray()
     {
         string code = """
@@ -540,6 +564,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task Issue2856_ArraysInDataRow_NoDiagnostic()
     {
         string code = """
@@ -561,6 +586,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenMethodIsGeneric()
     {
         string code = """

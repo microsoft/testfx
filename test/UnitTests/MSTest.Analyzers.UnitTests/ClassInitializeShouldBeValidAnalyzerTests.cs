@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class ClassInitializeShouldBeValidAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenClassInitializeIsPublic_NoDiagnostic()
     {
         string code = """
@@ -28,6 +29,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsGenericWithInheritanceModeSet_NoDiagnostic()
     {
         string code = """
@@ -46,6 +48,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsGenericWithInheritanceModeSetToNone_Diagnostic()
     {
         string code = """
@@ -67,6 +70,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
             code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsGenericWithoutSettingInheritanceMode_Diagnostic()
     {
         string code = """
@@ -88,6 +92,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
             code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
     {
         string code = """
@@ -108,6 +113,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsInternal_InsidePublicClassWithDiscoverInternals_Diagnostic()
     {
         string code = """
@@ -148,10 +154,11 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
-    [Arguments("protected")]
-    [Arguments("internal")]
-    [Arguments("internal protected")]
-    [Arguments("private")]
+    [DataRow("protected")]
+    [DataRow("internal")]
+    [DataRow("internal protected")]
+    [DataRow("private")]
+    [TestMethod]
     public async Task WhenClassInitializeIsNotPublic_Diagnostic(string accessibility)
     {
         string code = $$"""
@@ -186,6 +193,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsNotOrdinary_Diagnostic()
     {
         string code = """
@@ -207,6 +215,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
             code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsGeneric_Diagnostic()
     {
         string code = """
@@ -241,6 +250,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsNotStatic_Diagnostic()
     {
         string code = """
@@ -275,6 +285,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeDoesNotHaveParameters_Diagnostic()
     {
         string code = """
@@ -309,6 +320,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeReturnTypeIsNotValid_Diagnostic()
     {
         string code = """
@@ -384,6 +396,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeReturnTypeIsValid_NoDiagnostic()
     {
         string code = """
@@ -415,6 +428,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsAsyncVoid_Diagnostic()
     {
         string code = """
@@ -453,6 +467,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenMultipleViolations_TheyAllGetFixed()
     {
         string code = """
@@ -491,6 +506,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsNotOnClass_Diagnostic()
     {
         string code = """
@@ -508,6 +524,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsOnSealedClassNotMarkedWithTestClass_Diagnostic()
     {
         string code = """
@@ -525,6 +542,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsOnNonSealedClassNotMarkedWithTestClass_NoDiagnostic()
     {
         string code = """
@@ -542,6 +560,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsOnAbstractClassNotMarkedWithTestClass_AndWithInheritanceBehavior_NoDiagnostic()
     {
         string code = """
@@ -559,6 +578,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsOnAbstractClassMarkedWithTestClass_AndWithInheritanceBehavior_NoDiagnostic()
     {
         string code = """
@@ -577,6 +597,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsAbstractClassNotMarkedWithTestClass_AndWithoutInheritanceBehavior_Diagnostic()
     {
         string code = """
@@ -594,6 +615,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsOnAbstractClassMarkedWithTestClass_AndWithoutInheritanceBehavior_Diagnostic()
     {
         string code = """
@@ -612,6 +634,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsOnAbstractClassMarkedWithTestClass_AndWithInheritanceBehaviorNone_Diagnostic()
     {
         string code = """
@@ -630,6 +653,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsOnSealedClassMarkedWithTestClass_AndWithInheritanceBehavior_Diagnostic()
     {
         string code = """
@@ -648,6 +672,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsOnSealedClassMarkedWithTestClass_AndWithInheritanceBehaviorNone_NoDiagnostic()
     {
         string code = """
@@ -666,6 +691,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassInitializeIsOnSealedClassMarkedWithTestClass_AndDefaultInheritanceBehavior_NoDiagnostic()
     {
         string code = """

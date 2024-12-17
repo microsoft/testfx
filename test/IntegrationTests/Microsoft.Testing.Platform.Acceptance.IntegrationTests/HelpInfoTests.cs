@@ -1,23 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class HelpInfoTests : AcceptanceTestBase
+[TestClass]
+public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public HelpInfoTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Help_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -72,17 +65,16 @@ Extension options:
     --output
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
-    --treenode-filter
-        Use a tree filter to filter down the tests to execute
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task HelpShortName_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--?");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -97,12 +89,13 @@ Options:
         testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Help_WhenNoExtensionRegisteredAndUnknownOptionIsSpecified_OutputDefaultHelpContentAndUnknownOption(string tfm)
     {
         const string UnknownOption = "aaa";
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"-{UnknownOption}");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
@@ -118,10 +111,11 @@ Options:
         testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Info_WhenNoExtensionRegistered_OutputDefaultInfoContent(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -132,7 +126,7 @@ Microsoft Testing Platform:
   Version: .+
   Dynamic Code Supported: True
   Runtime information: .+
-  {(tfm != TargetFrameworks.NetFramework[0].Arguments ? "###SKIP###" : $"Runtime location: .+")}
+  {(tfm != TargetFrameworks.NetFramework[0] ? "###SKIP###" : $"Runtime location: .+")}
   Test module: .+{TestAssetFixture.NoExtensionAssetName}.*
 Built-in command line providers:
   PlatformCommandLineProvider
@@ -260,15 +254,6 @@ Registered command line providers:
         Hidden: False
         Description: Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
-  TestingFrameworkExtension
-    Name: Microsoft Testing Framework
-    Version: .+
-    Description: Microsoft Testing Framework\. This framework allows you to test your code anywhere in any mode \(all OSes, all platforms, all configurations\.\.\.\)\.
-    Options:
-      --treenode-filter
-        Arity: 1
-        Hidden: False
-        Description: Use a tree filter to filter down the tests to execute
 Registered tools:
   There are no registered tools\.
 """;
@@ -276,10 +261,11 @@ Registered tools:
         testHostResult.AssertOutputMatchesRegexLines(regexMatchPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Help_WithAllExtensionsRegistered_OutputFullHelpContent(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -367,17 +353,16 @@ Extension options:
         Enable generating TRX report
     --report-trx-filename
         The name of the generated TRX report
-    --treenode-filter
-        Use a tree filter to filter down the tests to execute
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task HelpShortName_WithAllExtensionsRegistered_OutputFullHelpContent(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("-?");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -392,10 +377,11 @@ Options:
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Info_WithAllExtensionsRegistered_OutputFullInfoContent(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -406,7 +392,7 @@ Microsoft Testing Platform:
   Version: *
   Dynamic Code Supported: True
   Runtime information: *
-  {(tfm != TargetFrameworks.NetFramework[0].Arguments ? "###SKIP###" : $"Runtime location: *")}
+  {(tfm != TargetFrameworks.NetFramework[0] ? "###SKIP###" : $"Runtime location: *")}
   Test module: *{TestAssetFixture.AllExtensionsAssetName}*
 Built-in command line providers:
   PlatformCommandLineProvider
@@ -563,6 +549,15 @@ Registered command line providers:
         Description: Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
         Default type is 'Full'
+  MSBuildCommandLineProvider
+    Name: MSBuildCommandLineProvider
+    Version: *
+    Description: Extension used to pass parameters from MSBuild node and the hosts
+    Options:
+      --internal-msbuild-node
+        Arity: 1
+        Hidden: True
+        Description: Used to pass the MSBuild node handle
   RetryCommandLineOptionsProvider
     Name: Retry failed tests
     Version: *
@@ -602,15 +597,6 @@ Registered command line providers:
         Hidden: False
         Description: Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
-  TestingFrameworkExtension
-    Name: Microsoft Testing Framework
-    Version: *
-    Description: Microsoft Testing Framework. This framework allows you to test your code anywhere in any mode (all OSes, all platforms, all configurations...).
-    Options:
-      --treenode-filter
-        Arity: 1
-        Hidden: False
-        Description: Use a tree filter to filter down the tests to execute
   TrxReportGeneratorCommandLine
     Name: TRX report generator
     Version: *
@@ -649,8 +635,7 @@ Registered tools:
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string AllExtensionsAssetName = "AllExtensionsInfoTest";
         public const string NoExtensionAssetName = "NoExtensionInfoTest";
@@ -664,13 +649,10 @@ Registered tools:
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
         <LangVersion>preview</LangVersion>
+        <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     </PropertyGroup>
     <ItemGroup>
-        <!-- Platform and TrxReport.Abstractions are only needed because Internal.Framework relies on a preview version that we want to override with currently built one -->
-        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingInternalFrameworkVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingInternalFrameworkVersion$" />
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingEnterpriseExtensionsVersion$" />
@@ -680,33 +662,47 @@ Registered tools:
 </Project>
 
 #file Program.cs
-using AllExtensionsInfoTest;
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.AddTestFramework(new SourceGeneratedTestNodesBuilder());
-builder.AddCrashDumpProvider();
-builder.AddHangDumpProvider();
-builder.AddHotReloadProvider();
-builder.AddRetryProvider();
-builder.AddTrxReportProvider();
-using ITestApplication app = await builder.BuildAsync();
-return await app.RunAsync();
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Services;
 
-#file UnitTest1.cs
-namespace AllExtensionsInfoTest;
-
-[TestGroup]
-public class UnitTest1
+public class Program
 {
-    public void TestMethod1()
+    public static async Task<int> Main(string[] args)
     {
-        Assert.IsTrue(true);
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.RegisterTestFramework(
+            sp => new TestFrameworkCapabilities(),
+            (_,__) => new DummyTestFramework());
+        builder.AddSelfRegisteredExtensions(args);
+        using ITestApplication app = await builder.BuildAsync();
+        return await app.RunAsync();
     }
 }
 
-#file Usings.cs
-global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Internal.Framework;
-global using Microsoft.Testing.Extensions;
+public class DummyTestFramework : ITestFramework
+{
+    public string Uid => nameof(DummyTestFramework);
+
+    public string Version => "2.0.0";
+
+    public string DisplayName => nameof(DummyTestFramework);
+
+    public string Description => nameof(DummyTestFramework);
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
+        => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
+        => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+    public Task ExecuteRequestAsync(ExecuteRequestContext context)
+    {
+       context.Complete();
+       return Task.CompletedTask;
+    }
+}
 """;
 
         private const string NoExtensionTestCode = """
@@ -721,37 +717,51 @@ global using Microsoft.Testing.Extensions;
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
     <ItemGroup>
-        <!-- Platform and TrxReport.Abstractions are only needed because Internal.Framework relies on a preview version that we want to override with currently built one -->
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingInternalFrameworkVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingInternalFrameworkVersion$" />
     </ItemGroup>
 </Project>
 
 #file Program.cs
-using NoExtensionInfoTest;
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.AddTestFramework(new SourceGeneratedTestNodesBuilder());
-using ITestApplication app = await builder.BuildAsync();
-return await app.RunAsync();
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Services;
 
-#file UnitTest1.cs
-namespace NoExtensionInfoTest;
-
-[TestGroup]
-public class UnitTest1
+public class Program
 {
-    public void TestMethod1()
+    public static async Task<int> Main(string[] args)
     {
-        Assert.IsTrue(true);
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.RegisterTestFramework(
+            sp => new TestFrameworkCapabilities(),
+            (_,__) => new DummyTestFramework());
+        using ITestApplication app = await builder.BuildAsync();
+        return await app.RunAsync();
     }
 }
 
-#file Usings.cs
-global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Internal.Framework;
-global using Microsoft.Testing.Extensions;
+public class DummyTestFramework : ITestFramework
+{
+    public string Uid => nameof(DummyTestFramework);
+
+    public string Version => "2.0.0";
+
+    public string DisplayName => nameof(DummyTestFramework);
+
+    public string Description => nameof(DummyTestFramework);
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
+        => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
+        => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+    public Task ExecuteRequestAsync(ExecuteRequestContext context)
+    {
+       context.Complete();
+       return Task.CompletedTask;
+    }
+}
 """;
 
         public string NoExtensionTargetAssetPath => GetAssetPath(NoExtensionAssetName);
@@ -764,14 +774,12 @@ global using Microsoft.Testing.Extensions;
                 NoExtensionTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
             yield return (AllExtensionsAssetName, AllExtensionsAssetName,
                 AllExtensionsTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion));
         }
     }
 }

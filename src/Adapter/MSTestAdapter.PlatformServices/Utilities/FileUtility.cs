@@ -86,7 +86,7 @@ internal class FileUtility
     /// Returns empty string on error when specified to continue the run on error,
     /// throw on error when specified to abort the run on error.
     /// </returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public virtual string CopyFileOverwrite(string source, string destination, out string? warning)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(source), "source should not be null.");
@@ -224,7 +224,7 @@ internal class FileUtility
     /// them.
     /// </summary>
     /// <param name="filePath">The root directory to clear.</param>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public virtual void DeleteDirectories(string filePath)
     {
         Guard.NotNullOrWhiteSpace(filePath);
@@ -255,7 +255,7 @@ internal class FileUtility
     /// </summary>
     /// <param name="path">path to symbols file.</param>
     /// <returns>Pdb file name or null if non-existent.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private static string? GetSymbolsFileName(string? path)
     {
         if (StringEx.IsNullOrEmpty(path) || path.IndexOfAny(Path.GetInvalidPathChars()) != -1)

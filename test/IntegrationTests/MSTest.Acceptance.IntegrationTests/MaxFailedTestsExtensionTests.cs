@@ -10,19 +10,16 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class MaxFailedTestsExtensionTests : AcceptanceTestBase
+[TestClass]
+public sealed class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedTestsExtensionTests.TestAssetFixture>
 {
     private const string AssetName = nameof(MaxFailedTestsExtensionTests);
-    private readonly TestAssetFixture _testAssetFixture;
 
-    public MaxFailedTestsExtensionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task SimpleMaxFailedTestsScenario(string tfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 3");
         testHostResult.AssertExitCodeIs(ExitCodes.TestExecutionStoppedForMaxFailedTests);
@@ -42,8 +39,7 @@ public sealed class MaxFailedTestsExtensionTests : AcceptanceTestBase
         Assert.AreEqual(12, total);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
 #file MaxFailedTestsExtensionTests.csproj
