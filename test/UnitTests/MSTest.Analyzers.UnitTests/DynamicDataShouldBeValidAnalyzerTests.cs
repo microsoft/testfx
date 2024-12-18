@@ -423,22 +423,22 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [DynamicData("SomeProperty")]
+                [{|#4:DynamicData("SomeProperty")|}]
                 public void {|#0:TestMethod1|}(object[] o)
                 {
                 }
 
-                [DynamicData("SomeProperty", typeof(SomeClass))]
+                [{|#5:DynamicData("SomeProperty", typeof(SomeClass))|}]
                 public void {|#1:TestMethod2|}(object[] o)
                 {
                 }
 
-                [DynamicData(dynamicDataSourceName: "SomeProperty")]
+                [{|#6:DynamicData(dynamicDataSourceName: "SomeProperty")|}]
                 public void {|#2:TestMethod3|}(object[] o)
                 {
                 }
 
-                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeProperty")]
+                [{|#7:DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeProperty")|}]
                 public void {|#3:TestMethod4|}(object[] o)
                 {
                 }
@@ -451,10 +451,22 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithLocation(0),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithLocation(1),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithLocation(2),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithLocation(3));
+            // /0/Test0.cs(6,6): warning MSTEST0018: '[DynamicData]' member 'MyTestClass.SomeProperty' cannot be found
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithSpan(6, 6, 6, 33).WithArguments("MyTestClass", "SomeProperty"),
+            // /0/Test0.cs(7,17): warning MSTEST0018: '[DynamicData]' should only be set on a test method
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithSpan(7, 17, 7, 28),
+            // /0/Test0.cs(11,6): warning MSTEST0018: '[DynamicData]' member 'SomeClass.SomeProperty' cannot be found
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithSpan(11, 6, 11, 52).WithArguments("SomeClass", "SomeProperty"),
+            // /0/Test0.cs(12,17): warning MSTEST0018: '[DynamicData]' should only be set on a test method
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithSpan(12, 17, 12, 28),
+            // /0/Test0.cs(16,6): warning MSTEST0018: '[DynamicData]' member 'MyTestClass.SomeProperty' cannot be found
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithSpan(16, 6, 16, 56).WithArguments("MyTestClass", "SomeProperty"),
+            // /0/Test0.cs(17,17): warning MSTEST0018: '[DynamicData]' should only be set on a test method
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithSpan(17, 17, 17, 28),
+            // /0/Test0.cs(21,6): warning MSTEST0018: '[DynamicData]' member 'SomeClass.SomeProperty' cannot be found
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithSpan(21, 6, 21, 101).WithArguments("SomeClass", "SomeProperty"),
+            // /0/Test0.cs(22,17): warning MSTEST0018: '[DynamicData]' should only be set on a test method
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithSpan(22, 17, 22, 28));
     }
 
     [TestMethod]
@@ -582,8 +594,33 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
                 {
                 }
 
+                [{|#8:DynamicData(nameof(DataField), DynamicDataSourceType.Method)|}]
+                [TestMethod]
+                public void TestMethod15(object[] o)
+                {
+                }
+
+                [{|#9:DynamicData(nameof(DataField), DynamicDataSourceType.Property)|}]
+                [TestMethod]
+                public void TestMethod16(object[] o)
+                {
+                }
+
+                [{|#10:DynamicData(nameof(DataField), DynamicDataSourceType.AutoDetect)|}]
+                [TestMethod]
+                public void TestMethod17(object[] o)
+                {
+                }
+
+                [{|#11:DynamicData(nameof(DataField))|}]
+                [TestMethod]
+                public void TestMethod18(object[] o)
+                {
+                }
+
                 public static IEnumerable<object[]> Data => new List<object[]>();
                 public static IEnumerable<object[]> GetData() => new List<object[]>();
+                public static IEnumerable<object[]> DataField = new List<object[]>();
             }
 
             public class SomeClass
@@ -602,7 +639,11 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(4).WithArguments("MyTestClass", "Data"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(5).WithArguments("SomeClass", "SomeData"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(6).WithArguments("MyTestClass", "Data"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(7).WithArguments("SomeClass", "SomeData"));
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(7).WithArguments("SomeClass", "SomeData"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeNotPropertyOrMethodRule).WithLocation(8).WithArguments("MyTestClass", "DataField"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeNotPropertyOrMethodRule).WithLocation(9).WithArguments("MyTestClass", "DataField"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeNotPropertyOrMethodRule).WithLocation(10).WithArguments("MyTestClass", "DataField"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeNotPropertyOrMethodRule).WithLocation(11).WithArguments("MyTestClass", "DataField"));
     }
 
     [TestMethod]

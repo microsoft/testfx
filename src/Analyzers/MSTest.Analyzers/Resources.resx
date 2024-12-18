@@ -540,4 +540,7 @@ The type declaring these methods should also respect the following rules:
   <data name="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes" xml:space="preserve">
     <value>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</value>
   </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</value>
+  </data>
 </root>

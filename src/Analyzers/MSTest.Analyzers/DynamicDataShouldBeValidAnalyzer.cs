@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Immutable;
 
 using Analyzer.Utilities.Extensions;
@@ -48,6 +47,9 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor SourceTypeMethodRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeMethod), Resources.ResourceManager, typeof(Resources)));
 
+    internal static readonly DiagnosticDescriptor SourceTypeNotPropertyOrMethodRule = NotTestMethodRule
+        .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod), Resources.ResourceManager, typeof(Resources)));
+
     internal static readonly DiagnosticDescriptor MemberMethodRule = NotTestMethodRule
         .WithMessage(new(nameof(Resources.DynamicDataShouldBeValidMessageFormat_MemberMethod), Resources.ResourceManager, typeof(Resources)));
 
@@ -66,6 +68,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
         FoundTooManyMembersRule,
         SourceTypePropertyRule,
         SourceTypeMethodRule,
+        SourceTypeNotPropertyOrMethodRule,
         MemberMethodRule,
         MemberTypeRule,
         DataMemberSignatureRule,
@@ -190,18 +193,29 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         ISymbol member = potentialMembers[0];
 
-        // If the member is a property and the data source type is not set to property, report a diagnostic.
-        if (member.Kind == SymbolKind.Property && dataSourceType is not (DynamicDataSourceTypeProperty or DynamicDataSourceTypeAutoDetect))
+        switch (member.Kind)
         {
-            context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(SourceTypePropertyRule, declaringType.Name, memberName));
-            return;
-        }
+            case SymbolKind.Property:
+                // If the member is a property and the data source type is not set to property or auto detect, report a diagnostic.
+                if (dataSourceType is not (DynamicDataSourceTypeProperty or DynamicDataSourceTypeAutoDetect))
+                {
+                    context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(SourceTypePropertyRule, declaringType.Name, memberName));
+                    return;
+                }
 
-        // If the member is a method and the data source type is not set to method, report a diagnostic.
-        if (member.Kind == SymbolKind.Method && dataSourceType is not (DynamicDataSourceTypeMethod or DynamicDataSourceTypeAutoDetect))
-        {
-            context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(SourceTypeMethodRule, declaringType.Name, memberName));
-            return;
+                break;
+            case SymbolKind.Method:
+                // If the member is a method and the data source type is not set to method or auto detect, report a diagnostic.
+                if (dataSourceType is not (DynamicDataSourceTypeMethod or DynamicDataSourceTypeAutoDetect))
+                {
+                    context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(SourceTypeMethodRule, declaringType.Name, memberName));
+                    return;
+                }
+
+                break;
+            default:
+                context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(SourceTypeNotPropertyOrMethodRule, declaringType.Name, memberName));
+                return;
         }
 
         if (!member.IsStatic)

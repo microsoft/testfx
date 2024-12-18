@@ -367,9 +367,14 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="needs-review-translation">'[DynamicData]' üyesi '{0}.{1}' bir yöntem olduğundan 'DynamicDataSourceType.Method' öğesini ayarlamalısınız</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
+        <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
+        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
-        <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
-        <target state="translated">'[DynamicData]' üyesi '{0}.{1}' bir özellik olduğundan 'DynamicDataSourceType.Property' öğesini ayarlamalısınız</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="needs-review-translation">'[DynamicData]' üyesi '{0}.{1}' bir özellik olduğundan 'DynamicDataSourceType.Property' öğesini ayarlamalısınız</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">

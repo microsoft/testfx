@@ -367,9 +367,14 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <target state="needs-review-translation">Element członkowski „{0}.{1}” „[DynamicData]” jest metodą, dlatego należy ustawić „DynamicDataSourceType.Method”</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
+        <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
+        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
-        <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
-        <target state="translated">Element członkowski „{0}.{1}” „[DynamicData]” jest właściwością, dlatego należy ustawić „DynamicDataSourceType.Property”</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="needs-review-translation">Element członkowski „{0}.{1}” „[DynamicData]” jest właściwością, dlatego należy ustawić „DynamicDataSourceType.Property”</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
