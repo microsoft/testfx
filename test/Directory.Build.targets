@@ -28,7 +28,11 @@
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
     <PackageReference Include="MSTest.Analyzers" />
-    <PackageReference Include="MSTest.TestFramework" />
+
+    <!-- Analyzers project need to explicitly exclude compile and runtime assets from MSTest.TestFramework NuGet package -->
+    <!-- This is to ensure that the assembly built from source is what is being used in tests -->
+    <!-- To avoid duplicate PackageReference warning, we detect if the PackageReference is already included and not include it here. -->
+    <PackageReference Include="MSTest.TestFramework" Condition=" '@(PackageReference->Contains('MSTest.TestFramework'))' == 'False' " />
     <PackageReference Include="MSTest.TestAdapter" />
   </ItemGroup>
 

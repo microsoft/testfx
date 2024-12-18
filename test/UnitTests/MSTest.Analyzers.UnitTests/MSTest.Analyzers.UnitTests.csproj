@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -19,6 +19,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" />
     <!-- CVE-2024-0057 / Transitive deps of code analysis testing packages -->
     <PackageReference Include="NuGet.Packaging" />
+
+    <PackageReference Include="MSTest.TestFramework" ExcludeAssets="runtime;compile" />
   </ItemGroup>
 
   <ItemGroup>
