@@ -201,6 +201,8 @@ public abstract class TestContext
     /// <param name="args">the arguments.</param>
     public abstract void WriteLine(string format, params object?[] args);
 
+    public abstract void DisplayMessage(MessageLevel messageLevel, string message);
+
     private T? GetProperty<T>(string name)
         where T : class
     {

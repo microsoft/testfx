@@ -85,4 +85,6 @@ public interface ITestContext
     /// </summary>
     /// <param name="displayName">The display name.</param>
     void SetDisplayName(string? displayName);
+
+    void DisplayMessage(MessageLevel messageLevel, string message);
 }
