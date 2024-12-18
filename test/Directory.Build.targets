@@ -28,7 +28,9 @@
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
     <PackageReference Include="MSTest.Analyzers" />
+
     <PackageReference Include="MSTest.TestFramework" />
+    <PackageReference Update="MSTest.TestFramework" Condition=" '$(UseMSTestFromSource)' == 'true' " ExcludeAssets="runtime;compile" />
     <PackageReference Include="MSTest.TestAdapter" />
   </ItemGroup>
 

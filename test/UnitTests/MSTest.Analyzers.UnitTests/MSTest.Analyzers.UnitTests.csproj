@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -6,6 +6,11 @@
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    
+    <!-- Analyzers project need to explicitly exclude compile and runtime assets from MSTest.TestFramework NuGet package -->
+    <!-- This is to ensure that the assembly built from source is what is being used in tests -->
+    <!-- This will exclude compile and runtime assets from NuGet so that they flow via ProjectReference -->
+    <UseMSTestFromSource>true</UseMSTestFromSource>
   </PropertyGroup>
 
   <ItemGroup>
