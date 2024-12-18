@@ -260,7 +260,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
                 foreach (TestClassInfo classInfo in classInfoCache)
                 {
-                    classInfo.ExecuteClassCleanup();
+                    classInfo.ExecuteClassCleanup(testContext.Context);
                 }
 
                 IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;

@@ -73,7 +73,7 @@ internal sealed class ClassCleanupManager
         IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
         foreach (TestClassInfo classInfo in classInfoCache)
         {
-            classInfo.ExecuteClassCleanup();
+            classInfo.ExecuteClassCleanup(testContext);
         }
 
         IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
