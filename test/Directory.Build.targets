@@ -22,14 +22,14 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(UseVSTestRunner)' == 'false' ">
-    <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CrashDump\Microsoft.Testing.Extensions.CrashDump.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.HangDump\Microsoft.Testing.Extensions.HangDump.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
+    <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" Condition=" '$(UseMSTestFromPackageReference)' != 'false' " />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
-    <PackageReference Include="MSTest.Analyzers" />
-    <PackageReference Include="MSTest.TestFramework" />
-    <PackageReference Include="MSTest.TestAdapter" />
+    <PackageReference Include="MSTest.Analyzers" Condition=" '$(UseMSTestFromPackageReference)' != 'false' " />
+    <PackageReference Include="MSTest.TestFramework" Condition=" '$(UseMSTestFromPackageReference)' != 'false' " />
+    <PackageReference Include="MSTest.TestAdapter" Condition=" '$(UseMSTestFromPackageReference)' != 'false' " />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(UseVSTestRunner)' == 'false' ">
