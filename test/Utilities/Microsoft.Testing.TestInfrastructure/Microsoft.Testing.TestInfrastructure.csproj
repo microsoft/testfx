@@ -7,8 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest.Analyzers" />
-    <PackageReference Include="MSTest.TestFramework" />
     <PackageReference Include="Polly" />
     <PackageReference Include="Polly.Contrib.WaitAndRetry" />
   </ItemGroup>
@@ -18,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
     <Using Include="Polyfills" />
   </ItemGroup>
 
