@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="zh-Hant" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="FailedToCreateRetryDirectoryBecauseOfCollision">
+        <source>Failed to create retries directory due to collisions in '{0}' despite re-trying.</source>
+        <target state="translated">無法建立重試目錄，因為 '{0}' 中發生衝突，但仍在重試。</target>
+        <note>'{0}' is the directory where collisions happen</note>
+      </trans-unit>
+      <trans-unit id="FailureThresholdPolicy">
+        <source>Failure threshold policy is enabled, failed tests will not be restarted.</source>
+        <target state="translated">已啟用失敗節流原則，將不會重新啟動失敗的測試。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailureThresholdPolicyMaxCount">
+        <source>Maximum failed tests threshold is {0} and {1} tests failed</source>
+        <target state="translated">失敗的測試閾值上限是 {0}，有 {1} 個測試失敗</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailureThresholdPolicyMaxPercentage">
+        <source>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</source>
+        <target state="translated">失敗的百分比閾值為 {0}%，有 {1}% 個測試失敗 ({2}/{3})</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MoveFiles">
+        <source>
+=====================
+Moving last attempt asset files to the default result directory
+=====================
+</source>
+        <target state="translated">
+=====================
+將上次嘗試的資產檔案移至預設結果目錄
+=====================
+</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MovingFileToLocation">
+        <source>Moving file '{0}' to '{1}'</source>
+        <target state="translated">正在將檔案 '{0}' 移至 '{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
+        <source>Failed to start process '{0}'</source>
+        <target state="translated">無法啟動處理程序 '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsExtensionDescription">
+        <source>Retry failed tests feature allows to restart test execution upon failure.</source>
+        <target state="translated">重試失敗的測試功能允許在失敗時重新啟動測試執行。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsExtensionDisplayName">
+        <source>Retry failed tests</source>
+        <target state="translated">重試失敗的測試</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
+        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">重試失敗的測試僅適用於類型為 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 的建立器</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
+        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
+        <target state="translated">如果失敗的測試百分比大於指定的值，則停用重試機制</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
+        <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
+        <target state="translated">如果失敗的測試數目大於指定的值，則停用重試機制</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
+        <source>Retry failed tests feature is not supported in hot reload mode</source>
+        <target state="translated">熱重新載入模式不支援重試失敗的測試功能</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsNotSupportedInServerModeErrorMessage">
+        <source>Retry failed tests feature is not supported in server mode</source>
+        <target state="translated">伺服器模式不支援重試失敗的測試功能</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsOptionDescription">
+        <source>Enable retry failed tests</source>
+        <target state="translated">啟用重試失敗的測試</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
+        <source>Option '{0}' requires option '{1}' to be specified</source>
+        <target state="translated">使用 '{0}' 選項時必須指定選項 '{1}'。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a single integer argument</source>
+        <target state="translated">選項 '{0}' 需要單一整數引數</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
+        <source>Options '{0}' and '{1}' cannot be used together</source>
+        <target state="translated">選項 '{0}' 和 '{1}' 不能同時使用</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
+        <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
+        <target state="translated">測試主機處理序在重試服務連線到它之前已結束。結束代碼: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteCompletedSuccessfully">
+        <source>
+=====================
+Tests suite completed successfully in {0} attempts
+=====================</source>
+        <target state="translated">
+=====================
+測試套件已順利在 {0} 次嘗試中完成
+=====================</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteFailed">
+        <source>
+=====================
+Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
+=====================
+</source>
+        <target state="translated">
+=====================
+測試套件失敗，失敗的測試總數: {0}，結束代碼: {1}，嘗試: {2}/{3}
+=====================
+</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteFailedInAllAttempts">
+        <source>
+=====================
+Tests suite failed in all {0} attempts
+=====================</source>
+        <target state="translated">
+=====================
+測試套件在所有 {0} 次嘗試中都失敗
+=====================</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteFailedWithWrongExitCode">
+        <source>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</source>
+        <target state="translated">測試套件失敗，結束代碼與 2 不同 (測試失敗)。與未預期情况有關的失敗。結束代碼 '{0}'</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -55,10 +55,8 @@ public class UnitTest1
         MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
 
         var versionsPropsFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
-        var directoryPackagesPropsFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
-        MicrosoftTestingEnterpriseExtensionsVersion = ExtractVersionFromXmlFile(versionsPropsFileDoc, "MicrosoftTestingExtensionsRetryVersion");
         MSTestEngineVersion = ExtractVersionFromXmlFile(versionsPropsFileDoc, "MSTestEngineVersion");
     }
 
@@ -80,8 +78,6 @@ public class UnitTest1
     public static string MicrosoftNETTestSdkVersion { get; private set; }
 
     public static string MicrosoftTestingPlatformVersion { get; private set; }
-
-    public static string MicrosoftTestingEnterpriseExtensionsVersion { get; private set; }
 
     [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Fine in this context")]
