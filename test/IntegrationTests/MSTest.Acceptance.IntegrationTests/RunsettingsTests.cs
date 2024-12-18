@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
-using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
@@ -38,11 +37,6 @@ public sealed class RunSettingsTests : AcceptanceTestBase<RunSettingsTests.TestA
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task UnsupportedRunSettingsEntriesAreFlagged(string tfm)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && tfm == TargetFrameworks.NetFramework.First())
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
 
@@ -101,7 +95,7 @@ public sealed class RunSettingsTests : AcceptanceTestBase<RunSettingsTests.TestA
         {
             yield return (ProjectName, ProjectName,
                 SourceCode
-                .PatchTargetFrameworks(TargetFrameworks.NetCurrent, TargetFrameworks.NetFramework.First())
+                .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
