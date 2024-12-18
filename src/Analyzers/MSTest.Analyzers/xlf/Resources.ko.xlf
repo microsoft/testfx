@@ -363,8 +363,8 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
-        <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
-        <target state="translated">'[DynamicData]' 멤버 '{0}.{1}'은(는) 메서드이므로 'DynamicDataSourceType.Method'를 설정해야 합니다.</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="needs-review-translation">'[DynamicData]' 멤버 '{0}.{1}'은(는) 메서드이므로 'DynamicDataSourceType.Method'를 설정해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">

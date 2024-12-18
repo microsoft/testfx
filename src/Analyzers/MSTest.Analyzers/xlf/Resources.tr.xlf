@@ -363,8 +363,8 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
-        <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
-        <target state="translated">'[DynamicData]' üyesi '{0}.{1}' bir yöntem olduğundan 'DynamicDataSourceType.Method' öğesini ayarlamalısınız</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="needs-review-translation">'[DynamicData]' üyesi '{0}.{1}' bir yöntem olduğundan 'DynamicDataSourceType.Method' öğesini ayarlamalısınız</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">

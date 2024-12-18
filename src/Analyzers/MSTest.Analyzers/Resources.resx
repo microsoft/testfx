@@ -493,7 +493,7 @@ The type declaring these methods should also respect the following rules:
     <value>'[DynamicDta]' member '{0}.{1}' is found more than once</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty" xml:space="preserve">
-    <value>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</value>
+    <value>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_MemberMethod" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' should be a method</value>
@@ -502,7 +502,7 @@ The type declaring these methods should also respect the following rules:
     <value>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod" xml:space="preserve">
-    <value>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</value>
+    <value>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature" xml:space="preserve">
     <value>'[DynamicData]' display name method '{0}.{1}' signature is invalid</value>

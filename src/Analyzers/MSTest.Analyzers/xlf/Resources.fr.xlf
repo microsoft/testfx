@@ -363,8 +363,8 @@ Le type doit être une classe
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
-        <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
-        <target state="translated">Membre '[DynamicData]' '{0}.{1}' est une méthode, vous devez donc définir 'DynamicDataSourceType.Method'</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="needs-review-translation">Membre '[DynamicData]' '{0}.{1}' est une méthode, vous devez donc définir 'DynamicDataSourceType.Method'</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
