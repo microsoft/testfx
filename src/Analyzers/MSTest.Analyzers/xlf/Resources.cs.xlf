@@ -253,12 +253,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
-        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <target state="translated">Byly nalezeny dva konfliktní typy pro obecný parametr '{0}'. Konfliktní typy jsou '{1}' a '{2}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
-        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <target state="translated">Typ obecného parametru '{0}' nelze odvodit.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">

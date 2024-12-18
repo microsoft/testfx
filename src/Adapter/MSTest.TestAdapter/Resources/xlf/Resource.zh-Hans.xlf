@@ -78,17 +78,17 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
-        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <target state="translated">无法推断 '{0}' 泛型参数的类型。</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
         <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
-        <target state="new">The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</target>
+        <target state="translated">泛型测试方法 '{0}' 没有参数，因此无法推断泛型参数。</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterConflict">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
-        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <target state="translated">发现泛型参数 '{0}' 的两个冲突类型。冲突类型 '{1}' 和 '{2}'。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidValue">

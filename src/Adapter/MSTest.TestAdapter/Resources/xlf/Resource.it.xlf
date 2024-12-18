@@ -78,17 +78,17 @@ ma ha ricevuto {4} argomenti, con tipi "{5}".</target>
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
-        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <target state="translated">Impossibile dedurre il tipo del parametro generico '{0}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
         <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
-        <target state="new">The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</target>
+        <target state="translated">Il metodo di test generico '{0}' non contiene argomenti, di conseguenza non è possibile dedurre il parametro generico.</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterConflict">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
-        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <target state="translated">Sono stati trovati due tipi in conflitto per il parametro generico '{0}'. I tipi in conflitto sono '{1}' e '{2}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidValue">
