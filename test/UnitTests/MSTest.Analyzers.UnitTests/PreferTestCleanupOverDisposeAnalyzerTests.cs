@@ -10,6 +10,23 @@ namespace MSTest.Analyzers.Test;
 [TestGroup]
 public sealed class PreferTestCleanupOverDisposeAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
+    public async Task WhenNonTestClassHasDispose_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyNonTestClass : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
     public async Task WhenTestClassHasDispose_Diagnostic()
     {
         string code = """
