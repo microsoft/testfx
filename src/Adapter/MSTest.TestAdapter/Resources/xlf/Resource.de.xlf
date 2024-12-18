@@ -78,17 +78,17 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
-        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <target state="translated">Der Typ des generischen Parameters '{0}' konnte nicht abgeleitet werden.</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
         <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
-        <target state="new">The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</target>
+        <target state="translated">Die generische Testmethode '{0}' hat keine Argumente, daher kann der generische Parameter nicht abgeleitet werden.</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterConflict">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
-        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <target state="translated">Es wurden zwei in Konflikt stehende Typen für den generischen Parameter '{0}' gefunden. Die in Konflikt stehenden Typen sind '{1}' und '{2}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidValue">
