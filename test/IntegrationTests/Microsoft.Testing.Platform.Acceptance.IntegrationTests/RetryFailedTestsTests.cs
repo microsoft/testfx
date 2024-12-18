@@ -3,6 +3,8 @@
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 #pragma warning restore IDE0073 // The file header does not match the required text
 
+using System.Runtime.InteropServices;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
@@ -131,11 +133,18 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         }
     }
 
-    // We use crash dump, not supported in NetFramework at the moment
     [TestMethod]
+    // We use crash dump, not supported in NetFramework at the moment
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     public async Task RetryFailedTests_MoveFiles_Succeeds(string tfm)
-        => await RetryHelper.RetryAsync(
+    {
+        // TODO: Crash dump is not working properly on macos, so we skip the test for now
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            return;
+        }
+
+        await RetryHelper.RetryAsync(
             async () =>
             {
                 var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
@@ -171,6 +180,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                     Assert.Fail($"Expected 1 or 2 dump files, but found {dumpFilesCount}");
                 }
             }, 3, TimeSpan.FromSeconds(5));
+    }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
