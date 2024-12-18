@@ -3,7 +3,18 @@
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
+/// <summary>
+/// Represents output device data that should be displayed as warning.
+/// </summary>
+/// <remarks>
+/// It's up to the output device to decide how to display error messages.
+/// The built-in terminal output device will print warnings in yellow foreground.
+/// The built-in server mode output device will send the data to Test Explorer with Warning severity.
+/// </remarks>
 public sealed class WarningMessageOutputDeviceData(string message) : IOutputDeviceData
 {
+    /// <summary>
+    /// Gets the message text represented by this instance.
+    /// </summary>
     public string Message { get; } = message;
 }
