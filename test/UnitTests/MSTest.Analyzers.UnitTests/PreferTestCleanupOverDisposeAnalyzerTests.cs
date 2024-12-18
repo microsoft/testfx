@@ -11,6 +11,24 @@ namespace MSTest.Analyzers.Test;
 public sealed class PreferTestCleanupOverDisposeAnalyzerTests
 {
     [TestMethod]
+    public async Task WhenNonTestClassHasDispose_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyNonTestClass : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenTestClassHasDispose_Diagnostic()
     {
         string code = """
