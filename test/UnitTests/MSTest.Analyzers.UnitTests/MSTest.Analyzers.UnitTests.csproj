@@ -6,6 +6,11 @@
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    
+    <!-- Analyzers project need to explicitly exclude compile and runtime assets from MSTest.TestFramework NuGet package -->
+    <!-- This is to ensure that the assembly built from source is what is being used in tests -->
+    <!-- This will exclude compile and runtime assets from NuGet so that they flow via ProjectReference -->
+    <UseMSTestFromSource>true</UseMSTestFromSource>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,8 +24,6 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" />
     <!-- CVE-2024-0057 / Transitive deps of code analysis testing packages -->
     <PackageReference Include="NuGet.Packaging" />
-
-    <PackageReference Include="MSTest.TestFramework" ExcludeAssets="runtime;compile" />
   </ItemGroup>
 
   <ItemGroup>
