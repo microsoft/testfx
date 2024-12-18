@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Immutable;
 
 using Analyzer.Utilities.Extensions;
@@ -99,7 +100,7 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
         bool isTestMethod = false;
-        List<AttributeData> dynamicDataAttributes = new();
+        bool hasDynamicDataAttribute = false;
         foreach (AttributeData methodAttribute in methodSymbol.GetAttributes())
         {
             // Current method should be a test method or should inherit from the TestMethod attribute.
@@ -111,26 +112,15 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
 
             if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, dynamicDataAttributeSymbol))
             {
-                dynamicDataAttributes.Add(methodAttribute);
+                hasDynamicDataAttribute = true;
+                AnalyzeAttribute(context, methodAttribute, methodSymbol, dynamicDataSourceTypeSymbol, ienumerableTypeSymbol, itupleTypeSymbol, methodInfoTypeSymbol);
             }
         }
 
         // Check if attribute is set on a test method.
-        if (!isTestMethod)
+        if (!isTestMethod && hasDynamicDataAttribute)
         {
-            if (dynamicDataAttributes.Count > 0)
-            {
-                context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotTestMethodRule));
-            }
-
-            return;
-        }
-
-        // Check each data row attribute.
-        foreach (AttributeData attribute in dynamicDataAttributes)
-        {
-            AnalyzeAttribute(context, attribute, methodSymbol, dynamicDataSourceTypeSymbol, ienumerableTypeSymbol, itupleTypeSymbol,
-                methodInfoTypeSymbol);
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotTestMethodRule));
         }
     }
 
