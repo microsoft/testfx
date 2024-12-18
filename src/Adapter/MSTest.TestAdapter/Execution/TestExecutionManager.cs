@@ -463,7 +463,7 @@ public class TestExecutionManager
             IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
             Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
 
-            // testRunner is in a different app domain. We cannot pass the testExecutionRecorder directly.
+            // testRunner could be in a different AppDomain. We cannot pass the testExecutionRecorder directly.
             // Instead, we pass a proxy (remoting object) that is marshallable by ref.
             UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties, new RemotingMessageLogger(testExecutionRecorder));
 

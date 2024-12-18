@@ -394,21 +394,18 @@ public class TestContextImplementationTests : TestContainer
 
     public void DisplayMessageShouldForwardToIMessageLogger()
     {
-        var messageLoggerMock = new Mock<IMessageLogger>();
-        var list = new List<(TestMessageLevel, string)>();
+        var messageLoggerMock = new Mock<IMessageLogger>(MockBehavior.Strict);
 
         messageLoggerMock
-            .Setup(l => l.SendMessage(It.IsAny<TestMessageLevel>(), It.IsAny<string>()))
-            .Callback((TestMessageLevel testMessageLevel, string message) => list.Add((testMessageLevel, message)));
+            .Setup(l => l.SendMessage(It.IsAny<TestMessageLevel>(), It.IsAny<string>()));
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties, messageLoggerMock.Object);
         _testContextImplementation.DisplayMessage(MessageLevel.Informational, "InfoMessage");
         _testContextImplementation.DisplayMessage(MessageLevel.Warning, "WarningMessage");
         _testContextImplementation.DisplayMessage(MessageLevel.Error, "ErrorMessage");
 
-        Assert.AreEqual(3, list.Count);
-        Assert.AreEqual((TestMessageLevel.Informational, "InfoMessage"), list[0]);
-        Assert.AreEqual((TestMessageLevel.Warning, "WarningMessage"), list[1]);
-        Assert.AreEqual((TestMessageLevel.Error, "ErrorMessage"), list[2]);
+        messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Informational, "InfoMessage"), Times.Once);
+        messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Warning, "WarningMessage"), Times.Once);
+        messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Error, "ErrorMessage"), Times.Once);
     }
 }

@@ -4,22 +4,22 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// An enumeration to specify the level of the messages to be displayed when using TestContext.DisplayMessage API.
+/// Specifies the severity level of messages displayed using the <see cref="TestContext.DisplayMessage(Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel, string)"/> API.
 /// </summary>
 public enum MessageLevel
 {
     /// <summary>
-    /// The message will be displayed in informational level.
+    /// The message will be displayed as informational, typically used for general updates or non-critical messages.
     /// </summary>
     Informational,
 
     /// <summary>
-    /// The message will be displayed in warning level.
+    /// The message will be displayed as a warning, indicating a potential issue or something requiring attention.
     /// </summary>
     Warning,
 
     /// <summary>
-    /// The message will be displayed in error level.
+    /// The message will be displayed as an error, representing a significant issue or failure.
     /// </summary>
     Error,
 }
