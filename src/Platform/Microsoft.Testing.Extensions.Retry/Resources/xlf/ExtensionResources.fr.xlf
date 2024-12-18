@@ -4,22 +4,22 @@
     <body>
       <trans-unit id="FailedToCreateRetryDirectoryBecauseOfCollision">
         <source>Failed to create retries directory due to collisions in '{0}' despite re-trying.</source>
-        <target state="translated">Échec de la création du répertoire des nouvelles tentatives en raison de collisions dans « {0} » malgré une nouvelle tentative.</target>
+        <target state="new">Failed to create retries directory due to collisions in '{0}' despite re-trying.</target>
         <note>'{0}' is the directory where collisions happen</note>
       </trans-unit>
       <trans-unit id="FailureThresholdPolicy">
         <source>Failure threshold policy is enabled, failed tests will not be restarted.</source>
-        <target state="translated">La stratégie de seuil d’échec est activée, les tests ayant échoué ne seront pas redémarrés.</target>
+        <target state="new">Failure threshold policy is enabled, failed tests will not be restarted.</target>
         <note />
       </trans-unit>
       <trans-unit id="FailureThresholdPolicyMaxCount">
         <source>Maximum failed tests threshold is {0} and {1} tests failed</source>
-        <target state="translated">Le seuil maximal des tests ayant échoué est {0} et {1} tests ont échoué</target>
+        <target state="new">Maximum failed tests threshold is {0} and {1} tests failed</target>
         <note />
       </trans-unit>
       <trans-unit id="FailureThresholdPolicyMaxPercentage">
         <source>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</source>
-        <target state="translated">Le seuil de pourcentage d’échec est {0}% et {1}% de tests ont échoué ({2}/{3})</target>
+        <target state="new">Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</target>
         <note />
       </trans-unit>
       <trans-unit id="MoveFiles">
@@ -28,81 +28,81 @@
 Moving last attempt asset files to the default result directory
 =====================
 </source>
-        <target state="translated">
+        <target state="new">
 =====================
-Déplacement des fichiers de ressources de la dernière tentative vers le répertoire de résultats par défaut
+Moving last attempt asset files to the default result directory
 =====================
 </target>
         <note />
       </trans-unit>
       <trans-unit id="MovingFileToLocation">
         <source>Moving file '{0}' to '{1}'</source>
-        <target state="translated">Déplacement du fichier '{0}' vers '{1}'</target>
+        <target state="new">Moving file '{0}' to '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
-        <target state="translated">Échec de démarrage du processus « {0} »</target>
+        <target state="new">Failed to start process '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
         <source>Retry failed tests feature allows to restart test execution upon failure.</source>
-        <target state="translated">La fonctionnalité de nouvelles tentatives de tests ayant échoué permet de redémarrer l’exécution des tests en cas d’échec.</target>
+        <target state="new">Retry failed tests feature allows to restart test execution upon failure.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDisplayName">
         <source>Retry failed tests</source>
-        <target state="translated">Nouvelle tentative de tests ayant échoué</target>
+        <target state="new">Retry failed tests</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
         <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Les nouvelles tentatives de tests ayant échoué fonctionnent uniquement avec les générateurs de type « Microsoft.Testing.Platform.Builder.TestApplicationBuilder »</target>
+        <target state="new">Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
-        <target state="translated">Désactiver le mécanisme de nouvelle tentative si le pourcentage de tests ayant échoué est supérieur à la valeur spécifiée</target>
+        <target state="new">Disable retry mechanism if the percentage of failed tests is greater than the specified value</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
-        <target state="translated">Désactiver le mécanisme de nouvelle tentative si le nombre de tests ayant échoué est supérieur à la valeur spécifiée</target>
+        <target state="new">Disable retry mechanism if the number of failed tests is greater than the specified value</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
         <source>Retry failed tests feature is not supported in hot reload mode</source>
-        <target state="translated">La fonctionnalité de nouvelles tentatives de tests ayant échoué n’est pas prise en charge en mode rechargement à chaud</target>
+        <target state="new">Retry failed tests feature is not supported in hot reload mode</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInServerModeErrorMessage">
         <source>Retry failed tests feature is not supported in server mode</source>
-        <target state="translated">La fonctionnalité de nouvelles tentatives de tests ayant échoué n’est pas prise en charge en mode serveur</target>
+        <target state="new">Retry failed tests feature is not supported in server mode</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
         <source>Enable retry failed tests</source>
-        <target state="translated">Activer les nouvelles tentatives de tests ayant échoué</target>
+        <target state="new">Enable retry failed tests</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
         <source>Option '{0}' requires option '{1}' to be specified</source>
-        <target state="translated">L’option '{0}' nécessite la spécification de l’option '{1}'</target>
+        <target state="new">Option '{0}' requires option '{1}' to be specified</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
         <source>Option '{0}' expects a single integer argument</source>
-        <target state="translated">L’option '{0}' attend un seul argument entier</target>
+        <target state="new">Option '{0}' expects a single integer argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
         <source>Options '{0}' and '{1}' cannot be used together</source>
-        <target state="translated">Les options «{0}» et «{1}» ne peuvent pas être utilisées ensemble</target>
+        <target state="new">Options '{0}' and '{1}' cannot be used together</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
         <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
-        <target state="translated">Le processus hôte de test s’est arrêté avant que le service de nouvelle tentative puisse s’y connecter. Code de sortie : {0}</target>
+        <target state="new">Test host process exited before the retry service could connect to it. Exit code: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestSuiteCompletedSuccessfully">
@@ -110,9 +110,9 @@ Déplacement des fichiers de ressources de la dernière tentative vers le réper
 =====================
 Tests suite completed successfully in {0} attempts
 =====================</source>
-        <target state="translated">
+        <target state="new">
 =====================
-La suite de tests s’est terminée correctement dans les {0} tentatives
+Tests suite completed successfully in {0} attempts
 =====================</target>
         <note />
       </trans-unit>
@@ -122,9 +122,9 @@ La suite de tests s’est terminée correctement dans les {0} tentatives
 Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
 =====================
 </source>
-        <target state="translated">
+        <target state="new">
 =====================
-Échec de la suite de tests, nombre total de tests ayant échoué : {0}, code de sortie : {1}, tentative : {2}/{3}
+Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
 =====================
 </target>
         <note />
@@ -134,15 +134,15 @@ Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
 =====================
 Tests suite failed in all {0} attempts
 =====================</source>
-        <target state="translated">
+        <target state="new">
 =====================
-Échec de la suite de tests dans toutes les {0} tentatives
+Tests suite failed in all {0} attempts
 =====================</target>
         <note />
       </trans-unit>
       <trans-unit id="TestSuiteFailedWithWrongExitCode">
         <source>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</source>
-        <target state="translated">La suite de tests a échoué avec un code de sortie différent de 2 (tests échoués). Défaillance liée à une condition inattendue. Code de sortie « {0} »</target>
+        <target state="new">Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</target>
         <note />
       </trans-unit>
     </body>
