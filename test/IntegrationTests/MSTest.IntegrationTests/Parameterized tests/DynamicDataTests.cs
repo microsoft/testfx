@@ -58,7 +58,10 @@ public class DynamicDataTests : CLITestBase
             "MethodWithOverload (\"1\",1)",
             "MethodWithOverload (\"2\",1)",
             "MethodWithOverload (1,\"0\")",
-            "MethodWithOverload (2,\"2\")");
+            "MethodWithOverload (2,\"2\")",
+            "DynamicDataTest_SimpleCollection(0)",
+            "DynamicDataTest_SimpleCollection(2)",
+            "DynamicDataTest_SimpleCollection(4)");
 
         VerifyE2E.FailedTestCount(testResults, 0);
     }

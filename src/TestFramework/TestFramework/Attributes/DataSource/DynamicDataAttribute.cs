@@ -122,75 +122,41 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     public TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; set; } = TestDataSourceUnfoldingStrategy.Auto;
 
     /// <inheritdoc />
-    public IEnumerable<object[]> GetData(MethodInfo methodInfo) => DynamicDataProvider.Instance.GetData(_dynamicDataDeclaringType, _dynamicDataSourceType, _dynamicDataSourceName, methodInfo);
+    public IEnumerable<object[]> GetData(MethodInfo methodInfo)
+        => DynamicDataProvider.Instance.GetData(_dynamicDataDeclaringType, _dynamicDataSourceType, _dynamicDataSourceName, methodInfo);
 
     /// <inheritdoc />
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
     {
-        if (DynamicDataDisplayName != null)
+        if (DynamicDataDisplayName == null)
         {
-            Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
-            DebugEx.Assert(dynamicDisplayNameDeclaringType is not null, "Declaring type of test data cannot be null.");
-
-            MethodInfo method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(DynamicDataDisplayName)
-                ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {DynamicDataDisplayName}");
-            ParameterInfo[] parameters = method.GetParameters();
-            return parameters.Length != 2 ||
-                parameters[0].ParameterType != typeof(MethodInfo) ||
-                parameters[1].ParameterType != typeof(object[]) ||
-                method.ReturnType != typeof(string) ||
-                !method.IsStatic ||
-                !method.IsPublic
-                ? throw new ArgumentNullException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        FrameworkMessages.DynamicDataDisplayName,
-                        DynamicDataDisplayName,
-                        nameof(String),
-                        string.Join(", ", nameof(MethodInfo), typeof(object[]).Name)))
-                : method.Invoke(null, [methodInfo, data]) as string;
+            return TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, TestIdGenerationStrategy);
         }
 
-        return TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, TestIdGenerationStrategy);
-    }
+        Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
+        DebugEx.Assert(dynamicDisplayNameDeclaringType is not null, "Declaring type of test data cannot be null.");
 
-    private static bool TryGetData(object dataSource, [NotNullWhen(true)] out IEnumerable<object[]>? data)
-    {
-        if (dataSource is IEnumerable<object[]> enumerableObjectArray)
+        MethodInfo method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(DynamicDataDisplayName)
+            ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {DynamicDataDisplayName}");
+        ParameterInfo[] parameters = method.GetParameters();
+        if (parameters.Length != 2
+            || parameters[0].ParameterType != typeof(MethodInfo)
+            || parameters[1].ParameterType != typeof(object[])
+            || method.ReturnType != typeof(string)
+            || !method.IsStatic
+            || !method.IsPublic)
         {
-            data = enumerableObjectArray;
-            return true;
+            throw new ArgumentNullException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    FrameworkMessages.DynamicDataDisplayName,
+                    DynamicDataDisplayName,
+                    nameof(String),
+                    string.Join(", ", nameof(MethodInfo), typeof(object[]).Name)));
         }
 
-#if NETCOREAPP || NET471_OR_GREATER
-        if (dataSource is IEnumerable enumerable)
-        {
-            List<object[]> objects = new();
-            foreach (object? entry in enumerable)
-            {
-                if (entry is not ITuple tuple
-                    || (objects.Count > 0 && objects[^1].Length != tuple.Length))
-                {
-                    data = null;
-                    return false;
-                }
-
-                object[] array = new object[tuple.Length];
-                for (int i = 0; i < tuple.Length; i++)
-                {
-                    array[i] = tuple[i]!;
-                }
-
-                objects.Add(array);
-            }
-
-            data = objects;
-            return true;
-        }
-#endif
-
-        data = null;
-        return false;
+        // Try to get the display name from the method.
+        return method.Invoke(null, [methodInfo, data]) as string;
     }
 
     string? ITestDataSourceEmptyDataSourceExceptionInfo.GetPropertyOrMethodNameForEmptyDataSourceException()

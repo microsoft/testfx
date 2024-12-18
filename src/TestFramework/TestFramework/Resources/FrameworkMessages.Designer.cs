@@ -295,7 +295,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Property or method {0} on {1} return type is not assignable to &apos;IEnumerable&lt;object[]&gt;&apos; (nor &apos;IEnumerable&lt;ITuple&gt;&apos; for .NET Core)..
+        ///   Looks up a localized string similar to Property or method {0} on {1} return type is not assignable to &apos;IEnumerable&apos;..
         /// </summary>
         internal static string DynamicDataIEnumerableNull {
             get {
