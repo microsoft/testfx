@@ -76,7 +76,7 @@
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <!-- CVE-2024-0057 / Transitive deps of code analysis testing packages -->
     <PackageVersion Include="NuGet.Packaging" Version="6.12.1" />
-    <PackageVersion Include="Polly" Version="8.4.2" />
+    <PackageVersion Include="Polly" Version="8.5.0" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="StreamJsonRpc" Version="2.20.20" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
