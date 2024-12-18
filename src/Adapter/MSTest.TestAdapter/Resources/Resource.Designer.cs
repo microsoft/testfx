@@ -243,15 +243,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; referenced member &apos;{0}.{1}&apos; should return &apos;IEnumerable&lt;object[]&gt;&apos;, &apos;IEnumerable&lt;Tuple&gt;` or &apos;IEnumerable&lt;ValueTuple&gt;&apos;.
-        /// </summary>
-        internal static string DynamicDataShouldBeValidMessageFormat_MemberType {
-            get {
-                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_MemberType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The dynamic data source &apos;{0}&apos; in type &apos;{1}&apos; should exist and be a property or a method..
         /// </summary>
         internal static string DynamicDataSourceShouldExistAndBeValid {
@@ -302,15 +293,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string Execution_Test_Timeout {
             get {
                 return ResourceManager.GetString("Execution_Test_Timeout", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to get attribute cache. Ignoring attribute inheritance and falling into &apos;type defines Attribute model&apos;, so that we have some data..
-        /// </summary>
-        internal static string FailedFetchAttributeCache {
-            get {
-                return ResourceManager.GetString("FailedFetchAttributeCache", resourceCulture);
             }
         }
         
@@ -419,15 +401,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string OlderTFMVersionFound {
             get {
                 return ResourceManager.GetString("OlderTFMVersionFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8..
-        /// </summary>
-        internal static string OlderTFMVersionFoundClassCleanup {
-            get {
-                return ResourceManager.GetString("OlderTFMVersionFoundClassCleanup", resourceCulture);
             }
         }
         
