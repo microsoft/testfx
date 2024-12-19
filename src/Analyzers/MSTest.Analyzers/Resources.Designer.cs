@@ -502,7 +502,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a method so you should set &apos;DynamicDataSourceType.Method&apos;.
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a method so you should use &apos;DynamicDataSourceType.AutoDetect&apos; or &apos;DynamicDataSourceType.Method&apos; (auto detect is the default when not specified explicitly, and is recommended).
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeMethod {
             get {
@@ -511,7 +511,16 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a property so you should set &apos;DynamicDataSourceType.Property&apos;.
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is not a property nor a method. Only properties and methods are supported..
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a property so you should use &apos;DynamicDataSourceType.AutoDetect&apos; or &apos;DynamicDataSourceType.Property&apos; (auto detect is the default when not specified explicitly, and is recommended).
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeProperty {
             get {
