@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis.Testing;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AssemblyCleanupShouldBeValidAnalyzer,
     MSTest.Analyzers.AssemblyCleanupShouldBeValidFixer>;
@@ -252,29 +254,13 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests
             public class MyTestClass
             {
                 [AssemblyCleanup]
-                public static void {|#0:AssemblyCleanup|}(TestContext testContext)
+                public static void AssemblyCleanup(TestContext testContext)
                 {
                 }
             }
             """;
 
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [AssemblyCleanup]
-                public static void AssemblyCleanup()
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(
-            code,
-            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyCleanup"),
-            fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
