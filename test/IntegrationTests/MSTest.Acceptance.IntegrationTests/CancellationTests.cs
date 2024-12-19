@@ -220,7 +220,7 @@ public class UnitTest1
 public class UnitTest2
 {
     [ClassCleanup]
-    public void ClassCleanup(TestContext testContext)
+    public static void ClassCleanup(TestContext testContext)
     {
         if (Environment.GetEnvironmentVariable("CLASSCLEANUP_CONTEXT_PARAMETER_CANCEL") == "1")
         {
