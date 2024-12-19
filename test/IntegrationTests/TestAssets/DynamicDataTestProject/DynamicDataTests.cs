@@ -100,6 +100,11 @@ public class DynamicDataTests
     {
     }
 
+    [TestMethod]
+    [DynamicData(nameof(SimpleCollection))]
+    public void DynamicDataTest_SimpleCollection(int value)
+        => Assert.AreEqual(0, value % 2);
+
     private static void ParseAndAssert(string userData, User expectedUser)
     {
         // Prepare
@@ -211,5 +216,15 @@ public class DynamicDataTests
     {
         yield return new object[] { 1, "0" };
         yield return new object[] { 2, "2" };
+    }
+
+    private static IEnumerable<int> SimpleCollection
+    {
+        get
+        {
+            yield return 0;
+            yield return 2;
+            yield return 4;
+        }
     }
 }
