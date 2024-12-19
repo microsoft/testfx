@@ -160,7 +160,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
             return true;
         }
 
-        if (dataSource is IEnumerable enumerable)
+        if (dataSource is IEnumerable enumerable and not string)
         {
             List<object[]> objects = new();
             foreach (object? entry in enumerable)
