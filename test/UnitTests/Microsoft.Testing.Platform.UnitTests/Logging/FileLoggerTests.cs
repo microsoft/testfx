@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 
@@ -31,7 +32,7 @@ public sealed class FileLoggerTests : IDisposable
     private readonly Mock<IFileSystem> _mockFileSystem = new();
     private readonly Mock<IFileStream> _mockStream = new();
     private readonly Mock<IFileStreamFactory> _mockFileStreamFactory = new();
-    private readonly MemoryStream _memoryStream;
+    private readonly CustomMemoryStream _memoryStream;
 
     public FileLoggerTests()
     {
@@ -41,7 +42,7 @@ public sealed class FileLoggerTests : IDisposable
 #endif
 
         _mockStream.Setup(x => x.Name).Returns(FileName);
-        _memoryStream = new MemoryStream();
+        _memoryStream = new CustomMemoryStream();
         _mockStream.Setup(x => x.Stream).Returns(_memoryStream);
     }
 
@@ -229,4 +230,23 @@ public sealed class FileLoggerTests : IDisposable
 
     void IDisposable.Dispose()
         => _memoryStream.Dispose();
+
+    private sealed class CustomMemoryStream : MemoryStream
+    {
+        private bool _shouldDispose;
+
+        [SuppressMessage("Usage", "CA2215:Dispose methods should call base class dispose", Justification = "Don't dispose")]
+        protected override void Dispose(bool disposing)
+        {
+            if (_shouldDispose)
+            {
+                base.Dispose(disposing);
+            }
+            else
+            {
+                _shouldDispose = true;
+                return;
+            }
+        }
+    }
 }
