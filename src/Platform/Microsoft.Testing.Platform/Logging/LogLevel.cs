@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Logging;
 
+/// <summary>
+/// Specifies a logging level used with <see cref="ILogger" /> APIs.
+/// </summary>
 public enum LogLevel
 {
     /// <summary>
