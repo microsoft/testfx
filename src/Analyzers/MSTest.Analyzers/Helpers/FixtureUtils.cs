@@ -10,24 +10,6 @@ using Microsoft.CodeAnalysis;
 
 namespace MSTest.Analyzers.Helpers;
 
-internal enum FixtureParameterMode
-{
-    /// <summary>
-    /// Indicates that there must not be a TestContext parameter
-    /// </summary>
-    MustNotHaveTestContext,
-
-    /// <summary>
-    /// Indicates that a TestContext parameter is mandatory
-    /// </summary>
-    MustHaveTestContext,
-
-    /// <summary>
-    /// Indicates that a TestContext parameter is optional.
-    /// </summary>
-    OptionalTestContext,
-}
-
 internal static class FixtureUtils
 {
     public static bool IsAssemblyInitializeMethod(this IMethodSymbol methodSymbol, INamedTypeSymbol assemblyInitializeAttributeSymbol)
