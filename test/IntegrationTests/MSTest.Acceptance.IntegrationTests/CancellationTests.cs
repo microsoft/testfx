@@ -85,17 +85,17 @@ public sealed class CancellationTests : AcceptanceTestBase<CancellationTests.Tes
     }
 
     [TestMethod]
-    public async Task WhenCancelingTestContextParameterTokenInTestCleanup_MessageIsAsExpected()
+    public async Task WhenCancelingTestContextParameterTokenInClassCleanup_MessageIsAsExpected()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
         {
-            ["TESTCLEANUP_CONTEXT_PARAMETER_CANCEL"] = "1",
+            ["CLASSCLEANUP_CONTEXT_PARAMETER_CANCEL"] = "1",
         });
 
         // Assert
         testHostResult.AssertExitCodeIs(2);
-        testHostResult.AssertOutputContains("Test cleanup method 'UnitTest2.TestCleanup' was canceled");
+        testHostResult.AssertOutputContains("Class cleanup method 'UnitTest2.ClassCleanup' was canceled");
         testHostResult.AssertOutputContains("Failed!");
     }
 
@@ -219,10 +219,10 @@ public class UnitTest1
 [TestClass]
 public class UnitTest2
 {
-    [TestCleanup]
-    public void TestCleanup(TestContext testContext)
+    [ClassCleanup]
+    public void ClassCleanup(TestContext testContext)
     {
-        if (Environment.GetEnvironmentVariable("TESTCLEANUP_CONTEXT_PARAMETER_CANCEL") == "1")
+        if (Environment.GetEnvironmentVariable("CLASSCLEANUP_CONTEXT_PARAMETER_CANCEL") == "1")
         {
             testContext.CancellationTokenSource.Cancel();
             testContext.CancellationTokenSource.Token.ThrowIfCancellationRequested();
