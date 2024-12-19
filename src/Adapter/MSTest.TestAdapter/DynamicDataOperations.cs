@@ -160,43 +160,21 @@ internal class DynamicDataOperations : IDynamicDataOperations
             return true;
         }
 
-        if (dataSource is IEnumerable enumerable)
+        if (dataSource is IEnumerable enumerable and not string)
         {
             List<object[]> objects = new();
             foreach (object? entry in enumerable)
             {
-#if NET471_OR_GREATER || NETCOREAPP
-                if (entry is not ITuple tuple
-                    || (objects.Count > 0 && objects[^1].Length != tuple.Length))
+                if (entry is null)
                 {
                     data = null;
                     return false;
                 }
 
-                object[] array = new object[tuple.Length];
-                for (int i = 0; i < tuple.Length; i++)
+                if (!TryHandleTupleDataSource(entry, objects))
                 {
-                    array[i] = tuple[i]!;
+                    objects.Add(new[] { entry });
                 }
-
-                objects.Add(array);
-#else
-                Type type = entry.GetType();
-                if (!IsTupleOrValueTuple(entry.GetType(), out int tupleSize)
-                    || (objects.Count > 0 && objects[objects.Count - 1].Length != tupleSize))
-                {
-                    data = null;
-                    return false;
-                }
-
-                object[] array = new object[tupleSize];
-                for (int i = 0; i < tupleSize; i++)
-                {
-                    array[i] = type.GetField($"Item{i + 1}")?.GetValue(entry)!;
-                }
-
-                objects.Add(array);
-#endif
             }
 
             data = objects;
@@ -204,6 +182,40 @@ internal class DynamicDataOperations : IDynamicDataOperations
         }
 
         data = null;
+        return false;
+    }
+
+    private static bool TryHandleTupleDataSource(object data, List<object[]> objects)
+    {
+#if NET471_OR_GREATER || NETCOREAPP
+        if (data is ITuple tuple
+            && (objects.Count == 0 || objects[^1].Length == tuple.Length))
+        {
+            object[] array = new object[tuple.Length];
+            for (int i = 0; i < tuple.Length; i++)
+            {
+                array[i] = tuple[i]!;
+            }
+
+            objects.Add(array);
+            return true;
+        }
+#else
+        Type type = data.GetType();
+        if (IsTupleOrValueTuple(data.GetType(), out int tupleSize)
+            && (objects.Count == 0 || objects[objects.Count - 1].Length == tupleSize))
+        {
+            object[] array = new object[tupleSize];
+            for (int i = 0; i < tupleSize; i++)
+            {
+                array[i] = type.GetField($"Item{i + 1}")?.GetValue(data)!;
+            }
+
+            objects.Add(array);
+            return true;
+        }
+#endif
+
         return false;
     }
 
