@@ -12,15 +12,8 @@
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" />
     <PackageReference Include="StreamJsonRpc" />
-    <PackageReference Include="Microsoft.Testing.Extensions.Retry" />
 
     <Compile Include="$(RepoRoot)test\IntegrationTests\MSTest.Acceptance.IntegrationTests\ServerMode\**\*.cs" Link="ServerMode\%(RecursiveDir)%(FileName)%(Extension)" />
-  </ItemGroup>
-
-  <!-- Packages needed for the test assets but that we don't want to reference -->
-  <ItemGroup>
-    <PackageDownload Include="Microsoft.Testing.Extensions.HotReload" Version="[$(MicrosoftTestingExtensionsRetryVersion)]" />
-    <PackageDownload Include="Microsoft.Testing.Extensions.Retry" Version="[$(MicrosoftTestingExtensionsRetryVersion)]" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,10 +24,5 @@
     <Using Include="Microsoft.Testing.TestInfrastructure" />
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
-
-  <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">
-    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.hotreload\$(MicrosoftTestingExtensionsRetryVersion)\microsoft.testing.extensions.hotreload.$(MicrosoftTestingExtensionsRetryVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.hotreload.$(MicrosoftTestingExtensionsRetryVersion).nupkg" />
-    <Copy SkipUnchangedFiles="true" SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.retry\$(MicrosoftTestingExtensionsRetryVersion)\microsoft.testing.extensions.retry.$(MicrosoftTestingExtensionsRetryVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.retry.$(MicrosoftTestingExtensionsRetryVersion).nupkg" />
-  </Target>
 
 </Project>
