@@ -260,13 +260,13 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
                 foreach (TestClassInfo classInfo in classInfoCache)
                 {
-                    classInfo.ExecuteClassCleanup();
+                    classInfo.ExecuteClassCleanup(testContext.Context);
                 }
 
                 IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
                 foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
                 {
-                    assemblyInfo.ExecuteAssemblyCleanup();
+                    assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
                 }
             }
             finally
@@ -364,5 +364,5 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         return true;
     }
 
-    internal void ForceCleanup() => ClassCleanupManager.ForceCleanup(_typeCache);
+    internal void ForceCleanup(IDictionary<string, object?> sourceLevelParameters, IMessageLogger logger) => ClassCleanupManager.ForceCleanup(_typeCache, sourceLevelParameters, logger);
 }

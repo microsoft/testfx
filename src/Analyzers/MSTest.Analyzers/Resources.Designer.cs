@@ -68,12 +68,10 @@ namespace MSTest.Analyzers {
         ///-it should not be &apos;async void&apos;
         ///-it should not be a special method (finalizer, operator...).
         ///-it should not be generic
-        ///-it should not take any parameter
+        ///-it should either not take any parameter, or take a single parameter of type &apos;TestContext&apos;
         ///-return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///
-        ///The type declaring these methods should also respect the following rules:
-        ///-The type should be a class
-        ///-The class should [rest of string was truncated]&quot;;.
+        ///The type declaring these methods should also respect the followi [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string AssemblyCleanupShouldBeValidDescription {
             get {
@@ -217,9 +215,9 @@ namespace MSTest.Analyzers {
         ///-it should not be &apos;async void&apos;
         ///-it should not be a special method (finalizer, operator...).
         ///-it should not be generic
-        ///-it should not take any parameter
+        ///-it should either not take any parameter, or take a single parameter of type &apos;TestContext&apos;
         ///-return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should be spec [rest of string was truncated]&quot;;.
+        ///-&apos;InheritanceBehavior.B [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ClassCleanupShouldBeValidDescription {
             get {
