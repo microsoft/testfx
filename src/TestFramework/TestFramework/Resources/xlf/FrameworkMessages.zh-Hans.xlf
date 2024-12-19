@@ -254,7 +254,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
-        <target state="needs-review-translation">{1} 返回类型上的属性或方法 {0} 不能分配给 "IEnumerable&lt;object[]&gt;" (对于 .NET Core，也不能分配给 "IEnumerable&lt;ITuple&gt;")。</target>
+        <target state="new">Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">

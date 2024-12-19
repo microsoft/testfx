@@ -649,14 +649,14 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="new">Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
-- it should not be 'static'
-- it should may be generic as long as type parameters can be inferred and argument types are compatible
-- it should not be 'abstract'
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</target>
+        <target state="translated">Metody testowe, czyli metody oznaczone atrybutem „[TestMethod]”, powinny uwzględniać następujący układ, aby platforma MSTest uznała je za prawidłowe:
+— powinny mieć wartość „public” (lub „internal”, jeśli ustawiono atrybut „[assembly: DiscoverInternals]”)
+— nie powinny mieć wartości „static”
+— mogą być ogólne, o ile można wywnioskować parametry typu i typy argumentów są zgodne
+— nie powinny mieć wartości „abstract”
+— zwracany typ powinien mieć wartość „void”, „Task” lub „ValueTask”
+— nie powinny mieć wartości „async void”
+— nie powinny być metodą specjalną (finalizator, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
