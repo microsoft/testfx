@@ -204,18 +204,18 @@ public sealed class FileLoggerTests : IDisposable
             .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
 
-        using FileLogger fileLogger = new(
+        // Ensures that the async flush is completed before the file is read
+        using (FileLogger fileLogger = new(
             new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
             defaultLogLevel,
             _mockClock.Object,
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockFileStreamFactory.Object);
-        fileLogger.Log(currentLogLevel, Message, null, Formatter, Category);
-
-        // Ensures that the async flush is completed before the file is read
-        fileLogger.Dispose();
+            _mockFileStreamFactory.Object))
+        {
+            fileLogger.Log(currentLogLevel, Message, null, Formatter, Category);
+        }
 
         if (LogTestHelpers.IsLogEnabled(defaultLogLevel, currentLogLevel))
         {
