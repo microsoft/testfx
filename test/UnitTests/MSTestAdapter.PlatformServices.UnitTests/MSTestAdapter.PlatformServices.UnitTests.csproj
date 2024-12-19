@@ -39,7 +39,6 @@
   <ItemGroup>
     <PackageReference Include="Moq" />
     <PackageReference Include="StrongNamer" />
-    <PackageReference Include="System.ValueTuple" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">

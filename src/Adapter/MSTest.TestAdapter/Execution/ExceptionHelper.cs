@@ -3,7 +3,6 @@
 
 using System.Globalization;
 using System.Text;
-using System.Text.RegularExpressions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -100,19 +99,18 @@ internal static class ExceptionHelper
     /// <returns>
     /// The trimmed stack trace removing traces of the framework and adapter from the stack.
     /// </returns>
-    internal static string TrimStackTrace(string stackTrace)
+    internal static string TrimStackTrace(ReadOnlySpan<char> stackTrace)
     {
         if (stackTrace.Length == 0)
         {
-            return stackTrace;
+            return string.Empty;
         }
 
         StringBuilder result = new(stackTrace.Length);
-        string[] stackFrames = Regex.Split(stackTrace, Environment.NewLine);
 
-        foreach (string stackFrame in stackFrames)
+        foreach (ReadOnlySpan<char> stackFrame in stackTrace.EnumerateLines())
         {
-            if (StringEx.IsNullOrEmpty(stackFrame))
+            if (stackFrame.Length == 0)
             {
                 continue;
             }
@@ -123,7 +121,7 @@ internal static class ExceptionHelper
             if (!hasReference)
             {
                 result.Append(stackFrame);
-                result.Append(Environment.NewLine);
+                result.AppendLine();
             }
         }
 
@@ -200,7 +198,7 @@ internal static class ExceptionHelper
             return CreateStackTraceInformation(ex.InnerException, checkInnerExceptions, stackTraceString);
         }
 
-        string stackTrace = TrimStackTrace(stackTraceString);
+        string stackTrace = TrimStackTrace(stackTraceString.AsSpan());
 
         return !StringEx.IsNullOrEmpty(stackTrace) ? new StackTraceInformation(stackTrace, null, 0, 0) : null;
     }
@@ -214,11 +212,11 @@ internal static class ExceptionHelper
     /// <returns>
     /// True if the framework or the adapter methods are in the stack frame.
     /// </returns>
-    internal static bool HasReferenceToUTF(string stackFrame)
+    internal static bool HasReferenceToUTF(ReadOnlySpan<char> stackFrame)
     {
         foreach (string type in TypesToBeExcluded)
         {
-            if (stackFrame.IndexOf(type, StringComparison.Ordinal) > -1)
+            if (stackFrame.IndexOf(type.AsSpan(), StringComparison.Ordinal) > -1)
             {
                 return true;
             }
