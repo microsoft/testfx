@@ -765,7 +765,7 @@ public class TestClassInfo
                     methodInfo.InvokeAsSynchronousTask(null, testContext);
                 }
             },
-            new CancellationTokenSource(),
+            testContext.CancellationTokenSource,
             timeout,
             methodInfo,
             new ClassExecutionContextScope(ClassType, remainingCleanupCount),

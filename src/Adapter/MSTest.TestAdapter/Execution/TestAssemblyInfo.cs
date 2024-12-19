@@ -287,7 +287,7 @@ public class TestAssemblyInfo
                              AssemblyCleanupMethod.InvokeAsSynchronousTask(null, testContext);
                          }
                      },
-                     new CancellationTokenSource(),
+                     testContext.CancellationTokenSource,
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
                      new AssemblyExecutionContextScope(isCleanup: true),
