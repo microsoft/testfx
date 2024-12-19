@@ -197,7 +197,7 @@ public sealed class FileLoggerTests : IDisposable
 
     [TestMethod]
     [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers), DynamicDataSourceType.Method)]
-    public async Task Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(LogLevel defaultLogLevel, LogLevel currentLogLevel)
+    public void Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
         _mockFileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(false);
         _mockFileStreamFactory
@@ -214,13 +214,11 @@ public sealed class FileLoggerTests : IDisposable
             _mockFileStreamFactory.Object);
         fileLogger.Log(currentLogLevel, Message, null, Formatter, Category);
 
+        // Ensures that the async flush is completed before the file is read
+        fileLogger.Dispose();
+
         if (LogTestHelpers.IsLogEnabled(defaultLogLevel, currentLogLevel))
         {
-            if (_memoryStream.Length == 0)
-            {
-                await Task.Delay(1000);
-            }
-
             Assert.AreEqual($"0001-01-01T00:00:00.0000000+00:00 Test {currentLogLevel.ToString().ToUpperInvariant()} Message{Environment.NewLine}", Encoding.Default.GetString(_memoryStream.ToArray()));
         }
         else
