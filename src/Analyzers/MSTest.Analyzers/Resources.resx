@@ -125,7 +125,7 @@
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
@@ -197,7 +197,7 @@ The type declaring these methods should also respect the following rules:
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
