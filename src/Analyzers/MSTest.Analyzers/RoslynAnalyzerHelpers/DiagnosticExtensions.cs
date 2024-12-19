@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Analyzer.Utilities.Extensions;
 
-internal static class FixtureUtils
+internal static class DiagnosticExtensions
 {
     public static Diagnostic CreateDiagnostic(
         this SyntaxNode node,
