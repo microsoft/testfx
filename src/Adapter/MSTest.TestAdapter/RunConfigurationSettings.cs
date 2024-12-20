@@ -2,10 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Xml;
 
+#if !WINDOWS_UWP
+using System.Globalization;
+
 using Microsoft.Testing.Platform.Configurations;
+#endif
+
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions;
@@ -166,6 +170,7 @@ public class RunConfigurationSettings
         return settings;
     }
 
+#if !WINDOWS_UWP
     internal static RunConfigurationSettings SetRunConfigurationSettingsFromConfig(IConfiguration configuration, RunConfigurationSettings settings)
     {
         // Expected format of the json is: -
@@ -195,4 +200,5 @@ public class RunConfigurationSettings
 
         return settings;
     }
+#endif
 }

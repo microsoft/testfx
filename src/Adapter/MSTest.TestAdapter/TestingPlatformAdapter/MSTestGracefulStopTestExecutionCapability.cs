@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !WINDOWS_UWP
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -23,3 +24,4 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
         return Task.CompletedTask;
     }
 }
+#endif
