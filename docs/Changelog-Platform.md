@@ -2,7 +2,61 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)## <a name="1.5.0" />[1.5.0] - 2024-12-20
+
+See full log [here](https://github.com/microsoft/testfx/compare/v1.4.3...v1.5.0)
+
+### Added
+
+* Expose `ExecuteRequestContext` ctor for testability by @MarcoRossignoli in https://github.com/microsoft/testfx/pull/3717
+* Add `StandardOutputProperty` and `StandardErrorProperty` by @MarcoRossignoli in https://github.com/microsoft/testfx/pull/3748
+* Optimize the server mode discovery workflow by @MarcoRossignoli in https://github.com/microsoft/testfx/pull/3877
+* Add yy/mm to the log filename for better ordering by @MarcoRossignoli in https://github.com/microsoft/testfx/pull/3894
+* Add logic to read env var for runsettings path in VSTestBridge by @mariam-abdulla in https://github.com/microsoft/testfx/pull/3909
+* Support runsettings environment variables by @MarcoRossignoli in https://github.com/microsoft/testfx/pull/3918
+* Write standard output and error, and respect execution id by @nohwnd in https://github.com/microsoft/testfx/pull/3934
+* Add key only overload to TestMetadataProperty by @Evangelink in https://github.com/microsoft/testfx/pull/4041
+* Pass multiple errors by @nohwnd in https://github.com/microsoft/testfx/pull/4054
+* Introduce and use warning and error output messages by @Evangelink in https://github.com/microsoft/testfx/pull/4217
+* Show running tests by @drognanar in https://github.com/microsoft/testfx/pull/4221* Show running tests by @drognanar in https://github.com/microsoft/testfx/pull/4221
+
+### Fixed
+
+* Ensure correct exit code in case of cancellation and add `OnExit` phase for for `IPushOnlyProtocol` by @MarcoRossignoli in https://github.com/microsoft/testfx/pull/3820
+* Fix writing dark colors by @nohwnd in https://github.com/microsoft/testfx/pull/3825
+* Fix: do not show telemetry banner if no telemetry provider is registered by @Evangelink in https://github.com/microsoft/testfx/pull/3862
+* Fix RunSettings/RunConfiguration/ResultsDirectory by @MarcoRossignoli in https://github.com/microsoft/testfx/pull/3902
+* Fix concurrency issue in TerminalTestReporter by @mariam-abdulla in https://github.com/microsoft/testfx/pull/4229
+* Only push output device messages to Test Explorer, don't push logs by @Youssef1313 in https://github.com/microsoft/testfx/pull/4178
+* Fix missing skip reason by @MarcoRossignoli in https://github.com/microsoft/testfx/pull/3754
+* Fix skipped Test isn't shown as skipped/not executed in Trx Report  by @engyebrahim in https://github.com/microsoft/testfx/pull/3773
+* Fix Timed Out Test isn't shown under timeout counter in Trx Report by @engyebrahim in https://github.com/microsoft/testfx/pull/3788
+* Fix trx in case of exit code != 0 by @MarcoRossignoli in https://github.com/microsoft/testfx/pull/3887
+* Fix SelfRegisteredExtensions type to be internal by @Evangelink in https://github.com/microsoft/testfx/pull/3891
+* Display inner exceptions by @Evangelink in https://github.com/microsoft/testfx/pull/3920
+* Fix publishing as docker image via /t:PublishContainer by @nohwnd in https://github.com/microsoft/testfx/pull/3929
+* Fix conflict with Microsoft.Win32.Registry by @Evangelink in https://github.com/microsoft/testfx/pull/3988
+* Fix live output with HotReload (#3983) by @nohwnd in https://github.com/microsoft/testfx/pull/3993
+* Fix hangdump not showing tests in progress (#3992) by @nohwnd in https://github.com/microsoft/testfx/pull/3999
+* Fix hangdump space in dump path (#3994) by @nohwnd in https://github.com/microsoft/testfx/pull/4001
+* Improve error message for incompatible architecture by @Youssef1313 in https://github.com/microsoft/testfx/pull/4144
+* StopUpdate in Finally Block by @thomhurst in https://github.com/microsoft/testfx/pull/4147
+* Set IsTestingPlatformApplication to true in ClassicEngine.targets by @mariam-abdulla in https://github.com/microsoft/testfx/pull/4151
+* Fix displaying progress in non-ansi terminal by @Evangelink in https://github.com/microsoft/testfx/pull/4320
+
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.0)
+* Microsoft.Testing.Extensions.HangDump: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.0)
+* Microsoft.Testing.Extensions.HotReload: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.0)
+* Microsoft.Testing.Extensions.Retry: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.0)
+* Microsoft.Testing.Extensions.Telemetry: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.5.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.0)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.5.0)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.5.0)
+* Microsoft.Testing.Platform: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.5.0)
+* Microsoft.Testing.Platform.MSBuild: [1.5.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.5.0)
 
 ## <a name="1.4.3" />[1.4.3] - 2024-11-12
 
