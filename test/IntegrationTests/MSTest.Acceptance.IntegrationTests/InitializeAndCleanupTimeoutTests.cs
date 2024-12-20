@@ -257,9 +257,7 @@ public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase<InitializeAnd
             new() { ["TASKDELAY_TESTINIT"] = "1" });
 
         testHostResult.AssertOutputContains("TestInit started");
-        testHostResult.AssertOutputContains(TargetFrameworks.NetFramework.Any(x => x == tfm)
-            ? "Test initialize method 'TestClass.TestInit' was canceled"
-            : "Test initialize method 'TestClass.TestInit' timed out after 100ms");
+        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' was canceled");
         testHostResult.AssertOutputDoesNotContain("TestInit completed");
     }
 
