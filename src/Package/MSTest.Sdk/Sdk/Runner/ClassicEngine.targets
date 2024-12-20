@@ -43,9 +43,6 @@
   <ItemGroup>
     <PackageReference Include="MSTest.TestFramework" Sdk="MSTest"
                       Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.Analyzers" Sdk="MSTest"
-                      Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)"
-                      Condition=" '$(EnableMSTestAnalyzers)' != 'false' " />
   </ItemGroup>
 
   <!-- Core (for test applications - not for test libraries) -->
