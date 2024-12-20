@@ -52,9 +52,6 @@
       <MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_localization\%(CurrentUICultureHierarchy.Identity)\*.dll">
         <UICulture>%(CurrentUICultureHierarchy.Identity)</UICulture>
       </MSTestV2Files>
-      <MSTestV2Files Include="$(MSBuildThisFileDirectory)*.dll">
-        <UICulture>%(CurrentUICultureHierarchy.Identity)</UICulture>
-      </MSTestV2Files>
     </ItemGroup>
 
     <ItemGroup>
