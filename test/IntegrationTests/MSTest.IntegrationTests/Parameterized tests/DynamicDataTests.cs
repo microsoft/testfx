@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -59,9 +60,9 @@ public class DynamicDataTests : CLITestBase
             "MethodWithOverload (\"2\",1)",
             "MethodWithOverload (1,\"0\")",
             "MethodWithOverload (2,\"2\")",
-            "DynamicDataTest_SimpleCollection(0)",
-            "DynamicDataTest_SimpleCollection(2)",
-            "DynamicDataTest_SimpleCollection(4)");
+            "DynamicDataTest_SimpleCollection (0)",
+            "DynamicDataTest_SimpleCollection (2)",
+            "DynamicDataTest_SimpleCollection (4)");
 
         VerifyE2E.FailedTestCount(testResults, 0);
     }
