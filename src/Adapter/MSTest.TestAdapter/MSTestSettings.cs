@@ -983,11 +983,7 @@ public class MSTestSettings
 
         if (configuration["mstest:classCleanupLifecycle"] is string classCleanupLifecycle)
         {
-            if (TryParseEnum(classCleanupLifecycle, out ClassCleanupBehavior lifecycle))
-            {
-                settings.ClassCleanupLifecycle = lifecycle;
-            }
-            else
+            if (!TryParseEnum(classCleanupLifecycle, out ClassCleanupBehavior lifecycle))
             {
                 throw new AdapterSettingsException(string.Format(
                     CultureInfo.CurrentCulture,
@@ -995,6 +991,8 @@ public class MSTestSettings
                     classCleanupLifecycle,
                     string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
             }
+
+            settings.ClassCleanupLifecycle = lifecycle;
         }
 
         if (configuration["mstest:parallelism:workers"] is string workers)
@@ -1018,11 +1016,7 @@ public class MSTestSettings
         {
             value = value.Equals("class", StringComparison.OrdinalIgnoreCase) ? "ClassLevel"
                     : value.Equals("methood", StringComparison.OrdinalIgnoreCase) ? "MethodLevel" : value;
-            if (TryParseEnum(value, out ExecutionScope scope))
-            {
-                settings.ParallelizationScope = scope;
-            }
-            else
+            if (!TryParseEnum(value, out ExecutionScope scope))
             {
                 throw new AdapterSettingsException(string.Format(
                     CultureInfo.CurrentCulture,
@@ -1030,6 +1024,8 @@ public class MSTestSettings
                     value,
                     string.Join(", ", EnumPolyfill.GetNames<ExecutionScope>())));
             }
+
+            settings.ParallelizationScope = scope;
         }
 
         MSTestSettingsProvider.Load(configuration);
