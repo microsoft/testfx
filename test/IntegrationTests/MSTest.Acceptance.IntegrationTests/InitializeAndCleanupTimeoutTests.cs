@@ -257,7 +257,9 @@ public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase<InitializeAnd
             new() { ["TASKDELAY_TESTINIT"] = "1" });
 
         testHostResult.AssertOutputContains("TestInit started");
-        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' was canceled");
+        testHostResult.AssertOutputContains(TargetFrameworks.NetFramework.Any(x => x == tfm)
+            ? "Test initialize method 'TestClass.TestInit' was canceled"
+            : "Test initialize method 'TestClass.TestInit' timed out after 100ms");
         testHostResult.AssertOutputDoesNotContain("TestInit completed");
     }
 
@@ -315,7 +317,7 @@ public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase<InitializeAnd
 
         testHostResult.AssertOutputContains("AssemblyCleanup started");
         testHostResult.AssertOutputContains("AssemblyCleanup Thread.Sleep completed");
-        testHostResult.AssertOutputContains("Assembly cleanup method 'TestClass.AssemblyCleanup' was canceled");
+        testHostResult.AssertOutputContains("Assembly cleanup method 'TestClass.AssemblyCleanup' timed out after 100ms");
         testHostResult.AssertOutputDoesNotContain("AssemblyCleanup completed");
     }
 
@@ -345,7 +347,7 @@ public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase<InitializeAnd
 
         testHostResult.AssertOutputContains("ClassCleanup started");
         testHostResult.AssertOutputContains("ClassCleanup Thread.Sleep completed");
-        testHostResult.AssertOutputContains("Class cleanup method 'TestClass.ClassCleanup' was canceled");
+        testHostResult.AssertOutputContains("Class cleanup method 'TestClass.ClassCleanup' timed out after 100ms");
         testHostResult.AssertOutputDoesNotContain("ClassCleanup completed");
     }
 
