@@ -503,11 +503,7 @@ public class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidClassCleanupLifecycleValue,
                                         value,
-#if NET
-                                        string.Join(", ", Enum.GetNames<ClassCleanupBehavior>())));
-#else
                                         string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
-#endif
 
                             break;
                         }
@@ -834,11 +830,7 @@ public class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidParallelScopeValue,
                                         value,
-#if NET
-                                        string.Join(", ", Enum.GetNames<ExecutionScope>())));
-#else
                                         string.Join(", ", EnumPolyfill.GetNames<ExecutionScope>())));
-#endif
 
                             break;
                         }
@@ -1001,11 +993,7 @@ public class MSTestSettings
                     CultureInfo.CurrentCulture,
                     Resource.InvalidClassCleanupLifecycleValue,
                     classCleanupLifecycle,
-#if NET
-                    string.Join(", ", Enum.GetNames<ClassCleanupBehavior>())));
-#else
                     string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
-#endif
             }
         }
 
@@ -1040,11 +1028,7 @@ public class MSTestSettings
                     CultureInfo.CurrentCulture,
                     Resource.InvalidParallelScopeValue,
                     value,
-#if NET
-                    string.Join(", ", Enum.GetNames<ExecutionScope>())));
-#else
                     string.Join(", ", EnumPolyfill.GetNames<ExecutionScope>())));
-#endif
             }
         }
 
