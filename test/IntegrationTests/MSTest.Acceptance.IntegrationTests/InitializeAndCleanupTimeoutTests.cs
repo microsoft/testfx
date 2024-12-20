@@ -197,7 +197,7 @@ public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase<InitializeAnd
             new() { ["TASKDELAY_ASSEMBLYINIT"] = "1" });
 
         testHostResult.AssertOutputContains("AssemblyInit started");
-        testHostResult.AssertOutputContains("Assembly initialize method 'TestClass.AssemblyInit' timed out");
+        testHostResult.AssertOutputContains("Assembly initialize method 'TestClass.AssemblyInit' timed out after 100ms");
         testHostResult.AssertOutputDoesNotContain("AssemblyInit Thread.Sleep completed");
         testHostResult.AssertOutputDoesNotContain("AssemblyInit completed");
     }
@@ -212,7 +212,7 @@ public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase<InitializeAnd
             new() { ["TASKDELAY_ASSEMBLYCLEANUP"] = "1" });
 
         testHostResult.AssertOutputContains("AssemblyCleanup started");
-        testHostResult.AssertOutputContains("Assembly cleanup method 'TestClass.AssemblyCleanup' was canceled");
+        testHostResult.AssertOutputContains("Assembly cleanup method 'TestClass.AssemblyCleanup' timed out after 100ms");
         testHostResult.AssertOutputDoesNotContain("AssemblyCleanup Thread.Sleep completed");
         testHostResult.AssertOutputDoesNotContain("AssemblyCleanup completed");
     }
@@ -242,7 +242,7 @@ public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase<InitializeAnd
             new() { ["TASKDELAY_CLASSCLEANUP"] = "1" });
 
         testHostResult.AssertOutputContains("ClassCleanup started");
-        testHostResult.AssertOutputContains("Class cleanup method 'TestClass.ClassCleanup' was canceled");
+        testHostResult.AssertOutputContains("Class cleanup method 'TestClass.ClassCleanup' timed out after 100ms");
         testHostResult.AssertOutputDoesNotContain("ClassCleanup Thread.Sleep completed");
         testHostResult.AssertOutputDoesNotContain("ClassCleanup completed");
     }
@@ -257,7 +257,7 @@ public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase<InitializeAnd
             new() { ["TASKDELAY_TESTINIT"] = "1" });
 
         testHostResult.AssertOutputContains("TestInit started");
-        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' was canceled");
+        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' timed out after 100ms");
         testHostResult.AssertOutputDoesNotContain("TestInit completed");
     }
 
@@ -271,7 +271,7 @@ public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase<InitializeAnd
             new() { ["TASKDELAY_TESTCLEANUP"] = "1" });
 
         testHostResult.AssertOutputContains("TestCleanup started");
-        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' was canceled");
+        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' timed out after 100ms");
         testHostResult.AssertOutputDoesNotContain("TestCleanup completed");
     }
 
@@ -299,7 +299,7 @@ public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase<InitializeAnd
             new() { ["CHECKTOKEN_ASSEMBLYINIT"] = "1" });
 
         testHostResult.AssertOutputContains("AssemblyInit started");
-        testHostResult.AssertOutputContains("Assembly initialize method 'TestClass.AssemblyInit' timed out");
+        testHostResult.AssertOutputContains("Assembly initialize method 'TestClass.AssemblyInit' timed out after 100ms");
         testHostResult.AssertOutputContains("AssemblyInit Thread.Sleep completed");
         testHostResult.AssertOutputDoesNotContain("AssemblyInit completed");
     }
@@ -329,7 +329,7 @@ public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase<InitializeAnd
             new() { ["CHECKTOKEN_CLASSINIT"] = "1" });
 
         testHostResult.AssertOutputContains("ClassInit started");
-        testHostResult.AssertOutputContains("Class initialize method 'TestClass.ClassInit' timed out");
+        testHostResult.AssertOutputContains("Class initialize method 'TestClass.ClassInit' timed out after 100ms");
         testHostResult.AssertOutputContains("ClassInit Thread.Sleep completed");
         testHostResult.AssertOutputDoesNotContain("ClassInit completed");
     }
@@ -360,7 +360,7 @@ public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase<InitializeAnd
 
         testHostResult.AssertOutputContains("TestInit started");
         testHostResult.AssertOutputDoesNotContain("TestInit completed");
-        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' timed out");
+        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' timed out after 100ms");
     }
 
     [TestMethod]
@@ -374,7 +374,7 @@ public class InitializeAndCleanupTimeoutTests : AcceptanceTestBase<InitializeAnd
 
         testHostResult.AssertOutputContains("TestCleanup started");
         testHostResult.AssertOutputDoesNotContain("TestCleanup completed");
-        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' timed out");
+        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' timed out after 100ms");
     }
 
     [TestMethod]
@@ -484,34 +484,25 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class TestClass
 {
-    private static TestContext _assemblyTestContext;
-    private static TestContext _classTestContext;
-
     [Timeout(100, CooperativeCancellation = true)]
     [AssemblyInitialize]
     public static async Task AssemblyInit(TestContext testContext)
-    {
-        _assemblyTestContext = testContext;
-        await DoWork("ASSEMBLYINIT", "AssemblyInit", testContext);
-    }
+        => await DoWork("ASSEMBLYINIT", "AssemblyInit", testContext);
 
     [Timeout(100, CooperativeCancellation = true)]
     [AssemblyCleanup]
-    public static async Task AssemblyCleanup()
-        => await DoWork("ASSEMBLYCLEANUP", "AssemblyCleanup", _assemblyTestContext);
+    public static async Task AssemblyCleanup(TestContext testContext)
+        => await DoWork("ASSEMBLYCLEANUP", "AssemblyCleanup", testContext);
 
     [Timeout(100, CooperativeCancellation = true)]
     [ClassInitialize]
     public static async Task ClassInit(TestContext testContext)
-    {
-        _classTestContext = testContext;
-        await DoWork("CLASSINIT", "ClassInit", testContext);
-    }
+        => await DoWork("CLASSINIT", "ClassInit", testContext);
 
     [Timeout(100, CooperativeCancellation = true)]
     [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
-    public static async Task ClassCleanup()
-        => await DoWork("CLASSCLEANUP", "ClassCleanup", _classTestContext);
+    public static async Task ClassCleanup(TestContext testContext)
+        => await DoWork("CLASSCLEANUP", "ClassCleanup", testContext);
 
     public TestContext TestContext { get; set; }
 
