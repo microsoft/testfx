@@ -4,7 +4,7 @@
 #if WINDOWS_UWP
 namespace Microsoft.Testing.Platform.Configurations;
 
-public interface IConfiguration
+internal interface IConfiguration
 {
 }
 #endif
