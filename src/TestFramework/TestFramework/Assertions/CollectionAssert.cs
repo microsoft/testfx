@@ -1563,8 +1563,8 @@ public sealed class CollectionAssert
         // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
 
         // Count the occurrences of each object in the both collections
-        Dictionary<T, int> expectedElements = GetElementCounts<T>(expected, comparer, out int expectedNulls);
-        Dictionary<T, int> actualElements = GetElementCounts<T>(actual, comparer, out int actualNulls);
+        Dictionary<T, int> expectedElements = GetElementCounts(expected, comparer, out int expectedNulls);
+        Dictionary<T, int> actualElements = GetElementCounts(actual, comparer, out int actualNulls);
 
         if (actualNulls != expectedNulls)
         {

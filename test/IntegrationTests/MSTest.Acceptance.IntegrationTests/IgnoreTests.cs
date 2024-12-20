@@ -6,17 +6,13 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class IgnoreTests : AcceptanceTestBase
+[TestClass]
+public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public IgnoreTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
+    [TestMethod]
     public async Task ClassCleanup_Inheritance_WhenClassIsSkipped()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter ClassName!~TestClassWithAssemblyInitialize");
 
         // Assert
@@ -26,9 +22,10 @@ public sealed class IgnoreTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("SubClass.Method");
     }
 
+    [TestMethod]
     public async Task WhenAllTestsAreIgnored_AssemblyInitializeAndCleanupAreSkipped()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithAssemblyInitialize");
 
         // Assert
@@ -38,8 +35,7 @@ public sealed class IgnoreTests : AcceptanceTestBase
         testHostResult.AssertOutputDoesNotContain("AssemblyCleanup");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestIgnore";
 

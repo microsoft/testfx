@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class DoNotStoreStaticTestContextAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class DoNotStoreStaticTestContextAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenAssemblyInitializeOrClassInitialize_Diagnostic()
     {
         string code = """
@@ -87,6 +88,7 @@ public sealed class DoNotStoreStaticTestContextAnalyzerTests(ITestExecutionConte
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenOtherTestContext_NoDiagnostic()
     {
         string code = """

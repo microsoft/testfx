@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class DynamicDataShouldBeValidAnalyzerTests
 {
+    [TestMethod]
     public async Task ValidUsages_NoDiagnostic()
     {
         string code = """
@@ -22,49 +23,97 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             {
                 [DynamicData("Data")]
                 [TestMethod]
-                public void TestMethod1(object[] o)
+                public void TestMethod1Auto(object[] o)
+                {
+                }
+
+                [DynamicData("Data", DynamicDataSourceType.Property)]
+                [TestMethod]
+                public void TestMethod1Property(object[] o)
                 {
                 }
 
                 [DynamicData("SomeData", typeof(SomeClass))]
                 [TestMethod]
-                public void TestMethod2(object[] o)
+                public void TestMethod2Auto(object[] o)
+                {
+                }
+
+                [DynamicData("SomeData", typeof(SomeClass), DynamicDataSourceType.Property)]
+                [TestMethod]
+                public void TestMethod2Property(object[] o)
                 {
                 }
 
                 [DynamicData(dynamicDataSourceName: "Data")]
                 [TestMethod]
-                public void TestMethod3(object[] o)
+                public void TestMethod3Auto(object[] o)
+                {
+                }
+
+                [DynamicData(dynamicDataSourceName: "Data", DynamicDataSourceType.Property)]
+                [TestMethod]
+                public void TestMethod3Property(object[] o)
                 {
                 }
 
                 [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeData")]
                 [TestMethod]
-                public void TestMethod4(object[] o)
+                public void TestMethod4Auto(object[] o)
+                {
+                }
+
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeData", dynamicDataSourceType: DynamicDataSourceType.Property)]
+                [TestMethod]
+                public void TestMethod4Property(object[] o)
                 {
                 }
 
                 [DynamicData("GetData", DynamicDataSourceType.Method)]
                 [TestMethod]
-                public void TestMethod11(object[] o)
+                public void TestMethod11Method(object[] o)
+                {
+                }
+
+                [DynamicData("GetData")]
+                [TestMethod]
+                public void TestMethod11Auto(object[] o)
                 {
                 }
 
                 [DynamicData("GetSomeData", typeof(SomeClass), DynamicDataSourceType.Method)]
                 [TestMethod]
-                public void TestMethod12(object[] o)
+                public void TestMethod12Method(object[] o)
+                {
+                }
+
+                [DynamicData("GetSomeData", typeof(SomeClass))]
+                [TestMethod]
+                public void TestMethod12Auto(object[] o)
                 {
                 }
 
                 [DynamicData(dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetData")]
                 [TestMethod]
-                public void TestMethod13(object[] o)
+                public void TestMethod13Method(object[] o)
+                {
+                }
+
+                [DynamicData(dynamicDataSourceType: DynamicDataSourceType.AutoDetect, dynamicDataSourceName: "GetData")]
+                [TestMethod]
+                public void TestMethod13Auto(object[] o)
                 {
                 }
 
                 [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetSomeData")]
                 [TestMethod]
-                public void TestMethod14(object[] o)
+                public void TestMethod14Method(object[] o)
+                {
+                }
+
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceType: DynamicDataSourceType.AutoDetect, dynamicDataSourceName: "GetSomeData")]
+                [TestMethod]
+                public void TestMethod14Auto(object[] o)
                 {
                 }
 
@@ -260,16 +309,116 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
                 {
                 }
 
+                [DynamicData("Data")]
+                [TestMethod]
+                public void TestMethod501(object[] o)
+                {
+                }
+            
+                [DynamicData("SomeData", typeof(SomeClass))]
+                [TestMethod]
+                public void TestMethod502(object[] o)
+                {
+                }
+            
+                [DynamicData(dynamicDataSourceName: "Data")]
+                [TestMethod]
+                public void TestMethod503(object[] o)
+                {
+                }
+            
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeData")]
+                [TestMethod]
+                public void TestMethod504(object[] o)
+                {
+                }
+
+                [DynamicData("GetData", DynamicDataSourceType.Method)]
+                [TestMethod]
+                public void TestMethod511(object[] o)
+                {
+                }
+            
+                [DynamicData("GetSomeData", typeof(SomeClass), DynamicDataSourceType.Method)]
+                [TestMethod]
+                public void TestMethod512(object[] o)
+                {
+                }
+            
+                [DynamicData(dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetData")]
+                [TestMethod]
+                public void TestMethod513(object[] o)
+                {
+                }
+            
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetSomeData")]
+                [TestMethod]
+                public void TestMethod514(object[] o)
+                {
+                }
+
+                [DynamicData("DataArray")]
+                [TestMethod]
+                public void TestMethod601(MyTestClass[] o)
+                {
+                }
+            
+                [DynamicData("SomeDataArray", typeof(SomeClass))]
+                [TestMethod]
+                public void TestMethod602(MyTestClass[] o)
+                {
+                }
+            
+                [DynamicData(dynamicDataSourceName: "DataArray")]
+                [TestMethod]
+                public void TestMethod603(MyTestClass[] o)
+                {
+                }
+            
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeDataArray")]
+                [TestMethod]
+                public void TestMethod604(MyTestClass[] o)
+                {
+                }
+            
+                [DynamicData("GetDataArray", DynamicDataSourceType.Method)]
+                [TestMethod]
+                public void TestMethod611(MyTestClass[] o)
+                {
+                }
+            
+                [DynamicData("GetSomeDataArray", typeof(SomeClass), DynamicDataSourceType.Method)]
+                [TestMethod]
+                public void TestMethod612(MyTestClass[] o)
+                {
+                }
+            
+                [DynamicData(dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetDataArray")]
+                [TestMethod]
+                public void TestMethod613(MyTestClass[] o)
+                {
+                }
+            
+                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetSomeDataArray")]
+                [TestMethod]
+                public void TestMethod614(MyTestClass[] o)
+                {
+                }    
+
                 public static IEnumerable<object[]> Data => new List<object[]>();
                 public static IEnumerable<Tuple<int, string>> DataTuple => new List<Tuple<int, string>>();
                 public static IEnumerable<(int, string)> DataValueTuple => new List<(int, string)>();
                 public static MyTestClass[][] DataJaggedArray => System.Array.Empty<MyTestClass[]>();
                 public static IEnumerable<MyTestClass[]> DataNonObjectTypeArray => new List<MyTestClass[]>();
+                public static IEnumerable<object> DataObject => new List<object>();
+                public static MyTestClass[] DataArray => System.Array.Empty<MyTestClass>();
                 public static IEnumerable<object[]> GetData() => new List<object[]>();
                 public static IEnumerable<Tuple<int, string>> GetDataTuple() => new List<Tuple<int, string>>();
                 public static IEnumerable<(int, string)> GetDataValueTuple() => new List<(int, string)>();
                 public static MyTestClass[][] GetDataJaggedArray() => System.Array.Empty<MyTestClass[]>();
                 public static IEnumerable<MyTestClass[]> GetDataNonObjectTypeArray() => new List<MyTestClass[]>();
+                public static IEnumerable<object> GetDataObject() => new List<object>();
+                public static MyTestClass[] GetDataArray() => System.Array.Empty<MyTestClass>();
             }
 
             public class SomeClass
@@ -279,17 +428,22 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
                 public static IEnumerable<(int, string)> SomeDataValueTuple => new List<(int, string)>();
                 public static MyTestClass[][] SomeDataJaggedArray => System.Array.Empty<MyTestClass[]>();
                 public static IEnumerable<MyTestClass[]> SomeDataNonObjectTypeArray => new List<MyTestClass[]>();
+                public static IEnumerable<object> SomeDataObject => new List<object>();
+                public static MyTestClass[] SomeDataArray => System.Array.Empty<MyTestClass>();
                 public static IEnumerable<object[]> GetSomeData() => new List<object[]>();
                 public static IEnumerable<Tuple<int, string>> GetSomeDataTuple() => new List<Tuple<int, string>>();
                 public static IEnumerable<(int, string)> GetSomeDataValueTuple() => new List<(int, string)>();
                 public static MyTestClass[][] GetSomeDataJaggedArray() => System.Array.Empty<MyTestClass[]>();
                 public static IEnumerable<MyTestClass[]> GetSomeDataNonObjectTypeArray() => new List<MyTestClass[]>();
+                public static IEnumerable<object> GetSomeDataObject() => new List<object>();
+                public static MyTestClass[] GetSomeDataArray() => System.Array.Empty<MyTestClass>();
             }
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataSourceMemberDoesNotExist_Diagnostic()
     {
         string code = """
@@ -364,6 +518,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithLocation(7).WithArguments("SomeClass", "MemberNotFound"));
     }
 
+    [TestMethod]
     public async Task WhenAppliedToNonTestMethod_Diagnostic()
     {
         string code = """
@@ -372,22 +527,22 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             [TestClass]
             public class MyTestClass
             {
-                [DynamicData("SomeProperty")]
+                [{|#4:DynamicData("SomeProperty")|}]
                 public void {|#0:TestMethod1|}(object[] o)
                 {
                 }
 
-                [DynamicData("SomeProperty", typeof(SomeClass))]
+                [{|#5:DynamicData("SomeProperty", typeof(SomeClass))|}]
                 public void {|#1:TestMethod2|}(object[] o)
                 {
                 }
 
-                [DynamicData(dynamicDataSourceName: "SomeProperty")]
+                [{|#6:DynamicData(dynamicDataSourceName: "SomeProperty")|}]
                 public void {|#2:TestMethod3|}(object[] o)
                 {
                 }
 
-                [DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeProperty")]
+                [{|#7:DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeProperty")|}]
                 public void {|#3:TestMethod4|}(object[] o)
                 {
                 }
@@ -400,12 +555,25 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithLocation(0),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithLocation(1),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithLocation(2),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithLocation(3));
+            // /0/Test0.cs(6,6): warning MSTEST0018: '[DynamicData]' member 'MyTestClass.SomeProperty' cannot be found
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithSpan(6, 6, 6, 33).WithArguments("MyTestClass", "SomeProperty"),
+            // /0/Test0.cs(7,17): warning MSTEST0018: '[DynamicData]' should only be set on a test method
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithSpan(7, 17, 7, 28),
+            // /0/Test0.cs(11,6): warning MSTEST0018: '[DynamicData]' member 'SomeClass.SomeProperty' cannot be found
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithSpan(11, 6, 11, 52).WithArguments("SomeClass", "SomeProperty"),
+            // /0/Test0.cs(12,17): warning MSTEST0018: '[DynamicData]' should only be set on a test method
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithSpan(12, 17, 12, 28),
+            // /0/Test0.cs(16,6): warning MSTEST0018: '[DynamicData]' member 'MyTestClass.SomeProperty' cannot be found
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithSpan(16, 6, 16, 56).WithArguments("MyTestClass", "SomeProperty"),
+            // /0/Test0.cs(17,17): warning MSTEST0018: '[DynamicData]' should only be set on a test method
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithSpan(17, 17, 17, 28),
+            // /0/Test0.cs(21,6): warning MSTEST0018: '[DynamicData]' member 'SomeClass.SomeProperty' cannot be found
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithSpan(21, 6, 21, 101).WithArguments("SomeClass", "SomeProperty"),
+            // /0/Test0.cs(22,17): warning MSTEST0018: '[DynamicData]' should only be set on a test method
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.NotTestMethodRule).WithSpan(22, 17, 22, 28));
     }
 
+    [TestMethod]
     public async Task WhenDataSourceMemberFoundMultipleTimes_Diagnostic()
     {
         string code = """
@@ -439,6 +607,18 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
                 {
                 }
 
+                [{|#4:DynamicData("GetData", DynamicDataSourceType.AutoDetect)|}]
+                [TestMethod]
+                public void TestMethod5(object[] o)
+                {
+                }
+
+                [{|#5:DynamicData("GetData")|}]
+                [TestMethod]
+                public void TestMethod6(object[] o)
+                {
+                }
+
                 public static IEnumerable<object[]> GetData() => new List<object[]>();
                 public static IEnumerable<object[]> GetData(int i) => new List<object[]>();
             }
@@ -455,9 +635,12 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule).WithLocation(0).WithArguments("MyTestClass", "GetData"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule).WithLocation(1).WithArguments("SomeClass", "GetSomeData"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule).WithLocation(2).WithArguments("MyTestClass", "GetData"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule).WithLocation(3).WithArguments("SomeClass", "GetSomeData"));
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule).WithLocation(3).WithArguments("SomeClass", "GetSomeData"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule).WithLocation(4).WithArguments("MyTestClass", "GetData"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.FoundTooManyMembersRule).WithLocation(5).WithArguments("MyTestClass", "GetData"));
     }
 
+    [TestMethod]
     public async Task WhenMemberKindIsMixedUp_Diagnostic()
     {
         string code = """
@@ -467,25 +650,25 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             [TestClass]
             public class MyTestClass
             {
-                [{|#0:DynamicData("GetData")|}]
+                [{|#0:DynamicData("GetData", DynamicDataSourceType.Property)|}]
                 [TestMethod]
                 public void TestMethod1(object[] o)
                 {
                 }
 
-                [{|#1:DynamicData("GetSomeData", typeof(SomeClass))|}]
+                [{|#1:DynamicData("GetSomeData", typeof(SomeClass), DynamicDataSourceType.Property)|}]
                 [TestMethod]
                 public void TestMethod2(object[] o)
                 {
                 }
 
-                [{|#2:DynamicData(dynamicDataSourceName: "GetData")|}]
+                [{|#2:DynamicData(dynamicDataSourceName: "GetData", DynamicDataSourceType.Property)|}]
                 [TestMethod]
                 public void TestMethod3(object[] o)
                 {
                 }
 
-                [{|#3:DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "GetSomeData")|}]
+                [{|#3:DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "GetSomeData", dynamicDataSourceType: DynamicDataSourceType.Property)|}]
                 [TestMethod]
                 public void TestMethod4(object[] o)
                 {
@@ -515,8 +698,33 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
                 {
                 }
 
+                [{|#8:DynamicData(nameof(DataField), DynamicDataSourceType.Method)|}]
+                [TestMethod]
+                public void TestMethod15(object[] o)
+                {
+                }
+
+                [{|#9:DynamicData(nameof(DataField), DynamicDataSourceType.Property)|}]
+                [TestMethod]
+                public void TestMethod16(object[] o)
+                {
+                }
+
+                [{|#10:DynamicData(nameof(DataField), DynamicDataSourceType.AutoDetect)|}]
+                [TestMethod]
+                public void TestMethod17(object[] o)
+                {
+                }
+
+                [{|#11:DynamicData(nameof(DataField))|}]
+                [TestMethod]
+                public void TestMethod18(object[] o)
+                {
+                }
+
                 public static IEnumerable<object[]> Data => new List<object[]>();
                 public static IEnumerable<object[]> GetData() => new List<object[]>();
+                public static IEnumerable<object[]> DataField = new List<object[]>();
             }
 
             public class SomeClass
@@ -535,149 +743,14 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(4).WithArguments("MyTestClass", "Data"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(5).WithArguments("SomeClass", "SomeData"),
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(6).WithArguments("MyTestClass", "Data"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(7).WithArguments("SomeClass", "SomeData"));
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypePropertyRule).WithLocation(7).WithArguments("SomeClass", "SomeData"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeNotPropertyOrMethodRule).WithLocation(8).WithArguments("MyTestClass", "DataField"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeNotPropertyOrMethodRule).WithLocation(9).WithArguments("MyTestClass", "DataField"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeNotPropertyOrMethodRule).WithLocation(10).WithArguments("MyTestClass", "DataField"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.SourceTypeNotPropertyOrMethodRule).WithLocation(11).WithArguments("MyTestClass", "DataField"));
     }
 
-    public async Task WhenDataSourceReturnTypeIsInvalid_Diagnostic()
-    {
-        string code = """
-            using System.Collections.Generic;
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [{|#0:DynamicData("Data")|}]
-                [TestMethod]
-                public void TestMethod1(object[] o)
-                {
-                }
-
-                [{|#1:DynamicData("SomeData", typeof(SomeClass))|}]
-                [TestMethod]
-                public void TestMethod2(object[] o)
-                {
-                }
-
-                [{|#2:DynamicData(dynamicDataSourceName: "Data")|}]
-                [TestMethod]
-                public void TestMethod3(object[] o)
-                {
-                }
-
-                [{|#3:DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeData")|}]
-                [TestMethod]
-                public void TestMethod4(object[] o)
-                {
-                }
-
-                [{|#4:DynamicData("GetData", DynamicDataSourceType.Method)|}]
-                [TestMethod]
-                public void TestMethod5(object[] o)
-                {
-                }
-
-                [{|#5:DynamicData("GetSomeData", typeof(SomeClass), DynamicDataSourceType.Method)|}]
-                [TestMethod]
-                public void TestMethod6(object[] o)
-                {
-                }
-
-                [{|#6:DynamicData(dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetData")|}]
-                [TestMethod]
-                public void TestMethod7(object[] o)
-                {
-                }
-
-                [{|#7:DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetSomeData")|}]
-                [TestMethod]
-                public void TestMethod8(object[] o)
-                {
-                }
-
-                [{|#8:DynamicData("DataArray")|}]
-                [TestMethod]
-                public void TestMethod9(MyTestClass[] o)
-                {
-                }
-
-                [{|#9:DynamicData("SomeDataArray", typeof(SomeClass))|}]
-                [TestMethod]
-                public void TestMethod10(MyTestClass[] o)
-                {
-                }
-
-                [{|#10:DynamicData(dynamicDataSourceName: "DataArray")|}]
-                [TestMethod]
-                public void TestMethod11(MyTestClass[] o)
-                {
-                }
-
-                [{|#11:DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceName: "SomeDataArray")|}]
-                [TestMethod]
-                public void TestMethod12(MyTestClass[] o)
-                {
-                }
-
-                [{|#12:DynamicData("GetDataArray", DynamicDataSourceType.Method)|}]
-                [TestMethod]
-                public void TestMethod13(MyTestClass[] o)
-                {
-                }
-
-                [{|#13:DynamicData("GetSomeDataArray", typeof(SomeClass), DynamicDataSourceType.Method)|}]
-                [TestMethod]
-                public void TestMethod14(MyTestClass[] o)
-                {
-                }
-
-                [{|#14:DynamicData(dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetDataArray")|}]
-                [TestMethod]
-                public void TestMethod15(MyTestClass[] o)
-                {
-                }
-
-                [{|#15:DynamicData(dynamicDataDeclaringType: typeof(SomeClass), dynamicDataSourceType: DynamicDataSourceType.Method, dynamicDataSourceName: "GetSomeDataArray")|}]
-                [TestMethod]
-                public void TestMethod16(MyTestClass[] o)
-                {
-                }
-
-                public static IEnumerable<object> Data => new List<object>();
-                public static MyTestClass[] DataArray => System.Array.Empty<MyTestClass>();
-                public static IEnumerable<object> GetData() => new List<object>();
-                public static MyTestClass[] GetDataArray() => System.Array.Empty<MyTestClass>();
-            }
-
-            public class SomeClass
-            {
-                public static IEnumerable<object> SomeData => new List<object>();
-                public static MyTestClass[] SomeDataArray => System.Array.Empty<MyTestClass>();
-                public static IEnumerable<object> GetSomeData() => new List<object>();
-                public static MyTestClass[] GetSomeDataArray() => System.Array.Empty<MyTestClass>();
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(0).WithArguments("MyTestClass", "Data"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(1).WithArguments("SomeClass", "SomeData"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(2).WithArguments("MyTestClass", "Data"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(3).WithArguments("SomeClass", "SomeData"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(4).WithArguments("MyTestClass", "GetData"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(5).WithArguments("SomeClass", "GetSomeData"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(6).WithArguments("MyTestClass", "GetData"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(7).WithArguments("SomeClass", "GetSomeData"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(8).WithArguments("MyTestClass", "DataArray"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(9).WithArguments("SomeClass", "SomeDataArray"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(10).WithArguments("MyTestClass", "DataArray"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(11).WithArguments("SomeClass", "SomeDataArray"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(12).WithArguments("MyTestClass", "GetDataArray"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(13).WithArguments("SomeClass", "GetSomeDataArray"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(14).WithArguments("MyTestClass", "GetDataArray"),
-            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberTypeRule).WithLocation(15).WithArguments("SomeClass", "GetSomeDataArray"));
-    }
-
+    [TestMethod]
     public async Task MemberIsNotStatic_Diagnostic()
     {
         string code = """
@@ -711,6 +784,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DataMemberSignatureRule).WithLocation(1).WithArguments("MyTestClass", "GetData"));
     }
 
+    [TestMethod]
     public async Task MemberIsNotPublic_NoDiagnostic()
     {
         string code = """
@@ -741,6 +815,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task MethodHasParameters_Diagnostic()
     {
         string code = """
@@ -774,6 +849,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DataMemberSignatureRule).WithLocation(1).WithArguments("MyTestClass", "GetData2"));
     }
 
+    [TestMethod]
     public async Task MethodIsGeneric_Diagnostic()
     {
         string code = """
@@ -799,6 +875,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DataMemberSignatureRule).WithLocation(0).WithArguments("MyTestClass", "GetData"));
     }
 
+    [TestMethod]
     public async Task WhenDisplayMemberIsValid_NoDiagnostic()
     {
         string code = """
@@ -873,6 +950,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDisplayMemberIsNotFound_Diagnostic()
     {
         string code = """
@@ -924,6 +1002,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithLocation(3).WithArguments("SomeClass", "MemberNotFound"));
     }
 
+    [TestMethod]
     public async Task WhenDisplayMemberIsNotPublic_Diagnostic()
     {
         string code = """
@@ -979,6 +1058,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DisplayMethodSignatureRule).WithLocation(3).WithArguments("SomeClass", "GetSomeDisplayName"));
     }
 
+    [TestMethod]
     public async Task WhenDisplayMemberIsNotStatic_Diagnostic()
     {
         string code = """
@@ -1034,6 +1114,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DisplayMethodSignatureRule).WithLocation(3).WithArguments("SomeClass", "GetSomeDisplayName"));
     }
 
+    [TestMethod]
     public async Task WhenDisplayMemberDoesNotReturnString_Diagnostic()
     {
         string code = """
@@ -1089,6 +1170,7 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.DisplayMethodSignatureRule).WithLocation(3).WithArguments("SomeClass", "GetSomeDisplayName"));
     }
 
+    [TestMethod]
     public async Task WhenDisplayMemberInvalidParameters_Diagnostic()
     {
         string code = """

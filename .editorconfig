@@ -249,6 +249,7 @@ dotnet_diagnostic.SA1402.severity = none                # SA1402: File may only 
 dotnet_diagnostic.SA1515.severity = none                # SA1515: Single-line comment should be preceded by blank line
 dotnet_diagnostic.SA1611.severity = none                # SA1611: Element parameters should be documented
 dotnet_diagnostic.SA1615.severity = none                # SA1615: Element return value should be documented
+dotnet_diagnostic.SA1633.severity = none                # SA1633: File should have header
 dotnet_diagnostic.SA1649.severity = none                # SA1649: File name should match first type name
 
 # -----------------------------------------------------------------------------------------

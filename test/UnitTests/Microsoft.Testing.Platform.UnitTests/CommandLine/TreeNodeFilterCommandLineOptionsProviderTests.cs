@@ -7,14 +7,10 @@ using Microsoft.Testing.Platform.UnitTests.Helpers;
 
 namespace Microsoft.Testing.Platform.UnitTests.CommandLine;
 
-[TestGroup]
-public class TreeNodeFilterCommandLineOptionsProviderTests : TestBase
+[TestClass]
+public sealed class TreeNodeFilterCommandLineOptionsProviderTests
 {
-    public TreeNodeFilterCommandLineOptionsProviderTests(ITestExecutionContext testExecutionContext)
-    : base(testExecutionContext)
-    {
-    }
-
+    [TestMethod]
     public async Task TreenodeFilter_AlwaysValid()
     {
         var provider = new TreeNodeFilterCommandLineOptionsProvider(new TestExtension());
@@ -24,6 +20,7 @@ public class TreeNodeFilterCommandLineOptionsProviderTests : TestBase
         Assert.IsTrue(validateOptionsResult.IsValid);
     }
 
+    [TestMethod]
     public async Task CommandLineOptions_AlwaysValid()
     {
         var provider = new TreeNodeFilterCommandLineOptionsProvider(new TestExtension());

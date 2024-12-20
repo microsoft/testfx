@@ -1,23 +1,17 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class MaxFailedTestsExtensionTests : AcceptanceTestBase
+[TestClass]
+public class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedTestsExtensionTests.TestAssetFixture>
 {
     private const string AssetName = nameof(MaxFailedTestsExtensionTests);
-    private readonly TestAssetFixture _testAssetFixture;
 
-    public MaxFailedTestsExtensionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
+    [TestMethod]
     public async Task TestMaxFailedTestsShouldCallStopTestExecutionAsync()
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2");
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestExecutionStoppedForMaxFailedTests);
@@ -26,9 +20,10 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 3, passed: 3, skipped: 0);
     }
 
+    [TestMethod]
     public async Task WhenCapabilityIsMissingShouldFail()
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2", environmentVariables: new()
         {
             ["DO_NOT_ADD_CAPABILITY"] = "1",
@@ -38,8 +33,7 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
 #file MaxFailedTestsExtensionTests.csproj
@@ -74,11 +68,11 @@ internal sealed class Program
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-        var adapter = new DummyAdapter();
-        builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => adapter);
+        var testFramework = new DummyTestFramework();
+        builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => testFramework);
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        builder.AddMaximumFailedTestsService(adapter);
+        builder.AddMaximumFailedTestsService(testFramework);
 #pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         using ITestApplication app = await builder.BuildAsync();
@@ -86,9 +80,9 @@ internal sealed class Program
     }
 }
 
-internal class DummyAdapter : ITestFramework, IDataProducer
+internal class DummyTestFramework : ITestFramework, IDataProducer
 {
-    public string Uid => nameof(DummyAdapter);
+    public string Uid => nameof(DummyTestFramework);
 
     public string Version => string.Empty;
 

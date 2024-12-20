@@ -1,23 +1,17 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
-using Microsoft.Testing.Platform.Helpers;
-
 using SL = Microsoft.Build.Logging.StructuredLogger;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class MSBuildTests_EntryPoint : AcceptanceTestBase
+[TestClass]
+public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSBuildTests";
-    private readonly AcceptanceFixture _acceptanceFixture;
 
-    public MSBuildTests_EntryPoint(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
-
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [TestMethod]
     public async Task When_GenerateTestingPlatformEntryPoint_IsFalse_NoEntryPointInjected(string tfm, BuildConfiguration compilationMode, Verb verb)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -25,9 +19,9 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase
             CSharpSourceCode
             .PatchCodeWithReplace("$TargetFrameworks$", tfm)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj ", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
-        compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -p:GenerateTestingPlatformEntryPoint=False -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -p:GenerateTestingPlatformEntryPoint=False -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
         SL.Build binLog = SL.Serialization.Read(binlogFile);
         SL.Target generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPoint");
         Assert.AreEqual("Target \"_GenerateTestingPlatformEntryPoint\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'True' ) was evaluated as ( 'False' == 'True' ).", ((SL.Message)generateTestingPlatformEntryPoint.Children[0]).Text);
@@ -38,7 +32,8 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase
         Assert.AreNotEqual(0, compilationResult.ExitCode);
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [TestMethod]
     public async Task GenerateCSharpEntryPointAndVerifyTheCacheUsage(string tfm, BuildConfiguration compilationMode, Verb verb)
         => await GenerateAndVerifyLanguageSpecificEntryPoint(nameof(GenerateCSharpEntryPointAndVerifyTheCacheUsage), CSharpSourceCode, "cs", tfm, compilationMode, verb,
             @"Entrypoint source:
@@ -62,7 +57,8 @@ internal sealed class TestingPlatformEntryPoint
     }
 }'", "Csc");
 
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [TestMethod]
     public async Task GenerateVBEntryPointAndVerifyTheCacheUsage(string tfm, BuildConfiguration compilationMode, Verb verb)
         => await GenerateAndVerifyLanguageSpecificEntryPoint(nameof(GenerateVBEntryPointAndVerifyTheCacheUsage), VBSourceCode, "vb", tfm, compilationMode, verb,
             @"Entrypoint source:
@@ -89,7 +85,8 @@ Module TestingPlatformEntryPoint
 
 End Module'", "Vbc");
 
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [TestMethod]
     public async Task GenerateFSharpEntryPointAndVerifyTheCacheUsage(string tfm, BuildConfiguration compilationMode, Verb verb)
         => await GenerateAndVerifyLanguageSpecificEntryPoint(nameof(GenerateFSharpEntryPointAndVerifyTheCacheUsage), FSharpSourceCode, "fs", tfm, compilationMode, verb,
             @"Entrypoint source:
@@ -116,13 +113,11 @@ let main args =
     {
         string finalSourceCode = sourceCode
             .PatchCodeWithReplace("$TargetFrameworks$", tfm)
-            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            // We need to pickup local build packages -dev
-            .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingPlatformVersion);
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, finalSourceCode);
-        await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.{languageFileExtension}proj", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.{languageFileExtension}proj", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         string binlogFile = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"), "msbuild.binlog");
-        DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         SL.Build binLog = SL.Serialization.Read(binlogFile);
         SL.Target generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPoint");
         SL.Task testingPlatformEntryPoint = generateTestingPlatformEntryPoint.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformEntryPointTask");
@@ -141,7 +136,7 @@ let main args =
         Assert.IsNotNull(sourceFilePathInObj);
 
         File.Delete(binlogFile);
-        await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -bl:{binlogFile} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         binLog = SL.Serialization.Read(binlogFile);
         generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>(t => t.Name == "_GenerateTestingPlatformEntryPoint" && t.Children.Count > 0).Single();
         Assert.IsNotNull(generateTestingPlatformEntryPoint.FindChildrenRecursive<SL.Message>(m => m.Text.Contains("Skipping target \"_GenerateTestingPlatformEntryPoint\" because all output files are up-to-date with respect to the input files.", StringComparison.OrdinalIgnoreCase)).Single());
@@ -158,15 +153,15 @@ let main args =
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="A" >
-        <DisplayName>DummyAdapter</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration</TypeFullName>
+        <DisplayName>DummyTestFramework</DisplayName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="B" >
-        <DisplayName>DummyAdapter2</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration2</TypeFullName>
+        <DisplayName>DummyTestFramework2</DisplayName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration2</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
@@ -181,7 +176,6 @@ let main args =
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
 </Project>
 
@@ -195,15 +189,15 @@ using Microsoft.Testing.Platform.Requests;
 
 namespace MyNamespaceRoot.Level1.Level2;
 
-public static class DummyAdapterRegistration
+public static class DummyTestFrameworkRegistration
 {
     public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] args)
     {
-        testApplicationBuilder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyAdapter());
+        testApplicationBuilder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
     }
 }
 
-public static class DummyAdapterRegistration2
+public static class DummyTestFrameworkRegistration2
 {
     public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] args)
     {
@@ -211,9 +205,9 @@ public static class DummyAdapterRegistration2
     }
 }
 
-internal sealed class DummyAdapter : ITestFramework, IDataProducer
+internal sealed class DummyTestFramework : ITestFramework, IDataProducer
 {
-    public string Uid => nameof(DummyAdapter);
+    public string Uid => nameof(DummyTestFramework);
 
     public string Version => string.Empty;
 
@@ -249,15 +243,15 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="A" >
-        <DisplayName>DummyAdapter</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration</TypeFullName>
+        <DisplayName>DummyTestFramework</DisplayName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="B" >
-        <DisplayName>DummyAdapter2</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration2</TypeFullName>
+        <DisplayName>DummyTestFramework2</DisplayName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration2</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
@@ -269,7 +263,6 @@ internal sealed class Capabilities : ITestFrameworkCapabilities
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
 </Project>
 
@@ -284,18 +277,18 @@ Imports Microsoft.Testing.Platform.Extensions
 Imports Microsoft.Testing.Platform
 
 Namespace MyNamespaceRoot.Level1.Level2
-  Public Module DummyAdapterRegistration
+  Public Module DummyTestFrameworkRegistration
     Public Sub AddExtensions(builder As ITestApplicationBuilder, args As String())
-      builder.RegisterTestFramework(Function() New Capabilities(), Function(cap, services) New DummyAdapter())
+      builder.RegisterTestFramework(Function() New Capabilities(), Function(cap, services) New DummyTestFramework())
     End Sub
   End Module
 
-  Public Module DummyAdapterRegistration2
+  Public Module DummyTestFrameworkRegistration2
     Public Sub AddExtensions(builder As ITestApplicationBuilder, args As String())
     End Sub
   End Module
 
-  Class DummyAdapter
+  Class DummyTestFramework
     Implements ITestFramework
     Implements IDataProducer
 
@@ -375,15 +368,15 @@ End Namespace
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="A" >
-        <DisplayName>DummyAdapter</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration</TypeFullName>
+        <DisplayName>DummyTestFramework</DisplayName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
     <ItemGroup>
       <TestingPlatformBuilderHook Include="B" >
-        <DisplayName>DummyAdapter2</DisplayName>
-        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyAdapterRegistration2</TypeFullName>
+        <DisplayName>DummyTestFramework2</DisplayName>
+        <TypeFullName>MyNamespaceRoot.Level1.Level2.DummyTestFrameworkRegistration2</TypeFullName>
       </TestingPlatformBuilderHook>
     </ItemGroup>
 
@@ -419,11 +412,11 @@ type Capabilities () =
     interface ITestFrameworkCapabilities with
         member _.Capabilities = [||]
 
-type DummyAdapter() =
+type DummyTestFramework() =
     let dataProducer = {
         new IDataProducer with
             member _.DataTypesProduced = [| typedefof<TestNodeUpdateMessage> |]
-            member _.Uid = nameof(DummyAdapter)
+            member _.Uid = nameof(DummyTestFramework)
             member _.Version = ""
             member _.DisplayName = ""
             member _.Description = ""
@@ -432,7 +425,7 @@ type DummyAdapter() =
         }
 
     interface ITestFramework with
-        member _.Uid = nameof(DummyAdapter)
+        member _.Uid = nameof(DummyTestFramework)
         member _.Version = ""
         member _.DisplayName = ""
         member _.Description = ""
@@ -449,11 +442,11 @@ type DummyAdapter() =
             context.Complete()
             }
 
-module DummyAdapterRegistration =
+module DummyTestFrameworkRegistration =
     let AddExtensions (testApplicationBuilder : ITestApplicationBuilder, args: string[]) =
-        testApplicationBuilder.RegisterTestFramework((fun _ -> Capabilities()), (fun _ _ -> DummyAdapter())) |> ignore
+        testApplicationBuilder.RegisterTestFramework((fun _ -> Capabilities()), (fun _ _ -> DummyTestFramework())) |> ignore
 
-module DummyAdapterRegistration2 =
+module DummyTestFrameworkRegistration2 =
     let AddExtensions (_, _) = ()
 
 """;

@@ -7,9 +7,10 @@ using Microsoft.Testing.Platform.CommandLine;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
-[TestGroup]
-public class TrxReportGeneratorCommandLineTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class TrxReportGeneratorCommandLineTests
 {
+    [TestMethod]
     public async Task IsValid_If_TrxFile_And_Only_TargetFilename_Is_Provided()
     {
         var provider = new TrxReportGeneratorCommandLine();
@@ -21,8 +22,9 @@ public class TrxReportGeneratorCommandLineTests(ITestExecutionContext testExecut
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
 
-    [Arguments(false, false)]
-    [Arguments(true, true)]
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(true, true)]
     public async Task IsInvalid_If_TrxFile_And_Only_TargetFilename_Are_Not_Provided(bool isTrxFile, bool hasDirectory)
     {
         var provider = new TrxReportGeneratorCommandLine();
@@ -39,8 +41,9 @@ public class TrxReportGeneratorCommandLineTests(ITestExecutionContext testExecut
         Assert.AreEqual(isTrxFile ? TestReports.Resources.ExtensionResources.TrxReportFileNameShouldNotContainPath : TestReports.Resources.ExtensionResources.TrxReportFileNameExtensionIsNotTrx, validateOptionsResult.ErrorMessage);
     }
 
-    [Arguments(false, false, true)]
-    [Arguments(true, true, false)]
+    [TestMethod]
+    [DataRow(false, false, true)]
+    [DataRow(true, true, false)]
     public async Task IsValid_When_TrxReport_TrxReportFile_Is_Provided_And_DiscoverTests_Not_Provided(bool isFileNameSet, bool isTrxSet, bool isDiscoverTestsSet)
     {
         var provider = new TrxReportGeneratorCommandLine();
@@ -65,8 +68,9 @@ public class TrxReportGeneratorCommandLineTests(ITestExecutionContext testExecut
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
 
-    [Arguments(true, false, false)]
-    [Arguments(true, true, true)]
+    [TestMethod]
+    [DataRow(true, false, false)]
+    [DataRow(true, true, true)]
     public async Task IsInvalid_When_TrxReport_TrxReportFile_Is_Provided_And_DiscoverTests_Provided(bool isFileNameSet, bool isTrxSet, bool isDiscoverTestsSet)
     {
         var provider = new TrxReportGeneratorCommandLine();

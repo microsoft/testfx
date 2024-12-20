@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenTestMethodIsNotIgnored_NoDiagnostic()
     {
         string code = """
@@ -28,6 +29,7 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task UsingIgnoreWithoutTestMethod_NoDiagnostic()
     {
         string code = """
@@ -46,6 +48,7 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodIsIgnored_Diagnostic()
     {
         string code = """
@@ -69,6 +72,7 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests(ITestExecutionCont
                 .WithArguments("MyTestMethod"));
     }
 
+    [TestMethod]
     public async Task WhenDerivedTestMethodAttributeIsIgnored_Diagnostic()
     {
         string code = """

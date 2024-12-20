@@ -20,11 +20,11 @@
   <PropertyGroup>
     <!-- Hot Reload -->
     <EnableMicrosoftTestingExtensionsHotReload Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHotReload>
-    <MicrosoftTestingExtensionsHotReloadVersion Condition=" '$(MicrosoftTestingExtensionsHotReloadVersion)' == '' " >$(MicrosoftTestingEntrepriseExtensionsVersion)</MicrosoftTestingExtensionsHotReloadVersion>
+    <MicrosoftTestingExtensionsHotReloadVersion Condition=" '$(MicrosoftTestingExtensionsHotReloadVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHotReloadVersion>
 
     <!-- Retry -->
     <EnableMicrosoftTestingExtensionsRetry Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsRetry>
-    <MicrosoftTestingExtensionsRetryVersion Condition=" '$(MicrosoftTestingExtensionsRetryVersion)' == '' " >$(MicrosoftTestingEntrepriseExtensionsVersion)</MicrosoftTestingExtensionsRetryVersion>
+    <MicrosoftTestingExtensionsRetryVersion Condition=" '$(MicrosoftTestingExtensionsRetryVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsRetryVersion>
 
     <!-- Crash dump -->
     <EnableMicrosoftTestingExtensionsCrashDump Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsCrashDump>
@@ -43,9 +43,6 @@
   <ItemGroup>
     <PackageReference Include="MSTest.TestFramework" Sdk="MSTest"
                       Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.Analyzers" Sdk="MSTest"
-                      Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)"
-                      Condition=" '$(EnableMSTestAnalyzers)' != 'false' " />
   </ItemGroup>
 
   <!-- Core (for test applications - not for test libraries) -->

@@ -8,20 +8,15 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class STATestClassTests : AcceptanceTestBase
+[TestClass]
+public sealed class STATestClassTests : AcceptanceTestBase<STATestClassTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
     private const string AssetName = "STATestClass";
     private const string TimeoutAssetName = "TimeoutSTATestClass";
     private const string CooperativeTimeoutAssetName = "CooperativeTimeoutSTATestClass";
 
-    // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
-    public STATestClassTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
-        AcceptanceFixture globalFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task STATestClass_OnWindows_OnLifeCycleTestClass_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -29,7 +24,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
             return;
         }
 
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
 
@@ -46,7 +41,8 @@ public sealed class STATestClassTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task STATestClass_OnWindows_OnLifeCycleTestClassWithLastTestSkipped_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -54,7 +50,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
             return;
         }
 
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClassWithLastTestSkipped");
 
@@ -71,7 +67,8 @@ public sealed class STATestClassTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task STATestClass_OnWindows_OnLifeCycleTestClass_WithTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -79,7 +76,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
             return;
         }
 
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetTimeoutAssetPath, TimeoutAssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetTimeoutAssetPath, TimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
 
@@ -96,7 +93,8 @@ public sealed class STATestClassTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task STATestClass_OnWindows_OnLifeCycleTestClassWithLastTestSkipped_WithTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -104,7 +102,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
             return;
         }
 
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetTimeoutAssetPath, TimeoutAssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetTimeoutAssetPath, TimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClassWithLastTestSkipped");
 
@@ -121,7 +119,8 @@ public sealed class STATestClassTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task STATestClass_OnWindows_OnLifeCycleTestClass_WithCooperativeTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -129,7 +128,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
             return;
         }
 
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetCooperativeTimeoutAssetPath, CooperativeTimeoutAssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetCooperativeTimeoutAssetPath, CooperativeTimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
 
@@ -146,7 +145,8 @@ public sealed class STATestClassTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task STATestClass_OnWindows_OnLifeCycleTestClassWithLastTestSkipped_WithCooperativeTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -154,7 +154,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
             return;
         }
 
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetCooperativeTimeoutAssetPath, CooperativeTimeoutAssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetCooperativeTimeoutAssetPath, CooperativeTimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClassWithLastTestSkipped");
 
@@ -171,7 +171,8 @@ public sealed class STATestClassTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task DerivedSTATestClass_OnWindows_OnTestClassWithClassCleanupEndOfAssembly_ClassCleanupIsMTA(string currentTfm)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -179,7 +180,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
             return;
         }
 
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithClassCleanupEndOfAssembly");
 
@@ -196,8 +197,7 @@ public sealed class STATestClassTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 

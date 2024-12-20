@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenTestClassHasDeploymentItem_NoDiagnostic()
     {
         string code = """
@@ -25,6 +26,7 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzerTests(ITes
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodHasDeploymentItem_NoDiagnostic()
     {
         string code = """
@@ -44,6 +46,7 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzerTests(ITes
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenInheritedTestClassAttributeHasDeploymentItem_NoDiagnostic()
     {
         string code = """
@@ -62,6 +65,7 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzerTests(ITes
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenInheritedTestMethodAttributeHasDeploymentItem_NoDiagnostic()
     {
         string code = """
@@ -84,6 +88,7 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzerTests(ITes
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAClassHasDeploymentItem_Diagnostic()
     {
         string code = """
@@ -98,6 +103,7 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzerTests(ITes
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAMethodHasDeploymentItem_Diagnostic()
     {
         string code = """

@@ -61,9 +61,9 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
         <target state="translated">Byly zjištěny soubory .runsettings i .testconfig.json. Vyberte prosím jenom jeden z těchto souborů konfigurace testu.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
-        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="translated">Odkazovaný člen [DynamicData] {0}.{1} by měl vracet IEnumerable&lt;object[]&gt;, IEnumerable&lt;Tuple&gt; nebo IEnumerable&lt;ValueTuple&gt;.</target>
+      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
+        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
+        <target state="new">The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
@@ -73,17 +73,17 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
-        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <target state="translated">Typ obecného parametru '{0}' nelze odvodit.</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
         <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
-        <target state="new">The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</target>
+        <target state="translated">Obecná testovací metoda '{0}' nemá argumenty, takže obecný parametr nelze odvodit.</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterConflict">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
-        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <target state="translated">Byly nalezeny dva konfliktní typy pro obecný parametr '{0}'. Konfliktní typy jsou '{1}' a '{2}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidValue">
@@ -445,11 +445,6 @@ Chyba: {1}</target>
         <target state="translated">Vyvolané výjimky:</target>
         <note>This is usually precedes by TestAssembly_AssemblyDiscoveryFailure message, and preceded by list of exceptions thrown in a test discovery session.</note>
       </trans-unit>
-      <trans-unit id="FailedFetchAttributeCache">
-        <source>Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.</source>
-        <target state="translated">Nepodařilo se získat mezipaměť atributů. Ignoruje se dědičnost atributů a spadání do „type defines Attribute model“, abychom získali určitá data.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="FailedToGetCustomAttribute">
         <source>Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</source>
         <target state="translated">Získání vlastních atributů pro typ {0} vyvolalo výjimku (bude ignorovat a používat způsob reflexe): {1}</target>
@@ -464,11 +459,6 @@ Chyba: {1}</target>
       <trans-unit id="UTA_UserCodeThrewNullValueException">
         <source>The called code threw an exception that was caught, but the exception value was null</source>
         <target state="translated">Volaný kód vyvolal výjimku, která byla zachycena, ale její hodnota byla null.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="OlderTFMVersionFoundClassCleanup">
-        <source>An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8.</source>
-        <target state="translated">V sestavení je načtena starší verze balíčku MSTestV2. Metody čištění testů se nemusí spustit očekávaným způsobem. Ujistěte se prosím, že všechny vaše testovací projekty odkazují na balíčky MSTest novější než verze 2.2.8.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute">

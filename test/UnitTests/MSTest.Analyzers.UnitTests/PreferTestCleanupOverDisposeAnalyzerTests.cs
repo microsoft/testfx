@@ -7,9 +7,28 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class PreferTestCleanupOverDisposeAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class PreferTestCleanupOverDisposeAnalyzerTests
 {
+    [TestMethod]
+    public async Task WhenNonTestClassHasDispose_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyNonTestClass : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenTestClassHasDispose_Diagnostic()
     {
         string code = """
@@ -49,6 +68,7 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasDisposeAsync_Diagnostic()
     {
         string code = """
@@ -84,6 +104,7 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasTestCleanup_NoDiagnostic()
     {
         string code = """

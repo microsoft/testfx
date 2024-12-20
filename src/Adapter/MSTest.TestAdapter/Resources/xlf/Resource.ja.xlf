@@ -62,9 +62,9 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">'.runsettings' ファイルと '.testconfig.json' ファイルの両方が検出されました。これらのテスト構成ファイルのいずれか 1 つだけを選択してください。</target>
         <note />
       </trans-unit>
-      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
-        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="translated">'[DynamicData]' の参照されるメンバー '{0}.{1}' は、'IEnumerable&lt;object[]&gt;'、'IEnumerable&lt;Tuple&gt;`、'IEnumerable&lt;ValueTuple&gt;' のいずれかを返す必要があります</target>
+      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
+        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
+        <target state="new">The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
@@ -74,17 +74,17 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
-        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <target state="translated">ジェネリック パラメーター '{0}' の型を推論できませんでした。</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
         <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
-        <target state="new">The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</target>
+        <target state="translated">'{0}' ジェネリック テスト メソッドに引数がないため、ジェネリック パラメーターを推論できません。</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterConflict">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
-        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <target state="translated">ジェネリック パラメーター '{0}' に 2 つの競合する型が見つかりました。競合する型は '{1}' で '{2}'。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidValue">
@@ -446,11 +446,6 @@ Error: {1}</source>
         <target state="translated">スローされた例外:</target>
         <note>This is usually precedes by TestAssembly_AssemblyDiscoveryFailure message, and preceded by list of exceptions thrown in a test discovery session.</note>
       </trans-unit>
-      <trans-unit id="FailedFetchAttributeCache">
-        <source>Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.</source>
-        <target state="translated">属性キャッシュを取得できませんでした。属性の継承を無視すると、'type defines Attribute model' に分類されるため、いくつかのデータがあるようになります。</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="FailedToGetCustomAttribute">
         <source>Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</source>
         <target state="translated">型 {0} のカスタム属性を取得中に例外がスローされました (無視してリフレクションの方法を使用します): {1}</target>
@@ -465,11 +460,6 @@ Error: {1}</source>
       <trans-unit id="UTA_UserCodeThrewNullValueException">
         <source>The called code threw an exception that was caught, but the exception value was null</source>
         <target state="translated">呼び出されたコードはキャッチされた例外をスローしましたが、例外値が null でした</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="OlderTFMVersionFoundClassCleanup">
-        <source>An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8.</source>
-        <target state="translated">古いバージョンの MSTestV2 パッケージがアセンブリに読み込まれています。テスト クリーンアップ メソッドが正しく実行されない可能性があります。すべてのテスト プロジェクトが、バージョン 2.2.8 より新しい MSTest パッケージを参照していることを確認してください。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute">

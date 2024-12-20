@@ -253,12 +253,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
-        <target state="new">Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</target>
+        <target state="translated">Byly nalezeny dva konfliktní typy pro obecný parametr '{0}'. Konfliktní typy jsou '{1}' a '{2}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
-        <target state="new">The type of the generic parameter '{0}' could not be inferred.</target>
+        <target state="translated">Typ obecného parametru '{0}' nelze odvodit.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
@@ -363,13 +363,18 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
-        <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
-        <target state="translated">Člen [DynamicData] {0}.{1} je metoda, takže byste měli nastavit DynamicDataSourceType.Method.</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="new">'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
+        <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
+        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
-        <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
-        <target state="translated">Člen [DynamicData] {0}.{1} je vlastnost, takže byste měli nastavit DynamicDataSourceType.Property.</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="new">'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
@@ -644,14 +649,14 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="new">Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
-- it should not be 'static'
-- it should may be generic as long as type parameters can be inferred and argument types are compatible
-- it should not be 'abstract'
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</target>
+        <target state="translated">Testovací metody (metody označené atributem [TestMethod]) by měly respektovat následující rozložení, které MSTest považuje za platné:
+– musí být public (nebo internal, pokud je nastaven atribut [assembly: DiscoverInternals]),
+– musí být static,
+– můžou být obecné, pokud lze odvodit parametry typu a typy argumentů jsou kompatibilní
+– nesmí být abstract,
+– návratový typ by měl být void, Task nebo ValueTask,
+– nesmí být async void,
+– nesmí být speciální metodou (finalizační metoda, operátor...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">

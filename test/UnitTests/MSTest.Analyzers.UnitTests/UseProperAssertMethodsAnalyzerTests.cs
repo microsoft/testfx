@@ -8,9 +8,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 namespace MSTest.Analyzers.Test;
 
 // NOTE: tests in this class are intentionally not using the [|...|] markup syntax so that we test the arguments
-[TestGroup]
-public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class UseProperAssertMethodsAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenAssertIsTrueWithEqualsNullArgument()
     {
         string code = """
@@ -50,6 +51,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueWithIsNullArgument()
     {
         string code = """
@@ -89,6 +91,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueWithNotEqualsNullArgument()
     {
         string code = """
@@ -128,6 +131,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueWithIsNotNullArgument()
     {
         string code = """
@@ -167,6 +171,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseWithEqualsNullArgument()
     {
         string code = """
@@ -206,6 +211,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseWithIsNullArgument()
     {
         string code = """
@@ -245,6 +251,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseWithNotEqualsNullArgument()
     {
         string code = """
@@ -284,6 +291,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseWithIsNotNullArgument()
     {
         string code = """
@@ -323,6 +331,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueAndArgumentIsEquality()
     {
         string code = """
@@ -364,6 +373,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsTrueAndArgumentIsInequality()
     {
         string code = """
@@ -405,6 +415,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseAndArgumentIsEquality()
     {
         string code = """
@@ -446,6 +457,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertIsFalseAndArgumentIsInequality()
     {
         string code = """
@@ -487,6 +499,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualAndExpectedIsNull()
     {
         string code = """
@@ -526,6 +539,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualAndExpectedIsNull()
     {
         string code = """
@@ -565,6 +579,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualAndExpectedIsTrue()
     {
         string code = """
@@ -604,6 +619,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualAndExpectedIsTrue_CastNotAddedWhenTypeIsBool()
     {
         string code = """
@@ -643,6 +659,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualAndExpectedIsTrue_CastNotAddedWhenTypeIsNullableBool()
     {
         string code = """
@@ -682,6 +699,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualAndExpectedIsTrue_CastShouldBeAddedWithParentheses()
     {
         string code = """
@@ -731,6 +749,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualAndExpectedIsTrue()
     {
         string code = """
@@ -754,6 +773,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreEqualAndExpectedIsFalse()
     {
         string code = """
@@ -793,6 +813,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests(ITestExecutionContext te
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssertAreNotEqualAndExpectedIsFalse()
     {
         string code = """

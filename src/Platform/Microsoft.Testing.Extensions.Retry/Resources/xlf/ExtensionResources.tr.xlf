@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="tr" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="FailedToCreateRetryDirectoryBecauseOfCollision">
+        <source>Failed to create retries directory due to collisions in '{0}' despite re-trying.</source>
+        <target state="new">Failed to create retries directory due to collisions in '{0}' despite re-trying.</target>
+        <note>'{0}' is the directory where collisions happen</note>
+      </trans-unit>
+      <trans-unit id="FailureThresholdPolicy">
+        <source>Failure threshold policy is enabled, failed tests will not be restarted.</source>
+        <target state="new">Failure threshold policy is enabled, failed tests will not be restarted.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailureThresholdPolicyMaxCount">
+        <source>Maximum failed tests threshold is {0} and {1} tests failed</source>
+        <target state="new">Maximum failed tests threshold is {0} and {1} tests failed</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailureThresholdPolicyMaxPercentage">
+        <source>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</source>
+        <target state="new">Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MoveFiles">
+        <source>
+=====================
+Moving last attempt asset files to the default result directory
+=====================
+</source>
+        <target state="new">
+=====================
+Moving last attempt asset files to the default result directory
+=====================
+</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MovingFileToLocation">
+        <source>Moving file '{0}' to '{1}'</source>
+        <target state="new">Moving file '{0}' to '{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
+        <source>Failed to start process '{0}'</source>
+        <target state="new">Failed to start process '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsExtensionDescription">
+        <source>Retry failed tests feature allows to restart test execution upon failure.</source>
+        <target state="new">Retry failed tests feature allows to restart test execution upon failure.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsExtensionDisplayName">
+        <source>Retry failed tests</source>
+        <target state="new">Retry failed tests</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
+        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="new">Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
+        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
+        <target state="new">Disable retry mechanism if the percentage of failed tests is greater than the specified value</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
+        <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
+        <target state="new">Disable retry mechanism if the number of failed tests is greater than the specified value</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
+        <source>Retry failed tests feature is not supported in hot reload mode</source>
+        <target state="new">Retry failed tests feature is not supported in hot reload mode</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsNotSupportedInServerModeErrorMessage">
+        <source>Retry failed tests feature is not supported in server mode</source>
+        <target state="new">Retry failed tests feature is not supported in server mode</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsOptionDescription">
+        <source>Enable retry failed tests</source>
+        <target state="new">Enable retry failed tests</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
+        <source>Option '{0}' requires option '{1}' to be specified</source>
+        <target state="new">Option '{0}' requires option '{1}' to be specified</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a single integer argument</source>
+        <target state="new">Option '{0}' expects a single integer argument</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
+        <source>Options '{0}' and '{1}' cannot be used together</source>
+        <target state="new">Options '{0}' and '{1}' cannot be used together</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
+        <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
+        <target state="new">Test host process exited before the retry service could connect to it. Exit code: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteCompletedSuccessfully">
+        <source>
+=====================
+Tests suite completed successfully in {0} attempts
+=====================</source>
+        <target state="new">
+=====================
+Tests suite completed successfully in {0} attempts
+=====================</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteFailed">
+        <source>
+=====================
+Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
+=====================
+</source>
+        <target state="new">
+=====================
+Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
+=====================
+</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteFailedInAllAttempts">
+        <source>
+=====================
+Tests suite failed in all {0} attempts
+=====================</source>
+        <target state="new">
+=====================
+Tests suite failed in all {0} attempts
+=====================</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteFailedWithWrongExitCode">
+        <source>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</source>
+        <target state="new">Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

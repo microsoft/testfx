@@ -7,14 +7,9 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class ConfigurationExtensionsTests : TestBase
+[TestClass]
+public sealed class ConfigurationExtensionsTests
 {
-    public ConfigurationExtensionsTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
     private string GetActualValueFromConfiguration(IConfiguration configuration, string key) => key switch
     {
         PlatformConfigurationConstants.PlatformResultDirectory => configuration.GetTestResultDirectory(),
@@ -23,9 +18,10 @@ public class ConfigurationExtensionsTests : TestBase
         _ => throw new ArgumentException("Unsupported key."),
     };
 
-    [Arguments(PlatformConfigurationConstants.PlatformResultDirectory)]
-    [Arguments(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
-    [Arguments(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
+    [TestMethod]
+    [DataRow(PlatformConfigurationConstants.PlatformResultDirectory)]
+    [DataRow(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
+    [DataRow(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
     public void ConfigurationExtensions_TestedMethod_ReturnsExpectedPath(string key)
     {
         string expectedPath = Path.Combine("a", "b", "c");
@@ -38,9 +34,10 @@ public class ConfigurationExtensionsTests : TestBase
         Assert.AreEqual(expectedPath, GetActualValueFromConfiguration(configuration.Object, key));
     }
 
-    [Arguments(PlatformConfigurationConstants.PlatformResultDirectory)]
-    [Arguments(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
-    [Arguments(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
+    [TestMethod]
+    [DataRow(PlatformConfigurationConstants.PlatformResultDirectory)]
+    [DataRow(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
+    [DataRow(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
     public void ConfigurationExtensions_TestedMethod_ThrowsArgumentNullException(string key)
     {
         Mock<IConfiguration> configuration = new();
@@ -48,6 +45,6 @@ public class ConfigurationExtensionsTests : TestBase
             .Setup(configuration => configuration[key])
             .Returns(value: null);
 
-        Assert.Throws<ArgumentNullException>(() => GetActualValueFromConfiguration(configuration.Object, key));
+        Assert.ThrowsException<ArgumentNullException>(() => GetActualValueFromConfiguration(configuration.Object, key));
     }
 }

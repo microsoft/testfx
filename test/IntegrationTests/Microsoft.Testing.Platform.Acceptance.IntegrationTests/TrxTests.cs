@@ -4,23 +4,16 @@
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
-using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class TrxTests : AcceptanceTestBase
+[TestClass]
+public class TrxTests : AcceptanceTestBase<TrxTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public TrxTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenReportTrxIsNotSpecified_TrxReportIsNotGenerated(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -32,20 +25,22 @@ Out of process file artifacts produced:
         testHostResult.AssertOutputDoesNotMatchRegex(outputPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenReportTrxIsSpecified_TrxReportIsGeneratedInDefaultLocation(string tfm)
     {
-        string testResultsPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, "TestResults");
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, "TestResults");
         string trxPathPattern = Path.Combine(testResultsPath, ".*.trx").Replace(@"\", @"\\");
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--report-trx");
 
         // number of test is the third param because we have two different test code with different number of tests.
         await AssertTrxReportWasGeneratedAsync(testHostResult, trxPathPattern, 1);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenTestHostCrash_ErrorIsDisplayedInsideTheTrx(string tfm)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -55,7 +50,7 @@ Out of process file artifacts produced:
         }
 
         string fileName = Guid.NewGuid().ToString("N");
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--crashdump --report-trx --report-trx-filename {fileName}.trx",
             new() { { "CRASHPROCESS", "1" } });
@@ -64,15 +59,16 @@ Out of process file artifacts produced:
 
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
         string trxContent = File.ReadAllText(trxFile);
-        Assert.That(Regex.IsMatch(trxContent, @"Test host process pid: .* crashed\."), trxContent);
-        Assert.That(trxContent.Contains("""<ResultSummary outcome="Failed">"""), trxContent);
+        Assert.IsTrue(Regex.IsMatch(trxContent, @"Test host process pid: .* crashed\."), trxContent);
+        StringAssert.Contains(trxContent, """<ResultSummary outcome="Failed">""", trxContent);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenSkipTest_ItAppearsAsExpectedInsideTheTrx(string tfm)
     {
         string fileName = Guid.NewGuid().ToString("N");
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPathWithSkippedTest, TestAssetFixture.AssetNameUsingMSTest, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPathWithSkippedTest, TestAssetFixture.AssetNameUsingMSTest, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx");
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
@@ -82,33 +78,34 @@ Out of process file artifacts produced:
         string trxContent = File.ReadAllText(trxFile);
 
         // check if the tests have been added to Results, TestDefinitions, TestEntries and ResultSummary.
-        Assert.That(trxContent.Contains(@"<UnitTestResult "), trxContent);
-        Assert.That(trxContent.Contains(@"outcome=""NotExecuted"""), trxContent);
-
-        Assert.That(trxContent.Contains(@"<UnitTest name=""TestMethod1"), trxContent);
-        Assert.That(trxContent.Contains(@"<TestEntry "), trxContent);
-        Assert.That(trxContent.Contains("""<ResultSummary outcome="Failed">"""), trxContent);
-        Assert.That(trxContent.Contains("""<Counters total="2" executed="0" passed="0" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="2" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />"""), trxContent);
+        StringAssert.Contains(trxContent, @"<UnitTestResult ", trxContent);
+        StringAssert.Contains(trxContent, @"outcome=""NotExecuted""", trxContent);
+        StringAssert.Contains(trxContent, @"<UnitTest name=""TestMethod1", trxContent);
+        StringAssert.Contains(trxContent, @"<TestEntry ", trxContent);
+        StringAssert.Contains(trxContent, """<ResultSummary outcome="Failed">""", trxContent);
+        StringAssert.Contains(trxContent, """<Counters total="2" executed="0" passed="0" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="2" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />""", trxContent);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenTheTestNameHasInvalidXmlChar_TheTrxCreatedSuccessfully(string tfm)
     {
-        string testResultsPath = Path.Combine(_testAssetFixture.TargetAssetPathWithDataRow, "bin", "Release", tfm, "TestResults");
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPathWithDataRow, "bin", "Release", tfm, "TestResults");
         string trxPathPattern = Path.Combine(testResultsPath, ".*.trx").Replace(@"\", @"\\");
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPathWithDataRow, TestAssetFixture.AssetNameUsingMSTest, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPathWithDataRow, TestAssetFixture.AssetNameUsingMSTest, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--report-trx");
 
         // number of test is the third param because we have two different test code with different number of tests.
         await AssertTrxReportWasGeneratedAsync(testHostResult, trxPathPattern, 2);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_UsingDataDriven_CreatesUnitTestTagForEachOneInsideTheTrx(string tfm)
     {
         string fileName = Guid.NewGuid().ToString("N");
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPathWithSkippedTest, TestAssetFixture.AssetNameUsingMSTest, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPathWithSkippedTest, TestAssetFixture.AssetNameUsingMSTest, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx");
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
@@ -122,47 +119,51 @@ Out of process file artifacts produced:
 \s*<UnitTest.*
 \s*<UnitTest
 """;
-        Assert.That(Regex.IsMatch(trxContent, trxContentsPattern));
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenReportTrxIsSpecifiedWithFullPath_TrxReportShouldFail(string tfm)
     {
-        string testResultsPath = Path.Combine(_testAssetFixture.TargetAssetPath, "aaa", "Release", tfm, "TestResults");
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, "aaa", "Release", tfm, "TestResults");
 
         Assert.IsFalse(Directory.Exists(testResultsPath));
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {Path.Combine(testResultsPath, "report.trx")}");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Option '--report-trx-filename' has invalid arguments: file name argument must not contain path (e.g. --report-trx-filename myreport.trx)");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenReportTrxIsSpecifiedWithRelativePath_TrxReportShouldFail(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {Path.Combine("aaa", "report.trx")}");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Option '--report-trx-filename' has invalid arguments: file name argument must not contain path (e.g. --report-trx-filename myreport.trx)");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenReportTrxIsNotSpecifiedAndReportTrxPathIsSpecified_ErrorIsDisplayed(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx-filename report.trx");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Error: '--report-trx-filename' requires '--report-trx' to be enabled");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenReportTrxIsSpecifiedAndListTestsIsSpecified_ErrorIsDisplayed(string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --list-tests");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
@@ -196,8 +197,7 @@ Out of process file artifacts produced:
         return Regex.IsMatch(await reader.ReadToEndAsync(), pattern);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string AssetName = "TrxTest";
         public const string AssetNameUsingMSTest = "TrxTestUsingMSTest";
@@ -218,45 +218,73 @@ Out of process file artifacts produced:
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
-        <!-- Platform and TrxReport.Abstractions are only needed because Internal.Framework relies on a preview version that we want to override with currently built one -->
-        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingInternalFrameworkVersion$" />
-        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingInternalFrameworkVersion$" />
     </ItemGroup>
 </Project>
 
 #file Program.cs
-using TrxTest;
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.AddTestFramework(new SourceGeneratedTestNodesBuilder());
-builder.AddCrashDumpProvider();
-builder.AddTrxReportProvider();
-using ITestApplication app = await builder.BuildAsync();
-return await app.RunAsync();
+using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Extensions.TrxReport.Abstractions;
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Services;
 
-#file UnitTest1.cs
-namespace TrxTest;
-
-[TestGroup]
-public class UnitTest1
+public class Program
 {
-    public void TestMethod1()
+    public static async Task<int> Main(string[] args)
+    {
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.RegisterTestFramework(
+            sp => new TestFrameworkCapabilities(new TrxReportCapability()),
+            (_,__) => new DummyTestFramework());
+        builder.AddCrashDumpProvider();
+        builder.AddTrxReportProvider();
+        using ITestApplication app = await builder.BuildAsync();
+        return await app.RunAsync();
+    }
+}
+
+public class TrxReportCapability : ITrxReportCapability
+{
+    bool ITrxReportCapability.IsSupported { get; } = true;
+    void ITrxReportCapability.Enable()
+    {
+    }
+}
+
+public class DummyTestFramework : ITestFramework, IDataProducer
+{
+    public string Uid => nameof(DummyTestFramework);
+
+    public string Version => "2.0.0";
+
+    public string DisplayName => nameof(DummyTestFramework);
+
+    public string Description => nameof(DummyTestFramework);
+
+    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
+        => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+
+    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
+        => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+
+    public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         if (Environment.GetEnvironmentVariable("CRASHPROCESS") == "1")
         {
             Environment.FailFast("CRASHPROCESS");
         }
 
-        Assert.IsTrue(true);
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = "0", DisplayName = "Test", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+        context.Complete();
     }
 }
-
-#file Usings.cs
-global using System;
-global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Internal.Framework;
-global using Microsoft.Testing.Extensions;
 """;
 
         private const string MSTestCode = """
@@ -270,6 +298,7 @@ global using Microsoft.Testing.Extensions;
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <EnableMSTestRunner>true</EnableMSTestRunner>
+        <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
@@ -318,9 +347,7 @@ global using Microsoft.VisualStudio.TestTools.UnitTesting;
             yield return (AssetName, AssetName,
                 TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingInternalFrameworkVersion$", MicrosoftTestingInternalFrameworkVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
             yield return (WithSkippedTest, AssetNameUsingMSTest,
                 MSTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)

@@ -16,7 +16,6 @@
     <AspireHostingTestingVersion Condition=" '$(AspireHostingTestingVersion)' == '' ">${AspireHostingTestingVersion}</AspireHostingTestingVersion>
     <MicrosoftNETTestSdkVersion Condition=" '$(MicrosoftNETTestSdkVersion)' == '' ">${MicrosoftNETTestSdkVersion}</MicrosoftNETTestSdkVersion>
     <MicrosoftPlaywrightVersion Condition=" '$(MicrosoftPlaywrightVersion)' == '' ">${MicrosoftPlaywrightVersion}</MicrosoftPlaywrightVersion>
-    <MicrosoftTestingEntrepriseExtensionsVersion Condition=" '$(MicrosoftTestingEntrepriseExtensionsVersion)' == '' ">${MicrosoftTestingEntrepriseExtensionsVersion}</MicrosoftTestingEntrepriseExtensionsVersion>
     <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >${MicrosoftTestingExtensionsCodeCoverageVersion}</MicrosoftTestingExtensionsCodeCoverageVersion>
     <MicrosoftTestingExtensionsFakesVersion Condition=" '$(MicrosoftTestingExtensionsFakesVersion)' == '' " >${MicrosoftTestingExtensionsFakesVersion}</MicrosoftTestingExtensionsFakesVersion>
     <MicrosoftTestingPlatformVersion Condition=" '$(MicrosoftTestingPlatformVersion)' == '' " >${MicrosoftTestingPlatformVersion}</MicrosoftTestingPlatformVersion>

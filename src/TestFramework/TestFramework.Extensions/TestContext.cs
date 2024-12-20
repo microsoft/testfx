@@ -201,12 +201,14 @@ public abstract class TestContext
     /// <param name="args">the arguments.</param>
     public abstract void WriteLine(string format, params object?[] args);
 
+    public abstract void DisplayMessage(MessageLevel messageLevel, string message);
+
     private T? GetProperty<T>(string name)
         where T : class
     {
         DebugEx.Assert(Properties is not null, "Properties is null");
 #if WINDOWS_UWP || WIN_UI
-        if (!((System.Collections.Generic.IDictionary<string, object>)Properties).TryGetValue(name, out object? propertyValue))
+        if (!((IDictionary<string, object>)Properties).TryGetValue(name, out object? propertyValue))
         {
             return null;
         }

@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
@@ -130,7 +131,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// <param name="testMethod"> The test Method. </param>
     /// <param name="testContextProperties"> The test context properties. </param>
     /// <returns> The <see cref="UnitTestResult"/>. </returns>
-    internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties)
+    internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
     {
         Guard.NotNull(testMethod);
 
@@ -138,7 +139,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         {
             using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
             var properties = new Dictionary<string, object?>(testContextProperties);
-            ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
+            ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger);
             testContext.SetOutcome(UTF.UnitTestOutcome.InProgress);
 
             // Get the testMethod

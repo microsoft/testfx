@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class AssemblyCleanupShouldBeValidAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenAssemblyCleanupIsPublic_NoDiagnostic()
     {
         string code = """
@@ -28,6 +29,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyCleanIsInsideAGenericClass_Diagnostic()
     {
         string code = """
@@ -49,6 +51,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
             code);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyCleanupIsNotOrdinary_Diagnostic()
     {
         string code = """
@@ -70,6 +73,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
             code);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyCleanupIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
     {
         string code = """
@@ -90,6 +94,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyCleanupIsInternal_InsidePublicClassWithDiscoverInternals_Diagnostic()
     {
         string code = """
@@ -128,10 +133,11 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
-    [Arguments("protected")]
-    [Arguments("internal")]
-    [Arguments("internal protected")]
-    [Arguments("private")]
+    [DataRow("protected")]
+    [DataRow("internal")]
+    [DataRow("internal protected")]
+    [DataRow("private")]
+    [TestMethod]
     public async Task WhenAssemblyCleanupIsNotPublic_Diagnostic(string accessibility)
     {
         string code = $$"""
@@ -166,6 +172,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyCleanupIsGeneric_Diagnostic()
     {
         string code = """
@@ -200,6 +207,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyCleanupIsNotStatic_Diagnostic()
     {
         string code = """
@@ -234,6 +242,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyCleanupHasParameters_Diagnostic()
     {
         string code = """
@@ -268,6 +277,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyCleanupReturnTypeIsNotValid_Diagnostic()
     {
         string code = """
@@ -375,6 +385,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyCleanupReturnTypeIsValid_NoDiagnostic()
     {
         string code = """
@@ -406,6 +417,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyCleanupIsAsyncVoid_Diagnostic()
     {
         string code = """
@@ -444,6 +456,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenMultipleViolations_TheyAllGetFixed()
     {
         string code = """
@@ -482,6 +495,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyCleanupIsNotOnClass_Diagnostic()
     {
         string code = """
@@ -499,6 +513,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAssemblyCleanupIsOnClassNotMarkedWithTestClass_Diagnostic()
     {
         string code = """
