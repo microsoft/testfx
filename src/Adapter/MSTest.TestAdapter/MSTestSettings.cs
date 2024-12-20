@@ -8,7 +8,9 @@ using System.Xml.Linq;
 
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+#if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+#endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
@@ -263,7 +265,9 @@ public class MSTestSettings
     [Obsolete("this function will be removed in v4.0.0")]
     public static void PopulateSettings(IDiscoveryContext? context) => PopulateSettings(context, null, null);
 
-    private static bool IsRunSettingsFileHasMSTestSettings(string? runSettingsXml) => IsRunSettingsFileHasSettingName(runSettingsXml, SettingsName) || IsRunSettingsFileHasSettingName(runSettingsXml, SettingsNameAlias);
+#if !WINDOWS_UWP
+    private static bool IsRunSettingsFileHasMSTestSettings(string? runSettingsXml)
+    => IsRunSettingsFileHasSettingName(runSettingsXml, SettingsName) || IsRunSettingsFileHasSettingName(runSettingsXml, SettingsNameAlias);
 
     private static bool IsRunSettingsFileHasSettingName(string? runSettingsXml, string SettingName)
     {
@@ -288,6 +292,7 @@ public class MSTestSettings
 
         return !reader.EOF;
     }
+#endif
 
     /// <summary>
     /// Populate adapter settings from the context.
@@ -298,16 +303,25 @@ public class MSTestSettings
     /// </param>
     internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger, IConfiguration? configuration)
     {
-        if (configuration?["mstest"] != null && context?.RunSettings != null && IsRunSettingsFileHasMSTestSettings(context.RunSettings.SettingsXml))
+#if !WINDOWS_UWP
+        if (configuration?["mstest"] != null
+            && context?.RunSettings != null
+            && IsRunSettingsFileHasMSTestSettings(context.RunSettings.SettingsXml))
         {
             throw new InvalidOperationException(Resource.DuplicateConfigurationError);
         }
+#endif
 
         // This will contain default adapter settings
         var settings = new MSTestSettings();
         var runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
-        if (!StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml) && configuration?["mstest"] is null)
+#if !WINDOWS_UWP
+        if (!StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml)
+            && configuration?["mstest"] is null)
+#else
+        if (!StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml))
+#endif
         {
             MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias, logger);
 
@@ -325,11 +339,13 @@ public class MSTestSettings
 
             SetGlobalSettings(context.RunSettings.SettingsXml, settings, logger);
         }
+#if !WINDOWS_UWP
         else if (configuration?["mstest"] is not null)
         {
             RunConfigurationSettings.SetRunConfigurationSettingsFromConfig(configuration, runConfigurationSettings);
             SetSettingsFromConfig(configuration, logger, settings);
         }
+#endif
 
         CurrentSettings = settings;
         RunConfigurationSettings = runConfigurationSettings;
@@ -877,6 +893,7 @@ public class MSTestSettings
         }
     }
 
+#if !WINDOWS_UWP
     private static void ParseBooleanSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<bool> setSetting)
     {
         if (configuration[$"mstest:{key}"] is not string value)
@@ -1033,4 +1050,5 @@ public class MSTestSettings
 
         MSTestSettingsProvider.Load(configuration);
     }
+#endif
 }
