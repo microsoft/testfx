@@ -22,7 +22,7 @@ function Confirm-NugetPackages {
         "MSTest.Sdk"                            = 15;
         "MSTest.Internal.TestFx.Documentation"  = 10;
         "MSTest.TestFramework"                  = 148;
-        "MSTest.TestAdapter"                    = 82;
+        "MSTest.TestAdapter"                    = 74;
         "MSTest"                                = 6;
         "MSTest.Analyzers"                      = 10;
     }
