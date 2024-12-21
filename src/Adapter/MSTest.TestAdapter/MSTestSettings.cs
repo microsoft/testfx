@@ -1029,7 +1029,7 @@ public class MSTestSettings
         if (configuration["mstest:parallelism:scope"] is string value)
         {
             value = value.Equals("class", StringComparison.OrdinalIgnoreCase) ? "ClassLevel"
-                    : value.Equals("methood", StringComparison.OrdinalIgnoreCase) ? "MethodLevel" : value;
+                    : value.Equals("method", StringComparison.OrdinalIgnoreCase) ? "MethodLevel" : value;
             if (TryParseEnum(value, out ExecutionScope scope))
             {
                 settings.ParallelizationScope = scope;
