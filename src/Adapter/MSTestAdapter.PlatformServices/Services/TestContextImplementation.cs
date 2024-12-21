@@ -42,11 +42,6 @@ public class TestContextImplementation : TestContext, ITestContext
     private readonly ThreadSafeStringWriter? _threadSafeStringWriter;
 
     /// <summary>
-    /// Test Method.
-    /// </summary>
-    private readonly ITestMethod _testMethod;
-
-    /// <summary>
     /// Properties.
     /// </summary>
     private readonly Dictionary<string, object?> _properties;
@@ -81,7 +76,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
     /// <param name="messageLogger">The message logger to use.</param>
-    internal TestContextImplementation(ITestMethod testMethod, StringWriter stringWriter, IDictionary<string, object?> properties, IMessageLogger messageLogger)
+    internal TestContextImplementation(ITestMethod? testMethod, StringWriter stringWriter, IDictionary<string, object?> properties, IMessageLogger messageLogger)
         : this(testMethod, stringWriter, properties)
         => _messageLogger = messageLogger;
 
@@ -91,27 +86,29 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="testMethod">The test method.</param>
     /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
-    public TestContextImplementation(ITestMethod testMethod, StringWriter stringWriter, IDictionary<string, object?> properties)
+    public TestContextImplementation(ITestMethod? testMethod, StringWriter stringWriter, IDictionary<string, object?> properties)
     {
-        DebugEx.Assert(testMethod != null, "TestMethod is not null");
+        // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
 
 #if NETFRAMEWORK
         DebugEx.Assert(stringWriter != null, "StringWriter is not null");
 #endif
 
-        _testMethod = testMethod;
         _stringWriter = stringWriter;
 
         // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
         _threadSafeStringWriter = stringWriter as ThreadSafeStringWriter;
-        _properties = new Dictionary<string, object?>(properties)
-        {
-            [FullyQualifiedTestClassNameLabel] = _testMethod.FullClassName,
-            [ManagedTypeLabel] = _testMethod.ManagedTypeName,
-            [ManagedMethodLabel] = _testMethod.ManagedMethodName,
-            [TestNameLabel] = _testMethod.Name,
-        };
+        _properties = testMethod is null
+            ? new Dictionary<string, object?>(properties)
+            : new Dictionary<string, object?>(properties)
+            {
+                [FullyQualifiedTestClassNameLabel] = testMethod.FullClassName,
+                [ManagedTypeLabel] = testMethod.ManagedTypeName,
+                [ManagedMethodLabel] = testMethod.ManagedMethodName,
+                [TestNameLabel] = testMethod.Name,
+            };
+
         _testResultFiles = [];
     }
 
