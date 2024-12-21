@@ -865,11 +865,7 @@ public class MSTestSettings
     private static bool TryParseEnum<T>(string value, out T result)
         where T : struct, Enum
         => Enum.TryParse(value, true, out result)
-#if NET6_0_OR_GREATER
-        && Enum.IsDefined(result);
-#else
-        && Enum.IsDefined(typeof(T), result);
-#endif
+        && EnumPolyfill.IsDefined(result);
 
     private static void SetGlobalSettings(
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
