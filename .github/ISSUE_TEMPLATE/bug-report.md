@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a bug report to help us improve MSTest
+about: Create a bug report to help us improve Microsoft.Testing.Platform and MSTest
 labels: [bug, need-triage]
 ---
 
