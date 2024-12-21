@@ -69,10 +69,10 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             string namedPipeName = _environment.GetEnvironmentVariable(pipeNameEnvironmentVariable)
                 ?? throw new InvalidOperationException($"Expected {pipeNameEnvironmentVariable} environment variable set.");
             _namedPipeClient = new NamedPipeClient(namedPipeName);
-            _namedPipeClient.RegisterSerializer(new ActivityIndicatorMutexNameRequestSerializer(), typeof(ActivityIndicatorMutexNameRequest));
-            _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-            _namedPipeClient.RegisterSerializer(new SessionEndSerializerRequestSerializer(), typeof(SessionEndSerializerRequest));
-            _namedPipeClient.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
+            _namedPipeClient.RegisterSerializer<ActivityIndicatorMutexNameRequestSerializer, ActivityIndicatorMutexNameRequest>();
+            _namedPipeClient.RegisterSerializer<VoidResponseSerializer, VoidResponse>();
+            _namedPipeClient.RegisterSerializer<SessionEndSerializerRequestSerializer, SessionEndSerializerRequest>();
+            _namedPipeClient.RegisterSerializer<ConsumerPipeNameRequestSerializer, ConsumerPipeNameRequest>();
         }
     }
 
@@ -120,10 +120,10 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
             _logger.LogTrace($"Hang dump pipe name: '{_pipeNameDescription.Name}'");
             _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
-            _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
-            _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));
-            _singleConnectionNamedPipeServer.RegisterSerializer(new ExitSignalActivityIndicatorTaskRequestSerializer(), typeof(ExitSignalActivityIndicatorTaskRequest));
-            _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+            _singleConnectionNamedPipeServer.RegisterSerializer<GetInProgressTestsResponseSerializer, GetInProgressTestsResponse>();
+            _singleConnectionNamedPipeServer.RegisterSerializer<GetInProgressTestsRequestSerializer, GetInProgressTestsRequest>();
+            _singleConnectionNamedPipeServer.RegisterSerializer<ExitSignalActivityIndicatorTaskRequestSerializer, ExitSignalActivityIndicatorTaskRequest>();
+            _singleConnectionNamedPipeServer.RegisterSerializer<VoidResponseSerializer, VoidResponse>();
             await _logger.LogTraceAsync($"Send consumer pipe name to the test controller '{_pipeNameDescription.Name}'");
             await _namedPipeClient.RequestReplyAsync<ConsumerPipeNameRequest, VoidResponse>(new ConsumerPipeNameRequest(_pipeNameDescription.Name), cancellationToken)
                 .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);

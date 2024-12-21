@@ -58,11 +58,11 @@ internal sealed class RetryLifecycleCallbacks : ITestApplicationLifecycleCallbac
         logger.LogDebug($"Connecting to pipe '{pipeName[0]}'");
 
         Client = new(pipeName[0]);
-        Client.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        Client.RegisterSerializer(new FailedTestRequestSerializer(), typeof(FailedTestRequest));
-        Client.RegisterSerializer(new GetListOfFailedTestsRequestSerializer(), typeof(GetListOfFailedTestsRequest));
-        Client.RegisterSerializer(new GetListOfFailedTestsResponseSerializer(), typeof(GetListOfFailedTestsResponse));
-        Client.RegisterSerializer(new TotalTestsRunRequestSerializer(), typeof(TotalTestsRunRequest));
+        Client.RegisterSerializer<VoidResponseSerializer, VoidResponse>();
+        Client.RegisterSerializer<FailedTestRequestSerializer, FailedTestRequest>();
+        Client.RegisterSerializer<GetListOfFailedTestsRequestSerializer, GetListOfFailedTestsRequest>();
+        Client.RegisterSerializer<GetListOfFailedTestsResponseSerializer, GetListOfFailedTestsResponse>();
+        Client.RegisterSerializer<TotalTestsRunRequestSerializer, TotalTestsRunRequest>();
         await Client.ConnectAsync(cancellationToken);
 
         GetListOfFailedTestsResponse result = await Client.RequestReplyAsync<GetListOfFailedTestsRequest, GetListOfFailedTestsResponse>(new GetListOfFailedTestsRequest(), cancellationToken);

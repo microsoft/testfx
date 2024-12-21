@@ -57,10 +57,10 @@ internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestApplicatio
         }
 
         PipeClient = new(msbuildInfo[0]);
-        PipeClient.RegisterSerializer(new ModuleInfoRequestSerializer(), typeof(ModuleInfoRequest));
-        PipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        PipeClient.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
-        PipeClient.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
+        PipeClient.RegisterSerializer<ModuleInfoRequestSerializer, ModuleInfoRequest>();
+        PipeClient.RegisterSerializer<VoidResponseSerializer, VoidResponse>();
+        PipeClient.RegisterSerializer<FailedTestInfoRequestSerializer, FailedTestInfoRequest>();
+        PipeClient.RegisterSerializer<RunSummaryInfoRequestSerializer, RunSummaryInfoRequest>();
         using var cancellationTokenSource = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
         using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, _testApplicationCancellationTokenSource.CancellationToken);
         await PipeClient.ConnectAsync(linkedCancellationToken.Token);

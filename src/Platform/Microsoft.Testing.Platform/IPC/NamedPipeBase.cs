@@ -14,9 +14,11 @@ internal abstract class NamedPipeBase
     private readonly Dictionary<Type, object> _typeSerializer = [];
     private readonly Dictionary<int, object> _idSerializer = [];
 
-    public void RegisterSerializer(INamedPipeSerializer namedPipeSerializer, Type type)
+    public void RegisterSerializer<TSerializer, TInput>()
+        where TSerializer : INamedPipeSerializer, new()
     {
-        _typeSerializer.Add(type, namedPipeSerializer);
+        INamedPipeSerializer namedPipeSerializer = new TSerializer();
+        _typeSerializer.Add(typeof(TInput), namedPipeSerializer);
         _idSerializer.Add(namedPipeSerializer.Id, namedPipeSerializer);
     }
 
