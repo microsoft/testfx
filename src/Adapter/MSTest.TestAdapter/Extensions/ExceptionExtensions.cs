@@ -37,7 +37,7 @@ internal static class ExceptionExtensions
     /// </summary>
     /// <param name="exception">An <see cref="Exception"/> object.</param>
     /// <returns>Exception message.</returns>
-    internal static string TryGetMessage(this Exception exception)
+    internal static string TryGetMessage(this Exception? exception)
     {
         if (exception == null)
         {
