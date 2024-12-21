@@ -62,25 +62,25 @@ public class UnitTestOutcomeExtensionsTests : TestContainer
 
     public void GetMoreImportantOutcomeShouldReturnFailIfTwoOutcomesAreFailedAndInconclusive()
     {
-        UTF.UnitTestOutcome resultOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed, UTF.UnitTestOutcome.Inconclusive);
+        UTF.UnitTestOutcome resultOutcome = UTF.UnitTestOutcome.Failed.GetMoreImportantOutcome(UTF.UnitTestOutcome.Inconclusive);
         Verify(resultOutcome == UTF.UnitTestOutcome.Failed);
     }
 
     public void GetMoreImportantOutcomeShouldReturnInconclusiveIfTwoOutcomesArePassedAndInconclusive()
     {
-        UTF.UnitTestOutcome resultOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(UTF.UnitTestOutcome.Passed, UTF.UnitTestOutcome.Inconclusive);
+        UTF.UnitTestOutcome resultOutcome = UTF.UnitTestOutcome.Passed.GetMoreImportantOutcome(UTF.UnitTestOutcome.Inconclusive);
         Verify(resultOutcome == UTF.UnitTestOutcome.Inconclusive);
     }
 
     public void GetMoreImportantOutcomeShouldReturnFailedIfTwoOutcomesArePassedAndFailed()
     {
-        UTF.UnitTestOutcome resultOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(UTF.UnitTestOutcome.Passed, UTF.UnitTestOutcome.Failed);
+        UTF.UnitTestOutcome resultOutcome = UTF.UnitTestOutcome.Passed.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed);
         Verify(resultOutcome == UTF.UnitTestOutcome.Failed);
     }
 
     public void GetMoreImportantOutcomeShouldReturnFailedIfBothOutcomesAreFailed()
     {
-        UTF.UnitTestOutcome resultOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed, UTF.UnitTestOutcome.Failed);
+        UTF.UnitTestOutcome resultOutcome = UTF.UnitTestOutcome.Failed.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed);
         Verify(resultOutcome == UTF.UnitTestOutcome.Failed);
     }
 }

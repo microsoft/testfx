@@ -8,5 +8,5 @@ namespace Microsoft.Testing.Platform.MSBuild;
 public static class TestingPlatformBuilderHook
 {
     public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] _)
-        => MSBuildExtensions.AddMSBuild(testApplicationBuilder);
+        => testApplicationBuilder.AddMSBuild();
 }

@@ -447,7 +447,7 @@ internal sealed class TestMethodRunner
         UTF.UnitTestOutcome aggregateOutcome = results[0].Outcome;
         foreach (TestResult result in results)
         {
-            aggregateOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(aggregateOutcome, result.Outcome);
+            aggregateOutcome = aggregateOutcome.GetMoreImportantOutcome(result.Outcome);
         }
 
         return aggregateOutcome;
