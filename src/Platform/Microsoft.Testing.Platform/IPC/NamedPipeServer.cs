@@ -4,7 +4,6 @@
 #if NET
 using System.Buffers;
 #endif
-using System.Globalization;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
 

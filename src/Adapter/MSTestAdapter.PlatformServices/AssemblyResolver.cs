@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK || NET
-using System.Diagnostics;
-using System.Reflection;
 #if NETFRAMEWORK
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security;

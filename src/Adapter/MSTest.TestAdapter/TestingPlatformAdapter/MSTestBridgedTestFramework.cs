@@ -2,9 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-using System.Diagnostics;
-using System.Reflection;
-
 using Microsoft.Testing.Extensions.VSTestBridge;
 using Microsoft.Testing.Extensions.VSTestBridge.Requests;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;

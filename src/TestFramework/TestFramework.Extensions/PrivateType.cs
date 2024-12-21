@@ -3,9 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System.Globalization;
-using System.Reflection;
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>

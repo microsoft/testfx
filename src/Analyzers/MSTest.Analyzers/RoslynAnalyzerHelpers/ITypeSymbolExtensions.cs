@@ -2,8 +2,6 @@
 
 #nullable disable warnings
 
-using System.Diagnostics.CodeAnalysis;
-
 using Microsoft.CodeAnalysis;
 
 namespace Analyzer.Utilities.Extensions;

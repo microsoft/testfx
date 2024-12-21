@@ -6,9 +6,6 @@ using System.Threading.Channels;
 #else
 using System.Collections.Concurrent;
 #endif
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Text;
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;

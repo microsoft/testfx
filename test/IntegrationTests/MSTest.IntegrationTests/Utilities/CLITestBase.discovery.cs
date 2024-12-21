@@ -3,7 +3,6 @@
 
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using System.Diagnostics;
 
 using DiscoveryAndExecutionTests.Utilities;
 

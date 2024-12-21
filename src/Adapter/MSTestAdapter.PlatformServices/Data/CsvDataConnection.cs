@@ -6,9 +6,6 @@
 using System.Collections;
 using System.Data;
 using System.Data.OleDb;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Text;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

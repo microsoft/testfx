@@ -3,8 +3,6 @@
 
 #nullable enable
 
-using System.Diagnostics.CodeAnalysis;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;

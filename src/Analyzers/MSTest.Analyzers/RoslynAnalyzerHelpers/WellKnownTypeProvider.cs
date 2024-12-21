@@ -2,8 +2,6 @@
 
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 
 using Analyzer.Utilities.Extensions;
 using Analyzer.Utilities.PooledObjects;

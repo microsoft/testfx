@@ -8,9 +8,6 @@ using System.Data.Common;
 using System.Data.Odbc;
 using System.Data.OleDb;
 using System.Data.SqlClient;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Text;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

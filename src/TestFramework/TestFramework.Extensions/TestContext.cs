@@ -6,8 +6,6 @@ using System.Collections;
 using System.Data;
 using System.Data.Common;
 #endif
-using System.Diagnostics;
-using System.Globalization;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
