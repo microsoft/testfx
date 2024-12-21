@@ -130,16 +130,14 @@ internal sealed class TestMethodRunner
                     result = [new()];
                 }
 
-#pragma warning disable IDE0056 // Use index operator
-                result[result.Length - 1] = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
+                result[^1] = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
                 {
-                    StandardOut = result[result.Length - 1].StandardOut,
-                    StandardError = result[result.Length - 1].StandardError,
-                    DebugTrace = result[result.Length - 1].DebugTrace,
-                    TestContextMessages = result[result.Length - 1].TestContextMessages,
-                    Duration = result[result.Length - 1].Duration,
+                    StandardOut = result[^1].StandardOut,
+                    StandardError = result[^1].StandardError,
+                    DebugTrace = result[^1].DebugTrace,
+                    TestContextMessages = result[^1].TestContextMessages,
+                    Duration = result[^1].Duration,
                 };
-#pragma warning restore IDE0056 // Use index operator
             }
             finally
             {

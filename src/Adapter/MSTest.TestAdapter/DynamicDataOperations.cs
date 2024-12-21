@@ -203,7 +203,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
 #else
         Type type = data.GetType();
         if (IsTupleOrValueTuple(data.GetType(), out int tupleSize)
-            && (objects.Count == 0 || objects[objects.Count - 1].Length == tupleSize))
+            && (objects.Count == 0 || objects[^1].Length == tupleSize))
         {
             object[] array = new object[tupleSize];
             for (int i = 0; i < tupleSize; i++)

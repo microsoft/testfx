@@ -721,9 +721,7 @@ public class TestClassInfo
             {
                 if (results.Length > 0)
                 {
-#pragma warning disable IDE0056 // Use index operator
-                    UnitTestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
+                    UnitTestResult lastResult = results[^1];
                     lastResult.Outcome = ObjectModelUnitTestOutcome.Error;
                     lastResult.ErrorMessage = ex.Message;
                     lastResult.ErrorStackTrace = ex.StackTrace;
@@ -733,9 +731,7 @@ public class TestClassInfo
             {
                 if (results.Length > 0)
                 {
-#pragma warning disable IDE0056 // Use index operator
-                    UnitTestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
+                    UnitTestResult lastResult = results[^1];
                     lastResult.StandardOut += initializationLogs;
                     lastResult.StandardError += initializationErrorLogs;
                     lastResult.DebugTrace += initializationTrace;
