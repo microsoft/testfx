@@ -3,12 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-using System.Text;
-using System.Xml;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;

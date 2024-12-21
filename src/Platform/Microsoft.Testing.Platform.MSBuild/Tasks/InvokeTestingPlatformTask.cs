@@ -3,10 +3,7 @@
 
 #pragma warning disable CS8618 // Properties below are set by MSBuild.
 
-using System.Diagnostics;
-using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Text;
 
 using Microsoft.Build.Framework;
 using Microsoft.Testing.Extensions.MSBuild;

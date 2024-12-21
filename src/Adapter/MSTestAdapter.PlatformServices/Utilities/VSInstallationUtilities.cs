@@ -3,7 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using static System.String;

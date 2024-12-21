@@ -6,7 +6,6 @@ using System.Collections;
 using System.Data;
 using System.Data.Common;
 #endif
-using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;

@@ -6,8 +6,6 @@
 #if NETFRAMEWORK
 using System.Collections;
 #endif
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 

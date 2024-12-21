@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using System.Globalization;
 
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.HangDump.Serializers;

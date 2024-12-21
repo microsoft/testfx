@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Adapted from https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.CoreUtilities/Helpers/DotnetHostHelper.cs
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 using Microsoft.Win32;
