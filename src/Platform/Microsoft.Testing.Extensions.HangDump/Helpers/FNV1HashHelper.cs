@@ -14,16 +14,12 @@ internal static class FNV_1aHashHelper
     /// </summary>
     public static uint ComputeStringHash(string s)
     {
-        uint num = default;
-        if (s != null)
+        uint num = 2166136261u;
+        int num2 = 0;
+        while (num2 < s.Length)
         {
-            num = 2166136261u;
-            int num2 = 0;
-            while (num2 < s.Length)
-            {
-                num = (s[num2] ^ num) * 16777619;
-                num2++;
-            }
+            num = (s[num2] ^ num) * 16777619;
+            num2++;
         }
 
         return num;
