@@ -66,9 +66,9 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestApplicationLif
                 string namedPipeName = _environment.GetEnvironmentVariable(TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME)
                     ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable, TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME));
                 NamedPipeClient = new NamedPipeClient(namedPipeName);
-                NamedPipeClient.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
-                NamedPipeClient.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
-                NamedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+                NamedPipeClient.RegisterSerializer<ReportFileNameRequestSerializer, ReportFileNameRequest>();
+                NamedPipeClient.RegisterSerializer<TestAdapterInformationRequestSerializer, TestAdapterInformationRequest>();
+                NamedPipeClient.RegisterSerializer<VoidResponseSerializer, VoidResponse>();
 
                 // Connect to the named pipe server
                 await NamedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);

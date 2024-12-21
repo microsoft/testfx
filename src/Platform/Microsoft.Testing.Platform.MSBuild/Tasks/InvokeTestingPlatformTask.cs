@@ -257,10 +257,10 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 while (!_waitForConnections.IsCancellationRequested)
                 {
                     NamedPipeServer pipeServer = new(_pipeNameDescription, HandleRequestAsync, new SystemEnvironment(), new MSBuildLogger(), new SystemTask(), maxNumberOfServerInstances: 100, CancellationToken.None);
-                    pipeServer.RegisterSerializer(new ModuleInfoRequestSerializer(), typeof(ModuleInfoRequest));
-                    pipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-                    pipeServer.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
-                    pipeServer.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
+                    pipeServer.RegisterSerializer<ModuleInfoRequestSerializer, ModuleInfoRequest>();
+                    pipeServer.RegisterSerializer<VoidResponseSerializer, VoidResponse>();
+                    pipeServer.RegisterSerializer<FailedTestInfoRequestSerializer, FailedTestInfoRequest>();
+                    pipeServer.RegisterSerializer<RunSummaryInfoRequestSerializer, RunSummaryInfoRequest>();
                     await pipeServer.WaitConnectionAsync(_waitForConnections.Token);
                     _connections.Add(pipeServer);
                     Log.LogMessage(MessageImportance.Low, $"Client connected to '{_pipeNameDescription.Name}'");

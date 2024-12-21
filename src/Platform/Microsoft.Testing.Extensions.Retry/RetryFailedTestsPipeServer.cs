@@ -27,11 +27,11 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
             serviceProvider.GetTask(),
             serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken);
 
-        _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        _singleConnectionNamedPipeServer.RegisterSerializer(new FailedTestRequestSerializer(), typeof(FailedTestRequest));
-        _singleConnectionNamedPipeServer.RegisterSerializer(new GetListOfFailedTestsRequestSerializer(), typeof(GetListOfFailedTestsRequest));
-        _singleConnectionNamedPipeServer.RegisterSerializer(new GetListOfFailedTestsResponseSerializer(), typeof(GetListOfFailedTestsResponse));
-        _singleConnectionNamedPipeServer.RegisterSerializer(new TotalTestsRunRequestSerializer(), typeof(TotalTestsRunRequest));
+        _singleConnectionNamedPipeServer.RegisterSerializer<VoidResponseSerializer, VoidResponse>();
+        _singleConnectionNamedPipeServer.RegisterSerializer<FailedTestRequestSerializer, FailedTestRequest>();
+        _singleConnectionNamedPipeServer.RegisterSerializer<GetListOfFailedTestsRequestSerializer, GetListOfFailedTestsRequest>();
+        _singleConnectionNamedPipeServer.RegisterSerializer<GetListOfFailedTestsResponseSerializer, GetListOfFailedTestsResponse>();
+        _singleConnectionNamedPipeServer.RegisterSerializer<TotalTestsRunRequestSerializer, TotalTestsRunRequest>();
         _failedTests = failedTests;
     }
 

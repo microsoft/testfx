@@ -24,14 +24,14 @@ internal static class RegisterSerializers
 {
     public static void RegisterAllSerializers(this NamedPipeBase namedPipeBase)
     {
-        namedPipeBase.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        namedPipeBase.RegisterSerializer(new TestHostProcessExitRequestSerializer(), typeof(TestHostProcessExitRequest));
-        namedPipeBase.RegisterSerializer(new TestHostProcessPIDRequestSerializer(), typeof(TestHostProcessPIDRequest));
-        namedPipeBase.RegisterSerializer(new CommandLineOptionMessagesSerializer(), typeof(CommandLineOptionMessages));
-        namedPipeBase.RegisterSerializer(new DiscoveredTestMessagesSerializer(), typeof(DiscoveredTestMessages));
-        namedPipeBase.RegisterSerializer(new TestResultMessagesSerializer(), typeof(TestResultMessages));
-        namedPipeBase.RegisterSerializer(new FileArtifactMessagesSerializer(), typeof(FileArtifactMessages));
-        namedPipeBase.RegisterSerializer(new TestSessionEventSerializer(), typeof(TestSessionEvent));
-        namedPipeBase.RegisterSerializer(new HandshakeMessageSerializer(), typeof(HandshakeMessage));
+        namedPipeBase.RegisterSerializer<VoidResponseSerializer, VoidResponse>();
+        namedPipeBase.RegisterSerializer<TestHostProcessExitRequestSerializer, TestHostProcessExitRequest>();
+        namedPipeBase.RegisterSerializer<TestHostProcessPIDRequestSerializer, TestHostProcessPIDRequest>();
+        namedPipeBase.RegisterSerializer<CommandLineOptionMessagesSerializer, CommandLineOptionMessages>();
+        namedPipeBase.RegisterSerializer<DiscoveredTestMessagesSerializer, DiscoveredTestMessages>();
+        namedPipeBase.RegisterSerializer<TestResultMessagesSerializer, TestResultMessages>();
+        namedPipeBase.RegisterSerializer<FileArtifactMessagesSerializer, FileArtifactMessages>();
+        namedPipeBase.RegisterSerializer<TestSessionEventSerializer, TestSessionEvent>();
+        namedPipeBase.RegisterSerializer<HandshakeMessageSerializer, HandshakeMessage>();
     }
 }

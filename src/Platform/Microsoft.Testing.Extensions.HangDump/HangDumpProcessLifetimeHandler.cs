@@ -129,10 +129,10 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             async () =>
         {
             _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
-            _singleConnectionNamedPipeServer.RegisterSerializer(new ActivityIndicatorMutexNameRequestSerializer(), typeof(ActivityIndicatorMutexNameRequest));
-            _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-            _singleConnectionNamedPipeServer.RegisterSerializer(new SessionEndSerializerRequestSerializer(), typeof(SessionEndSerializerRequest));
-            _singleConnectionNamedPipeServer.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
+            _singleConnectionNamedPipeServer.RegisterSerializer<ActivityIndicatorMutexNameRequestSerializer, ActivityIndicatorMutexNameRequest>();
+            _singleConnectionNamedPipeServer.RegisterSerializer<VoidResponseSerializer, VoidResponse>();
+            _singleConnectionNamedPipeServer.RegisterSerializer<SessionEndSerializerRequestSerializer, SessionEndSerializerRequest>();
+            _singleConnectionNamedPipeServer.RegisterSerializer<ConsumerPipeNameRequestSerializer, ConsumerPipeNameRequest>();
             await _logger.LogDebugAsync($"Waiting for connection to {_singleConnectionNamedPipeServer.PipeName.Name}");
             await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
         }, cancellationToken);
@@ -165,10 +165,10 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             await _logger.LogDebugAsync($"Consumer pipe name received '{consumerPipeNameRequest.PipeName}'");
             _namedPipeClient = new NamedPipeClient(consumerPipeNameRequest.PipeName);
-            _namedPipeClient.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
-            _namedPipeClient.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));
-            _namedPipeClient.RegisterSerializer(new ExitSignalActivityIndicatorTaskRequestSerializer(), typeof(ExitSignalActivityIndicatorTaskRequest));
-            _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+            _namedPipeClient.RegisterSerializer<GetInProgressTestsResponseSerializer, GetInProgressTestsResponse>();
+            _namedPipeClient.RegisterSerializer<GetInProgressTestsRequestSerializer, GetInProgressTestsRequest>();
+            _namedPipeClient.RegisterSerializer<ExitSignalActivityIndicatorTaskRequestSerializer, ExitSignalActivityIndicatorTaskRequest>();
+            _namedPipeClient.RegisterSerializer<VoidResponseSerializer, VoidResponse>();
             _waitConsumerPipeName.Set();
             return VoidResponse.CachedInstance;
         }

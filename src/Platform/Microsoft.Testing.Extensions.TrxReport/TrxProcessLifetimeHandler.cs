@@ -102,9 +102,9 @@ internal sealed class TrxProcessLifetimeHandler :
             async () =>
             {
                 _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellation);
-                _singleConnectionNamedPipeServer.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
-                _singleConnectionNamedPipeServer.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
-                _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+                _singleConnectionNamedPipeServer.RegisterSerializer<ReportFileNameRequestSerializer, ReportFileNameRequest>();
+                _singleConnectionNamedPipeServer.RegisterSerializer<TestAdapterInformationRequestSerializer, TestAdapterInformationRequest>();
+                _singleConnectionNamedPipeServer.RegisterSerializer<VoidResponseSerializer, VoidResponse>();
                 await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellation).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellation);
             }, cancellation);
 
