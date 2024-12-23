@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
@@ -64,6 +65,8 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase<AssemblyResolut
             _testAssetDirectory.Dispose();
             MainDllFolder?.Dispose();
         }
+
+        public TestAsset GetTestAsset(string assetID) => throw ApplicationStateGuard.Unreachable();
 
         public async Task InitializeAsync()
         {

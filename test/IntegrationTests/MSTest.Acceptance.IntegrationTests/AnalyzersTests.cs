@@ -10,16 +10,10 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class AnalyzersTests : AcceptanceTestBase<AnalyzersTests.TestAssetFixture>
 {
     [TestMethod]
-    public async Task AnalyzerMessagesShouldBeLocalized()
+    public void AnalyzerMessagesShouldBeLocalized()
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
-        {
-            // This is fr-FR
-            ["VSLang"] = "1036",
-        });
-
-        testHostResult.AssertOutputContains("DataRow ne doit être défini que sur une méthode de test");
+        TestAsset testAsset = AssetFixture.GetTestAsset("Analyzers");
+        testAsset.DotnetResult!.AssertOutputContains("DataRow ne doit être défini que sur une méthode de test");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -27,6 +21,12 @@ public sealed class AnalyzersTests : AcceptanceTestBase<AnalyzersTests.TestAsset
         public const string ProjectName = "Analyzers";
 
         public string ProjectPath => GetAssetPath(ProjectName);
+
+        protected override Dictionary<string, string?> DotNetBuildEnvironmentVariables { get; } = new()
+        {
+            // This is fr-FR
+            ["VSLang"] = "1036",
+        };
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
