@@ -10,7 +10,7 @@
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
@@ -19,22 +19,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Aby byly metody s označením [AssemblyCleanup] platné, musí se řídit následujícím rozložením: 
-– Nesmí být deklarované pro obecnou třídu.
-– Musí být public.
-– Musí být static.
-– Nesmí být async void.
-– Nesmí být speciální metodou (finalizační metoda, operátor...).
-– Nesmí být obecné.
-– Nesmí přijímat žádný parametr.
-– Návratový typ musí být void, Task nebo ValueTask.
+        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla: 
-– Typ by měl být třída.
-– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
-– Třída by neměla být static.
-– Třída by měla být označena atributem [TestClass] (nebo odvozeným atributem).
-– Třída by neměla být obecná.</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -140,7 +140,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
@@ -151,24 +151,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Aby byly metody s označením [ClassCleanup] platné, musí se řídit následujícím rozložením: 
-– Nesmí být deklarované pro obecnou třídu bez nastavení režimu InheritanceBehavior.
-– Musí být public.
-– Musí být static.
-– Nesmí být async void.
-– Nesmí být speciální metodou (finalizační metoda, operátor...).
-– Nesmí být obecné.
-– Nesmí přijímat žádný parametr.
-– Návratový typ musí být void, Task nebo ValueTask.
-– V případě třídy abstract by měl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
-– V případě třídy sealed by neměl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
+        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla: 
-– Typ by měl být třída.
-– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
-– Třída by neměla být static.
-– Pokud je třída sealed, měla by být označena atributem [TestClass] (nebo odvozeným atributem).
-– Třída by neměla být obecná.</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -364,17 +364,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <target state="translated">'[DynamicData]' člen {0}.{1} je metoda, takže byste měli použít DynamicDataSourceType.AutoDetect nebo DynamicDataSourceType.Method (automatické zjišťování je výchozí, pokud není explicitně zadáno, a doporučuje se)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
         <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</target>
+        <target state="translated">'[DynamicData]' člen {0}.{1} není vlastnost ani metoda. Jsou podporovány pouze vlastnosti a metody.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
         <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <target state="translated">'[DynamicData]' člen {0}.{1} je vlastnost, takže byste měli použít DynamicDataSourceType.AutoDetect nebo DynamicDataSourceType.Property (automatické zjišťování je výchozí, pokud není explicitně zadáno, a doporučuje se)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">

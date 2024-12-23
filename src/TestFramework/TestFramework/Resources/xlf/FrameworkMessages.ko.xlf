@@ -254,7 +254,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
-        <target state="new">Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</target>
+        <target state="translated">{1} 반환 형식의 속성 또는 메서드 {0}은(는) 'IEnumerable'에 할당할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">
