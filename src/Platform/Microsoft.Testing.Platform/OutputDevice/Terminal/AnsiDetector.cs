@@ -5,8 +5,6 @@
 // https://github.com/spectreconsole/spectre.console/blob/main/src/Spectre.Console/Internal/Backends/Ansi/AnsiDetector.cs
 // and from the supports-ansi project by Qingrong Ke
 // https://github.com/keqingrong/supports-ansi/blob/master/index.js
-using System.Text.RegularExpressions;
-
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>

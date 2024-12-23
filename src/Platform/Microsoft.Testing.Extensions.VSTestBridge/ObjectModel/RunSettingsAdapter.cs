@@ -3,9 +3,6 @@
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
-using System.Globalization;
-using System.Xml.Linq;
-
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Platform;

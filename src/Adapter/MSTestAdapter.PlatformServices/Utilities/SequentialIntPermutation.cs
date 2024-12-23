@@ -3,8 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System.Collections;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 /// <summary>

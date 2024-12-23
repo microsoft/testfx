@@ -3,8 +3,6 @@
 
 #pragma warning disable CS8618 // Properties below are set by MSBuild.
 
-using System.Diagnostics;
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
