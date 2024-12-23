@@ -358,6 +358,8 @@ class AssemblyResolver :
             return null;
         }
 
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(requestedName.Name), "MSTest.AssemblyResolver.OnResolve: requested name is empty!");
+
         foreach (string dir in searchDirectorypaths)
         {
             if (StringEx.IsNullOrEmpty(dir))
