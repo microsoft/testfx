@@ -10,9 +10,8 @@ internal sealed class CommandLineOptionsProxy : ICommandLineOptions
     private ICommandLineOptions? _commandLineOptions;
 
     public bool IsOptionSet(string optionName)
-        => _commandLineOptions is null
-            ? throw new InvalidOperationException(Resources.PlatformResources.CommandLineOptionsNotReady)
-            : _commandLineOptions.IsOptionSet(optionName);
+        => _commandLineOptions?.IsOptionSet(optionName) ??
+           throw new InvalidOperationException(Resources.PlatformResources.CommandLineOptionsNotReady);
 
     public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
         => _commandLineOptions is null
