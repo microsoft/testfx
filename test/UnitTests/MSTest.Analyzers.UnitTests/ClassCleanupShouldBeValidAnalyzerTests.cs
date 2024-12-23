@@ -284,7 +284,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenClassCleanupHasParameters_Diagnostic()
+    public async Task WhenClassCleanupHasTestContextParameter_NoDiagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -293,29 +293,13 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests
             public class MyTestClass
             {
                 [ClassCleanup]
-                public static void {|#0:ClassCleanup|}(TestContext testContext)
+                public static void ClassCleanup(TestContext testContext)
                 {
                 }
             }
             """;
 
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [ClassCleanup]
-                public static void ClassCleanup()
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(
-            code,
-            VerifyCS.Diagnostic().WithLocation(0).WithArguments("ClassCleanup"),
-            fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]

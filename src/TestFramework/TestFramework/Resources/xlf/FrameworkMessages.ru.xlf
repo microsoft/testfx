@@ -254,7 +254,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
-        <target state="new">Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</target>
+        <target state="translated">Свойство или метод {0} в {1} тип возвращаемого значения не может быть назначен "IEnumerable".</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">

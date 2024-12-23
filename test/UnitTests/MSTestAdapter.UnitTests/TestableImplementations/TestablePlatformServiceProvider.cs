@@ -9,6 +9,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
 internal class TestablePlatformServiceProvider : IPlatformServiceProvider
@@ -124,7 +126,12 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public TestRunCancellationToken TestRunCancellationToken { get; set; }
 
-    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties, IMessageLogger messageLogger) => new TestContextImplementation(testMethod, writer, properties, messageLogger);
+    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome)
+    {
+        var testContextImpl = new TestContextImplementation(testMethod, writer, properties, messageLogger);
+        testContextImpl.SetOutcome(outcome);
+        return testContextImpl;
+    }
 
     public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle) => MockTestSourceHost.Object;
 

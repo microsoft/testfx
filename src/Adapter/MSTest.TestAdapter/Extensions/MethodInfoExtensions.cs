@@ -41,8 +41,14 @@ internal static class MethodInfoExtensions
 
         return
             method is { IsStatic: true, IsPublic: true } &&
-            (method.GetParameters().Length == 0) &&
+            HasCorrectClassOrAssemblyCleanupParameters(method) &&
             method.IsValidReturnType();
+    }
+
+    private static bool HasCorrectClassOrAssemblyCleanupParameters(MethodInfo method)
+    {
+        ParameterInfo[] parameters = method.GetParameters();
+        return parameters.Length == 0 || (parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext));
     }
 
     /// <summary>

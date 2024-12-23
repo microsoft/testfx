@@ -260,7 +260,7 @@ public class TestAssemblyInfo
     /// It is a replacement for RunAssemblyCleanup but as we are in a bug-fix version, we do not want to touch
     /// public API and so we introduced this method.
     /// </remarks>
-    internal void ExecuteAssemblyCleanup()
+    internal void ExecuteAssemblyCleanup(TestContext testContext)
     {
         if (AssemblyCleanupMethod == null)
         {
@@ -272,8 +272,18 @@ public class TestAssemblyInfo
             try
             {
                 AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
-                     () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
-                     new CancellationTokenSource(),
+                     () =>
+                     {
+                         if (AssemblyCleanupMethod.GetParameters().Length == 0)
+                         {
+                             AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
+                         }
+                         else
+                         {
+                             AssemblyCleanupMethod.InvokeAsSynchronousTask(null, testContext);
+                         }
+                     },
+                     testContext.CancellationTokenSource,
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
                      new AssemblyExecutionContextScope(isCleanup: true),

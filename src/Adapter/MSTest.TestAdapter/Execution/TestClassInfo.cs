@@ -488,12 +488,12 @@ public class TestClassInfo
                 try
                 {
                     classCleanupMethod = ClassCleanupMethod;
-                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod, BaseClassCleanupMethods.Count) : null;
+                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod, BaseClassCleanupMethods.Count, null!) : null;
                     var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethods);
                     while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, baseClassCleanupQueue.Count);
+                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, baseClassCleanupQueue.Count, null!);
                     }
 
                     IsClassCleanupExecuted = ClassCleanupException is null;
@@ -545,7 +545,7 @@ public class TestClassInfo
     /// This is a replacement for RunClassCleanup but as we are on a bug fix version, we do not want to change
     /// the public API, hence this method.
     /// </remarks>
-    internal void ExecuteClassCleanup()
+    internal void ExecuteClassCleanup(TestContext testContext)
     {
         if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
             || IsClassCleanupExecuted)
@@ -572,7 +572,7 @@ public class TestClassInfo
                 {
                     if (!ReflectHelper.Instance.IsNonDerivedAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
                     {
-                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count);
+                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count, testContext);
                     }
                 }
 
@@ -583,7 +583,7 @@ public class TestClassInfo
                         classCleanupMethod = BaseClassCleanupMethods[i];
                         if (!ReflectHelper.Instance.IsNonDerivedAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
                         {
-                            ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count - 1 - i);
+                            ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count - 1 - i, testContext);
                             if (ClassCleanupException is not null)
                             {
                                 break;
@@ -704,7 +704,7 @@ public class TestClassInfo
                 using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
                 try
                 {
-                    ExecuteClassCleanup();
+                    ExecuteClassCleanup(testContext.Context);
                 }
                 finally
                 {
@@ -742,7 +742,7 @@ public class TestClassInfo
         }
     }
 
-    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, int remainingCleanupCount)
+    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, int remainingCleanupCount, TestContext testContext)
     {
         TimeoutInfo? timeout = null;
         if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
@@ -751,8 +751,18 @@ public class TestClassInfo
         }
 
         return FixtureMethodRunner.RunWithTimeoutAndCancellation(
-            () => methodInfo.InvokeAsSynchronousTask(null),
-            new CancellationTokenSource(),
+            () =>
+            {
+                if (methodInfo.GetParameters().Length == 0)
+                {
+                    methodInfo.InvokeAsSynchronousTask(null);
+                }
+                else
+                {
+                    methodInfo.InvokeAsSynchronousTask(null, testContext);
+                }
+            },
+            testContext.CancellationTokenSource,
             timeout,
             methodInfo,
             new ClassExecutionContextScope(ClassType, remainingCleanupCount),
