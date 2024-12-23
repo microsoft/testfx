@@ -18,7 +18,6 @@ public sealed class AnalyzersTests : AcceptanceTestBase<NopAssetFixture>
 
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RunAnalyzers>true</RunAnalyzers>
   </PropertyGroup>
 
@@ -38,13 +37,13 @@ public class UnitTest1
 """.PatchTargetFrameworks(TargetFrameworks.NetCurrent)
     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
 
-        TestAsset testAsset = await TestAsset.GenerateAssetAsync("Analyzers", code);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync("Analyzers", code);
         DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, environmentVariables: new()
         {
-            // This is fr-FR
-            ["VSLang"] = "1036",
-        });
-
-        result.AssertOutputContains("DataRow ne doit être défini que sur une méthode de test");
+            ["DOTNET_CLI_UI_LANGUAGE"] = "it-IT",
+            ["PreferredUILang"] = "it-IT",
+            ["VSLang"] = "1040",
+        }, warnAsError: false);
+        result.AssertOutputContains("DataRow deve essere impostato solo su un metodo di test");
     }
 }
