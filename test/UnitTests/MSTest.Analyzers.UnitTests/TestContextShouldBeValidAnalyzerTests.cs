@@ -363,6 +363,29 @@ public sealed class TestContextShouldBeValidAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
+    public async Task WhenTestContextPropertyIsReadonly_AssignedInConstructorViaField_NoDiagnostic()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private readonly TestContext _testContext;
+
+                public MyTestClass(TestContext testContext)
+                {
+                    _testContext = testContext;
+                }
+
+                public TestContext TestContext => _testContext;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
     [DataRow("TestContext", "private")]
     [DataRow("TestContext", "public")]
     [DataRow("TestContext", "internal")]
