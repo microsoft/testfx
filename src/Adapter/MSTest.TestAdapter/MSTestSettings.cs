@@ -503,11 +503,7 @@ public class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidClassCleanupLifecycleValue,
                                         value,
-#if NET
-                                        string.Join(", ", Enum.GetNames<ClassCleanupBehavior>())));
-#else
                                         string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
-#endif
 
                             break;
                         }
@@ -834,11 +830,7 @@ public class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidParallelScopeValue,
                                         value,
-#if NET
-                                        string.Join(", ", Enum.GetNames<ExecutionScope>())));
-#else
                                         string.Join(", ", EnumPolyfill.GetNames<ExecutionScope>())));
-#endif
 
                             break;
                         }
@@ -865,11 +857,7 @@ public class MSTestSettings
     private static bool TryParseEnum<T>(string value, out T result)
         where T : struct, Enum
         => Enum.TryParse(value, true, out result)
-#if NET6_0_OR_GREATER
-        && Enum.IsDefined(result);
-#else
-        && Enum.IsDefined(typeof(T), result);
-#endif
+        && EnumPolyfill.IsDefined(result);
 
     private static void SetGlobalSettings(
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
@@ -991,22 +979,16 @@ public class MSTestSettings
 
         if (configuration["mstest:classCleanupLifecycle"] is string classCleanupLifecycle)
         {
-            if (TryParseEnum(classCleanupLifecycle, out ClassCleanupBehavior lifecycle))
-            {
-                settings.ClassCleanupLifecycle = lifecycle;
-            }
-            else
+            if (!TryParseEnum(classCleanupLifecycle, out ClassCleanupBehavior lifecycle))
             {
                 throw new AdapterSettingsException(string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.InvalidClassCleanupLifecycleValue,
                     classCleanupLifecycle,
-#if NET
-                    string.Join(", ", Enum.GetNames<ClassCleanupBehavior>())));
-#else
                     string.Join(", ", EnumPolyfill.GetNames<ClassCleanupBehavior>())));
-#endif
             }
+
+            settings.ClassCleanupLifecycle = lifecycle;
         }
 
         if (configuration["mstest:parallelism:workers"] is string workers)
@@ -1030,22 +1012,16 @@ public class MSTestSettings
         {
             value = value.Equals("class", StringComparison.OrdinalIgnoreCase) ? "ClassLevel"
                     : value.Equals("method", StringComparison.OrdinalIgnoreCase) ? "MethodLevel" : value;
-            if (TryParseEnum(value, out ExecutionScope scope))
-            {
-                settings.ParallelizationScope = scope;
-            }
-            else
+            if (!TryParseEnum(value, out ExecutionScope scope))
             {
                 throw new AdapterSettingsException(string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.InvalidParallelScopeValue,
                     value,
-#if NET
-                    string.Join(", ", Enum.GetNames<ExecutionScope>())));
-#else
                     string.Join(", ", EnumPolyfill.GetNames<ExecutionScope>())));
-#endif
             }
+
+            settings.ParallelizationScope = scope;
         }
 
         MSTestSettingsProvider.Load(configuration);
