@@ -151,9 +151,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // func.
             : () => _isVSTestMode || _isListTests || _isServerMode
                 ? false
-                : _testHostControllerInfo.IsCurrentProcessTestHostController == null
-                    ? null
-                    : !_testHostControllerInfo.IsCurrentProcessTestHostController;
+                : !_testHostControllerInfo.IsCurrentProcessTestHostController;
 
         // This is single exe run, don't show all the details of assemblies and their summaries.
         _terminalTestReporter = new TerminalTestReporter(_console, new()

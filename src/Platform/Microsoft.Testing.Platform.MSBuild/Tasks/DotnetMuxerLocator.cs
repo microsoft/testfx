@@ -369,7 +369,7 @@ internal sealed class DotnetMuxerLocator
             }
         }
 
-        return archType is null ? throw new InvalidOperationException("Invalid image") : archType;
+        return archType ?? throw new InvalidOperationException("Invalid image");
     }
 
     // See https://opensource.apple.com/source/xnu/xnu-2050.18.24/EXTERNAL_HEADERS/mach-o/loader.h

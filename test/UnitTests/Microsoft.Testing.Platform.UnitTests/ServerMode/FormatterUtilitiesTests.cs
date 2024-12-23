@@ -133,9 +133,7 @@ public sealed class FormatterUtilitiesTests
     }
 
     public static string? FormatSerializerTypes(MethodInfo methodInfo, object?[]? data)
-        => data is not null
-            ? (data[0] as Type)?.Name
-            : null;
+        => (data?[0] as Type)?.Name;
 
     private static void AssertSerialize(Type type, string instanceSerialized)
     {
