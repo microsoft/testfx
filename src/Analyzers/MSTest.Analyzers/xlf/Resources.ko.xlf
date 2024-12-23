@@ -19,22 +19,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">'[AssemblyCleanup]'으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
--제네릭 클래스에서 선언할 수 없습니다.
-- 'public'이어야 합니다. 
-- 'static'이어야 합니다.
-- 'async void'가 아니어야 합니다.
-- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.
-- 제네릭이 아니어야 합니다.
-- 매개 변수를 사용하지 않아야 합니다.
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
+        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 
-이러한 메서드를 선언하는 형식은 다음 규칙도 준수해야 합니다.
--형식은 클래스여야 합니다.
--클래스는 'public' 또는 'internal'이어야 합니다(테스트 프로젝트에서 '[DiscoverInternals]' 특성을 사용하는 경우).
--클래스는 'static'이 되어서는 안 됩니다.
--클래스는 '[TestClass]'(또는 파생 특성)로 표시되어야 합니다.
--클래스는 제네릭이 아니어야 합니다.</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -151,24 +151,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">'[ClassCleanup]'으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
--'InheritanceBehavior' 모드가 설정되지 않은 제네릭 클래스에서 선언할 수 없습니다.
-- 'public'이어야 합니다. 
-- 'static'이어야 합니다.
-- 'async void'가 아니어야 합니다.
-- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.
-- 제네릭이 아니어야 합니다.
-- 매개 변수를 사용하지 않아야 합니다.
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
-- 클래스가 'abstract'인 경우 'InheritanceBehavior.BeforeEachDerivedClass' 특성 매개 변수를 지정해야 합니다.
-- 클래스가 'sealed'인 경우 'InheritanceBehavior.BeforeEachDerivedClass' 특성 매개 변수를 지정하면 안 됩니다.
+        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
 
-이러한 메서드를 선언하는 형식은 다음 규칙도 준수해야 합니다.
--형식은 클래스여야 합니다.
--클래스는 'public' 또는 'internal'이어야 합니다(테스트 프로젝트에서 '[DiscoverInternals]' 특성을 사용하는 경우).
--클래스는 'static'이 되어서는 안 됩니다.
--클래스가 'sealed'인 경우 '[TestClass]'(또는 파생 특성)로 표시되어야 합니다.
--클래스는 제네릭이 아니어야 합니다.</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -364,17 +364,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <target state="translated">'[DynamicData]' 멤버 '{0}.{1}'은(는) 'DynamicDataSourceType.AutoDetect' 또는 'DynamicDataSourceType.Method'를 사용해야 하는 메서드입니다.(명시적으로 지정하지 않은 경우 자동 검색이 기본값이며 권장)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
         <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</target>
+        <target state="translated">'[DynamicData]' 멤버 '{0}.{1}'은(는) 속성이나 메서드가 아닙니다. 속성 및 메서드만 지원됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
         <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</target>
+        <target state="translated">'[DynamicData]' 멤버 '{0}.{1}'은 속성이므로 'DynamicDataSourceType.AutoDetect' 또는 'DynamicDataSourceType.Property'를 사용해야 합니다(명시적으로 지정되지 않은 경우 자동 검색이 기본값이며 권장).</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
