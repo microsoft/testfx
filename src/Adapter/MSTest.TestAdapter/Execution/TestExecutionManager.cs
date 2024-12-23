@@ -415,7 +415,7 @@ public class TestExecutionManager
 #if !WINDOWS_UWP
         if (MSTestGracefulStopTestExecutionCapability.Instance.IsStopRequested)
         {
-            testRunner.ForceCleanup();
+            testRunner.ForceCleanup(sourceLevelParameters!, new RemotingMessageLogger(frameworkHandle));
         }
 #endif
 
@@ -435,6 +435,8 @@ public class TestExecutionManager
         IEnumerable<TestCase> orderedTests = MSTestSettings.CurrentSettings.OrderTestsByNameInClass
             ? tests.OrderBy(t => t.GetManagedType()).ThenBy(t => t.GetManagedMethod())
             : tests;
+
+        var remotingMessageLogger = new RemotingMessageLogger(testExecutionRecorder);
 
         foreach (TestCase currentTest in orderedTests)
         {
@@ -469,7 +471,7 @@ public class TestExecutionManager
 
             // testRunner could be in a different AppDomain. We cannot pass the testExecutionRecorder directly.
             // Instead, we pass a proxy (remoting object) that is marshallable by ref.
-            UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties, new RemotingMessageLogger(testExecutionRecorder));
+            UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties, remotingMessageLogger);
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
 

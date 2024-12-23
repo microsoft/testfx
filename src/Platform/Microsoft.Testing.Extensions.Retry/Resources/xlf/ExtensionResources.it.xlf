@@ -4,22 +4,22 @@
     <body>
       <trans-unit id="FailedToCreateRetryDirectoryBecauseOfCollision">
         <source>Failed to create retries directory due to collisions in '{0}' despite re-trying.</source>
-        <target state="new">Failed to create retries directory due to collisions in '{0}' despite re-trying.</target>
+        <target state="translated">Non è possibile creare la directory dei tentativi a causa di collisioni in “{0}” nonostante i tentativi ripetuti.</target>
         <note>'{0}' is the directory where collisions happen</note>
       </trans-unit>
       <trans-unit id="FailureThresholdPolicy">
         <source>Failure threshold policy is enabled, failed tests will not be restarted.</source>
-        <target state="new">Failure threshold policy is enabled, failed tests will not be restarted.</target>
+        <target state="translated">Se il criterio della soglia di errore è abilitato, i test non riusciti non verranno riavviati.</target>
         <note />
       </trans-unit>
       <trans-unit id="FailureThresholdPolicyMaxCount">
         <source>Maximum failed tests threshold is {0} and {1} tests failed</source>
-        <target state="new">Maximum failed tests threshold is {0} and {1} tests failed</target>
+        <target state="translated">La soglia massima dei test non superati è {0} e i test {1} non sono riusciti</target>
         <note />
       </trans-unit>
       <trans-unit id="FailureThresholdPolicyMaxPercentage">
         <source>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</source>
-        <target state="new">Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</target>
+        <target state="translated">La soglia percentuale di operazioni non riuscite è del {0}% e del {1}% di test non riusciti ({2}/{3})</target>
         <note />
       </trans-unit>
       <trans-unit id="MoveFiles">
@@ -28,81 +28,81 @@
 Moving last attempt asset files to the default result directory
 =====================
 </source>
-        <target state="new">
+        <target state="translated">
 =====================
-Moving last attempt asset files to the default result directory
+Spostamento dei file di asset dell'ultimo tentativo nella directory dei risultati predefinita
 =====================
 </target>
         <note />
       </trans-unit>
       <trans-unit id="MovingFileToLocation">
         <source>Moving file '{0}' to '{1}'</source>
-        <target state="new">Moving file '{0}' to '{1}'</target>
+        <target state="translated">Spostamento del file '{0}' in '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
-        <target state="new">Failed to start process '{0}'</target>
+        <target state="translated">Impossibile avviare il processo '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
         <source>Retry failed tests feature allows to restart test execution upon failure.</source>
-        <target state="new">Retry failed tests feature allows to restart test execution upon failure.</target>
+        <target state="translated">La funzionalità di ripetizione dei test non riusciti consente di riavviare l'esecuzione dei test in caso di errore.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDisplayName">
         <source>Retry failed tests</source>
-        <target state="new">Retry failed tests</target>
+        <target state="translated">Ripeti i test non riusciti</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
         <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="new">Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <target state="translated">La ripetizione dei test non riusciti funziona solo con i generatori di tipo 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
-        <target state="new">Disable retry mechanism if the percentage of failed tests is greater than the specified value</target>
+        <target state="translated">Disabilita il meccanismo di ripetizione dei tentativi se la percentuale di test non riusciti è maggiore del valore specificato.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
-        <target state="new">Disable retry mechanism if the number of failed tests is greater than the specified value</target>
+        <target state="translated">Disabilita il meccanismo di ripetizione dei tentativi se il numero di test non riusciti è maggiore del valore specificato.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
         <source>Retry failed tests feature is not supported in hot reload mode</source>
-        <target state="new">Retry failed tests feature is not supported in hot reload mode</target>
+        <target state="translated">La funzionalità di ripetizione dei test non riusciti non è supportata nella modalità di ricaricamento rapido.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInServerModeErrorMessage">
         <source>Retry failed tests feature is not supported in server mode</source>
-        <target state="new">Retry failed tests feature is not supported in server mode</target>
+        <target state="translated">La funzionalità di ripetizione dei test non riusciti non è supportata in modalità server</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
         <source>Enable retry failed tests</source>
-        <target state="new">Enable retry failed tests</target>
+        <target state="translated">Abilita la ripetizione dei test non riusciti</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
         <source>Option '{0}' requires option '{1}' to be specified</source>
-        <target state="new">Option '{0}' requires option '{1}' to be specified</target>
+        <target state="translated">L'opzione '{0}' richiede l'opzione '{1}' da specificare</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
         <source>Option '{0}' expects a single integer argument</source>
-        <target state="new">Option '{0}' expects a single integer argument</target>
+        <target state="translated">L'opzione '{0}' prevede un singolo argomento integer</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
         <source>Options '{0}' and '{1}' cannot be used together</source>
-        <target state="new">Options '{0}' and '{1}' cannot be used together</target>
+        <target state="translated">Le opzioni '{0}' e '{1}' non possono essere usate insieme</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
         <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
-        <target state="new">Test host process exited before the retry service could connect to it. Exit code: {0}</target>
+        <target state="translated">Il processo host di test è stato chiuso prima che il servizio di ripetizione potesse connettersi ad esso. Codice di uscita: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestSuiteCompletedSuccessfully">
@@ -110,9 +110,9 @@ Moving last attempt asset files to the default result directory
 =====================
 Tests suite completed successfully in {0} attempts
 =====================</source>
-        <target state="new">
+        <target state="translated">
 =====================
-Tests suite completed successfully in {0} attempts
+Il gruppo di test è stato completato correttamente in {0} tentativi
 =====================</target>
         <note />
       </trans-unit>
@@ -122,9 +122,9 @@ Tests suite completed successfully in {0} attempts
 Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
 =====================
 </source>
-        <target state="new">
+        <target state="translated">
 =====================
-Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
+Gruppo di test non riuscito, totale test non superati: {0}, codice di uscita: {1}, tentativo: {2}/{3}
 =====================
 </target>
         <note />
@@ -134,15 +134,15 @@ Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
 =====================
 Tests suite failed in all {0} attempts
 =====================</source>
-        <target state="new">
+        <target state="translated">
 =====================
-Tests suite failed in all {0} attempts
+Gruppo di test non riuscito in tutti i {0} tentativi
 =====================</target>
         <note />
       </trans-unit>
       <trans-unit id="TestSuiteFailedWithWrongExitCode">
         <source>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</source>
-        <target state="new">Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</target>
+        <target state="translated">Il gruppo di test non è riuscito e il codice di uscita è diverso da 2 (test non superati). Errore correlato a una condizione imprevista. Codice di uscita "{0}"</target>
         <note />
       </trans-unit>
     </body>
