@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="HotReloadHandlerUnsupportedFrameworkErrorMessage">
         <source>Hot reload is only supported on .NET 6.0 or greater</source>
-        <target state="new">Hot reload is only supported on .NET 6.0 or greater</target>
+        <target state="translated">ホット リロードは .NET 6.0 以降でのみサポートされています</target>
         <note />
       </trans-unit>
       <trans-unit id="HotReloadSessionCompleted">
         <source>Hot reload test session completed</source>
-        <target state="new">Hot reload test session completed</target>
+        <target state="translated">ホット リロード テスト セッションが完了しました</target>
         <note />
       </trans-unit>
       <trans-unit id="HotReloadSessionStarted">
         <source>Hot reload test session started</source>
-        <target state="new">Hot reload test session started</target>
+        <target state="translated">ホット リロード テスト セッションが開始されました</target>
         <note />
       </trans-unit>
     </body>
