@@ -70,20 +70,24 @@ internal static class IMethodSymbolExtensions
     /// </summary>
     public static bool IsAsyncDisposeImplementation([NotNullWhen(returnValue: true)] this IMethodSymbol? method, [NotNullWhen(returnValue: true)] INamedTypeSymbol? iAsyncDisposable, [NotNullWhen(returnValue: true)] INamedTypeSymbol? valueTaskType)
     {
-        if (method == null)
+        while (true)
         {
-            return false;
-        }
+            if (method == null)
+            {
+                return false;
+            }
 
-        if (method.IsOverride)
-        {
-            return method.OverriddenMethod.IsAsyncDisposeImplementation(iAsyncDisposable, valueTaskType);
-        }
+            if (method.IsOverride)
+            {
+                method = method.OverriddenMethod;
+                continue;
+            }
 
-        // Identify the implementor of IAsyncDisposable.Dispose in the given method's containing type and check
-        // if it is the given method.
-        return SymbolEqualityComparer.Default.Equals(method.ReturnType, valueTaskType) &&
-            method.Parameters.IsEmpty &&
-            method.IsImplementationOfInterfaceMethod(null, iAsyncDisposable, "DisposeAsync");
+            // Identify the implementor of IAsyncDisposable.Dispose in the given method's containing type and check
+            // if it is the given method.
+            return SymbolEqualityComparer.Default.Equals(method.ReturnType, valueTaskType) &&
+                   method.Parameters.IsEmpty &&
+                   method.IsImplementationOfInterfaceMethod(null, iAsyncDisposable, "DisposeAsync");
+        }
     }
 }
