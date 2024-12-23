@@ -3,8 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System.Reflection;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 internal interface IAssemblyUtility

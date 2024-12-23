@@ -148,6 +148,7 @@
 
   <ItemGroup>
     <Using Include="Polyfills" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope" Alias="ExecutionScope" />
   </ItemGroup>
 
   <!-- SDK bottom import -->
