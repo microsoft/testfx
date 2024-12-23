@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="HotReloadHandlerUnsupportedFrameworkErrorMessage">
         <source>Hot reload is only supported on .NET 6.0 or greater</source>
-        <target state="new">Hot reload is only supported on .NET 6.0 or greater</target>
+        <target state="translated">Le rechargement à chaud est uniquement pris en charge sur .NET 6.0 ou version ultérieure</target>
         <note />
       </trans-unit>
       <trans-unit id="HotReloadSessionCompleted">
         <source>Hot reload test session completed</source>
-        <target state="new">Hot reload test session completed</target>
+        <target state="translated">Session de test de rechargement à chaud terminée</target>
         <note />
       </trans-unit>
       <trans-unit id="HotReloadSessionStarted">
         <source>Hot reload test session started</source>
-        <target state="new">Hot reload test session started</target>
+        <target state="translated">Session de test de rechargement à chaud démarrée</target>
         <note />
       </trans-unit>
     </body>
