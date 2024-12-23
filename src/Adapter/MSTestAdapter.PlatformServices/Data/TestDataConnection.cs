@@ -2,11 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-using System.Collections;
 using System.Data;
 using System.Data.Common;
-using System.Diagnostics;
-using System.Globalization;
 using System.Security;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;

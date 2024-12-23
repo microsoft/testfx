@@ -1,12 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
-using System.Text;
-
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -157,9 +151,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // func.
             : () => _isVSTestMode || _isListTests || _isServerMode
                 ? false
-                : _testHostControllerInfo.IsCurrentProcessTestHostController == null
-                    ? null
-                    : !_testHostControllerInfo.IsCurrentProcessTestHostController;
+                : !_testHostControllerInfo.IsCurrentProcessTestHostController;
 
         // This is single exe run, don't show all the details of assemblies and their summaries.
         _terminalTestReporter = new TerminalTestReporter(_console, new()

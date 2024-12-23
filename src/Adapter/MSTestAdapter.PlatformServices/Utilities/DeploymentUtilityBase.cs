@@ -3,9 +3,6 @@
 
 #if !WINDOWS_UWP
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 

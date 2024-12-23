@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;

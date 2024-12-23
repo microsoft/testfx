@@ -3,8 +3,6 @@
 
 #if !WINDOWS_UWP
 
-using System.Diagnostics.CodeAnalysis;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;

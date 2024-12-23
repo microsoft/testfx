@@ -4,11 +4,7 @@
 #if NETCOREAPP
 using System.Buffers;
 #endif
-using System.Globalization;
 using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;

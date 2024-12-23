@@ -3,7 +3,6 @@
 
 #nullable enable
 
-using System.Collections;
 using System.Collections.ObjectModel;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;

@@ -5,12 +5,6 @@
 #pragma warning disable CA1837 // Use 'Environment.ProcessId'
 #pragma warning disable CA1416 // Validate platform compatibility
 
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 
 namespace Microsoft.Testing.TestInfrastructure;
