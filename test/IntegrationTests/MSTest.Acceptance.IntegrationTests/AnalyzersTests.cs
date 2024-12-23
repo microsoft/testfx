@@ -7,47 +7,23 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class AnalyzersTests : AcceptanceTestBase<AnalyzersTests.TestAssetFixture>
+public sealed class AnalyzersTests : AcceptanceTestBase<NopAssetFixture>
 {
     [TestMethod]
-    public void AnalyzerMessagesShouldBeLocalized()
+    public async Task AnalyzerMessagesShouldBeLocalized()
     {
-        TestAsset testAsset = AssetFixture.GetTestAsset("Analyzers");
-        testAsset.DotnetResult!.AssertOutputContains("DataRow ne doit être défini que sur une méthode de test");
-    }
-
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
-    {
-        public const string ProjectName = "Analyzers";
-
-        public string ProjectPath => GetAssetPath(ProjectName);
-
-        protected override Dictionary<string, string?> DotNetBuildEnvironmentVariables { get; } = new()
-        {
-            // This is fr-FR
-            ["VSLang"] = "1036",
-        };
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (ProjectName, ProjectName,
-                SourceCode
-                .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
-
-        private const string SourceCode = """
+        string code = """
 #file Analyzers.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
 
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
 </Project>
 
 #file UnitTest1.cs
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -58,6 +34,16 @@ public class UnitTest1
     {
     }
 }
-""";
+""".PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+
+        TestAsset testAsset = await TestAsset.GenerateAssetAsync("Analyzers", code);
+        DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, environmentVariables: new()
+        {
+            // This is fr-FR
+            ["VSLang"] = "1036",
+        });
+
+        result.AssertOutputContains("DataRow ne doit être défini que sur une méthode de test");
     }
 }

@@ -3,15 +3,11 @@
 
 using System.Collections.Concurrent;
 
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.TestInfrastructure;
 
 public interface ITestAssetFixture : IDisposable
 {
     Task InitializeAsync();
-
-    TestAsset GetTestAsset(string assetID);
 }
 
 public sealed class NopAssetFixture : ITestAssetFixture
@@ -21,8 +17,6 @@ public sealed class NopAssetFixture : ITestAssetFixture
     public void Dispose()
     {
     }
-
-    public TestAsset GetTestAsset(string assetID) => throw ApplicationStateGuard.Unreachable();
 }
 
 public abstract class TestAssetFixtureBase : ITestAssetFixture
@@ -34,24 +28,17 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
     protected TestAssetFixtureBase(TempDirectory nugetGlobalPackagesDirectory)
         => _nugetGlobalPackagesDirectory = nugetGlobalPackagesDirectory;
 
-    protected virtual Dictionary<string, string?> DotNetBuildEnvironmentVariables { get; } = new();
-
     public string GetAssetPath(string assetID)
         => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)
             ? throw new ArgumentNullException(nameof(assetID), $"Cannot find target path for test asset '{assetID}'")
             : testAsset.TargetAssetPath;
-
-    public TestAsset GetTestAsset(string assetID)
-        => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)
-            ? throw new ArgumentNullException(nameof(assetID), $"Cannot find test asset '{assetID}'")
-            : testAsset;
 
     public async Task InitializeAsync()
 #if NET
         => await Parallel.ForEachAsync(GetAssetsToGenerate(), async (asset, _) =>
         {
             TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code);
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, environmentVariables: DotNetBuildEnvironmentVariables);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path);
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         });
