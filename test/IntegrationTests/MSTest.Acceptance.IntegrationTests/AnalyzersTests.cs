@@ -19,6 +19,7 @@ public sealed class AnalyzersTests : AcceptanceTestBase<NopAssetFixture>
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RunAnalyzers>true</RunAnalyzers>
   </PropertyGroup>
 
 </Project>
