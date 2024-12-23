@@ -8,10 +8,6 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 
-#if NETCOREAPP
-using System.Runtime.CompilerServices;
-#endif
-
 namespace Microsoft.Testing.Extensions;
 
 public static class AppInsightsTelemetryProviderExtensions

@@ -2,10 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Adapted from https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.CoreUtilities/Helpers/DotnetHostHelper.cs
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
-
 using Microsoft.Win32;
 
 namespace Microsoft.Testing.Platform.MSBuild.Tasks;
@@ -373,7 +369,7 @@ internal sealed class DotnetMuxerLocator
             }
         }
 
-        return archType is null ? throw new InvalidOperationException("Invalid image") : archType;
+        return archType ?? throw new InvalidOperationException("Invalid image");
     }
 
     // See https://opensource.apple.com/source/xnu/xnu-2050.18.24/EXTERNAL_HEADERS/mach-o/loader.h

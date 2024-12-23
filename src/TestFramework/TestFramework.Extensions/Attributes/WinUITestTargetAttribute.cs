@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if WIN_UI
-using System.Globalization;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 

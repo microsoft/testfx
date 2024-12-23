@@ -3,8 +3,6 @@
 
 #if !NETCOREAPP
 
-using System.Globalization;
-
 using Jsonite;
 
 using Microsoft.Testing.Platform.Resources;
