@@ -10,7 +10,7 @@
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
@@ -19,7 +19,7 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Os métodos marcados com “[AssemblyCleanup]” devem seguir o seguinte layout para serem válidos:
+        <target state="needs-review-translation">Os métodos marcados com “[AssemblyCleanup]” devem seguir o seguinte layout para serem válidos:
 -não podem ser declarados em uma classe genérica
 -devem ser "públicos"
 -devem ser "estáticos"
@@ -140,7 +140,7 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
@@ -151,7 +151,7 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Os métodos marcados com “[ClassCleanup]” devem seguir o seguinte layout para serem válidos:
+        <target state="needs-review-translation">Os métodos marcados com “[ClassCleanup]” devem seguir o seguinte layout para serem válidos:
 -não podem ser declarados em uma classe genérica sem que o modo “InheritanceBehavior” esteja definido
 -devem ser "públicos"
 -devem ser "estáticos"

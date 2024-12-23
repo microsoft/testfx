@@ -10,7 +10,7 @@
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
@@ -19,7 +19,7 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Чтобы метод, помеченный "[AssemblyCleanup]", был допустимым, он должен соответствовать следующим правилам:
+        <target state="needs-review-translation">Чтобы метод, помеченный "[AssemblyCleanup]", был допустимым, он должен соответствовать следующим правилам:
 – не может быть объявлен для универсального класса ("generic");
 – должен быть общедоступным ("public");
 – должен быть статическим ("static");
@@ -142,7 +142,7 @@ The type declaring these methods should also respect the following rules:
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
@@ -153,7 +153,7 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Чтобы метод, помеченный "[ClassCleanup]", был допустимым, он должен соответствовать следующим правилам:
+        <target state="needs-review-translation">Чтобы метод, помеченный "[ClassCleanup]", был допустимым, он должен соответствовать следующим правилам:
 – не может быть объявлен для универсального класса, если не установлен режим InheritanceBehavior;
 – должен быть общедоступным ("public");
 – должен быть статическим ("static");
