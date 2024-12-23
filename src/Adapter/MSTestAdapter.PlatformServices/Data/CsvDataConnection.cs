@@ -3,7 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System.Collections;
 using System.Data;
 using System.Data.OleDb;
 

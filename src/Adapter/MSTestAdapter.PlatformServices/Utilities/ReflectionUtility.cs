@@ -3,10 +3,6 @@
 
 #if !WINDOWS_UWP
 
-#if NETFRAMEWORK
-using System.Collections;
-#endif
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 /// <summary>

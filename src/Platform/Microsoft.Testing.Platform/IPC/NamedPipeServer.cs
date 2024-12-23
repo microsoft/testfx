@@ -5,7 +5,6 @@
 using System.Buffers;
 #endif
 using System.IO.Pipes;
-using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;

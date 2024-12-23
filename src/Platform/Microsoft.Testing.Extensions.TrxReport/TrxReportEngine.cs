@@ -5,7 +5,6 @@
 using System.Buffers;
 #endif
 using System.Security.Cryptography;
-using System.Xml.Linq;
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
