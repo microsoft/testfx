@@ -14,7 +14,7 @@ internal static class DataSerializationHelper
     {
         UseSimpleDictionaryFormat = true,
         EmitTypeInformation = System.Runtime.Serialization.EmitTypeInformation.Always,
-        DateTimeFormat = new System.Runtime.Serialization.DateTimeFormat("O", System.Globalization.CultureInfo.InvariantCulture),
+        DateTimeFormat = new System.Runtime.Serialization.DateTimeFormat("O", CultureInfo.InvariantCulture),
     };
 
     /// <summary>

@@ -478,7 +478,7 @@ public class MSTestSettingsTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
-        Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.ClassLevel);
+        Verify(adapterSettings.ParallelizationScope == ExecutionScope.ClassLevel);
     }
 
     public void ParallelizationSettingsShouldBeSetToDefaultsOnAnEmptyParalleizeSetting()
@@ -495,7 +495,7 @@ public class MSTestSettingsTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
-        Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.ClassLevel);
+        Verify(adapterSettings.ParallelizationScope == .ExecutionScope.ClassLevel);
     }
 
     public void ParallelizationSettingsShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -515,7 +515,7 @@ public class MSTestSettingsTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(adapterSettings.ParallelizationWorkers == 127);
-        Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.MethodLevel);
+        Verify(adapterSettings.ParallelizationScope == ExecutionScope.MethodLevel);
     }
 
     public void GetSettingsShouldThrowIfParallelizationScopeIsNotValid()
@@ -550,7 +550,7 @@ public class MSTestSettingsTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.MethodLevel);
+        Verify(adapterSettings.ParallelizationScope == ExecutionScope.MethodLevel);
     }
 
     public void GetSettingsShouldThrowWhenParallelizeHasInvalidElements()
@@ -607,7 +607,7 @@ public class MSTestSettingsTests : TestContainer
 
         Verify(adapterSettings.TestSettingsFile is not null);
         Verify(adapterSettings.ParallelizationWorkers == 127);
-        Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.MethodLevel);
+        Verify(adapterSettings.ParallelizationScope == ExecutionScope.MethodLevel);
     }
 
     public void GetSettingsShouldBeAbleToReadAfterParallelizationSettingsOnEmptyParallelizationNode()
