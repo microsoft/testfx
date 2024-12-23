@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Helpers;
 #endif
 
 using System.IO.Pipes;
-using System.Runtime.InteropServices;
 
 #if NET
 using Microsoft.Testing.Platform.Resources;

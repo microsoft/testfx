@@ -3,8 +3,6 @@
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
-using System.Reflection;
-
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 
@@ -135,9 +133,7 @@ public sealed class FormatterUtilitiesTests
     }
 
     public static string? FormatSerializerTypes(MethodInfo methodInfo, object?[]? data)
-        => data is not null
-            ? (data[0] as Type)?.Name
-            : null;
+        => (data?[0] as Type)?.Name;
 
     private static void AssertSerialize(Type type, string instanceSerialized)
     {

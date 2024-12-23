@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-
 // Copied from https://github.com/dotnet/roslyn-analyzers/blob/main/src/Utilities/Compiler/Debug.cs
 namespace Microsoft.Testing.Platform;
 

@@ -3,9 +3,6 @@
 
 // NOTE: This file is copied as-is from VSTest source code.
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform;
 

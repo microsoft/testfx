@@ -3,11 +3,7 @@
 
 #if !WINDOWS_UWP
 
-using System.Diagnostics.CodeAnalysis;
 #if NETFRAMEWORK
-using System.Diagnostics;
-using System.Globalization;
-using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;

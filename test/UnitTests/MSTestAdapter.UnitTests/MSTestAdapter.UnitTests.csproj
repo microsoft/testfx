@@ -33,4 +33,8 @@
     <PackageReference Include="StrongNamer" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope" Alias="ExecutionScope" />
+  </ItemGroup>
+
 </Project>
