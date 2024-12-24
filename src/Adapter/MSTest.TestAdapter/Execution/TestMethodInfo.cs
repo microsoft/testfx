@@ -646,7 +646,7 @@ public class TestMethodInfo : ITestMethod
         // Prefix the exception message with the exception type name as prefix when exception is not assert exception.
         string exceptionMessage = realException is UnitTestAssertException
             ? realException.TryGetMessage()
-            : ExceptionHelper.GetFormattedExceptionMessage(realException);
+            : realException.GetFormattedExceptionMessage();
         string errorMessage = string.Format(
             CultureInfo.CurrentCulture,
             Resource.UTA_InitMethodThrows,
