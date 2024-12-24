@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Text;
-using System.Text.RegularExpressions;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -77,12 +73,14 @@ internal static class ExceptionHelper
         bool first = true;
         while (stackTraces.Count != 0)
         {
-            result.AppendFormat(
-                    CultureInfo.CurrentCulture,
-                    "{0} {1}{2}",
-                    first ? string.Empty : (Resource.UTA_EndOfInnerExceptionTrace + Environment.NewLine),
-                    stackTraces.Pop(),
-                    Environment.NewLine);
+            if (!first)
+            {
+                result.AppendLine(Resource.UTA_EndOfInnerExceptionTrace);
+            }
+
+            result.Append(' ');
+            result.AppendLine(stackTraces.Pop());
+
             first = false;
         }
 

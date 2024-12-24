@@ -64,7 +64,7 @@ public class PlatformServiceProviderTests : TestContainer
         testMethod.Setup(tm => tm.Name).Returns("M");
 
         // Act.
-        PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, writer, properties);
+        PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, writer, properties, null, default);
 
         // Assert.
         Verify(testContext.Context.FullyQualifiedTestClassName == "A.C.M");

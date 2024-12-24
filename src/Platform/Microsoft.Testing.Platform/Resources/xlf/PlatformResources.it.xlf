@@ -2,9 +2,14 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="it" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
+        <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
+        <target state="translated">Il framework di test corrente non implementa 'IGracefulStopTestExecutionCapability', necessario per la funzionalità '--maximum-failed-tests'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="new">Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</target>
+        <target state="translated">Estensione usata per supportare '--maximum-failed-tests'. Quando viene raggiunta una soglia di errori specificata, l'esecuzione dei test verrà interrotta.</target>
         <note />
       </trans-unit>
       <trans-unit id="Aborted">
@@ -378,7 +383,7 @@
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="new">The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</target>
+        <target state="translated">L'opzione '--maximum-failed-tests' deve essere un numero intero positivo. Il valore '{0}' non è valido.</target>
         <note />
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -398,7 +403,7 @@
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_MoreTestsCount">
         <source>and {0} more</source>
-        <target state="new">and {0} more</target>
+        <target state="translated">e altri {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
@@ -547,7 +552,7 @@ I valori disponibili sono 'Trace', 'Debug', 'Information', 'Warning', 'Error' e 
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
         <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="new">Specifies a maximum number of test failures that, when exceeded, will abort the test run.</target>
+        <target state="translated">Specifica un numero massimo di errori di test che, se superati, interromperanno l'esecuzione dei test.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
@@ -640,7 +645,7 @@ Acquisisce un argomento come stringa nel formato &lt;value&gt;[h|m|s] dove 'valu
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="new">Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</target>
+        <target state="translated">La sessione di test verrà interrotta perché sono stati individuati errori ('{0}') specificati dall'opzione '--maximum-failed-tests'.</target>
         <note>{0} is the number of max failed tests.</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">

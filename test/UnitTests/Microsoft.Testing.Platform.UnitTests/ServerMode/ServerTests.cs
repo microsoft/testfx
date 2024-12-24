@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -15,11 +14,10 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class ServerTests : TestBase
+[TestClass]
+public sealed class ServerTests
 {
-    public ServerTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
+    public ServerTests()
     {
         if (IsHotReloadEnabled(new SystemEnvironment()))
         {
@@ -30,6 +28,7 @@ public class ServerTests : TestBase
     private static bool IsHotReloadEnabled(SystemEnvironment environment) => environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_WATCH) == "1"
         || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
 
+    [TestMethod]
     public async Task ServerCanBeStartedAndAborted_TcpIp() => await RetryHelper.RetryAsync(
                 async () =>
                 {
@@ -51,6 +50,7 @@ public class ServerTests : TestBase
                     Assert.AreEqual(ExitCodes.TestSessionAborted, await serverTask);
                 }, 3, TimeSpan.FromSeconds(10));
 
+    [TestMethod]
     public async Task ServerCanInitialize()
     {
         using var server = TcpServer.Create();
@@ -126,6 +126,7 @@ public class ServerTests : TestBase
         Assert.AreEqual(0, result);
     }
 
+    [TestMethod]
     public async Task DiscoveryRequestCanBeCanceled()
     {
         using var server = TcpServer.Create();

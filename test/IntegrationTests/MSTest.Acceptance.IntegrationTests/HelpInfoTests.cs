@@ -7,21 +7,16 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class HelpInfoTests : AcceptanceTestBase
+[TestClass]
+public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
 {
     private const string AssetName = "HelpInfo";
-    private readonly TestAssetFixture _testAssetFixture;
 
-    // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
-    public HelpInfoTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
-        AcceptanceFixture globalFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task Help_WhenMSTestExtensionRegistered_OutputHelpContentOfRegisteredExtension(string tfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -89,10 +84,11 @@ Extension options:
         testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task Info_WhenMSTestExtensionRegistered_OutputInfoContentOfRegisteredExtension(string tfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -124,8 +120,7 @@ Extension options:
         testHostResult.AssertOutputContains(output);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 

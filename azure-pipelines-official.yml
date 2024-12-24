@@ -92,6 +92,7 @@ extends:
           enablePublishBuildAssets: true
           enablePublishUsingPipelines: true
           enableTelemetry: true
+          enableSourceBuild: true
           jobs:
           - job: Windows
             timeoutInMinutes: 90
@@ -159,7 +160,7 @@ extends:
                 displayName: 'Publish Test Results folders'
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-                  ArtifactName: TestResults
+                  ArtifactName: TestResults_Windows
                 condition: failed()
 
             - task: NuGetAuthenticate@1
@@ -195,6 +196,15 @@ extends:
                   ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
                 name: Test
                 displayName: Tests
+
+              # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
+              # through the console or trx
+              - task: 1ES.PublishBuildArtifacts@1
+                displayName: 'Publish Test Results folders'
+                inputs:
+                  PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+                  ArtifactName: TestResults_Linux
+                condition: failed()
 
       - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
         - template: /eng/common/templates-official/job/onelocbuild.yml@self

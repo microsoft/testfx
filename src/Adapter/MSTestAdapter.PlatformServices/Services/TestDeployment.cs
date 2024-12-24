@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-
 #if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 #endif
@@ -25,10 +22,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// The test deployment.
 /// </summary>
+#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 #endif
 public class TestDeployment : ITestDeployment
 {

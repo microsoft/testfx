@@ -1,11 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Runtime.InteropServices;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -19,13 +14,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Class responsible for execution of tests at assembly level and sending tests via framework handle.
 /// </summary>
+#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
 #endif
+#endif
 public class TestExecutionManager
 {
+    private sealed class RemotingMessageLogger : MarshalByRefObject, IMessageLogger
+    {
+        private readonly IMessageLogger _realMessageLogger;
+
+        public RemotingMessageLogger(IMessageLogger messageLogger)
+            => _realMessageLogger = messageLogger;
+
+        public void SendMessage(TestMessageLevel testMessageLevel, string message)
+            => _realMessageLogger.SendMessage(testMessageLevel, message);
+    }
+
     /// <summary>
     /// Dictionary for test run parameters.
     /// </summary>
@@ -399,10 +407,12 @@ public class TestExecutionManager
             ExecuteTestsWithTestRunner(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner);
         }
 
+#if !WINDOWS_UWP
         if (MSTestGracefulStopTestExecutionCapability.Instance.IsStopRequested)
         {
-            testRunner.ForceCleanup();
+            testRunner.ForceCleanup(sourceLevelParameters!, new RemotingMessageLogger(frameworkHandle));
         }
+#endif
 
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
     }
@@ -421,13 +431,17 @@ public class TestExecutionManager
             ? tests.OrderBy(t => t.GetManagedType()).ThenBy(t => t.GetManagedMethod())
             : tests;
 
+        var remotingMessageLogger = new RemotingMessageLogger(testExecutionRecorder);
+
         foreach (TestCase currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
+#if !WINDOWS_UWP
             if (MSTestGracefulStopTestExecutionCapability.Instance.IsStopRequested)
             {
                 break;
             }
+#endif
 
             // If it is a fixture test, add it to the list of fixture tests and do not execute it.
             // It is executed by test itself.
@@ -449,7 +463,10 @@ public class TestExecutionManager
             // Run single test passing test context properties to it.
             IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
             Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
-            UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
+
+            // testRunner could be in a different AppDomain. We cannot pass the testExecutionRecorder directly.
+            // Instead, we pass a proxy (remoting object) that is marshallable by ref.
+            UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties, remotingMessageLogger);
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
 

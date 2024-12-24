@@ -175,9 +175,6 @@
     <value>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.
 Error: {1}</value>
   </data>
-  <data name="UTA_ErrorGenericTestMethod" xml:space="preserve">
-    <value>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</value>
-  </data>
   <data name="TestAssembly_FileDoesNotExist" xml:space="preserve">
     <value>File does not exist: {0}</value>
   </data>
@@ -328,9 +325,6 @@ Error: {1}</value>
     <value>Exceptions thrown:</value>
     <comment>This is usually precedes by TestAssembly_AssemblyDiscoveryFailure message, and preceded by list of exceptions thrown in a test discovery session.</comment>
   </data>
-  <data name="FailedFetchAttributeCache" xml:space="preserve">
-    <value>Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.</value>
-  </data>
   <data name="FailedToGetCustomAttribute" xml:space="preserve">
     <value>Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</value>
     <comment>{0}: Attribute full type name.
@@ -341,9 +335,6 @@ Error: {1}</value>
   </data>
   <data name="UTA_UserCodeThrewNullValueException" xml:space="preserve">
     <value>The called code threw an exception that was caught, but the exception value was null</value>
-  </data>
-  <data name="OlderTFMVersionFoundClassCleanup" xml:space="preserve">
-    <value>An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8.</value>
   </data>
   <data name="CannotExpandIDataSourceAttribute" xml:space="preserve">
     <value>Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</value>
@@ -411,10 +402,19 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="InvalidValue" xml:space="preserve">
     <value>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</value>
   </data>
-  <data name="DynamicDataShouldBeValidMessageFormat_MemberType" xml:space="preserve">
-    <value>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</value>
-  </data>
   <data name="DuplicateConfigurationError" xml:space="preserve">
     <value>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</value>
+  </data>
+  <data name="GenericParameterCantBeInferred" xml:space="preserve">
+    <value>The type of the generic parameter '{0}' could not be inferred.</value>
+  </data>
+  <data name="GenericParameterCantBeInferredBecauseNoArguments" xml:space="preserve">
+    <value>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</value>
+  </data>
+  <data name="GenericParameterConflict" xml:space="preserve">
+    <value>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</value>
+  </data>
+  <data name="DynamicDataSourceShouldExistAndBeValid" xml:space="preserve">
+    <value>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</value>
   </data>
 </root>

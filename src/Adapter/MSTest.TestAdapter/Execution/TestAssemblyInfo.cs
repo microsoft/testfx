@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -18,10 +14,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines TestAssembly Info object.
 /// </summary>
+#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 #endif
 public class TestAssemblyInfo
 {
@@ -262,7 +260,7 @@ public class TestAssemblyInfo
     /// It is a replacement for RunAssemblyCleanup but as we are in a bug-fix version, we do not want to touch
     /// public API and so we introduced this method.
     /// </remarks>
-    internal void ExecuteAssemblyCleanup()
+    internal void ExecuteAssemblyCleanup(TestContext testContext)
     {
         if (AssemblyCleanupMethod == null)
         {
@@ -274,8 +272,18 @@ public class TestAssemblyInfo
             try
             {
                 AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
-                     () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
-                     new CancellationTokenSource(),
+                     () =>
+                     {
+                         if (AssemblyCleanupMethod.GetParameters().Length == 0)
+                         {
+                             AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
+                         }
+                         else
+                         {
+                             AssemblyCleanupMethod.InvokeAsSynchronousTask(null, testContext);
+                         }
+                     },
+                     testContext.CancellationTokenSource,
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
                      new AssemblyExecutionContextScope(isCleanup: true),

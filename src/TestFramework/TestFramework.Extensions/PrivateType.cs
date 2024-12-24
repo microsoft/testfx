@@ -3,9 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System.Globalization;
-using System.Reflection;
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -59,7 +56,7 @@ public class PrivateType
     /// Invokes static member.
     /// </summary>
     /// <param name="name">Name of the member to InvokeHelper.</param>
-    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
+    /// <param name="parameterTypes">An array of <see cref="Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
     /// <param name="args">Arguments to the invocation.</param>
     /// <returns>Result of invocation.</returns>
     public object InvokeStatic(string name, Type[]? parameterTypes, object?[]? args) => InvokeStatic(name, parameterTypes, args, CultureInfo.InvariantCulture);
@@ -68,7 +65,7 @@ public class PrivateType
     /// Invokes static member.
     /// </summary>
     /// <param name="name">Name of the member to InvokeHelper.</param>
-    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
+    /// <param name="parameterTypes">An array of <see cref="Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
     /// <param name="args">Arguments to the invocation.</param>
     /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
     /// <returns>Result of invocation.</returns>
@@ -87,7 +84,7 @@ public class PrivateType
     /// Invokes the static method.
     /// </summary>
     /// <param name="name">Name of the member.</param>
-    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
+    /// <param name="parameterTypes">An array of <see cref="Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
     /// <param name="args">Arguments to the invocation.</param>
     /// <param name="culture">Culture info.</param>
     /// <returns>Result of invocation.</returns>
@@ -107,7 +104,7 @@ public class PrivateType
     /// </summary>
     /// <param name="name">Name of the member.</param>
     /// <param name="bindingFlags">Additional invocation attributes.</param>
-    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
+    /// <param name="parameterTypes">An array of <see cref="Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
     /// <param name="args">Arguments to the invocation.</param>
     /// <returns>Result of invocation.</returns>
     public object InvokeStatic(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args) => InvokeStatic(name, bindingFlags, parameterTypes, args, CultureInfo.InvariantCulture);
@@ -127,7 +124,7 @@ public class PrivateType
     /// </summary>
     /// <param name="name">Name of the member.</param>
     /// <param name="bindingFlags">Additional invocation attributes.</param>
-    /// /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
+    /// /// <param name="parameterTypes">An array of <see cref="Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
     /// <param name="args">Arguments to the invocation.</param>
     /// <param name="culture">Culture.</param>
     /// <returns>Result of invocation.</returns>
@@ -138,7 +135,7 @@ public class PrivateType
     /// </summary>
     /// <param name="name">Name of the member.</param>
     /// <param name="bindingFlags">Additional invocation attributes.</param>
-    /// /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
+    /// /// <param name="parameterTypes">An array of <see cref="Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
     /// <param name="args">Arguments to the invocation.</param>
     /// <param name="culture">Culture.</param>
     /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
@@ -354,7 +351,7 @@ public class PrivateType
     /// </summary>
     /// <param name="name">Name of the property.</param>
     /// <param name="value">Value to be set to field or property.</param>
-    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
+    /// <param name="parameterTypes">An array of <see cref="Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetStaticProperty(string name, object value, Type[]? parameterTypes, object?[]? args) => SetStaticProperty(name, BindingFlags.SetProperty, value, parameterTypes, args);
 
@@ -372,7 +369,7 @@ public class PrivateType
     /// </summary>
     /// <param name="name">Name of the property.</param>
     /// <param name="bindingFlags">Additional invocation attributes.</param>
-    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
+    /// <param name="parameterTypes">An array of <see cref="Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The static property.</returns>
     public object GetStaticProperty(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args)
@@ -403,7 +400,7 @@ public class PrivateType
     /// <param name="name">Name of the property.</param>
     /// <param name="bindingFlags">Additional invocation attributes.</param>
     /// <param name="value">Value to be set to field or property.</param>
-    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
+    /// <param name="parameterTypes">An array of <see cref="Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetStaticProperty(string name, BindingFlags bindingFlags, object value, Type[]? parameterTypes, object?[]? args)
     {

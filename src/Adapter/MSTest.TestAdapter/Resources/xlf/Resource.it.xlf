@@ -61,15 +61,30 @@ ma ha ricevuto {4} argomenti, con tipi "{5}".</target>
         <target state="translated">Sono stati rilevati sia i file '.runsettings' sia '.testconfig.json'. Selezionare solo uno di questi file di configurazione di test.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
-        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="translated">'[DynamicData]' membro di riferimento '{0}.{1}' deve restituire 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;' o 'IEnumerable&lt;ValueTuple&gt;'</target>
+      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
+        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
+        <target state="translated">L'origine dati dinamica '{0}' nel tipo '{1}' deve esistere ed essere una proprietà o un metodo.</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">È stato superato il periodo di timeout per l'esecuzione del test '{0}'.</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="GenericParameterCantBeInferred">
+        <source>The type of the generic parameter '{0}' could not be inferred.</source>
+        <target state="translated">Impossibile dedurre il tipo del parametro generico '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
+        <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
+        <target state="translated">Il metodo di test generico '{0}' non contiene argomenti, di conseguenza non è possibile dedurre il parametro generico.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GenericParameterConflict">
+        <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
+        <target state="translated">Sono stati trovati due tipi in conflitto per il parametro generico '{0}'. I tipi in conflitto sono '{1}' e '{2}'.</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
@@ -201,11 +216,6 @@ ma ha ricevuto {4} argomenti, con tipi "{5}".</target>
 Error: {1}</source>
         <target state="translated">Non è possibile caricare i tipi dall'origine test '{0}'. È possibile che alcuni o tutti i test non siano stati individuati in questa origine.
 Errore: {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_ErrorGenericTestMethod">
-        <source>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</source>
-        <target state="translated">UTA015: un metodo generico non può essere un metodo di test. La firma di {0}.{1} non è valida</target>
         <note></note>
       </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
@@ -435,11 +445,6 @@ Errore: {1}</target>
         <target state="translated">Eccezioni generate:</target>
         <note>This is usually precedes by TestAssembly_AssemblyDiscoveryFailure message, and preceded by list of exceptions thrown in a test discovery session.</note>
       </trans-unit>
-      <trans-unit id="FailedFetchAttributeCache">
-        <source>Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.</source>
-        <target state="translated">Non è stato possibile ottenere la cache degli attributi. L'ereditarietà dell'attributo verrà ignorata e verrà considerato 'il tipo definisce il modello di attributo', in modo che siano disponibili alcuni dati.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="FailedToGetCustomAttribute">
         <source>Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</source>
         <target state="translated">Il recupero degli attributi personalizzati per il tipo {0} ha generato un'eccezione (verrà ignorata e verrà usata la modalità reflection): {1}</target>
@@ -454,11 +459,6 @@ Errore: {1}</target>
       <trans-unit id="UTA_UserCodeThrewNullValueException">
         <source>The called code threw an exception that was caught, but the exception value was null</source>
         <target state="translated">Il codice chiamato ha generato un'eccezione che è stata rilevata, ma il valore dell'eccezione è Null</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="OlderTFMVersionFoundClassCleanup">
-        <source>An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8.</source>
-        <target state="translated">Nell'assembly è caricata una versione precedente del pacchetto MSTestV2. I metodi di pulizia dei test potrebbero non essere eseguiti come previsto. Assicurarsi che tutti i progetti di test facciano riferimento a pacchetti MSTest più recenti della versione 2.2.8.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute">

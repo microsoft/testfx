@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class TestMethodShouldBeValidAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenTestMethodIsPublic_NoDiagnostic()
     {
         string code = """
@@ -28,10 +29,11 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
-    [Arguments("protected")]
-    [Arguments("internal")]
-    [Arguments("internal protected")]
-    [Arguments("private")]
+    [DataRow("protected")]
+    [DataRow("internal")]
+    [DataRow("internal protected")]
+    [DataRow("private")]
+    [TestMethod]
     public async Task WhenTestMethodIsNotPublic_Diagnostic(string accessibility)
     {
         string code = $$"""
@@ -63,6 +65,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenMethodIsNotPublicAndNotTestMethod_NoDiagnostic()
     {
         string code = $$"""
@@ -92,6 +95,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodIsStatic_Diagnostic()
     {
         string code = """
@@ -123,6 +127,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodIsAbstract_Diagnostic()
     {
         string code = """
@@ -152,6 +157,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodIsGeneric_Diagnostic()
     {
         string code = """
@@ -162,6 +168,12 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
             {
                 [TestMethod]
                 public void [|MyTestMethod|]<T>()
+                {
+                }
+
+                [TestMethod]
+                [DataRow(0)]
+                public void MyTestMethod<T>(T t)
                 {
                 }
             }
@@ -177,12 +189,19 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
                 public void MyTestMethod()
                 {
                 }
+
+                [TestMethod]
+                [DataRow(0)]
+                public void MyTestMethod<T>(T t)
+                {
+                }
             }
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodIsNotOrdinary_Diagnostic()
     {
         string code = """
@@ -201,6 +220,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodReturnTypeIsNotValid_Diagnostic()
     {
         string code = """
@@ -268,6 +288,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodReturnTypeIsValid_NoDiagnostic()
     {
         string code = """
@@ -299,6 +320,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodIsAsyncVoid_Diagnostic()
     {
         string code = """
@@ -332,6 +354,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodIsInternalAndDiscoverInternals_NoDiagnostic()
     {
         string code = """
@@ -371,6 +394,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenTestMethodIsPrivateAndDiscoverInternals_Diagnostic()
     {
         string code = """

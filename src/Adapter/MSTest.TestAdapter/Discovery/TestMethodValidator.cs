@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -62,22 +58,12 @@ internal class TestMethodValidator
             return false;
         }
 
-        // Generic method Definitions are not valid.
-        if (testMethodInfo.IsGenericMethodDefinition)
-        {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, testMethodInfo.DeclaringType!.FullName, testMethodInfo.Name);
-            warnings.Add(message);
-            return false;
-        }
-
         bool isAccessible = testMethodInfo.IsPublic
             || (_discoverInternals && testMethodInfo.IsAssembly);
 
         // Todo: Decide whether parameter count matters.
-        // The isGenericMethod check below id to verify that there are no closed generic methods slipping through.
-        // Closed generic methods being GenericMethod<int> and open being GenericMethod<TAttribute>.
         bool isValidTestMethod = isAccessible &&
-                                 testMethodInfo is { IsAbstract: false, IsStatic: false, IsGenericMethod: false } &&
+                                 testMethodInfo is { IsAbstract: false, IsStatic: false } &&
                                  testMethodInfo.IsValidReturnType();
 
         if (!isValidTestMethod)

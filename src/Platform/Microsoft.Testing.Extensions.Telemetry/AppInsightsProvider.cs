@@ -3,11 +3,7 @@
 
 #if NETCOREAPP
 using System.Threading.Channels;
-#else
-using System.Collections.Concurrent;
 #endif
-using System.Globalization;
-using System.Text;
 
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Configurations;

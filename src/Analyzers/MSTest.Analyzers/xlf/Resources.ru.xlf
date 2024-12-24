@@ -10,7 +10,7 @@
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
@@ -19,23 +19,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Чтобы метод, помеченный "[AssemblyCleanup]", был допустимым, он должен соответствовать следующим правилам:
-– не может быть объявлен для универсального класса ("generic");
-– должен быть общедоступным ("public");
-– должен быть статическим ("static");
-– не быть асинхронным и не возвращающим значения ("async void")
-– не быть специальным (метод завершения, оператор…).
-– не быть общим ("generic")
-;
-– не принимать никаких параметров;
-– тип возвращаемого значения должен быть "void", "Task" или "ValueTask";
+        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 
-Тип, объявляющий такие методы, также должен соответствовать следующим правилам:
-– должен быть классом;
-– класс должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]");
-– не должен быть статическим ("static");
-– должен быть помечен как "[TestClass]" (или производный атрибут);
-– не должен быть универсальным ("generic").</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -142,7 +141,7 @@ The type declaring these methods should also respect the following rules:
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
@@ -153,25 +152,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Чтобы метод, помеченный "[ClassCleanup]", был допустимым, он должен соответствовать следующим правилам:
-– не может быть объявлен для универсального класса, если не установлен режим InheritanceBehavior;
-– должен быть общедоступным ("public");
-– должен быть статическим ("static");
-– не быть асинхронным и не возвращающим значения ("async void")
-– не быть специальным (метод завершения, оператор…).
-– не быть общим ("generic")
-;
-– не принимать никаких параметров;
-– тип возвращаемого значения должен быть "void", "Task" или "ValueTask";
-– если класс абстрактный, должен быть указан параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
-– если класс запечатанный, не следует указывать параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
+        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
 
-Тип, объявляющий такие методы, также должен соответствовать следующим правилам:
-– должен быть классом;
-– класс должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]");
-– не должен быть объявлен как статический ("static");
-– если класс запечатанный, его следует пометить как "[TestClass]" (или производный атрибут);
-– не должен быть универсальным ("generic").</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -253,6 +251,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
         <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
         <target state="translated">Тип аргумента DataRow должен соответствовать типу параметра метода. Обнаружены несовпадения в следующих индексах: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
+        <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
+        <target state="translated">Обнаружены два конфликтующих типа для универсального параметра '{0}'. Конфликтуют типы '{1}' и '{2}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved">
+        <source>The type of the generic parameter '{0}' could not be inferred.</source>
+        <target state="translated">Не удалось определить тип универсального '{0}' параметра.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
@@ -357,13 +365,18 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
-        <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
-        <target state="translated">Элемент "[DynamicData]" "{0}.{1}" является методом, поэтому следует задать "DynamicDataSourceType.Method"</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="translated">'[DynamicData]' "{0}.{1}" является методом, поэтому следует использовать "DynamicDataSourceType.AutoDetect" или "DynamicDataSourceType.Method" (автообнаружение используется по умолчанию, если не указано явно, и рекомендуется)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
+        <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
+        <target state="translated">'[DynamicData]' "{0}.{1}" не является свойством или методом. Поддерживаются только свойства и методы.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
-        <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
-        <target state="translated">Элемент "[DynamicData]" "{0}.{1}" является свойством, поэтому следует задать "DynamicDataSourceType.Property"</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="translated">'[DynamicData]' "{0}.{1}" является свойством, поэтому следует использовать "DynamicDataSourceType.AutoDetect" или "DynamicDataSourceType.Property" (автообнаружение используется по умолчанию, если не указано явно и рекомендуется)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
@@ -639,7 +652,7 @@ The type declaring these methods should also respect the following rules:
         <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
-- it should not be generic
+- it should may be generic as long as type parameters can be inferred and argument types are compatible
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
@@ -647,9 +660,9 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Методы теста (методы, помеченные атрибутом "[TestMethod]") должны соблюдать следующую структуру, чтобы считаться допустимыми в MSTest:
 – должно быть присвоено значение "public" (или "internal", если задан атрибут "[assembly: DiscoverInternals]")
 – не следует присваивать значение "static"
-– не следует присваивать универсальное значение
+– могут быть универсальными, если можно вывести параметры типа, а типы аргументов являются совместимыми
 – не следует присваивать значение "abstract"
-- возвращаемый тип должен быть "void", "Task" или "ValueTask"
+– возвращаемый тип должен быть "void", "Task" или "ValueTask"
 – не следует присваивать значение "async void"
 – это должен быть специальный метод (метод завершения, оператор...).</target>
         <note />

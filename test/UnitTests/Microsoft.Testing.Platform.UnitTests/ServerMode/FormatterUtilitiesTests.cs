@@ -11,19 +11,23 @@ using TestNodeUid = Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class FormatterUtilitiesTests : TestBase
+[TestClass]
+public sealed class FormatterUtilitiesTests
 {
     private readonly IMessageFormatter _formatter = FormatterUtilities.CreateFormatter();
 
-    public FormatterUtilitiesTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext) =>
+    public static IEnumerable<object[]> SerializerTypesForDynamicData
+        => SerializerUtilities.SerializerTypes.Select(x => new object[] { x });
+
+    public FormatterUtilitiesTests()
+        =>
 #if NETCOREAPP
         Assert.AreEqual("System.Text.Json", _formatter.Id);
 #else
         Assert.AreEqual("Jsonite", _formatter.Id);
 #endif
 
+    [TestMethod]
     public void CanDeserializeTaskResponse()
     {
 #pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
@@ -44,11 +48,11 @@ public class FormatterUtilitiesTests : TestBase
 
         var response = (ResponseMessage)msg;
         Assert.AreEqual(1, response.Id);
-        Assert.AreEqual(null, response.Result);
+        Assert.IsNull(response.Result);
     }
 
-    [ArgumentsProvider(memberName: nameof(SerializerUtilities.SerializerTypes), memberType: typeof(SerializerUtilities),
-        TestArgumentsEntryProviderMethodName = nameof(FormatSerializerTypes))]
+    [DynamicData(nameof(SerializerTypesForDynamicData), DynamicDataDisplayName = nameof(FormatSerializerTypes))]
+    [TestMethod]
     public async Task SerializeDeserialize_Succeed(Type type)
     {
         object instanceToSerialize = CreateInstance(type);
@@ -71,8 +75,9 @@ public class FormatterUtilitiesTests : TestBase
         static bool HasCustomDeserializeAssert(Type type) => type == typeof(TestNode);
     }
 
-    [Arguments(typeof(DiscoverRequestArgs))]
-    [Arguments(typeof(RunRequestArgs))]
+    [DataRow(typeof(DiscoverRequestArgs))]
+    [DataRow(typeof(RunRequestArgs))]
+    [TestMethod]
     public void DeserializeSpecificTypes(Type type)
     {
         string json = CreateSerializedInstance(type);
@@ -93,7 +98,7 @@ public class FormatterUtilitiesTests : TestBase
             }
             else
             {
-                Assert.AreEqual(actual, expected);
+                Assert.AreEqual(expected, actual);
             }
         }
     }
@@ -127,7 +132,8 @@ public class FormatterUtilitiesTests : TestBase
         }
     }
 
-    internal static TestArgumentsEntry<Type> FormatSerializerTypes(TestArgumentsContext testArgumentsContext) => new((Type)testArgumentsContext.Arguments, ((Type)testArgumentsContext.Arguments).Name);
+    public static string? FormatSerializerTypes(MethodInfo methodInfo, object?[]? data)
+        => (data?[0] as Type)?.Name;
 
     private static void AssertSerialize(Type type, string instanceSerialized)
     {

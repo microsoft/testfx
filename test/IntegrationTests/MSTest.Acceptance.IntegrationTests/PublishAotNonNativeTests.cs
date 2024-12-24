@@ -10,23 +10,21 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// When PublishAOT=true is set on a project, it will set IsDynamicCodeSupported to false, but the code will still run as managed
 /// and VSTest is still able to find tests in the dll.
 /// </summary>
-[TestGroup]
-public sealed class PublishAotNonNativeTests : AcceptanceTestBase
+[TestClass]
+public sealed class PublishAotNonNativeTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "PublishAotNonNative";
 
-    public PublishAotNonNativeTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
-
+    [TestMethod]
     public async Task RunTests_ThatEnablePublishAOT_ButDontBuildToNative()
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
-               AssetName,
-               SourceCode
-               .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{TargetFrameworks.NetCurrent.Arguments}</TargetFramework>")
-               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c Debug {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c Debug {generator.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
 
         // In the real-world issue, access to path C:\Program Files\dotnet\ is denied, but we run this from a local .dotnet folder, where we have write access.
         // So instead of relying on the test run failing because of AccessDenied, we check the output, and see where TestResults were placed.
@@ -80,6 +78,4 @@ namespace MSTestSdkTest
     }
 }
 """;
-
-    private readonly AcceptanceFixture _acceptanceFixture;
 }

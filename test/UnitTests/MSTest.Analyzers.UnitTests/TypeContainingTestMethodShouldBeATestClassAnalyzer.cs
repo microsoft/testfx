@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenTestClassHasTestMethod_NoDiagnostic()
     {
         string code = """
@@ -28,6 +29,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassWithoutTestAttribute_HaveTestMethod_Diagnostic()
     {
         string code = """
@@ -43,6 +45,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassWithoutTestAttribute_AndWithoutTestMethods_InheritTestClassWithTestMethods_Diagnostic()
     {
         string code = """
@@ -71,6 +74,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassWithoutTestAttribute_AndWithTestMethods_InheritTestClass_Diagnostic()
     {
         string code = """
@@ -99,6 +103,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenInheritedTestClassAttribute_HasInheritedTestMethodAttribute_NoDiagnostic()
     {
         string code = """
@@ -125,6 +130,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassWithoutTestAttribute_HasInheritedTestMethodAttribute_Diagnostic()
     {
         string code = """
@@ -146,6 +152,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenAbstractClassWithoutTestAttribute_HaveTestMethod_NoDiagnostic()
     {
         string code = """
@@ -163,6 +170,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests(ITes
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassHasTestInitializeAndThenTestMethod_Diagnostic()
     {
         string code = """

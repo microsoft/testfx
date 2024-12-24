@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 using DynamicDataTestProject;
 
 using LibProjectReferencedByDataSourceTest;
@@ -22,8 +20,16 @@ public class DynamicDataTests
     public void DynamicDataTest_SourceMethod(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
-    [DynamicData(nameof(ParseUserData))]
+    [DynamicData(nameof(GetParseUserData))]
+    public void DynamicDataTest_SourceMethodAuto(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
+
+    [DataTestMethod]
+    [DynamicData(nameof(ParseUserData), DynamicDataSourceType.Property)]
     public void DynamicDataTest_SourceProperty(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
+
+    [DataTestMethod]
+    [DynamicData(nameof(ParseUserData))]
+    public void DynamicDataTest_SourcePropertyAuto(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
     [DynamicData(nameof(GetParseUserData), DynamicDataSourceType.Method,
@@ -91,6 +97,11 @@ public class DynamicDataTests
     public void MethodWithOverload(int x, string y)
     {
     }
+
+    [TestMethod]
+    [DynamicData(nameof(SimpleCollection))]
+    public void DynamicDataTest_SimpleCollection(int value)
+        => Assert.AreEqual(0, value % 2);
 
     private static void ParseAndAssert(string userData, User expectedUser)
     {
@@ -203,5 +214,15 @@ public class DynamicDataTests
     {
         yield return new object[] { 1, "0" };
         yield return new object[] { 2, "2" };
+    }
+
+    private static IEnumerable<int> SimpleCollection
+    {
+        get
+        {
+            yield return 0;
+            yield return 2;
+            yield return 4;
+        }
     }
 }

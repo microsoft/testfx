@@ -8,16 +8,15 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class LoggerFactoryTests : TestBase
+[TestClass]
+public sealed class LoggerFactoryTests
 {
     private readonly Mock<ILogger> _mockLogger = new();
     private readonly Mock<IMonitor> _mockMonitor = new();
     private readonly Mock<IDisposableLoggerProvider> _mockLoggerProvider = new();
     private readonly ILoggerProvider[] _loggerProviders;
 
-    public LoggerFactoryTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
+    public LoggerFactoryTests()
     {
         _mockMonitor.Setup(x => x.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object);
         _mockLoggerProvider.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(_mockLogger.Object);
@@ -28,6 +27,7 @@ public class LoggerFactoryTests : TestBase
         ];
     }
 
+    [TestMethod]
     public void LoggerFactory_LoggerCreatedOnlyOnce()
     {
         using LoggerFactory loggerFactory = new(_loggerProviders, LogLevel.Information, _mockMonitor.Object);

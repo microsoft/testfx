@@ -68,12 +68,10 @@ namespace MSTest.Analyzers {
         ///-it should not be &apos;async void&apos;
         ///-it should not be a special method (finalizer, operator...).
         ///-it should not be generic
-        ///-it should not take any parameter
+        ///-it should either not take any parameter, or take a single parameter of type &apos;TestContext&apos;
         ///-return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///
-        ///The type declaring these methods should also respect the following rules:
-        ///-The type should be a class
-        ///-The class should [rest of string was truncated]&quot;;.
+        ///The type declaring these methods should also respect the followi [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string AssemblyCleanupShouldBeValidDescription {
             get {
@@ -217,9 +215,9 @@ namespace MSTest.Analyzers {
         ///-it should not be &apos;async void&apos;
         ///-it should not be a special method (finalizer, operator...).
         ///-it should not be generic
-        ///-it should not take any parameter
+        ///-it should either not take any parameter, or take a single parameter of type &apos;TestContext&apos;
         ///-return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///-&apos;InheritanceBehavior.BeforeEachDerivedClass&apos; attribute parameter should be spec [rest of string was truncated]&quot;;.
+        ///-&apos;InheritanceBehavior.B [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ClassCleanupShouldBeValidDescription {
             get {
@@ -308,6 +306,24 @@ namespace MSTest.Analyzers {
         internal static string DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch {
             get {
                 return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found two conflicting types for generic parameter &apos;{0}&apos;. The conflicting types are &apos;{1}&apos; and &apos;{2}&apos;..
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The type of the generic parameter &apos;{0}&apos; could not be inferred..
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved", resourceCulture);
             }
         }
         
@@ -486,7 +502,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a method so you should set &apos;DynamicDataSourceType.Method&apos;.
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a method so you should use &apos;DynamicDataSourceType.AutoDetect&apos; or &apos;DynamicDataSourceType.Method&apos; (auto detect is the default when not specified explicitly, and is recommended).
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeMethod {
             get {
@@ -495,7 +511,16 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a property so you should set &apos;DynamicDataSourceType.Property&apos;.
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is not a property nor a method. Only properties and methods are supported..
+        /// </summary>
+        internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod {
+            get {
+                return ResourceManager.GetString("DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is a property so you should use &apos;DynamicDataSourceType.AutoDetect&apos; or &apos;DynamicDataSourceType.Property&apos; (auto detect is the default when not specified explicitly, and is recommended).
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_SourceTypeProperty {
             get {
@@ -852,11 +877,11 @@ namespace MSTest.Analyzers {
         ///   Looks up a localized string similar to Test methods, methods marked with the &apos;[TestMethod]&apos; attribute, should respect the following layout to be considered valid by MSTest:
         ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
         ///- it should not be &apos;static&apos;
-        ///- it should not be generic
+        ///- it should may be generic as long as type parameters can be inferred and argument types are compatible
         ///- it should not be &apos;abstract&apos;
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- it should not be &apos;async void&apos;
-        ///- it should not be a special method (finalizer, operator...)..
+        ///- it should not be a special me [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string TestMethodShouldBeValidDescription {
             get {

@@ -1,20 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public class SystemAsyncMonitorTests : TestBase
+[TestClass]
+public sealed class SystemAsyncMonitorTests
 {
-    public SystemAsyncMonitorTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
+    [TestMethod]
     public async Task AsyncMonitor_ShouldCorrectlyLock()
     {
         var asyncSystemMonitor = (SystemAsyncMonitor)new SystemMonitorAsyncFactory().Create();

@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Runtime.InteropServices;
-
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -15,10 +13,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// Contains the execution logic for this adapter.
 /// </summary>
 [ExtensionUri(Constants.ExecutorUriString)]
+#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 #endif
 public class MSTestExecutor : ITestExecutor
 {

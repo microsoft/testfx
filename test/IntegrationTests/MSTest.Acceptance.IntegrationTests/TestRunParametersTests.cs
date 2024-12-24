@@ -6,18 +6,14 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class TestRunParametersTests : AcceptanceTestBase
+[TestClass]
+public sealed class TestRunParametersTests : AcceptanceTestBase<TestRunParametersTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public TestRunParametersTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestRunParameters_WhenProvidingMultipleArgumentsToTheOption(string tfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --test-parameter MyParameter2=MyValue2 MyParameter3=MyValue3");
 
         // Assert
@@ -25,10 +21,11 @@ public sealed class TestRunParametersTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestRunParameters_WhenProvidingMultipleMultipleTimesTheOptionAndArgument(string tfm)
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --test-parameter MyParameter2=MyValue2 --test-parameter MyParameter3=MyValue3");
 
         // Assert
@@ -36,8 +33,7 @@ public sealed class TestRunParametersTests : AcceptanceTestBase
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestRunParameters";
 

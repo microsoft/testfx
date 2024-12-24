@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class ClassCleanupShouldBeValidAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenClassCleanupIsPublic_NoDiagnostic()
     {
         string code = """
@@ -28,6 +29,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsGenericWithInheritanceModeSet_NoDiagnostic()
     {
         string code = """
@@ -46,6 +48,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsGenericWithInheritanceModeSetToNone_Diagnostic()
     {
         string code = """
@@ -67,6 +70,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsGenericWithoutSettingInheritanceMode_Diagnostic()
     {
         string code = """
@@ -88,6 +92,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsNotOrdinary_Diagnostic()
     {
         string code = """
@@ -109,6 +114,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
     {
         string code = """
@@ -129,6 +135,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsInternal_InsidePublicClassWithDiscoverInternals_Diagnostic()
     {
         string code = """
@@ -167,10 +174,11 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             fixedCode);
     }
 
-    [Arguments("protected")]
-    [Arguments("internal")]
-    [Arguments("internal protected")]
-    [Arguments("private")]
+    [DataRow("protected")]
+    [DataRow("internal")]
+    [DataRow("internal protected")]
+    [DataRow("private")]
+    [TestMethod]
     public async Task WhenClassCleanupIsNotPublic_Diagnostic(string accessibility)
     {
         string code = $$"""
@@ -205,6 +213,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsGeneric_Diagnostic()
     {
         string code = """
@@ -239,6 +248,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsNotStatic_Diagnostic()
     {
         string code = """
@@ -273,7 +283,8 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             fixedCode);
     }
 
-    public async Task WhenClassCleanupHasParameters_Diagnostic()
+    [TestMethod]
+    public async Task WhenClassCleanupHasTestContextParameter_NoDiagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -282,31 +293,16 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             public class MyTestClass
             {
                 [ClassCleanup]
-                public static void {|#0:ClassCleanup|}(TestContext testContext)
+                public static void ClassCleanup(TestContext testContext)
                 {
                 }
             }
             """;
 
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [ClassCleanup]
-                public static void ClassCleanup()
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(
-            code,
-            VerifyCS.Diagnostic().WithLocation(0).WithArguments("ClassCleanup"),
-            fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupReturnTypeIsNotValid_Diagnostic()
     {
         string code = """
@@ -382,6 +378,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupReturnTypeIsValid_NoDiagnostic()
     {
         string code = """
@@ -413,6 +410,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsAsyncVoid_Diagnostic()
     {
         string code = """
@@ -451,6 +449,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenMultipleViolations_TheyAllGetFixed()
     {
         string code = """
@@ -489,6 +488,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsNotOnClass_Diagnostic()
     {
         string code = """
@@ -506,6 +506,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsOnSealedClassNotMarkedWithTestClass_Diagnostic()
     {
         string code = """
@@ -523,6 +524,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsOnNonSealedClassNotMarkedWithTestClass_NoDiagnostic()
     {
         string code = """
@@ -540,6 +542,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsOnAbstractClassNotMarkedWithTestClass_AndWithInheritanceBehavior_NoDiagnostic()
     {
         string code = """
@@ -557,6 +560,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsOnAbstractClassMarkedWithTestClass_AndWithInheritanceBehavior_NoDiagnostic()
     {
         string code = """
@@ -575,6 +579,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsAbstractClassNotMarkedWithTestClass_AndWithoutInheritanceBehavior_Diagnostic()
     {
         string code = """
@@ -592,6 +597,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsOnAbstractClassMarkedWithTestClass_AndWithoutInheritanceBehavior_Diagnostic()
     {
         string code = """
@@ -610,6 +616,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsOnAbstractClassMarkedWithTestClass_AndWithInheritanceBehaviorNone_Diagnostic()
     {
         string code = """
@@ -628,6 +635,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsOnSealedClassMarkedWithTestClass_AndWithInheritanceBehavior_Diagnostic()
     {
         string code = """
@@ -646,6 +654,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsOnSealedClassMarkedWithTestClass_AndWithInheritanceBehaviorNone_NoDiagnostic()
     {
         string code = """
@@ -664,6 +673,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenClassCleanupIsOnSealedClassMarkedWithTestClass_WithDefaultInheritanceBehavior_NoDiagnostic()
     {
         string code = """

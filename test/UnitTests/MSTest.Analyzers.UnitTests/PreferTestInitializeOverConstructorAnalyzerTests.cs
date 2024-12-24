@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class PreferTestInitializeOverConstructorAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenTestClassHasCtor_Diagnostic()
     {
         string code = """
@@ -39,6 +40,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHas_TwoCtorandExsitesTestInitialize_Diagnostic()
     {
         string code = """
@@ -97,6 +99,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClass_WithLocalTestInitializeAttribute_Diagnostic()
     {
         string code = """
@@ -151,6 +154,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasImplicitCtor_NoDiagnostic()
     {
         string code = """
@@ -165,6 +169,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
     public async Task WhenTestClassHasParameterizedCtor_NoDiagnostic()
     {
         string code = """

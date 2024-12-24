@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 Analyzer.Utilities.WellKnownTypeProvider
 Analyzer.Utilities.WellKnownTypeProvider.Compilation.get -> Microsoft.CodeAnalysis.Compilation!
 Analyzer.Utilities.WellKnownTypeProvider.GetOrCreateTypeByMetadataName(string! fullTypeName) -> Microsoft.CodeAnalysis.INamedTypeSymbol?

@@ -1,14 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
 #if NETFRAMEWORK
 using System.Data;
 using System.Data.Common;
 #endif
-using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
@@ -20,10 +19,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// The virtual string properties of the TestContext are retrieved from the property dictionary
 /// like GetProperty&lt;string&gt;("TestName") or GetProperty&lt;string&gt;("FullyQualifiedTestClassName").
 /// </summary>
+#if RELEASE
 #if NET6_0_OR_GREATER
 [Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
 #else
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 #endif
 public class TestContextImplementation : TestContext, ITestContext
 {
@@ -39,14 +40,10 @@ public class TestContextImplementation : TestContext, ITestContext
     private readonly ThreadSafeStringWriter? _threadSafeStringWriter;
 
     /// <summary>
-    /// Test Method.
-    /// </summary>
-    private readonly ITestMethod _testMethod;
-
-    /// <summary>
     /// Properties.
     /// </summary>
     private readonly Dictionary<string, object?> _properties;
+    private readonly IMessageLogger? _messageLogger;
 
     /// <summary>
     /// Specifies whether the writer is disposed or not.
@@ -76,27 +73,40 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="testMethod">The test method.</param>
     /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
-    public TestContextImplementation(ITestMethod testMethod, StringWriter stringWriter, IDictionary<string, object?> properties)
+    /// <param name="messageLogger">The message logger to use.</param>
+    internal TestContextImplementation(ITestMethod? testMethod, StringWriter stringWriter, IDictionary<string, object?> properties, IMessageLogger messageLogger)
+        : this(testMethod, stringWriter, properties)
+        => _messageLogger = messageLogger;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
+    /// </summary>
+    /// <param name="testMethod">The test method.</param>
+    /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
+    /// <param name="properties">Properties/configuration passed in.</param>
+    public TestContextImplementation(ITestMethod? testMethod, StringWriter stringWriter, IDictionary<string, object?> properties)
     {
-        DebugEx.Assert(testMethod != null, "TestMethod is not null");
+        // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
 
 #if NETFRAMEWORK
         DebugEx.Assert(stringWriter != null, "StringWriter is not null");
 #endif
 
-        _testMethod = testMethod;
         _stringWriter = stringWriter;
 
         // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
         _threadSafeStringWriter = stringWriter as ThreadSafeStringWriter;
-        _properties = new Dictionary<string, object?>(properties)
-        {
-            [FullyQualifiedTestClassNameLabel] = _testMethod.FullClassName,
-            [ManagedTypeLabel] = _testMethod.ManagedTypeName,
-            [ManagedMethodLabel] = _testMethod.ManagedMethodName,
-            [TestNameLabel] = _testMethod.Name,
-        };
+        _properties = testMethod is null
+            ? new Dictionary<string, object?>(properties)
+            : new Dictionary<string, object?>(properties)
+            {
+                [FullyQualifiedTestClassNameLabel] = testMethod.FullClassName,
+                [ManagedTypeLabel] = testMethod.ManagedTypeName,
+                [ManagedMethodLabel] = testMethod.ManagedMethodName,
+                [TestNameLabel] = testMethod.Name,
+            };
+
         _testResultFiles = [];
     }
 
@@ -355,5 +365,7 @@ public class TestContextImplementation : TestContext, ITestContext
     public void SetDisplayName(string? displayName)
         => TestDisplayName = displayName;
 
+    public override void DisplayMessage(MessageLevel messageLevel, string message)
+        => _messageLogger?.SendMessage(messageLevel.ToTestMessageLevel(), message);
     #endregion
 }

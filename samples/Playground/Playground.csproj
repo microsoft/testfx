@@ -8,6 +8,10 @@
     <NoWarn>$(NoWarn);NETSDK1023</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
+    <Compile Remove="ServerMode/**/*.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />

@@ -2,10 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if WIN_UI
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
-using System.Text;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
 
 /// <summary>

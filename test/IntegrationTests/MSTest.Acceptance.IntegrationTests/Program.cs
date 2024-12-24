@@ -1,12 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-
 using Microsoft.Testing.Extensions;
-using Microsoft.Testing.Internal.Framework.Configurations;
 
-using MSTest.Acceptance.IntegrationTests;
+[assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
+[assembly: ClassCleanupExecution(ClassCleanupBehavior.EndOfClass)]
 
 // Opt-out telemetry
 Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
@@ -16,9 +14,7 @@ DotnetCli.DoNotRetry = Debugger.IsAttached;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 
-builder.AddTestFramework(
-   new TestFrameworkConfiguration(Debugger.IsAttached ? 1 : Environment.ProcessorCount),
-   new SourceGeneratedTestNodesBuilder());
+builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverageProvider();
 #endif

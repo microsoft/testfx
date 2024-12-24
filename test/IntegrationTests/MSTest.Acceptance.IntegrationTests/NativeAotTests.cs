@@ -1,15 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Runtime.InteropServices;
-
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class NativeAotTests : AcceptanceTestBase
+[TestClass]
+public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string SourceCode = """
 #file NativeAotTests.csproj
@@ -84,11 +82,8 @@ public class UnitTest1
 }
 """;
 
-    private readonly AcceptanceFixture _acceptanceFixture;
-
-    public NativeAotTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext) => _acceptanceFixture = acceptanceFixture;
-
+    [TestMethod]
+    [Ignore("https://github.com/microsoft/testfx/issues/4369")]
     public async Task NativeAotTests_WillRunWithExitCodeZero()
     {
         // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.
@@ -107,24 +102,23 @@ public class UnitTest1
                     "NativeAotTests",
                     SourceCode
                     .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                    .PatchCodeWithReplace("$MicrosoftTestingEnterpriseExtensionsVersion$", MicrosoftTestingEnterpriseExtensionsVersion)
-                    .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent.Arguments)
+                    .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                     .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion),
                     addPublicFeeds: true);
 
                 await DotnetCli.RunAsync(
                     $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
-                    _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+                    AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     retryCount: 0);
                 DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
                     $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
-                    _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+                    AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     timeoutInSeconds: 90,
                     retryCount: 0);
                 compilationResult.AssertOutputContains("Generating native code");
 
-                var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent.Arguments, RID, Verb.publish);
+                var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent, RID, Verb.publish);
 
                 TestHostResult result = await testHost.ExecuteAsync();
                 result.AssertExitCodeIs(0);

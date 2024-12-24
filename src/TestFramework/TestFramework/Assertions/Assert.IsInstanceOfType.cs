@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -48,7 +45,7 @@ public sealed partial class Assert
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>([NotNull] object? value, out T instance)
-        => IsInstanceOfType<T>(value, out instance, string.Empty, null);
+        => IsInstanceOfType(value, out instance, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified object is an instance of the expected
@@ -90,7 +87,7 @@ public sealed partial class Assert
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, string? message)
-        => IsInstanceOfType<T>(value, out instance, message, null);
+        => IsInstanceOfType(value, out instance, message, null);
 
     /// <summary>
     /// Tests whether the specified object is an instance of the expected

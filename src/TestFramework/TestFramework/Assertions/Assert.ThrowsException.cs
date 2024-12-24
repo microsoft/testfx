@@ -1,8 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
+using System.ComponentModel;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -14,6 +13,60 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public sealed partial class Assert
 {
     /// <summary>
+    /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
+    /// (or derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// exception of type other than <typeparamref name="TException"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </param>
+    /// <param name="messageArgs">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <typeparam name="TException">
+    /// The type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    public static TException Throws<TException>(Action action, string message = "", params object[] messageArgs)
+        where TException : Exception
+        => ThrowsException<TException>(action, isStrictType: false, message, parameters: messageArgs);
+
+    /// <summary>
+    /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
+    /// (and not of derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// exception of type other than <typeparamref name="TException"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </param>
+    /// <param name="messageArgs">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <typeparam name="TException">
+    /// The type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    public static TException ThrowsExactly<TException>(Action action, string message = "", params object[] messageArgs)
+        where TException : Exception
+        => ThrowsException<TException>(action, isStrictType: true, message, parameters: messageArgs);
+
+    /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
     /// of type <typeparamref name="T"/> (and not of derived type) and throws <c>AssertFailedException</c>
     /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
@@ -22,7 +75,7 @@ public sealed partial class Assert
     /// Delegate to code to be tested and which is expected to throw exception.
     /// </param>
     /// <typeparam name="T">
-    /// Type of exception expected to be thrown.
+    /// The exact type of exception expected to be thrown.
     /// </typeparam>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
@@ -30,6 +83,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Action action)
         where T : Exception
         => ThrowsException<T>(action, string.Empty, null);
@@ -55,6 +109,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Action action, string message)
         where T : Exception
         => ThrowsException<T>(action, message, null);
@@ -76,6 +131,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Func<object?> action)
         where T : Exception
         => ThrowsException<T>(action, string.Empty, null);
@@ -101,6 +157,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Func<object?> action, string message)
         where T : Exception
         => ThrowsException<T>(action, message, null);
@@ -129,6 +186,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Func<object?> action, string message, params object?[]? parameters)
         where T : Exception
 #pragma warning disable IDE0053 // Use expression body for lambda expression
@@ -160,9 +218,13 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and format appropriately.")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T ThrowsException<T>(Action action, string message, params object?[]? parameters)
         where T : Exception
+        => ThrowsException<T>(action, isStrictType: true, message, parameters: parameters);
+
+    private static TException ThrowsException<TException>(Action action, bool isStrictType, string message, [CallerMemberName] string assertMethodName = "", params object?[]? parameters)
+        where TException : Exception
     {
         Guard.NotNull(action);
         Guard.NotNull(message);
@@ -174,19 +236,22 @@ public sealed partial class Assert
         }
         catch (Exception ex)
         {
-            if (!typeof(T).Equals(ex.GetType()))
+            bool isExceptionOfType = isStrictType
+                ? typeof(TException) == ex.GetType()
+                : ex is TException;
+            if (!isExceptionOfType)
             {
                 userMessage = BuildUserMessage(message, parameters);
                 finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.WrongExceptionThrown,
                     userMessage,
-                    typeof(T),
+                    typeof(TException),
                     ex.GetType());
-                ThrowAssertFailed("Assert.ThrowsException", finalMessage);
+                ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
             }
 
-            return (T)ex;
+            return (TException)ex;
         }
 
         userMessage = BuildUserMessage(message, parameters);
@@ -194,12 +259,66 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.NoExceptionThrown,
             userMessage,
-            typeof(T));
-        ThrowAssertFailed("Assert.ThrowsException", finalMessage);
+            typeof(TException));
+        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
 
         // This will not hit, but need it for compiler.
         return null;
     }
+
+    /// <summary>
+    /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
+    /// (or derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// exception of type other than <typeparamref name="TException"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </param>
+    /// <param name="messageArgs">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <typeparam name="TException">
+    /// The type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    public static Task<TException> ThrowsAsync<TException>(Func<Task> action, string message = "", params object[] messageArgs)
+        where TException : Exception
+        => ThrowsExceptionAsync<TException>(action, isStrictType: false, message, parameters: messageArgs);
+
+    /// <summary>
+    /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
+    /// (and not of derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// exception of type other than <typeparamref name="TException"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </param>
+    /// <param name="messageArgs">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <typeparam name="TException">
+    /// The type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    public static Task<TException> ThrowsExactlyAsync<TException>(Func<Task> action, string message = "", params object[] messageArgs)
+        where TException : Exception
+        => ThrowsExceptionAsync<TException>(action, isStrictType: true, message, parameters: messageArgs);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
@@ -218,6 +337,7 @@ public sealed partial class Assert
     /// <returns>
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action)
         where T : Exception
         => await ThrowsExceptionAsync<T>(action, string.Empty, null)
@@ -240,6 +360,7 @@ public sealed partial class Assert
     /// <returns>
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message)
         where T : Exception
         => await ThrowsExceptionAsync<T>(action, message, null)
@@ -265,8 +386,14 @@ public sealed partial class Assert
     /// <returns>
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message, params object?[]? parameters)
         where T : Exception
+        => await ThrowsExceptionAsync<T>(action, true, message, parameters: parameters)
+            .ConfigureAwait(false);
+
+    private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, string message, [CallerMemberName] string assertMethodName = "", params object?[]? parameters)
+        where TException : Exception
     {
         Guard.NotNull(action);
         Guard.NotNull(message);
@@ -278,19 +405,23 @@ public sealed partial class Assert
         }
         catch (Exception ex)
         {
-            if (!typeof(T).Equals(ex.GetType()))
+            bool isExceptionOfType = isStrictType
+                ? typeof(TException) == ex.GetType()
+                : ex is TException;
+
+            if (!isExceptionOfType)
             {
                 userMessage = BuildUserMessage(message, parameters);
                 finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.WrongExceptionThrown,
                     userMessage,
-                    typeof(T),
+                    typeof(TException),
                     ex.GetType());
-                ThrowAssertFailed("Assert.ThrowsException", finalMessage);
+                ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
             }
 
-            return (T)ex;
+            return (TException)ex;
         }
 
         userMessage = BuildUserMessage(message, parameters);
@@ -298,8 +429,8 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.NoExceptionThrown,
             userMessage,
-            typeof(T));
-        ThrowAssertFailed("Assert.ThrowsException", finalMessage);
+            typeof(TException));
+        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
 
         // This will not hit, but need it for compiler.
         return null!;
