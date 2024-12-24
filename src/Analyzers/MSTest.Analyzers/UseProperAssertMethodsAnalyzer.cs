@@ -298,7 +298,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             // The message is: Use 'Assert.{0}' instead of 'Assert.{1}'.
             string properAssertMethod = shouldUseIsNull ? "IsNull" : "IsNotNull";
 
-            var properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
             properties.Add(ProperAssertMethodNameKey, properAssertMethod);
             properties.Add(CodeFixModeKey, CodeFixModeSimple);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
@@ -325,7 +325,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
             // The message is: Use 'Assert.{0}' instead of 'Assert.{1}'.
             string properAssertMethod = shouldUseAreEqual ? "AreEqual" : "AreNotEqual";
-            var properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
             properties.Add(ProperAssertMethodNameKey, properAssertMethod);
             properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
@@ -357,7 +357,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 actualType.SpecialType != SpecialType.System_Boolean &&
                 !actualType.IsNullableOfBoolean();
 
-            var properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
             properties.Add(ProperAssertMethodNameKey, properAssertMethod);
             properties.Add(CodeFixModeKey, CodeFixModeRemoveArgument);
 
@@ -382,7 +382,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
             // The message is: Use 'Assert.{0}' instead of 'Assert.{1}'.
             string properAssertMethod = shouldUseIsNull ? "IsNull" : "IsNotNull";
-            var properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
             properties.Add(ProperAssertMethodNameKey, properAssertMethod);
             properties.Add(CodeFixModeKey, CodeFixModeRemoveArgument);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
