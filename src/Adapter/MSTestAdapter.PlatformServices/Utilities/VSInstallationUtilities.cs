@@ -3,9 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-
 using static System.String;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;

@@ -1,11 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Xml;
-using System.Xml.Linq;
-
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 #if !WINDOWS_UWP
@@ -1011,7 +1006,7 @@ public class MSTestSettings
         if (configuration["mstest:parallelism:scope"] is string value)
         {
             value = value.Equals("class", StringComparison.OrdinalIgnoreCase) ? "ClassLevel"
-                    : value.Equals("methood", StringComparison.OrdinalIgnoreCase) ? "MethodLevel" : value;
+                    : value.Equals("method", StringComparison.OrdinalIgnoreCase) ? "MethodLevel" : value;
             if (!TryParseEnum(value, out ExecutionScope scope))
             {
                 throw new AdapterSettingsException(string.Format(

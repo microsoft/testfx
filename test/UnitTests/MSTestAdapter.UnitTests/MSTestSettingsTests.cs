@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Xml;
-
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -1374,5 +1372,25 @@ public class MSTestSettingsTests : TestContainer
         Verify(settings.ParallelizationWorkers == 4);
         Verify(settings.ParallelizationScope == ExecutionScope.ClassLevel);
     }
+
+    [TestMethod]
+    public void ConfigJson_WithValidValues_MethodScope()
+    {
+        // Arrange - setting up valid configuration values
+        var configDictionary = new Dictionary<string, string> { { "mstest:parallelism:scope", "method" } };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+            .Returns((string key) => configDictionary.TryGetValue(key, out string value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+
+        // Assert
+        Verify(settings.ParallelizationScope == ExecutionScope.MethodLevel);
+    }
+
     #endregion
 }
