@@ -82,7 +82,9 @@ internal static class FixtureMethodRunner
                 action();
                 return null;
             }
-            catch (OperationCanceledException)
+            catch (Exception ex) when
+                ((ex is OperationCanceledException oce && oce.CancellationToken == cancellationTokenSource.Token)
+                || (ex is AggregateException aggregateEx && aggregateEx.InnerExceptions.OfType<TaskCanceledException>().Any()))
             {
                 // Ideally we would like to check that the token of the exception matches cancellationTokenSource but TestContext
                 // instances are not well defined so we have to handle the exception entirely.
@@ -156,7 +158,7 @@ internal static class FixtureMethodRunner
                     timeout));
         }
         catch (Exception ex) when
-            (ex is OperationCanceledException
+            ((ex is OperationCanceledException oce && oce.CancellationToken == cancellationTokenSource.Token)
             || (ex is AggregateException aggregateEx && aggregateEx.InnerExceptions.OfType<TaskCanceledException>().Any()))
         {
             return new(
@@ -220,10 +222,7 @@ internal static class FixtureMethodRunner
                     timeout));
         }
         catch (Exception ex) when
-
-            // This exception occurs when the cancellation happens before the task is actually started.
-            ((ex is TaskCanceledException tce && tce.CancellationToken == cancellationTokenSource.Token)
-            || (ex is OperationCanceledException oce && oce.CancellationToken == cancellationTokenSource.Token)
+            ((ex is OperationCanceledException oce && oce.CancellationToken == cancellationTokenSource.Token)
             || (ex is AggregateException aggregateEx && aggregateEx.InnerExceptions.OfType<TaskCanceledException>().Any()))
         {
             return new(
