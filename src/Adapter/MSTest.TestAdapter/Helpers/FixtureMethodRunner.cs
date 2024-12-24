@@ -16,6 +16,13 @@ internal static class FixtureMethodRunner
         Action action, CancellationTokenSource cancellationTokenSource, TimeoutInfo? timeoutInfo, MethodInfo methodInfo,
         IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
+        if (cancellationTokenSource.Token.IsCancellationRequested)
+        {
+            return new(
+                UnitTestOutcome.Timeout,
+                string.Format(CultureInfo.InvariantCulture, methodCanceledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
+        }
+
         // If no timeout is specified, we can run the action directly. This avoids any overhead of creating a task/thread and
         // ensures that the execution context is preserved (as we run the action on the current thread).
         if (timeoutInfo is null)
