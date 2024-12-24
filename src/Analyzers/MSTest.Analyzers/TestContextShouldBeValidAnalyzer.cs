@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
 using System.Collections.Immutable;
 
 using Analyzer.Utilities.Extensions;
@@ -125,7 +124,7 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
 
         if (operation is ISimpleAssignmentOperation assignmentOperation &&
-            assignmentOperation.Target is IMemberReferenceOperation { Member: IFieldSymbol { } candidateField } targetMemberReference &&
+            assignmentOperation.Target is IMemberReferenceOperation { Member: IFieldSymbol { } candidateField } &&
             assignmentOperation.Value is IParameterReferenceOperation parameterReference &&
             SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, testContextParameter))
         {
