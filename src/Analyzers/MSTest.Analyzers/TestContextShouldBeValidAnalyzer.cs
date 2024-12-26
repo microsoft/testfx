@@ -124,7 +124,7 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
 
         if (operation is ISimpleAssignmentOperation assignmentOperation &&
-            assignmentOperation.Target is IMemberReferenceOperation { Member: IFieldSymbol { } candidateField } targetMemberReference &&
+            assignmentOperation.Target is IMemberReferenceOperation { Member: IFieldSymbol { } candidateField } &&
             assignmentOperation.Value is IParameterReferenceOperation parameterReference &&
             SymbolEqualityComparer.Default.Equals(parameterReference.Parameter, testContextParameter))
         {

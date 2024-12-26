@@ -34,9 +34,7 @@ internal static class FixtureMethodRunner
             }
             catch (Exception ex)
             {
-                Exception realException = ex.GetRealException();
-
-                if (realException is OperationCanceledException oce && oce.CancellationToken == cancellationTokenSource.Token)
+                if (ex.GetRealException().IsOperationCanceledExceptionFromToken(cancellationTokenSource.Token))
                 {
                     return new(
                         UnitTestOutcome.Timeout,
@@ -82,9 +80,7 @@ internal static class FixtureMethodRunner
                 action();
                 return null;
             }
-            catch (Exception ex) when
-                ((ex is OperationCanceledException oce && oce.CancellationToken == cancellationTokenSource.Token)
-                || (ex is AggregateException aggregateEx && aggregateEx.InnerExceptions.OfType<TaskCanceledException>().Any()))
+            catch (Exception ex) when (ex.IsOperationCanceledExceptionFromToken(cancellationTokenSource.Token))
             {
                 // Ideally we would like to check that the token of the exception matches cancellationTokenSource but TestContext
                 // instances are not well defined so we have to handle the exception entirely.
@@ -157,9 +153,7 @@ internal static class FixtureMethodRunner
                     methodInfo.Name,
                     timeout));
         }
-        catch (Exception ex) when
-            ((ex is OperationCanceledException oce && oce.CancellationToken == cancellationTokenSource.Token)
-            || (ex is AggregateException aggregateEx && aggregateEx.InnerExceptions.OfType<TaskCanceledException>().Any()))
+        catch (Exception ex) when (ex.IsOperationCanceledExceptionFromToken(cancellationTokenSource.Token))
         {
             return new(
                 UnitTestOutcome.Timeout,
@@ -177,7 +171,7 @@ internal static class FixtureMethodRunner
         }
     }
 
-    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    [SupportedOSPlatform("windows")]
     private static TestFailedException? RunWithTimeoutAndCancellationWithSTAThread(
         Action action, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
         IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
@@ -221,9 +215,7 @@ internal static class FixtureMethodRunner
                     methodInfo.Name,
                     timeout));
         }
-        catch (Exception ex) when
-            ((ex is OperationCanceledException oce && oce.CancellationToken == cancellationTokenSource.Token)
-            || (ex is AggregateException aggregateEx && aggregateEx.InnerExceptions.OfType<TaskCanceledException>().Any()))
+        catch (Exception ex) when (ex.IsOperationCanceledExceptionFromToken(cancellationTokenSource.Token))
         {
             return new(
                 UnitTestOutcome.Timeout,
