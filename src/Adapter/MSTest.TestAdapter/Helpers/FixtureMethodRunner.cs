@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
@@ -14,7 +15,10 @@ internal static class FixtureMethodRunner
 {
     internal static TestFailedException? RunWithTimeoutAndCancellation(
         Action action, CancellationTokenSource cancellationTokenSource, TimeoutInfo? timeoutInfo, MethodInfo methodInfo,
-        IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
+        IExecutionContextScope executionContextScope, string methodCanceledMessageFormat, string methodTimedOutMessageFormat,
+        // When a test method is marked with [Timeout], this timeout is applied from ctor to destructor, so we need to take
+        // that into account when processing the OCE of the action.
+        (CancellationTokenSource TokenSource, int Timeout)? testTimeoutInfo = default)
     {
         if (cancellationTokenSource.Token.IsCancellationRequested)
         {
@@ -38,7 +42,18 @@ internal static class FixtureMethodRunner
                 {
                     return new(
                         UnitTestOutcome.Timeout,
-                        string.Format(CultureInfo.InvariantCulture, methodCanceledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
+                        testTimeoutInfo?.TokenSource.Token.IsCancellationRequested == true
+                            ? string.Format(
+                                CultureInfo.InvariantCulture,
+                                methodTimedOutMessageFormat,
+                                methodInfo.DeclaringType!.FullName,
+                                methodInfo.Name,
+                                testTimeoutInfo.Value.Timeout)
+                            : string.Format(
+                                CultureInfo.InvariantCulture,
+                                methodCanceledMessageFormat,
+                                methodInfo.DeclaringType!.FullName,
+                                methodInfo.Name));
                 }
 
                 throw;

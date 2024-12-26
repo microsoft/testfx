@@ -196,7 +196,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
             new() { ["TASKDELAY_ASSEMBLYINIT"] = "1" });
 
         testHostResult.AssertOutputContains("AssemblyInit started");
-        testHostResult.AssertOutputContains("Assembly initialize method 'TestClass.AssemblyInit' timed out after 100ms");
+        testHostResult.AssertOutputContains("Assembly initialize method 'TestClass.AssemblyInit' timed out after 1000ms");
         testHostResult.AssertOutputDoesNotContain("AssemblyInit Thread.Sleep completed");
         testHostResult.AssertOutputDoesNotContain("AssemblyInit completed");
     }
@@ -211,7 +211,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
             new() { ["TASKDELAY_ASSEMBLYCLEANUP"] = "1" });
 
         testHostResult.AssertOutputContains("AssemblyCleanup started");
-        testHostResult.AssertOutputContains("Assembly cleanup method 'TestClass.AssemblyCleanup' timed out after 100ms");
+        testHostResult.AssertOutputContains("Assembly cleanup method 'TestClass.AssemblyCleanup' timed out after 1000ms");
         testHostResult.AssertOutputDoesNotContain("AssemblyCleanup Thread.Sleep completed");
         testHostResult.AssertOutputDoesNotContain("AssemblyCleanup completed");
     }
@@ -226,7 +226,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
             new() { ["TASKDELAY_CLASSINIT"] = "1" });
 
         testHostResult.AssertOutputContains("ClassInit started");
-        testHostResult.AssertOutputContains("Class initialize method 'TestClass.ClassInit' timed out after 100ms");
+        testHostResult.AssertOutputContains("Class initialize method 'TestClass.ClassInit' timed out after 1000ms");
         testHostResult.AssertOutputDoesNotContain("ClassInit Thread.Sleep completed");
         testHostResult.AssertOutputDoesNotContain("ClassInit completed");
     }
@@ -241,7 +241,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
             new() { ["TASKDELAY_CLASSCLEANUP"] = "1" });
 
         testHostResult.AssertOutputContains("ClassCleanup started");
-        testHostResult.AssertOutputContains("Class cleanup method 'TestClass.ClassCleanup' timed out after 100ms");
+        testHostResult.AssertOutputContains("Class cleanup method 'TestClass.ClassCleanup' timed out after 1000ms");
         testHostResult.AssertOutputDoesNotContain("ClassCleanup Thread.Sleep completed");
         testHostResult.AssertOutputDoesNotContain("ClassCleanup completed");
     }
@@ -256,7 +256,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
             new() { ["TASKDELAY_TESTINIT"] = "1" });
 
         testHostResult.AssertOutputContains("TestInit started");
-        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' timed out after 100ms");
+        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' timed out after 1000ms");
         testHostResult.AssertOutputDoesNotContain("TestInit completed");
     }
 
@@ -270,7 +270,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
             new() { ["TASKDELAY_TESTCLEANUP"] = "1" });
 
         testHostResult.AssertOutputContains("TestCleanup started");
-        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' timed out after 100ms");
+        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' timed out after 1000ms");
         testHostResult.AssertOutputDoesNotContain("TestCleanup completed");
     }
 
@@ -284,7 +284,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
             new() { ["CHECKTOKEN_ASSEMBLYINIT"] = "1" });
 
         testHostResult.AssertOutputContains("AssemblyInit started");
-        testHostResult.AssertOutputContains("Assembly initialize method 'TestClass.AssemblyInit' timed out after 100ms");
+        testHostResult.AssertOutputContains("Assembly initialize method 'TestClass.AssemblyInit' timed out after 1000ms");
         testHostResult.AssertOutputContains("AssemblyInit Thread.Sleep completed");
         testHostResult.AssertOutputDoesNotContain("AssemblyInit completed");
     }
@@ -300,7 +300,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
 
         testHostResult.AssertOutputContains("AssemblyCleanup started");
         testHostResult.AssertOutputContains("AssemblyCleanup Thread.Sleep completed");
-        testHostResult.AssertOutputContains("Assembly cleanup method 'TestClass.AssemblyCleanup' timed out after 100ms");
+        testHostResult.AssertOutputContains("Assembly cleanup method 'TestClass.AssemblyCleanup' timed out after 1000ms");
         testHostResult.AssertOutputDoesNotContain("AssemblyCleanup completed");
     }
 
@@ -314,7 +314,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
             new() { ["CHECKTOKEN_CLASSINIT"] = "1" });
 
         testHostResult.AssertOutputContains("ClassInit started");
-        testHostResult.AssertOutputContains("Class initialize method 'TestClass.ClassInit' timed out after 100ms");
+        testHostResult.AssertOutputContains("Class initialize method 'TestClass.ClassInit' timed out after 1000ms");
         testHostResult.AssertOutputContains("ClassInit Thread.Sleep completed");
         testHostResult.AssertOutputDoesNotContain("ClassInit completed");
     }
@@ -330,7 +330,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
 
         testHostResult.AssertOutputContains("ClassCleanup started");
         testHostResult.AssertOutputContains("ClassCleanup Thread.Sleep completed");
-        testHostResult.AssertOutputContains("Class cleanup method 'TestClass.ClassCleanup' timed out after 100ms");
+        testHostResult.AssertOutputContains("Class cleanup method 'TestClass.ClassCleanup' timed out after 1000ms");
         testHostResult.AssertOutputDoesNotContain("ClassCleanup completed");
     }
 
@@ -345,7 +345,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
 
         testHostResult.AssertOutputContains("TestInit started");
         testHostResult.AssertOutputDoesNotContain("TestInit completed");
-        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' timed out after 100ms");
+        testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' timed out after 1000ms");
     }
 
     [TestMethod]
@@ -359,7 +359,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
 
         testHostResult.AssertOutputContains("TestCleanup started");
         testHostResult.AssertOutputDoesNotContain("TestCleanup completed");
-        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' timed out after 100ms");
+        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' timed out after 1000ms");
     }
 
     private async Task RunAndAssertTestWasCanceledAsync(string rootFolder, string assetName, string tfm, string envVarPrefix, string entryKind)
@@ -478,7 +478,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         });
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("Test 'TestMethod' exceeded execution timeout period.");
+        testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
     }
 
     [TestMethod]
@@ -492,7 +492,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         });
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("Test 'TestMethod' exceeded execution timeout period.");
+        testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
     }
 
     [TestMethod]
@@ -506,7 +506,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         });
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("Test 'TestMethod' exceeded execution timeout period.");
+        testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
     }
 
     [TestMethod]
@@ -520,7 +520,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         });
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("Test 'TestMethod' exceeded execution timeout period.");
+        testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
     }
 
     [TestMethod]
@@ -534,7 +534,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         });
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("Test 'TestMethod' exceeded execution timeout period.");
+        testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
     }
 
     [TestMethod]
@@ -548,7 +548,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         });
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("Test initialize method 'TimeoutTest.UnitTest1.TestInit' was canceled");
+        testHostResult.AssertOutputContains("Test initialize method 'TimeoutTest.UnitTest1.TestInit' timed out after 1000ms");
     }
 
     [TestMethod]
@@ -562,7 +562,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         });
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("Test cleanup method 'TimeoutTest.UnitTest1.TestCleanup' was canceled");
+        testHostResult.AssertOutputContains("Test cleanup method 'TimeoutTest.UnitTest1.TestCleanup' timed out after 1000ms");
     }
 
     [TestMethod]
@@ -576,7 +576,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         });
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted.");
+        testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -661,34 +661,34 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class TestClass
 {
-    [Timeout(100, CooperativeCancellation = true)]
+    [Timeout(1000, CooperativeCancellation = true)]
     [AssemblyInitialize]
     public static async Task AssemblyInit(TestContext testContext)
         => await DoWork("ASSEMBLYINIT", "AssemblyInit", testContext);
 
-    [Timeout(100, CooperativeCancellation = true)]
+    [Timeout(1000, CooperativeCancellation = true)]
     [AssemblyCleanup]
     public static async Task AssemblyCleanup(TestContext testContext)
         => await DoWork("ASSEMBLYCLEANUP", "AssemblyCleanup", testContext);
 
-    [Timeout(100, CooperativeCancellation = true)]
+    [Timeout(1000, CooperativeCancellation = true)]
     [ClassInitialize]
     public static async Task ClassInit(TestContext testContext)
         => await DoWork("CLASSINIT", "ClassInit", testContext);
 
-    [Timeout(100, CooperativeCancellation = true)]
+    [Timeout(1000, CooperativeCancellation = true)]
     [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
     public static async Task ClassCleanup(TestContext testContext)
         => await DoWork("CLASSCLEANUP", "ClassCleanup", testContext);
 
     public TestContext TestContext { get; set; }
 
-    [Timeout(100, CooperativeCancellation = true)]
+    [Timeout(1000, CooperativeCancellation = true)]
     [TestInitialize]
     public async Task TestInit()
         => await DoWork("TESTINIT", "TestInit", TestContext);
 
-    [Timeout(100, CooperativeCancellation = true)]
+    [Timeout(1000, CooperativeCancellation = true)]
     [TestCleanup]
     public async Task TestCleanup()
         => await DoWork("TESTCLEANUP", "TestCleanup", TestContext);
@@ -708,7 +708,8 @@ public class TestClass
         }
         else
         {
-            System.Threading.Thread.Sleep(200);
+            // We want to wait more than the timeout value to ensure the timeout is hit
+            await Task.Delay(2_000);
             Console.WriteLine($"{stepName} Thread.Sleep completed");
             if (Environment.GetEnvironmentVariable($"CHECKTOKEN_{envVarSuffix}") == "1")
             {
@@ -920,14 +921,14 @@ namespace TimeoutTest;
 [TestClass]
 public class UnitTest1
 {
-    private TestContext _testContext;
+    private readonly TestContext _testContext;
 
     public UnitTest1(TestContext testContext)
     {
         _testContext = testContext;
         if (Environment.GetEnvironmentVariable("LONG_WAIT_CTOR") == "1")
         {
-            Task.Delay(10000, _testContext.CancellationTokenSource.Token).Wait();
+            Task.Delay(10_000, _testContext.CancellationTokenSource.Token).Wait();
         }
     }
 
@@ -936,7 +937,7 @@ public class UnitTest1
     {
         if (Environment.GetEnvironmentVariable("LONG_WAIT_TESTINIT") == "1")
         {
-            await Task.Delay(10000, _testContext.CancellationTokenSource.Token);
+            await Task.Delay(10_000, _testContext.CancellationTokenSource.Token);
         }
     }
 
@@ -945,7 +946,7 @@ public class UnitTest1
     {
         if (Environment.GetEnvironmentVariable("LONG_WAIT_TESTCLEANUP") == "1")
         {
-            await Task.Delay(10000, _testContext.CancellationTokenSource.Token);
+            await Task.Delay(10_000, _testContext.CancellationTokenSource.Token);
         }
     }
 
@@ -955,7 +956,7 @@ public class UnitTest1
     {
         if (Environment.GetEnvironmentVariable("LONG_WAIT_TEST") == "1")
         {
-            await Task.Delay(10000, _testContext.CancellationTokenSource.Token);
+            await Task.Delay(10_000, _testContext.CancellationTokenSource.Token);
         }
     }
 }

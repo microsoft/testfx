@@ -32,10 +32,6 @@ internal static class ExceptionExtensions
         return exception;
     }
 
-    internal static bool IsOperationCanceledExceptionFromToken(this Exception ex, CancellationToken cancellationToken)
-        => (ex is OperationCanceledException oce && oce.CancellationToken == cancellationToken)
-        || (ex is AggregateException aggregateEx && aggregateEx.InnerExceptions.OfType<OperationCanceledException>().Any(oce => oce.CancellationToken == cancellationToken));
-
     /// <summary>
     /// Get the exception message if available, empty otherwise.
     /// </summary>

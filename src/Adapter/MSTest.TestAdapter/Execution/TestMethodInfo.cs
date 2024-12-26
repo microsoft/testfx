@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
@@ -22,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 [Obsolete(Constants.PublicTypeObsoleteMessage)]
 #endif
 #endif
-public class TestMethodInfo : ITestMethod, IDisposable
+public class TestMethodInfo : ITestMethod
 {
     /// <summary>
     /// Specifies the timeout when it is not set in a test case.
@@ -32,7 +33,6 @@ public class TestMethodInfo : ITestMethod, IDisposable
     private object? _classInstance;
     private bool _isTestContextSet;
     private bool _isTestCleanupInvoked;
-    private CancellationTokenSource? _timeoutTokenSource;
 
     internal TestMethodInfo(
         MethodInfo testMethod,
@@ -114,7 +114,7 @@ public class TestMethodInfo : ITestMethod, IDisposable
         watch.Start();
         try
         {
-            result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments) : ExecuteInternal(arguments);
+            result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments) : ExecuteInternal(arguments, null);
         }
         finally
         {
@@ -218,7 +218,7 @@ public class TestMethodInfo : ITestMethod, IDisposable
     /// <param name="arguments">Arguments to be passed to the method.</param>
     /// <returns>The result of the execution.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private TestResult ExecuteInternal(object?[]? arguments)
+    private TestResult ExecuteInternal(object?[]? arguments, CancellationTokenSource? timeoutTokenSource)
     {
         DebugEx.Assert(TestMethod != null, "UnitTestExecuter.DefaultTestMethodInvoke: testMethod = null.");
 
@@ -240,7 +240,7 @@ public class TestMethodInfo : ITestMethod, IDisposable
                     // For any failure after this point, we must run TestCleanup
                     _isTestContextSet = true;
 
-                    if (RunTestInitializeMethod(_classInstance, result))
+                    if (RunTestInitializeMethod(_classInstance, result, timeoutTokenSource))
                     {
                         hasTestInitializePassed = true;
                         if (IsTimeoutSet)
@@ -268,12 +268,21 @@ public class TestMethodInfo : ITestMethod, IDisposable
                     // Expected Exception was thrown, so Pass the test
                     result.Outcome = UTF.UnitTestOutcome.Passed;
                 }
-                else if (realException is OperationCanceledException oce && oce.CancellationToken == TestMethodOptions.TestContext?.Context.CancellationTokenSource.Token)
+                else if (realException.IsOperationCanceledExceptionFromToken(TestMethodOptions.TestContext!.Context.CancellationTokenSource.Token))
                 {
                     result.Outcome = UTF.UnitTestOutcome.Timeout;
                     result.TestFailureException = new TestFailedException(
                         ObjectModelUnitTestOutcome.Timeout,
-                        string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName));
+                        timeoutTokenSource?.Token.IsCancellationRequested == true
+                            ? string.Format(
+                                CultureInfo.InvariantCulture,
+                                Resource.Execution_Test_Timeout,
+                                TestMethodName,
+                                TestMethodOptions.TimeoutInfo.Timeout)
+                            : string.Format(
+                                CultureInfo.InvariantCulture,
+                                Resource.Execution_Test_Cancelled,
+                                TestMethodName));
                 }
                 else
                 {
@@ -322,7 +331,7 @@ public class TestMethodInfo : ITestMethod, IDisposable
         // Pulling it out so extension writers can abort custom cleanups if need be. Having this in a finally block
         // does not allow a thread abort exception to be raised within the block but throws one after finally is executed
         // crashing the process. This was blocking writing an extension for Dynamic Timeout in VSO.
-        RunTestCleanupMethod(result);
+        RunTestCleanupMethod(result, timeoutTokenSource);
 
         return testRunnerException != null ? throw testRunnerException : result;
     }
@@ -467,7 +476,7 @@ public class TestMethodInfo : ITestMethod, IDisposable
     /// </summary>
     /// <param name="result">Instance of TestResult.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private void RunTestCleanupMethod(TestResult result)
+    private void RunTestCleanupMethod(TestResult result, CancellationTokenSource? timeoutTokenSource)
     {
         DebugEx.Assert(result != null, "result != null");
 
@@ -487,21 +496,21 @@ public class TestMethodInfo : ITestMethod, IDisposable
                 TestMethodOptions.TestContext!.Context.CancellationTokenSource = new CancellationTokenSource();
 
                 // If we are running with a method timeout, we need to cancel the cleanup when the overall timeout expires. If it already expired, nothing to do.
-                if (_timeoutTokenSource is { IsCancellationRequested: false })
+                if (timeoutTokenSource is { IsCancellationRequested: false })
                 {
-                    _timeoutTokenSource?.Token.Register(TestMethodOptions.TestContext.Context.CancellationTokenSource.Cancel);
+                    timeoutTokenSource?.Token.Register(TestMethodOptions.TestContext.Context.CancellationTokenSource.Cancel);
                 }
 
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
                 testCleanupException = testCleanupMethod is not null
-                    ? InvokeCleanupMethod(testCleanupMethod, _classInstance, Parent.BaseTestCleanupMethodsQueue.Count)
+                    ? InvokeCleanupMethod(testCleanupMethod, _classInstance, Parent.BaseTestCleanupMethodsQueue.Count, timeoutTokenSource)
                     : null;
                 var baseTestCleanupQueue = new Queue<MethodInfo>(Parent.BaseTestCleanupMethodsQueue);
                 while (baseTestCleanupQueue.Count > 0 && testCleanupException is null)
                 {
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
-                    testCleanupException = InvokeCleanupMethod(testCleanupMethod, _classInstance, baseTestCleanupQueue.Count);
+                    testCleanupException = InvokeCleanupMethod(testCleanupMethod, _classInstance, baseTestCleanupQueue.Count, timeoutTokenSource);
                 }
             }
             finally
@@ -525,9 +534,9 @@ public class TestMethodInfo : ITestMethod, IDisposable
         }
 
         // If the exception is already a `TestFailedException` we throw it as-is
-        if (testCleanupException is TestFailedException)
+        if (testCleanupException is TestFailedException tfe)
         {
-            result.Outcome = UTF.UnitTestOutcome.Failed;
+            result.Outcome = tfe.Outcome.ToAdapterOutcome();
             result.TestFailureException = testCleanupException;
             return;
         }
@@ -603,7 +612,7 @@ public class TestMethodInfo : ITestMethod, IDisposable
     /// <param name="result">Instance of TestResult.</param>
     /// <returns>True if the TestInitialize method(s) did not throw an exception.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private bool RunTestInitializeMethod(object classInstance, TestResult result)
+    private bool RunTestInitializeMethod(object classInstance, TestResult result, CancellationTokenSource? timeoutTokenSource)
     {
         DebugEx.Assert(classInstance != null, "classInstance != null");
         DebugEx.Assert(result != null, "result != null");
@@ -619,7 +628,9 @@ public class TestMethodInfo : ITestMethod, IDisposable
             while (baseTestInitializeStack.Count > 0)
             {
                 testInitializeMethod = baseTestInitializeStack.Pop();
-                testInitializeException = testInitializeMethod is not null ? InvokeInitializeMethod(testInitializeMethod, classInstance) : null;
+                testInitializeException = testInitializeMethod is not null
+                    ? InvokeInitializeMethod(testInitializeMethod, classInstance, timeoutTokenSource)
+                    : null;
                 if (testInitializeException is not null)
                 {
                     break;
@@ -629,7 +640,9 @@ public class TestMethodInfo : ITestMethod, IDisposable
             if (testInitializeException == null)
             {
                 testInitializeMethod = Parent.TestInitializeMethod;
-                testInitializeException = testInitializeMethod is not null ? InvokeInitializeMethod(testInitializeMethod, classInstance) : null;
+                testInitializeException = testInitializeMethod is not null
+                    ? InvokeInitializeMethod(testInitializeMethod, classInstance, timeoutTokenSource)
+                    : null;
             }
         }
         catch (Exception ex)
@@ -644,9 +657,9 @@ public class TestMethodInfo : ITestMethod, IDisposable
         }
 
         // If the exception is already a `TestFailedException` we throw it as-is
-        if (testInitializeException is TestFailedException)
+        if (testInitializeException is TestFailedException tfe)
         {
-            result.Outcome = UTF.UnitTestOutcome.Failed;
+            result.Outcome = tfe.Outcome.ToAdapterOutcome();
             result.TestFailureException = testInitializeException;
             return false;
         }
@@ -665,7 +678,9 @@ public class TestMethodInfo : ITestMethod, IDisposable
             exceptionMessage);
         StackTraceInformation? stackTrace = realException.GetStackTraceInformation();
 
-        result.Outcome = realException is AssertInconclusiveException ? UTF.UnitTestOutcome.Inconclusive : UTF.UnitTestOutcome.Failed;
+        result.Outcome = realException is AssertInconclusiveException
+            ? UTF.UnitTestOutcome.Inconclusive
+            : UTF.UnitTestOutcome.Failed;
         result.TestFailureException = new TestFailedException(
             result.Outcome.ToUnitTestOutcome(),
             errorMessage,
@@ -675,7 +690,7 @@ public class TestMethodInfo : ITestMethod, IDisposable
         return false;
     }
 
-    private TestFailedException? InvokeInitializeMethod(MethodInfo methodInfo, object classInstance)
+    private TestFailedException? InvokeInitializeMethod(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
     {
         TimeoutInfo? timeout = null;
         if (Parent.TestInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
@@ -690,10 +705,13 @@ public class TestMethodInfo : ITestMethod, IDisposable
             methodInfo,
             new InstanceExecutionContextScope(classInstance, Parent.ClassType),
             Resource.TestInitializeWasCancelled,
-            Resource.TestInitializeTimedOut);
+            Resource.TestInitializeTimedOut,
+            timeoutTokenSource is null
+                ? null
+                : (timeoutTokenSource, TestMethodOptions.TimeoutInfo.Timeout));
     }
 
-    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, object classInstance, int remainingCleanupCount)
+    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, object classInstance, int remainingCleanupCount, CancellationTokenSource? timeoutTokenSource)
     {
         TimeoutInfo? timeout = null;
         if (Parent.TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
@@ -708,7 +726,10 @@ public class TestMethodInfo : ITestMethod, IDisposable
             methodInfo,
             new InstanceExecutionContextScope(classInstance, Parent.ClassType, remainingCleanupCount),
             Resource.TestCleanupWasCancelled,
-            Resource.TestCleanupTimedOut);
+            Resource.TestCleanupTimedOut,
+            timeoutTokenSource is null
+                ? null
+                : (timeoutTokenSource, TestMethodOptions.TimeoutInfo.Timeout));
     }
 
     /// <summary>
@@ -797,7 +818,7 @@ public class TestMethodInfo : ITestMethod, IDisposable
             if (realException.IsOperationCanceledExceptionFromToken(TestMethodOptions.TestContext!.Context.CancellationTokenSource.Token))
             {
                 result.Outcome = UTF.UnitTestOutcome.Timeout;
-                result.TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Timeout, string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName));
+                result.TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Timeout, string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TestMethodOptions.TimeoutInfo.Timeout));
             }
             else
             {
@@ -830,24 +851,25 @@ public class TestMethodInfo : ITestMethod, IDisposable
 
         if (TestMethodOptions.TimeoutInfo.CooperativeCancellation)
         {
+            CancellationTokenSource? timeoutTokenSource = null;
             try
             {
-                _timeoutTokenSource = new(TestMethodOptions.TimeoutInfo.Timeout);
-                _timeoutTokenSource.Token.Register(TestMethodOptions.TestContext!.Context.CancellationTokenSource.Cancel);
-                if (_timeoutTokenSource.Token.IsCancellationRequested)
+                timeoutTokenSource = new(TestMethodOptions.TimeoutInfo.Timeout);
+                timeoutTokenSource.Token.Register(TestMethodOptions.TestContext!.Context.CancellationTokenSource.Cancel);
+                if (timeoutTokenSource.Token.IsCancellationRequested)
                 {
                     return new()
                     {
                         Outcome = UTF.UnitTestOutcome.Timeout,
                         TestFailureException = new TestFailedException(
                             ObjectModelUnitTestOutcome.Timeout,
-                            string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName)),
+                            string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TestMethodOptions.TimeoutInfo.Timeout)),
                     };
                 }
 
                 try
                 {
-                    return ExecuteInternal(arguments);
+                    return ExecuteInternal(arguments, timeoutTokenSource);
                 }
                 catch (OperationCanceledException)
                 {
@@ -858,33 +880,21 @@ public class TestMethodInfo : ITestMethod, IDisposable
                         Outcome = UTF.UnitTestOutcome.Timeout,
                         TestFailureException = new TestFailedException(
                             ObjectModelUnitTestOutcome.Timeout,
-                            _timeoutTokenSource.Token.IsCancellationRequested
-                                ? string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName)
+                            timeoutTokenSource.Token.IsCancellationRequested
+                                ? string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TestMethodOptions.TimeoutInfo.Timeout)
                                 : string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName)),
                     };
                 }
             }
             finally
             {
-                _timeoutTokenSource?.Dispose();
-                _timeoutTokenSource = null;
+                timeoutTokenSource?.Dispose();
+                timeoutTokenSource = null;
             }
         }
 
         TestResult? result = null;
         Exception? failure = null;
-
-        void ExecuteAsyncAction()
-        {
-            try
-            {
-                result = ExecuteInternal(arguments);
-            }
-            catch (Exception ex)
-            {
-                failure = ex;
-            }
-        }
 
         if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TestMethodOptions.TimeoutInfo.Timeout, TestMethodOptions.TestContext!.Context.CancellationTokenSource.Token))
         {
@@ -897,12 +907,12 @@ public class TestMethodInfo : ITestMethod, IDisposable
 
             // It's possible that some failures happened and that the cleanup wasn't executed, so we need to run it here.
             // The method already checks if the cleanup was already executed.
-            RunTestCleanupMethod(result);
+            RunTestCleanupMethod(result, null);
             return result;
         }
 
         // Timed out or canceled
-        string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName);
+        string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TestMethodOptions.TimeoutInfo.Timeout);
         if (TestMethodOptions.TestContext.Context.CancellationTokenSource.IsCancellationRequested)
         {
             errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName);
@@ -917,10 +927,20 @@ public class TestMethodInfo : ITestMethod, IDisposable
 
         // We don't know when the cancellation happened so it's possible that the cleanup wasn't executed, so we need to run it here.
         // The method already checks if the cleanup was already executed.
-        RunTestCleanupMethod(timeoutResult);
+        RunTestCleanupMethod(timeoutResult, null);
         return timeoutResult;
-    }
 
-    void IDisposable.Dispose()
-        => _timeoutTokenSource?.Dispose();
+        // Local functions
+        void ExecuteAsyncAction()
+        {
+            try
+            {
+                result = ExecuteInternal(arguments, null);
+            }
+            catch (Exception ex)
+            {
+                failure = ex;
+            }
+        }
+    }
 }
