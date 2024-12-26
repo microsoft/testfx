@@ -380,7 +380,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
         <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
-        <target state="needs-review-translation">"[DynamicDta]"-Element "{0}.{1}" wurde mehrmals gefunden.</target>
+        <target state="new">'[DynamicData]' member '{0}.{1}' is found more than once</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">

@@ -379,7 +379,7 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
         <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
-        <target state="needs-review-translation">'[DynamicDta]' üyesi '{0}.{1}' birden çok kez bulundu</target>
+        <target state="new">'[DynamicData]' member '{0}.{1}' is found more than once</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
