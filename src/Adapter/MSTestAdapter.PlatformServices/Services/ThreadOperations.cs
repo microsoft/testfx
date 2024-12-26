@@ -52,7 +52,7 @@ public class ThreadOperations : IThreadOperations
     }
 #endif
 
-    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    [SupportedOSPlatform("windows")]
     private static bool ExecuteWithCustomThread(Action action, int timeout, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
