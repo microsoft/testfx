@@ -33,9 +33,9 @@ public partial class CLITestBase : TestContainer
         ExpandTestSourcePaths(sources, targetFramework);
 
         _discoveryEventsHandler = new DiscoveryEventsHandler();
-        string runSettingXml = GetRunSettingXml(runSettings);
+        string runSettingsXml = GetRunSettingsXml(runSettings);
 
-        s_vsTestConsoleWrapper.DiscoverTests(sources, runSettingXml, _discoveryEventsHandler);
+        s_vsTestConsoleWrapper.DiscoverTests(sources, runSettingsXml, _discoveryEventsHandler);
     }
 
     /// <summary>
@@ -49,9 +49,9 @@ public partial class CLITestBase : TestContainer
         ExpandTestSourcePaths(sources, targetFramework);
 
         RunEventsHandler = new RunEventsHandler();
-        string runSettingXml = GetRunSettingXml(runSettings);
+        string runSettingsXml = GetRunSettingsXml(runSettings);
 
-        s_vsTestConsoleWrapper.RunTests(sources, runSettingXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, RunEventsHandler);
+        s_vsTestConsoleWrapper.RunTests(sources, runSettingsXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, RunEventsHandler);
         if (RunEventsHandler.Errors.Count != 0)
         {
             throw new Exception($"Run failed with {RunEventsHandler.Errors.Count} errors:{Environment.NewLine}{string.Join(Environment.NewLine, RunEventsHandler.Errors)}");

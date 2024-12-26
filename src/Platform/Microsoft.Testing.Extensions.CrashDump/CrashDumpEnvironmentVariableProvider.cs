@@ -201,7 +201,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         static void AddError(StringBuilder errors, string variableName, string? expectedValue, string? actualValue)
         {
             string actualValueString = actualValue ?? "<null>";
-            errors.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpInvalidEnvironmentVariableValueErrorMessage, variableName, expectedValue, actualValueString));
+            errors.AppendLine(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpInvalidEnvironmentVariableValueErrorMessage, variableName, expectedValue, actualValueString));
         }
 #endif
     }

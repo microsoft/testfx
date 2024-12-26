@@ -40,13 +40,13 @@ public class DesktopSettingsProviderTests : TestContainer
 
     public void SettingsShouldReturnInitializedSettings()
     {
-        string runSettingxml =
+        string runSettingsXml =
             """
             <MSTestV2>
               <DeploymentEnabled>False</DeploymentEnabled>
             </MSTestV2>
             """;
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingsXml);
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         _settingsProvider.Load(reader);
@@ -58,13 +58,13 @@ public class DesktopSettingsProviderTests : TestContainer
 
     public void LoadShouldReadAndFillInSettings()
     {
-        string runSettingxml =
+        string runSettingsXml =
             """
             <MSTestV2>
               <DeploymentEnabled>False</DeploymentEnabled>
             </MSTestV2>
             """;
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingsXml);
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         _settingsProvider.Load(reader);
