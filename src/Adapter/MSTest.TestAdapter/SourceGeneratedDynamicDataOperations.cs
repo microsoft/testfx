@@ -3,6 +3,4 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
-internal sealed class SourceGeneratedDynamicDataOperations : DynamicDataOperations
-{
-}
+internal sealed class SourceGeneratedDynamicDataOperations : DynamicDataOperations;

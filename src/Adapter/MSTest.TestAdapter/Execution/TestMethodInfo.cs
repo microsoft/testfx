@@ -1,12 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-using System.Text;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -652,7 +646,7 @@ public class TestMethodInfo : ITestMethod
         // Prefix the exception message with the exception type name as prefix when exception is not assert exception.
         string exceptionMessage = realException is UnitTestAssertException
             ? realException.TryGetMessage()
-            : ExceptionHelper.GetFormattedExceptionMessage(realException);
+            : realException.GetFormattedExceptionMessage();
         string errorMessage = string.Format(
             CultureInfo.CurrentCulture,
             Resource.UTA_InitMethodThrows,

@@ -6,6 +6,4 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// <summary>
 /// Error or warning message that was sent to screen during the test run.
 /// </summary>
-internal interface IProgressMessage
-{
-}
+internal interface IProgressMessage;

@@ -3,10 +3,6 @@
 
 #if !WINDOWS_UWP
 
-#if NETFRAMEWORK || NETSTANDARD || NETCOREAPP3_1
-using System.Diagnostics;
-#endif
-using System.Globalization;
 #if NETFRAMEWORK
 using System.Security;
 #endif

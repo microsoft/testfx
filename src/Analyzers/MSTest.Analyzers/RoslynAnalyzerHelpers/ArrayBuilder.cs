@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the MIT license.  See License.txt in the project root for license information.
 
-using System.Collections;
 using System.Collections.Immutable;
-using System.Diagnostics;
 
 #pragma warning disable CA1000 // Do not declare static members on generic types
 

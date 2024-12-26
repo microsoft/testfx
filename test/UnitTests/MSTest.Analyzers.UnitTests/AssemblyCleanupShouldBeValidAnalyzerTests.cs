@@ -252,29 +252,13 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests
             public class MyTestClass
             {
                 [AssemblyCleanup]
-                public static void {|#0:AssemblyCleanup|}(TestContext testContext)
+                public static void AssemblyCleanup(TestContext testContext)
                 {
                 }
             }
             """;
 
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [AssemblyCleanup]
-                public static void AssemblyCleanup()
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(
-            code,
-            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyCleanup"),
-            fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]

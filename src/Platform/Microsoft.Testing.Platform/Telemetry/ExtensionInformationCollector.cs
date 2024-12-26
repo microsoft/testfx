@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETCOREAPP
-using System.Text;
 using System.Text.Json;
 #else
 using Jsonite;

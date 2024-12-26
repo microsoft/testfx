@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK || NET
-using System.Diagnostics;
-using System.Reflection;
 #if NETFRAMEWORK
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security;
@@ -358,7 +356,7 @@ class AssemblyResolver :
             return null;
         }
 
-        DebugEx.Assert(requestedName != null && !StringEx.IsNullOrEmpty(requestedName.Name), "MSTest.AssemblyResolver.OnResolve: requested is null or name is empty!");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(requestedName.Name), "MSTest.AssemblyResolver.OnResolve: requested name is empty!");
 
         foreach (string dir in searchDirectorypaths)
         {

@@ -32,6 +32,7 @@ internal static class FixtureUtils
 
     public static bool HasValidFixtureMethodSignature(this IMethodSymbol methodSymbol, INamedTypeSymbol? taskSymbol,
         INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals, bool shouldBeStatic, bool allowGenericType,
+        FixtureParameterMode fixtureParameterMode,
         INamedTypeSymbol? testContextSymbol, INamedTypeSymbol testClassAttributeSymbol, bool fixtureAllowInheritedTestClass, out bool isFixable)
     {
         isFixable = false;
@@ -60,7 +61,7 @@ internal static class FixtureUtils
         return !methodSymbol.IsGenericMethod
             && methodSymbol.IsStatic == shouldBeStatic
             && !methodSymbol.IsAbstract
-            && HasCorrectParameters(methodSymbol, testContextSymbol)
+            && HasCorrectParameters(methodSymbol, fixtureParameterMode, testContextSymbol)
             && methodSymbol.IsPublicAndHasCorrectResultantVisibility(canDiscoverInternals)
             && HasValidReturnType(methodSymbol, taskSymbol, valueTaskSymbol);
     }
@@ -125,10 +126,22 @@ internal static class FixtureUtils
         return false;
     }
 
-    private static bool HasCorrectParameters(IMethodSymbol methodSymbol, INamedTypeSymbol? testContextSymbol)
-        => testContextSymbol is null
-            ? methodSymbol.Parameters.Length == 0
-            : methodSymbol.Parameters.Length == 1 && SymbolEqualityComparer.Default.Equals(methodSymbol.Parameters[0].Type, testContextSymbol);
+    private static bool HasCorrectParameters(IMethodSymbol methodSymbol, FixtureParameterMode fixtureParameterMode, INamedTypeSymbol? testContextSymbol)
+    {
+        return fixtureParameterMode switch
+        {
+            FixtureParameterMode.MustNotHaveTestContext => DoesNotHaveTestContext(methodSymbol),
+            FixtureParameterMode.MustHaveTestContext => HasTestContext(methodSymbol, testContextSymbol),
+            FixtureParameterMode.OptionalTestContext => DoesNotHaveTestContext(methodSymbol) || HasTestContext(methodSymbol, testContextSymbol),
+            _ => throw ApplicationStateGuard.Unreachable(),
+        };
+
+        static bool DoesNotHaveTestContext(IMethodSymbol methodSymbol)
+            => methodSymbol.Parameters.Length == 0;
+
+        static bool HasTestContext(IMethodSymbol methodSymbol, INamedTypeSymbol? testContextSymbol)
+            => testContextSymbol is not null && methodSymbol.Parameters.Length == 1 && SymbolEqualityComparer.Default.Equals(methodSymbol.Parameters[0].Type, testContextSymbol);
+    }
 
     private static bool HasValidReturnType(IMethodSymbol methodSymbol, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
         => methodSymbol is { ReturnsVoid: true, IsAsync: false }

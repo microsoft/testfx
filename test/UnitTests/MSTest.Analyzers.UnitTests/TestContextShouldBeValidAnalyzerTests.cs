@@ -343,6 +343,35 @@ public sealed class TestContextShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestContextPropertyIsNotCasedCorrectly_Diagnostic()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext {|#0:testContext|} { get; set; }
+            }
+            """;
+        string fixedCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.TestContextShouldBeValidRule)
+                .WithLocation(0),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenTestContextPropertyIsReadonly_AssignedInConstructor_NoDiagnostic()
     {
         string code = $$"""
@@ -357,6 +386,29 @@ public sealed class TestContextShouldBeValidAnalyzerTests
                 }
 
                 public TestContext TestContext { get; }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestContextPropertyIsReadonly_AssignedInConstructorViaField_NoDiagnostic()
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private readonly TestContext _testContext;
+
+                public MyTestClass(TestContext testContext)
+                {
+                    _testContext = testContext;
+                }
+
+                public TestContext TestContext => _testContext;
             }
             """;
 

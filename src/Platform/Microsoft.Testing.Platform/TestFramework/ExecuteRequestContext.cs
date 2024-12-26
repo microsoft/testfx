@@ -3,8 +3,6 @@
 
 #pragma warning disable RS0016 // Add public types and members to the declared API
 
-using System.Diagnostics.CodeAnalysis;
-
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
 

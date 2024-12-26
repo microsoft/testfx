@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -10,6 +8,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
@@ -126,7 +126,12 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public TestRunCancellationToken TestRunCancellationToken { get; set; }
 
-    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties, IMessageLogger messageLogger) => new TestContextImplementation(testMethod, writer, properties, messageLogger);
+    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome)
+    {
+        var testContextImpl = new TestContextImplementation(testMethod, writer, properties, messageLogger);
+        testContextImpl.SetOutcome(outcome);
+        return testContextImpl;
+    }
 
     public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle) => MockTestSourceHost.Object;
 

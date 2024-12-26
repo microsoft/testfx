@@ -3,8 +3,6 @@
 
 #if !WIN_UI
 
-using System.Text;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;

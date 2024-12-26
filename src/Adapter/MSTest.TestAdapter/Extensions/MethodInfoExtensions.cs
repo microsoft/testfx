@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter;
@@ -43,8 +39,14 @@ internal static class MethodInfoExtensions
 
         return
             method is { IsStatic: true, IsPublic: true } &&
-            (method.GetParameters().Length == 0) &&
+            HasCorrectClassOrAssemblyCleanupParameters(method) &&
             method.IsValidReturnType();
+    }
+
+    private static bool HasCorrectClassOrAssemblyCleanupParameters(MethodInfo method)
+    {
+        ParameterInfo[] parameters = method.GetParameters();
+        return parameters.Length == 0 || (parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext));
     }
 
     /// <summary>
