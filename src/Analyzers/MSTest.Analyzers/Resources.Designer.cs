@@ -504,7 +504,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;[DynamicDta]&apos; member &apos;{0}.{1}&apos; is found more than once.
+        ///   Looks up a localized string similar to &apos;[DynamicData]&apos; member &apos;{0}.{1}&apos; is found more than once.
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_TooManyMembers {
             get {

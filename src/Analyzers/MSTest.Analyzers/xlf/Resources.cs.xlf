@@ -363,8 +363,8 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
-        <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
-        <target state="translated">Člen [DynamicDta] {0}.{1} byl nalezen více než jednou.</target>
+        <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
+        <target state="needs-review-translation">Člen [DynamicDta] {0}.{1} byl nalezen více než jednou.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
