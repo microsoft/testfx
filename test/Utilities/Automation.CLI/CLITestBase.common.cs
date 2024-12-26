@@ -16,10 +16,8 @@ public partial class CLITestBase : TestContainer
         "Release";
 #endif
 
-#pragma warning disable IDE0051 // Remove unused private members
-    private const string TestPlatformCLIPackageName = "Microsoft.TestPlatform";
-#pragma warning restore IDE0051 // Remove unused private members
     private const string DefaultTargetFramework = "net462";
+    internal const string TestPlatformCLIPackageName = "Microsoft.TestPlatform";
 
     protected static XmlDocument ReadCPMFile()
     {
@@ -76,13 +74,10 @@ public partial class CLITestBase : TestContainer
     }
 
     /// <summary>
-    /// Gets the RunSettingXml having testadapterpath filled in specified by argument.
-    /// Inserts testAdapterPath in existing runSetting if not present already,
+    /// Gets the RunSettingXml with the TestAdapterPath inserted,
     /// or generates new runSettings with testAdapterPath if runSettings is Empty.
     /// </summary>
-    /// <param name="settingsXml">RunSettings provided for discovery/execution.</param>
-    /// <returns>RunSettingXml as string.</returns>
-    protected static string GetRunSettingXml(string settingsXml)
+    protected static string GetRunSettingsXml(string settingsXml)
     {
         if (string.IsNullOrEmpty(settingsXml))
         {
