@@ -13,8 +13,6 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
 public class MSTestSettingsTests : TestContainer
@@ -493,7 +491,7 @@ public class MSTestSettingsTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
         Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
-        Verify(adapterSettings.ParallelizationScope == .ExecutionScope.ClassLevel);
+        Verify(adapterSettings.ParallelizationScope == ExecutionScope.ClassLevel);
     }
 
     public void ParallelizationSettingsShouldBeConsumedFromRunSettingsWhenSpecified()
