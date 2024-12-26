@@ -33,7 +33,7 @@ public partial class CLITestBase : TestContainer
         ExpandTestSourcePaths(sources, targetFramework);
 
         _discoveryEventsHandler = new DiscoveryEventsHandler();
-        string runSettingsXml = GetRunSettingXml(runSettings);
+        string runSettingsXml = GetRunSettingsXml(runSettings);
 
         s_vsTestConsoleWrapper.DiscoverTests(sources, runSettingsXml, _discoveryEventsHandler);
     }
@@ -49,7 +49,7 @@ public partial class CLITestBase : TestContainer
         ExpandTestSourcePaths(sources, targetFramework);
 
         RunEventsHandler = new RunEventsHandler();
-        string runSettingsXml = GetRunSettingXml(runSettings);
+        string runSettingsXml = GetRunSettingsXml(runSettings);
 
         s_vsTestConsoleWrapper.RunTests(sources, runSettingsXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, RunEventsHandler);
         if (RunEventsHandler.Errors.Count != 0)
