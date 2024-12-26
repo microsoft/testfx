@@ -490,7 +490,7 @@ The type declaring these methods should also respect the following rules:
     <value>'[DynamicData]' member '{0}.{1}' cannot be found</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_TooManyMembers" xml:space="preserve">
-    <value>'[DynamicDta]' member '{0}.{1}' is found more than once</value>
+    <value>'[DynamicData]' member '{0}.{1}' is found more than once</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</value>

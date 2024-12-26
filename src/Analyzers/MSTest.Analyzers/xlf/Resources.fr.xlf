@@ -378,8 +378,8 @@ Le type doit être une classe
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
-        <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
-        <target state="translated">Membre « [DynamicDta] »{0}.{1}' est trouvé plusieurs fois</target>
+        <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
+        <target state="needs-review-translation">Membre « [DynamicDta] »{0}.{1}' est trouvé plusieurs fois</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
