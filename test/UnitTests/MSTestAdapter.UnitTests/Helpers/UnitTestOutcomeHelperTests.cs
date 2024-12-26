@@ -19,7 +19,7 @@ public class UnitTestOutcomeHelperTests : TestContainer
 
     public UnitTestOutcomeHelperTests()
     {
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
               <MSTestV2>
@@ -27,7 +27,7 @@ public class UnitTestOutcomeHelperTests : TestContainer
             </RunSettings>
             """;
         var mockMessageLogger = new Mock<IMessageLogger>();
-        _adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias, mockMessageLogger.Object);
+        _adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, mockMessageLogger.Object);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomePassedShouldReturnTestOutcomePassed()
