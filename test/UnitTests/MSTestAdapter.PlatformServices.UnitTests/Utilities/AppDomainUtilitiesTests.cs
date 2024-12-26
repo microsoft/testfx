@@ -51,7 +51,7 @@ public class AppDomainUtilitiesTests : TestContainer
             """;
 
         byte[] observedConfigBytes = setup.GetConfigurationBytes();
-        string observedXml = System.Text.Encoding.UTF8.GetString(observedConfigBytes);
+        string observedXml = Encoding.UTF8.GetString(observedConfigBytes);
 
         Verify(SanitizeString(observedXml).Contains(SanitizeString(expectedRedir)), "Config must have OM redirection");
 

@@ -9,7 +9,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     private const string AssetName = "MSBuildTests";
 
     public static string? FormatBuildMatrixEntry(MethodInfo method, object?[]? data)
-        => $"{data![0]},{(string.Equals(TargetFrameworks.All.ToMSBuildTargetFrameworks(), data[1]) ? "multitfm" : data[1])},{data[2]},{((bool)data[3]! ? "Succeeded" : "Failed")}";
+        => $"{data![0]},{(Equals(TargetFrameworks.All.ToMSBuildTargetFrameworks(), data[1]) ? "multitfm" : data[1])},{data[2]},{((bool)data[3]! ? "Succeeded" : "Failed")}";
 
     internal static IEnumerable<(string BuildCommand, string TargetFramework, BuildConfiguration BuildConfiguration, bool TestSucceeded)> GetBuildMatrix()
     {

@@ -44,7 +44,7 @@ public partial class CLITestBase : TestContainer
 
     protected static string GetArtifactsBinFolderPath()
     {
-        string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        string assemblyLocation = Assembly.GetExecutingAssembly().Location;
 
         string artifactsBinFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\.."));
         Directory.Exists(artifactsBinFolder).Should().BeTrue();
@@ -54,7 +54,7 @@ public partial class CLITestBase : TestContainer
 
     protected static string GetArtifactsTestResultsFolderPath()
     {
-        string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        string assemblyLocation = Assembly.GetExecutingAssembly().Location;
 
         string artifactsFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\..\.."));
         Directory.Exists(artifactsFolder).Should().BeTrue();
