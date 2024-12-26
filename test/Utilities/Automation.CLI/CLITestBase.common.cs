@@ -76,12 +76,12 @@ public partial class CLITestBase : TestContainer
     }
 
     /// <summary>
-    /// Gets the RunSettingXml having testadapterpath filled in specified by argument.
+    /// Gets the run settings XML having testadapterpath filled in specified by argument.
     /// Inserts testAdapterPath in existing runSetting if not present already,
     /// or generates new runSettings with testAdapterPath if runSettings is Empty.
     /// </summary>
     /// <param name="settingsXml">RunSettings provided for discovery/execution.</param>
-    /// <returns>RunSettingXml as string.</returns>
+    /// <returns>The content of the run settings XML as string.</returns>
     protected static string GetRunSettingXml(string settingsXml)
     {
         if (string.IsNullOrEmpty(settingsXml))
