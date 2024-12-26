@@ -99,7 +99,7 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
     }
 
 #if NETFRAMEWORK
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public void ProcessNewStorage(string testSource, IList<DeploymentItem> deploymentItems, IList<string> warnings)
     {
         // Add deployment items and process .config files only for storages we have not processed before.

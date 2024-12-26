@@ -36,7 +36,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
     /// <param name="assemblyPath"> Path to the assembly file to load from. </param>
     /// <param name="warnings"> The warnings. </param>
     /// <returns> Full path to dependent assemblies. </returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public IReadOnlyCollection<string> GetFullPathToDependentAssemblies(string assemblyPath, out IList<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(assemblyPath), "assemblyPath");
@@ -217,7 +217,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
     /// <param name="result"> The result. </param>
     /// <param name="visitedAssemblies"> The visited Assemblies. </param>
     /// <param name="warnings"> The warnings. </param>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private void GetDependentAssembliesInternal(string assemblyString, IList<string> result, ISet<string> visitedAssemblies, IList<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(assemblyString), "assemblyString");
