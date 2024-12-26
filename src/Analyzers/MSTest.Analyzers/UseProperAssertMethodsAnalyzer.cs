@@ -297,12 +297,14 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
             // The message is: Use 'Assert.{0}' instead of 'Assert.{1}'.
             string properAssertMethod = shouldUseIsNull ? "IsNull" : "IsNotNull";
+
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeSimple);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
                 additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), expressionUnderTest.GetLocation()),
-                properties: ImmutableDictionary<string, string?>.Empty
-                    .Add(ProperAssertMethodNameKey, properAssertMethod)
-                    .Add(CodeFixModeKey, CodeFixModeSimple),
+                properties: properties.ToImmutable(),
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
             return;
@@ -323,12 +325,13 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
             // The message is: Use 'Assert.{0}' instead of 'Assert.{1}'.
             string properAssertMethod = shouldUseAreEqual ? "AreEqual" : "AreNotEqual";
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
                 additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), toBecomeExpected.GetLocation(), toBecomeActual.GetLocation()),
-                properties: ImmutableDictionary<string, string?>.Empty
-                    .Add(ProperAssertMethodNameKey, properAssertMethod)
-                    .Add(CodeFixModeKey, CodeFixModeAddArgument),
+                properties: properties.ToImmutable(),
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
             return;
@@ -354,19 +357,19 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 actualType.SpecialType != SpecialType.System_Boolean &&
                 !actualType.IsNullableOfBoolean();
 
-            ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty
-                .Add(ProperAssertMethodNameKey, properAssertMethod)
-                .Add(CodeFixModeKey, CodeFixModeRemoveArgument);
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeRemoveArgument);
 
             if (codeFixShouldAddCast)
             {
-                properties = properties.Add(NeedsNullableBooleanCastKey, null);
+                properties.Add(NeedsNullableBooleanCastKey, null);
             }
 
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
                 additionalLocations: ImmutableArray.Create(expectedArgument.Syntax.GetLocation(), actualArgumentValue?.Syntax.GetLocation() ?? Location.None),
-                properties: properties,
+                properties: properties.ToImmutable(),
                 properAssertMethod,
                 isAreEqualInvocation ? "AreEqual" : "AreNotEqual"));
         }
@@ -379,12 +382,14 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
             // The message is: Use 'Assert.{0}' instead of 'Assert.{1}'.
             string properAssertMethod = shouldUseIsNull ? "IsNull" : "IsNotNull";
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeRemoveArgument);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
                 additionalLocations: ImmutableArray.Create(expectedArgument.Syntax.GetLocation()),
-                properties: ImmutableDictionary<string, string?>.Empty
-                    .Add(ProperAssertMethodNameKey, properAssertMethod)
-                    .Add(CodeFixModeKey, CodeFixModeRemoveArgument), properAssertMethod,
+                properties: properties.ToImmutable(),
+                properAssertMethod,
                 isAreEqualInvocation ? "AreEqual" : "AreNotEqual"));
         }
     }
