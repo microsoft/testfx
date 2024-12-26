@@ -483,8 +483,8 @@ class AssemblyResolver :
     /// <param name="args"> The args. </param>
     /// <param name="isReflectionOnly"> Indicates whether this is called under a Reflection Only Load context. </param>
     /// <returns> The <see cref="Assembly"/>.  </returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "senderAppDomain", Justification = "This is an event handler.")]
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "senderAppDomain", Justification = "This is an event handler.")]
 #pragma warning disable IDE0060 // Remove unused parameter
     private Assembly? OnResolveInternal(object? senderAppDomain, ResolveEventArgs args, bool isReflectionOnly)
 #pragma warning restore IDE0060 // Remove unused parameter
@@ -686,8 +686,8 @@ class AssemblyResolver :
     /// <param name="requestedName"> The requested Name. </param>
     /// <param name="isReflectionOnly"> Indicates whether this is called under a Reflection Only Load context. </param>
     /// <returns> The <see cref="Assembly"/>. </returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFrom", Justification = "The assembly location is figured out from the configuration that the user passes in.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    [SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFrom", Justification = "The assembly location is figured out from the configuration that the user passes in.")]
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private Assembly? SearchAndLoadAssembly(string assemblyPath, string assemblyName, AssemblyName requestedName, bool isReflectionOnly)
     {
         try

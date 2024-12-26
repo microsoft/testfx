@@ -28,7 +28,7 @@ internal sealed class MSTestBannerCapability : IBannerMessageOwnerCapability
         }
 
 #if NETCOREAPP
-        if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeCompiled)
+        if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
         {
             bannerMessage.Append(" [");
