@@ -1,4 +1,17 @@
 #nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AssertAreEqualInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AssertAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, System.IEquatable<TArgument>? expected, System.IEquatable<TArgument>? actual, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AssertAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? expected, TArgument? actual, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AssertAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? expected, TArgument? actual, System.Collections.Generic.IEqualityComparer<TArgument>? comparer, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AssertAreNotEqualInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AssertAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? notExpected, TArgument? actual, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AssertAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? notExpected, TArgument? actual, System.Collections.Generic.IEqualityComparer<TArgument>? comparer, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendFormatted(System.ReadOnlySpan<char> value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
@@ -30,6 +43,22 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAtt
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.AutoDetect = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType = Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Property) -> void
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, System.Type! dynamicDataDeclaringType, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType = Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Property) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(decimal expected, decimal actual, decimal delta, ref AssertNonGenericAreEqualInterpolatedStringHandler! message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(double expected, double actual, double delta, ref AssertNonGenericAreEqualInterpolatedStringHandler! message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(long expected, long actual, long delta, ref AssertNonGenericAreEqualInterpolatedStringHandler! message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, ref AssertNonGenericAreEqualInterpolatedStringHandler! message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, ref AssertNonGenericAreEqualInterpolatedStringHandler! message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(System.IEquatable<T>? expected, System.IEquatable<T>? actual, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<T> message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<T> message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<T> message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(decimal notExpected, decimal actual, decimal delta, ref AssertNonGenericAreNotEqualInterpolatedStringHandler! message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(double notExpected, double actual, double delta, ref AssertNonGenericAreNotEqualInterpolatedStringHandler! message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(float notExpected, float actual, float delta, ref AssertNonGenericAreNotEqualInterpolatedStringHandler! message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(long notExpected, long actual, long delta, ref AssertNonGenericAreNotEqualInterpolatedStringHandler! message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, ref AssertNonGenericAreNotEqualInterpolatedStringHandler! message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, ref AssertNonGenericAreNotEqualInterpolatedStringHandler! message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<T> message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool condition, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool? condition, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotNull(object? value, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler message) -> void
@@ -40,3 +69,4 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(Sy
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, string! message = "", params object![]! messageArgs) -> System.Threading.Tasks.Task<TException!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Action! action, string! message = "", params object![]! messageArgs) -> TException!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, string! message = "", params object![]! messageArgs) -> System.Threading.Tasks.Task<TException!>!
+~static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(float expected, float actual, float delta, ref AssertNonGenericAreEqualInterpolatedStringHandler? message) -> void
