@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.Simplification;
 
 using MSTest.Analyzers.Helpers;
 
@@ -84,8 +85,6 @@ public sealed class UseNewerAssertThrowsFixer : CodeFixProvider
             // This is a best effort handling.
             SyntaxNode actionArgument = editor.OriginalRoot.FindNode(additionalLocations[0].SourceSpan, getInnermostNodeForTie: true);
 
-            // If it's not ParenthesizedLambdaExpressionSyntax (e.g, a variable of type Func<object>), we can switch it to '() => _ = variableName()'
-            // But for now, we will only handle ParenthesizedLambdaExpressionSyntax.
             if (actionArgument is ParenthesizedLambdaExpressionSyntax lambdaSyntax)
             {
                 if (lambdaSyntax.ExpressionBody is not null)
@@ -135,6 +134,15 @@ public sealed class UseNewerAssertThrowsFixer : CodeFixProvider
                         }
                     }
                 }
+            }
+            else if (actionArgument is ExpressionSyntax expressionSyntax)
+            {
+                editor.ReplaceNode(
+                    expressionSyntax,
+                    SyntaxFactory.ParenthesizedLambdaExpression(
+                        SyntaxFactory.ParameterList(),
+                        block: null,
+                        expressionBody: AssignToDiscard(SyntaxFactory.InvocationExpression(SyntaxFactory.ParenthesizedExpression(expressionSyntax).WithAdditionalAnnotations(Simplifier.Annotation)))));
             }
         }
 
