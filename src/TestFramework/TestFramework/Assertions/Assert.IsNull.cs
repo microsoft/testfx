@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -10,6 +12,58 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed partial class Assert
 {
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertIsNullInterpolatedStringHandler
+    {
+        private readonly StringBuilder? _builder;
+
+        public AssertIsNullInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend)
+        {
+            shouldAppend = value is not null;
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal readonly string ToStringAndClear() => _builder!.ToString();
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NET
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertIsNotNullInterpolatedStringHandler
+    {
+        private readonly StringBuilder? _builder;
+
+        public AssertIsNotNullInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend)
+        {
+            shouldAppend = value is null;
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal readonly string ToStringAndClear() => _builder!.ToString();
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NET
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
     /// <summary>
     /// Tests whether the specified object is null and throws an exception
     /// if it is not.
@@ -39,6 +93,15 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNull(object? value, string? message)
         => IsNull(value, message, null);
+
+    /// <inheritdoc cref="IsNull(object?, string?)" />
+    public static void IsNull(object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNullInterpolatedStringHandler message)
+    {
+        if (value is not null)
+        {
+            ThrowAssertFailed("Assert.IsNull", message.ToStringAndClear());
+        }
+    }
 
     /// <summary>
     /// Tests whether the specified object is null and throws an exception
@@ -94,6 +157,15 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNotNull([NotNull] object? value, string? message)
         => IsNotNull(value, message, null);
+
+    /// <inheritdoc cref="IsNull(object?, string?)" />
+    public static void IsNotNull(object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNotNullInterpolatedStringHandler message)
+    {
+        if (value is null)
+        {
+            ThrowAssertFailed("Assert.IsNotNull", message.ToStringAndClear());
+        }
+    }
 
     /// <summary>
     /// Tests whether the specified object is non-null and throws an exception
