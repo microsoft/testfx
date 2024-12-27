@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -10,6 +12,58 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed partial class Assert
 {
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertIsTrueInterpolatedStringHandler
+    {
+        private readonly StringBuilder? _builder;
+
+        public AssertIsTrueInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend)
+        {
+            shouldAppend = condition is false or null;
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal readonly string ToStringAndClear() => _builder!.ToString();
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NET
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertIsFalseInterpolatedStringHandler
+    {
+        private readonly StringBuilder? _builder;
+
+        public AssertIsFalseInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend)
+        {
+            shouldAppend = condition is true or null;
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal readonly string ToStringAndClear() => _builder!.ToString();
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NET
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
     /// if the condition is false.
@@ -53,6 +107,15 @@ public sealed partial class Assert
     public static void IsTrue([DoesNotReturnIf(false)] bool condition, string? message)
         => IsTrue(condition, message, null);
 
+    /// <inheritdoc cref="IsTrue(bool, string?)"/>
+    public static void IsTrue([DoesNotReturnIf(false)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
+    {
+        if (!condition)
+        {
+            ThrowAssertFailed("Assert.IsTrue", message.ToStringAndClear());
+        }
+    }
+
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
     /// if the condition is false.
@@ -69,6 +132,15 @@ public sealed partial class Assert
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message)
         => IsTrue(condition, message, null);
+
+    /// <inheritdoc cref="IsTrue(bool?, string?)"/>
+    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
+    {
+        if (condition is false or null)
+        {
+            ThrowAssertFailed("Assert.IsTrue", message.ToStringAndClear());
+        }
+    }
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -165,6 +237,15 @@ public sealed partial class Assert
     public static void IsFalse([DoesNotReturnIf(true)] bool condition, string? message)
         => IsFalse(condition, message, null);
 
+    /// <inheritdoc cref="IsFalse(bool, string?)" />
+    public static void IsFalse([DoesNotReturnIf(true)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
+    {
+        if (condition)
+        {
+            ThrowAssertFailed("Assert.IsFalse", message.ToStringAndClear());
+        }
+    }
+
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
     /// if the condition is true.
@@ -181,6 +262,15 @@ public sealed partial class Assert
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message)
         => IsFalse(condition, message, null);
+
+    /// <inheritdoc cref="IsFalse(bool, string?)" />
+    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
+    {
+        if (condition is true or null)
+        {
+            ThrowAssertFailed("Assert.IsFalse", message.ToStringAndClear());
+        }
+    }
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
