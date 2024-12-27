@@ -20,12 +20,14 @@ public sealed partial class Assert
 
         public AssertIsNullInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend)
         {
-            shouldAppend = value is not null;
+            shouldAppend = IsNullFailing(value);
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
             }
         }
+
+        internal bool ShouldAppend => _builder is not null;
 
         internal readonly string ToStringAndClear() => _builder!.ToString();
 
@@ -46,12 +48,14 @@ public sealed partial class Assert
 
         public AssertIsNotNullInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend)
         {
-            shouldAppend = value is null;
+            shouldAppend = IsNotNullFailing(value);
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
             }
         }
+
+        internal bool ShouldAppend => _builder is not null;
 
         internal readonly string ToStringAndClear() => _builder!.ToString();
 
@@ -95,9 +99,11 @@ public sealed partial class Assert
         => IsNull(value, message, null);
 
     /// <inheritdoc cref="IsNull(object?, string?)" />
+#pragma warning disable IDE0060 // Remove unused parameter - false positive. The value parameter is used via the interpolated string handler.
     public static void IsNull(object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNullInterpolatedStringHandler message)
+#pragma warning restore IDE0060 // Remove unused parameter
     {
-        if (value is not null)
+        if (message.ShouldAppend)
         {
             ThrowAssertFailed("Assert.IsNull", message.ToStringAndClear());
         }
@@ -122,11 +128,13 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNull(object? value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
-        if (value != null)
+        if (IsNullFailing(value))
         {
             ThrowAssertFailed("Assert.IsNull", BuildUserMessage(message, parameters));
         }
     }
+
+    private static bool IsNullFailing(object? value) => value is not null;
 
     /// <summary>
     /// Tests whether the specified object is non-null and throws an exception
@@ -159,9 +167,11 @@ public sealed partial class Assert
         => IsNotNull(value, message, null);
 
     /// <inheritdoc cref="IsNull(object?, string?)" />
+#pragma warning disable IDE0060 // Remove unused parameter - false positive. The value parameter is used via the interpolated string handler.
     public static void IsNotNull(object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNotNullInterpolatedStringHandler message)
+#pragma warning restore IDE0060 // Remove unused parameter
     {
-        if (value is null)
+        if (message.ShouldAppend)
         {
             ThrowAssertFailed("Assert.IsNotNull", message.ToStringAndClear());
         }
@@ -186,9 +196,11 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNotNull([NotNull] object? value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
-        if (value == null)
+        if (IsNotNullFailing(value))
         {
             ThrowAssertFailed("Assert.IsNotNull", BuildUserMessage(message, parameters));
         }
     }
+
+    private static bool IsNotNullFailing([NotNullWhen(false)] object? value) => value is null;
 }

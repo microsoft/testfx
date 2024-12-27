@@ -20,12 +20,14 @@ public sealed partial class Assert
 
         public AssertIsTrueInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend)
         {
-            shouldAppend = condition is false or null;
+            shouldAppend = IsTrueFailing(condition);
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
             }
         }
+
+        internal bool ShouldAppend => _builder is not null;
 
         internal readonly string ToStringAndClear() => _builder!.ToString();
 
@@ -46,12 +48,14 @@ public sealed partial class Assert
 
         public AssertIsFalseInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend)
         {
-            shouldAppend = condition is true or null;
+            shouldAppend = IsFalseFailing(condition);
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
             }
         }
+
+        internal bool ShouldAppend => _builder is not null;
 
         internal readonly string ToStringAndClear() => _builder!.ToString();
 
@@ -108,9 +112,11 @@ public sealed partial class Assert
         => IsTrue(condition, message, null);
 
     /// <inheritdoc cref="IsTrue(bool, string?)"/>
+#pragma warning disable IDE0060 // Remove unused parameter - false positive. The condition parameter is used via the interpolated string handler.
     public static void IsTrue([DoesNotReturnIf(false)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
+#pragma warning restore IDE0060 // Remove unused parameter
     {
-        if (!condition)
+        if (message.ShouldAppend)
         {
             ThrowAssertFailed("Assert.IsTrue", message.ToStringAndClear());
         }
@@ -134,9 +140,11 @@ public sealed partial class Assert
         => IsTrue(condition, message, null);
 
     /// <inheritdoc cref="IsTrue(bool?, string?)"/>
+#pragma warning disable IDE0060 // Remove unused parameter - false positive. The condition parameter is used via the interpolated string handler.
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
+#pragma warning restore IDE0060 // Remove unused parameter
     {
-        if (condition is false or null)
+        if (message.ShouldAppend)
         {
             ThrowAssertFailed("Assert.IsTrue", message.ToStringAndClear());
         }
@@ -162,7 +170,7 @@ public sealed partial class Assert
     public static void IsTrue([DoesNotReturnIf(false)] bool condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (!condition)
+        if (IsTrueFailing(condition))
         {
             ThrowAssertFailed("Assert.IsTrue", BuildUserMessage(message, parameters));
         }
@@ -188,11 +196,17 @@ public sealed partial class Assert
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (condition is false or null)
+        if (IsTrueFailing(condition))
         {
             ThrowAssertFailed("Assert.IsTrue", BuildUserMessage(message, parameters));
         }
     }
+
+    private static bool IsTrueFailing(bool? condition)
+        => condition is false or null;
+
+    private static bool IsTrueFailing(bool condition)
+        => !condition;
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -238,9 +252,11 @@ public sealed partial class Assert
         => IsFalse(condition, message, null);
 
     /// <inheritdoc cref="IsFalse(bool, string?)" />
+#pragma warning disable IDE0060 // Remove unused parameter - false positive. The condition parameter is used via the interpolated string handler.
     public static void IsFalse([DoesNotReturnIf(true)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
+#pragma warning restore IDE0060 // Remove unused parameter
     {
-        if (condition)
+        if (message.ShouldAppend)
         {
             ThrowAssertFailed("Assert.IsFalse", message.ToStringAndClear());
         }
@@ -264,9 +280,11 @@ public sealed partial class Assert
         => IsFalse(condition, message, null);
 
     /// <inheritdoc cref="IsFalse(bool, string?)" />
+#pragma warning disable IDE0060 // Remove unused parameter - false positive. The condition parameter is used via the interpolated string handler.
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
+#pragma warning restore IDE0060 // Remove unused parameter
     {
-        if (condition is true or null)
+        if (message.ShouldAppend)
         {
             ThrowAssertFailed("Assert.IsFalse", message.ToStringAndClear());
         }
@@ -292,7 +310,7 @@ public sealed partial class Assert
     public static void IsFalse([DoesNotReturnIf(true)] bool condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (condition)
+        if (IsFalseFailing(condition))
         {
             ThrowAssertFailed("Assert.IsFalse", BuildUserMessage(message, parameters));
         }
@@ -318,9 +336,16 @@ public sealed partial class Assert
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (condition is true or null)
+        if (IsFalseFailing(condition))
         {
             ThrowAssertFailed("Assert.IsFalse", BuildUserMessage(message, parameters));
         }
     }
+
+    private static bool IsFalseFailing(bool? condition)
+        => condition is true or null;
+
+    private static bool IsFalseFailing(bool condition)
+        => condition;
+
 }
