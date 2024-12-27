@@ -168,6 +168,11 @@ internal sealed class TestMethodRunner
         {
             if (_test.DataType == DynamicDataType.ITestDataSource)
             {
+                if (_test.TestDataSourceIgnoreReason is not null)
+                {
+                    return [new(UnitTestOutcome.Ignored, _test.TestDataSourceIgnoreReason)];
+                }
+
                 object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
                 TestResult[] testResults = ExecuteTestWithDataSource(null, data);
                 results.AddRange(testResults);
@@ -306,6 +311,20 @@ internal sealed class TestMethodRunner
                 foreach (UTF.ITestDataSource testDataSource in testDataSources)
                 {
                     isDataDriven = true;
+
+                    if (testDataSource is ITestDataSourceIgnoreCapability { Ignore: { } ignoreReason })
+                    {
+                        results.Add(new()
+                        {
+                            // This is closest to ignore. This enum doesn't have a value specific to Ignore.
+                            // It may be a better idea to add a value there, but the enum is public and we need to think more carefully before adding the API.
+                            // For now, TestResultExtensions.ToUnitTestResults method will convert this to Ignored value of ObjectModel enum when IgnoreReason is non-null.
+                            Outcome = UTF.UnitTestOutcome.NotRunnable,
+                            IgnoreReason = ignoreReason,
+                        });
+                        continue;
+                    }
+
                     IEnumerable<object?[]>? dataSource;
 
                     // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.

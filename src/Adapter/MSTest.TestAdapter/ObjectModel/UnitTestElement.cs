@@ -206,6 +206,7 @@ internal sealed class UnitTestElement
 
             testCase.SetPropertyValue(Constants.TestDynamicDataTypeProperty, (int)TestMethod.DataType);
             testCase.SetPropertyValue(Constants.TestDynamicDataProperty, data);
+            testCase.SetPropertyValue(Constants.TestDataSourceIgnoreReasonProperty, TestMethod.TestDataSourceIgnoreReason);
         }
 
         SetTestCaseId(testCase, testFullName);
