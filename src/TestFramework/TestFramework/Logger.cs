@@ -36,33 +36,16 @@ public class Logger
         Guard.NotNull(format);
         Guard.NotNull(args);
 
-        Delegate[] delegates = OnLogMessage.GetInvocationList();
-
         string message = args.Length == 0
             ? format
             : string.Format(CultureInfo.InvariantCulture, format, args);
 
-        if (delegates.Length == 1)
-        {
-            try
-            {
-                OnLogMessage(message);
-            }
-            catch (Exception)
-            {
-                // Catch and ignore all exceptions thrown by event handlers.
-            }
-
-            return;
-        }
-
-        object?[] parameters = [message];
         // Making sure all event handlers are called in sync on same thread.
-        foreach (Delegate invoker in delegates)
+        foreach (LogMessageHandler invoker in DelegatePolyfill.EnumerateInvocationList(OnLogMessage))
         {
             try
             {
-                invoker.GetMethodInfo()!.Invoke(invoker.Target, parameters);
+                invoker(message);
             }
             catch (Exception)
             {
