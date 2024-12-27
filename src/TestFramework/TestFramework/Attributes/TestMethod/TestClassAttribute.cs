@@ -26,4 +26,9 @@ public class TestClassAttribute : Attribute
     public virtual TestMethodAttribute? GetTestMethodAttribute(TestMethodAttribute? testMethodAttribute) =>
         // If TestMethod is not extended by derived class then return back the original TestMethodAttribute
         testMethodAttribute;
+
+    /// <summary>
+    /// Gets or sets a reason to ignore the test class. Setting the property to non-null value will ignore the test class.
+    /// </summary>
+    public string? Ignore { get; set; }
 }

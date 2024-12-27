@@ -34,11 +34,6 @@ internal sealed class UnitTestElement
     public TestMethod TestMethod { get; private set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether the unit test should be ignored at run-time.
-    /// </summary>
-    public bool Ignored { get; set; }
-
-    /// <summary>
     /// Gets or sets a value indicating whether it is a async test.
     /// </summary>
     public bool IsAsync { get; set; }

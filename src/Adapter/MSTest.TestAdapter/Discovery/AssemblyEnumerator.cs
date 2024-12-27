@@ -342,7 +342,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return new UnitTestElement(method)
             {
                 DisplayName = $"[{fixtureType}] {methodName}",
-                Ignored = true,
                 Traits = [new Trait(Constants.FixturesTestTrait, fixtureType)],
             };
         }
@@ -424,6 +423,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
         // Any change made here should be reflected in TestMethodRunner.ExecuteDataSourceBasedTests as well.
         data = dataSource.GetData(methodInfo);
+        string? ignoreReason = (dataSource as ITestDataSourceIgnoreCapability)?.Ignore;
 
         if (!data.Any())
         {

@@ -347,9 +347,17 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             }
         }
 
+        // TODO: Executor should never be null. Is it incorrectly annotated?
+        string? ignoreMessage = testMethodInfo.TestMethodOptions.Executor?.Ignore ?? testMethodInfo.Parent.ClassAttribute.Ignore;
+        if (ignoreMessage is not null)
+        {
+            notRunnableResult = [new UnitTestResult(UnitTestOutcome.Ignored, ignoreMessage)];
+            return false;
+        }
+
         IgnoreAttribute? ignoreAttributeOnClass =
             _reflectHelper.GetFirstNonDerivedAttributeOrDefault<IgnoreAttribute>(testMethodInfo.Parent.ClassType, inherit: false);
-        string? ignoreMessage = ignoreAttributeOnClass?.IgnoreMessage;
+        ignoreMessage = ignoreAttributeOnClass?.IgnoreMessage;
 
         IgnoreAttribute? ignoreAttributeOnMethod =
             _reflectHelper.GetFirstNonDerivedAttributeOrDefault<IgnoreAttribute>(testMethodInfo.TestMethod, inherit: false);
