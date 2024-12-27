@@ -168,4 +168,7 @@
   <data name="UseProperAssertMethodsFix" xml:space="preserve">
     <value>Use '{0}'</value>
   </data>
+  <data name="UseNewerAssertThrows" xml:space="preserve">
+    <value>Use '{0}'</value>
+  </data>
 </root>

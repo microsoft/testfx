@@ -724,6 +724,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">'[DeploymentItem]'은(는) 테스트 클래스 또는 테스트 메서드에만 지정할 수 있습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsMessageFormat">
+        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
+        <target state="new">Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsTitle">
+        <source>Use newer methods to assert exceptions</source>
+        <target state="new">Use newer methods to assert exceptions</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
         <source>By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute '[Parallelize]' to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute '[DoNotParallelize]'.</source>
         <target state="translated">기본적으로 MSTest는 동일한 어셈블리 내에서 테스트를 순차적으로 실행하므로 심각한 성능 제한이 발생할 수 있습니다. 어셈블리 특성 '[Parallelize]'가 병렬로 테스트를 실행하도록 설정하거나 어셈블리가 병렬화할 수 없는 것으로 알려진 경우 어셈블리 수준 특성 '[DoNotParallelize]'을(를) 명시적으로 사용하는 것이 좋습니다.</target>
