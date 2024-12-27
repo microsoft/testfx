@@ -38,11 +38,6 @@ public class Logger
 
         Delegate[] delegates = OnLogMessage.GetInvocationList();
 
-        if (delegates.Length == 0)
-        {
-            return;
-        }
-
         string message = args.Length == 0
             ? format
             : string.Format(CultureInfo.InvariantCulture, format, args);
