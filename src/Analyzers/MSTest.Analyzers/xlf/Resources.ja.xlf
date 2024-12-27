@@ -378,8 +378,8 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
-        <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
-        <target state="translated">'[DynamicDta]' メンバー '{0}.{1}' が複数回見つかりました</target>
+        <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
+        <target state="new">'[DynamicData]' member '{0}.{1}' is found more than once</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
