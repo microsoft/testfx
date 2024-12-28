@@ -10,6 +10,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
+using Polyfills;
+
 namespace DiscoveryAndExecutionTests.Utilities;
 
 internal static class TestCaseFilterFactory
