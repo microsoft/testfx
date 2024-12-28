@@ -39,11 +39,9 @@
   <ItemGroup>
     <PackageReference Include="Moq" />
     <PackageReference Include="StrongNamer" />
+    <PackageReference Include="System.Memory" />
   </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
-  </ItemGroup>
-
+  
   <ItemGroup>
     <Content Include="DataTestSourceFile.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
