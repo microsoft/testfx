@@ -27,7 +27,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
         MockTraceListener = new Mock<ITraceListener>();
         MockTraceListenerManager = new Mock<ITraceListenerManager>();
         MockThreadOperations = new Mock<IThreadOperations>();
-        TestTools.UnitTesting.DynamicDataProvider.Instance = SourceGeneratorToggle.UseSourceGenerator
+        UTF.DynamicDataProvider.Instance = SourceGeneratorToggle.UseSourceGenerator
             ? new SourceGeneratedDynamicDataOperations()
             : new DynamicDataOperations();
     }

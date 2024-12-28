@@ -10,7 +10,7 @@ public partial class AssertTests
     #region That tests
     public void ThatShouldReturnAnInstanceOfAssert() => Verify(Assert.That is not null);
 
-    public void ThatShouldCacheAssertInstance() => Verify(object.ReferenceEquals(Assert.That, Assert.That));
+    public void ThatShouldCacheAssertInstance() => Verify(ReferenceEquals(Assert.That, Assert.That));
     #endregion
 
     #region ReplaceNullChars tests
