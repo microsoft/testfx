@@ -279,7 +279,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test &apos;{0}&apos; execution has been aborted..
+        ///   Looks up a localized string similar to Test &apos;{0}&apos; was canceled.
         /// </summary>
         internal static string Execution_Test_Cancelled {
             get {
@@ -288,7 +288,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test &apos;{0}&apos; exceeded execution timeout period..
+        ///   Looks up a localized string similar to Test &apos;{0}&apos; timed out after {1}ms.
         /// </summary>
         internal static string Execution_Test_Timeout {
             get {
