@@ -419,7 +419,7 @@ Fehler: {1}</target>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
         <source>Test '{0}' was canceled</source>
-        <target state="needs-review-translation">Die Ausführung des Tests "{0}" wurde abgebrochen.</target>
+        <target state="new">Test '{0}' was canceled</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
