@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 
 /// <summary>
@@ -32,5 +30,8 @@ internal static class ExceptionExtensions
 
         return exceptionString;
     }
+
+    internal static bool IsOperationCanceledExceptionFromToken(this Exception ex, CancellationToken cancellationToken)
+        => (ex is OperationCanceledException oce && oce.CancellationToken == cancellationToken)
+        || (ex is AggregateException aggregateEx && aggregateEx.InnerExceptions.OfType<OperationCanceledException>().Any(oce => oce.CancellationToken == cancellationToken));
 }
-#endif

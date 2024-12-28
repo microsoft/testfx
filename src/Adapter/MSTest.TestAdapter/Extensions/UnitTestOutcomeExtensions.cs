@@ -34,6 +34,19 @@ public static class UnitTestOutcomeExtensions
             _ => UnitTestOutcome.Error,
         };
 
+    internal static UTF.UnitTestOutcome ToAdapterOutcome(this UnitTestOutcome outcome)
+        => outcome switch
+        {
+            UnitTestOutcome.Failed => UTF.UnitTestOutcome.Failed,
+            UnitTestOutcome.Inconclusive => UTF.UnitTestOutcome.Inconclusive,
+            UnitTestOutcome.InProgress => UTF.UnitTestOutcome.InProgress,
+            UnitTestOutcome.Passed => UTF.UnitTestOutcome.Passed,
+            UnitTestOutcome.Timeout => UTF.UnitTestOutcome.Timeout,
+            UnitTestOutcome.NotRunnable => UTF.UnitTestOutcome.NotRunnable,
+            UnitTestOutcome.NotFound => UTF.UnitTestOutcome.NotFound,
+            _ => UTF.UnitTestOutcome.Error,
+        };
+
     /// <summary>
     /// Returns more important outcome of two.
     /// </summary>

@@ -207,6 +207,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     private static bool IsEqualsNullBinaryOperator(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest)
     {
         if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals, RightOperand: { } rightOperand } binaryOperation &&
+            binaryOperation.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator } &&
             rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
         {
             expressionUnderTest = binaryOperation.LeftOperand.Syntax;
@@ -221,6 +222,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     private static bool IsNotEqualsNullBinaryOperator(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest)
     {
         if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, RightOperand: { } rightOperand } binaryOperation &&
+            binaryOperation.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator } &&
             rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
         {
             expressionUnderTest = binaryOperation.LeftOperand.Syntax;
@@ -253,7 +255,8 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             toBecomeActual = isPattern1.Value.Syntax;
             return EqualityCheckStatus.Equals;
         }
-        else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals } binaryOperation1)
+        else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals } binaryOperation1 &&
+            binaryOperation1.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator })
         {
             // This is quite arbitrary. We can do extra checks to see which one (if any) looks like a "constant" and make it the expected.
             toBecomeExpected = binaryOperation1.RightOperand.Syntax;
@@ -266,7 +269,8 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             toBecomeActual = isPattern2.Value.Syntax;
             return EqualityCheckStatus.NotEquals;
         }
-        else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals } binaryOperation2)
+        else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals } binaryOperation2 &&
+            binaryOperation2.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator })
         {
             // This is quite arbitrary. We can do extra checks to see which one (if any) looks like a "constant" and make it the expected.
             toBecomeExpected = binaryOperation2.RightOperand.Syntax;
