@@ -2,9 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-using System.Runtime.InteropServices;
-using System.Text;
-
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Services;
 
@@ -31,7 +28,7 @@ internal sealed class MSTestBannerCapability : IBannerMessageOwnerCapability
         }
 
 #if NETCOREAPP
-        if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeCompiled)
+        if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
         {
             bannerMessage.Append(" [");

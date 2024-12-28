@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
@@ -206,7 +204,7 @@ public class TestableAssemblyResolver : AssemblyResolver
 
     public Func<List<string>, string, bool, Assembly> SearchAssemblySetter { get; internal set; }
 
-    protected override bool DoesDirectoryExist(string path) => DoesDirectoryExistSetter == null ? base.DoesDirectoryExist(path) : DoesDirectoryExistSetter(path);
+    protected override bool DoesDirectoryExist(string path) => DoesDirectoryExistSetter?.Invoke(path) ?? base.DoesDirectoryExist(path);
 
     protected override string[] GetDirectories(string path) => GetDirectoriesSetter == null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
 
@@ -214,7 +212,7 @@ public class TestableAssemblyResolver : AssemblyResolver
             ? base.SearchAssembly(searchDirectorypaths, name, isReflectionOnly)
             : SearchAssemblySetter(searchDirectorypaths, name, isReflectionOnly);
 
-    protected override bool DoesFileExist(string filePath) => DoesFileExistSetter == null ? base.DoesFileExist(filePath) : DoesFileExistSetter(filePath);
+    protected override bool DoesFileExist(string filePath) => DoesFileExistSetter?.Invoke(filePath) ?? base.DoesFileExist(filePath);
 
     protected override Assembly LoadAssemblyFrom(string path) => LoadAssemblyFromSetter == null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
 

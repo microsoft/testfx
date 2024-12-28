@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
-using System.Reflection;
 using System.Security.Policy;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -124,7 +123,7 @@ public class DesktopTestSourceHostTests : TestContainer
     {
         // Arrange
         DummyClass dummyClass = new();
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
               <RunConfiguration>
@@ -135,7 +134,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         string location = typeof(TestSourceHost).Assembly.Location;
         var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         TestSourceHost sourceHost = new(location, mockRunSettings.Object, null);
 
@@ -198,7 +197,7 @@ public class DesktopTestSourceHostTests : TestContainer
     {
         // Arrange
         DummyClass dummyClass = new();
-        string runSettingxml =
+        string runSettingsXml =
         @"<RunSettings>
                 <RunConfiguration>
                     <DisableAppDomain>True</DisableAppDomain>
@@ -207,7 +206,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         string location = typeof(TestSourceHost).Assembly.Location;
         var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
 
@@ -227,7 +226,7 @@ public class DesktopTestSourceHostTests : TestContainer
     {
         // Arrange
         DummyClass dummyClass = new();
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
               <RunConfiguration>
@@ -238,7 +237,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         string location = typeof(TestSourceHost).Assembly.Location;
         var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
 

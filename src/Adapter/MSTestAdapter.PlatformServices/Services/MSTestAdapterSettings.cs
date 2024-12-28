@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-using System.Globalization;
-using System.Xml;
 
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;

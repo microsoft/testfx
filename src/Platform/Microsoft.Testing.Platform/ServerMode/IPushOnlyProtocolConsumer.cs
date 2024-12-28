@@ -5,6 +5,4 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal interface IPushOnlyProtocolConsumer : IDataConsumer, ITestSessionLifetimeHandler
-{
-}
+internal interface IPushOnlyProtocolConsumer : IDataConsumer, ITestSessionLifetimeHandler;

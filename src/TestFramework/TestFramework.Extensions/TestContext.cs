@@ -1,13 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
 #if NETFRAMEWORK
 using System.Data;
 using System.Data.Common;
 #endif
-using System.Diagnostics;
-using System.Globalization;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -51,7 +48,7 @@ public abstract class TestContext
     /// <summary>
     /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted.
     /// </summary>
-    public virtual CancellationTokenSource CancellationTokenSource { get; protected set; } = new();
+    public virtual CancellationTokenSource CancellationTokenSource { get; protected internal set; } = new();
 
     public object?[]? TestData { get; protected set; }
 

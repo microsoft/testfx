@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 
 using Analyzer.Utilities;
 using Analyzer.Utilities.Extensions;
@@ -208,6 +207,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     private static bool IsEqualsNullBinaryOperator(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest)
     {
         if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals, RightOperand: { } rightOperand } binaryOperation &&
+            binaryOperation.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator } &&
             rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
         {
             expressionUnderTest = binaryOperation.LeftOperand.Syntax;
@@ -222,6 +222,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     private static bool IsNotEqualsNullBinaryOperator(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest)
     {
         if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, RightOperand: { } rightOperand } binaryOperation &&
+            binaryOperation.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator } &&
             rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
         {
             expressionUnderTest = binaryOperation.LeftOperand.Syntax;
@@ -254,7 +255,8 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             toBecomeActual = isPattern1.Value.Syntax;
             return EqualityCheckStatus.Equals;
         }
-        else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals } binaryOperation1)
+        else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals } binaryOperation1 &&
+            binaryOperation1.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator })
         {
             // This is quite arbitrary. We can do extra checks to see which one (if any) looks like a "constant" and make it the expected.
             toBecomeExpected = binaryOperation1.RightOperand.Syntax;
@@ -267,7 +269,8 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             toBecomeActual = isPattern2.Value.Syntax;
             return EqualityCheckStatus.NotEquals;
         }
-        else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals } binaryOperation2)
+        else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals } binaryOperation2 &&
+            binaryOperation2.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator })
         {
             // This is quite arbitrary. We can do extra checks to see which one (if any) looks like a "constant" and make it the expected.
             toBecomeExpected = binaryOperation2.RightOperand.Syntax;
@@ -298,12 +301,14 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
             // The message is: Use 'Assert.{0}' instead of 'Assert.{1}'.
             string properAssertMethod = shouldUseIsNull ? "IsNull" : "IsNotNull";
+
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeSimple);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
                 additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), expressionUnderTest.GetLocation()),
-                properties: ImmutableDictionary<string, string?>.Empty
-                    .Add(ProperAssertMethodNameKey, properAssertMethod)
-                    .Add(CodeFixModeKey, CodeFixModeSimple),
+                properties: properties.ToImmutable(),
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
             return;
@@ -324,12 +329,13 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
             // The message is: Use 'Assert.{0}' instead of 'Assert.{1}'.
             string properAssertMethod = shouldUseAreEqual ? "AreEqual" : "AreNotEqual";
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
                 additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), toBecomeExpected.GetLocation(), toBecomeActual.GetLocation()),
-                properties: ImmutableDictionary<string, string?>.Empty
-                    .Add(ProperAssertMethodNameKey, properAssertMethod)
-                    .Add(CodeFixModeKey, CodeFixModeAddArgument),
+                properties: properties.ToImmutable(),
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
             return;
@@ -355,19 +361,19 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 actualType.SpecialType != SpecialType.System_Boolean &&
                 !actualType.IsNullableOfBoolean();
 
-            ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty
-                .Add(ProperAssertMethodNameKey, properAssertMethod)
-                .Add(CodeFixModeKey, CodeFixModeRemoveArgument);
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeRemoveArgument);
 
             if (codeFixShouldAddCast)
             {
-                properties = properties.Add(NeedsNullableBooleanCastKey, null);
+                properties.Add(NeedsNullableBooleanCastKey, null);
             }
 
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
                 additionalLocations: ImmutableArray.Create(expectedArgument.Syntax.GetLocation(), actualArgumentValue?.Syntax.GetLocation() ?? Location.None),
-                properties: properties,
+                properties: properties.ToImmutable(),
                 properAssertMethod,
                 isAreEqualInvocation ? "AreEqual" : "AreNotEqual"));
         }
@@ -380,12 +386,14 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
             // The message is: Use 'Assert.{0}' instead of 'Assert.{1}'.
             string properAssertMethod = shouldUseIsNull ? "IsNull" : "IsNotNull";
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeRemoveArgument);
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
                 additionalLocations: ImmutableArray.Create(expectedArgument.Syntax.GetLocation()),
-                properties: ImmutableDictionary<string, string?>.Empty
-                    .Add(ProperAssertMethodNameKey, properAssertMethod)
-                    .Add(CodeFixModeKey, CodeFixModeRemoveArgument), properAssertMethod,
+                properties: properties.ToImmutable(),
+                properAssertMethod,
                 isAreEqualInvocation ? "AreEqual" : "AreNotEqual"));
         }
     }

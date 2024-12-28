@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text;
-
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -203,7 +201,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         static void AddError(StringBuilder errors, string variableName, string? expectedValue, string? actualValue)
         {
             string actualValueString = actualValue ?? "<null>";
-            errors.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpInvalidEnvironmentVariableValueErrorMessage, variableName, expectedValue, actualValueString));
+            errors.AppendLine(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpInvalidEnvironmentVariableValueErrorMessage, variableName, expectedValue, actualValueString));
         }
 #endif
     }

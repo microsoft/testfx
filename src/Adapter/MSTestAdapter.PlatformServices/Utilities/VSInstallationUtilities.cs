@@ -3,9 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-
 using static System.String;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -40,7 +37,7 @@ public static class VSInstallationUtilities
     /// Gets the visual studio installation path on the local machine.
     /// </summary>
     /// <returns>VS install path.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Need to ignore failures to read the registry settings")]
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Need to ignore failures to read the registry settings")]
     public static string? VSInstallPath
     {
         get

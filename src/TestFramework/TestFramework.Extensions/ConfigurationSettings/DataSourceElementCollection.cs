@@ -4,7 +4,6 @@
 #if NETFRAMEWORK
 
 using System.Configuration;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 

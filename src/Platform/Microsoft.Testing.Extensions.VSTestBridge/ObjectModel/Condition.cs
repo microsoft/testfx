@@ -2,10 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // NOTE: This file is copied as-is from VSTest source code.
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Text;
-
 using Microsoft.Testing.Platform;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
