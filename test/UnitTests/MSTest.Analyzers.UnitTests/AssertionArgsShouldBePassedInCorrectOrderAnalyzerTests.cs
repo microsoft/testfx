@@ -163,6 +163,28 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenBothAreLiterals_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    Assert.AreEqual(0, 0);
+                    Assert.AreEqual(0, 1);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task LiteralUsingNamedArgument()
     {
         string code = """
