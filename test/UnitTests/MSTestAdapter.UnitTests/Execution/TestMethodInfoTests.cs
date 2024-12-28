@@ -1272,7 +1272,7 @@ public class TestMethodInfoTests : TestContainer
             UTF.TestResult result = method.Invoke(null);
 
             Verify(result.Outcome == UTF.UnitTestOutcome.Timeout);
-            Verify(result.TestFailureException.Message.Contains("exceeded execution timeout period"));
+            Verify(result.TestFailureException.Message.Equals("Test 'DummyTestMethod' timed out after 1ms", StringComparison.Ordinal));
         });
     }
 
@@ -1299,7 +1299,7 @@ public class TestMethodInfoTests : TestContainer
             UTF.TestResult result = method.Invoke(null);
 
             Verify(result.Outcome == UTF.UnitTestOutcome.Timeout);
-            Verify(result.TestFailureException.Message.Contains("exceeded execution timeout period"));
+            Verify(result.TestFailureException.Message.Equals("Test 'DummyTestMethod' timed out after 1ms", StringComparison.Ordinal));
             Verify(_testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not canceled..");
         });
     }
@@ -1329,7 +1329,7 @@ public class TestMethodInfoTests : TestContainer
             UTF.TestResult result = method.Invoke(null);
 
             Verify(result.Outcome == UTF.UnitTestOutcome.Timeout);
-            Verify(result.TestFailureException.Message.Contains("execution has been aborted"));
+            Verify(result.TestFailureException.Message.Equals("Test 'DummyTestMethod' was canceled", StringComparison.Ordinal));
             Verify(_testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not canceled..");
         });
     }
