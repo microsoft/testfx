@@ -1329,7 +1329,7 @@ public class TestMethodInfoTests : TestContainer
             UTF.TestResult result = method.Invoke(null);
 
             Verify(result.Outcome == UTF.UnitTestOutcome.Timeout);
-            Verify(result.TestFailureException.Message.Contains("execution has been aborted"));
+            Verify(result.TestFailureException.Message.Equals("Test 'DummyTestMethod' was canceled", StringComparison.Ordinal));
             Verify(_testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not canceled..");
         });
     }
