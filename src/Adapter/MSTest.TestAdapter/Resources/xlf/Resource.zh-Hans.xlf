@@ -419,7 +419,7 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
         <source>Test '{0}' was canceled</source>
-        <target state="needs-review-translation">已中止测试“{0}”的执行。</target>
+        <target state="new">Test '{0}' was canceled</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
