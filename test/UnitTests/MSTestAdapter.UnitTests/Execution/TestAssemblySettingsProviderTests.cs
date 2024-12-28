@@ -99,7 +99,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
 
         // Assert.
-        Verify(settings.Scope == UTF.ExecutionScope.ClassLevel);
+        Verify(settings.Scope == ExecutionScope.ClassLevel);
     }
 
     public void GetSettingsShouldSetParallelScope()
@@ -112,13 +112,13 @@ public class TestAssemblySettingsProviderTests : TestContainer
         _testablePlatformServiceProvider
             .MockReflectionOperations
             .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.ParallelizeAttribute)))
-            .Returns([new UTF.ParallelizeAttribute { Scope = UTF.ExecutionScope.MethodLevel }]);
+            .Returns([new UTF.ParallelizeAttribute { Scope = ExecutionScope.MethodLevel }]);
 
         // Act.
         MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
 
         // Assert.
-        Verify(settings.Scope == UTF.ExecutionScope.MethodLevel);
+        Verify(settings.Scope == ExecutionScope.MethodLevel);
     }
 
     public void GetSettingsShouldSetCanParallelizeAssemblyToTrueByDefault()

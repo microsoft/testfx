@@ -67,9 +67,9 @@ ancak, '{5}' türüyle {4} argüman aldı.</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
-        <source>Test '{0}' exceeded execution timeout period.</source>
-        <target state="translated">'{0}' testi yürütme zaman aşımı süresini aştı.</target>
-        <note></note>
+        <source>Test '{0}' timed out after {1}ms</source>
+        <target state="new">Test '{0}' timed out after {1}ms</target>
+        <note />
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
@@ -418,9 +418,9 @@ Hata: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
-        <source>Test '{0}' execution has been aborted.</source>
-        <target state="translated">'{0}' testinin yürütülmesi iptal edildi.</target>
-        <note></note>
+        <source>Test '{0}' was canceled</source>
+        <target state="needs-review-translation">'{0}' testinin yürütülmesi iptal edildi.</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
         <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
