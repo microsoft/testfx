@@ -32,7 +32,7 @@ public enum DynamicDataSourceType
 /// Attribute to define dynamic data for a test method.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestDataSourceEmptyDataSourceExceptionInfo, ITestDataSourceUnfoldingCapability, ITestDataIdentifierStrategy
+public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestDataSourceEmptyDataSourceExceptionInfo, ITestDataSourceUnfoldingCapability
 {
     private readonly string _dynamicDataSourceName;
     private readonly DynamicDataSourceType _dynamicDataSourceType;
@@ -113,9 +113,6 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
 
     /// <inheritdoc />
     public TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; set; } = TestDataSourceUnfoldingStrategy.Auto;
-
-    /// <inheritdoc />
-    public TestDataIdentifierStrategy IdentifierStrategy { get; set; } = TestDataIdentifierStrategy.Auto;
 
     /// <inheritdoc />
     public IEnumerable<object[]> GetData(MethodInfo methodInfo)

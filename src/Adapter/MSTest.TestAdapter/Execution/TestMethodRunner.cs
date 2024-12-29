@@ -260,7 +260,7 @@ internal sealed class TestMethodRunner
         object?[]? data;
         if (_test.SerializedData?.Length == 3)
         {
-            if (!Enum.TryParse(_test.SerializedData[0], out TestDataIdentifierStrategy _)
+            if (!Enum.TryParse(_test.SerializedData[0], out TestDataSourceUnfoldingStrategy _)
                 || !int.TryParse(_test.SerializedData[1], out int dataSourceIndex)
                 || !int.TryParse(_test.SerializedData[2], out int dataIndex))
             {

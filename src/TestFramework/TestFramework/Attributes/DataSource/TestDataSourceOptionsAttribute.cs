@@ -18,43 +18,10 @@ public sealed class TestDataSourceOptionsAttribute : Attribute
     /// The <see cref="UnfoldingStrategy"/> to use when executing parameterized tests.
     /// </param>
     public TestDataSourceOptionsAttribute(TestDataSourceUnfoldingStrategy unfoldingStrategy)
-        : this(unfoldingStrategy, TestDataIdentifierStrategy.Auto)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestDataSourceOptionsAttribute"/> class.
-    /// </summary>
-    /// <param name="identifierStrategy">
-    /// The <see cref="IdentifierStrategy"/> to use when executing parameterized tests.
-    /// </param>
-    public TestDataSourceOptionsAttribute(TestDataIdentifierStrategy identifierStrategy)
-        : this(TestDataSourceUnfoldingStrategy.Auto, identifierStrategy)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestDataSourceOptionsAttribute"/> class.
-    /// </summary>
-    /// <param name="unfoldingStrategy">
-    /// The <see cref="UnfoldingStrategy"/> to use when executing parameterized tests.
-    /// </param>
-    /// <param name="identifierStrategy">
-    /// The <see cref="IdentifierStrategy"/> to use when executing parameterized tests.
-    /// </param>
-    public TestDataSourceOptionsAttribute(TestDataSourceUnfoldingStrategy unfoldingStrategy, TestDataIdentifierStrategy identifierStrategy)
-    {
-        UnfoldingStrategy = unfoldingStrategy;
-        IdentifierStrategy = identifierStrategy;
-    }
+        => UnfoldingStrategy = unfoldingStrategy;
 
     /// <summary>
     /// Gets the test unfolding strategy.
     /// </summary>
     public TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; }
-
-    /// <summary>
-    /// Gets the test data identifier strategy.
-    /// </summary>
-    public TestDataIdentifierStrategy IdentifierStrategy { get; }
 }

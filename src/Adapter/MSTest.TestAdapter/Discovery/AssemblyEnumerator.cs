@@ -90,7 +90,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = testDataSourceOptionsAttribute?.UnfoldingStrategy switch
         {
             // When strategy is auto we want to unfold
-            TestDataSourceUnfoldingStrategy.Auto => TestDataSourceUnfoldingStrategy.Unfold,
+            TestDataSourceUnfoldingStrategy.Auto => TestDataSourceUnfoldingStrategy.UnfoldUsingDataContractJsonSerializer,
             // When strategy is set, let's use it
             { } value => value,
             // When the attribute is not set, let's look at the legacy attribute
@@ -104,16 +104,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 // as the ID generator will ignore it.
                 (null, TestIdGenerationStrategy.Legacy) => TestDataSourceUnfoldingStrategy.Fold,
 #pragma warning restore CS0618 // Type or member is obsolete
-                _ => TestDataSourceUnfoldingStrategy.Unfold,
+                _ => TestDataSourceUnfoldingStrategy.UnfoldUsingDataContractJsonSerializer,
             },
-        };
-
-        TestDataIdentifierStrategy dataSourcesIdentifierStrategy = testDataSourceOptionsAttribute?.IdentifierStrategy switch
-        {
-            // When strategy is null or auto we want to use the data contract serialization
-            null or TestDataIdentifierStrategy.Auto => TestDataIdentifierStrategy.DataContractSerialization,
-            // When strategy is set, let's use it
-            { } value => value,
         };
 
         Dictionary<string, object>? testRunParametersFromRunSettings = RunSettingsUtilities.GetTestRunParameters(runSettingsXml);
@@ -124,7 +116,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 continue;
             }
 
-            List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, testRunParametersFromRunSettings, type, warnings, discoverInternals, dataSourcesUnfoldingStrategy, dataSourcesIdentifierStrategy, testIdGenerationStrategy, fixturesTests);
+            List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, testRunParametersFromRunSettings, type, warnings, discoverInternals, dataSourcesUnfoldingStrategy, testIdGenerationStrategy, fixturesTests);
             tests.AddRange(testsInType);
         }
 
@@ -224,7 +216,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
         List<string> warningMessages,
         bool discoverInternals,
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy,
-        TestDataIdentifierStrategy dataSourcesIdentifierStrategy,
         TestIdGenerationStrategy testIdGenerationStrategy,
         HashSet<string> fixturesTests)
     {
@@ -255,7 +246,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                             AddFixtureTests(testMethodInfo, tests, fixturesTests);
                         }
 
-                        if (TryUnfoldITestDataSources(test, testMethodInfo, dataSourcesUnfoldingStrategy, dataSourcesIdentifierStrategy, tests))
+                        if (TryUnfoldITestDataSources(test, testMethodInfo, dataSourcesUnfoldingStrategy, tests))
                         {
                             continue;
                         }
@@ -357,7 +348,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool TryUnfoldITestDataSources(UnitTestElement test, TestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, TestDataIdentifierStrategy dataSourcesIdentifierStrategy, List<UnitTestElement> tests)
+    private static bool TryUnfoldITestDataSources(UnitTestElement test, TestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, List<UnitTestElement> tests)
     {
         // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
         // Since we depend on those properties, if they don't exist, we bail out early.
@@ -382,7 +373,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             {
                 dataSourceIndex++;
                 isDataDriven = true;
-                if (!TryUnfoldITestDataSource(dataSource, dataSourceIndex, dataSourcesUnfoldingStrategy, dataSourcesIdentifierStrategy, test, new(testMethodInfo.MethodInfo, test.DisplayName), tempListOfTests))
+                if (!TryUnfoldITestDataSource(dataSource, dataSourceIndex, dataSourcesUnfoldingStrategy, test, new(testMethodInfo.MethodInfo, test.DisplayName), tempListOfTests))
                 {
                     // TODO: Improve multi-source design!
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
@@ -412,7 +403,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, int dataSourceIndex, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, TestDataIdentifierStrategy dataSourcesIdentifierStrategy, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests)
+    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, int dataSourceIndex, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests)
     {
         var unfoldingCapability = dataSource as ITestDataSourceUnfoldingCapability;
 
@@ -476,13 +467,12 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 return false;
             }
 
-            TestDataIdentifierStrategy currentDataSourceIdentifierStrategy = (dataSource as ITestDataIdentifierStrategy)?.IdentifierStrategy ?? TestDataIdentifierStrategy.Auto;
-            if (currentDataSourceIdentifierStrategy == TestDataIdentifierStrategy.DataIndex
-                || (currentDataSourceIdentifierStrategy == TestDataIdentifierStrategy.Auto && dataSourcesIdentifierStrategy == TestDataIdentifierStrategy.DataIndex))
+            if (unfoldingCapability?.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex
+                || (unfoldingCapability?.UnfoldingStrategy is null or TestDataSourceUnfoldingStrategy.Auto && dataSourcesUnfoldingStrategy == TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex))
             {
                 discoveredTest.TestMethod.SerializedData = new string[3]
                 {
-                    TestDataIdentifierStrategy.DataIndex.ToString(),
+                    TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex.ToString(),
                     dataSourceIndex.ToString(CultureInfo.InvariantCulture),
                     index.ToString(CultureInfo.InvariantCulture),
                 };

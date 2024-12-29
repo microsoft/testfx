@@ -14,7 +14,7 @@ public class DynamicDataTests_Index
     #region https://github.com/microsoft/testfx/issues/908
 
     [TestMethod]
-    [DynamicData(nameof(AddTestCases), IdentifierStrategy = TestDataIdentifierStrategy.DataIndex)]
+    [DynamicData(nameof(AddTestCases), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex)]
     public void Add_ShouldAddTheExpectedValues(Collection<string> systemUnderTest, IEnumerable<string> itemsToAdd, Collection<string> expected)
     {
         // The actual tested method is irrelevant. Executing this empty tests provokes the error
@@ -47,7 +47,7 @@ public class DynamicDataTests_Index
     #region https://github.com/microsoft/testfx/issues/1022
 
     [TestMethod]
-    [DynamicData(nameof(UnlimitedNaturalData), IdentifierStrategy = TestDataIdentifierStrategy.DataIndex)]
+    [DynamicData(nameof(UnlimitedNaturalData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex)]
     public void TestUnlimitedNatural(UnlimitedNatural testObject, UnlimitedNatural other, bool expected)
     {
         bool actual = testObject.Equals(other);
@@ -92,7 +92,7 @@ public class DynamicDataTests_Index
 
     #region https://github.com/microsoft/testfx/issues/1037
 
-    [DynamicData(nameof(TestData), IdentifierStrategy = TestDataIdentifierStrategy.DataIndex)]
+    [DynamicData(nameof(TestData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex)]
     [TestMethod]
     public void ValidateExMessage(Exception ex)
         => Assert.AreEqual(ex?.Message, "Test exception message");
@@ -126,7 +126,7 @@ public class DynamicDataTests_Index
     #region https://github.com/microsoft/testfx/issues/1094
 
     [TestMethod]
-    [DynamicData(nameof(Create_test_cases_for_multiplication_of_vector_and_real), IdentifierStrategy = TestDataIdentifierStrategy.DataIndex)]
+    [DynamicData(nameof(Create_test_cases_for_multiplication_of_vector_and_real), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex)]
     public void Vector2D_op_Multiplication_Vector2D_double___valid_args___scaled_vector(Vector2D v, double d, Vector2D expected)
     {
         Vector2D actual = v * d;
@@ -137,7 +137,7 @@ public class DynamicDataTests_Index
     }
 
     [TestMethod]
-    [DynamicData(nameof(Create_test_cases_for_multiplication_of_real_and_vector), IdentifierStrategy = TestDataIdentifierStrategy.DataIndex)]
+    [DynamicData(nameof(Create_test_cases_for_multiplication_of_real_and_vector), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex)]
     public void Vector2D_op_Multiplication_double_Vector2D___valid_args___scaled_vector(double d, Vector2D v, Vector2D expected)
     {
         Vector2D actual = d * v;
@@ -148,7 +148,7 @@ public class DynamicDataTests_Index
     }
 
     [TestMethod]
-    [DynamicData(nameof(Create_test_cases_for_scalar_product_of_two_vectors), IdentifierStrategy = TestDataIdentifierStrategy.DataIndex)]
+    [DynamicData(nameof(Create_test_cases_for_scalar_product_of_two_vectors), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex)]
     public void Vector2D_op_Multiplication_Vector2D_Vector2D___valid_Vector2D___double_scalar_product(Vector2D v, Vector2D w, double expected)
     {
         double actual = v * w;
@@ -226,7 +226,7 @@ public class DynamicDataTests_Index
     #region https://github.com/microsoft/testfx/issues/1588
 
     [TestMethod]
-    [DynamicData(nameof(GetTestData), IdentifierStrategy = TestDataIdentifierStrategy.DataIndex)]
+    [DynamicData(nameof(GetTestData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex)]
     public void TestReadonlyCollectionData(string someString, MyData foo)
     {
     }

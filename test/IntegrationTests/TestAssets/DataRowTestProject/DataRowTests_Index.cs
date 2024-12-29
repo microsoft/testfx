@@ -11,16 +11,16 @@ public class DataRowTests_Index
     #region // https://github.com/microsoft/testfx/issues/2390
 
     [TestMethod]
-    [DataRow((byte)0, new object[] { (byte)0 }, IdentifierStrategy = TestDataIdentifierStrategy.DataIndex)]
-    [DataRow((short)0, new object[] { (short)0 }, IdentifierStrategy = TestDataIdentifierStrategy.DataIndex)]
-    [DataRow(0L, new object[] { 0L }, IdentifierStrategy = TestDataIdentifierStrategy.DataIndex)]
+    [DataRow((byte)0, new object[] { (byte)0 }, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex)]
+    [DataRow((short)0, new object[] { (short)0 }, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex)]
+    [DataRow(0L, new object[] { 0L }, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex)]
     public void NestedInputTypes(object org, object nested)
         => Assert.IsTrue(
             org.GetType().Name.Equals(((object[])nested)[0].GetType().Name, StringComparison.Ordinal),
             string.Concat("Expected ", org.GetType().Name, " but got ", ((object[])nested)[0].GetType().Name));
 
     [TestMethod]
-    [DataRow(0, new object[] { (byte)0 }, IdentifierStrategy = TestDataIdentifierStrategy.DataIndex)]
+    [DataRow(0, new object[] { (byte)0 }, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex)]
     public void NestedInputTypesInvalid(object org, object nested)
         => Assert.IsFalse(
             org.GetType().Name.Equals(((object[])nested)[0].GetType().Name, StringComparison.Ordinal),
