@@ -258,21 +258,19 @@ internal sealed class TestMethodRunner
 
         UTF.ITestDataSource? dataSource;
         object?[]? data;
-        if (_test.SerializedData?.Length == 3
-            && Enum.TryParse(_test.SerializedData[0], out TestDataIdentifierStrategy _))
+        if (_test.SerializedData?.Length == 3)
         {
-            if (!int.TryParse(_test.SerializedData[1], out int dataSourceIndex)
+            if (!Enum.TryParse(_test.SerializedData[0], out TestDataIdentifierStrategy _)
+                || !int.TryParse(_test.SerializedData[1], out int dataSourceIndex)
                 || !int.TryParse(_test.SerializedData[2], out int dataIndex))
             {
-                // TODO
-                throw new InvalidOperationException();
+                throw ApplicationStateGuard.Unreachable();
             }
 
             dataSource = _testMethodInfo.GetAttributes<Attribute>(false)?.OfType<UTF.ITestDataSource>().Skip(dataSourceIndex).FirstOrDefault();
             if (dataSource is null)
             {
-                // TODO
-                throw new InvalidOperationException();
+                throw ApplicationStateGuard.Unreachable();
             }
 
             data = dataSource.GetData(_testMethodInfo.MethodInfo).Skip(dataIndex).FirstOrDefault();
