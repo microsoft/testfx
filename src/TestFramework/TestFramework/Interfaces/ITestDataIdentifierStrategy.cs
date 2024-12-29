@@ -12,6 +12,10 @@ public interface ITestDataIdentifierStrategy
     /// <summary>
     /// Gets the strategy used to uniquely identify test data.
     /// </summary>
+    /// <remarks>
+    /// Altering the strategy may change the test ID generated for each test case, potentially
+    /// causing issues if the test is being monitored or tracked over time.
+    /// </remarks>
     TestDataIdentifierStrategy IdentifierStrategy { get; }
 }
 
@@ -36,5 +40,9 @@ public enum TestDataIdentifierStrategy : byte
     /// <summary>
     /// Identifies test data by its index in the data source.
     /// </summary>
+    /// <remarks>
+    /// Using this strategy will alter the test ID if the data source is reordered, as it depends
+    /// on the index of the data. This may affect the ability to track test cases over time.
+    /// </remarks>
     DataIndex,
 }
