@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Attribute to define in-line data for a test method.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfoldingCapability
+public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfoldingCapability, ITestDataIdentifierStrategy
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
@@ -55,6 +55,9 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfol
 
     /// <inheritdoc />
     public TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; set; } = TestDataSourceUnfoldingStrategy.Auto;
+
+    /// <inheritdoc />
+    public TestDataIdentifierStrategy IdentifierStrategy { get; set; } = TestDataIdentifierStrategy.Auto;
 
     /// <inheritdoc />
     public IEnumerable<object?[]> GetData(MethodInfo methodInfo) => [Data];
