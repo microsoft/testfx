@@ -161,47 +161,54 @@ internal sealed class TestMethodRunner
         DebugEx.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
 
         List<TestResult> results = [];
+        if (_testMethodInfo.TestMethodOptions.Executor == null)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
+                "Not able to get executor for method {0}.{1}",
+                _testMethodInfo.TestClassName,
+                _testMethodInfo.TestMethodName);
+
+            TestResult emptyResult = new()
+            {
+                Outcome = UTF.UnitTestOutcome.Unknown,
+                TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult),
+            };
+            _testContext.SetOutcome(emptyResult.Outcome);
+
+            results.Add(emptyResult);
+            return results.ToUnitTestResults();
+        }
+
         bool isDataDriven = false;
         var parentStopwatch = Stopwatch.StartNew();
-
-        if (_testMethodInfo.TestMethodOptions.Executor != null)
+        if (_test.DataType == DynamicDataType.ITestDataSource)
         {
-            if (_test.DataType == DynamicDataType.ITestDataSource)
-            {
-                object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
-                TestResult[] testResults = ExecuteTestWithDataSource(null, data);
-                results.AddRange(testResults);
-            }
-            else if (TryExecuteDataSourceBasedTests(results))
-            {
-                isDataDriven = true;
-            }
-            else if (TryExecuteFoldedDataDrivenTests(results))
-            {
-                isDataDriven = true;
-            }
-            else
-            {
-                _testContext.SetDisplayName(_test.DisplayName);
-                TestResult[] testResults = ExecuteTest(_testMethodInfo);
-
-                foreach (TestResult testResult in testResults)
-                {
-                    if (StringEx.IsNullOrWhiteSpace(testResult.DisplayName))
-                    {
-                        testResult.DisplayName = _test.DisplayName;
-                    }
-                }
-
-                results.AddRange(testResults);
-            }
+            object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
+            TestResult[] testResults = ExecuteTestWithDataSource(null, data);
+            results.AddRange(testResults);
+        }
+        else if (TryExecuteDataSourceBasedTests(results))
+        {
+            isDataDriven = true;
+        }
+        else if (TryExecuteFoldedDataDrivenTests(results))
+        {
+            isDataDriven = true;
         }
         else
         {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
-            "Not able to get executor for method {0}.{1}",
-            _testMethodInfo.TestClassName,
-            _testMethodInfo.TestMethodName);
+            _testContext.SetDisplayName(_test.DisplayName);
+            TestResult[] testResults = ExecuteTest(_testMethodInfo);
+
+            foreach (TestResult testResult in testResults)
+            {
+                if (StringEx.IsNullOrWhiteSpace(testResult.DisplayName))
+                {
+                    testResult.DisplayName = _test.DisplayName;
+                }
+            }
+
+            results.AddRange(testResults);
         }
 
         // Get aggregate outcome.
@@ -214,6 +221,7 @@ internal sealed class TestMethodRunner
             // In legacy scenario
 #pragma warning disable CS0618 // Type or member is obsolete
             if (_test.TestIdGenerationStrategy == TestIdGenerationStrategy.Legacy)
+#pragma warning restore CS0618 // Type or member is obsolete
             {
                 parentStopwatch.Stop();
                 var parentResult = new TestResult
@@ -225,7 +233,6 @@ internal sealed class TestMethodRunner
 
                 results = UpdateResultsWithParentInfo(results, parentResult);
             }
-#pragma warning restore CS0618 // Type or member is obsolete
             else
             {
                 results = UpdateResultsWithParentInfo(results);
