@@ -12,6 +12,90 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed partial class Assert
 {
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertNonStrictThrowsInterpolatedStringHandler<TException>
+        where TException : Exception
+    {
+        private readonly StringBuilder? _builder;
+        private readonly ThrowsExceptionState _state;
+
+        public AssertNonStrictThrowsInterpolatedStringHandler(int literalLength, int formattedCount, Action action, out bool shouldAppend)
+        {
+            ThrowsExceptionState state = IsThrowsFailing<TException>(action, isStrictType: false, "Throws");
+            shouldAppend = state.FailAction is not null;
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal TException FailIfNeeded()
+        {
+            if (_state.FailAction is not null)
+            {
+                _state.FailAction(_builder!.ToString());
+            }
+            else
+            {
+                return (TException)_state.ExceptionWhenNotFailing!;
+            }
+
+            // This will not hit, but need it for compiler.
+            return null!;
+        }
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NETCOREAPP3_1_OR_GREATER
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertThrowsExactlyInterpolatedStringHandler<TException>
+        where TException : Exception
+    {
+        private readonly StringBuilder? _builder;
+        private readonly ThrowsExceptionState _state;
+
+        public AssertThrowsExactlyInterpolatedStringHandler(int literalLength, int formattedCount, Action action, out bool shouldAppend)
+        {
+            ThrowsExceptionState state = IsThrowsFailing<TException>(action, isStrictType: true, "ThrowsExactly");
+            shouldAppend = state.FailAction is not null;
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal TException FailIfNeeded()
+        {
+            if (_state.FailAction is not null)
+            {
+                _state.FailAction(_builder!.ToString());
+            }
+            else
+            {
+                return (TException)_state.ExceptionWhenNotFailing!;
+            }
+
+            // This will not hit, but need it for compiler.
+            return null!;
+        }
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NETCOREAPP3_1_OR_GREATER
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
     /// (or derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
@@ -39,6 +123,12 @@ public sealed partial class Assert
         where TException : Exception
         => ThrowsException<TException>(action, isStrictType: false, message, parameters: messageArgs);
 
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static TException Throws<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] AssertNonStrictThrowsInterpolatedStringHandler<TException> message)
+#pragma warning restore IDE0060 // Remove unused parameter
+        where TException : Exception
+        => message.FailIfNeeded();
+
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
     /// (and not of derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
@@ -65,6 +155,12 @@ public sealed partial class Assert
     public static TException ThrowsExactly<TException>(Action action, string message = "", params object[] messageArgs)
         where TException : Exception
         => ThrowsException<TException>(action, isStrictType: true, message, parameters: messageArgs);
+
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static TException ThrowsExactly<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] AssertThrowsExactlyInterpolatedStringHandler<TException> message)
+#pragma warning restore IDE0060 // Remove unused parameter
+        where TException : Exception
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
@@ -428,7 +524,7 @@ public sealed partial class Assert
     }
 
     private static ThrowsExceptionState IsThrowsFailing<TException>(Action action, bool isStrictType, string assertMethodName)
-    where TException : Exception
+        where TException : Exception
     {
         try
         {
