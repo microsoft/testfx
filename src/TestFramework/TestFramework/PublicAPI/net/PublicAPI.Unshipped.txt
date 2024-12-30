@@ -5,3 +5,5 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStr
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler.AppendFormatted(System.ReadOnlySpan<char> value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNullInterpolatedStringHandler.AppendFormatted(System.ReadOnlySpan<char> value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStringHandler.AppendFormatted(System.ReadOnlySpan<char> value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler.AppendFormatted(System.ReadOnlySpan<char> value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.AppendFormatted(System.ReadOnlySpan<char> value) -> void

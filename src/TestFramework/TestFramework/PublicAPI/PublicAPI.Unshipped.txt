@@ -33,7 +33,6 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStri
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStringHandler.AssertIsTrueInterpolatedStringHandler() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStringHandler.AssertIsTrueInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler
-Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.AppendFormatted(System.ReadOnlySpan<char> value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.AppendLiteral(string! value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.AssertNonGenericAreEqualInterpolatedStringHandler() -> void
@@ -44,7 +43,6 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInte
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? expected, string? actual, bool ignoreCase, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? expected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler
-Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler.AppendFormatted(System.ReadOnlySpan<char> value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler.AppendLiteral(string! value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler.AssertNonGenericAreNotEqualInterpolatedStringHandler() -> void
