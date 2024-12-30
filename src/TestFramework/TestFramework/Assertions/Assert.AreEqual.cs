@@ -369,7 +369,7 @@ public sealed partial class Assert
         => AreEqual(expected, actual, comparer, message, null);
 
     /// <inheritdoc cref="AreEqual{T}(T, T, IEqualityComparer{T}?, string?)" />
-#pragma warning disable IDE0060 // Remove unused parameter - false positive. The comparer parameter is used via the interpolated string handler.
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(comparer))] ref AssertAreEqualInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.FailIfNeeded();
@@ -724,7 +724,7 @@ public sealed partial class Assert
         => AreNotEqual(notExpected, actual, comparer, message, null);
 
     /// <inheritdoc cref="AreNotEqual{T}(T, T, string?)" />
-#pragma warning disable IDE0060 // Remove unused parameter - false positive. The comparer parameter is used via the interpolated string handler.
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T>? comparer, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(comparer))] ref AssertAreNotEqualInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.FailIfNeeded();

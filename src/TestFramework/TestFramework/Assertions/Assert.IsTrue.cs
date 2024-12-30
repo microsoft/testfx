@@ -120,7 +120,7 @@ public sealed partial class Assert
         => IsTrue(condition, message, null);
 
     /// <inheritdoc cref="IsTrue(bool, string?)"/>
-#pragma warning disable IDE0060 // Remove unused parameter - false positive. The condition parameter is used via the interpolated string handler.
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsTrue([DoesNotReturnIf(false)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.FailIfNeeded();
@@ -143,7 +143,7 @@ public sealed partial class Assert
         => IsTrue(condition, message, null);
 
     /// <inheritdoc cref="IsTrue(bool?, string?)"/>
-#pragma warning disable IDE0060 // Remove unused parameter - false positive. The condition parameter is used via the interpolated string handler.
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.FailIfNeeded();
@@ -253,7 +253,7 @@ public sealed partial class Assert
         => IsFalse(condition, message, null);
 
     /// <inheritdoc cref="IsFalse(bool, string?)" />
-#pragma warning disable IDE0060 // Remove unused parameter - false positive. The condition parameter is used via the interpolated string handler.
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsFalse([DoesNotReturnIf(true)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.FailIfNeeded();
@@ -276,7 +276,7 @@ public sealed partial class Assert
         => IsFalse(condition, message, null);
 
     /// <inheritdoc cref="IsFalse(bool, string?)" />
-#pragma warning disable IDE0060 // Remove unused parameter - false positive. The condition parameter is used via the interpolated string handler.
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.FailIfNeeded();

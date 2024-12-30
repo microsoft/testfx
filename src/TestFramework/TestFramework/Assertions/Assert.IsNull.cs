@@ -107,7 +107,7 @@ public sealed partial class Assert
         => IsNull(value, message, null);
 
     /// <inheritdoc cref="IsNull(object?, string?)" />
-#pragma warning disable IDE0060 // Remove unused parameter - false positive. The value parameter is used via the interpolated string handler.
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsNull(object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNullInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.FailIfNeeded();
@@ -173,7 +173,7 @@ public sealed partial class Assert
         => IsNotNull(value, message, null);
 
     /// <inheritdoc cref="IsNull(object?, string?)" />
-#pragma warning disable IDE0060 // Remove unused parameter - false positive. The value parameter is used via the interpolated string handler.
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsNotNull(object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNotNullInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.FailIfNeeded();
