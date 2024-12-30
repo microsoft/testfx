@@ -17,6 +17,16 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStr
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendLiteral(string! value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AssertIsFalseInterpolatedStringHandler() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AssertIsFalseInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler.AssertIsInstanceOfTypeInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler.AssertIsInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, System.Type? expectedType, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler.AssertIsNotInstanceOfTypeInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler.AssertIsNotInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, System.Type? wrongType, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler.AppendLiteral(string! value) -> void

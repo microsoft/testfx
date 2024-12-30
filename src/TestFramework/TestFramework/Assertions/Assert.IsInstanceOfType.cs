@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -10,6 +12,78 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed partial class Assert
 {
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertIsInstanceOfTypeInterpolatedStringHandler
+    {
+        private readonly StringBuilder? _builder;
+        private readonly object? _value;
+        private readonly Type? _expectedType;
+
+        public AssertIsInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, Type? expectedType, out bool shouldAppend)
+        {
+            _value = value;
+            _expectedType = expectedType;
+            shouldAppend = IsInstanceOfTypeFailing(value, expectedType);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal void FailIfNeeded()
+        {
+            if (_builder is not null)
+            {
+                FailIsInstanceOfType(_value, _expectedType, _builder.ToString());
+            }
+        }
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NETCOREAPP3_1_OR_GREATER
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertIsNotInstanceOfTypeInterpolatedStringHandler
+    {
+        private readonly StringBuilder? _builder;
+        private readonly object? _value;
+        private readonly Type? _wrongType;
+
+        public AssertIsNotInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, Type? wrongType, out bool shouldAppend)
+        {
+            _value = value;
+            _wrongType = wrongType;
+            shouldAppend = IsNotInstanceOfTypeFailing(value, wrongType);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal void FailIfNeeded()
+        {
+            if (_builder is not null)
+            {
+                FailIsNotInstanceOfType(_value, _wrongType, _builder.ToString());
+            }
+        }
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NETCOREAPP3_1_OR_GREATER
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
     /// <summary>
     /// Tests whether the specified object is an instance of the expected
     /// type and throws an exception if the expected type is not in the
@@ -116,23 +190,30 @@ public sealed partial class Assert
     public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (expectedType == null || value == null)
+        if (IsInstanceOfTypeFailing(value, expectedType))
         {
-            ThrowAssertFailed("Assert.IsInstanceOfType", BuildUserMessage(message, parameters));
+            FailIsInstanceOfType(value, expectedType, BuildUserMessage(message, parameters));
         }
+    }
 
-        Type elementType = value.GetType();
-        if (!expectedType.IsAssignableFrom(elementType))
+    private static bool IsInstanceOfTypeFailing([NotNullWhen(false)] object? value, [NotNullWhen(false)] Type? expectedType)
+        => expectedType == null || value == null || !expectedType.IsAssignableFrom(value.GetType());
+
+    [DoesNotReturn]
+    private static void FailIsInstanceOfType(object? value, Type? expectedType, string userMessage)
+    {
+        string finalMessage = userMessage;
+        if (expectedType is not null && value is not null)
         {
-            string userMessage = BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(
+            finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.IsInstanceOfFailMsg,
                 userMessage,
                 expectedType.ToString(),
                 value.GetType().ToString());
-            ThrowAssertFailed("Assert.IsInstanceOfType", finalMessage);
         }
+
+        ThrowAssertFailed("Assert.IsInstanceOfType", finalMessage);
     }
 
     /// <summary>
@@ -246,29 +327,32 @@ public sealed partial class Assert
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (wrongType == null)
+        if (IsNotInstanceOfTypeFailing(value, wrongType))
         {
-            ThrowAssertFailed("Assert.IsNotInstanceOfType", BuildUserMessage(message, parameters));
+            FailIsNotInstanceOfType(value, wrongType, BuildUserMessage(message, parameters));
         }
+    }
 
-        // Null is not an instance of any type.
-        if (value == null)
-        {
-            return;
-        }
+    private static bool IsNotInstanceOfTypeFailing(object? value, [NotNullWhen(false)] Type? wrongType)
+        => wrongType is null ||
+            // Null is not an instance of any type.
+            (value is not null && wrongType.IsAssignableFrom(value.GetType()));
 
-        Type elementType = value.GetType();
-        if (wrongType.IsAssignableFrom(elementType))
+    [DoesNotReturn]
+    private static void FailIsNotInstanceOfType(object? value, Type? wrongType, string userMessage)
+    {
+        string finalMessage = userMessage;
+        if (wrongType is not null)
         {
-            string userMessage = BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(
+            finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.IsNotInstanceOfFailMsg,
                 userMessage,
                 wrongType.ToString(),
-                value.GetType().ToString());
-            ThrowAssertFailed("Assert.IsNotInstanceOfType", finalMessage);
+                value!.GetType().ToString());
         }
+
+        ThrowAssertFailed("Assert.IsNotInstanceOfType", finalMessage);
     }
 
     /// <summary>
