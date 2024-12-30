@@ -74,6 +74,30 @@ public partial class AssertTests
     public void AreNotSame_PassDifferentObject_ShouldPass()
         => Assert.AreNotSame(new object(), new object());
 
+    public void AreSame_BothAreValueTypes_ShouldFailWithSpecializedMessage()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreSame(1, 1));
+        Verify(ex.Message == "Assert.AreSame failed. Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). ");
+    }
+
+    public void AreSame_StringMessage_BothAreValueTypes_ShouldFailWithSpecializedMessage()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreSame(1, 1, "User-provided message"));
+        Verify(ex.Message == "Assert.AreSame failed. Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). User-provided message");
+    }
+
+    public void AreSame_InterpolatedString_BothAreValueTypes_ShouldFailWithSpecializedMessage()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreSame(1, 1, $"User-provided message {new object().GetType()}"));
+        Verify(ex.Message == "Assert.AreSame failed. Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). User-provided message System.Object");
+    }
+
+    public void AreSame_MessageArgs_BothAreValueTypes_ShouldFailWithSpecializedMessage()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreSame(1, 1, "User-provided message {0}", new object().GetType()));
+        Verify(ex.Message == "Assert.AreSame failed. Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). User-provided message System.Object");
+    }
+
     public void AreNotSame_PassSameObject_ShouldFail()
     {
         object o = new();
