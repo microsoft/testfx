@@ -12,6 +12,16 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolate
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AssertAreNotEqualInterpolatedStringHandler() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AssertAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? notExpected, TArgument? actual, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AssertAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? notExpected, TArgument? actual, System.Collections.Generic.IEqualityComparer<TArgument>? comparer, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>.AssertAreNotSameInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>.AssertAreNotSameInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? notExpected, TArgument? actual, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AssertAreSameInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AssertAreSameInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? expected, TArgument? actual, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendLiteral(string! value) -> void
@@ -86,6 +96,8 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? n
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<T> message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame<T>(T? notExpected, T? actual, Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<T> message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool condition, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool? condition, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotNull(object? value, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler message) -> void

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -10,6 +12,75 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed partial class Assert
 {
+
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertAreSameInterpolatedStringHandler<TArgument>
+    {
+        private readonly StringBuilder? _builder;
+        private readonly TArgument? _expected;
+        private readonly TArgument? _actual;
+
+        public AssertAreSameInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? expected, TArgument? actual, out bool shouldAppend)
+        {
+            _expected = expected;
+            _actual = actual;
+            shouldAppend = IsAreSameFailing(expected, actual);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal void FailIfNeeded()
+        {
+            if (_builder is not null)
+            {
+                FailAreSame(_expected, _actual, _builder.ToString());
+            }
+        }
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NETCOREAPP3_1_OR_GREATER
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertAreNotSameInterpolatedStringHandler<TArgument>
+    {
+        private readonly StringBuilder? _builder;
+
+        public AssertAreNotSameInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? notExpected, TArgument? actual, out bool shouldAppend)
+        {
+            shouldAppend = IsAreNotSameFailing(notExpected, actual);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal void FailIfNeeded()
+        {
+            if (_builder is not null)
+            {
+                FailAreNotSame(_builder.ToString());
+            }
+        }
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NETCOREAPP3_1_OR_GREATER
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
     /// <summary>
     /// Tests whether the specified objects both refer to the same object and
     /// throws an exception if the two inputs do not refer to the same object.
@@ -55,6 +126,12 @@ public sealed partial class Assert
     public static void AreSame<T>(T? expected, T? actual, string? message)
         => AreSame(expected, actual, message, null);
 
+    /// <inheritdoc cref="AreSame{T}(T, T, string?)" />
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static void AreSame<T>(T? expected, T? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreSameInterpolatedStringHandler<T> message)
+#pragma warning restore IDE0060 // Remove unused parameter
+        => message.FailIfNeeded();
+
     /// <summary>
     /// Tests whether the specified objects both refer to the same object and
     /// throws an exception if the two inputs do not refer to the same object.
@@ -82,23 +159,28 @@ public sealed partial class Assert
     /// </exception>
     public static void AreSame<T>(T? expected, T? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
-        if (ReferenceEquals(expected, actual))
+        if (!IsAreSameFailing(expected, actual))
         {
             return;
         }
 
         string userMessage = BuildUserMessage(message, parameters);
-        string finalMessage = userMessage;
+        FailAreSame(expected, actual, userMessage);
+    }
 
-        if (expected is ValueType)
+    private static bool IsAreSameFailing<T>(T? expected, T? actual)
+        => !ReferenceEquals(expected, actual);
+
+    [DoesNotReturn]
+    private static void FailAreSame<T>(T? expected, T? actual, string userMessage)
+    {
+        string finalMessage = userMessage;
+        if (expected is ValueType && actual is ValueType)
         {
-            if (actual is ValueType)
-            {
-                finalMessage = string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.AreSameGivenValues,
-                    userMessage);
-            }
+            finalMessage = string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreSameGivenValues,
+                userMessage);
         }
 
         ThrowAssertFailed("Assert.AreSame", finalMessage);
@@ -151,6 +233,12 @@ public sealed partial class Assert
     public static void AreNotSame<T>(T? notExpected, T? actual, string? message)
         => AreNotSame(notExpected, actual, message, null);
 
+    /// <inheritdoc cref="AreNotSame{T}(T, T, string?)" />
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static void AreNotSame<T>(T? notExpected, T? actual, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual))] AssertAreNotSameInterpolatedStringHandler<T> message)
+#pragma warning restore IDE0060 // Remove unused parameter
+        => message.FailIfNeeded();
+
     /// <summary>
     /// Tests whether the specified objects refer to different objects and
     /// throws an exception if the two inputs refer to the same object.
@@ -179,9 +267,16 @@ public sealed partial class Assert
     /// </exception>
     public static void AreNotSame<T>(T? notExpected, T? actual, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
-        if (ReferenceEquals(notExpected, actual))
+        if (IsAreNotSameFailing(notExpected, actual))
         {
-            ThrowAssertFailed("Assert.AreNotSame", BuildUserMessage(message, parameters));
+            FailAreNotSame(BuildUserMessage(message, parameters));
         }
     }
+
+    private static bool IsAreNotSameFailing<T>(T? notExpected, T? actual)
+        => ReferenceEquals(notExpected, actual);
+
+    [DoesNotReturn]
+    private static void FailAreNotSame(string userMessage)
+        => ThrowAssertFailed("Assert.AreNotSame", userMessage);
 }
