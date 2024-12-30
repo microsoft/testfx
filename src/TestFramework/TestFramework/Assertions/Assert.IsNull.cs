@@ -174,9 +174,11 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="IsNull(object?, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsNotNull(object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNotNullInterpolatedStringHandler message)
+    public static void IsNotNull([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNotNullInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
         => message.FailIfNeeded();
+#pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
     /// Tests whether the specified object is non-null and throws an exception

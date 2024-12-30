@@ -941,6 +941,7 @@ public sealed partial class Assert
     public static void AreNotEqual(float notExpected, float actual, float delta, string? message)
         => AreNotEqual(notExpected, actual, delta, message, null);
 
+    /// <inheritdoc cref="AreNotEqual(float, float, float, string?)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual(float notExpected, float actual, float delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter

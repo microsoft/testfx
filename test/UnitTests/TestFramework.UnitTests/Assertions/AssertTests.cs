@@ -39,4 +39,15 @@ public partial class AssertTests
         Verify(message == "{");
     }
     #endregion
+
+    private sealed class DummyClassTrackingToStringCalls
+    {
+        public bool WasToStringCalled { get; private set; }
+
+        public override string ToString()
+        {
+            WasToStringCalled = true;
+            return nameof(DummyClassTrackingToStringCalls);
+        }
+    }
 }

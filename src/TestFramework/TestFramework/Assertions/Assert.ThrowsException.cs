@@ -123,8 +123,9 @@ public sealed partial class Assert
         where TException : Exception
         => ThrowsException<TException>(action, isStrictType: false, message, parameters: messageArgs);
 
+    /// <inheritdoc cref="Throws{TException}(Action, string, object[])" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static TException Throws<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] AssertNonStrictThrowsInterpolatedStringHandler<TException> message)
+    public static TException Throws<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsInterpolatedStringHandler<TException> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
         => message.FailIfNeeded();
@@ -156,8 +157,9 @@ public sealed partial class Assert
         where TException : Exception
         => ThrowsException<TException>(action, isStrictType: true, message, parameters: messageArgs);
 
+    /// <inheritdoc cref="ThrowsExactly{TException}(Action, string, object[])" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static TException ThrowsExactly<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] AssertThrowsExactlyInterpolatedStringHandler<TException> message)
+    public static TException ThrowsExactly<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
         => message.FailIfNeeded();

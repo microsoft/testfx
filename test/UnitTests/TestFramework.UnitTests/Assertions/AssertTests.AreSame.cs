@@ -9,17 +9,6 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 public partial class AssertTests
 {
-    private sealed class DummyClassTrackingToStringCalls
-    {
-        public bool WasToStringCalled { get; private set; }
-
-        public override string ToString()
-        {
-            WasToStringCalled = true;
-            return nameof(DummyClassTrackingToStringCalls);
-        }
-    }
-
     public void AreSame_PassSameObject_ShouldPass()
     {
         object o = new();
