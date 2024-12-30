@@ -17,13 +17,18 @@ public sealed partial class Assert
     public readonly struct AssertAreEqualInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;
+        private readonly object? _expected;
+        private readonly object? _actual;
 
         public AssertAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? expected, TArgument? actual, out bool shouldAppend)
         {
+            _expected = expected!;
             shouldAppend = AreEqualFailing(expected, actual);
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
+                _expected = expected;
+                _actual = actual;
             }
         }
 
@@ -33,6 +38,8 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
+                _expected = expected;
+                _actual = actual;
             }
         }
 
@@ -42,12 +49,18 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
+                _expected = expected;
+                _actual = actual;
             }
         }
 
-        internal bool ShouldAppend => _builder is not null;
-
-        internal readonly string ToStringAndClear() => _builder!.ToString();
+        internal void FailIfNeeded()
+        {
+            if (_builder is not null)
+            {
+                FailAreEqual(_expected, _actual, _builder.ToString());
+            }
+        }
 
         public readonly void AppendLiteral(string value) => _builder!.Append(value);
 
@@ -63,6 +76,8 @@ public sealed partial class Assert
     public readonly struct AssertAreNotEqualInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;
+        private readonly object? _notExpected;
+        private readonly object? _actual;
 
         public AssertAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? notExpected, TArgument? actual, out bool shouldAppend)
         {
@@ -70,6 +85,8 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
+                _notExpected = notExpected;
+                _actual = actual;
             }
         }
 
@@ -79,12 +96,18 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
+                _notExpected = notExpected;
+                _actual = actual;
             }
         }
 
-        internal bool ShouldAppend => _builder is not null;
-
-        internal readonly string ToStringAndClear() => _builder!.ToString();
+        internal void FailIfNeeded()
+        {
+            if (_builder is not null)
+            {
+                FailAreNotEqual(_notExpected, _actual, _builder.ToString());
+            }
+        }
 
         public readonly void AppendLiteral(string value) => _builder!.Append(value);
 
@@ -100,6 +123,7 @@ public sealed partial class Assert
     public readonly struct AssertNonGenericAreEqualInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
+        private readonly Action<string>? _failAction;
 
         public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, float expected, float actual, float delta, out bool shouldAppend)
         {
@@ -107,6 +131,7 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
+                _failAction = userMessage => FailAreEqual(expected, actual, delta, userMessage);
             }
         }
 
@@ -116,6 +141,7 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
+                _failAction = userMessage => FailAreEqual(expected, actual, delta, userMessage);
             }
         }
 
@@ -125,6 +151,7 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
+                _failAction = userMessage => FailAreEqual(expected, actual, delta, userMessage);
             }
         }
 
@@ -134,16 +161,13 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
+                _failAction = userMessage => FailAreEqual(expected, actual, delta, userMessage);
             }
         }
 
         public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? expected, string? actual, bool ignoreCase, out bool shouldAppend)
+            : this(literalLength, formattedCount, expected, actual, ignoreCase, CultureInfo.InvariantCulture, out shouldAppend)
         {
-            shouldAppend = AreEqualFailing(expected, actual, ignoreCase);
-            if (shouldAppend)
-            {
-                _builder = new StringBuilder(literalLength + formattedCount);
-            }
         }
 
         public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? expected, string? actual, bool ignoreCase, [NotNull] CultureInfo? culture, out bool shouldAppend)
@@ -153,12 +177,12 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
+                _failAction = userMessage => FailAreEqual(expected, actual, ignoreCase, culture, userMessage);
             }
         }
 
-        internal bool ShouldAppend => _builder is not null;
-
-        internal readonly string ToStringAndClear() => _builder!.ToString();
+        internal void FailIfNeeded()
+            => _failAction?.Invoke(_builder!.ToString());
 
         public readonly void AppendLiteral(string value) => _builder!.Append(value);
 
@@ -230,9 +254,10 @@ public sealed partial class Assert
             }
         }
 
-        internal bool ShouldAppend => _builder is not null;
-
-        internal readonly string ToStringAndClear() => _builder!.ToString();
+        internal void FailIfNeeded()
+        {
+            // TODO:
+        }
 
         public readonly void AppendLiteral(string value) => _builder!.Append(value);
 
@@ -315,12 +340,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="AreEqual{T}(IEquatable{T}?, IEquatable{T}?, string?)" />
     public static void AreEqual<T>(T? expected, T? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreEqualInterpolatedStringHandler<T> message)
-    {
-        if (message.ShouldAppend)
-        {
-            ThrowAssertFailed("Assert.AreEqual", GetAreEqualFinalMessage(expected, actual, message.ToStringAndClear()));
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -356,12 +376,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - false positive. The comparer parameter is used via the interpolated string handler.
     public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(comparer))] ref AssertAreEqualInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
-    {
-        if (message.ShouldAppend)
-        {
-            ThrowAssertFailed("Assert.AreEqual", GetAreEqualFinalMessage(expected, actual, message.ToStringAndClear()));
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -431,27 +446,8 @@ public sealed partial class Assert
         }
 
         string userMessage = BuildUserMessage(message, parameters);
-        string finalMessage = GetAreEqualFinalMessage(expected, actual, userMessage);
-
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        FailAreEqual(expected, actual, userMessage);
     }
-
-    private static string GetAreEqualFinalMessage(object? expected, object? actual, string userMessage)
-        => actual != null && expected != null && !actual.GetType().Equals(expected.GetType())
-            ? string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualDifferentTypesFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                expected.GetType().FullName,
-                ReplaceNulls(actual),
-                actual.GetType().FullName)
-            : string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual));
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -501,12 +497,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="AreEqual{T}(IEquatable{T}?, IEquatable{T}?, string?)"/>
     public static void AreEqual<T>(IEquatable<T>? expected, IEquatable<T>? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreEqualInterpolatedStringHandler<T> message)
-    {
-        if (message.ShouldAppend)
-        {
-            ThrowAssertFailed("Assert.AreEqual", GetAreEqualFinalMessage(expected, actual, message.ToStringAndClear()));
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -542,9 +533,7 @@ public sealed partial class Assert
         }
 
         string userMessage = BuildUserMessage(message, parameters);
-        string finalMessage = GetAreEqualFinalMessage(expected, actual, userMessage);
-
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        FailAreEqual(expected, actual, userMessage);
     }
 
     private static bool AreEqualFailing<T>(T? expected, T? actual)
@@ -555,6 +544,78 @@ public sealed partial class Assert
 
     private static bool AreEqualFailing<T>(IEquatable<T>? expected, IEquatable<T>? actual)
         => (actual is not null || expected is not null) && actual?.Equals(expected) != true;
+
+    private static bool AreEqualFailing(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
+        => CompareInternal(expected, actual, ignoreCase, culture) != 0;
+
+    private static bool AreEqualFailing(float expected, float actual, float delta)
+        => float.IsNaN(expected) || float.IsNaN(actual) || float.IsNaN(delta) ||
+            Math.Abs(expected - actual) > delta;
+
+    private static bool AreEqualFailing(double expected, double actual, double delta)
+        => double.IsNaN(expected) || double.IsNaN(actual) || double.IsNaN(delta) ||
+            Math.Abs(expected - actual) > delta;
+
+    private static bool AreEqualFailing(decimal expected, decimal actual, decimal delta)
+        => Math.Abs(expected - actual) > delta;
+
+    private static bool AreEqualFailing(long expected, long actual, long delta)
+        => Math.Abs(expected - actual) > delta;
+
+    [DoesNotReturn]
+    private static void FailAreEqual(object? expected, object? actual, string userMessage)
+    {
+        string finalMessage = actual != null && expected != null && !actual.GetType().Equals(expected.GetType())
+            ? string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualDifferentTypesFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                expected.GetType().FullName,
+                ReplaceNulls(actual),
+                actual.GetType().FullName)
+            : string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                ReplaceNulls(actual));
+        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+    }
+
+    [DoesNotReturn]
+    private static void FailAreEqual<T>(T expected, T actual, T delta, string userMessage)
+        where T : struct, IConvertible
+    {
+        string finalMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.AreEqualDeltaFailMsg,
+            userMessage,
+            expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
+            actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
+            delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
+        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+    }
+
+    [DoesNotReturn]
+    private static void FailAreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string userMessage)
+    {
+        string finalMessage = !ignoreCase && CompareInternal(expected, actual, ignoreCase, culture) == 0
+            ? string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualCaseFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                ReplaceNulls(actual))
+            : string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                ReplaceNulls(actual));
+
+        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+    }
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
@@ -630,12 +691,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="AreNotEqual{T}(T, T, string?)" />
     public static void AreNotEqual<T>(T? notExpected, T? actual, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual))] ref AssertAreNotEqualInterpolatedStringHandler<T> message)
-    {
-        if (message.ShouldAppend)
-        {
-            ThrowAssertFailed("Assert.AreNotEqual", GetAreNotEqualFinalMessage(notExpected, actual, message.ToStringAndClear()));
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
@@ -671,12 +727,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - false positive. The comparer parameter is used via the interpolated string handler.
     public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T>? comparer, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(comparer))] ref AssertAreNotEqualInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
-    {
-        if (message.ShouldAppend)
-        {
-            ThrowAssertFailed("Assert.AreNotEqual", GetAreNotEqualFinalMessage(notExpected, actual, message.ToStringAndClear()));
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
@@ -802,12 +853,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="AreEqual(float, float, float, string?)"/>
     public static void AreEqual(float expected, float actual, float delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
-    {
-        if (message.ShouldAppend)
-        {
-            // TODO:
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified floats are equal and throws an exception
@@ -839,18 +885,10 @@ public sealed partial class Assert
     public static void AreEqual(float expected, float actual, float delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (float.IsNaN(expected) || float.IsNaN(actual) || float.IsNaN(delta) ||
-            Math.Abs(expected - actual) > delta)
+        if (AreEqualFailing(expected, actual, delta))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualDeltaFailMsg,
-                userMessage,
-                expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
-                actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
-                delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-            ThrowAssertFailed("Assert.AreEqual", finalMessage);
+            FailAreEqual(expected, actual, delta, userMessage);
         }
     }
 
@@ -904,12 +942,7 @@ public sealed partial class Assert
         => AreNotEqual(notExpected, actual, delta, message, null);
 
     public static void AreNotEqual(float notExpected, float actual, float delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
-    {
-        if (message.ShouldAppend)
-        {
-            // TODO:
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified floats are unequal and throws an exception
@@ -1006,12 +1039,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="AreEqual(decimal, decimal, decimal, string?)" />
     public static void AreEqual(decimal expected, decimal actual, decimal delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
-    {
-        if (message.ShouldAppend)
-        {
-            // TODO:
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified decimals are equal and throws an exception
@@ -1043,17 +1071,10 @@ public sealed partial class Assert
     public static void AreEqual(decimal expected, decimal actual, decimal delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (Math.Abs(expected - actual) > delta)
+        if (AreEqualFailing(expected, actual, delta))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualDeltaFailMsg,
-                userMessage,
-                expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
-                actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
-                delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-            ThrowAssertFailed("Assert.AreEqual", finalMessage);
+            FailAreEqual(expected, actual, delta, userMessage);
         }
     }
 
@@ -1108,12 +1129,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="AreNotEqual(decimal, decimal, decimal, string?)" />
     public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
-    {
-        if (message.ShouldAppend)
-        {
-            // TODO:
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified decimals are unequal and throws an exception
@@ -1210,12 +1226,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="AreEqual(long, long, long, string?)" />
     public static void AreEqual(long expected, long actual, long delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
-    {
-        if (message.ShouldAppend)
-        {
-            // TODO:
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified longs are equal and throws an exception
@@ -1247,17 +1258,10 @@ public sealed partial class Assert
     public static void AreEqual(long expected, long actual, long delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (Math.Abs(expected - actual) > delta)
+        if (AreEqualFailing(expected, actual, delta))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualDeltaFailMsg,
-                userMessage,
-                expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
-                actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
-                delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-            ThrowAssertFailed("Assert.AreEqual", finalMessage);
+            FailAreEqual(expected, actual, delta, userMessage);
         }
     }
 
@@ -1312,12 +1316,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="AreNotEqual(long, long, long, string?)" />
     public static void AreNotEqual(long notExpected, long actual, long delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
-    {
-        if (message.ShouldAppend)
-        {
-            // TODO:
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified longs are unequal and throws an exception
@@ -1413,12 +1412,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="AreEqual(double, double, double, string?)" />
     public static void AreEqual(double expected, double actual, double delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
-    {
-        if (message.ShouldAppend)
-        {
-            // TODO:
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified doubles are equal and throws an exception
@@ -1449,18 +1443,10 @@ public sealed partial class Assert
     public static void AreEqual(double expected, double actual, double delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (double.IsNaN(expected) || double.IsNaN(actual) || double.IsNaN(delta) ||
-            Math.Abs(expected - actual) > delta)
+        if (AreEqualFailing(expected, actual, delta))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualDeltaFailMsg,
-                userMessage,
-                expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
-                actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
-                delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-            ThrowAssertFailed("Assert.AreEqual", finalMessage);
+            FailAreEqual(expected, actual, delta, userMessage);
         }
     }
 
@@ -1515,12 +1501,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="AreNotEqual(double, double, double, string?)" />
     public static void AreNotEqual(double notExpected, double actual, double delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
-    {
-        if (message.ShouldAppend)
-        {
-            // TODO:
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified doubles are unequal and throws an exception
@@ -1613,12 +1594,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="AreEqual(string?, string?, bool, string?)" />
     public static void AreEqual(string? expected, string? actual, bool ignoreCase, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
-    {
-        if (message.ShouldAppend)
-        {
-            // TODO:
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified strings are equal and throws an exception
@@ -1707,10 +1683,7 @@ public sealed partial class Assert
         [NotNull] CultureInfo? culture, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
     {
         CheckParameterNotNull(culture, "Assert.AreEqual", nameof(culture), string.Empty);
-        if (message.ShouldAppend)
-        {
-            // TODO:
-        }
+        message.FailIfNeeded();
     }
 
     /// <summary>
@@ -1745,28 +1718,13 @@ public sealed partial class Assert
         [NotNull] CultureInfo? culture, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         CheckParameterNotNull(culture, "Assert.AreEqual", "culture", string.Empty);
-        if (CompareInternal(expected, actual, ignoreCase, culture) == 0)
+        if (!AreEqualFailing(expected, actual, ignoreCase, culture))
         {
             return;
         }
 
         string userMessage = BuildUserMessage(message, parameters);
-        string finalMessage = !ignoreCase && CompareInternal(expected, actual, ignoreCase, culture) == 0
-            ? string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualCaseFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual))
-            : string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual));
-
-        // Comparison failed. Check if it was a case-only failure.
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        FailAreEqual(expected, actual, ignoreCase, culture, userMessage);
     }
 
     /// <summary>
@@ -1818,12 +1776,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="AreNotEqual(string?, string?, bool, string?)" />
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
-    {
-        if (message.ShouldAppend)
-        {
-            // TODO:
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified strings are unequal and throws an exception
@@ -1913,11 +1866,8 @@ public sealed partial class Assert
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase,
         CultureInfo? culture, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
     {
-        CheckParameterNotNull(culture, "Assert.AreEqual", nameof(culture), string.Empty);
-        if (message.ShouldAppend)
-        {
-            // TODO:
-        }
+        CheckParameterNotNull(culture, "Assert.AreNotEqual", nameof(culture), string.Empty);
+        message.FailIfNeeded();
     }
 
     /// <summary>
