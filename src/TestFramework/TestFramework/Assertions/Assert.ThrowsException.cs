@@ -229,41 +229,18 @@ public sealed partial class Assert
         Guard.NotNull(action);
         Guard.NotNull(message);
 
-        string userMessage, finalMessage;
-        try
+        ThrowsExceptionState state = IsThrowsFailing<TException>(action, isStrictType, assertMethodName);
+        if (state.FailAction is not null)
         {
-            action();
+            state.FailAction(BuildUserMessage(message, parameters));
         }
-        catch (Exception ex)
+        else
         {
-            bool isExceptionOfType = isStrictType
-                ? typeof(TException) == ex.GetType()
-                : ex is TException;
-            if (!isExceptionOfType)
-            {
-                userMessage = BuildUserMessage(message, parameters);
-                finalMessage = string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.WrongExceptionThrown,
-                    userMessage,
-                    typeof(TException),
-                    ex.GetType());
-                ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
-            }
-
-            return (TException)ex;
+            return (TException)state.ExceptionWhenNotFailing!;
         }
-
-        userMessage = BuildUserMessage(message, parameters);
-        finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.NoExceptionThrown,
-            userMessage,
-            typeof(TException));
-        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
 
         // This will not hit, but need it for compiler.
-        return null;
+        return null!;
     }
 
     /// <summary>
@@ -398,7 +375,23 @@ public sealed partial class Assert
         Guard.NotNull(action);
         Guard.NotNull(message);
 
-        string userMessage, finalMessage;
+        ThrowsExceptionState state = await IsThrowsAsyncFailingAsync<TException>(action, isStrictType, assertMethodName).ConfigureAwait(false);
+        if (state.FailAction is not null)
+        {
+            state.FailAction(BuildUserMessage(message, parameters));
+        }
+        else
+        {
+            return (TException)state.ExceptionWhenNotFailing!;
+        }
+
+        // This will not hit, but need it for compiler.
+        return null!;
+    }
+
+    private static async Task<ThrowsExceptionState> IsThrowsAsyncFailingAsync<TException>(Func<Task> action, bool isStrictType, string assertMethodName)
+        where TException : Exception
+    {
         try
         {
             await action().ConfigureAwait(false);
@@ -409,30 +402,88 @@ public sealed partial class Assert
                 ? typeof(TException) == ex.GetType()
                 : ex is TException;
 
-            if (!isExceptionOfType)
-            {
-                userMessage = BuildUserMessage(message, parameters);
-                finalMessage = string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.WrongExceptionThrown,
-                    userMessage,
-                    typeof(TException),
-                    ex.GetType());
-                ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
-            }
-
-            return (TException)ex;
+            return isExceptionOfType
+                ? ThrowsExceptionState.CreateNotFailingState(ex)
+                : ThrowsExceptionState.CreateFailingState(userMessage =>
+                {
+                    string finalMessage = string.Format(
+                        CultureInfo.CurrentCulture,
+                        FrameworkMessages.WrongExceptionThrown,
+                        userMessage,
+                        typeof(TException),
+                        ex.GetType());
+                    ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+                });
         }
 
-        userMessage = BuildUserMessage(message, parameters);
-        finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.NoExceptionThrown,
-            userMessage,
-            typeof(TException));
-        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+        return ThrowsExceptionState.CreateFailingState(failAction: userMessage =>
+        {
+            string finalMessage = string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.NoExceptionThrown,
+                userMessage,
+                typeof(TException));
+            ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+        });
+    }
 
-        // This will not hit, but need it for compiler.
-        return null!;
+    private static ThrowsExceptionState IsThrowsFailing<TException>(Action action, bool isStrictType, string assertMethodName)
+    where TException : Exception
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            bool isExceptionOfType = isStrictType
+                ? typeof(TException) == ex.GetType()
+                : ex is TException;
+
+            return isExceptionOfType
+                ? ThrowsExceptionState.CreateNotFailingState(ex)
+                : ThrowsExceptionState.CreateFailingState(userMessage =>
+                {
+                    string finalMessage = string.Format(
+                        CultureInfo.CurrentCulture,
+                        FrameworkMessages.WrongExceptionThrown,
+                        userMessage,
+                        typeof(TException),
+                        ex.GetType());
+                    ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+                });
+        }
+
+        return ThrowsExceptionState.CreateFailingState(failAction: userMessage =>
+        {
+            string finalMessage = string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.NoExceptionThrown,
+                userMessage,
+                typeof(TException));
+            ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+        });
+    }
+
+    private readonly struct ThrowsExceptionState
+    {
+        public Exception? ExceptionWhenNotFailing { get; }
+
+        public Action<string>? FailAction { get; }
+
+        private ThrowsExceptionState(Exception? exceptionWhenNotFailing, Action<string>? failAction)
+        {
+            // If the assert is failing, failAction should be non-null, and exceptionWhenNotFailing should be null.
+            // If the assert is not failing, exceptionWhenNotFailing should be non-null, and failAction should be null.
+            Debug.Assert(exceptionWhenNotFailing is null ^ failAction is null, "Exactly one of exceptionWhenNotFailing and failAction should be null.");
+            ExceptionWhenNotFailing = exceptionWhenNotFailing;
+            FailAction = failAction;
+        }
+
+        public static ThrowsExceptionState CreateFailingState(Action<string> failAction)
+            => new(exceptionWhenNotFailing: null, failAction);
+
+        public static ThrowsExceptionState CreateNotFailingState(Exception exception)
+            => new(exception, failAction: null);
     }
 }
