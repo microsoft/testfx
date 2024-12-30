@@ -12,7 +12,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed partial class Assert
 {
-
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public readonly struct AssertAreSameInterpolatedStringHandler<TArgument>
