@@ -27,9 +27,13 @@ public sealed partial class Assert
             }
         }
 
-        internal bool ShouldAppend => _builder is not null;
-
-        internal readonly string ToStringAndClear() => _builder!.ToString();
+        internal void FailIfNeeded()
+        {
+            if (_builder is not null)
+            {
+                FailIsTrue(_builder.ToString());
+            }
+        }
 
         public readonly void AppendLiteral(string value) => _builder!.Append(value);
 
@@ -55,9 +59,13 @@ public sealed partial class Assert
             }
         }
 
-        internal bool ShouldAppend => _builder is not null;
-
-        internal readonly string ToStringAndClear() => _builder!.ToString();
+        internal void FailIfNeeded()
+        {
+            if (_builder is not null)
+            {
+                FailIsFalse(_builder.ToString());
+            }
+        }
 
         public readonly void AppendLiteral(string value) => _builder!.Append(value);
 
@@ -115,12 +123,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - false positive. The condition parameter is used via the interpolated string handler.
     public static void IsTrue([DoesNotReturnIf(false)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-    {
-        if (message.ShouldAppend)
-        {
-            ThrowAssertFailed("Assert.IsTrue", message.ToStringAndClear());
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -143,12 +146,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - false positive. The condition parameter is used via the interpolated string handler.
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-    {
-        if (message.ShouldAppend)
-        {
-            ThrowAssertFailed("Assert.IsTrue", message.ToStringAndClear());
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -172,7 +170,7 @@ public sealed partial class Assert
     {
         if (IsTrueFailing(condition))
         {
-            ThrowAssertFailed("Assert.IsTrue", BuildUserMessage(message, parameters));
+            FailIsTrue(BuildUserMessage(message, parameters));
         }
     }
 
@@ -198,7 +196,7 @@ public sealed partial class Assert
     {
         if (IsTrueFailing(condition))
         {
-            ThrowAssertFailed("Assert.IsTrue", BuildUserMessage(message, parameters));
+            FailIsTrue(BuildUserMessage(message, parameters));
         }
     }
 
@@ -207,6 +205,9 @@ public sealed partial class Assert
 
     private static bool IsTrueFailing(bool condition)
         => !condition;
+
+    private static void FailIsTrue(string message)
+        => ThrowAssertFailed("Assert.IsTrue", message);
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -255,12 +256,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - false positive. The condition parameter is used via the interpolated string handler.
     public static void IsFalse([DoesNotReturnIf(true)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-    {
-        if (message.ShouldAppend)
-        {
-            ThrowAssertFailed("Assert.IsFalse", message.ToStringAndClear());
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -283,12 +279,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - false positive. The condition parameter is used via the interpolated string handler.
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-    {
-        if (message.ShouldAppend)
-        {
-            ThrowAssertFailed("Assert.IsFalse", message.ToStringAndClear());
-        }
-    }
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -312,7 +303,7 @@ public sealed partial class Assert
     {
         if (IsFalseFailing(condition))
         {
-            ThrowAssertFailed("Assert.IsFalse", BuildUserMessage(message, parameters));
+            FailIsFalse(BuildUserMessage(message, parameters));
         }
     }
 
@@ -338,7 +329,7 @@ public sealed partial class Assert
     {
         if (IsFalseFailing(condition))
         {
-            ThrowAssertFailed("Assert.IsFalse", BuildUserMessage(message, parameters));
+            FailIsFalse(BuildUserMessage(message, parameters));
         }
     }
 
@@ -348,4 +339,7 @@ public sealed partial class Assert
     private static bool IsFalseFailing(bool condition)
         => condition;
 
+    [DoesNotReturn]
+    private static void FailIsFalse(string userMessage)
+        => ThrowAssertFailed("Assert.IsFalse", userMessage);
 }
