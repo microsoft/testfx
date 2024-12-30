@@ -22,8 +22,8 @@ public sealed partial class Assert
 
         public AssertNonStrictThrowsInterpolatedStringHandler(int literalLength, int formattedCount, Action action, out bool shouldAppend)
         {
-            ThrowsExceptionState state = IsThrowsFailing<TException>(action, isStrictType: false, "Throws");
-            shouldAppend = state.FailAction is not null;
+            _state = IsThrowsFailing<TException>(action, isStrictType: false, "Throws");
+            shouldAppend = _state.FailAction is not null;
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
@@ -64,8 +64,8 @@ public sealed partial class Assert
 
         public AssertThrowsExactlyInterpolatedStringHandler(int literalLength, int formattedCount, Action action, out bool shouldAppend)
         {
-            ThrowsExceptionState state = IsThrowsFailing<TException>(action, isStrictType: true, "ThrowsExactly");
-            shouldAppend = state.FailAction is not null;
+            _state = IsThrowsFailing<TException>(action, isStrictType: true, "ThrowsExactly");
+            shouldAppend = _state.FailAction is not null;
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
