@@ -95,6 +95,154 @@ public sealed partial class Assert
 #endif
     }
 
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertNonGenericAreEqualInterpolatedStringHandler
+    {
+        private readonly StringBuilder? _builder;
+
+        public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, float expected, float actual, float delta, out bool shouldAppend)
+        {
+            shouldAppend = AreEqualFailing(expected, actual, delta);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, decimal expected, decimal actual, decimal delta, out bool shouldAppend)
+        {
+            shouldAppend = AreEqualFailing(expected, actual, delta);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, long expected, long actual, long delta, out bool shouldAppend)
+        {
+            shouldAppend = AreEqualFailing(expected, actual, delta);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, double expected, double actual, double delta, out bool shouldAppend)
+        {
+            shouldAppend = AreEqualFailing(expected, actual, delta);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? expected, string? actual, bool ignoreCase, out bool shouldAppend)
+        {
+            shouldAppend = AreEqualFailing(expected, actual, ignoreCase);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? expected, string? actual, bool ignoreCase, [NotNull] CultureInfo? culture, out bool shouldAppend)
+        {
+            Guard.NotNull(culture);
+            shouldAppend = AreEqualFailing(expected, actual, ignoreCase, culture);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal bool ShouldAppend => _builder is not null;
+
+        internal readonly string ToStringAndClear() => _builder!.ToString();
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NET
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertNonGenericAreNotEqualInterpolatedStringHandler
+    {
+        private readonly StringBuilder? _builder;
+
+        public AssertNonGenericAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, float expected, float actual, float delta, out bool shouldAppend)
+        {
+            shouldAppend = AreNotEqualFailing(expected, actual, delta);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        public AssertNonGenericAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, decimal expected, decimal actual, decimal delta, out bool shouldAppend)
+        {
+            shouldAppend = AreNotEqualFailing(expected, actual, delta);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        public AssertNonGenericAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, long expected, long actual, long delta, out bool shouldAppend)
+        {
+            shouldAppend = AreNotEqualFailing(expected, actual, delta);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        public AssertNonGenericAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, double expected, double actual, double delta, out bool shouldAppend)
+        {
+            shouldAppend = AreNotEqualFailing(expected, actual, delta);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        public AssertNonGenericAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? expected, string? actual, bool ignoreCase, out bool shouldAppend)
+        {
+            shouldAppend = AreNotEqualFailing(expected, actual, ignoreCase);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        public AssertNonGenericAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? expected, string? actual, bool ignoreCase, [NotNull] CultureInfo? culture, out bool shouldAppend)
+        {
+            Guard.NotNull(culture);
+            shouldAppend = AreNotEqualFailing(expected, actual, ignoreCase, culture);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal bool ShouldAppend => _builder is not null;
+
+        internal readonly string ToStringAndClear() => _builder!.ToString();
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NET
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
@@ -653,7 +801,7 @@ public sealed partial class Assert
         => AreEqual(expected, actual, delta, message, null);
 
     /// <inheritdoc cref="AreEqual(float, float, float, string?)"/>
-    public static void AreEqual(float expected, float actual, float delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler? message)
+    public static void AreEqual(float expected, float actual, float delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
     {
         if (message.ShouldAppend)
         {
