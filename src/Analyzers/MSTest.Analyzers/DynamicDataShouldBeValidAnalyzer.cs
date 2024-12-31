@@ -169,11 +169,10 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
                 return (potentialProperty, false);
             }
 
-            IEnumerable<IMethodSymbol> candidateMethods = potentialMembers.OfType<IMethodSymbol>().Where(m => m.Parameters.Length == 0);
+            IEnumerable<ISymbol> candidateMethods = potentialMembers.Where(m => m.Kind == SymbolKind.Method);
             if (candidateMethods.Count() > 1)
             {
-                // If there are multiple methods with the same name and all are parameterless, report a diagnostic. This is not a supported scenario.
-                // Note: This is likely to happen only when they differ in arity (for example, one is non-generic and the other is generic).
+                // If there are multiple methods with the same name, report a diagnostic. This is not a supported scenario.
                 return (null, true);
             }
 
