@@ -12,24 +12,92 @@ using Newtonsoft.Json.Linq;
 
 namespace DataSourceTestProject;
 
+public abstract class DynamicDataTestsBase
+{
+    public static IEnumerable<object[]> GetDataFromBase()
+    {
+        yield return
+        [
+            "John;Doe",
+            new User()
+            {
+                FirstName = "John",
+                LastName = "Doe",
+            }
+        ];
+
+        yield return
+        [
+            "Jane;Doe",
+            new User()
+            {
+                FirstName = "Jane",
+                LastName = "Doe",
+            }
+        ];
+    }
+
+    public static IEnumerable<object[]> DataFromBase
+    {
+        get
+        {
+            yield return
+            [
+                "John;Doe",
+                new User()
+                {
+                    FirstName = "John",
+                    LastName = "Doe",
+                }
+            ];
+
+            yield return
+            [
+                "Jane;Doe",
+                new User()
+                {
+                    FirstName = "Jane",
+                    LastName = "Doe",
+                }
+            ];
+        }
+    }
+}
+
 [TestClass]
-public class DynamicDataTests
+public class DynamicDataTests : DynamicDataTestsBase
 {
     [DataTestMethod]
     [DynamicData(nameof(GetParseUserData), DynamicDataSourceType.Method)]
     public void DynamicDataTest_SourceMethod(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
+    [DynamicData(nameof(GetDataFromBase), DynamicDataSourceType.Method)]
+    public void DynamicDataTest_SourceMethodFromBase(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
+
+    [DataTestMethod]
     [DynamicData(nameof(GetParseUserData))]
     public void DynamicDataTest_SourceMethodAuto(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
+
+    [DataTestMethod]
+    [DynamicData(nameof(GetDataFromBase))]
+    public void DynamicDataTest_SourceMethodAutoFromBase(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
     [DynamicData(nameof(ParseUserData), DynamicDataSourceType.Property)]
     public void DynamicDataTest_SourceProperty(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
+    [DynamicData(nameof(DataFromBase), DynamicDataSourceType.Property)]
+    public void DynamicDataTest_SourcePropertyFromBase(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
+
+    [DataTestMethod]
     [DynamicData(nameof(ParseUserData))]
     public void DynamicDataTest_SourcePropertyAuto(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
+
+    [DataTestMethod]
+    [DynamicData(nameof(DataFromBase))]
+    public void DynamicDataTest_SourcePropertyAutoFromBase(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
     [DynamicData(nameof(GetParseUserData), DynamicDataSourceType.Method,
@@ -117,54 +185,9 @@ public class DynamicDataTests
         Assert.AreEqual(user.LastName, expectedUser.LastName);
     }
 
-    public static IEnumerable<object[]> GetParseUserData()
-    {
-        yield return
-        [
-            "John;Doe",
-            new User()
-            {
-                FirstName = "John",
-                LastName = "Doe",
-            }
-        ];
+    public static IEnumerable<object[]> GetParseUserData() => GetDataFromBase();
 
-        yield return
-        [
-            "Jane;Doe",
-            new User()
-            {
-                FirstName = "Jane",
-                LastName = "Doe",
-            }
-        ];
-    }
-
-    public static IEnumerable<object[]> ParseUserData
-    {
-        get
-        {
-            yield return
-            [
-                "John;Doe",
-                new User()
-                {
-                    FirstName = "John",
-                    LastName = "Doe",
-                }
-            ];
-
-            yield return
-            [
-                "Jane;Doe",
-                new User()
-                {
-                    FirstName = "Jane",
-                    LastName = "Doe",
-                }
-            ];
-        }
-    }
+    public static IEnumerable<object[]> ParseUserData => DataFromBase;
 
     public static string GetCustomDynamicDataDisplayName(MethodInfo methodInfo, object[] data)
         => $"Custom DynamicDataTestMethod {methodInfo.Name} with {data.Length} parameters";
