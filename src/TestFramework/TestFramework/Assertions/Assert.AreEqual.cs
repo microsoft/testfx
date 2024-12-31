@@ -14,7 +14,7 @@ public sealed partial class Assert
 {
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly ref struct AssertAreEqualInterpolatedStringHandler<TArgument>
+    public readonly struct AssertAreEqualInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;
         private readonly object? _expected;
