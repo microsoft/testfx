@@ -19,11 +19,11 @@ internal class DynamicDataOperations : IDynamicDataOperations
         {
             case DynamicDataSourceType.AutoDetect:
 #pragma warning disable IDE0045 // Convert to conditional expression - it becomes less readable.
-                if (PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataPropertyInfo)
+                if (PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(_dynamicDataDeclaringType, _dynamicDataSourceName, includeNonPublic: true) is { } dynamicDataPropertyInfo)
                 {
                     obj = GetDataFromProperty(dynamicDataPropertyInfo);
                 }
-                else if (PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethod(_dynamicDataDeclaringType, _dynamicDataSourceName, parameters: []) is { } dynamicDataMethodInfo)
+                else if (PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethod(_dynamicDataDeclaringType, _dynamicDataSourceName, parameters: [], includeNonPublic: true) is { } dynamicDataMethodInfo)
                 {
                     obj = GetDataFromMethod(dynamicDataMethodInfo);
                 }
@@ -35,14 +35,14 @@ internal class DynamicDataOperations : IDynamicDataOperations
 
                 break;
             case DynamicDataSourceType.Property:
-                PropertyInfo property = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(_dynamicDataDeclaringType, _dynamicDataSourceName)
+                PropertyInfo property = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(_dynamicDataDeclaringType, _dynamicDataSourceName, includeNonPublic: true)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {_dynamicDataSourceName}");
 
                 obj = GetDataFromProperty(property);
                 break;
 
             case DynamicDataSourceType.Method:
-                MethodInfo method = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethod(_dynamicDataDeclaringType, _dynamicDataSourceName, parameters: [])
+                MethodInfo method = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethod(_dynamicDataDeclaringType, _dynamicDataSourceName, parameters: [], includeNonPublic: true)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {_dynamicDataSourceName}");
 
                 obj = GetDataFromMethod(method);
