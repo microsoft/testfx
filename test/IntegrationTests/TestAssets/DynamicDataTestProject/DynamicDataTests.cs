@@ -62,6 +62,10 @@ public abstract class DynamicDataTestsBase
             ];
         }
     }
+
+    public static IEnumerable<object[]> DataShadowingBase => throw new NotImplementedException();
+
+    public static IEnumerable<object[]> GetDataShadowingBase() => throw new NotImplementedException();
 }
 
 [TestClass]
@@ -76,12 +80,20 @@ public class DynamicDataTests : DynamicDataTestsBase
     public void DynamicDataTest_SourceMethodFromBase(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
+    [DynamicData(nameof(GetDataShadowingBase), DynamicDataSourceType.Method)]
+    public void DynamicDataTest_SourceMethodShadowingBase(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
+
+    [DataTestMethod]
     [DynamicData(nameof(GetParseUserData))]
     public void DynamicDataTest_SourceMethodAuto(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
     [DynamicData(nameof(GetDataFromBase))]
     public void DynamicDataTest_SourceMethodAutoFromBase(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
+
+    [DataTestMethod]
+    [DynamicData(nameof(GetDataShadowingBase))]
+    public void DynamicDataTest_SourceMethodAutoShadowingBase(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
     [DynamicData(nameof(ParseUserData), DynamicDataSourceType.Property)]
@@ -92,12 +104,20 @@ public class DynamicDataTests : DynamicDataTestsBase
     public void DynamicDataTest_SourcePropertyFromBase(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
+    [DynamicData(nameof(DataShadowingBase), DynamicDataSourceType.Property)]
+    public void DynamicDataTest_SourcePropertyShadowingBase(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
+
+    [DataTestMethod]
     [DynamicData(nameof(ParseUserData))]
     public void DynamicDataTest_SourcePropertyAuto(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
     [DynamicData(nameof(DataFromBase))]
     public void DynamicDataTest_SourcePropertyAutoFromBase(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
+
+    [DataTestMethod]
+    [DynamicData(nameof(DataShadowingBase))]
+    public void DynamicDataTest_SourcePropertyAutoShadowingBase(string userData, User expectedUser) => ParseAndAssert(userData, expectedUser);
 
     [DataTestMethod]
     [DynamicData(nameof(GetParseUserData), DynamicDataSourceType.Method,
@@ -185,9 +205,13 @@ public class DynamicDataTests : DynamicDataTestsBase
         Assert.AreEqual(user.LastName, expectedUser.LastName);
     }
 
+    public static new IEnumerable<object[]> GetDataShadowingBase() => GetDataFromBase();
+
     public static IEnumerable<object[]> GetParseUserData() => GetDataFromBase();
 
     public static IEnumerable<object[]> ParseUserData => DataFromBase;
+
+    public static new IEnumerable<object[]> DataShadowingBase => DataFromBase;
 
     public static string GetCustomDynamicDataDisplayName(MethodInfo methodInfo, object[] data)
         => $"Custom DynamicDataTestMethod {methodInfo.Name} with {data.Length} parameters";
