@@ -55,26 +55,28 @@ internal sealed class UseNewerAssertThrowsAnalyzer : DiagnosticAnalyzer
     {
         var operation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = operation.TargetMethod;
-        if (SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, assertTypeSymbol) &&
-            targetMethod.Name is "ThrowsException" or "ThrowsExceptionAsync")
+        if (!SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, assertTypeSymbol) ||
+            targetMethod.Name is not ("ThrowsException" or "ThrowsExceptionAsync"))
         {
-            ImmutableArray<Location> additionalLocations = ImmutableArray<Location>.Empty;
-
-            // The old synchronous ThrowsException method has an overload that takes a Func<object> as the action.
-            // The new synchronous ThrowsExactly method does not have this overload, and only Action overload is available.
-            // Hence, the codefix should be aware of that to adjust accordingly.
-            // For example, 'Assert.ThrowsException(() => 5)' should be fixed to Assert.ThrowsExactly(() => _ = 5).
-            // Also, Assert.ThrowsException usage could be a long body with some return statements, which would be invalid for ThrowsExactly as there is only Action overload.
-            // The codefix should adjust any "return whatever;" statements to "_ = whatever;" followed by "return;"
-            // The codefix will know that it needs to adjust something if there is an additional location, which will be pointing to the action argument.
-            if (!targetMethod.Name.EndsWith("Async", StringComparison.Ordinal) &&
-                targetMethod.Parameters[0].Type.OriginalDefinition.Equals(funcType, SymbolEqualityComparer.Default) &&
-                operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Ordinal == 0)?.Syntax.GetLocation() is { } additionalLocation)
-            {
-                additionalLocations = ImmutableArray.Create(additionalLocation);
-            }
-
-            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, additionalLocations, properties: null));
+            return;
         }
+
+        ImmutableArray<Location> additionalLocations = ImmutableArray<Location>.Empty;
+
+        // The old synchronous ThrowsException method has an overload that takes a Func<object> as the action.
+        // The new synchronous ThrowsExactly method does not have this overload, and only Action overload is available.
+        // Hence, the codefix should be aware of that to adjust accordingly.
+        // For example, 'Assert.ThrowsException(() => 5)' should be fixed to Assert.ThrowsExactly(() => _ = 5).
+        // Also, Assert.ThrowsException usage could be a long body with some return statements, which would be invalid for ThrowsExactly as there is only Action overload.
+        // The codefix should adjust any "return whatever;" statements to "_ = whatever;" followed by "return;"
+        // The codefix will know that it needs to adjust something if there is an additional location, which will be pointing to the action argument.
+        if (!targetMethod.Name.EndsWith("Async", StringComparison.Ordinal) &&
+            targetMethod.Parameters[0].Type.OriginalDefinition.Equals(funcType, SymbolEqualityComparer.Default) &&
+            operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Ordinal == 0)?.Syntax.GetLocation() is { } additionalLocation)
+        {
+            additionalLocations = ImmutableArray.Create(additionalLocation);
+        }
+
+        context.ReportDiagnostic(operation.CreateDiagnostic(Rule, additionalLocations, properties: null));
     }
 }

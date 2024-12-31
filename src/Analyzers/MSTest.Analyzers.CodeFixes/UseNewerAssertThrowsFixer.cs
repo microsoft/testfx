@@ -79,71 +79,73 @@ public sealed class UseNewerAssertThrowsFixer : CodeFixProvider
             editor.ReplaceNode(arg.NameColon!.Name, arg.NameColon!.Name.WithIdentifier(SyntaxFactory.Identifier("messageArgs").WithTriviaFrom(arg.NameColon.Name.Identifier)));
         }
 
-        if (additionalLocations.Count == 1)
+        if (additionalLocations.Count != 1)
         {
-            // The existing ThrowsException call is using the Func<object> overload. The new ThrowsExactly method does not have this overload, so we need to adjust.
-            // This is a best effort handling.
-            SyntaxNode actionArgument = editor.OriginalRoot.FindNode(additionalLocations[0].SourceSpan, getInnermostNodeForTie: true);
+            return editor.GetChangedRoot();
+        }
 
-            if (actionArgument is ParenthesizedLambdaExpressionSyntax lambdaSyntax)
+        // The existing ThrowsException call is using the Func<object> overload. The new ThrowsExactly method does not have this overload, so we need to adjust.
+        // This is a best effort handling.
+        SyntaxNode actionArgument = editor.OriginalRoot.FindNode(additionalLocations[0].SourceSpan, getInnermostNodeForTie: true);
+
+        if (actionArgument is ParenthesizedLambdaExpressionSyntax lambdaSyntax)
+        {
+            if (lambdaSyntax.ExpressionBody is not null)
             {
-                if (lambdaSyntax.ExpressionBody is not null)
+                editor.ReplaceNode(
+                    lambdaSyntax.ExpressionBody,
+                    AssignToDiscard(lambdaSyntax.ExpressionBody));
+            }
+            else if (lambdaSyntax.Block is not null)
+            {
+                // This is more complex. We need to iterate through all descendants of type ReturnStatementSyntax, and split it into two statements.
+                // The first statement will be an assignment expression to a discard, and the second statement will be 'return;'.
+                // We may even need to add extra braces in case the return statement (for example) is originally inside an if statement without braces.
+                // For example:
+                // if (condition)
+                //     return Whatever;
+                // should be converted to:
+                // if (condition)
+                // {
+                //     _ = Whatever;
+                //     return;
+                // }
+                // Keep in mind: When descending into descendant nodes, we shouldn't descend into potential other lambda expressions or local functions.
+                IEnumerable<ReturnStatementSyntax> returnStatements = lambdaSyntax.Block.DescendantNodes(descendIntoChildren: node => node is not (LocalFunctionStatementSyntax or AnonymousFunctionExpressionSyntax)).OfType<ReturnStatementSyntax>();
+                foreach (ReturnStatementSyntax returnStatement in returnStatements)
                 {
-                    editor.ReplaceNode(
-                        lambdaSyntax.ExpressionBody,
-                        AssignToDiscard(lambdaSyntax.ExpressionBody));
-                }
-                else if (lambdaSyntax.Block is not null)
-                {
-                    // This is more complex. We need to iterate through all descendants of type ReturnStatementSyntax, and split it into two statements.
-                    // The first statement will be an assignment expression to a discard, and the second statement will be 'return;'.
-                    // We may even need to add extra braces in case the return statement (for example) is originally inside an if statement without braces.
-                    // For example:
-                    // if (condition)
-                    //     return Whatever;
-                    // should be converted to:
-                    // if (condition)
-                    // {
-                    //     _ = Whatever;
-                    //     return;
-                    // }
-                    // Keep in mind: When descending into descendant nodes, we shouldn't descend into potential other lambda expressions or local functions.
-                    IEnumerable<ReturnStatementSyntax> returnStatements = lambdaSyntax.Block.DescendantNodes(descendIntoChildren: node => node is not (LocalFunctionStatementSyntax or AnonymousFunctionExpressionSyntax)).OfType<ReturnStatementSyntax>();
-                    foreach (ReturnStatementSyntax returnStatement in returnStatements)
+                    if (returnStatement.Expression is not { } returnExpression)
                     {
-                        if (returnStatement.Expression is not { } returnExpression)
-                        {
-                            // This should be an error in user code.
-                            continue;
-                        }
+                        // This should be an error in user code.
+                        continue;
+                    }
 
-                        ExpressionStatementSyntax returnReplacement = SyntaxFactory.ExpressionStatement(AssignToDiscard(returnStatement.Expression));
+                    ExpressionStatementSyntax returnReplacement = SyntaxFactory.ExpressionStatement(AssignToDiscard(returnStatement.Expression));
 
-                        if (returnStatement.Parent is BlockSyntax blockSyntax)
-                        {
-                            editor.InsertAfter(returnStatement, SyntaxFactory.ReturnStatement());
-                            editor.ReplaceNode(returnStatement, returnReplacement);
-                        }
-                        else
-                        {
-                            editor.ReplaceNode(
-                                returnStatement,
-                                SyntaxFactory.Block(
-                                    returnReplacement,
-                                    SyntaxFactory.ReturnStatement()));
-                        }
+                    if (returnStatement.Parent is BlockSyntax blockSyntax)
+                    {
+                        editor.InsertAfter(returnStatement, SyntaxFactory.ReturnStatement());
+                        editor.ReplaceNode(returnStatement, returnReplacement);
+                    }
+                    else
+                    {
+                        editor.ReplaceNode(
+                            returnStatement,
+                            SyntaxFactory.Block(
+                                returnReplacement,
+                                SyntaxFactory.ReturnStatement()));
                     }
                 }
             }
-            else if (actionArgument is ExpressionSyntax expressionSyntax)
-            {
-                editor.ReplaceNode(
-                    expressionSyntax,
-                    SyntaxFactory.ParenthesizedLambdaExpression(
-                        SyntaxFactory.ParameterList(),
-                        block: null,
-                        expressionBody: AssignToDiscard(SyntaxFactory.InvocationExpression(SyntaxFactory.ParenthesizedExpression(expressionSyntax).WithAdditionalAnnotations(Simplifier.Annotation)))));
-            }
+        }
+        else if (actionArgument is ExpressionSyntax expressionSyntax)
+        {
+            editor.ReplaceNode(
+                expressionSyntax,
+                SyntaxFactory.ParenthesizedLambdaExpression(
+                    SyntaxFactory.ParameterList(),
+                    block: null,
+                    expressionBody: AssignToDiscard(SyntaxFactory.InvocationExpression(SyntaxFactory.ParenthesizedExpression(expressionSyntax).WithAdditionalAnnotations(Simplifier.Annotation)))));
         }
 
         return editor.GetChangedRoot();
