@@ -8,8 +8,8 @@
   </PropertyGroup>
   <PropertyGroup Label="MSTest prod dependencies - darc updated">
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>10.0.0-beta.24604.4</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <MicrosoftTestingExtensionsCodeCoverageVersion>17.14.0-preview.24620.2</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <MicrosoftTestingExtensionsCodeCoverageVersion>17.14.0-preview.24630.1</MicrosoftTestingExtensionsCodeCoverageVersion>
     <!-- comment to facilitate merge conflicts -->
-    <MSTestEngineVersion>1.0.0-alpha.24619.2</MSTestEngineVersion>
+    <MSTestEngineVersion>1.0.0-alpha.24629.1</MSTestEngineVersion>
   </PropertyGroup>
 </Project>

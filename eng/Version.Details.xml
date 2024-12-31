@@ -13,13 +13,13 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>45d845e04c05fbe5da9838c454bbc3af1df6be81</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.14.0-preview.24620.2">
+    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.14.0-preview.24630.1">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>8ec298cce46b78be7e9ceb9e7403ad555b51f12b</Sha>
+      <Sha>d4a113f856a31bcdcbf6e08da8928961c98bb497</Sha>
     </Dependency>
-    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24619.2">
+    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24629.1">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>0381237a1a7c06d5e36523400235d2bc013ad058</Sha>
+      <Sha>70a9fbe65deff4f8b3a8043a7ea5e2533b7e176e</Sha>
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
     <Dependency Name="Microsoft.SourceBuild.Intermediate.diagnostics" Version="9.0.0-preview.24566.1">
@@ -34,9 +34,9 @@
       <SourceBuild RepoName="source-build-externals" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="10.0.561001">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="10.0.563001">
       <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
-      <Sha>94798e07efab2663f2d1a71862780bc365d2e3ab</Sha>
+      <Sha>80f1e84b2077a7208943db050067d86c94ace837</Sha>
       <SourceBuild RepoName="source-build-reference-packages" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
