@@ -50,7 +50,7 @@ public sealed partial class Assert
         public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
 
 #if NETCOREAPP3_1_OR_GREATER
-        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 #endif
     }
 
@@ -92,7 +92,7 @@ public sealed partial class Assert
         public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
 
 #if NETCOREAPP3_1_OR_GREATER
-        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 #endif
     }
 
