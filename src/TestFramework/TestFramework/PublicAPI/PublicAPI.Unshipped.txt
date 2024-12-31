@@ -22,6 +22,16 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStr
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AppendLiteral(string! value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AssertAreSameInterpolatedStringHandler() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AssertAreSameInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? expected, TArgument? actual, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>.AssertGenericIsInstanceOfTypeInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>.AssertGenericIsInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendLiteral(string! value) -> void
@@ -110,6 +120,11 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame<T>(T? notE
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool condition, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool? condition, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType(object? value, System.Type? expectedType, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value, out T instance, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType(object? value, System.Type? wrongType, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType<T>(object? value, Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotNull(object? value, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNull(object? value, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNullInterpolatedStringHandler message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(bool condition, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStringHandler message) -> void

@@ -50,6 +50,40 @@ public sealed partial class Assert
 
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>
+    {
+        private readonly StringBuilder? _builder;
+        private readonly object? _value;
+
+        public AssertGenericIsInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend)
+        {
+            _value = value;
+            shouldAppend = IsInstanceOfTypeFailing(value, typeof(TArg));
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal void FailIfNeeded()
+        {
+            if (_builder is not null)
+            {
+                FailIsInstanceOfType(_value, typeof(TArg), _builder.ToString());
+            }
+        }
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NETCOREAPP3_1_OR_GREATER
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public readonly struct AssertIsNotInstanceOfTypeInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
@@ -72,6 +106,40 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 FailIsNotInstanceOfType(_value, _wrongType, _builder.ToString());
+            }
+        }
+
+        public readonly void AppendLiteral(string value) => _builder!.Append(value);
+
+        public readonly void AppendFormatted<T>(T value) => _builder!.Append(value);
+
+#if NETCOREAPP3_1_OR_GREATER
+        public readonly void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value.ToString());
+#endif
+    }
+
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>
+    {
+        private readonly StringBuilder? _builder;
+        private readonly object? _value;
+
+        public AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend)
+        {
+            _value = value;
+            shouldAppend = IsNotInstanceOfTypeFailing(value, typeof(TArg));
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal void FailIfNeeded()
+        {
+            if (_builder is not null)
+            {
+                FailIsNotInstanceOfType(_value, typeof(TArg), _builder.ToString());
             }
         }
 
@@ -145,6 +213,14 @@ public sealed partial class Assert
     public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message)
         => IsInstanceOfType(value, expectedType, message, null);
 
+    /// <inheritdoc cref="IsInstanceOfType(object?, Type?, string?)" />
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, [InterpolatedStringHandlerArgument(nameof(value), nameof(expectedType))] ref AssertIsInstanceOfTypeInterpolatedStringHandler message)
+#pragma warning restore IDE0060 // Remove unused parameter
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
+        => message.FailIfNeeded();
+#pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
+
     /// <summary>
     /// Tests whether the specified object is an instance of the generic
     /// type and throws an exception if the generic type is not in the
@@ -154,6 +230,14 @@ public sealed partial class Assert
     public static void IsInstanceOfType<T>([NotNull] object? value, string? message)
         => IsInstanceOfType(value, typeof(T), message, null);
 
+    /// <inheritdoc cref="IsInstanceOfType{T}(object?, string?)" />
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static void IsInstanceOfType<T>([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message)
+#pragma warning restore IDE0060 // Remove unused parameter
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
+        => message.FailIfNeeded();
+#pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
+
     /// <summary>
     /// Tests whether the specified object is an instance of the generic
     /// type and throws an exception if the generic type is not in the
@@ -162,6 +246,15 @@ public sealed partial class Assert
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, string? message)
         => IsInstanceOfType(value, out instance, message, null);
+
+    /// <inheritdoc cref="IsInstanceOfType{T}(object?, out T, string?)" />
+    public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message)
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
+    {
+        message.FailIfNeeded();
+        instance = (T)value!;
+    }
+#pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
     /// Tests whether the specified object is an instance of the expected
@@ -291,6 +384,14 @@ public sealed partial class Assert
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message)
         => IsNotInstanceOfType(value, wrongType, message, null);
 
+    /// <inheritdoc cref="IsNotInstanceOfType(object?, Type?, string?)" />
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, [InterpolatedStringHandlerArgument(nameof(value), nameof(wrongType))] ref AssertIsNotInstanceOfTypeInterpolatedStringHandler message)
+#pragma warning restore IDE0060 // Remove unused parameter
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
+        => message.FailIfNeeded();
+#pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
+
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong generic
     /// type and throws an exception if the specified type is in the
@@ -299,6 +400,12 @@ public sealed partial class Assert
     /// <typeparam name="T">The type that <paramref name="value"/> should not be.</typeparam>
     public static void IsNotInstanceOfType<T>(object? value, string? message)
         => IsNotInstanceOfType(value, typeof(T), message, null);
+
+    /// <inheritdoc cref="IsNotInstanceOfType{T}(object?, string?)" />
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static void IsNotInstanceOfType<T>(object? value, [InterpolatedStringHandlerArgument(nameof(value))] AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<T> message)
+#pragma warning restore IDE0060 // Remove unused parameter
+        => message.FailIfNeeded();
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong

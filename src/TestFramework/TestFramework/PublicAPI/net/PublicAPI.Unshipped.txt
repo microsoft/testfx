@@ -3,6 +3,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedSt
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AppendFormatted(System.ReadOnlySpan<char> value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>.AppendFormatted(System.ReadOnlySpan<char> value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AppendFormatted(System.ReadOnlySpan<char> value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(System.ReadOnlySpan<char> value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(System.ReadOnlySpan<char> value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendFormatted(System.ReadOnlySpan<char> value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler.AppendFormatted(System.ReadOnlySpan<char> value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler.AppendFormatted(System.ReadOnlySpan<char> value) -> void
