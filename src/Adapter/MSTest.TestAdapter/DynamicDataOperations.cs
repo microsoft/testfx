@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -258,7 +258,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
         Type? currentType = type;
         while (currentType is not null)
         {
-            PropertyInfo? property = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(type, propertyName);
+            PropertyInfo? property = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(currentType, propertyName);
             if (property is not null)
             {
                 return property;
@@ -276,7 +276,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
         Type? currentType = type;
         while (currentType is not null)
         {
-            MethodInfo? method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(type, methodName);
+            MethodInfo? method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(currentType, methodName);
             if (method is not null)
             {
                 return method;
