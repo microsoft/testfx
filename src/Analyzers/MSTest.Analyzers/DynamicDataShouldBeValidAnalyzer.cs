@@ -180,14 +180,25 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        // If there are multiple members with the same name, report a diagnostic. This is not a supported scenario.
-        if (potentialMembers.Length > 1)
+        ISymbol? potentialProperty = potentialMembers.FirstOrDefault(m => m.Kind == SymbolKind.Property);
+        ISymbol member;
+        if (potentialProperty is not null)
         {
-            context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(FoundTooManyMembersRule, declaringType.Name, memberName));
-            return;
+            member = potentialProperty;
         }
+        else
+        {
+            IEnumerable<IMethodSymbol> candidateMethods = potentialMembers.OfType<IMethodSymbol>().Where(m => m.Parameters.Length == 0);
+            if (candidateMethods.Count() > 1)
+            {
+                // If there are multiple methods with the same name and all are parameterless, report a diagnostic. This is not a supported scenario.
+                // Note: This is likely to happen only when they differ in arity (for example, one is non-generic and the other is generic).
+                context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(FoundTooManyMembersRule, declaringType.Name, memberName));
+                return;
+            }
 
-        ISymbol member = potentialMembers[0];
+            member = candidateMethods.FirstOrDefault() ?? potentialMembers[0];
+        }
 
         switch (member.Kind)
         {
