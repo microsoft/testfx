@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #nullable enable
@@ -73,7 +73,7 @@ public partial class AssertTests
     {
         DummyClassTrackingToStringCalls o = new();
         Exception ex = VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType(5, typeof(string), $"User-provided message {o}"));
-        Verify(ex.Message == "Assert.IsInstanceOfType failed. User-provided message Expected type:<System.String>. Actual type:<System.Int32>.");
+        Verify(ex.Message == "Assert.IsInstanceOfType failed. User-provided message DummyClassTrackingToStringCalls Expected type:<System.String>. Actual type:<System.Int32>.");
         Verify(o.WasToStringCalled);
     }
 
