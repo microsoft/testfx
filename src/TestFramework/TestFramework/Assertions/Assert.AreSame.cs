@@ -55,15 +55,15 @@ public sealed partial class Assert
         // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
         // the BCL's StringBuilder.AppendInterpolatedStringHandler
         // TODO: Is InvariantCulture the right thing to use here?
-        public void AppendFormatted<T>(T value, string? format) => _builder!.Append(string.Format(CultureInfo.InvariantCulture, $"{{0:{format}}}", value));
+        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0:{format}}}", value);
 
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.Append(string.Format(CultureInfo.InvariantCulture, $"{{0,{alignment}}}", value));
+        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}}}", value);
 
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.Append(string.Format(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value));
+        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
 
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.Append(string.Format(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value));
+        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
 
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.Append(string.Format(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value));
+        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
     }
 
     [InterpolatedStringHandler]
@@ -105,15 +105,15 @@ public sealed partial class Assert
         // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
         // the BCL's StringBuilder.AppendInterpolatedStringHandler
         // TODO: Is InvariantCulture the right thing to use here?
-        public void AppendFormatted<T>(T value, string? format) => _builder!.Append(string.Format(CultureInfo.InvariantCulture, $"{{0:{format}}}", value));
+        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0:{format}}}", value);
 
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.Append(string.Format(CultureInfo.InvariantCulture, $"{{0,{alignment}}}", value));
+        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}}}", value);
 
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.Append(string.Format(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value));
+        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
 
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.Append(string.Format(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value));
+        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
 
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.Append(string.Format(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value));
+        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
     }
 
     /// <summary>
