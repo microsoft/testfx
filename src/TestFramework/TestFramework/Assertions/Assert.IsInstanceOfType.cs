@@ -61,9 +61,13 @@ public sealed partial class Assert
 
         public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
 
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
     [InterpolatedStringHandler]
@@ -113,9 +117,13 @@ public sealed partial class Assert
 
         public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
 
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
     [InterpolatedStringHandler]
@@ -167,9 +175,13 @@ public sealed partial class Assert
 
         public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
 
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
     [InterpolatedStringHandler]
@@ -219,9 +231,13 @@ public sealed partial class Assert
 
         public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
 
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
     /// <summary>
