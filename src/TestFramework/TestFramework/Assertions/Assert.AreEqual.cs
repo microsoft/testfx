@@ -70,7 +70,9 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
 
         // NOTE: All the overloads involving format and/or alignment are not super efficient.
@@ -132,7 +134,9 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
 
         // NOTE: All the overloads involving format and/or alignment are not super efficient.
@@ -228,7 +232,9 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
 
         // NOTE: All the overloads involving format and/or alignment are not super efficient.
@@ -324,7 +330,9 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
 
         // NOTE: All the overloads involving format and/or alignment are not super efficient.
