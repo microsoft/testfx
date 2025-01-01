@@ -50,18 +50,17 @@ public sealed partial class Assert
         // and should be okay if not very optimized.
         // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
         // the BCL's StringBuilder.AppendInterpolatedStringHandler
-        // TODO: Is InvariantCulture the right thing to use here?
-        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0:{format}}}", value);
+        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
 
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}}}", value);
+        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
 
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
+        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
+        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
+        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
@@ -104,18 +103,17 @@ public sealed partial class Assert
         // and should be okay if not very optimized.
         // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
         // the BCL's StringBuilder.AppendInterpolatedStringHandler
-        // TODO: Is InvariantCulture the right thing to use here?
-        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0:{format}}}", value);
+        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
 
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}}}", value);
+        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
 
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
+        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
+        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(CultureInfo.InvariantCulture, $"{{0,{alignment}:{format}}}", value);
+        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
