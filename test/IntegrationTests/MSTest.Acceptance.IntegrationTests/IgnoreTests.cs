@@ -18,7 +18,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 3);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 12, skipped: 9);
 
         testHostResult.AssertOutputContains("SubClass.Method");
     }
@@ -56,6 +56,17 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
+    }
+
+    [TestMethod]
+    public async Task WhenSpecificDataSourceIsIgnoredViaIgnoreMessageProperty()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithDataSourcesUsingIgnoreMessage");
+
+        // Assert
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 10, skipped: 6);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -104,6 +115,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
 
 #file UnitTest1.cs
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -190,6 +202,50 @@ public class TestClassWithMethodUsingIgnoreMessage
     [TestMethod]
     public void TestMethod2()
     {
+    }
+}
+
+[TestClass]
+public class TestClassWithDataSourcesUsingIgnoreMessage
+{
+    [TestMethod] // 1 skipped, 2 pass
+    [DataRow(0, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DataRow(1, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold, IgnoreMessage = "This data row is ignored")]
+    [DataRow(2, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    public void TestMethod1(int i)
+    {
+    }
+
+    [TestMethod] // 1 skipped (folded), 3 pass
+    [DynamicData("Data", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData("Data", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold, IgnoreMessage = "This source is ignored")]
+    public void TestMethod2(int i)
+    {
+    }
+
+    [TestMethod] // 1 skipped, 2 pass
+    [DataRow(0, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DataRow(1, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold, IgnoreMessage = "This data row is ignored")]
+    [DataRow(2, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    public void TestMethod3(int i)
+    {
+    }
+
+    [TestMethod] // 3 skipped (unfolded), 3 pass
+    [DynamicData("Data", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DynamicData("Data", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold, IgnoreMessage = "This source is ignored")]
+    public void TestMethod4(int i)
+    {
+    }
+
+    public static IEnumerable<object[]> Data
+    {
+        get
+        {
+            yield return new object[] { 0 };
+            yield return new object[] { 1 };
+            yield return new object[] { 2 };
+        }
     }
 }
 """;
