@@ -31,7 +31,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                FailIsNull(_builder.ToString());
+                ThrowAssertIsNullFailed(_builder.ToString());
             }
         }
 
@@ -86,7 +86,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                FailIsNotNull(_builder.ToString());
+                ThrowAssertIsNotNullFailed(_builder.ToString());
             }
         }
 
@@ -179,13 +179,13 @@ public sealed partial class Assert
     {
         if (IsNullFailing(value))
         {
-            FailIsNull(BuildUserMessage(message, parameters));
+            ThrowAssertIsNullFailed(BuildUserMessage(message, parameters));
         }
     }
 
     private static bool IsNullFailing(object? value) => value is not null;
 
-    private static void FailIsNull(string message)
+    private static void ThrowAssertIsNullFailed(string message)
         => ThrowAssertFailed("Assert.IsNull", message);
 
     /// <summary>
@@ -247,13 +247,13 @@ public sealed partial class Assert
     {
         if (IsNotNullFailing(value))
         {
-            FailIsNotNull(BuildUserMessage(message, parameters));
+            ThrowAssertIsNotNullFailed(BuildUserMessage(message, parameters));
         }
     }
 
     private static bool IsNotNullFailing([NotNullWhen(false)] object? value) => value is null;
 
     [DoesNotReturn]
-    private static void FailIsNotNull(string message)
+    private static void ThrowAssertIsNotNullFailed(string message)
         => ThrowAssertFailed("Assert.IsNotNull", message);
 }

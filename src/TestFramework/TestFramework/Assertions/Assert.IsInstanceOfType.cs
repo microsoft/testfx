@@ -35,7 +35,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                FailIsInstanceOfType(_value, _expectedType, _builder.ToString());
+                ThrowAssertIsInstanceOfTypeFailed(_value, _expectedType, _builder.ToString());
             }
         }
 
@@ -92,7 +92,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                FailIsInstanceOfType(_value, typeof(TArg), _builder.ToString());
+                ThrowAssertIsInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
             }
         }
 
@@ -151,7 +151,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                FailIsNotInstanceOfType(_value, _wrongType, _builder.ToString());
+                ThrowAssertIsNotInstanceOfTypeFailed(_value, _wrongType, _builder.ToString());
             }
         }
 
@@ -208,7 +208,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                FailIsNotInstanceOfType(_value, typeof(TArg), _builder.ToString());
+                ThrowAssertIsNotInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
             }
         }
 
@@ -377,7 +377,7 @@ public sealed partial class Assert
     {
         if (IsInstanceOfTypeFailing(value, expectedType))
         {
-            FailIsInstanceOfType(value, expectedType, BuildUserMessage(message, parameters));
+            ThrowAssertIsInstanceOfTypeFailed(value, expectedType, BuildUserMessage(message, parameters));
         }
     }
 
@@ -385,7 +385,7 @@ public sealed partial class Assert
         => expectedType == null || value == null || !expectedType.IsAssignableFrom(value.GetType());
 
     [DoesNotReturn]
-    private static void FailIsInstanceOfType(object? value, Type? expectedType, string userMessage)
+    private static void ThrowAssertIsInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
     {
         string finalMessage = userMessage;
         if (expectedType is not null && value is not null)
@@ -528,7 +528,7 @@ public sealed partial class Assert
     {
         if (IsNotInstanceOfTypeFailing(value, wrongType))
         {
-            FailIsNotInstanceOfType(value, wrongType, BuildUserMessage(message, parameters));
+            ThrowAssertIsNotInstanceOfTypeFailed(value, wrongType, BuildUserMessage(message, parameters));
         }
     }
 
@@ -538,7 +538,7 @@ public sealed partial class Assert
             (value is not null && wrongType.IsAssignableFrom(value.GetType()));
 
     [DoesNotReturn]
-    private static void FailIsNotInstanceOfType(object? value, Type? wrongType, string userMessage)
+    private static void ThrowAssertIsNotInstanceOfTypeFailed(object? value, Type? wrongType, string userMessage)
     {
         string finalMessage = userMessage;
         if (wrongType is not null)

@@ -31,7 +31,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                FailIsTrue(_builder.ToString());
+                ThrowAssertIsTrueFailed(_builder.ToString());
             }
         }
 
@@ -86,7 +86,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                FailIsFalse(_builder.ToString());
+                ThrowAssertIsFalseFailed(_builder.ToString());
             }
         }
 
@@ -215,7 +215,7 @@ public sealed partial class Assert
     {
         if (IsTrueFailing(condition))
         {
-            FailIsTrue(BuildUserMessage(message, parameters));
+            ThrowAssertIsTrueFailed(BuildUserMessage(message, parameters));
         }
     }
 
@@ -241,7 +241,7 @@ public sealed partial class Assert
     {
         if (IsTrueFailing(condition))
         {
-            FailIsTrue(BuildUserMessage(message, parameters));
+            ThrowAssertIsTrueFailed(BuildUserMessage(message, parameters));
         }
     }
 
@@ -251,7 +251,7 @@ public sealed partial class Assert
     private static bool IsTrueFailing(bool condition)
         => !condition;
 
-    private static void FailIsTrue(string message)
+    private static void ThrowAssertIsTrueFailed(string message)
         => ThrowAssertFailed("Assert.IsTrue", message);
 
     /// <summary>
@@ -348,7 +348,7 @@ public sealed partial class Assert
     {
         if (IsFalseFailing(condition))
         {
-            FailIsFalse(BuildUserMessage(message, parameters));
+            ThrowAssertIsFalseFailed(BuildUserMessage(message, parameters));
         }
     }
 
@@ -374,7 +374,7 @@ public sealed partial class Assert
     {
         if (IsFalseFailing(condition))
         {
-            FailIsFalse(BuildUserMessage(message, parameters));
+            ThrowAssertIsFalseFailed(BuildUserMessage(message, parameters));
         }
     }
 
@@ -385,6 +385,6 @@ public sealed partial class Assert
         => condition;
 
     [DoesNotReturn]
-    private static void FailIsFalse(string userMessage)
+    private static void ThrowAssertIsFalseFailed(string userMessage)
         => ThrowAssertFailed("Assert.IsFalse", userMessage);
 }

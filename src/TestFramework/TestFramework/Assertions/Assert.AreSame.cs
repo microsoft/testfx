@@ -35,7 +35,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                FailAreSame(_expected, _actual, _builder.ToString());
+                ThrowAssertAreSameFailed(_expected, _actual, _builder.ToString());
             }
         }
 
@@ -90,7 +90,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                FailAreNotSame(_builder.ToString());
+                ThrowAssertAreNotSameFailed(_builder.ToString());
             }
         }
 
@@ -210,14 +210,14 @@ public sealed partial class Assert
         }
 
         string userMessage = BuildUserMessage(message, parameters);
-        FailAreSame(expected, actual, userMessage);
+        ThrowAssertAreSameFailed(expected, actual, userMessage);
     }
 
     private static bool IsAreSameFailing<T>(T? expected, T? actual)
         => !ReferenceEquals(expected, actual);
 
     [DoesNotReturn]
-    private static void FailAreSame<T>(T? expected, T? actual, string userMessage)
+    private static void ThrowAssertAreSameFailed<T>(T? expected, T? actual, string userMessage)
     {
         string finalMessage = userMessage;
         if (expected is ValueType && actual is ValueType)
@@ -314,7 +314,7 @@ public sealed partial class Assert
     {
         if (IsAreNotSameFailing(notExpected, actual))
         {
-            FailAreNotSame(BuildUserMessage(message, parameters));
+            ThrowAssertAreNotSameFailed(BuildUserMessage(message, parameters));
         }
     }
 
@@ -322,6 +322,6 @@ public sealed partial class Assert
         => ReferenceEquals(notExpected, actual);
 
     [DoesNotReturn]
-    private static void FailAreNotSame(string userMessage)
+    private static void ThrowAssertAreNotSameFailed(string userMessage)
         => ThrowAssertFailed("Assert.AreNotSame", userMessage);
 }
