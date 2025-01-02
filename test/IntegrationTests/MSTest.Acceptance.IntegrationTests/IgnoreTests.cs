@@ -18,7 +18,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 3);
 
         testHostResult.AssertOutputContains("SubClass.Method");
     }
@@ -44,7 +44,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
     }
 
     [TestMethod]
@@ -55,7 +55,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
