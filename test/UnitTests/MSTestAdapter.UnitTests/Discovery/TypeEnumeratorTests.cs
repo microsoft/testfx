@@ -291,18 +291,6 @@ public partial class TypeEnumeratorTests : TestContainer
         Verify(expectedAsyncTaskName == testElement.AsyncTypeName);
     }
 
-    public void GetTestFromMethodShouldSetIgnoredPropertyToFalseIfNotSetOnTestClassAndTestMethod()
-    {
-        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
-        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
-
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
-
-        Verify(testElement is not null);
-        Verify(!testElement.Ignored);
-    }
-
     public void GetTestFromMethodShouldSetTestCategory()
     {
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);

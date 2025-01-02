@@ -24,6 +24,8 @@ public class TestResult
     /// </summary>
     public UnitTestOutcome Outcome { get; set; }
 
+    internal string? IgnoreReason { get; set; }
+
     /// <summary>
     /// Gets or sets the exception thrown when test is failed.
     /// </summary>

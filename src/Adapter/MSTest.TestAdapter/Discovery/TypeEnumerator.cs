@@ -155,7 +155,6 @@ internal class TypeEnumerator
             TestCategory = _reflectHelper.GetTestCategories(method, _type),
             DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
             Priority = _reflectHelper.GetPriority(method),
-            Ignored = _reflectHelper.IsNonDerivedAttributeDefined<IgnoreAttribute>(method, inherit: false),
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
         };
 

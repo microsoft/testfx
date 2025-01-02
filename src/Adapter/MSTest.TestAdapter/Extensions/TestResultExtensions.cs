@@ -29,7 +29,9 @@ public static class TestResultExtensions
         int i = 0;
         foreach (UTF.TestResult testResult in testResults)
         {
-            var outcome = testResult.Outcome.ToUnitTestOutcome();
+            UnitTestOutcome outcome = testResult.IgnoreReason is not null
+                ? UnitTestOutcome.Ignored
+                : testResult.Outcome.ToUnitTestOutcome();
 
             UnitTestResult unitTestResult = testResult.TestFailureException is { } testFailureException
                 ? new UnitTestResult(
@@ -40,6 +42,12 @@ public static class TestResultExtensions
                             ? testException.StackTraceInformation
                             : testFailureException.TryGetStackTraceInformation()))
                 : new UnitTestResult { Outcome = outcome };
+
+            if (testResult.IgnoreReason is not null)
+            {
+                unitTestResult.ErrorMessage = testResult.IgnoreReason;
+            }
+
             unitTestResult.StandardOut = testResult.LogOutput;
             unitTestResult.StandardError = testResult.LogError;
             unitTestResult.DebugTrace = testResult.DebugTrace;
