@@ -74,5 +74,4 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzer : DiagnosticAnalyze
             context.ReportDiagnostic(operation.CreateDiagnostic(Rule));
         }
     }
-
 }
