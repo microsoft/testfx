@@ -63,10 +63,9 @@ public class TestMethodRunnerTests : TestContainer
     private static TestClassInfo GetTestClassInfo<T>()
     {
         ConstructorInfo constructorInfo = typeof(T).GetConstructor([])!;
-        PropertyInfo testContextProperty = typeof(T).GetProperty("TestContext");
         var classAttribute = new TestClassAttribute();
         var testAssemblyInfo = new TestAssemblyInfo(typeof(T).Assembly);
-        return new TestClassInfo(typeof(T), constructorInfo, isParameterlessConstructor: true, testContextProperty, classAttribute, testAssemblyInfo);
+        return new TestClassInfo(typeof(T), constructorInfo, isParameterlessConstructor: true, classAttribute, testAssemblyInfo);
     }
 
     protected override void Dispose(bool disposing)
