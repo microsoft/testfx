@@ -474,7 +474,13 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             if (currentFragmentIndex >= _filters.Count)
             {
                 // Note: The regex for ** is .*.*, so we match against such a value expression.
-                return currentFragmentIndex > 0 && _filters.Last() is ValueExpression { Value: ".*.*" };
+                FilterExpression lastFilter = _filters.Last();
+                if (lastFilter is ValueAndPropertyExpression valueAndPropertyExpression)
+                {
+                    lastFilter = valueAndPropertyExpression.Value;
+                }
+
+                return currentFragmentIndex > 0 && lastFilter is ValueExpression { Value: ".*.*" };
             }
 
             if (!MatchFilterPattern(

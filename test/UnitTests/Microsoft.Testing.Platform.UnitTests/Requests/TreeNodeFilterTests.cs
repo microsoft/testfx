@@ -194,4 +194,23 @@ public sealed class TreeNodeFilterTests
             Assert.IsFalse(filterInstance.MatchesFilter(nodePath, nodeProperties));
         }
     }
+
+    [TestMethod]
+    public void MatchAllFilterWithPropertyExpression()
+    {
+        TreeNodeFilter filter = new("/**[A=B]");
+        Assert.IsTrue(filter.MatchesFilter("/A/B/C/D", new PropertyBag(new KeyValuePairStringProperty("A", "B"))));
+        Assert.IsFalse(filter.MatchesFilter("/A/B/C/D", new PropertyBag(new KeyValuePairStringProperty("A", "C"))));
+    }
+
+    [TestMethod]
+    public void MatchAllFilterSubpathWithPropertyExpression()
+    {
+        TreeNodeFilter filter = new("/A/**[A=B]");
+        Assert.IsTrue(filter.MatchesFilter("/A/B/C/D", new PropertyBag(new KeyValuePairStringProperty("A", "B"))));
+        Assert.IsFalse(filter.MatchesFilter("/B/A/C/D", new PropertyBag(new KeyValuePairStringProperty("A", "B"))));
+    }
+
+    [TestMethod]
+    public void MatchAllFilterWithPropertyExpression_DoNotAllowInMiddleOfFilter() => Assert.ThrowsException<ArgumentException>(() => _ = new TreeNodeFilter("/**/Path[A=B]"));
 }
