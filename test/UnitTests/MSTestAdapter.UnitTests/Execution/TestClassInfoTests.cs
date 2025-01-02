@@ -64,7 +64,7 @@ public class TestClassInfoTests : TestContainer
 
     public void TestClassInfoConstructorGetsTheConstructorInfoForTestClass() => Verify(_testClassConstructor == _testClassInfo.Constructor);
 
-    public void TestClassInfoTestContextPropertyGetsAReferenceToTheTestContextDefinedInTestClass() => Verify(_testClassInfo.TestContextProperty == _testClassType.GetProperty("TestContextProperty"));
+    public void TestClassInfoTestContextPropertyGetsAReferenceToTheTestContextDefinedInTestClass() => Verify(_testClassInfo.TestContextProperty == _testClassType.GetProperty("TestContext"));
 
     public void TestClassInfoParentGetsAReferenceToTheParentAssemblyForTheTestClass() => Verify(_testAssemblyInfo == _testClassInfo.Parent);
 
