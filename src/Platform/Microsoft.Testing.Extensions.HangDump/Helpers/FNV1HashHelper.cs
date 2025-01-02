@@ -10,20 +10,6 @@ internal static class FNV_1aHashHelper
     /// Computes a hash of the string using the FNV-1a algorithm.
     /// Used by Roslyn.
     /// </summary>
-    public static uint ComputeStringHash(string s)
-    {
-        uint num = default;
-        if (s != null)
-        {
-            num = 2166136261u;
-            int num2 = 0;
-            while (num2 < s.Length)
-            {
-                num = (s[num2] ^ num) * 16777619;
-                num2++;
-            }
-        }
-
-        return num;
-    }
+    public static uint ComputeStringHash(string input) =>
+        input.Aggregate(2166136261u, (current, ch) => (ch ^ current) * 16777619);
 }
