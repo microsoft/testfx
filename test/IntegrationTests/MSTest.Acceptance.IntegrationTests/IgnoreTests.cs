@@ -43,7 +43,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithIgnoreMessage");
 
         // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
     }
 
@@ -54,7 +54,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithMethodUsingIgnoreMessage");
 
         // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
     }
 
@@ -179,6 +179,7 @@ public class TestClassWithIgnoreMessage
     }
 }
 
+[TestClass]
 public class TestClassWithMethodUsingIgnoreMessage
 {
     [TestMethod(IgnoreMessage = "This test method is ignored")]
@@ -186,6 +187,7 @@ public class TestClassWithMethodUsingIgnoreMessage
     {
     }
 
+    [TestMethod]
     public void TestMethod2()
     {
     }
