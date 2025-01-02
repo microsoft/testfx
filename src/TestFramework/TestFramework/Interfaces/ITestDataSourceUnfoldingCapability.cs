@@ -22,17 +22,34 @@ public enum TestDataSourceUnfoldingStrategy : byte
     /// <summary>
     /// MSTest will decide whether to unfold the parameterized test based on value from the assembly level attribute
     /// <see cref="TestDataSourceOptionsAttribute" />. If no assembly level attribute is specified, then the default
-    /// configuration is to unfold.
+    /// configuration is to unfold using <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>.
     /// </summary>
     Auto,
 
     /// <summary>
     /// Each data row is treated as a separate test case.
     /// </summary>
+    [Obsolete("Use 'UnfoldUsingDataContractJsonSerializer' instead")]
     Unfold,
 
     /// <summary>
     /// The parameterized test is not unfolded; all data rows are treated as a single test case.
     /// </summary>
     Fold,
+
+    /// <summary>
+    /// Each data row is treated as a separate test case, and the data is unfolded using
+    /// <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>.
+    /// </summary>
+    UnfoldUsingDataContractJsonSerializer,
+
+    /// <summary>
+    /// Each data row is treated as a separate test case, and the data is unfolded using the data
+    /// source index and data index.
+    /// </summary>
+    /// <remarks>
+    /// Using this strategy will alter the test ID if the data source is reordered, as it depends
+    /// on the index of the data. This may affect the ability to track test cases over time.
+    /// </remarks>
+    UnfoldUsingDataIndex,
 }
