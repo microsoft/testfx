@@ -59,7 +59,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
         bool isInheritanceModeSet = methodSymbol.IsInheritanceModeSet(inheritanceBehaviorSymbol, classInitializeAttributeSymbol);
-        if (methodSymbol.IsClassInitializeMethod(classInitializeAttributeSymbol)
+        if (methodSymbol.HasAttribute(classInitializeAttributeSymbol)
             && ((!methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: true,
                 allowGenericType: isInheritanceModeSet, FixtureParameterMode.MustHaveTestContext, testContextSymbol,
                 testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))

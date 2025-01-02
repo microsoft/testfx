@@ -19,9 +19,4 @@ internal enum FilterOperator
     /// Combine the following expressions with a logical OR.
     /// </summary>
     Or,
-
-    /// <summary>
-    /// Filter the following expression by the given property.
-    /// </summary>
-    Equals,
 }

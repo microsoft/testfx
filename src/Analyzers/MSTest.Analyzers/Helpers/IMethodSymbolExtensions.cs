@@ -9,6 +9,9 @@ namespace MSTest.Analyzers.Helpers;
 
 internal static class IMethodSymbolExtensions
 {
+    public static bool HasAttribute(this IMethodSymbol methodSymbol, INamedTypeSymbol attribute)
+        => methodSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, attribute));
+
     public static bool IsPublicAndHasCorrectResultantVisibility(this IMethodSymbol methodSymbol, bool canDiscoverInternals)
     {
         // Even when we allow discovering internals, MSTest engine only supports the method being declared as public.

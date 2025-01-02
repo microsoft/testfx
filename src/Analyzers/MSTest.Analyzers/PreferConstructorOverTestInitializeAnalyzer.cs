@@ -51,7 +51,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzer : DiagnosticAnal
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
-        if (methodSymbol.IsTestInitializeMethod(testInitAttributeSymbol) && methodSymbol.ReturnsVoid)
+        if (methodSymbol.HasAttribute(testInitAttributeSymbol) && methodSymbol.ReturnsVoid)
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(Rule));
         }

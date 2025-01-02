@@ -561,20 +561,8 @@ public sealed partial class Assert
     public static void AreEqual(float expected, float actual, float delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (float.IsNaN(expected) || float.IsNaN(actual) || float.IsNaN(delta))
-        {
-            string userMessage = BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualDeltaFailMsg,
-                userMessage,
-                expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
-                actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
-                delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-            ThrowAssertFailed("Assert.AreEqual", finalMessage);
-        }
-
-        if (Math.Abs(expected - actual) > delta)
+        if (float.IsNaN(expected) || float.IsNaN(actual) || float.IsNaN(delta) ||
+            Math.Abs(expected - actual) > delta)
         {
             string userMessage = BuildUserMessage(message, parameters);
             string finalMessage = string.Format(
@@ -1130,20 +1118,8 @@ public sealed partial class Assert
     public static void AreEqual(double expected, double actual, double delta, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (double.IsNaN(expected) || double.IsNaN(actual) || double.IsNaN(delta))
-        {
-            string userMessage = BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualDeltaFailMsg,
-                userMessage,
-                expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
-                actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
-                delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-            ThrowAssertFailed("Assert.AreEqual", finalMessage);
-        }
-
-        if (Math.Abs(expected - actual) > delta)
+        if (double.IsNaN(expected) || double.IsNaN(actual) || double.IsNaN(delta) ||
+            Math.Abs(expected - actual) > delta)
         {
             string userMessage = BuildUserMessage(message, parameters);
             string finalMessage = string.Format(

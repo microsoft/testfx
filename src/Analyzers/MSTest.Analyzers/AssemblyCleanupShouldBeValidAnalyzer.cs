@@ -61,7 +61,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
-        if (!methodSymbol.IsAssemblyCleanupMethod(assemblyCleanupAttributeSymbol))
+        if (!methodSymbol.HasAttribute(assemblyCleanupAttributeSymbol))
         {
             return;
         }

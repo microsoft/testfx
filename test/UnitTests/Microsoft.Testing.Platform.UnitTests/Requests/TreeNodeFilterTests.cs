@@ -106,6 +106,42 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
+    public void Parameters_NegatedPropertyCheck()
+    {
+        TreeNodeFilter filter = new("/*.UnitTests[Tag!=Fast]");
+        Assert.IsFalse(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag(new KeyValuePairStringProperty("Tag", "Fast"))));
+        Assert.IsTrue(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag(new KeyValuePairStringProperty("Tag", "Slow"))));
+        Assert.IsTrue(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void Parameters_NegatedPropertyCheckWithMatchAllFilter()
+    {
+        TreeNodeFilter filter = new("/**[Tag!=Fast]");
+        Assert.IsFalse(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag(new KeyValuePairStringProperty("Tag", "Fast"))));
+        Assert.IsTrue(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag(new KeyValuePairStringProperty("Tag", "Slow"))));
+        Assert.IsTrue(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void Parameters_NegatedPropertyCheckCombinedWithAnd()
+    {
+        TreeNodeFilter filter = new("/*.UnitTests[(Tag!=Fast)&(Tag!=Slow)]");
+        Assert.IsFalse(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag(new KeyValuePairStringProperty("Tag", "Fast"))));
+        Assert.IsFalse(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag(new KeyValuePairStringProperty("Tag", "Slow"))));
+        Assert.IsTrue(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void Parameters_NegatedPropertyCheckCombinedWithOr()
+    {
+        TreeNodeFilter filter = new("/*.UnitTests[(Tag!=Fast)|(Tag!=Slow)]");
+        Assert.IsTrue(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag(new KeyValuePairStringProperty("Tag", "Fast"))));
+        Assert.IsTrue(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag(new KeyValuePairStringProperty("Tag", "Slow"))));
+        Assert.IsTrue(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag()));
+    }
+
+    [TestMethod]
     public void Parameters_DisallowAtStart()
         => Assert.ThrowsException<InvalidOperationException>(() => _ = new TreeNodeFilter("/[Tag=Fast]"));
 
@@ -167,4 +203,23 @@ public sealed class TreeNodeFilterTests
             Assert.IsFalse(filterInstance.MatchesFilter(nodePath, nodeProperties));
         }
     }
+
+    [TestMethod]
+    public void MatchAllFilterWithPropertyExpression()
+    {
+        TreeNodeFilter filter = new("/**[A=B]");
+        Assert.IsTrue(filter.MatchesFilter("/A/B/C/D", new PropertyBag(new KeyValuePairStringProperty("A", "B"))));
+        Assert.IsFalse(filter.MatchesFilter("/A/B/C/D", new PropertyBag(new KeyValuePairStringProperty("A", "C"))));
+    }
+
+    [TestMethod]
+    public void MatchAllFilterSubpathWithPropertyExpression()
+    {
+        TreeNodeFilter filter = new("/A/**[A=B]");
+        Assert.IsTrue(filter.MatchesFilter("/A/B/C/D", new PropertyBag(new KeyValuePairStringProperty("A", "B"))));
+        Assert.IsFalse(filter.MatchesFilter("/B/A/C/D", new PropertyBag(new KeyValuePairStringProperty("A", "B"))));
+    }
+
+    [TestMethod]
+    public void MatchAllFilterWithPropertyExpression_DoNotAllowInMiddleOfFilter() => Assert.ThrowsException<ArgumentException>(() => _ = new TreeNodeFilter("/**/Path[A=B]"));
 }

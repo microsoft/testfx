@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Testing;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseParallelizeAttributeAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
@@ -10,10 +14,30 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public class UseParallelizeAttributeAnalyzerTests
 {
+    private static async Task VerifyAsync(string code, bool includeTestAdapter, params DiagnosticResult[] expected)
+    {
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+        };
+
+        if (includeTestAdapter)
+        {
+            // NOTE: Test constructor already adds TestFramework refs.
+            test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(MSTestExecutor).Assembly.Location));
+        }
+
+        test.ExpectedDiagnostics.AddRange(expected);
+        await test.RunAsync();
+    }
+
     [TestMethod]
-    public async Task WhenNoAttributeSpecified_Diagnostic() => await VerifyCS.VerifyAnalyzerAsync(
-            string.Empty,
-            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.Rule).WithNoLocation());
+    public async Task WhenNoAttributeSpecified_TestAdapterNotReferenced_NoDiagnostic()
+        => await VerifyAsync(string.Empty, includeTestAdapter: false);
+
+    [TestMethod]
+    public async Task WhenNoAttributeSpecified_TestAdapterReferenced_Diagnostic()
+        => await VerifyAsync(string.Empty, includeTestAdapter: true, VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.Rule).WithNoLocation());
 
     [TestMethod]
     public async Task WhenParallelizeAttributeSet_NoDiagnostic()
@@ -24,7 +48,8 @@ public class UseParallelizeAttributeAnalyzerTests
             [assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyAsync(code, includeTestAdapter: true);
+        await VerifyAsync(code, includeTestAdapter: false);
     }
 
     [TestMethod]
@@ -36,6 +61,7 @@ public class UseParallelizeAttributeAnalyzerTests
             [assembly: DoNotParallelize]
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyAsync(code, includeTestAdapter: true);
+        await VerifyAsync(code, includeTestAdapter: false);
     }
 }
