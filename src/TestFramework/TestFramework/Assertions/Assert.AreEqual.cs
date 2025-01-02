@@ -64,7 +64,6 @@ public sealed partial class Assert
 
         public void AppendLiteral(string? value) => _builder!.Append(value);
 
-        // TODO (IMPORTANT): Verify that the behavior here is correct with enums, ISpanFormattable, and IFormattable arguments.
         public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
 
 #if NETCOREAPP3_1_OR_GREATER
