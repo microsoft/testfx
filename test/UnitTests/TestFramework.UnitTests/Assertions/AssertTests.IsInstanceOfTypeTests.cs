@@ -53,11 +53,12 @@ public partial class AssertTests
     public void InstanceOfType_WithStringMessage_ShouldPassWhenTypeIsCorrect()
         => Assert.IsInstanceOfType(5, typeof(int), "User-provided message");
 
-    public void InstanceOfType_WithInterpolatedString_ShouldFailWhenValueIsNull()
+    public async Task InstanceOfType_WithInterpolatedString_ShouldFailWhenValueIsNull()
     {
         DummyClassTrackingToStringCalls o = new();
-        Exception ex = VerifyThrows<AssertFailedException>(() => Assert.IsInstanceOfType(null, typeof(AssertTests), $"User-provided message {o}"));
-        Verify(ex.Message == "Assert.IsInstanceOfType failed. User-provided message DummyClassTrackingToStringCalls");
+        DateTime dateTime = DateTime.Now;
+        Exception ex = await VerifyThrowsAsync<AssertFailedException>(async () => Assert.IsInstanceOfType(null, typeof(AssertTests), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
+        Verify(ex.Message == $"Assert.IsInstanceOfType failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         Verify(o.WasToStringCalled);
     }
 
