@@ -168,9 +168,9 @@ internal sealed class TestMethodRunner
         {
             if (_test.DataType == DynamicDataType.ITestDataSource)
             {
-                if (_test.TestDataSourceIgnoreReason is not null)
+                if (_test.TestDataSourceIgnoreMessage is not null)
                 {
-                    return [new(UnitTestOutcome.Ignored, _test.TestDataSourceIgnoreReason)];
+                    return [new(UnitTestOutcome.Ignored, _test.TestDataSourceIgnoreMessage)];
                 }
 
                 object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
@@ -312,7 +312,7 @@ internal sealed class TestMethodRunner
                 {
                     isDataDriven = true;
 
-                    if (testDataSource is ITestDataSourceIgnoreCapability { Ignore: { } ignoreReason })
+                    if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { } ignoreReason })
                     {
                         results.Add(new()
                         {

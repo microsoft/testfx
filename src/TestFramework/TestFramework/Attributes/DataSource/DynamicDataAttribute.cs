@@ -117,7 +117,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// <summary>
     /// Gets or sets a reason to ignore this dynamic data source. Setting the property to non-null value will ignore the dynamic data source.
     /// </summary>
-    public string? Ignore { get; set; }
+    public string? IgnoreMessage { get; set; }
 
     /// <inheritdoc />
     public IEnumerable<object[]> GetData(MethodInfo methodInfo)

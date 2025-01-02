@@ -86,7 +86,7 @@ internal static class TestCaseExtensions
 
             testMethod.DataType = dataType;
             testMethod.SerializedData = data;
-            testMethod.TestDataSourceIgnoreReason = testCase.GetPropertyValue(Constants.TestDataSourceIgnoreReasonProperty) as string;
+            testMethod.TestDataSourceIgnoreMessage = testCase.GetPropertyValue(Constants.TestDataSourceIgnoreMessageProperty) as string;
         }
 
         if (testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) is string declaringClassName && declaringClassName != testClassName)

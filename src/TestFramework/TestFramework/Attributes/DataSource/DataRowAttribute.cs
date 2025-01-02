@@ -56,7 +56,7 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfol
     /// <summary>
     /// Gets or sets a reason to ignore the specific test case. Setting the property to non-null value will ignore the test case.
     /// </summary>
-    public string? Ignore { get; set; }
+    public string? IgnoreMessage { get; set; }
 
     /// <inheritdoc />
     public TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; set; } = TestDataSourceUnfoldingStrategy.Auto;

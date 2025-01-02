@@ -11,5 +11,5 @@ public interface ITestDataSourceIgnoreCapability
     /// <summary>
     /// Gets or sets a reason to ignore the test data source. Setting the property to non-null value will ignore the test data source.
     /// </summary>
-    string? Ignore { get; set; }
+    string? IgnoreMessage { get; set; }
 }

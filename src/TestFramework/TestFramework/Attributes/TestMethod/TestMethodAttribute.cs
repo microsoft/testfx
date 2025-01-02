@@ -53,7 +53,7 @@ public class TestMethodAttribute : Attribute
     /// <summary>
     /// Gets or sets a reason to ignore the test method. Setting the property to non-null value will ignore the test method.
     /// </summary>
-    public string? Ignore { get; set; }
+    public string? IgnoreMessage { get; set; }
 
     /// <summary>
     /// Executes a test method.

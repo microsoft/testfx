@@ -30,5 +30,5 @@ public class TestClassAttribute : Attribute
     /// <summary>
     /// Gets or sets a reason to ignore the test class. Setting the property to non-null value will ignore the test class.
     /// </summary>
-    public string? Ignore { get; set; }
+    public string? IgnoreMessage { get; set; }
 }

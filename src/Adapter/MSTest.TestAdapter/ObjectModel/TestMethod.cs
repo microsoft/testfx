@@ -143,7 +143,7 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     internal string?[]? SerializedData { get; set; }
 
-    internal string? TestDataSourceIgnoreReason { get; set; }
+    internal string? TestDataSourceIgnoreMessage { get; set; }
 
     /// <summary>
     /// Gets or sets the test group set during discovery.

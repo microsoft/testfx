@@ -1,22 +1,22 @@
 #nullable enable
-Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.Ignore.get -> string?
-Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.Ignore.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.IgnoreMessage.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.IgnoreMessage.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, System.Type! dynamicDataDeclaringType) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, System.Type! dynamicDataDeclaringType, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.Ignore.get -> string?
-Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.Ignore.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.IgnoreMessage.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.IgnoreMessage.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.AutoDetect = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType = Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Property) -> void
 *REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, System.Type! dynamicDataDeclaringType, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType = Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Property) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability
-Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.Ignore.get -> string?
-Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.Ignore.set -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.Ignore.get -> string?
-Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.Ignore.set -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.Ignore.get -> string?
-Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.Ignore.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.IgnoreMessage.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.IgnoreMessage.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.IgnoreMessage.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.IgnoreMessage.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.IgnoreMessage.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.IgnoreMessage.set -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Throws<TException>(System.Action! action, string! message = "", params object![]! messageArgs) -> TException!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, string! message = "", params object![]! messageArgs) -> System.Threading.Tasks.Task<TException!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Action! action, string! message = "", params object![]! messageArgs) -> TException!

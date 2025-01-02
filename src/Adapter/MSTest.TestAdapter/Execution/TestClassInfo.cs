@@ -568,7 +568,7 @@ public class TestClassInfo
             {
                 if (classCleanupMethod is not null)
                 {
-                    if (ClassAttribute.Ignore is null &&
+                    if (ClassAttribute.IgnoreMessage is null &&
                         !ReflectHelper.Instance.IsNonDerivedAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
                     {
                         ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count, testContext);
@@ -580,7 +580,7 @@ public class TestClassInfo
                     for (int i = 0; i < BaseClassCleanupMethods.Count; i++)
                     {
                         classCleanupMethod = BaseClassCleanupMethods[i];
-                        if (ClassAttribute.Ignore is null &&
+                        if (ClassAttribute.IgnoreMessage is null &&
                             !ReflectHelper.Instance.IsNonDerivedAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
                         {
                             ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count - 1 - i, testContext);
