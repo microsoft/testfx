@@ -19,9 +19,9 @@ internal interface IReflectionOperations2 : IReflectionOperations
 
     MethodInfo[] GetRuntimeMethods(Type type);
 
-    MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters);
+    MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters, bool includeNonPublic);
 
-    PropertyInfo? GetRuntimeProperty(Type classType, string propertyName);
+    PropertyInfo? GetRuntimeProperty(Type classType, string propertyName, bool includeNonPublic);
 
     Type? GetType(string typeName);
 

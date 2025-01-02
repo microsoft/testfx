@@ -816,6 +816,77 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task MemberIsShadowingBase_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class MyTestClassBase
+            {
+                public static IEnumerable<object[]> Data => new List<object[]>();
+                public static IEnumerable<object[]> GetData() => new List<object[]>();
+            }
+
+            [TestClass]
+            public class MyTestClass : MyTestClassBase
+            {
+                [DynamicData("Data")]
+                [TestMethod]
+                public void TestMethod1(object[] o)
+                {
+                }
+
+                [DynamicData("GetData", DynamicDataSourceType.Method)]
+                [TestMethod]
+                public void TestMethod2(object[] o)
+                {
+                }
+
+                public static IEnumerable<object[]> Data => new List<object[]>();
+                public static IEnumerable<object[]> GetData() => new List<object[]>();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task MemberIsFromBase_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class MyTestClassBase
+            {
+                public static IEnumerable<object[]> Data => new List<object[]>();
+                public static IEnumerable<object[]> GetData() => new List<object[]>();
+            }
+
+            [TestClass]
+            public class MyTestClass : MyTestClassBase
+            {
+                [DynamicData("Data")]
+                [TestMethod]
+                public void TestMethod1(object[] o)
+                {
+                }
+
+                [DynamicData("GetData", DynamicDataSourceType.Method)]
+                [TestMethod]
+                public void TestMethod2(object[] o)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task MethodHasParameters_Diagnostic()
     {
         string code = """

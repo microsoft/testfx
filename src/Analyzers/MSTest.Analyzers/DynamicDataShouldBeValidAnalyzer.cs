@@ -138,6 +138,48 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
         AnalyzeDisplayNameSource(context, attributeData, attributeSyntax, methodSymbol, methodInfoTypeSymbol);
     }
 
+    private static (ISymbol? Member, bool AreTooMany) TryGetMember(INamedTypeSymbol declaringType, string memberName)
+    {
+        INamedTypeSymbol? currentType = declaringType;
+        while (currentType is not null)
+        {
+            (ISymbol? Member, bool AreTooMany) result = TryGetMemberCore(currentType, memberName);
+            if (result.Member is not null || result.AreTooMany)
+            {
+                return result;
+            }
+
+            // Only continue to look at base types if the member is not found on the current type and we are not hit by "too many methods" rule.
+            currentType = currentType.BaseType;
+        }
+
+        return (null, false);
+
+        static (ISymbol? Member, bool AreTooMany) TryGetMemberCore(INamedTypeSymbol declaringType, string memberName)
+        {
+            // If we cannot find the member on the given type, report a diagnostic.
+            if (declaringType.GetMembers(memberName) is { Length: 0 } potentialMembers)
+            {
+                return (null, false);
+            }
+
+            ISymbol? potentialProperty = potentialMembers.FirstOrDefault(m => m.Kind == SymbolKind.Property);
+            if (potentialProperty is not null)
+            {
+                return (potentialProperty, false);
+            }
+
+            IEnumerable<ISymbol> candidateMethods = potentialMembers.Where(m => m.Kind == SymbolKind.Method);
+            if (candidateMethods.Count() > 1)
+            {
+                // If there are multiple methods with the same name, report a diagnostic. This is not a supported scenario.
+                return (null, true);
+            }
+
+            return (candidateMethods.FirstOrDefault() ?? potentialMembers[0], false);
+        }
+    }
+
     private static void AnalyzeDataSource(SymbolAnalysisContext context, AttributeData attributeData, SyntaxNode attributeSyntax,
         IMethodSymbol methodSymbol, INamedTypeSymbol dynamicDataSourceTypeSymbol, INamedTypeSymbol ienumerableTypeSymbol)
     {
@@ -173,21 +215,22 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        // If we cannot find the member on the given type, report a diagnostic.
-        if (declaringType.GetMembers(memberName) is { Length: 0 } potentialMembers)
-        {
-            context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(MemberNotFoundRule, declaringType.Name, memberName));
-            return;
-        }
+        (ISymbol? member, bool areTooMany) = TryGetMember(declaringType, memberName);
 
-        // If there are multiple members with the same name, report a diagnostic. This is not a supported scenario.
-        if (potentialMembers.Length > 1)
+        if (areTooMany)
         {
+            // If there are multiple methods with the same name and all are parameterless, report a diagnostic. This is not a supported scenario.
+            // Note: This is likely to happen only when they differ in arity (for example, one is non-generic and the other is generic).
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(FoundTooManyMembersRule, declaringType.Name, memberName));
             return;
         }
 
-        ISymbol member = potentialMembers[0];
+        if (member is null)
+        {
+            // If we cannot find the member on the given type, report a diagnostic.
+            context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(MemberNotFoundRule, declaringType.Name, memberName));
+            return;
+        }
 
         switch (member.Kind)
         {

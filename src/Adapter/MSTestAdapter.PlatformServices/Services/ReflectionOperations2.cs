@@ -45,11 +45,15 @@ internal sealed class ReflectionOperations2 : ReflectionOperations, IReflectionO
     public MethodInfo[] GetRuntimeMethods(Type type)
         => type.GetMethods(Everything);
 
-    public MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters)
-        => declaringType.GetRuntimeMethod(methodName, parameters);
+    public MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters, bool includeNonPublic)
+        => includeNonPublic
+            ? declaringType.GetMethod(methodName, Everything, null, parameters, null)
+            : declaringType.GetMethod(methodName, parameters);
 
-    public PropertyInfo? GetRuntimeProperty(Type classType, string testContextPropertyName)
-        => classType.GetProperty(testContextPropertyName);
+    public PropertyInfo? GetRuntimeProperty(Type classType, string testContextPropertyName, bool includeNonPublic)
+        => includeNonPublic
+            ? classType.GetProperty(testContextPropertyName, Everything)
+            : classType.GetProperty(testContextPropertyName);
 
     public Type? GetType(string typeName)
         => Type.GetType(typeName);
