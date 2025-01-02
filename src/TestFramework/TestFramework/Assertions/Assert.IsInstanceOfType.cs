@@ -31,7 +31,7 @@ public sealed partial class Assert
             }
         }
 
-        internal void FailIfNeeded()
+        internal void ComputeAssertion()
         {
             if (_builder is not null)
             {
@@ -88,7 +88,7 @@ public sealed partial class Assert
             }
         }
 
-        internal void FailIfNeeded()
+        internal void ComputeAssertion()
         {
             if (_builder is not null)
             {
@@ -147,7 +147,7 @@ public sealed partial class Assert
             }
         }
 
-        internal void FailIfNeeded()
+        internal void ComputeAssertion()
         {
             if (_builder is not null)
             {
@@ -204,7 +204,7 @@ public sealed partial class Assert
             }
         }
 
-        internal void FailIfNeeded()
+        internal void ComputeAssertion()
         {
             if (_builder is not null)
             {
@@ -310,7 +310,7 @@ public sealed partial class Assert
     public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, [InterpolatedStringHandlerArgument(nameof(value), nameof(expectedType))] ref AssertIsInstanceOfTypeInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
@@ -327,7 +327,7 @@ public sealed partial class Assert
     public static void IsInstanceOfType<T>([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
@@ -343,7 +343,7 @@ public sealed partial class Assert
     public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message)
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
     {
-        message.FailIfNeeded();
+        message.ComputeAssertion();
         instance = (T)value!;
     }
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
@@ -481,7 +481,7 @@ public sealed partial class Assert
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, [InterpolatedStringHandlerArgument(nameof(value), nameof(wrongType))] ref AssertIsNotInstanceOfTypeInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
@@ -497,7 +497,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsNotInstanceOfType<T>(object? value, [InterpolatedStringHandlerArgument(nameof(value))] AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong

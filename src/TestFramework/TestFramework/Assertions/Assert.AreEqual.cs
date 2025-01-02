@@ -54,7 +54,7 @@ public sealed partial class Assert
             }
         }
 
-        internal void FailIfNeeded()
+        internal void ComputeAssertion()
         {
             if (_builder is not null)
             {
@@ -118,7 +118,7 @@ public sealed partial class Assert
             }
         }
 
-        internal void FailIfNeeded()
+        internal void ComputeAssertion()
         {
             if (_builder is not null)
             {
@@ -221,7 +221,7 @@ public sealed partial class Assert
             }
         }
 
-        internal void FailIfNeeded()
+        internal void ComputeAssertion()
             => _failAction?.Invoke(_builder!.ToString());
 
         public void AppendLiteral(string value) => _builder!.Append(value);
@@ -319,7 +319,7 @@ public sealed partial class Assert
             }
         }
 
-        internal void FailIfNeeded()
+        internal void ComputeAssertion()
             => _failAction?.Invoke(_builder!.ToString());
 
         public void AppendLiteral(string value) => _builder!.Append(value);
@@ -428,7 +428,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual<T>(T? expected, T? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreEqualInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -464,7 +464,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(comparer))] ref AssertAreEqualInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -587,7 +587,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual<T>(IEquatable<T>? expected, IEquatable<T>? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreEqualInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -783,7 +783,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual<T>(T? notExpected, T? actual, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual))] ref AssertAreNotEqualInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
@@ -819,7 +819,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T>? comparer, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(comparer))] ref AssertAreNotEqualInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
@@ -945,7 +945,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual(float expected, float actual, float delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified floats are equal and throws an exception
@@ -1037,7 +1037,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual(float notExpected, float actual, float delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified floats are unequal and throws an exception
@@ -1132,7 +1132,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual(decimal expected, decimal actual, decimal delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified decimals are equal and throws an exception
@@ -1224,7 +1224,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified decimals are unequal and throws an exception
@@ -1319,7 +1319,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual(long expected, long actual, long delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified longs are equal and throws an exception
@@ -1411,7 +1411,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual(long notExpected, long actual, long delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified longs are unequal and throws an exception
@@ -1505,7 +1505,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual(double expected, double actual, double delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified doubles are equal and throws an exception
@@ -1596,7 +1596,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual(double notExpected, double actual, double delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified doubles are unequal and throws an exception
@@ -1701,7 +1701,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual(string? expected, string? actual, bool ignoreCase, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified strings are equal and throws an exception
@@ -1792,7 +1792,7 @@ public sealed partial class Assert
         [NotNull] CultureInfo? culture, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
     {
         CheckParameterNotNull(culture, "Assert.AreEqual", nameof(culture), string.Empty);
-        message.FailIfNeeded();
+        message.ComputeAssertion();
     }
 
     /// <summary>
@@ -1887,7 +1887,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified strings are unequal and throws an exception
@@ -1980,7 +1980,7 @@ public sealed partial class Assert
         CultureInfo? culture, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
     {
         CheckParameterNotNull(culture, "Assert.AreNotEqual", nameof(culture), string.Empty);
-        message.FailIfNeeded();
+        message.ComputeAssertion();
     }
 
     /// <summary>

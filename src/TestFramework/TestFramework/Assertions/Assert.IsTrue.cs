@@ -27,7 +27,7 @@ public sealed partial class Assert
             }
         }
 
-        internal void FailIfNeeded()
+        internal void ComputeAssertion()
         {
             if (_builder is not null)
             {
@@ -82,7 +82,7 @@ public sealed partial class Assert
             }
         }
 
-        internal void FailIfNeeded()
+        internal void ComputeAssertion()
         {
             if (_builder is not null)
             {
@@ -168,7 +168,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsTrue([DoesNotReturnIf(false)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -191,7 +191,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -301,7 +301,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsFalse([DoesNotReturnIf(true)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -324,7 +324,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception

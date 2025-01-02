@@ -30,7 +30,7 @@ public sealed partial class Assert
             }
         }
 
-        internal TException FailIfNeeded()
+        internal TException ComputeAssertion()
         {
             if (_state.FailAction is not null)
             {
@@ -95,7 +95,7 @@ public sealed partial class Assert
             }
         }
 
-        internal TException FailIfNeeded()
+        internal TException ComputeAssertion()
         {
             if (_state.FailAction is not null)
             {
@@ -174,7 +174,7 @@ public sealed partial class Assert
     public static TException Throws<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsInterpolatedStringHandler<TException> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -208,7 +208,7 @@ public sealed partial class Assert
     public static TException ThrowsExactly<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception

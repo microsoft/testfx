@@ -31,7 +31,7 @@ public sealed partial class Assert
             }
         }
 
-        internal void FailIfNeeded()
+        internal void ComputeAssertion()
         {
             if (_builder is not null)
             {
@@ -86,7 +86,7 @@ public sealed partial class Assert
             }
         }
 
-        internal void FailIfNeeded()
+        internal void ComputeAssertion()
         {
             if (_builder is not null)
             {
@@ -175,7 +175,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreSame<T>(T? expected, T? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreSameInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified objects both refer to the same object and
@@ -282,7 +282,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotSame<T>(T? notExpected, T? actual, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual))] ref AssertAreNotSameInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.FailIfNeeded();
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified objects refer to different objects and
