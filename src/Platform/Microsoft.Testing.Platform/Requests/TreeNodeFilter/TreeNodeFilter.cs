@@ -38,6 +38,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     /// FILTER_EXPR =
     ///   '(' FILTER_EXPR ')'
     ///   | TOKEN '=' TOKEN
+    ///   | TOKEN '!=' TOKEN
     ///   | FILTER_EXPR OP FILTER_EXPR
     ///   | TOKEN
     /// OP = '&amp;' | '|'
@@ -210,6 +211,13 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                     isPropAllowed = false;
                     break;
 
+                case "!=":
+                    operatorStack.Push(OperatorKind.FilterNotEquals);
+
+                    isOperatorAllowed = false;
+                    isPropAllowed = false;
+                    break;
+
                 default:
                     expressionStack.Push(new ValueExpression(token));
 
@@ -311,7 +319,6 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 {
                     OperatorKind.And => FilterOperator.And,
                     OperatorKind.Or => FilterOperator.Or,
-                    OperatorKind.FilterEquals => FilterOperator.Equals,
                     _ => throw ApplicationStateGuard.Unreachable(),
                 };
 
@@ -319,6 +326,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 break;
 
             case OperatorKind.FilterEquals:
+            case OperatorKind.FilterNotEquals:
                 FilterExpression valueExpr = expr.Pop();
                 FilterExpression propExpr = expr.Pop();
 
@@ -328,7 +336,13 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                     throw new InvalidOperationException();
                 }
 
-                expr.Push(new PropertyExpression(propValueExpr, valueValueExpr));
+                FilterExpression filterExpression = new PropertyExpression(propValueExpr, valueValueExpr);
+                if (op == OperatorKind.FilterNotEquals)
+                {
+                    filterExpression = new OperatorExpression(FilterOperator.Not, [filterExpression]);
+                }
+
+                expr.Push(filterExpression);
                 break;
 
             default:
@@ -404,6 +418,25 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                     }
 
                     yield return filter[i].ToString();
+
+                    break;
+
+                case '!':
+                    if (i + 1 < filter.Length && filter[i + 1] == '=')
+                    {
+                        if (lastStringTokenBuilder.Length > 0)
+                        {
+                            yield return lastStringTokenBuilder.ToString();
+                            lastStringTokenBuilder.Clear();
+                        }
+
+                        yield return "!=";
+                        i++;
+                    }
+                    else
+                    {
+                        goto default;
+                    }
 
                     break;
 
