@@ -117,6 +117,16 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="translated">Os argumentos de asserção devem ser passados na ordem correta</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
+        <source>Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types</source>
+        <target state="new">Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
+        <source>Don't use 'Assert.AreSame' with value types</source>
+        <target state="new">Don't use 'Assert.AreSame' with value types</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
         <target state="translated">Prefira 'Assert.ThrowsException' ou 'Assert.ThrowsExceptionAsync' '[ExpectedException]', pois isso garante que somente a chamada esperada lance a exceção esperada. As APIs assert também fornecem mais flexibilidade e permitem declarar propriedades extras da exceção.</target>
