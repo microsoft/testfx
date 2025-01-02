@@ -68,7 +68,7 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' timed out after {1}ms</source>
-        <target state="new">Test '{0}' timed out after {1}ms</target>
+        <target state="translated">Délai de '{0}' de test dépassé après {1}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
@@ -419,7 +419,7 @@ Erreur : {1}</target>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
         <source>Test '{0}' was canceled</source>
-        <target state="new">Test '{0}' was canceled</target>
+        <target state="translated">Le test '{0}' a été annulé</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
