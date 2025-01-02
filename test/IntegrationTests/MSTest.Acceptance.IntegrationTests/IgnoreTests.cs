@@ -66,6 +66,55 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputMatchesRegex("""
+            TestInitialize: TestMethod1 \(0\)
+            TestCleanup: TestMethod1 \(0\)
+            TestInitialize: TestMethod1 \(2\)
+            TestCleanup: TestMethod1 \(2\)
+            TestInitialize: TestMethod2 \(0\)
+            TestCleanup: TestMethod2 \(0\)
+            TestInitialize: TestMethod2 \(1\)
+            TestCleanup: TestMethod2 \(1\)
+            TestInitialize: TestMethod2 \(2\)
+            TestCleanup: TestMethod2 \(2\)
+            skipped TestMethod1 \(\d+ms\)
+            skipped TestMethod2 \(\d+ms\)
+            TestInitialize: TestMethod3 \(0\)
+            TestCleanup: TestMethod3 \(0\)
+            skipped TestMethod3 \(1\) \(\d+ms\)
+            TestInitialize: TestMethod3 \(2\)
+            TestCleanup: TestMethod3 \(2\)
+            TestInitialize: TestMethod4 \(0\)
+            TestCleanup: TestMethod4 \(0\)
+            TestInitialize: TestMethod4 \(1\)
+            TestCleanup: TestMethod4 \(1\)
+            TestInitialize: TestMethod4 \(2\)
+            TestCleanup: TestMethod4 \(2\)
+            skipped TestMethod4 \(3\) \(\d+ms\)
+            skipped TestMethod4 \(4\) \(\d+ms\)
+            skipped TestMethod4 \(5\) \(\d+ms\)
+            """);
+
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod1 (1)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod1 (1)");
+
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod2 (3)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod2 (3)");
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod2 (4)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod2 (4)");
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod2 (5)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod2 (5)");
+
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod3 (1)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod3 (1)");
+
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod4 (3)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod4 (3)");
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod4 (4)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod4 (4)");
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod4 (5)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod4 (5)");
+
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 10, skipped: 6);
     }
 
@@ -208,6 +257,11 @@ public class TestClassWithMethodUsingIgnoreMessage
 [TestClass]
 public class TestClassWithDataSourcesUsingIgnoreMessage
 {
+    private readonly TestContext _testContext;
+
+    public TestClassWithDataSourcesUsingIgnoreMessage(TestContext testContext)
+        => _testContext = testContext;
+
     [TestMethod] // 1 skipped, 2 pass
     [DataRow(0, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
     [DataRow(1, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold, IgnoreMessage = "This data row is ignored")]
@@ -217,8 +271,8 @@ public class TestClassWithDataSourcesUsingIgnoreMessage
     }
 
     [TestMethod] // 1 skipped (folded), 3 pass
-    [DynamicData("Data", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
-    [DynamicData("Data", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold, IgnoreMessage = "This source is ignored")]
+    [DynamicData("Data1", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData("Data2", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold, IgnoreMessage = "This source is ignored")]
     public void TestMethod2(int i)
     {
     }
@@ -232,19 +286,41 @@ public class TestClassWithDataSourcesUsingIgnoreMessage
     }
 
     [TestMethod] // 3 skipped (unfolded), 3 pass
-    [DynamicData("Data", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
-    [DynamicData("Data", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold, IgnoreMessage = "This source is ignored")]
+    [DynamicData("Data1", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DynamicData("Data2", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold, IgnoreMessage = "This source is ignored")]
     public void TestMethod4(int i)
     {
     }
 
-    public static IEnumerable<object[]> Data
+    [TestInitialize]
+    public void TestInit()
+    {
+        Console.WriteLine($"TestInitialize: {_testContext.TestDisplayName}");
+    }
+
+    [TestCleanup]
+    public void TestClean()
+    {
+        Console.WriteLine($"TestCleanup: {_testContext.TestDisplayName}");
+    }
+
+    public static IEnumerable<object[]> Data1
     {
         get
         {
             yield return new object[] { 0 };
             yield return new object[] { 1 };
             yield return new object[] { 2 };
+        }
+    }
+
+    public static IEnumerable<object[]> Data2
+    {
+        get
+        {
+            yield return new object[] { 3 };
+            yield return new object[] { 4 };
+            yield return new object[] { 5 };
         }
     }
 }
