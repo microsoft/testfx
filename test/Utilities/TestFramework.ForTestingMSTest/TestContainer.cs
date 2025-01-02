@@ -80,6 +80,26 @@ public abstract class TestContainer : IDisposable
         return null;
     }
 
+    public static async Task<Exception> VerifyThrowsAsync(
+        Func<Task> taskGetter,
+        [CallerArgumentExpression(nameof(taskGetter))] string? expression = default,
+        [CallerMemberName] string? caller = default,
+        [CallerFilePath] string? filePath = default,
+        [CallerLineNumber] int lineNumber = default)
+    {
+        try
+        {
+            await taskGetter();
+        }
+        catch (Exception ex)
+        {
+            return ex;
+        }
+
+        Throw(expression, caller, filePath, lineNumber);
+        return null;
+    }
+
     public static T VerifyThrows<T>(
         Action action,
         [CallerArgumentExpression(nameof(action))]

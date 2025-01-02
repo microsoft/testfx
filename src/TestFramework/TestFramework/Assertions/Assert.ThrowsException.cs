@@ -47,7 +47,7 @@ public sealed partial class Assert
 
         public void AppendLiteral(string value) => _builder!.Append(value);
 
-        public void AppendFormatted<T>(T value) => _builder!.Append(value);
+        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
 
 #if NETCOREAPP3_1_OR_GREATER
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
@@ -112,7 +112,7 @@ public sealed partial class Assert
 
         public void AppendLiteral(string value) => _builder!.Append(value);
 
-        public void AppendFormatted<T>(T value) => _builder!.Append(value);
+        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
 
 #if NETCOREAPP3_1_OR_GREATER
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);

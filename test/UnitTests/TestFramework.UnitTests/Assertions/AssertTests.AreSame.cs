@@ -3,6 +3,8 @@
 
 #nullable enable
 
+using System;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
@@ -40,11 +42,12 @@ public partial class AssertTests
         Verify(!o.WasToStringCalled);
     }
 
-    public void AreSame_InterpolatedString_PassDifferentObject_ShouldFail()
+    public async Task AreSame_InterpolatedString_PassDifferentObject_ShouldFail()
     {
         DummyClassTrackingToStringCalls o = new();
-        Exception ex = VerifyThrows(() => Assert.AreSame(new object(), new object(), $"User-provided message. {o}"));
-        Verify(ex.Message == "Assert.AreSame failed. User-provided message. DummyClassTrackingToStringCalls");
+        DateTime dateTime = DateTime.Now;
+        Exception ex = await VerifyThrowsAsync(async () => Assert.AreSame(new object(), new object(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
+        Verify(ex.Message == $"Assert.AreSame failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         Verify(o.WasToStringCalled);
     }
 
@@ -111,11 +114,12 @@ public partial class AssertTests
         Verify(!o.WasToStringCalled);
     }
 
-    public void AreNotSame_InterpolatedString_PassSameObject_ShouldFail()
+    public async Task AreNotSame_InterpolatedString_PassSameObject_ShouldFail()
     {
         DummyClassTrackingToStringCalls o = new();
-        Exception ex = VerifyThrows(() => Assert.AreNotSame(o, o, $"User-provided message. {o}"));
-        Verify(ex.Message == "Assert.AreNotSame failed. User-provided message. DummyClassTrackingToStringCalls");
+        DateTime dateTime = DateTime.Now;
+        Exception ex = await VerifyThrowsAsync(async () => Assert.AreNotSame(o, o, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
+        Verify(ex.Message == $"Assert.AreNotSame failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         Verify(o.WasToStringCalled);
     }
 
