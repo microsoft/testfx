@@ -58,6 +58,8 @@ public sealed partial class Assert
 
         public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
+        public void AppendFormatted(string? value) => _builder!.Append(value);
+
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
@@ -112,6 +114,8 @@ public sealed partial class Assert
         public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
 
         public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
+
+        public void AppendFormatted(string? value) => _builder!.Append(value);
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads

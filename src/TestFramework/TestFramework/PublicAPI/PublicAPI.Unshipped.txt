@@ -1,6 +1,7 @@
 #nullable enable
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendFormatted<T>(T value, int alignment) -> void
@@ -13,6 +14,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedSt
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AssertAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? expected, TArgument? actual, System.Collections.Generic.IEqualityComparer<TArgument>? comparer, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AppendFormatted<T>(T value, int alignment) -> void
@@ -24,6 +26,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolate
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.AssertAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? notExpected, TArgument? actual, System.Collections.Generic.IEqualityComparer<TArgument>? comparer, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>.AppendFormatted<T>(T value, int alignment) -> void
@@ -34,6 +37,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolated
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>.AssertAreNotSameInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? notExpected, TArgument? actual, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AppendFormatted<T>(T value, int alignment) -> void
@@ -44,6 +48,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStr
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.AssertAreSameInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? expected, TArgument? actual, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value, int alignment) -> void
@@ -54,6 +59,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTyp
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>.AssertGenericIsInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value, int alignment) -> void
@@ -64,6 +70,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOf
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment) -> void
@@ -74,6 +81,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStr
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AssertIsFalseInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment) -> void
@@ -84,6 +92,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterp
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler.AssertIsInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, System.Type? expectedType, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment) -> void
@@ -94,6 +103,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInt
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler.AssertIsNotInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, System.Type? wrongType, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment) -> void
@@ -104,6 +114,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedS
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler.AssertIsNotNullInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNullInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNullInterpolatedStringHandler.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNullInterpolatedStringHandler.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNullInterpolatedStringHandler.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNullInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNullInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment) -> void
@@ -114,6 +125,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNullInterpolatedStri
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNullInterpolatedStringHandler.AssertIsNullInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStringHandler.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStringHandler.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStringHandler.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment) -> void
@@ -124,6 +136,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStri
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStringHandler.AssertIsTrueInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment) -> void
@@ -139,6 +152,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInte
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? expected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment) -> void
@@ -154,6 +168,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualI
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler.AssertNonGenericAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? notExpected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException>.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException>.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException>.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException>.AppendFormatted<T>(T value, int alignment) -> void
@@ -164,6 +179,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpo
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException>.AssertNonStrictThrowsInterpolatedStringHandler(int literalLength, int formattedCount, System.Action! action, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AppendFormatted(string? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AppendFormatted<T>(T value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AppendFormatted<T>(T value, int alignment) -> void
