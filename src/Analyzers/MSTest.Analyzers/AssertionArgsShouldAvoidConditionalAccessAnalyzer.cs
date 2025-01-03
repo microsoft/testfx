@@ -101,15 +101,15 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         (_, int argumentCountToCheck) = supportedMethodNames.FirstOrDefault(x => x.MethodName == invocationOperation.TargetMethod.Name);
         if (argumentCountToCheck == 0
             || !SymbolEqualityComparer.Default.Equals(assertSymbol, invocationOperation.TargetMethod.ContainingType)
-            || !HasAnyConditionalAccessOperationChild(invocationOperation, argumentCountToCheck))
+            || !HasAnyConditionalAccessOperationChild(invocationOperation, argumentCountToCheck, out Location? additionalLocation))
         {
             return;
         }
 
-        context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
+        context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule, additionalLocations: ImmutableArray.Create(additionalLocation), properties: null));
     }
 
-    private static bool HasAnyConditionalAccessOperationChild(IInvocationOperation invocationOperation, int argumentCountToCheck)
+    private static bool HasAnyConditionalAccessOperationChild(IInvocationOperation invocationOperation, int argumentCountToCheck, [NotNullWhen(true)] out Location? additionalLocation)
     {
         foreach (IArgumentOperation argument in invocationOperation.Arguments)
         {
@@ -127,19 +127,27 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
             //      a.b?.c
             if (value.Kind == OperationKind.ConditionalAccess)
             {
+                additionalLocation = value.Syntax.GetLocation();
                 return true;
             }
 
             // Check for binary operations with conditional access => s?.Length > 1.
             if (value is IBinaryOperation binaryOperation)
             {
-                if (binaryOperation.LeftOperand.Kind == OperationKind.ConditionalAccess || binaryOperation.RightOperand.Kind == OperationKind.ConditionalAccess)
+                if (binaryOperation.LeftOperand.Kind == OperationKind.ConditionalAccess)
                 {
+                    additionalLocation = binaryOperation.LeftOperand.Syntax.GetLocation();
+                    return true;
+                }
+                else if (binaryOperation.RightOperand.Kind == OperationKind.ConditionalAccess)
+                {
+                    additionalLocation = binaryOperation.RightOperand.Syntax.GetLocation();
                     return true;
                 }
             }
         }
 
+        additionalLocation = null;
         return false;
     }
 }

@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AssertionArgsShouldAvoidConditionalAccessAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.AssertionArgsShouldAvoidConditionalAccessFixer>;
 
 namespace MSTest.Analyzers.UnitTests;
 
@@ -93,11 +93,110 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
                     Assert.AreNotEqual(s.Length, s.Length);
                     Assert.AreNotEqual(a.S.Length, 32);
                     Assert.AreNotEqual(b.S.Length, 32);
-            }
+                }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            public class A
+            {
+                public string? S { get; set; }
+                public List<string>? T { get; set; }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    A? a = new A();
+                    A b = new A();
+                    string? s = "";
+                    Assert.IsNotNull(s);
+                    Assert.AreEqual(s.Length, 32);
+                    Assert.AreEqual(((s.Length)), 32);
+                    Assert.AreEqual(s.Length, s.Length);
+                    Assert.IsNotNull(a);
+                    Assert.IsNotNull(a.S);
+                    Assert.AreEqual(a.S.Length, 32);
+                    Assert.IsNotNull(b.S);
+                    Assert.AreEqual(b.S.Length, 32);
+                    Assert.IsNotNull(a.T);
+                    Assert.IsNotNull(a.T[3]);
+                    Assert.AreEqual(a.T[3].Length, 32);
+                    Assert.IsNotNull(b.T);
+                    Assert.IsNotNull(b.T[3]);
+                    Assert.AreEqual(b.T[3].Length, 32);
+
+                    Assert.AreNotEqual(s.Length, 32);
+                    Assert.AreNotEqual(((s.Length)), 32);
+                    Assert.AreNotEqual(s.Length, s.Length);
+                    Assert.AreNotEqual(a.S.Length, 32);
+                    Assert.AreNotEqual(b.S.Length, 32);
+                    Assert.AreNotEqual(a.T[3].Length, 32);
+                    Assert.AreNotEqual(b.T[3].Length, 32);
+
+                    Assert.AreSame(s.Length, 32);
+                    Assert.AreSame(((s.Length)), 32);
+                    Assert.AreSame(s.Length, s.Length);
+                    Assert.AreSame(a.S.Length, 32);
+                    Assert.AreSame(b.S.Length, 32);
+                    Assert.AreSame(a.T[3].Length, 32);
+                    Assert.AreSame(b.T[3].Length, 32);
+
+                    Assert.AreNotSame(s.Length, 32);
+                    Assert.AreNotSame(((s.Length)), 32);
+                    Assert.AreNotSame(s.Length, s.Length);
+                    Assert.AreNotSame(a.S.Length, 32);
+                    Assert.AreNotSame(b.S.Length, 32);
+                    Assert.AreNotSame(a.T[3].Length, 32);
+                    Assert.AreNotSame(b.T[3].Length, 32);
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    string? s = "";
+                    A? a = new A();
+                    A b = new A();
+
+                    Assert.IsNotNull(s);
+                    Assert.IsNotNull(a);
+                    Assert.IsNotNull(a.S);
+                    Assert.IsNotNull(a.T);
+                    Assert.IsNotNull(b);
+                    Assert.IsNotNull(b.S);
+                    Assert.IsNotNull(b.T);
+                    Assert.AreEqual(s.Length, 32);
+                    Assert.AreEqual(((s.Length)), 32);
+                    Assert.AreEqual(s.Length, s.Length);
+                    Assert.AreEqual(a.S.Length, 32);
+                    Assert.AreEqual(b.S.Length, 32);
+                    Assert.AreEqual(a.T[3].Length, 32);
+                    Assert.AreEqual(b.T[3].Length, 32);
+                    Assert.AreNotEqual(s.Length, 32);
+                    Assert.AreNotEqual(((s.Length)), 32);
+                    Assert.AreNotEqual(s.Length, s.Length);
+                    Assert.AreNotEqual(a.S.Length, 32);
+                    Assert.AreNotEqual(b.S.Length, 32);
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = fixedCode,
+            NumberOfFixAllIterations = 3,
+            NumberOfFixAllInDocumentIterations = 3,
+            NumberOfFixAllInProjectIterations = 3,
+            NumberOfIncrementalIterations = 48,
+        }.RunAsync();
     }
 
     [TestMethod]
