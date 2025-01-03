@@ -39,4 +39,24 @@ public partial class AssertTests
         Verify(message == "{");
     }
     #endregion
+
+    private static Task<string> GetHelloStringAsync()
+        => Task.FromResult("Hello");
+
+    private sealed class DummyClassTrackingToStringCalls
+    {
+        public bool WasToStringCalled { get; private set; }
+
+        public override string ToString()
+        {
+            WasToStringCalled = true;
+            return nameof(DummyClassTrackingToStringCalls);
+        }
+    }
+
+    private sealed class DummyIFormattable : IFormattable
+    {
+        public string ToString(string format, IFormatProvider formatProvider)
+            => "DummyIFormattable.ToString()";
+    }
 }
