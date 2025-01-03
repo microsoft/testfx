@@ -26,6 +26,8 @@ public class TestClassInfo
 {
     private readonly Lock _testClassExecuteSyncObject = new();
 
+    private UnitTestResult? _classInitializeResult;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TestClassInfo"/> class.
     /// </summary>
@@ -343,18 +345,29 @@ public class TestClassInfo
 
     internal UnitTestResult GetResultOrRunClassInitialize(ITestContext testContext, string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
+        // Optimization: If we already ran before and know the result, return it.
+        if (_classInitializeResult is not null)
+        {
+            DebugEx.Assert(IsClassInitializeExecuted, "Class initialize result should be available if and only if class initialize was executed");
+            return _classInitializeResult;
+        }
+
+        DebugEx.Assert(!IsClassInitializeExecuted, "If class initialize was executed, we should have been in the previous if were we have a result available.");
+
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTATestClass
             && isWindowsOS
             && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
-            // For optimization purposes, we duplicate some of the logic of RunClassInitialize here so we don't need to start
-            // a thread for nothing.
-            if ((ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
-                || IsClassInitializeExecuted)
+            // For optimization purposes, avoid starting a thread when we know it will do nothing.
+            // This is the case when:
+            // 1. We have already executed class initialize (this is handled at the beginning for STA and non-STA)
+            // 2. There is no class initialize method to execute. In this case we mark IsClassInitializeExecuted and return a passed result (this condition here).
+            if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
             {
-                return DoRun();
+                IsClassInitializeExecuted = true;
+                return _classInitializeResult = new(ObjectModelUnitTestOutcome.Passed, null);
             }
 
             UnitTestResult result = new(ObjectModelUnitTestOutcome.Error, "MSTest STATestClass ClassInitialize didn't complete");
