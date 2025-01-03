@@ -120,6 +120,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProv
 
             // Easier than correctly reconstructing the syntax node manually, but not ideal.
             ExpressionSyntax parsedExpression = SyntaxFactory.ParseExpression($"{expressionCheckedForNull.ToFullString()}{_conditionalAccessExpressionSyntax.WhenNotNull}");
+            parsedExpression = parsedExpression.WithTriviaFrom(_conditionalAccessExpressionSyntax);
 
             editor.ReplaceNode(_conditionalAccessExpressionSyntax, parsedExpression);
 
