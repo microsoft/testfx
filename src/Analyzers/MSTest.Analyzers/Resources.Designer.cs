@@ -181,6 +181,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert.AreEqual&apos; instead of &apos;Assert.AreSame&apos; when comparing value types. Passing a value type to &apos;Assert.AreSame&apos; will be boxed (creating a new object). Because &apos;Assert.AreSame&apos; does the comparison by reference, it will fail when boxing happens..
+        /// </summary>
+        internal static string AvoidAssertAreSameWithValueTypesDescription {
+            get {
+                return ResourceManager.GetString("AvoidAssertAreSameWithValueTypesDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use &apos;Assert.AreEqual&apos; instead of &apos;Assert.AreSame&apos; when comparing value types.
         /// </summary>
         internal static string AvoidAssertAreSameWithValueTypesMessageFormat {

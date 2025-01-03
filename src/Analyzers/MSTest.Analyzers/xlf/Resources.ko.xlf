@@ -117,6 +117,11 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">어설션 인수는 올바른 순서로 전달되어야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
+        <source>Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types. Passing a value type to 'Assert.AreSame' will be boxed (creating a new object). Because 'Assert.AreSame' does the comparison by reference, it will fail when boxing happens.</source>
+        <target state="new">Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types. Passing a value type to 'Assert.AreSame' will be boxed (creating a new object). Because 'Assert.AreSame' does the comparison by reference, it will fail when boxing happens.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
         <source>Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types</source>
         <target state="new">Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types</target>

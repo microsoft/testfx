@@ -22,12 +22,13 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzer : DiagnosticAnalyze
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.AvoidAssertAreSameWithValueTypesTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AvoidAssertAreSameWithValueTypesMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.AvoidAssertAreSameWithValueTypesDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.AvoidAssertAreSameWithValueTypesRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);

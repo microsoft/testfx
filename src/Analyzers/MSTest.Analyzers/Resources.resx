@@ -549,4 +549,7 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidAssertAreSameWithValueTypesMessageFormat" xml:space="preserve">
     <value>Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types</value>
   </data>
+  <data name="AvoidAssertAreSameWithValueTypesDescription" xml:space="preserve">
+    <value>Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types. Passing a value type to 'Assert.AreSame' will be boxed (creating a new object). Because 'Assert.AreSame' does the comparison by reference, it will fail when boxing happens.</value>
+  </data>
 </root>
