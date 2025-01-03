@@ -93,7 +93,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
                     Assert.AreNotEqual(s.Length, s.Length);
                     Assert.AreNotEqual(a.S.Length, 32);
                     Assert.AreNotEqual(b.S.Length, 32);
-                }
+            }
             }
             """;
 
@@ -329,6 +329,35 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
                     StringAssert.DoesNotMatch(a.S, r);
                     StringAssert.DoesNotMatch(a.S, a.R);
                     StringAssert.DoesNotMatch(s, a.R);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingConditionalsAccess_In_Message_NoDiagnostic()
+    {
+        string code = """
+            #nullable enable
+            using System.Text.RegularExpressions;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            public class A
+            {
+                public string? S { get; set; }
+                public Regex? R { get; set; }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void Compliant()
+                {
+                    Assert.AreEqual(new object(), new object(), new A().S?.Length.ToString());
                 }
             }
             """;
