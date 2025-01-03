@@ -19,11 +19,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 internal sealed class TypeCache : MarshalByRefObject
 {
     /// <summary>
-    /// Test context property name.
-    /// </summary>
-    private const string TestContextPropertyName = "TestContext";
-
-    /// <summary>
     /// Predefined test Attribute names.
     /// </summary>
     private static readonly string[] PredefinedNames = ["Priority", "TestCategory", "Owner"];
@@ -311,13 +306,11 @@ internal sealed class TypeCache : MarshalByRefObject
         ConstructorInfo constructor = selectedConstructor.Value.CtorInfo;
         bool isParameterLessConstructor = selectedConstructor.Value.IsParameterless;
 
-        PropertyInfo? testContextProperty = ResolveTestContext(classType);
-
         TestAssemblyInfo assemblyInfo = GetAssemblyInfo(classType);
 
         TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetFirstDerivedAttributeOrDefault<TestClassAttribute>(classType, inherit: false);
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
-        var classInfo = new TestClassInfo(classType, constructor, isParameterLessConstructor, testContextProperty, testClassAttribute, assemblyInfo);
+        var classInfo = new TestClassInfo(classType, constructor, isParameterLessConstructor, testClassAttribute, assemblyInfo);
 
         // List holding the instance of the initialize/cleanup methods
         // to be passed into the tuples' queue  when updating the class info.
@@ -359,38 +352,6 @@ internal sealed class TypeCache : MarshalByRefObject
         }
 
         return classInfo;
-    }
-
-    /// <summary>
-    /// Resolves the test context property.
-    /// </summary>
-    /// <param name="classType"> The class Type. </param>
-    /// <returns> The <see cref="PropertyInfo"/> for TestContext property. Null if not defined. </returns>
-    private static PropertyInfo? ResolveTestContext(Type classType)
-    {
-        try
-        {
-            PropertyInfo? testContextProperty = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(classType, TestContextPropertyName);
-            if (testContextProperty == null)
-            {
-                // that's okay may be the property was not defined
-                return null;
-            }
-
-            // check if testContextProperty is of correct type
-            if (!string.Equals(testContextProperty.PropertyType.FullName, typeof(TestContext).FullName, StringComparison.Ordinal))
-            {
-                string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestContextTypeMismatchLoadError, classType.FullName);
-                throw new TypeInspectionException(errorMessage);
-            }
-
-            return testContextProperty;
-        }
-        catch (AmbiguousMatchException ex)
-        {
-            string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestContextLoadError, classType.FullName, ex.Message);
-            throw new TypeInspectionException(errorMessage);
-        }
     }
 
     #endregion

@@ -21,8 +21,6 @@ public class TestClassInfoTests : TestContainer
 
     private readonly ConstructorInfo _testClassConstructor;
 
-    private readonly PropertyInfo _testContextProperty;
-
     private readonly UTF.TestClassAttribute _testClassAttribute;
 
     private readonly TestAssemblyInfo _testAssemblyInfo;
@@ -35,7 +33,6 @@ public class TestClassInfoTests : TestContainer
     {
         _testClassType = typeof(DummyTestClass);
         _testClassConstructor = _testClassType.GetConstructors().First();
-        _testContextProperty = _testClassType.GetProperties().First();
         _testClassAttribute = (UTF.TestClassAttribute)_testClassType.GetCustomAttributes().First();
         _testAssemblyInfo = new TestAssemblyInfo(_testClassType.Assembly);
 
@@ -43,7 +40,6 @@ public class TestClassInfoTests : TestContainer
             _testClassType,
             _testClassConstructor,
             true,
-            _testContextProperty,
             _testClassAttribute,
             _testAssemblyInfo);
 
@@ -68,7 +64,7 @@ public class TestClassInfoTests : TestContainer
 
     public void TestClassInfoConstructorGetsTheConstructorInfoForTestClass() => Verify(_testClassConstructor == _testClassInfo.Constructor);
 
-    public void TestClassInfoTestContextPropertyGetsAReferenceToTheTestContextDefinedInTestClass() => Verify(_testContextProperty == _testClassInfo.TestContextProperty);
+    public void TestClassInfoTestContextPropertyGetsAReferenceToTheTestContextDefinedInTestClass() => Verify(_testClassInfo.TestContextProperty == _testClassType.GetProperty("TestContext"));
 
     public void TestClassInfoParentGetsAReferenceToTheParentAssemblyForTheTestClass() => Verify(_testAssemblyInfo == _testClassInfo.Parent);
 

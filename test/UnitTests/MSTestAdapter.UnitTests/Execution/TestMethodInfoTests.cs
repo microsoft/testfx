@@ -31,8 +31,6 @@ public class TestMethodInfoTests : TestContainer
 
     private readonly UTF.TestMethodAttribute _testMethodAttribute;
 
-    private readonly PropertyInfo _testContextProperty;
-
     private readonly TestAssemblyInfo _testAssemblyInfo;
 
     private readonly ConstructorInfo _constructorInfo;
@@ -51,12 +49,11 @@ public class TestMethodInfoTests : TestContainer
         _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod", StringComparison.Ordinal));
         _classAttribute = new UTF.TestClassAttribute();
         _testMethodAttribute = new UTF.TestMethodAttribute();
-        _testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 
         _testAssemblyInfo = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
         var testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
         _testContextImplementation = new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>());
-        _testClassInfo = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _testContextProperty, _classAttribute, _testAssemblyInfo);
+        _testClassInfo = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
         _expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
         _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(3600 * 1000), null, _testContextImplementation, false, _testMethodAttribute);
 
@@ -264,7 +261,7 @@ public class TestMethodInfoTests : TestContainer
     public void TestMethodInfoInvokeShouldSetErrorMessageIfTestClassConstructorThrowsWithoutInnerException()
     {
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithParameterizedCtor).GetConstructors().Single();
-        var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, true, _testContextProperty, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(_methodInfo, testClass, _testMethodOptions);
 
         UTF.TestResult result = method.Invoke(null);
@@ -294,7 +291,7 @@ public class TestMethodInfoTests : TestContainer
     public void TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrowsWithoutInnerException()
     {
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithParameterizedCtor).GetConstructors().Single();
-        var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, true, _testContextProperty, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(_methodInfo, testClass, _testMethodOptions);
 
         var exception = method.Invoke(null).TestFailureException as TestFailedException;
@@ -323,7 +320,7 @@ public class TestMethodInfoTests : TestContainer
     public void TestMethodInfoInvoke_WhenCtorHasOneParameterOfTypeTestContext_SetsItToTestContext()
     {
         ConstructorInfo ctorInfo = typeof(DummyTestClass).GetConstructor([typeof(UTFExtension.TestContext)]);
-        var testClassInfo = new TestClassInfo(typeof(DummyTestClass), ctorInfo, false, _testContextProperty, _classAttribute, _testAssemblyInfo);
+        var testClassInfo = new TestClassInfo(typeof(DummyTestClass), ctorInfo, false, _classAttribute, _testAssemblyInfo);
         var testMethodInfo = new TestMethodInfo(_methodInfo, testClassInfo, _testMethodOptions);
 
         UTF.TestResult result = testMethodInfo.Invoke(null);
@@ -337,7 +334,7 @@ public class TestMethodInfoTests : TestContainer
 
     public void TestMethodInfoInvokeShouldNotThrowIfTestContextIsNotPresent()
     {
-        var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, null, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(_methodInfo, testClass, _testMethodOptions);
 
         UTF.TestResult result;
@@ -349,8 +346,7 @@ public class TestMethodInfoTests : TestContainer
 
     public void TestMethodInfoInvokeShouldNotThrowIfTestContextDoesNotHaveASetter()
     {
-        PropertyInfo testContext = typeof(DummyTestClassWithTestContextWithoutSetter).GetProperties().Single();
-        var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, testContext, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(_methodInfo, testClass, _testMethodOptions);
 
         UTF.TestResult result;
@@ -410,7 +406,7 @@ public class TestMethodInfoTests : TestContainer
     public void TestMethodInfoInvoke_WhenCtorHasOneParameterOfTypeTestContextAndTestContextProperty_InitializeBothTestContexts()
     {
         ConstructorInfo ctorInfo = typeof(DummyTestClass).GetConstructor([typeof(UTFExtension.TestContext)]);
-        var testClassInfo = new TestClassInfo(typeof(DummyTestClass), ctorInfo, false, _testContextProperty, _classAttribute, _testAssemblyInfo);
+        var testClassInfo = new TestClassInfo(typeof(DummyTestClass), ctorInfo, false, _classAttribute, _testAssemblyInfo);
         var testMethodInfo = new TestMethodInfo(_methodInfo, testClassInfo, _testMethodOptions);
         UTFExtension.TestContext testContext = null;
         DummyTestClass.TestContextSetterBody = context => testContext = context as UTFExtension.TestContext;
@@ -882,7 +878,7 @@ public class TestMethodInfoTests : TestContainer
         bool disposeCalled = false;
         DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructor([])!;
-        var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, true, null, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
 
         method.Invoke(null);
@@ -897,7 +893,7 @@ public class TestMethodInfoTests : TestContainer
         bool asyncDisposeCalled = false;
         DummyTestClassWithAsyncDisposable.DisposeAsyncMethodBody = () => asyncDisposeCalled = true;
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithAsyncDisposable).GetConstructor([])!;
-        var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposable), ctorInfo, true, null, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
 
         // Act
@@ -918,7 +914,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClassWithAsyncDisposableAndDisposable.DisposeAsyncMethodBody = () => disposeAsyncCalledOrder = ++order;
 
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetConstructor([])!;
-        var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable), ctorInfo, true, null, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
 
         // Act
@@ -936,7 +932,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
         DummyTestClassWithDisposable.DummyTestCleanupMethodBody = classInstance => throw new NotImplementedException();
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructor([])!;
-        var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, true, null, _classAttribute, _testAssemblyInfo)
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo)
         {
             TestCleanupMethod = typeof(DummyTestClassWithDisposable).GetMethod("DummyTestCleanupMethod"),
         };
