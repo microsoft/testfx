@@ -3,7 +3,6 @@
 
 using System.Collections.Immutable;
 using System.Composition;
-using System.Threading;
 
 using Analyzer.Utilities;
 
@@ -56,8 +55,8 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProv
                     continue;
                 }
 
-                new SingleFixCodeAction(currentDocument, conditionalAccessExpressionSyntax, invocationExpressionSyntax).ApplyFix(editor);
-                currentDocument = editor.GetChangedDocument();
+                var codeAction = new SingleFixCodeAction(currentDocument, conditionalAccessExpressionSyntax, invocationExpressionSyntax);
+                currentDocument = codeAction.ApplyFix(editor);
             }
 
             return editor.GetChangedDocument();
@@ -109,11 +108,10 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProv
         protected override async Task<Document> GetChangedDocumentAsync(CancellationToken cancellationToken)
         {
             DocumentEditor editor = await DocumentEditor.CreateAsync(_document, cancellationToken).ConfigureAwait(false);
-            ApplyFix(editor);
-            return editor.GetChangedDocument();
+            return ApplyFix(editor);
         }
 
-        internal void ApplyFix(DocumentEditor editor)
+        internal Document ApplyFix(DocumentEditor editor)
         {
             ExpressionSyntax expressionCheckedForNull = _conditionalAccessExpressionSyntax.Expression;
             bool isNullAssertAlreadyPresent = IsNullAssertAlreadyPresent(expressionCheckedForNull, editor.GetChangedRoot().GetCurrentNode(_invocationExpressionSyntax) ?? _invocationExpressionSyntax);
@@ -191,6 +189,8 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProv
                     }
                 }
             }
+
+            return editor.GetChangedDocument();
         }
     }
 
