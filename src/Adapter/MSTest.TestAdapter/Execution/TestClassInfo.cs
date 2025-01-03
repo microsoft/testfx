@@ -439,6 +439,7 @@ public class TestClassInfo
                 result.TestContextMessages = initializationTestContextMessages;
             }
 
+            _classInitializeResult = result;
             return result;
         }
     }
