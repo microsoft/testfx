@@ -154,6 +154,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProv
                                 var parentBaseMethod = (BaseMethodDeclarationSyntax)node;
                                 return parentBaseMethod
                                     .WithExpressionBody(null)
+                                    .WithSemicolonToken(default)
                                     .WithBody(SyntaxFactory.Block(
                                         assertIsNotNull,
                                         SyntaxFactory.ExpressionStatement(parentBaseMethod.ExpressionBody!.Expression)));
@@ -168,6 +169,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProv
                                 var parentAccessor = (AccessorDeclarationSyntax)node;
                                 return parentAccessor
                                     .WithExpressionBody(null)
+                                    .WithSemicolonToken(default)
                                     .WithBody(SyntaxFactory.Block(
                                         assertIsNotNull,
                                         SyntaxFactory.ExpressionStatement(parentAccessor.ExpressionBody!.Expression)));
@@ -182,6 +184,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProv
                                 var parentLocalFunction = (LocalFunctionStatementSyntax)node;
                                 return parentLocalFunction
                                     .WithExpressionBody(null)
+                                    .WithSemicolonToken(default)
                                     .WithBody(SyntaxFactory.Block(
                                         assertIsNotNull,
                                         SyntaxFactory.ExpressionStatement(parentLocalFunction.ExpressionBody!.Expression)));

@@ -651,6 +651,85 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenExpressionBody()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            public class MyClass
+            {
+                public MyClass A { get; set; }
+                public MyClass B { get; set; }
+                public MyClass C { get; set; }
+                public MyClass D { get; set; }
+                public MyClass E { get; set; }
+                public MyClass F { get; set; }
+
+                public bool MyBool { get; set; }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void Case1() // NOTE: No easy way for us to fix this properly
+                    => [|Assert.IsTrue(new MyClass().A?.B.C?.D.E.MyBool)|];
+
+                [TestMethod]
+                public void Case2() // NOTE: No easy way for us to fix this properly
+                    => [|Assert.IsTrue(new MyClass().A?.B.C.D.E.MyBool)|];
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            
+            public class MyClass
+            {
+                public MyClass A { get; set; }
+                public MyClass B { get; set; }
+                public MyClass C { get; set; }
+                public MyClass D { get; set; }
+                public MyClass E { get; set; }
+                public MyClass F { get; set; }
+
+                public bool MyBool { get; set; }
+            }
+            
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void Case1() // NOTE: No easy way for us to fix this properly
+                {
+                    Assert.IsNotNull(new MyClass().A);
+                    Assert.IsNotNull(new MyClass().A.B.C);
+                    Assert.IsTrue(new MyClass().A.B.C.D.E.MyBool);
+                }
+
+                [TestMethod]
+                public void Case2() // NOTE: No easy way for us to fix this properly
+                {
+                    Assert.IsNotNull(new MyClass().A);
+                    Assert.IsTrue(new MyClass().A.B.C.D.E.MyBool);
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = fixedCode,
+            NumberOfFixAllIterations = 2,
+            NumberOfFixAllInDocumentIterations = 2,
+            NumberOfFixAllInProjectIterations = 2,
+            NumberOfIncrementalIterations = 3,
+        }.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenUsingConditionalsAccess_In_Message_NoDiagnostic()
     {
         string code = """
