@@ -1314,7 +1314,6 @@ public class MSTestSettingsTests : TestContainer
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:considerFixturesAsSpecialTests', setting will be ignored."), Times.Once);
     }
 
-    [TestMethod]
     public void ConfigJson_WithValidValues_ValuesAreSetCorrectly()
     {
         // Arrange - setting up valid configuration values
@@ -1374,5 +1373,24 @@ public class MSTestSettingsTests : TestContainer
         Verify(settings.ParallelizationWorkers == 4);
         Verify(settings.ParallelizationScope == ExecutionScope.ClassLevel);
     }
+
+    public void ConfigJson_WithValidValues_MethodScope()
+    {
+        // Arrange - setting up valid configuration values
+        var configDictionary = new Dictionary<string, string> { { "mstest:parallelism:scope", "method" } };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+            .Returns((string key) => configDictionary.TryGetValue(key, out string value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+
+        // Assert
+        Verify(settings.ParallelizationScope == ExecutionScope.MethodLevel);
+    }
+
     #endregion
 }
