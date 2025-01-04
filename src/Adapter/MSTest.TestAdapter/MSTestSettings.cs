@@ -1028,13 +1028,12 @@ public class MSTestSettings
 
         if (configuration["mstest:parallelism:scope"] is string value)
         {
-            value = value.Equals("class", StringComparison.OrdinalIgnoreCase) ? "ClassLevel"
-                    : value.Equals("methood", StringComparison.OrdinalIgnoreCase) ? "MethodLevel" : value;
-            if (TryParseEnum(value, out ExecutionScope scope))
-            {
-                settings.ParallelizationScope = scope;
-            }
-            else
+            value = value.Equals("class", StringComparison.OrdinalIgnoreCase) 
+                ? "ClassLevel"
+                : value.Equals("method", StringComparison.OrdinalIgnoreCase) 
+                    ? "MethodLevel" 
+                    : value;
+            if (!TryParseEnum(value, out ExecutionScope scope))
             {
                 throw new AdapterSettingsException(string.Format(
                     CultureInfo.CurrentCulture,
@@ -1046,6 +1045,8 @@ public class MSTestSettings
                     string.Join(", ", EnumPolyfill.GetNames<ExecutionScope>())));
 #endif
             }
+
+            settings.ParallelizationScope = scope;
         }
 
         MSTestSettingsProvider.Load(configuration);
