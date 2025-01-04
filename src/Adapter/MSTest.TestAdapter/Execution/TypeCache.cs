@@ -370,7 +370,7 @@ internal sealed class TypeCache : MarshalByRefObject
     {
         try
         {
-            PropertyInfo? testContextProperty = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(classType, TestContextPropertyName);
+            PropertyInfo? testContextProperty = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(classType, TestContextPropertyName, includeNonPublic: false);
             if (testContextProperty == null)
             {
                 // that's okay may be the property was not defined
@@ -810,7 +810,8 @@ internal sealed class TypeCache : MarshalByRefObject
         else if (methodBase != null)
         {
             Type[] parameters = methodBase.GetParameters().Select(i => i.ParameterType).ToArray();
-            testMethodInfo = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethod(methodBase.DeclaringType!, methodBase.Name, parameters);
+            // TODO: Should we pass true for includeNonPublic?
+            testMethodInfo = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethod(methodBase.DeclaringType!, methodBase.Name, parameters, includeNonPublic: false);
         }
 
         return testMethodInfo is null
