@@ -14,6 +14,9 @@
   <ItemGroup>
     <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+
+    <AdditionalFiles Include="PublicAPI\net\PublicAPI.Shipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp3.1'))" />
+    <AdditionalFiles Include="PublicAPI\net\PublicAPI.Unshipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp3.1'))" />
   </ItemGroup>
 
   <ItemGroup>

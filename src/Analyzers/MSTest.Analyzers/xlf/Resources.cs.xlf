@@ -117,6 +117,21 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Argumenty kontrolního výrazu musí být předány ve správném pořadí</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
+        <source>Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types. Passing a value type to 'Assert.AreSame' will be boxed (creating a new object). Because 'Assert.AreSame' does the comparison by reference, it will fail when boxing happens.</source>
+        <target state="new">Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types. Passing a value type to 'Assert.AreSame' will be boxed (creating a new object). Because 'Assert.AreSame' does the comparison by reference, it will fail when boxing happens.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
+        <source>Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types</source>
+        <target state="new">Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
+        <source>Don't use 'Assert.AreSame' with value types</source>
+        <target state="new">Don't use 'Assert.AreSame' with value types</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
         <target state="translated">Preferujte Assert.ThrowsException nebo Assert.ThrowsExceptionAsync před [ExpectedException], protože zajišťuje, že očekávanou výjimku vyvolá pouze očekávané volání. Rozhraní API assert také poskytují větší flexibilitu a umožňují vyhodnocovat další vlastnosti výjimky.</target>

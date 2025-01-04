@@ -117,6 +117,21 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">Onay deyimi bağımsız değişkenleri doğru sıralama düzeninde geçirilmelidir</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
+        <source>Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types. Passing a value type to 'Assert.AreSame' will be boxed (creating a new object). Because 'Assert.AreSame' does the comparison by reference, it will fail when boxing happens.</source>
+        <target state="new">Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types. Passing a value type to 'Assert.AreSame' will be boxed (creating a new object). Because 'Assert.AreSame' does the comparison by reference, it will fail when boxing happens.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
+        <source>Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types</source>
+        <target state="new">Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
+        <source>Don't use 'Assert.AreSame' with value types</source>
+        <target state="new">Don't use 'Assert.AreSame' with value types</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
         <target state="translated">Yalnızca beklenen çağrının beklenen özel durumu oluşturmasını sağladığı için '[ExpectedException]' yerine 'Assert.ThrowsException' veya 'Assert.ThrowsExceptionAsync' tercih edin. Onaylama API'leri de daha fazla esneklik sağlar ve özel durumun ek özelliklerini onaylamanıza izin verir.</target>
