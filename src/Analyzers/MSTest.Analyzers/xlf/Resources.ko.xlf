@@ -363,8 +363,8 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
-        <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
-        <target state="translated">'[DynamicDta]' 멤버 '{0}.{1}'을(를) 두 번 이상 찾았습니다.</target>
+        <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
+        <target state="needs-review-translation">'[DynamicDta]' 멤버 '{0}.{1}'을(를) 두 번 이상 찾았습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">

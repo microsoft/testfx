@@ -363,8 +363,8 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
-        <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
-        <target state="translated">O membro "{0}.{1}" de "[DynamicDta]" foi encontrado mais de uma vez</target>
+        <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
+        <target state="needs-review-translation">O membro "{0}.{1}" de "[DynamicDta]" foi encontrado mais de uma vez</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
