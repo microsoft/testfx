@@ -1028,10 +1028,10 @@ public class MSTestSettings
 
         if (configuration["mstest:parallelism:scope"] is string value)
         {
-            value = value.Equals("class", StringComparison.OrdinalIgnoreCase) 
+            value = value.Equals("class", StringComparison.OrdinalIgnoreCase)
                 ? "ClassLevel"
-                : value.Equals("method", StringComparison.OrdinalIgnoreCase) 
-                    ? "MethodLevel" 
+                : value.Equals("method", StringComparison.OrdinalIgnoreCase)
+                    ? "MethodLevel"
                     : value;
             if (!TryParseEnum(value, out ExecutionScope scope))
             {

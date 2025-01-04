@@ -34,10 +34,14 @@
 
   <Target Name="_AddAnalyzersToOutput">
     <ItemGroup>
-      <!-- Analyzer works for both C# and VB.NET -->
-      <TfmSpecificPackageFile Include="$(OutputPath)\MSTest.Analyzers.dll" PackagePath="analyzers/dotnet" />
-      <!-- This code fix is C# specific -->
+      <TfmSpecificPackageFile Include="$(OutputPath)\MSTest.Analyzers.dll" PackagePath="analyzers/dotnet/cs" />
       <TfmSpecificPackageFile Include="$(OutputPath)\MSTest.Analyzers.CodeFixes.dll" PackagePath="analyzers/dotnet/cs" />
+      <TfmSpecificPackageFile Include="$(OutputPath)\**\MSTest.Analyzers.resources.dll" PackagePath="analyzers/dotnet/cs/" />
+      <TfmSpecificPackageFile Include="$(OutputPath)\**\MSTest.Analyzers.CodeFixes.resources.dll" PackagePath="analyzers/dotnet/cs/" />
+
+      <!-- NOTE: Currently, code fixes are C# only. -->
+      <TfmSpecificPackageFile Include="$(OutputPath)\MSTest.Analyzers.dll" PackagePath="analyzers/dotnet/vb" />
+      <TfmSpecificPackageFile Include="$(OutputPath)\**\MSTest.Analyzers.resources.dll" PackagePath="analyzers/dotnet/vb/" />
     </ItemGroup>
   </Target>
 
