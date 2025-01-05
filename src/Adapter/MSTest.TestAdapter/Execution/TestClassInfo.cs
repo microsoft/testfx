@@ -780,7 +780,7 @@ public class TestClassInfo
     {
         try
         {
-            PropertyInfo? testContextProperty = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(classType, TestContextPropertyName);
+            PropertyInfo? testContextProperty = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(classType, TestContextPropertyName, includeNonPublic: false);
             if (testContextProperty == null)
             {
                 // that's okay may be the property was not defined

@@ -181,6 +181,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert.AreEqual&apos; instead of &apos;Assert.AreSame&apos; when comparing value types. Passing a value type to &apos;Assert.AreSame&apos; will be boxed (creating a new object). Because &apos;Assert.AreSame&apos; does the comparison by reference, it will fail when boxing happens..
+        /// </summary>
+        internal static string AvoidAssertAreSameWithValueTypesDescription {
+            get {
+                return ResourceManager.GetString("AvoidAssertAreSameWithValueTypesDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert.AreEqual&apos; instead of &apos;Assert.AreSame&apos; when comparing value types.
+        /// </summary>
+        internal static string AvoidAssertAreSameWithValueTypesMessageFormat {
+            get {
+                return ResourceManager.GetString("AvoidAssertAreSameWithValueTypesMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t use &apos;Assert.AreSame&apos; with value types.
+        /// </summary>
+        internal static string AvoidAssertAreSameWithValueTypesTitle {
+            get {
+                return ResourceManager.GetString("AvoidAssertAreSameWithValueTypesTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsException&apos; or &apos;Assert.ThrowsExceptionAsync&apos; over &apos;[ExpectedException]&apos; as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption..
         /// </summary>
         internal static string AvoidExpectedExceptionAttributeDescription {
