@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Security;
@@ -743,7 +743,7 @@ internal sealed class TypeCache : MarshalByRefObject
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
 
         // Let's build a fake options type as it won't be used.
-        return new TestMethodInfo(methodInfo, testClassInfo, new(TimeoutInfo.FromTimeout(-1), null, null, false, null));
+        return new TestMethodInfo(methodInfo, testClassInfo, new(TimeoutInfo.FromTimeout(-1), null, null, false, null!));
     }
 
     /// <summary>
