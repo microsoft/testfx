@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -354,22 +354,21 @@ public class TestClassInfo
 
         DebugEx.Assert(!IsClassInitializeExecuted, "If class initialize was executed, we should have been in the previous if were we have a result available.");
 
+        // For optimization purposes, return right away if there is nothing to execute.
+        // For STA, this avoids starting a thread when we know it will do nothing.
+        // But we still return early even not STA.
+        if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
+        {
+            IsClassInitializeExecuted = true;
+            return _classInitializeResult = new(ObjectModelUnitTestOutcome.Passed, null);
+        }
+
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTATestClass
             && isWindowsOS
             && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
-            // For optimization purposes, avoid starting a thread when we know it will do nothing.
-            // This is the case when:
-            // 1. We have already executed class initialize (this is handled at the beginning for STA and non-STA)
-            // 2. There is no class initialize method to execute. In this case we mark IsClassInitializeExecuted and return a passed result (this condition here).
-            if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
-            {
-                IsClassInitializeExecuted = true;
-                return _classInitializeResult = new(ObjectModelUnitTestOutcome.Passed, null);
-            }
-
             UnitTestResult result = new(ObjectModelUnitTestOutcome.Error, "MSTest STATestClass ClassInitialize didn't complete");
             Thread entryPointThread = new(() => result = DoRun())
             {
