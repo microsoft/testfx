@@ -17,9 +17,9 @@
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
       <Sha>d4a113f856a31bcdcbf6e08da8928961c98bb497</Sha>
     </Dependency>
-    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.25053.2">
+    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.25054.1">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>2a22637b3897dea2062a1ca574817772bc9346f5</Sha>
+      <Sha>038b4b79d9a55eecf37065fb30e41946a5933cf1</Sha>
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
     <Dependency Name="Microsoft.SourceBuild.Intermediate.diagnostics" Version="9.0.0-preview.24566.1">
