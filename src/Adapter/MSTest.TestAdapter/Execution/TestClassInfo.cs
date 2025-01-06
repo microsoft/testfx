@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -356,11 +356,6 @@ public class TestClassInfo
             return null;
         }
 
-        if (_classInitializeResult.Outcome == ObjectModelUnitTestOutcome.Passed)
-        {
-            return new(ObjectModelUnitTestOutcome.Passed, null);
-        }
-
         if (_classInitializeResult.ErrorStackTrace is not null && _classInitializeResult.ErrorMessage is not null)
         {
             return new(
@@ -370,8 +365,9 @@ public class TestClassInfo
                     new StackTraceInformation(_classInitializeResult.ErrorStackTrace, _classInitializeResult.ErrorFilePath, _classInitializeResult.ErrorLineNumber, _classInitializeResult.ErrorColumnNumber)));
         }
 
-        // Unlikely to be hit (GetResultOrRunClassInitialize appears to only create either Passed results or a result from exception), but
-        // we can still create UnitTestResult from outcome and error message.
+        // We are expecting this to be hit for the case of "Passed".
+        // It's unlikely to be hit otherwise (GetResultOrRunClassInitialize appears to only create either Passed results or a result from exception), but
+        // we can still create UnitTestResult from outcome and error message (which is expected to be null for Passed).
         return new(_classInitializeResult.Outcome, _classInitializeResult.ErrorMessage);
     }
 
