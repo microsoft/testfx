@@ -45,6 +45,7 @@ public class TestMethodInfo : ITestMethod
         TestMethod = testMethod;
         Parent = parent;
         TestMethodOptions = testMethodOptions;
+        ExpectedException = ResolveExpectedException();
     }
 
     /// <summary>
@@ -88,6 +89,8 @@ public class TestMethodInfo : ITestMethod
     /// Gets the options for the test method in this environment.
     /// </summary>
     internal TestMethodOptions TestMethodOptions { get; }
+
+    internal ExpectedExceptionBaseAttribute? ExpectedException { get; set; /*set for testing only*/ }
 
     public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.Instance.GetDerivedAttributes<Attribute>(TestMethod, inherit).ToArray();
 
@@ -213,6 +216,51 @@ public class TestMethodInfo : ITestMethod
     }
 
     /// <summary>
+    /// Resolves the expected exception attribute. The function will try to
+    /// get all the expected exception attributes defined for a testMethod.
+    /// </summary>
+    /// <returns>
+    /// The expected exception attribute found for this test. Null if not found.
+    /// </returns>
+    private ExpectedExceptionBaseAttribute? ResolveExpectedException()
+    {
+        IEnumerable<ExpectedExceptionBaseAttribute> expectedExceptions;
+
+        try
+        {
+            expectedExceptions = ReflectHelper.Instance.GetDerivedAttributes<ExpectedExceptionBaseAttribute>(TestMethod, inherit: true);
+        }
+        catch (Exception ex)
+        {
+            // If construction of the attribute throws an exception, indicate that there was an
+            // error when trying to run the test
+            string errorMessage = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_ExpectedExceptionAttributeConstructionException,
+                Parent.ClassType.FullName,
+                TestMethod.Name,
+                ex.GetFormattedExceptionMessage());
+            throw new TypeInspectionException(errorMessage);
+        }
+
+        // Verify that there is only one attribute (multiple attributes derived from
+        // ExpectedExceptionBaseAttribute are not allowed on a test method)
+        // This is needed EVEN IF the attribute doesn't allow multiple.
+        // See https://github.com/microsoft/testfx/issues/4331
+        if (expectedExceptions.Count() > 1)
+        {
+            string errorMessage = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_MultipleExpectedExceptionsOnTestMethod,
+                Parent.ClassType.FullName,
+                TestMethod.Name);
+            throw new TypeInspectionException(errorMessage);
+        }
+
+        return expectedExceptions.FirstOrDefault();
+    }
+
+    /// <summary>
     /// Execute test without timeout.
     /// </summary>
     /// <param name="arguments">Arguments to be passed to the method.</param>
@@ -303,11 +351,11 @@ public class TestMethodInfo : ITestMethod
             // if the user specified that the test was going to throw an exception, and
             // it did not, we should fail the test
             // We only perform this check if the test initialize passes and the test method is actually run.
-            if (hasTestInitializePassed && !isExceptionThrown && TestMethodOptions.ExpectedException != null)
+            if (hasTestInitializePassed && !isExceptionThrown && ExpectedException is { } expectedException)
             {
                 result.TestFailureException = new TestFailedException(
                     ObjectModelUnitTestOutcome.Failed,
-                    TestMethodOptions.ExpectedException.NoExceptionMessage);
+                    expectedException.NoExceptionMessage);
                 result.Outcome = UTF.UnitTestOutcome.Failed;
             }
         }
@@ -342,7 +390,7 @@ public class TestMethodInfo : ITestMethod
         // if the user specified an expected exception, we need to check if this
         // exception was thrown. If it was thrown, we should pass the test. In
         // case a different exception was thrown, the test is seen as failure
-        if (TestMethodOptions.ExpectedException == null)
+        if (ExpectedException == null)
         {
             return false;
         }
@@ -352,7 +400,7 @@ public class TestMethodInfo : ITestMethod
         {
             // If the expected exception attribute's Verify method returns, then it
             // considers this exception as expected, so the test passed
-            TestMethodOptions.ExpectedException.Verify(ex);
+            ExpectedException.Verify(ex);
             return true;
         }
         catch (Exception verifyEx)

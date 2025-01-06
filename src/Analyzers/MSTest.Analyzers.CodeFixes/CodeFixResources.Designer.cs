@@ -207,6 +207,15 @@ namespace MSTest.Analyzers {
         /// <summary>
         ///   Looks up a localized string similar to Use &apos;{0}&apos;.
         /// </summary>
+        internal static string UseNewerAssertThrows {
+            get {
+                return ResourceManager.GetString("UseNewerAssertThrows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;{0}&apos;.
+        /// </summary>
         internal static string UseProperAssertMethodsFix {
             get {
                 return ResourceManager.GetString("UseProperAssertMethodsFix", resourceCulture);

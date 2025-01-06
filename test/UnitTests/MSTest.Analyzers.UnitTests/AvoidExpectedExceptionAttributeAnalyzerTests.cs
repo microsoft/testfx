@@ -79,15 +79,13 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 {
                 }
 
-                [ExpectedException(typeof(System.Exception), AllowDerivedTypes = true)]
                 [TestMethod]
-                public void [|TestMethod3|]()
+                public void TestMethod3()
                 {
                 }
 
-                [ExpectedException(typeof(System.Exception), "Some message", AllowDerivedTypes = true)]
                 [TestMethod]
-                public void [|TestMethod4|]()
+                public void TestMethod4()
                 {
                 }
 
@@ -108,11 +106,9 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 {
                     fixedCode,
                 },
-                // ExpectedException with AllowDerivedTypes = True cannot be simply converted
-                // to Assert.ThrowsException as the semantics are different (same for custom attributes that may have some special semantics).
-                // For now, the user needs to manually fix this to use Assert.ThrowsException and specify the actual (exact) exception type.
+                // The codefix cannot fix MyExpectedException because it cannot detect the exception type.
+                // For now, the user needs to manually fix this.
                 // We *could* provide a codefix that uses Assert.ThrowsException<SameExceptionType> but that's most likely going to be wrong.
-                // If the user explicitly has AllowDerivedTypes, it's likely because he doesn't specify the exact exception type.
                 // NOTE: For fixed state, the default is MarkupMode.IgnoreFixable, so we set
                 // to Allow as we still have expected errors after applying the codefix.
                 MarkupHandling = MarkupMode.Allow,
@@ -138,6 +134,13 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 {
                     Console.WriteLine("Hello, world!");
                 }
+
+                [ExpectedException(typeof(System.Exception), AllowDerivedTypes = true)]
+                [TestMethod]
+                public void [|TestMethod2|]()
+                {
+                    Console.WriteLine("Hello, world!");
+                }
             }
             """;
 
@@ -151,7 +154,13 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.ThrowsException<Exception>(() => Console.WriteLine("Hello, world!"));
+                    Assert.ThrowsExactly<Exception>(() => Console.WriteLine("Hello, world!"));
+                }
+
+                [TestMethod]
+                public void TestMethod2()
+                {
+                    Assert.Throws<Exception>(() => Console.WriteLine("Hello, world!"));
                 }
             }
             """;
@@ -185,7 +194,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
             {
                 [TestMethod]
                 public void TestMethod()
-                    => Assert.ThrowsException<Exception>(() => Console.WriteLine("Hello, world!"));
+                    => Assert.ThrowsExactly<Exception>(() => Console.WriteLine("Hello, world!"));
             }
             """;
 
@@ -225,7 +234,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.ThrowsException<Exception>(() => GetNumber());
+                    Assert.ThrowsExactly<Exception>(() => GetNumber());
                 }
             }
             """;
@@ -262,7 +271,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 private int GetNumber() => 0;
                 [TestMethod]
                 public void TestMethod()
-                    => Assert.ThrowsException<Exception>(() => GetNumber());
+                    => Assert.ThrowsExactly<Exception>(() => GetNumber());
             }
             """;
 
@@ -286,6 +295,13 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 {
                     await Task.Delay(0);
                 }
+
+                [ExpectedException(typeof(System.Exception), AllowDerivedTypes = true)]
+                [TestMethod]
+                public async Task [|TestMethod2|]()
+                {
+                    await Task.Delay(0);
+                }
             }
             """;
 
@@ -300,7 +316,13 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 [TestMethod]
                 public async Task TestMethod()
                 {
-                    await Assert.ThrowsExceptionAsync<Exception>(async () => await Task.Delay(0));
+                    await Assert.ThrowsExactlyAsync<Exception>(async () => await Task.Delay(0));
+                }
+
+                [TestMethod]
+                public async Task TestMethod2()
+                {
+                    await Assert.ThrowsAsync<Exception>(async () => await Task.Delay(0));
                 }
             }
             """;
@@ -336,7 +358,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
             {
                 [TestMethod]
                 public async Task TestMethod()
-                    => await Assert.ThrowsExceptionAsync<Exception>(async () => await Task.Delay(0));
+                    => await Assert.ThrowsExactlyAsync<Exception>(async () => await Task.Delay(0));
             }
             """;
 
@@ -378,7 +400,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 public async Task TestMethod()
                 {
                     await Task.Delay(0);
-                    Assert.ThrowsException<Exception>(() => M());
+                    Assert.ThrowsExactly<Exception>(() => M());
                 }
 
                 private static void M() => throw new Exception();
@@ -428,7 +450,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 public async Task TestMethod()
                 {
                     Console.WriteLine("Hello, world!");
-                    await Assert.ThrowsExceptionAsync<Exception>(async () =>
+                    await Assert.ThrowsExactlyAsync<Exception>(async () =>
                             // In ideal world, it's best if the codefix can separate await M() to a
                             // variable, then only wrap M(someVariable) in Assert.ThrowsException
                             // Let's also have this comment serve as a test for trivia ;)

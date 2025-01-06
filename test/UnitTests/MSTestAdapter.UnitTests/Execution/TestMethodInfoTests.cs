@@ -31,8 +31,6 @@ public class TestMethodInfoTests : TestContainer
 
     private readonly UTF.TestMethodAttribute _testMethodAttribute;
 
-    private readonly PropertyInfo _testContextProperty;
-
     private readonly TestAssemblyInfo _testAssemblyInfo;
 
     private readonly ConstructorInfo _constructorInfo;
@@ -51,14 +49,13 @@ public class TestMethodInfoTests : TestContainer
         _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod", StringComparison.Ordinal));
         _classAttribute = new UTF.TestClassAttribute();
         _testMethodAttribute = new UTF.TestMethodAttribute();
-        _testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 
         _testAssemblyInfo = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
         var testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
         _testContextImplementation = new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>());
-        _testClassInfo = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _testContextProperty, _classAttribute, _testAssemblyInfo);
+        _testClassInfo = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
         _expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
-        _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(3600 * 1000), null, _testContextImplementation, false, _testMethodAttribute);
+        _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(3600 * 1000), _testContextImplementation, false, _testMethodAttribute);
 
         _testMethodInfo = new TestMethodInfo(
             _methodInfo,
@@ -264,7 +261,7 @@ public class TestMethodInfoTests : TestContainer
     public void TestMethodInfoInvokeShouldSetErrorMessageIfTestClassConstructorThrowsWithoutInnerException()
     {
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithParameterizedCtor).GetConstructors().Single();
-        var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, true, _testContextProperty, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(_methodInfo, testClass, _testMethodOptions);
 
         UTF.TestResult result = method.Invoke(null);
@@ -294,7 +291,7 @@ public class TestMethodInfoTests : TestContainer
     public void TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrowsWithoutInnerException()
     {
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithParameterizedCtor).GetConstructors().Single();
-        var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, true, _testContextProperty, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(_methodInfo, testClass, _testMethodOptions);
 
         var exception = method.Invoke(null).TestFailureException as TestFailedException;
@@ -323,7 +320,7 @@ public class TestMethodInfoTests : TestContainer
     public void TestMethodInfoInvoke_WhenCtorHasOneParameterOfTypeTestContext_SetsItToTestContext()
     {
         ConstructorInfo ctorInfo = typeof(DummyTestClass).GetConstructor([typeof(UTFExtension.TestContext)]);
-        var testClassInfo = new TestClassInfo(typeof(DummyTestClass), ctorInfo, false, _testContextProperty, _classAttribute, _testAssemblyInfo);
+        var testClassInfo = new TestClassInfo(typeof(DummyTestClass), ctorInfo, false, _classAttribute, _testAssemblyInfo);
         var testMethodInfo = new TestMethodInfo(_methodInfo, testClassInfo, _testMethodOptions);
 
         UTF.TestResult result = testMethodInfo.Invoke(null);
@@ -337,7 +334,7 @@ public class TestMethodInfoTests : TestContainer
 
     public void TestMethodInfoInvokeShouldNotThrowIfTestContextIsNotPresent()
     {
-        var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, null, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(_methodInfo, testClass, _testMethodOptions);
 
         UTF.TestResult result;
@@ -349,8 +346,7 @@ public class TestMethodInfoTests : TestContainer
 
     public void TestMethodInfoInvokeShouldNotThrowIfTestContextDoesNotHaveASetter()
     {
-        PropertyInfo testContext = typeof(DummyTestClassWithTestContextWithoutSetter).GetProperties().Single();
-        var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, testContext, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(_methodInfo, testClass, _testMethodOptions);
 
         UTF.TestResult result;
@@ -410,7 +406,7 @@ public class TestMethodInfoTests : TestContainer
     public void TestMethodInfoInvoke_WhenCtorHasOneParameterOfTypeTestContextAndTestContextProperty_InitializeBothTestContexts()
     {
         ConstructorInfo ctorInfo = typeof(DummyTestClass).GetConstructor([typeof(UTFExtension.TestContext)]);
-        var testClassInfo = new TestClassInfo(typeof(DummyTestClass), ctorInfo, false, _testContextProperty, _classAttribute, _testAssemblyInfo);
+        var testClassInfo = new TestClassInfo(typeof(DummyTestClass), ctorInfo, false, _classAttribute, _testAssemblyInfo);
         var testMethodInfo = new TestMethodInfo(_methodInfo, testClassInfo, _testMethodOptions);
         UTFExtension.TestContext testContext = null;
         DummyTestClass.TestContextSetterBody = context => testContext = context as UTFExtension.TestContext;
@@ -501,7 +497,7 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo.TestInitializeMethod.Name,
             "System.ArgumentException: Some exception message ---> System.InvalidOperationException: Inner exception message");
 
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions with { ExpectedException = _expectedException });
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions) { ExpectedException = _expectedException };
 
         // Act.
         UTF.TestResult result = testMethodInfo.Invoke(null);
@@ -526,7 +522,7 @@ public class TestMethodInfoTests : TestContainer
         // Arrange.
         DummyTestClass.TestInitializeMethodBodyAsync = async classInstance => await Task.FromException<Exception>(new Exception("Outer", new InvalidOperationException("Inner")));
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethodAsync");
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions with { ExpectedException = _expectedException });
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions) { ExpectedException = _expectedException };
 
         // Act.
         UTF.TestResult result = testMethodInfo.Invoke(null);
@@ -562,7 +558,7 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo.TestInitializeMethod.Name,
             "Assert.Fail failed. dummyFailMessage");
 
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions with { ExpectedException = _expectedException });
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions) { ExpectedException = _expectedException };
 
         // Act.
         UTF.TestResult result = testMethodInfo.Invoke(null);
@@ -593,7 +589,7 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo.TestInitializeMethod.Name,
             "Assert.Inconclusive failed. dummyFailMessage");
 
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions with { ExpectedException = _expectedException });
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions) { ExpectedException = _expectedException };
 
         // Act.
         UTF.TestResult result = testMethodInfo.Invoke(null);
@@ -882,7 +878,7 @@ public class TestMethodInfoTests : TestContainer
         bool disposeCalled = false;
         DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructor([])!;
-        var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, true, null, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
 
         method.Invoke(null);
@@ -897,7 +893,7 @@ public class TestMethodInfoTests : TestContainer
         bool asyncDisposeCalled = false;
         DummyTestClassWithAsyncDisposable.DisposeAsyncMethodBody = () => asyncDisposeCalled = true;
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithAsyncDisposable).GetConstructor([])!;
-        var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposable), ctorInfo, true, null, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
 
         // Act
@@ -918,7 +914,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClassWithAsyncDisposableAndDisposable.DisposeAsyncMethodBody = () => disposeAsyncCalledOrder = ++order;
 
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetConstructor([])!;
-        var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable), ctorInfo, true, null, _classAttribute, _testAssemblyInfo);
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
 
         // Act
@@ -936,7 +932,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
         DummyTestClassWithDisposable.DummyTestCleanupMethodBody = classInstance => throw new NotImplementedException();
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructor([])!;
-        var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, true, null, _classAttribute, _testAssemblyInfo)
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo)
         {
             TestCleanupMethod = typeof(DummyTestClassWithDisposable).GetMethod("DummyTestCleanupMethod"),
         };
@@ -1003,7 +999,7 @@ public class TestMethodInfoTests : TestContainer
     public void TestMethodInfoInvokeShouldSetResultAsPassedIfExpectedExceptionIsThrown()
     {
         DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions with { ExpectedException = _expectedException });
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions) { ExpectedException = _expectedException };
 
         UTF.TestResult result = testMethodInfo.Invoke(null);
 
@@ -1013,7 +1009,7 @@ public class TestMethodInfoTests : TestContainer
     public void TestMethodInfoInvokeShouldSetResultAsFailedIfExceptionDifferentFromExpectedExceptionIsThrown()
     {
         DummyTestClass.TestMethodBody = o => throw new IndexOutOfRangeException();
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions with { ExpectedException = _expectedException });
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions) { ExpectedException = _expectedException };
 
         UTF.TestResult result = testMethodInfo.Invoke(null);
 
@@ -1026,7 +1022,7 @@ public class TestMethodInfoTests : TestContainer
     public void TestMethodInfoInvokeShouldSetResultAsFailedWhenExceptionIsExpectedButIsNotThrown()
     {
         DummyTestClass.TestMethodBody = o => { return; };
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions with { ExpectedException = _expectedException });
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions) { ExpectedException = _expectedException };
         UTF.TestResult result = testMethodInfo.Invoke(null);
         Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
         string message = "Test method did not throw expected exception System.DivideByZeroException.";
@@ -1036,7 +1032,7 @@ public class TestMethodInfoTests : TestContainer
     public void TestMethodInfoInvokeShouldSetResultAsInconclusiveWhenExceptionIsAssertInconclusiveException()
     {
         DummyTestClass.TestMethodBody = o => throw new UTF.AssertInconclusiveException();
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions with { ExpectedException = _expectedException });
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions) { ExpectedException = _expectedException };
         UTF.TestResult result = testMethodInfo.Invoke(null);
         Verify(result.Outcome == UTF.UnitTestOutcome.Inconclusive);
         string message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException' was thrown.";
@@ -1055,7 +1051,7 @@ public class TestMethodInfoTests : TestContainer
             }
         };
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions with { ExpectedException = _expectedException });
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions) { ExpectedException = _expectedException };
 
         UTF.TestResult result = testMethodInfo.Invoke(null);
 
@@ -1068,7 +1064,10 @@ public class TestMethodInfoTests : TestContainer
         var method = new TestMethodInfo(
             _methodInfo,
             _testClassInfo,
-            _testMethodOptions with { ExpectedException = customExpectedException, TimeoutInfo = TimeoutInfo.FromTimeout(0) });
+            _testMethodOptions with { TimeoutInfo = TimeoutInfo.FromTimeout(0) })
+        {
+            ExpectedException = customExpectedException,
+        };
 
         DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
         UTF.TestResult result = method.Invoke(null);
@@ -1082,7 +1081,10 @@ public class TestMethodInfoTests : TestContainer
         var method = new TestMethodInfo(
             _methodInfo,
             _testClassInfo,
-            _testMethodOptions with { ExpectedException = customExpectedException, TimeoutInfo = TimeoutInfo.FromTimeout(0) });
+            _testMethodOptions with { TimeoutInfo = TimeoutInfo.FromTimeout(0) })
+        {
+            ExpectedException = customExpectedException,
+        };
 
         DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
         UTF.TestResult result = method.Invoke(null);
@@ -1096,7 +1098,10 @@ public class TestMethodInfoTests : TestContainer
         var method = new TestMethodInfo(
             _methodInfo,
             _testClassInfo,
-            _testMethodOptions with { ExpectedException = customExpectedException, TimeoutInfo = TimeoutInfo.FromTimeout(0) });
+            _testMethodOptions with { TimeoutInfo = TimeoutInfo.FromTimeout(0) })
+        {
+            ExpectedException = customExpectedException,
+        };
 
         DummyTestClass.TestMethodBody = o => throw new UTF.AssertInconclusiveException();
         UTF.TestResult result = method.Invoke(null);
@@ -1111,7 +1116,10 @@ public class TestMethodInfoTests : TestContainer
         var method = new TestMethodInfo(
             _methodInfo,
             _testClassInfo,
-            _testMethodOptions with { ExpectedException = derivedCustomExpectedException, TimeoutInfo = TimeoutInfo.FromTimeout(0) });
+            _testMethodOptions with { TimeoutInfo = TimeoutInfo.FromTimeout(0) })
+        {
+            ExpectedException = derivedCustomExpectedException,
+        };
 
         DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
         UTF.TestResult result = method.Invoke(null);
@@ -1128,7 +1136,10 @@ public class TestMethodInfoTests : TestContainer
         var method = new TestMethodInfo(
             _methodInfo,
             _testClassInfo,
-            _testMethodOptions with { ExpectedException = expectedException, TimeoutInfo = TimeoutInfo.FromTimeout(0) });
+            _testMethodOptions with { TimeoutInfo = TimeoutInfo.FromTimeout(0) })
+        {
+            ExpectedException = expectedException,
+        };
 
         DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
         UTF.TestResult result = method.Invoke(null);
@@ -1144,7 +1155,10 @@ public class TestMethodInfoTests : TestContainer
         var method = new TestMethodInfo(
             _methodInfo,
             _testClassInfo,
-            _testMethodOptions with { ExpectedException = expectedException, TimeoutInfo = TimeoutInfo.FromTimeout(0) });
+            _testMethodOptions with { TimeoutInfo = TimeoutInfo.FromTimeout(0) })
+        {
+            ExpectedException = expectedException,
+        };
 
         DummyTestClass.TestMethodBody = o => throw new ArgumentNullException();
         UTF.TestResult result = method.Invoke(null);
@@ -1163,7 +1177,10 @@ public class TestMethodInfoTests : TestContainer
         var method = new TestMethodInfo(
             _methodInfo,
             _testClassInfo,
-            _testMethodOptions with { ExpectedException = expectedException, TimeoutInfo = TimeoutInfo.FromTimeout(0) });
+            _testMethodOptions with { TimeoutInfo = TimeoutInfo.FromTimeout(0) })
+        {
+            ExpectedException = expectedException,
+        };
 
         DummyTestClass.TestMethodBody = o => throw new UTF.AssertFailedException();
         UTF.TestResult result = method.Invoke(null);
@@ -1181,7 +1198,10 @@ public class TestMethodInfoTests : TestContainer
         var method = new TestMethodInfo(
             _methodInfo,
             _testClassInfo,
-            _testMethodOptions with { ExpectedException = expectedException, TimeoutInfo = TimeoutInfo.FromTimeout(0) });
+            _testMethodOptions with { TimeoutInfo = TimeoutInfo.FromTimeout(0) })
+        {
+            ExpectedException = expectedException,
+        };
 
         DummyTestClass.TestMethodBody = o => throw new UTF.AssertInconclusiveException();
         UTF.TestResult result = method.Invoke(null);
@@ -1196,7 +1216,10 @@ public class TestMethodInfoTests : TestContainer
         var method = new TestMethodInfo(
             _methodInfo,
             _testClassInfo,
-            _testMethodOptions with { ExpectedException = expectedException, TimeoutInfo = TimeoutInfo.FromTimeout(0) });
+            _testMethodOptions with { TimeoutInfo = TimeoutInfo.FromTimeout(0) })
+        {
+            ExpectedException = expectedException,
+        };
 
         DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
         UTF.TestResult result = method.Invoke(null);
@@ -1212,13 +1235,77 @@ public class TestMethodInfoTests : TestContainer
         var method = new TestMethodInfo(
             _methodInfo,
             _testClassInfo,
-            _testMethodOptions with { ExpectedException = expectedException, TimeoutInfo = TimeoutInfo.FromTimeout(0) });
+            _testMethodOptions with { TimeoutInfo = TimeoutInfo.FromTimeout(0) })
+        {
+            ExpectedException = expectedException,
+        };
 
         DummyTestClass.TestMethodBody = o => throw new UTF.AssertInconclusiveException();
         UTF.TestResult result = method.Invoke(null);
         string message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException' was thrown.";
         Verify(result.TestFailureException.Message == message);
         Verify(result.Outcome == UTF.UnitTestOutcome.Inconclusive);
+    }
+
+    public void ResolveExpectedExceptionShouldThrowWhenAttributeIsDefinedTwice_DifferentConcreteType()
+    {
+        MethodInfo testMethodInfo = typeof(DummyTestClassForExpectedException).GetMethod(nameof(DummyTestClassForExpectedException.DummyTestMethod1));
+        TestClassInfo classInfo = new(
+            typeof(DummyTestClassForExpectedException),
+            typeof(DummyTestClassForExpectedException).GetConstructor(Array.Empty<Type>()),
+            isParameterlessConstructor: true,
+            new UTF.TestClassAttribute(),
+            new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
+
+        TypeInspectionException ex = UTF.Assert.ThrowsException<TypeInspectionException>(() => new TestMethodInfo(testMethodInfo, classInfo, _testMethodOptions));
+        UTF.Assert.AreEqual("The test method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests+DummyTestClassForExpectedException.DummyTestMethod1 has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.", ex.Message);
+    }
+
+    public void ResolveExpectedExceptionShouldThrowWhenAttributeIsDefinedTwice_SameConcreteType()
+    {
+        MethodInfo testMethodInfo = typeof(DummyTestClassForExpectedException).GetMethod(nameof(DummyTestClassForExpectedException.DummyTestMethod1));
+        TestClassInfo classInfo = new(
+            typeof(DummyTestClassForExpectedException),
+            typeof(DummyTestClassForExpectedException).GetConstructor(Array.Empty<Type>()),
+            isParameterlessConstructor: true,
+            new UTF.TestClassAttribute(),
+            new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
+
+        TypeInspectionException ex = UTF.Assert.ThrowsException<TypeInspectionException>(() => new TestMethodInfo(testMethodInfo, classInfo, _testMethodOptions));
+        UTF.Assert.AreEqual("The test method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests+DummyTestClassForExpectedException.DummyTestMethod1 has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.", ex.Message);
+    }
+
+    public void ResolveExpectedExceptionHelperShouldReturnExpectedExceptionAttributeIfPresent()
+    {
+        Type type = typeof(DummyTestClassForExpectedException);
+        MethodInfo methodInfo = type.GetMethod(nameof(DummyTestClassForExpectedException.TestMethodWithExpectedException));
+        TestClassInfo classInfo = new(
+            typeof(DummyTestClassForExpectedException),
+            typeof(DummyTestClassForExpectedException).GetConstructor(Array.Empty<Type>()),
+            isParameterlessConstructor: true,
+            new UTF.TestClassAttribute(),
+            new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
+
+        var testMethodInfo = new TestMethodInfo(methodInfo, classInfo, _testMethodOptions);
+
+        Verify(testMethodInfo.ExpectedException is not null);
+        Verify(((UTF.ExpectedExceptionAttribute)testMethodInfo.ExpectedException).ExceptionType == typeof(DivideByZeroException));
+    }
+
+    public void ResolveExpectedExceptionHelperShouldReturnNullIfExpectedExceptionAttributeIsNotPresent()
+    {
+        Type type = typeof(DummyTestClassForExpectedException);
+        MethodInfo methodInfo = type.GetMethod(nameof(DummyTestClassForExpectedException.TestMethodWithoutExpectedException));
+        TestClassInfo classInfo = new(
+            typeof(DummyTestClassForExpectedException),
+            typeof(DummyTestClassForExpectedException).GetConstructor(Array.Empty<Type>()),
+            isParameterlessConstructor: true,
+            new UTF.TestClassAttribute(),
+            new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
+
+        var testMethodInfo = new TestMethodInfo(methodInfo, classInfo, _testMethodOptions);
+
+        Verify(testMethodInfo.ExpectedException is null);
     }
 
     #endregion
@@ -1620,6 +1707,42 @@ public class TestMethodInfoTests : TestContainer
     }
 
     #endregion
+
+    public class DummyTestClassForExpectedException
+    {
+        private class MyExpectedException1Attribute : UTF.ExpectedExceptionBaseAttribute
+        {
+            protected internal override void Verify(Exception exception) => throw new NotImplementedException();
+        }
+
+        [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+        public class MyExpectedException2Attribute : UTF.ExpectedExceptionBaseAttribute
+        {
+            protected internal override void Verify(Exception exception) => throw new NotImplementedException();
+        }
+
+        [UTF.ExpectedException(typeof(Exception))]
+        [MyExpectedException1]
+
+        public void DummyTestMethod1()
+        {
+        }
+
+        [MyExpectedException2]
+        [MyExpectedException2]
+        public void DummyTestMethod2()
+        {
+        }
+
+        [UTF.ExpectedException(typeof(DivideByZeroException))]
+        public void TestMethodWithExpectedException()
+        {
+        }
+
+        public void TestMethodWithoutExpectedException()
+        {
+        }
+    }
 
 #if NET6_0_OR_GREATER
     public class DummyTestClassWithAsyncDisposable : IAsyncDisposable
