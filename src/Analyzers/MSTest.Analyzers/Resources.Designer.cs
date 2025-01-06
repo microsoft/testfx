@@ -181,7 +181,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use &apos;Assert.AreEqual&apos; instead of &apos;Assert.AreSame&apos; when comparing value types. Passing a value type to &apos;Assert.AreSame&apos; will be boxed (creating a new object). Because &apos;Assert.AreSame&apos; does the comparison by reference, it will fail when boxing happens..
+        ///   Looks up a localized string similar to Use &apos;Assert.AreEqual&apos;/&apos;Assert.AreNotEqual&apos; instead of &apos;Assert.AreSame&apos;/&apos;Assert.AreNotSame&apos; when comparing value types. Passing a value type to &apos;Assert.AreSame&apos;/&apos;Assert.AreNotSame&apos; will be boxed (creating a new object). Because &apos;Assert.AreSame&apos;/&apos;Assert.AreNotSame&apos; does the comparison by reference, &apos;Assert.AreSame&apos; will fail when boxing happens, and &apos;Assert.AreNotSame&apos; will always pass..
         /// </summary>
         internal static string AvoidAssertAreSameWithValueTypesDescription {
             get {
@@ -190,7 +190,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use &apos;Assert.AreEqual&apos; instead of &apos;Assert.AreSame&apos; when comparing value types.
+        ///   Looks up a localized string similar to Use &apos;{0}&apos; instead of &apos;{1}&apos; when comparing value types.
         /// </summary>
         internal static string AvoidAssertAreSameWithValueTypesMessageFormat {
             get {
@@ -199,7 +199,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Don&apos;t use &apos;Assert.AreSame&apos; with value types.
+        ///   Looks up a localized string similar to Don&apos;t use &apos;Assert.AreSame&apos; or &apos;Assert.AreNotSame&apos; with value types.
         /// </summary>
         internal static string AvoidAssertAreSameWithValueTypesTitle {
             get {
