@@ -272,10 +272,7 @@ internal sealed class TestMethodRunner
             {
                 results.Add(new()
                 {
-                    // This is closest to ignore. This enum doesn't have a value specific to Ignore.
-                    // It may be a better idea to add a value there, but the enum is public and we need to think more carefully before adding the API.
-                    // For now, TestResultExtensions.ToUnitTestResults method will convert this to Ignored value of ObjectModel enum when IgnoreReason is non-null.
-                    Outcome = UTF.UnitTestOutcome.NotRunnable,
+                    Outcome = UTF.UnitTestOutcome.Ignored,
                     IgnoreReason = ignoreMessage,
                 });
                 continue;

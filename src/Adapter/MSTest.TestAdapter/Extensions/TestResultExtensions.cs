@@ -29,9 +29,7 @@ public static class TestResultExtensions
         int i = 0;
         foreach (UTF.TestResult testResult in testResults)
         {
-            UnitTestOutcome outcome = testResult.IgnoreReason is not null
-                ? UnitTestOutcome.Ignored
-                : testResult.Outcome.ToUnitTestOutcome();
+            var outcome = testResult.Outcome.ToUnitTestOutcome();
 
             UnitTestResult unitTestResult = testResult.TestFailureException is { } testFailureException
                 ? new UnitTestResult(
