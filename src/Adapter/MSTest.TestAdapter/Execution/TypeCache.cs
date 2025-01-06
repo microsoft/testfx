@@ -729,8 +729,7 @@ internal sealed class TypeCache : MarshalByRefObject
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
 
         TimeoutInfo timeout = GetTestTimeout(methodInfo, testMethod);
-        ExpectedExceptionBaseAttribute? expectedExceptionAttribute = _reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod);
-        var testMethodOptions = new TestMethodOptions(timeout, expectedExceptionAttribute, testContext, captureDebugTraces, GetTestMethodAttribute(methodInfo, testClassInfo));
+        var testMethodOptions = new TestMethodOptions(timeout, testContext, captureDebugTraces, GetTestMethodAttribute(methodInfo, testClassInfo));
         var testMethodInfo = new TestMethodInfo(methodInfo, testClassInfo, testMethodOptions);
 
         SetCustomProperties(testMethodInfo, testContext);
@@ -743,7 +742,7 @@ internal sealed class TypeCache : MarshalByRefObject
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
 
         // Let's build a fake options type as it won't be used.
-        return new TestMethodInfo(methodInfo, testClassInfo, new(TimeoutInfo.FromTimeout(-1), null, null, false, null!));
+        return new TestMethodInfo(methodInfo, testClassInfo, new(TimeoutInfo.FromTimeout(-1), null, false, null!));
     }
 
     /// <summary>
