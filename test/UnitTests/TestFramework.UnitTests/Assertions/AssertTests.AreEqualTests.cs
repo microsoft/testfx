@@ -126,7 +126,8 @@ public partial class AssertTests : TestContainer
         var englishCulture = new CultureInfo("en-EN");
 
         // Won't ignore case.
-        VerifyThrows(() => Assert.AreEqual(expected, actual, false, englishCulture));
+        Exception ex = VerifyThrows(() => Assert.AreEqual(expected, actual, false, englishCulture));
+        Verify(ex.Message == "Assert.AreEqual failed. Expected:<i>. Case is different for actual value:<I>. ");
     }
 
     public void AreEqual_WithTurkishCultureAndDoesNotIgnoreCase_Throws()

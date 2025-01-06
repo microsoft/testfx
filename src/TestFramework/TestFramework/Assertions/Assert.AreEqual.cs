@@ -698,7 +698,8 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertAreEqualFailed(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string userMessage)
     {
-        string finalMessage = !ignoreCase && CompareInternal(expected, actual, ignoreCase, culture) == 0
+        // If the user requested to match case, and the difference between expected/actual is casing only, then we use a different message.
+        string finalMessage = !ignoreCase && CompareInternal(expected, actual, ignoreCase: true, culture) == 0
             ? string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.AreEqualCaseFailMsg,
