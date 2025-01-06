@@ -1070,6 +1070,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert.ThrowsExactly&apos; instead of &apos;Assert.ThrowsException&apos;.
+        /// </summary>
+        internal static string UseNewerAssertThrowsMessageFormat {
+            get {
+                return ResourceManager.GetString("UseNewerAssertThrowsMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use newer methods to assert exceptions.
+        /// </summary>
+        internal static string UseNewerAssertThrowsTitle {
+            get {
+                return ResourceManager.GetString("UseNewerAssertThrowsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute &apos;[Parallelize]&apos; to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute &apos;[DoNotParallelize]&apos;..
         /// </summary>
         internal static string UseParallelizeAttributeAnalyzerDescription {
