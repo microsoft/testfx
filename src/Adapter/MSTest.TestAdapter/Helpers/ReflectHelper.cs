@@ -88,55 +88,6 @@ internal class ReflectHelper : MarshalByRefObject
     }
 
     /// <summary>
-    /// Resolves the expected exception attribute. The function will try to
-    /// get all the expected exception attributes defined for a testMethod.
-    /// </summary>
-    /// <param name="methodInfo">The MethodInfo instance.</param>
-    /// <param name="testMethod">The test method.</param>
-    /// <returns>
-    /// The expected exception attribute found for this test. Null if not found.
-    /// </returns>
-    public virtual ExpectedExceptionBaseAttribute? ResolveExpectedExceptionHelper(MethodInfo methodInfo, TestMethod testMethod)
-    {
-        DebugEx.Assert(methodInfo != null, "MethodInfo should be non-null");
-
-        IEnumerable<ExpectedExceptionBaseAttribute> expectedExceptions;
-
-        try
-        {
-            expectedExceptions = GetDerivedAttributes<ExpectedExceptionBaseAttribute>(methodInfo, inherit: true);
-        }
-        catch (Exception ex)
-        {
-            // If construction of the attribute throws an exception, indicate that there was an
-            // error when trying to run the test
-            string errorMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_ExpectedExceptionAttributeConstructionException,
-                testMethod.FullClassName,
-                testMethod.Name,
-                ex.GetFormattedExceptionMessage());
-            throw new TypeInspectionException(errorMessage);
-        }
-
-        // Verify that there is only one attribute (multiple attributes derived from
-        // ExpectedExceptionBaseAttribute are not allowed on a test method)
-        // This is needed EVEN IF the attribute doesn't allow multiple.
-        // See https://github.com/microsoft/testfx/issues/4331
-        if (expectedExceptions.Count() > 1)
-        {
-            string errorMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_MultipleExpectedExceptionsOnTestMethod,
-                testMethod.FullClassName,
-                testMethod.Name);
-            throw new TypeInspectionException(errorMessage);
-        }
-
-        return expectedExceptions.FirstOrDefault();
-    }
-
-    /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
     /// <returns>
