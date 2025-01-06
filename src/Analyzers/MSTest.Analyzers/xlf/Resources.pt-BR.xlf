@@ -133,13 +133,13 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
-        <target state="translated">Prefira 'Assert.ThrowsException' ou 'Assert.ThrowsExceptionAsync' '[ExpectedException]', pois isso garante que somente a chamada esperada lance a exceção esperada. As APIs assert também fornecem mais flexibilidade e permitem declarar propriedades extras da exceção.</target>
+        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
+        <target state="needs-review-translation">Prefira 'Assert.ThrowsException' ou 'Assert.ThrowsExceptionAsync' '[ExpectedException]', pois isso garante que somente a chamada esperada lance a exceção esperada. As APIs assert também fornecem mais flexibilidade e permitem declarar propriedades extras da exceção.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</source>
-        <target state="translated">Preferir 'Assert.ThrowsException/ThrowsExceptionAsync' em vez de '[ExpectedException]'</target>
+        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
+        <target state="needs-review-translation">Preferir 'Assert.ThrowsException/ThrowsExceptionAsync' em vez de '[ExpectedException]'</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
