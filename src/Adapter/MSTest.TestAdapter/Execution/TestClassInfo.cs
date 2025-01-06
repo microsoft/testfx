@@ -24,6 +24,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 #endif
 public class TestClassInfo
 {
+    /// <summary>
+    /// Test context property name.
+    /// </summary>
+    private const string TestContextPropertyName = "TestContext";
+
     private readonly Lock _testClassExecuteSyncObject = new();
 
     /// <summary>
@@ -31,21 +36,19 @@ public class TestClassInfo
     /// </summary>
     /// <param name="type">Underlying test class type.</param>
     /// <param name="constructor">Constructor for the test class.</param>
-    /// <param name="testContextProperty">Reference to the <see cref="TestContext"/> property in test class.</param>
     /// <param name="classAttribute">Test class attribute.</param>
     /// <param name="parent">Parent assembly info.</param>
     internal TestClassInfo(
         Type type,
         ConstructorInfo constructor,
         bool isParameterlessConstructor,
-        PropertyInfo? testContextProperty,
         TestClassAttribute classAttribute,
         TestAssemblyInfo parent)
     {
         ClassType = type;
         Constructor = constructor;
         IsParameterlessConstructor = isParameterlessConstructor;
-        TestContextProperty = testContextProperty;
+        TestContextProperty = ResolveTestContext(type);
         Parent = parent;
         ClassAttribute = classAttribute;
     }
@@ -766,5 +769,37 @@ public class TestClassInfo
             new ClassExecutionContextScope(ClassType, remainingCleanupCount),
             Resource.ClassCleanupWasCancelled,
             Resource.ClassCleanupTimedOut);
+    }
+
+    /// <summary>
+    /// Resolves the test context property.
+    /// </summary>
+    /// <param name="classType"> The class Type. </param>
+    /// <returns> The <see cref="PropertyInfo"/> for TestContext property. Null if not defined. </returns>
+    private static PropertyInfo? ResolveTestContext(Type classType)
+    {
+        try
+        {
+            PropertyInfo? testContextProperty = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(classType, TestContextPropertyName, includeNonPublic: false);
+            if (testContextProperty == null)
+            {
+                // that's okay may be the property was not defined
+                return null;
+            }
+
+            // check if testContextProperty is of correct type
+            if (!string.Equals(testContextProperty.PropertyType.FullName, typeof(TestContext).FullName, StringComparison.Ordinal))
+            {
+                string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestContextTypeMismatchLoadError, classType.FullName);
+                throw new TypeInspectionException(errorMessage);
+            }
+
+            return testContextProperty;
+        }
+        catch (AmbiguousMatchException ex)
+        {
+            string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestContextLoadError, classType.FullName, ex.Message);
+            throw new TypeInspectionException(errorMessage);
+        }
     }
 }
