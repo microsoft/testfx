@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -30,6 +30,8 @@ public class TestClassInfo
     private const string TestContextPropertyName = "TestContext";
 
     private readonly Lock _testClassExecuteSyncObject = new();
+
+    private UnitTestResult? _classInitializeResult;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestClassInfo"/> class.
@@ -344,22 +346,62 @@ public class TestClassInfo
         throw testFailedException;
     }
 
+    private UnitTestResult? TryGetClonedCachedClassInitializeResult()
+    {
+        // Historically, we were not caching class initialize result, and were always going through the logic in GetResultOrRunClassInitialize.
+        // When caching is introduced, we found out that using the cached instance can change the behavior in some cases. For example,
+        // if you have Console.WriteLine in class initialize, those will be present on the UnitTestResult.
+        // Before caching was introduced, these logs will be only in the first class initialize result (attached to the first test run in class)
+        // By re-using the cached instance, it's now part of all tests.
+        // To preserve the original behavior, we clone the cached instance so we keep only the information we are sure should be reused.
+        if (_classInitializeResult is null)
+        {
+            return null;
+        }
+
+        if (_classInitializeResult.ErrorStackTrace is not null && _classInitializeResult.ErrorMessage is not null)
+        {
+            return new(
+                new TestFailedException(
+                    _classInitializeResult.Outcome,
+                    _classInitializeResult.ErrorMessage,
+                    new StackTraceInformation(_classInitializeResult.ErrorStackTrace, _classInitializeResult.ErrorFilePath, _classInitializeResult.ErrorLineNumber, _classInitializeResult.ErrorColumnNumber)));
+        }
+
+        // We are expecting this to be hit for the case of "Passed".
+        // It's unlikely to be hit otherwise (GetResultOrRunClassInitialize appears to only create either Passed results or a result from exception), but
+        // we can still create UnitTestResult from outcome and error message (which is expected to be null for Passed).
+        return new(_classInitializeResult.Outcome, _classInitializeResult.ErrorMessage);
+    }
+
     internal UnitTestResult GetResultOrRunClassInitialize(ITestContext testContext, string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
+        UnitTestResult? clonedInitializeResult = TryGetClonedCachedClassInitializeResult();
+
+        // Optimization: If we already ran before and know the result, return it.
+        if (clonedInitializeResult is not null)
+        {
+            DebugEx.Assert(IsClassInitializeExecuted, "Class initialize result should be available if and only if class initialize was executed");
+            return clonedInitializeResult;
+        }
+
+        DebugEx.Assert(!IsClassInitializeExecuted, "If class initialize was executed, we should have been in the previous if were we have a result available.");
+
+        // For optimization purposes, return right away if there is nothing to execute.
+        // For STA, this avoids starting a thread when we know it will do nothing.
+        // But we still return early even not STA.
+        if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
+        {
+            IsClassInitializeExecuted = true;
+            return _classInitializeResult = new(ObjectModelUnitTestOutcome.Passed, null);
+        }
+
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTATestClass
             && isWindowsOS
             && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
-            // For optimization purposes, we duplicate some of the logic of RunClassInitialize here so we don't need to start
-            // a thread for nothing.
-            if ((ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
-                || IsClassInitializeExecuted)
-            {
-                return DoRun();
-            }
-
             UnitTestResult result = new(ObjectModelUnitTestOutcome.Error, "MSTest STATestClass ClassInitialize didn't complete");
             Thread entryPointThread = new(() => result = DoRun())
             {
@@ -429,6 +471,7 @@ public class TestClassInfo
                 result.TestContextMessages = initializationTestContextMessages;
             }
 
+            _classInitializeResult = result;
             return result;
         }
     }
