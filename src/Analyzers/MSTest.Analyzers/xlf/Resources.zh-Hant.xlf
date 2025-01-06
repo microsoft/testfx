@@ -134,12 +134,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
-        <target state="needs-review-translation">偏好 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' 而非 '[ExpectedException]'，因為它可確保只有預期的呼叫會擲出預期的例外狀況。判斷提示 API 也提供更多彈性，並允許您斷言例外狀況的額外屬性。</target>
+        <target state="new">Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
         <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
-        <target state="needs-review-translation">偏好 'Assert.ThrowsException/ThrowsExceptionAsync' 而非 '[ExpectedException]'</target>
+        <target state="new">Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
