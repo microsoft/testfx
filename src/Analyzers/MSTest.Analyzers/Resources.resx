@@ -181,10 +181,10 @@ The type declaring these methods should also respect the following rules:
     <value>Assertion arguments should be passed in the correct order</value>
   </data>
   <data name="AvoidExpectedExceptionAttributeDescription" xml:space="preserve">
-    <value>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</value>
+    <value>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</value>
   </data>
   <data name="AvoidExpectedExceptionAttributeMessageFormat" xml:space="preserve">
-    <value>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</value>
+    <value>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</value>
   </data>
   <data name="AvoidExpectedExceptionAttributeTitle" xml:space="preserve">
     <value>Avoid '[ExpectedException]'</value>

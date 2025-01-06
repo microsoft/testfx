@@ -208,7 +208,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsException&apos; or &apos;Assert.ThrowsExceptionAsync&apos; over &apos;[ExpectedException]&apos; as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption..
+        ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsExactly&apos; or &apos;Assert.ThrowsExactlyAsync&apos; over &apos;[ExpectedException]&apos; as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception..
         /// </summary>
         internal static string AvoidExpectedExceptionAttributeDescription {
             get {
@@ -217,7 +217,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsException/ThrowsExceptionAsync&apos; over &apos;[ExpectedException]&apos;.
+        ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsExactly/ThrowsExactlyAsync&apos; over &apos;[ExpectedException]&apos;.
         /// </summary>
         internal static string AvoidExpectedExceptionAttributeMessageFormat {
             get {
