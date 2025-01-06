@@ -544,12 +544,12 @@ The type declaring these methods should also respect the following rules:
     <value>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</value>
   </data>
   <data name="AvoidAssertAreSameWithValueTypesTitle" xml:space="preserve">
-    <value>Don't use 'Assert.AreSame' with value types</value>
+    <value>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</value>
   </data>
   <data name="AvoidAssertAreSameWithValueTypesMessageFormat" xml:space="preserve">
-    <value>Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types</value>
+    <value>Use '{0}' instead of '{1}' when comparing value types</value>
   </data>
   <data name="AvoidAssertAreSameWithValueTypesDescription" xml:space="preserve">
-    <value>Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types. Passing a value type to 'Assert.AreSame' will be boxed (creating a new object). Because 'Assert.AreSame' does the comparison by reference, it will fail when boxing happens.</value>
+    <value>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</value>
   </data>
 </root>

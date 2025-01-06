@@ -56,7 +56,7 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzer : DiagnosticAnalyze
     {
         var operation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = operation.TargetMethod;
-        if (targetMethod.Name != "AreSame" ||
+        if ((targetMethod.Name != "AreSame" && targetMethod.Name != "AreNotSame") ||
             !assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default))
         {
             return;
@@ -72,7 +72,8 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzer : DiagnosticAnalyze
         if (argExpected.Value.WalkDownConversion().Type?.IsValueType == true ||
             argActual.Value.WalkDownConversion().Type?.IsValueType == true)
         {
-            context.ReportDiagnostic(operation.CreateDiagnostic(Rule));
+            string suggestedReplacement = targetMethod.Name == "AreSame" ? "AreEqual" : "AreNotEqual";
+            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, targetMethod.Name, suggestedReplacement));
         }
     }
 }

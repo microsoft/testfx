@@ -118,18 +118,18 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
-        <source>Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types. Passing a value type to 'Assert.AreSame' will be boxed (creating a new object). Because 'Assert.AreSame' does the comparison by reference, it will fail when boxing happens.</source>
-        <target state="new">Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types. Passing a value type to 'Assert.AreSame' will be boxed (creating a new object). Because 'Assert.AreSame' does the comparison by reference, it will fail when boxing happens.</target>
+        <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
+        <target state="new">Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
-        <source>Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types</source>
-        <target state="new">Use 'Assert.AreEqual' instead of 'Assert.AreSame' when comparing value types</target>
+        <source>Use '{0}' instead of '{1}' when comparing value types</source>
+        <target state="new">Use '{0}' instead of '{1}' when comparing value types</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
-        <source>Don't use 'Assert.AreSame' with value types</source>
-        <target state="new">Don't use 'Assert.AreSame' with value types</target>
+        <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
+        <target state="new">Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">

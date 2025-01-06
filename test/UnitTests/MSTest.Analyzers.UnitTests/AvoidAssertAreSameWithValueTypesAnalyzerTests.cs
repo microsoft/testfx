@@ -57,4 +57,52 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task UseAssertAreNotSameWithValueTypes_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    // Both are value types
+                    [|Assert.AreNotSame(0, 1)|];
+                    [|Assert.AreNotSame(0, 1, "Message")|];
+                    [|Assert.AreNotSame(0, 1, "Message {0}", "Arg")|];
+                    [|Assert.AreNotSame(message: "Message", notExpected: 0, actual: 1)|];
+
+                    [|Assert.AreNotSame<object>(0, 1)|];
+                    [|Assert.AreNotSame<object>(0, 1, "Message")|];
+                    [|Assert.AreNotSame<object>(0, 1, "Message {0}", "Arg")|];
+                    [|Assert.AreNotSame<object>(message: "Message", notExpected: 0, actual: 1)|];
+
+                    // Expected is value type. This is always-failing assert.
+                    [|Assert.AreNotSame<object>("0", 1)|];
+                    [|Assert.AreNotSame<object>("0", 1, "Message")|];
+                    [|Assert.AreNotSame<object>("0", 1, "Message {0}", "Arg")|];
+                    [|Assert.AreNotSame<object>(message: "Message", notExpected: "0", actual: 1)|];
+
+                    // Actual is value type. This is always-failing assert.
+                    [|Assert.AreNotSame<object>(0, "1")|];
+                    [|Assert.AreNotSame<object>(0, "1", "Message")|];
+                    [|Assert.AreNotSame<object>(0, "1", "Message {0}", "Arg")|];
+                    [|Assert.AreNotSame<object>(message: "Message", notExpected: 0, actual: "1")|];
+
+                    // Both are reference types. No diagnostic.
+                    Assert.AreNotSame("0", "1");
+                    Assert.AreNotSame("0", "1", "Message");
+                    Assert.AreNotSame("0", "1", "Message {0}", "Arg");
+                    Assert.AreNotSame(message: "Message", notExpected: "0", actual: "1");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
