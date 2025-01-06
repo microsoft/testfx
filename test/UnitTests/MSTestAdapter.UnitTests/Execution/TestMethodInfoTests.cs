@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -1254,7 +1254,6 @@ public class TestMethodInfoTests : TestContainer
             typeof(DummyTestClassForExpectedException),
             typeof(DummyTestClassForExpectedException).GetConstructor(Array.Empty<Type>()),
             isParameterlessConstructor: true,
-            null,
             new UTF.TestClassAttribute(),
             new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
 
@@ -1269,7 +1268,6 @@ public class TestMethodInfoTests : TestContainer
             typeof(DummyTestClassForExpectedException),
             typeof(DummyTestClassForExpectedException).GetConstructor(Array.Empty<Type>()),
             isParameterlessConstructor: true,
-            null,
             new UTF.TestClassAttribute(),
             new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
 
@@ -1285,7 +1283,6 @@ public class TestMethodInfoTests : TestContainer
             typeof(DummyTestClassForExpectedException),
             typeof(DummyTestClassForExpectedException).GetConstructor(Array.Empty<Type>()),
             isParameterlessConstructor: true,
-            null,
             new UTF.TestClassAttribute(),
             new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
 
@@ -1303,7 +1300,6 @@ public class TestMethodInfoTests : TestContainer
             typeof(DummyTestClassForExpectedException),
             typeof(DummyTestClassForExpectedException).GetConstructor(Array.Empty<Type>()),
             isParameterlessConstructor: true,
-            null,
             new UTF.TestClassAttribute(),
             new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
 
