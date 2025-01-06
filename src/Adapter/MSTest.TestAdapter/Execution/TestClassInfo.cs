@@ -345,6 +345,12 @@ public class TestClassInfo
 
     private UnitTestResult? TryGetClonedCachedClassInitializeResult()
     {
+        // Historically, we were not caching class initialize result, and were always going through the logic in GetResultOrRunClassInitialize.
+        // When caching is introduced, we found out that using the cached instance can change the behavior in some cases. For example,
+        // if you have Console.WriteLine in class initialize, those will be present on the UnitTestResult.
+        // Before caching was introduced, these logs will be only in the first class initialize result (attached to the first test run in class)
+        // By re-using the cached instance, it's now part of all tests.
+        // To preserve the original behavior, we clone the cached instance so we keep only the information we are sure should be reused.
         if (_classInitializeResult is null)
         {
             return null;
