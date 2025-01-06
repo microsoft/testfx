@@ -343,13 +343,39 @@ public class TestClassInfo
         throw testFailedException;
     }
 
+    private UnitTestResult? TryGetClonedCachedClassInitializeResult()
+    {
+        if (_classInitializeResult is null)
+        {
+            return null;
+        }
+
+        if (_classInitializeResult.Outcome == ObjectModelUnitTestOutcome.Passed)
+        {
+            return new(ObjectModelUnitTestOutcome.Passed, null);
+        }
+
+        if (_classInitializeResult.ErrorStackTrace is not null && _classInitializeResult.ErrorMessage is not null)
+        {
+            return new(
+                new TestFailedException(
+                    _classInitializeResult.Outcome,
+                    _classInitializeResult.ErrorMessage,
+                    new StackTraceInformation(_classInitializeResult.ErrorStackTrace, _classInitializeResult.ErrorFilePath, _classInitializeResult.ErrorLineNumber, _classInitializeResult.ErrorColumnNumber)));
+        }
+
+        return new(_classInitializeResult.Outcome, _classInitializeResult.ErrorMessage);
+    }
+
     internal UnitTestResult GetResultOrRunClassInitialize(ITestContext testContext, string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
+        UnitTestResult? clonedInitializeResult = TryGetClonedCachedClassInitializeResult();
+
         // Optimization: If we already ran before and know the result, return it.
-        if (_classInitializeResult is not null)
+        if (clonedInitializeResult is not null)
         {
             DebugEx.Assert(IsClassInitializeExecuted, "Class initialize result should be available if and only if class initialize was executed");
-            return _classInitializeResult;
+            return clonedInitializeResult;
         }
 
         DebugEx.Assert(!IsClassInitializeExecuted, "If class initialize was executed, we should have been in the previous if were we have a result available.");
