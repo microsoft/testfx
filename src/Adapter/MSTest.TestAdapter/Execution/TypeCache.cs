@@ -370,7 +370,7 @@ internal sealed class TypeCache : MarshalByRefObject
     {
         try
         {
-            PropertyInfo? testContextProperty = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(classType, TestContextPropertyName);
+            PropertyInfo? testContextProperty = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(classType, TestContextPropertyName, includeNonPublic: false);
             if (testContextProperty == null)
             {
                 // that's okay may be the property was not defined
@@ -743,7 +743,7 @@ internal sealed class TypeCache : MarshalByRefObject
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
 
         // Let's build a fake options type as it won't be used.
-        return new TestMethodInfo(methodInfo, testClassInfo, new(TimeoutInfo.FromTimeout(-1), null, null, false, null));
+        return new TestMethodInfo(methodInfo, testClassInfo, new(TimeoutInfo.FromTimeout(-1), null, null, false, null!));
     }
 
     /// <summary>
@@ -752,14 +752,15 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <param name="methodInfo"> The method info. </param>
     /// <param name="testClassInfo"> The test class info. </param>
     /// <returns>Test Method Attribute.</returns>
-    private TestMethodAttribute? GetTestMethodAttribute(MethodInfo methodInfo, TestClassInfo testClassInfo)
+    private TestMethodAttribute GetTestMethodAttribute(MethodInfo methodInfo, TestClassInfo testClassInfo)
     {
-        // Get the derived TestMethod attribute from reflection
-        TestMethodAttribute? testMethodAttribute = _reflectionHelper.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(methodInfo, inherit: false);
+        // Get the derived TestMethod attribute from reflection.
+        // It should be non-null as it was already validated by IsValidTestMethod.
+        TestMethodAttribute testMethodAttribute = _reflectionHelper.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(methodInfo, inherit: false)!;
 
         // Get the derived TestMethod attribute from Extended TestClass Attribute
         // If the extended TestClass Attribute doesn't have extended TestMethod attribute then base class returns back the original testMethod Attribute
-        testMethodAttribute = testClassInfo.ClassAttribute.GetTestMethodAttribute(testMethodAttribute!) ?? testMethodAttribute;
+        testMethodAttribute = testClassInfo.ClassAttribute.GetTestMethodAttribute(testMethodAttribute) ?? testMethodAttribute;
 
         return testMethodAttribute;
     }
@@ -810,7 +811,8 @@ internal sealed class TypeCache : MarshalByRefObject
         else if (methodBase != null)
         {
             Type[] parameters = methodBase.GetParameters().Select(i => i.ParameterType).ToArray();
-            testMethodInfo = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethod(methodBase.DeclaringType!, methodBase.Name, parameters);
+            // TODO: Should we pass true for includeNonPublic?
+            testMethodInfo = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethod(methodBase.DeclaringType!, methodBase.Name, parameters, includeNonPublic: false);
         }
 
         return testMethodInfo is null

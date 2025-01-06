@@ -290,6 +290,166 @@ public partial class AssertTests : TestContainer
 
 #pragma warning restore IDE0004
 
+    public void GenericAreEqual_InterpolatedString_EqualValues_ShouldPass()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        Assert.AreEqual(o, o, $"User-provided message: {o}");
+        Verify(!o.WasToStringCalled);
+    }
+
+    public async Task GenericAreEqual_InterpolatedString_DifferentValues_ShouldFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        DateTime dateTime = DateTime.Now;
+        Exception ex = await VerifyThrowsAsync(async () => Assert.AreEqual(0, 1, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
+        Verify(ex.Message == $"Assert.AreEqual failed. Expected:<0>. Actual:<1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(o.WasToStringCalled);
+    }
+
+    public void GenericAreNotEqual_InterpolatedString_DifferentValues_ShouldPass()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        Assert.AreNotEqual(0, 1, $"User-provided message: {o}");
+        Verify(!o.WasToStringCalled);
+    }
+
+    public async Task GenericAreNotEqual_InterpolatedString_SameValues_ShouldFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        DateTime dateTime = DateTime.Now;
+        Exception ex = await VerifyThrowsAsync(async () => Assert.AreNotEqual(0, 0, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
+        Verify(ex.Message == $"Assert.AreNotEqual failed. Expected any value except:<0>. Actual:<0>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(o.WasToStringCalled);
+    }
+
+    public void FloatAreEqual_InterpolatedString_EqualValues_ShouldPass()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        Assert.AreEqual(1.0f, 1.1f, delta: 0.2f, $"User-provided message: {o}");
+        Verify(!o.WasToStringCalled);
+    }
+
+    public async Task FloatAreEqual_InterpolatedString_DifferentValues_ShouldFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        DateTime dateTime = DateTime.Now;
+        Exception ex = await VerifyThrowsAsync(async () => Assert.AreEqual(1.0f, 1.1f, 0.001f, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
+        Verify(ex.Message == $"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(o.WasToStringCalled);
+    }
+
+    public void FloatAreNotEqual_InterpolatedString_DifferentValues_ShouldPass()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        Assert.AreNotEqual(1.0f, 1.1f, 0.001f, $"User-provided message: {o}");
+        Verify(!o.WasToStringCalled);
+    }
+
+    public async Task FloatAreNotEqual_InterpolatedString_SameValues_ShouldFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        DateTime dateTime = DateTime.Now;
+        Exception ex = await VerifyThrowsAsync(async () => Assert.AreNotEqual(1.0f, 1.1f, 0.2f, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
+        Verify(ex.Message == $"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(o.WasToStringCalled);
+    }
+
+    public void DecimalAreEqual_InterpolatedString_EqualValues_ShouldPass()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        Assert.AreEqual(1.0m, 1.1m, delta: 0.2m, $"User-provided message: {o}");
+        Verify(!o.WasToStringCalled);
+    }
+
+    public async Task DecimalAreEqual_InterpolatedString_DifferentValues_ShouldFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        DateTime dateTime = DateTime.Now;
+        Exception ex = await VerifyThrowsAsync(async () => Assert.AreEqual(1.0m, 1.1m, 0.001m, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
+        Verify(ex.Message == $"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1.0> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(o.WasToStringCalled);
+    }
+
+    public void DecimalAreNotEqual_InterpolatedString_DifferentValues_ShouldPass()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        Assert.AreNotEqual(1.0m, 1.1m, 0.001m, $"User-provided message: {o}");
+        Verify(!o.WasToStringCalled);
+    }
+
+    public async Task DecimalAreNotEqual_InterpolatedString_SameValues_ShouldFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        DateTime dateTime = DateTime.Now;
+        Exception ex = await VerifyThrowsAsync(async () => Assert.AreNotEqual(1.0m, 1.1m, 0.2m, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
+        Verify(ex.Message == $"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1.0> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(o.WasToStringCalled);
+    }
+
+    public void LongAreEqual_InterpolatedString_EqualValues_ShouldPass()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        Assert.AreEqual(1L, 2L, delta: 1L, $"User-provided message: {o}");
+        Verify(!o.WasToStringCalled);
+    }
+
+    public async Task LongAreEqual_InterpolatedString_DifferentValues_ShouldFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        DateTime dateTime = DateTime.Now;
+        Exception ex = await VerifyThrowsAsync(async () => Assert.AreEqual(1L, 2L, 0L, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
+        Verify(ex.Message == $"Assert.AreEqual failed. Expected a difference no greater than <0> between expected value <1> and actual value <2>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(o.WasToStringCalled);
+    }
+
+    public void LongAreNotEqual_InterpolatedString_DifferentValues_ShouldPass()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        Assert.AreNotEqual(1L, 2L, 0L, $"User-provided message: {o}");
+        Verify(!o.WasToStringCalled);
+    }
+
+    public async Task LongAreNotEqual_InterpolatedString_SameValues_ShouldFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        DateTime dateTime = DateTime.Now;
+        Exception ex = await VerifyThrowsAsync(async () => Assert.AreNotEqual(1L, 2L, 1L, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
+        Verify(ex.Message == $"Assert.AreNotEqual failed. Expected a difference greater than <1> between expected value <1> and actual value <2>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(o.WasToStringCalled);
+    }
+
+    public void DoubleAreEqual_InterpolatedString_EqualValues_ShouldPass()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        Assert.AreEqual(1.0d, 1.1d, delta: 0.2d, $"User-provided message: {o}");
+        Verify(!o.WasToStringCalled);
+    }
+
+    public async Task DoubleAreEqual_InterpolatedString_DifferentValues_ShouldFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        DateTime dateTime = DateTime.Now;
+        Exception ex = await VerifyThrowsAsync(async () => Assert.AreEqual(1.0d, 1.1d, 0.001d, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
+        Verify(ex.Message == $"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(o.WasToStringCalled);
+    }
+
+    public void DoubleAreNotEqual_InterpolatedString_DifferentValues_ShouldPass()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        Assert.AreNotEqual(1.0d, 1.1d, 0.001d, $"User-provided message: {o}");
+        Verify(!o.WasToStringCalled);
+    }
+
+    public async Task DoubleAreNotEqual_InterpolatedString_SameValues_ShouldFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        DateTime dateTime = DateTime.Now;
+        Exception ex = await VerifyThrowsAsync(async () => Assert.AreNotEqual(1.0d, 1.1d, 0.2d, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}"));
+        Verify(ex.Message == $"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1> and actual value <1.1>. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+        Verify(o.WasToStringCalled);
+    }
+
     private CultureInfo? GetCultureInfo() => CultureInfo.CurrentCulture;
 
     private class TypeOverridesEquals

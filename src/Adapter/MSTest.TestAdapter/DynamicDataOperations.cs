@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -19,11 +19,11 @@ internal class DynamicDataOperations : IDynamicDataOperations
         {
             case DynamicDataSourceType.AutoDetect:
 #pragma warning disable IDE0045 // Convert to conditional expression - it becomes less readable.
-                if (PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataPropertyInfo)
+                if (GetPropertyConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataPropertyInfo)
                 {
                     obj = GetDataFromProperty(dynamicDataPropertyInfo);
                 }
-                else if (PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataMethodInfo)
+                else if (GetMethodConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataMethodInfo)
                 {
                     obj = GetDataFromMethod(dynamicDataMethodInfo);
                 }
@@ -35,14 +35,14 @@ internal class DynamicDataOperations : IDynamicDataOperations
 
                 break;
             case DynamicDataSourceType.Property:
-                PropertyInfo property = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(_dynamicDataDeclaringType, _dynamicDataSourceName)
+                PropertyInfo property = GetPropertyConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {_dynamicDataSourceName}");
 
                 obj = GetDataFromProperty(property);
                 break;
 
             case DynamicDataSourceType.Method:
-                MethodInfo method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(_dynamicDataDeclaringType, _dynamicDataSourceName)
+                MethodInfo method = GetMethodConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {_dynamicDataSourceName}");
 
                 obj = GetDataFromMethod(method);
@@ -251,4 +251,40 @@ internal class DynamicDataOperations : IDynamicDataOperations
         return false;
     }
 #endif
+
+    private static PropertyInfo? GetPropertyConsideringInheritance(Type type, string propertyName)
+    {
+        // NOTE: Don't use GetRuntimeProperty. It considers inheritance only for instance properties.
+        Type? currentType = type;
+        while (currentType is not null)
+        {
+            PropertyInfo? property = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(currentType, propertyName);
+            if (property is not null)
+            {
+                return property;
+            }
+
+            currentType = currentType.BaseType;
+        }
+
+        return null;
+    }
+
+    private static MethodInfo? GetMethodConsideringInheritance(Type type, string methodName)
+    {
+        // NOTE: Don't use GetRuntimeMethod. It considers inheritance only for instance methods.
+        Type? currentType = type;
+        while (currentType is not null)
+        {
+            MethodInfo? method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(currentType, methodName);
+            if (method is not null)
+            {
+                return method;
+            }
+
+            currentType = currentType.BaseType;
+        }
+
+        return null;
+    }
 }
