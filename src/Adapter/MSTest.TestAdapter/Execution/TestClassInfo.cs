@@ -364,6 +364,8 @@ public class TestClassInfo
                     new StackTraceInformation(_classInitializeResult.ErrorStackTrace, _classInitializeResult.ErrorFilePath, _classInitializeResult.ErrorLineNumber, _classInitializeResult.ErrorColumnNumber)));
         }
 
+        // Unlikely to be hit (GetResultOrRunClassInitialize appears to only create either Passed results or a result from exception), but
+        // we can still create UnitTestResult from outcome and error message.
         return new(_classInitializeResult.Outcome, _classInitializeResult.ErrorMessage);
     }
 
