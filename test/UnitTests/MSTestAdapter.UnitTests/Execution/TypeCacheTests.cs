@@ -1545,6 +1545,7 @@ public class TypeCacheTests : TestContainer
         }
     }
 
+    [DummyTestClass]
     private class DummyTestClassWithIncorrectTestContextType
     {
         // This is TP.TF type.
@@ -1556,6 +1557,7 @@ public class TypeCacheTests : TestContainer
         public new string TestContext { get; set; }
     }
 
+    [DummyTestClass]
     private class DummyTestClassWithMultipleTestContextProperties : DummyTestClassWithTestContextProperty;
 
     [DummyTestClass]
