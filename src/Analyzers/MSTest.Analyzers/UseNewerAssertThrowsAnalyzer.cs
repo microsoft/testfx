@@ -14,7 +14,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0038: Use newer 'Assert.Throws' methods.
+/// MSTEST0039: Use newer 'Assert.Throws' methods.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 internal sealed class UseNewerAssertThrowsAnalyzer : DiagnosticAnalyzer
