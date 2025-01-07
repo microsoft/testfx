@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 #endif
 using System.Xml;
 
-using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
