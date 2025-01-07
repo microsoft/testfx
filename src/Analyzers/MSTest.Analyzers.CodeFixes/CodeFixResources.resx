@@ -168,6 +168,9 @@
   <data name="UseProperAssertMethodsFix" xml:space="preserve">
     <value>Use '{0}'</value>
   </data>
+  <data name="UseNewerAssertThrows" xml:space="preserve">
+    <value>Use '{0}'</value>
+  </data>
   <data name="AssertionArgsShouldAvoidConditionalAccessFix" xml:space="preserve">
     <value>Move conditional access in assertion to separate 'Assert.IsNotNull' check</value>
   </data>

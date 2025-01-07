@@ -87,6 +87,11 @@
         <target state="translated">Adicionar ''[TestMethod]"</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseNewerAssertThrows">
+        <source>Use '{0}'</source>
+        <target state="new">Use '{0}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">
         <source>Use '{0}'</source>
         <target state="translated">Usar '{0}'</target>
