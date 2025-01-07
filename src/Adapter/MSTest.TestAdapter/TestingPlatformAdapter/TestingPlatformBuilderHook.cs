@@ -6,9 +6,11 @@ using Microsoft.Testing.Platform.Builder;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 public static class TestingPlatformBuilderHook
 {
 #pragma warning disable IDE0060 // Remove unused parameter
-    public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] arguments) => testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
+    public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] arguments)
+        => testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 }
 #endif
