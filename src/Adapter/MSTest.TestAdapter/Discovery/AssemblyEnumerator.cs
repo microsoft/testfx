@@ -342,7 +342,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return new UnitTestElement(method)
             {
                 DisplayName = $"[{fixtureType}] {methodName}",
-                Ignored = true,
                 Traits = [new Trait(Constants.FixturesTestTrait, fixtureType)],
             };
         }
@@ -424,6 +423,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
         // Any change made here should be reflected in TestMethodRunner.ExecuteDataSourceBasedTests as well.
         data = dataSource.GetData(methodInfo);
+        string? testDataSourceIgnoreMessage = (dataSource as ITestDataSourceIgnoreCapability)?.IgnoreMessage;
 
         if (!data.Any())
         {
@@ -435,6 +435,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             UnitTestElement discoveredTest = test.Clone();
             // Make the test not data driven, because it had no data.
             discoveredTest.TestMethod.DataType = DynamicDataType.None;
+            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
             discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
 
             tests.Add(discoveredTest);
@@ -468,6 +469,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             try
             {
                 discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
+                discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
                 discoveredTest.TestMethod.DataType = DynamicDataType.ITestDataSource;
             }
             catch (SerializationException ex)

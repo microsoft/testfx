@@ -170,6 +170,11 @@ internal sealed class TestMethodRunner
         var parentStopwatch = Stopwatch.StartNew();
         if (_test.DataType == DynamicDataType.ITestDataSource)
         {
+            if (_test.TestDataSourceIgnoreMessage is not null)
+            {
+                return [new(UnitTestOutcome.Ignored, _test.TestDataSourceIgnoreMessage)];
+            }
+
             object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
             TestResult[] testResults = ExecuteTestWithDataSource(null, data);
             results.AddRange(testResults);
@@ -263,6 +268,16 @@ internal sealed class TestMethodRunner
 
         foreach (UTF.ITestDataSource testDataSource in testDataSources)
         {
+            if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { } ignoreMessage })
+            {
+                results.Add(new()
+                {
+                    Outcome = UTF.UnitTestOutcome.Ignored,
+                    IgnoreReason = ignoreMessage,
+                });
+                continue;
+            }
+
             IEnumerable<object?[]>? dataSource;
 
             // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.

@@ -31,6 +31,7 @@ public static class UnitTestOutcomeExtensions
             UTF.UnitTestOutcome.Timeout => UnitTestOutcome.Timeout,
             UTF.UnitTestOutcome.NotRunnable => UnitTestOutcome.NotRunnable,
             UTF.UnitTestOutcome.NotFound => UnitTestOutcome.NotFound,
+            UTF.UnitTestOutcome.Ignored => UnitTestOutcome.Ignored,
             _ => UnitTestOutcome.Error,
         };
 
@@ -44,6 +45,7 @@ public static class UnitTestOutcomeExtensions
             UnitTestOutcome.Timeout => UTF.UnitTestOutcome.Timeout,
             UnitTestOutcome.NotRunnable => UTF.UnitTestOutcome.NotRunnable,
             UnitTestOutcome.NotFound => UTF.UnitTestOutcome.NotFound,
+            UnitTestOutcome.Ignored => UTF.UnitTestOutcome.Ignored,
             _ => UTF.UnitTestOutcome.Error,
         };
 
