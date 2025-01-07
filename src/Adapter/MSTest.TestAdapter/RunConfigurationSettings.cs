@@ -7,7 +7,7 @@ using System.Xml;
 #if !WINDOWS_UWP
 using System.Globalization;
 
-using Microsoft.Testing.Platform.Configurations;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #endif
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;

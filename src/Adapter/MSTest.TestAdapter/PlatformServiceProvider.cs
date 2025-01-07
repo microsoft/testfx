@@ -140,6 +140,8 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     public TestRunCancellationToken? TestRunCancellationToken { get; set; }
 
+    public bool IsGracefulStopRequested { get; set; }
+
     /// <summary>
     /// Gets or sets the instance for the platform service.
     /// </summary>

@@ -125,6 +125,8 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public TestRunCancellationToken TestRunCancellationToken { get; set; }
 
+    public bool IsGracefulStopRequested { get; set; }
+
     public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties) => new TestContextImplementation(testMethod, writer, properties);
 
     public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle) => MockTestSourceHost.Object;

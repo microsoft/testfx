@@ -6,8 +6,8 @@ using System.Globalization;
 using System.Xml;
 using System.Xml.Linq;
 
-using Microsoft.Testing.Platform.Configurations;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 #endif

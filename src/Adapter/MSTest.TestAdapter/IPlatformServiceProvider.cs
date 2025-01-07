@@ -56,6 +56,8 @@ internal interface IPlatformServiceProvider
     /// </summary>
     TestRunCancellationToken? TestRunCancellationToken { get; set; }
 
+    bool IsGracefulStopRequested { get; set; }
+
     /// <summary>
     /// Creates an instance to the platform service for a test source host.
     /// </summary>
