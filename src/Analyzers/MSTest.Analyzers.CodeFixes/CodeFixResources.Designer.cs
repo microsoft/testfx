@@ -79,6 +79,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Move conditional access in assertion to separate &apos;Assert.IsNotNull&apos; check.
+        /// </summary>
+        internal static string AssertionArgsShouldAvoidConditionalAccessFix {
+            get {
+                return ResourceManager.GetString("AssertionArgsShouldAvoidConditionalAccessFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change method accessibility to &apos;private&apos;.
         /// </summary>
         internal static string ChangeMethodAccessibilityToPrivateFix {

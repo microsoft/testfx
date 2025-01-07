@@ -42,6 +42,10 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProv
             foreach (Diagnostic diagnostic in diagnostics)
             {
                 SyntaxNode assertInvocation = root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true);
+                // We need to track the assert invocation so that the individual 'SingleFixCodeAction's can get the up-to-date node
+                // from the most recent tree.
+                // Having the most recent node is important for IsNullAssertAlreadyPresent to work properly.
+                // We get the most recent node via editor.GetChangedRoot().GetCurrentNode(...)
                 editor.TrackNode(assertInvocation);
             }
 
@@ -101,7 +105,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProv
             _invocationExpressionSyntax = invocationExpressionSyntax;
         }
 
-        public override string Title { get; } = "TODO" /*CodeFixResources.AssertionArgsShouldAvoidConditionalAccessFix*/;
+        public override string Title { get; } = CodeFixResources.AssertionArgsShouldAvoidConditionalAccessFix;
 
         public override string? EquivalenceKey => nameof(AssertionArgsShouldAvoidConditionalAccessFixer);
 
@@ -206,24 +210,26 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessFixer : CodeFixProv
 
         foreach (StatementSyntax statement in blockSyntax.Statements)
         {
-            if (statement is ExpressionStatementSyntax expressionStatement)
+            if (statement is not ExpressionStatementSyntax expressionStatement)
             {
-                // We expect Assert.IsNull to be present before the invocation expression in question.
-                if (expressionStatement.Expression == invocationExpressionSyntax)
-                {
-                    return false;
-                }
+                continue;
+            }
 
-                if (expressionStatement.Expression is InvocationExpressionSyntax invocation)
+            // We expect Assert.IsNull to be present before the invocation expression in question.
+            if (expressionStatement.Expression == invocationExpressionSyntax)
+            {
+                return false;
+            }
+
+            if (expressionStatement.Expression is InvocationExpressionSyntax invocation)
+            {
+                SimpleNameSyntax? methodName =
+                    invocation.Expression as IdentifierNameSyntax ?? (invocation.Expression as MemberAccessExpressionSyntax)?.Name;
+                if ((methodName?.Identifier.Value as string) == "IsNotNull" &&
+                    invocation.ArgumentList.Arguments.Count > 0 &&
+                    invocation.ArgumentList.Arguments[0].Expression.IsEquivalentTo(expressionCheckedForNull))
                 {
-                    SimpleNameSyntax? methodName =
-                        invocation.Expression as IdentifierNameSyntax ?? (invocation.Expression as MemberAccessExpressionSyntax)?.Name;
-                    if ((methodName?.Identifier.Value as string) == "IsNotNull" &&
-                        invocation.ArgumentList.Arguments.Count > 0 &&
-                        invocation.ArgumentList.Arguments[0].Expression.IsEquivalentTo(expressionCheckedForNull))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
         }
