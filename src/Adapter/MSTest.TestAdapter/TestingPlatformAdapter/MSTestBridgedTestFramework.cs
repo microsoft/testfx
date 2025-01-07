@@ -5,21 +5,21 @@
 using Microsoft.Testing.Extensions.VSTestBridge;
 using Microsoft.Testing.Extensions.VSTestBridge.Requests;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTestBridgedTestFramework
 {
-    private readonly IConfiguration? _configuration;
+    private readonly BridgedConfiguration? _configuration;
 
     public MSTestBridgedTestFramework(MSTestExtension mstestExtension, Func<IEnumerable<Assembly>> getTestAssemblies,
         IServiceProvider serviceProvider, ITestFrameworkCapabilities capabilities)
         : base(mstestExtension, getTestAssemblies, serviceProvider, capabilities)
-        => _configuration = serviceProvider.GetConfiguration();
+        => _configuration = new(serviceProvider.GetConfiguration());
 
     /// <inheritdoc />
     protected override Task SynchronizedDiscoverTestsAsync(VSTestDiscoverTestExecutionRequest request, IMessageBus messageBus,

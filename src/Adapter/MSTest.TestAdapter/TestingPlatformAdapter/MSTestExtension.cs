@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Extensions;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal sealed class MSTestExtension : IExtension
 {
     public string Uid { get; } = GetExtensionUid();
