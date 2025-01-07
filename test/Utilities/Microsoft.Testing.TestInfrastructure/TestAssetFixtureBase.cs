@@ -63,6 +63,8 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
 
             _disposedValue = true;
         }
+
+        _nugetGlobalPackagesDirectory.Dispose();
     }
 
     public void Dispose()
