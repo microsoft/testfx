@@ -7,6 +7,11 @@
         <target state="translated">Aggiungi '[TestMethod]'</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssertionArgsShouldAvoidConditionalAccessFix">
+        <source>Move conditional access in assertion to separate 'Assert.IsNotNull' check</source>
+        <target state="new">Move conditional access in assertion to separate 'Assert.IsNotNull' check</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">Modifica l'accessibilità del metodo in 'privato'</target>
