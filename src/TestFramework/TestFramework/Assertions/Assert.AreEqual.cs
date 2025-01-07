@@ -648,11 +648,10 @@ public sealed partial class Assert
 
     private static bool AreEqualFailing(float expected, float actual, float delta)
     {
-        if (float.IsNaN(delta))
+        if (float.IsNaN(delta) || delta < 0)
         {
-            // NaN doesn't make sense as a delta value. Consider the assert failing.
-            // TODO: Maybe throwing ArgumentException is a better fit here?
-            return true;
+            // NaN and negative values don't make sense as a delta value.
+            throw new ArgumentOutOfRangeException(nameof(delta));
         }
 
         if (expected.Equals(actual))
@@ -669,12 +668,10 @@ public sealed partial class Assert
 
     private static bool AreEqualFailing(double expected, double actual, double delta)
     {
-        if (double.IsNaN(delta))
+        if (double.IsNaN(delta) || delta < 0)
         {
-            // Even if expected and actual are same, NaN doesn't make much sense as a value of delta.
-            // We fail the assert.
-            // TODO: Maybe throwing ArgumentException is a better fit here?
-            return true;
+            // NaN and negative values don't make sense as a delta value.
+            throw new ArgumentOutOfRangeException(nameof(delta));
         }
 
         if (expected.Equals(actual))
@@ -685,7 +682,7 @@ public sealed partial class Assert
         // If both doubles are NaN, then they were considered equal in the previous check.
         // If only one of them is NaN, then they are not equal regardless of the value of delta.
         // Then, the subtraction comparison to delta isn't involving NaNs.
-        return double.IsNaN(expected) || double.IsNaN(actual) || double.IsNaN(delta) ||
+        return double.IsNaN(expected) || double.IsNaN(actual) ||
                 Math.Abs(expected - actual) > delta;
     }
 
@@ -1122,11 +1119,10 @@ public sealed partial class Assert
 
     private static bool AreNotEqualFailing(float notExpected, float actual, float delta)
     {
-        if (float.IsNaN(delta))
+        if (float.IsNaN(delta) || delta < 0)
         {
-            // NaN doesn't make sense as a delta value. Consider the assert failing.
-            // TODO: Maybe throwing ArgumentException is a better fit here?
-            return true;
+            // NaN and negative values don't make sense as a delta value.
+            throw new ArgumentOutOfRangeException(nameof(delta));
         }
 
         if (float.IsNaN(notExpected) && float.IsNaN(actual))
@@ -1700,11 +1696,10 @@ public sealed partial class Assert
 
     private static bool AreNotEqualFailing(double notExpected, double actual, double delta)
     {
-        if (double.IsNaN(delta))
+        if (double.IsNaN(delta) || delta < 0)
         {
-            // NaN doesn't make sense as a delta value. Consider the assert failing.
-            // TODO: Maybe throwing ArgumentException is a better fit here?
-            return true;
+            // NaN and negative values don't make sense as a delta value.
+            throw new ArgumentOutOfRangeException(nameof(delta));
         }
 
         if (double.IsNaN(notExpected) && double.IsNaN(actual))

@@ -454,31 +454,136 @@ public partial class AssertTests : TestContainer
     public void FloatAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(1.0f, 2.0f, float.NaN));
-        Verify(ex.Message == "Assert.AreEqual failed. Expected a difference no greater than <NaN> between expected value <1> and actual value <2>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void FloatAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualEquals_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(1.0f, 1.0f, float.NaN));
-        Verify(ex.Message == "Assert.AreEqual failed. Expected a difference no greater than <NaN> between expected value <1> and actual value <1>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void FloatAreEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(float.NaN, 1.0f, float.NaN));
-        Verify(ex.Message == "Assert.AreEqual failed. Expected a difference no greater than <NaN> between expected value <NaN> and actual value <1>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void FloatAreEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(float.NaN, float.NaN, float.NaN));
-        Verify(ex.Message == "Assert.AreEqual failed. Expected a difference no greater than <NaN> between expected value <NaN> and actual value <NaN>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void FloatAreEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(1.0f, float.NaN, float.NaN));
-        Verify(ex.Message == "Assert.AreEqual failed. Expected a difference no greater than <NaN> between expected value <1> and actual value <NaN>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1.0f, 2.0f, -1.0f));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualEquals_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1.0f, 1.0f, -1.0f));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(float.NaN, 1.0f, -1.0f));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(float.NaN, float.NaN, -1.0f));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1.0f, float.NaN, -1.0f));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1.0f, 2.0f, float.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualEquals_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1.0f, 1.0f, float.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(float.NaN, 1.0f, float.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(float.NaN, float.NaN, -1.0f));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1.0f, float.NaN, float.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void FloatAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceGreaterThanDeltaPositive_DeltaIsNumeric_ShouldFail()
@@ -517,31 +622,136 @@ public partial class AssertTests : TestContainer
     public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0f, 2.0f, float.NaN));
-        Verify(ex.Message == "Assert.AreNotEqual failed. Expected a difference greater than <NaN> between expected value <1> and actual value <2>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualEquals_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0f, 1.0f, float.NaN));
-        Verify(ex.Message == "Assert.AreNotEqual failed. Expected a difference greater than <NaN> between expected value <1> and actual value <1>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void FloatAreNotEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(float.NaN, 1.0f, float.NaN));
-        Verify(ex.Message == "Assert.AreNotEqual failed. Expected a difference greater than <NaN> between expected value <NaN> and actual value <1>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void FloatAreNotEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(float.NaN, float.NaN, float.NaN));
-        Verify(ex.Message == "Assert.AreNotEqual failed. Expected a difference greater than <NaN> between expected value <NaN> and actual value <NaN>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0f, float.NaN, float.NaN));
-        Verify(ex.Message == "Assert.AreNotEqual failed. Expected a difference greater than <NaN> between expected value <1> and actual value <NaN>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0f, 2.0f, -1.0f));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualEquals_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0f, 1.0f, -1.0f));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreNotEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(float.NaN, 1.0f, -1.0f));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreNotEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(float.NaN, float.NaN, -1.0f));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0f, float.NaN, -1.0f));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0f, 2.0f, -1.0f));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualEquals_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0f, 1.0f, float.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreNotEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(float.NaN, 1.0f, float.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreNotEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(float.NaN, float.NaN, float.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0f, float.NaN, float.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceGreaterThanDeltaPositive_DeltaIsNumeric_ShouldPass()
@@ -576,31 +786,136 @@ public partial class AssertTests : TestContainer
     public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(1.0d, 2.0d, double.NaN));
-        Verify(ex.Message == "Assert.AreEqual failed. Expected a difference no greater than <NaN> between expected value <1> and actual value <2>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualEquals_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(1.0d, 1.0d, double.NaN));
-        Verify(ex.Message == "Assert.AreEqual failed. Expected a difference no greater than <NaN> between expected value <1> and actual value <1>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void DoubleAreEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(double.NaN, 1.0d, double.NaN));
-        Verify(ex.Message == "Assert.AreEqual failed. Expected a difference no greater than <NaN> between expected value <NaN> and actual value <1>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void DoubleAreEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(double.NaN, double.NaN, double.NaN));
-        Verify(ex.Message == "Assert.AreEqual failed. Expected a difference no greater than <NaN> between expected value <NaN> and actual value <NaN>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreEqual(1.0d, double.NaN, double.NaN));
-        Verify(ex.Message == "Assert.AreEqual failed. Expected a difference no greater than <NaN> between expected value <1> and actual value <NaN>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1.0d, 2.0d, -1.0d));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualEquals_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1.0d, 1.0d, -1.0d));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(double.NaN, 1.0d, -1.0d));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(double.NaN, double.NaN, -1.0d));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1.0d, double.NaN, -1.0d));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1.0d, 2.0d, double.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualEquals_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1.0d, 1.0d, double.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(double.NaN, 1.0d, double.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(double.NaN, double.NaN, double.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreEqual(1.0d, double.NaN, double.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceGreaterThanDeltaPositive_DeltaIsNumeric_ShouldFail()
@@ -639,31 +954,136 @@ public partial class AssertTests : TestContainer
     public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0d, 2.0d, double.NaN));
-        Verify(ex.Message == "Assert.AreNotEqual failed. Expected a difference greater than <NaN> between expected value <1> and actual value <2>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualEquals_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0d, 1.0d, double.NaN));
-        Verify(ex.Message == "Assert.AreNotEqual failed. Expected a difference greater than <NaN> between expected value <1> and actual value <1>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void DoubleAreNotEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(double.NaN, 1.0d, double.NaN));
-        Verify(ex.Message == "Assert.AreNotEqual failed. Expected a difference greater than <NaN> between expected value <NaN> and actual value <1>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void DoubleAreNotEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(double.NaN, double.NaN, double.NaN));
-        Verify(ex.Message == "Assert.AreNotEqual failed. Expected a difference greater than <NaN> between expected value <NaN> and actual value <NaN>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNaN_ShouldFail()
     {
         Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0d, double.NaN, double.NaN));
-        Verify(ex.Message == "Assert.AreNotEqual failed. Expected a difference greater than <NaN> between expected value <1> and actual value <NaN>. ");
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0d, 2.0d, -1.0d));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualEquals_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0d, 1.0d, -1.0d));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreNotEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(double.NaN, 1.0d, -1.0d));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreNotEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(double.NaN, double.NaN, -1.0d));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNegative_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0d, double.NaN, -1.0d));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0d, 2.0d, double.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualEquals_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0d, 1.0d, double.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreNotEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(double.NaN, 1.0d, double.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreNotEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(double.NaN, double.NaN, double.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
+    }
+
+    public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNegativeInf_ShouldFail()
+    {
+        Exception ex = VerifyThrows(() => Assert.AreNotEqual(1.0d, double.NaN, double.NegativeInfinity));
+        Verify(ex.Message == """
+            Specified argument was out of the range of valid values.
+            Parameter name: delta
+            """);
     }
 
     public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceGreaterThanDeltaPositive_DeltaIsNumeric_ShouldPass()
