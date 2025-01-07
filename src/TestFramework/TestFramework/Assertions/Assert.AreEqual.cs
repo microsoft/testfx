@@ -647,12 +647,44 @@ public sealed partial class Assert
         => CompareInternal(expected, actual, ignoreCase, culture) != 0;
 
     private static bool AreEqualFailing(float expected, float actual, float delta)
-        => float.IsNaN(expected) || float.IsNaN(actual) || float.IsNaN(delta) ||
-            Math.Abs(expected - actual) > delta;
+    {
+        if (float.IsNaN(delta) || delta < 0)
+        {
+            // NaN and negative values don't make sense as a delta value.
+            throw new ArgumentOutOfRangeException(nameof(delta));
+        }
+
+        if (expected.Equals(actual))
+        {
+            return false;
+        }
+
+        // If both floats are NaN, then they were considered equal in the previous check.
+        // If only one of them is NaN, then they are not equal regardless of the value of delta.
+        // Then, the subtraction comparison to delta isn't involving NaNs.
+        return float.IsNaN(expected) || float.IsNaN(actual) ||
+                Math.Abs(expected - actual) > delta;
+    }
 
     private static bool AreEqualFailing(double expected, double actual, double delta)
-        => double.IsNaN(expected) || double.IsNaN(actual) || double.IsNaN(delta) ||
-            Math.Abs(expected - actual) > delta;
+    {
+        if (double.IsNaN(delta) || delta < 0)
+        {
+            // NaN and negative values don't make sense as a delta value.
+            throw new ArgumentOutOfRangeException(nameof(delta));
+        }
+
+        if (expected.Equals(actual))
+        {
+            return false;
+        }
+
+        // If both doubles are NaN, then they were considered equal in the previous check.
+        // If only one of them is NaN, then they are not equal regardless of the value of delta.
+        // Then, the subtraction comparison to delta isn't involving NaNs.
+        return double.IsNaN(expected) || double.IsNaN(actual) ||
+                Math.Abs(expected - actual) > delta;
+    }
 
     private static bool AreEqualFailing(decimal expected, decimal actual, decimal delta)
         => Math.Abs(expected - actual) > delta;
@@ -1086,7 +1118,25 @@ public sealed partial class Assert
     }
 
     private static bool AreNotEqualFailing(float notExpected, float actual, float delta)
-        => Math.Abs(notExpected - actual) <= delta;
+    {
+        if (float.IsNaN(delta) || delta < 0)
+        {
+            // NaN and negative values don't make sense as a delta value.
+            throw new ArgumentOutOfRangeException(nameof(delta));
+        }
+
+        if (float.IsNaN(notExpected) && float.IsNaN(actual))
+        {
+            // If both notExpected and actual are NaN, then AreNotEqual should fail.
+            return true;
+        }
+
+        // Note: if both notExpected and actual are NaN, that was handled separately above.
+        // Now, if both are numerics, then the logic is good.
+        // And, if only one of them is NaN, we know they are not equal, meaning AreNotEqual shouldn't fail.
+        // And in this case we will correctly be returning false, because NaN <= anything is always false.
+        return Math.Abs(notExpected - actual) <= delta;
+    }
 
     /// <summary>
     /// Tests whether the specified decimals are equal and throws an exception
@@ -1645,7 +1695,25 @@ public sealed partial class Assert
     }
 
     private static bool AreNotEqualFailing(double notExpected, double actual, double delta)
-        => Math.Abs(notExpected - actual) <= delta;
+    {
+        if (double.IsNaN(delta) || delta < 0)
+        {
+            // NaN and negative values don't make sense as a delta value.
+            throw new ArgumentOutOfRangeException(nameof(delta));
+        }
+
+        if (double.IsNaN(notExpected) && double.IsNaN(actual))
+        {
+            // If both notExpected and actual are NaN, then AreNotEqual should fail.
+            return true;
+        }
+
+        // Note: if both notExpected and actual are NaN, that was handled separately above.
+        // Now, if both are numerics, then the logic is good.
+        // And, if only one of them is NaN, we know they are not equal, meaning AreNotEqual shouldn't fail.
+        // And in this case we will correctly be returning false, because NaN <= anything is always false.
+        return Math.Abs(notExpected - actual) <= delta;
+    }
 
     [DoesNotReturn]
     private static void ThrowAssertAreNotEqualFailed<T>(T notExpected, T actual, T delta, string userMessage)
