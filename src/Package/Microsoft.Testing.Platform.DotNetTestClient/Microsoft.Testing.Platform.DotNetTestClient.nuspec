@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    $CommonMetadataElements$
+    <readme>PACKAGE.md</readme>
+    <dependencies>
+      <group targetFramework="net9.0">
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    $CommonFileElements$
+
+    <file src="net9.0\Microsoft.Testing.Platform.DotNetTestClient.dll" target="lib\net9.0\" />
+    <file src="$RepoRoot$src\Package\MSTest\PACKAGE.md" target="" />
+  </files>
+</package>

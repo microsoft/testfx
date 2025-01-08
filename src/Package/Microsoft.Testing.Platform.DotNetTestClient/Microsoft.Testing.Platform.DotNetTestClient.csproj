@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net9.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <!--
+      This package ships shipped dlls that are consumed by dotnet/sdk and shipped after repacking.
+      Based on this definition such nuget is not shipping, because it does not directly ship the dlls to customers.
+      https://github.com/dotnet/arcade/blob/main/Documentation/ArcadeSdk.md#project-properties-defined-by-the-sdk
+    -->
+    <IsShipping>false</IsShipping>
+    <NuspecFile>Microsoft.Testing.Platform.DotNetTestClient.nuspec</NuspecFile>
+    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
+    <PackageId>Microsoft.Testing.Platform.DotNetTestClient</PackageId>
+    <PackageTags></PackageTags>
+    <PackageDescription>
+      This package contains types that are required by `dotnet test` in dotnet/SDK to communicate with an Microsoft.Testing.Platform test executable.
+
+      Supported platforms:
+      - .NET 10
+    </PackageDescription>
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\**\*.cs" LinkBase="IPC" />
+    <Compile Remove="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\DotnetTestDataConsumer.cs" />
+
+    <Compile Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\IPC\I*.cs" LinkBase="IPC" />
+    <Compile Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\IPC\NamedPipeBase.cs" LinkBase="IPC" />
+    <Compile Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\IPC\PipeNameDescription.cs" LinkBase="IPC" />
+    <Compile Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\IPC\*\*.cs" LinkBase="IPC" />
+
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" LinkBase="Helpers" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynDebug.cs" LinkBase="Helpers" />
+
+    <EmbeddedResource Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.resx" GenerateSource="true" LinkBase="Resources" Namespace="Microsoft.Testing.Platform.Resources" />
+  </ItemGroup>
+
+  <ItemGroup Label="NuGet">
+    <NuspecProperty Include="TestPlatformVersion=$(MicrosoftNETTestSdkVersion)" />
+    <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
+  </ItemGroup>
+
+</Project>

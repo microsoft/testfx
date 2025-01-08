@@ -1,6 +1,6 @@
 [CmdletBinding()]
 Param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [System.String] $configuration
 )
 
@@ -19,12 +19,13 @@ function Unzip {
 function Confirm-NugetPackages {
     Write-Verbose "Starting Confirm-NugetPackages."
     $expectedNumOfFiles = @{
-        "MSTest.Sdk"                            = 15;
-        "MSTest.Internal.TestFx.Documentation"  = 10;
-        "MSTest.TestFramework"                  = 148;
-        "MSTest.TestAdapter"                    = 74;
-        "MSTest"                                = 6;
-        "MSTest.Analyzers"                      = 50;
+        "MSTest.Sdk"                                  = 15
+        "MSTest.Internal.TestFx.Documentation"        = 10
+        "MSTest.TestFramework"                        = 148
+        "MSTest.TestAdapter"                          = 74
+        "MSTest"                                      = 6
+        "MSTest.Analyzers"                            = 50
+        "Microsoft.Testing.Platform.DotNetTestClient" = 7
     }
 
     $packageDirectory = Resolve-Path "$PSScriptRoot/../artifacts/packages/$configuration"
@@ -79,7 +80,8 @@ function Confirm-NugetPackages {
 
     if ($errors) {
         Write-Error "Validation of NuGet packages failed with $($errors.Count) errors:`n$($errors -join "`n")"
-    } else {
+    }
+    else {
         Write-Host "Successfully validated content of NuGet packages"
     }
 }
