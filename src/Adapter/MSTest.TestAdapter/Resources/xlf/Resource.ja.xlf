@@ -69,7 +69,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' timed out after {1}ms</source>
-        <target state="new">Test '{0}' timed out after {1}ms</target>
+        <target state="translated">テスト '{0}' が {1}ミリ秒後にタイムアウトしました</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
@@ -420,7 +420,7 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
         <source>Test '{0}' was canceled</source>
-        <target state="needs-review-translation">テスト '{0}' の実行が中止されました。</target>
+        <target state="translated">テスト '{0}' が取り消されました</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">

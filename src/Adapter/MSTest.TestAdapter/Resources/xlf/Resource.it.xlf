@@ -68,7 +68,7 @@ ma ha ricevuto {4} argomenti, con tipi "{5}".</target>
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' timed out after {1}ms</source>
-        <target state="new">Test '{0}' timed out after {1}ms</target>
+        <target state="translated">Timeout del '{0}' di test dopo {1}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
@@ -419,7 +419,7 @@ Errore: {1}</target>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
         <source>Test '{0}' was canceled</source>
-        <target state="needs-review-translation">L'esecuzione del test '{0}' è stata interrotta.</target>
+        <target state="translated">Il '{0}' di test è stato annullato</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">

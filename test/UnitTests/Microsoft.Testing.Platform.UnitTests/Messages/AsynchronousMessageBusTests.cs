@@ -16,7 +16,7 @@ public sealed class AsynchronousMessageBusTests
     [TestMethod]
     public async Task UnexpectedTypePublished_ShouldFail()
     {
-        MessageBusProxy proxy = new();
+        using MessageBusProxy proxy = new();
         InvalidTypePublished consumer = new(proxy);
         AsynchronousMessageBus asynchronousMessageBus = new(
             [consumer],
@@ -36,7 +36,7 @@ public sealed class AsynchronousMessageBusTests
     [TestMethod]
     public async Task DrainDataAsync_Loop_ShouldFail()
     {
-        MessageBusProxy proxy = new();
+        using MessageBusProxy proxy = new();
         LoopConsumerA consumerA = new(proxy);
         ConsumerB consumerB = new(proxy);
         AsynchronousMessageBus asynchronousMessageBus = new(
@@ -67,7 +67,7 @@ public sealed class AsynchronousMessageBusTests
     [TestMethod]
     public async Task MessageBus_WhenConsumerProducesAndConsumesTheSameType_ShouldNotConsumeWhatProducedByItself()
     {
-        MessageBusProxy proxy = new();
+        using MessageBusProxy proxy = new();
         Consumer consumerA = new(proxy, "consumerA");
         Consumer consumerB = new(proxy, "consumerB");
         AsynchronousMessageBus asynchronousMessageBus = new(

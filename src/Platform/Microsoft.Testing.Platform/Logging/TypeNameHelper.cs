@@ -31,12 +31,6 @@ internal static class TypeNameHelper
         { typeof(ushort), "ushort" },
     };
 
-    [return: NotNullIfNotNull(nameof(item))]
-    public static string? GetTypeDisplayName(object? item, bool fullName = true)
-        => item == null
-            ? null
-            : GetTypeDisplayName(item.GetType(), fullName);
-
     /// <summary>
     /// Pretty print a type name.
     /// </summary>

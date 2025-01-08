@@ -68,7 +68,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' timed out after {1}ms</source>
-        <target state="new">Test '{0}' timed out after {1}ms</target>
+        <target state="translated">测试 '{0}' 在 {1}毫秒后超时</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
@@ -419,7 +419,7 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
         <source>Test '{0}' was canceled</source>
-        <target state="needs-review-translation">已中止测试“{0}”的执行。</target>
+        <target state="translated">测试 '{0}' 已取消</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">

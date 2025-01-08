@@ -1319,44 +1319,6 @@ public class TypeCacheTests : TestContainer
 
     #region ResolveExpectedExceptionHelper tests
 
-    public void ResolveExpectedExceptionHelperShouldReturnExpectedExceptionAttributeIfPresent()
-    {
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithExpectedException");
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
-        ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException));
-
-        _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<ExpectedExceptionAttribute>(methodInfo, false))
-            .Returns(true);
-        _mockReflectHelper.Setup(rh => rh.ResolveExpectedExceptionHelper(methodInfo, testMethod)).Returns(expectedException);
-
-        TestMethodInfo testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
-                false);
-
-        Verify(expectedException == testMethodInfo.TestMethodOptions.ExpectedException);
-    }
-
-    public void ResolveExpectedExceptionHelperShouldReturnNullIfExpectedExceptionAttributeIsNotPresent()
-    {
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethod");
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
-
-        _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<ExpectedExceptionAttribute>(methodInfo, false))
-            .Returns(true);
-
-        TestMethodInfo testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
-                false);
-
-        ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException));
-
-        Verify(testMethodInfo.TestMethodOptions.ExpectedException is null);
-    }
-
     public void ResolveExpectedExceptionHelperShouldThrowIfMultipleExpectedExceptionAttributesArePresent()
     {
         Type type = typeof(DummyTestClassWithTestMethods);
@@ -1545,6 +1507,7 @@ public class TypeCacheTests : TestContainer
         }
     }
 
+    [DummyTestClass]
     private class DummyTestClassWithIncorrectTestContextType
     {
         // This is TP.TF type.
@@ -1556,6 +1519,7 @@ public class TypeCacheTests : TestContainer
         public new string TestContext { get; set; }
     }
 
+    [DummyTestClass]
     private class DummyTestClassWithMultipleTestContextProperties : DummyTestClassWithTestContextProperty;
 
     [DummyTestClass]

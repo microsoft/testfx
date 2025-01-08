@@ -63,7 +63,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
         bool isInheritanceModeSet = methodSymbol.IsInheritanceModeSet(inheritanceBehaviorSymbol, classCleanupAttributeSymbol);
-        if (methodSymbol.IsClassInitializeMethod(classCleanupAttributeSymbol)
+        if (methodSymbol.HasAttribute(classCleanupAttributeSymbol)
             && (!methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: true,
                 allowGenericType: isInheritanceModeSet, FixtureParameterMode.OptionalTestContext, testContextSymbol,
                 testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable)

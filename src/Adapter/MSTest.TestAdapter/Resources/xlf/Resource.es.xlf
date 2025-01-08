@@ -68,7 +68,7 @@ pero recibió {4} argumento(s), con los tipos "{5}".</target>
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' timed out after {1}ms</source>
-        <target state="new">Test '{0}' timed out after {1}ms</target>
+        <target state="translated">Se agotó el tiempo de espera de la '{0}' de pruebas después de {1}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
@@ -419,7 +419,7 @@ Error: {1}</target>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
         <source>Test '{0}' was canceled</source>
-        <target state="needs-review-translation">Se anuló la ejecución de la prueba "{0}".</target>
+        <target state="translated">Se canceló la '{0}' de pruebas</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
