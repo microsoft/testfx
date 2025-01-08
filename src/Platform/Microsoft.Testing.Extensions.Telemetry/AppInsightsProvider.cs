@@ -269,13 +269,17 @@ internal sealed partial class AppInsightsProvider :
 #endif
 #endif
 
-    public async Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap)
+    public
+#if NETCOREAPP
+        async
+#endif
+        Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap)
     {
 #if NETCOREAPP
         await _payloads.Writer.WriteAsync((eventName, paramsMap));
 #else
         _payloads.Add((eventName, paramsMap));
-        await Task.CompletedTask;
+        return Task.CompletedTask;
 #endif
     }
 
