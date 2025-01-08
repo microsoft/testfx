@@ -63,6 +63,9 @@ internal sealed class NonAnsiTerminal : ITerminal
         // nop
     }
 
+    // TODO: Refactor NonAnsiTerminal and AnsiTerminal such that we don't need StartUpdate/StopUpdate.
+    // It's much better if we use lock C# keyword instead of manually calling Monitor.Enter/Exit
+    // Using lock also ensures we don't accidentally have `await`s in between that could cause Exit to be on a different thread.
     public void StartUpdate()
     {
         if (_isBatching)
@@ -71,7 +74,9 @@ internal sealed class NonAnsiTerminal : ITerminal
         }
 
         bool lockTaken = false;
-        Monitor.Enter(Console.Out, ref lockTaken);
+        // SystemConsole.ConsoleOut is set only once in static ctor.
+        // So we are sure we will be doing Monitor.Exit on the same instance.
+        Monitor.Enter(SystemConsole.ConsoleOut, ref lockTaken);
         if (!lockTaken)
         {
             // Can this happen? :/
@@ -83,7 +88,7 @@ internal sealed class NonAnsiTerminal : ITerminal
 
     public void StopUpdate()
     {
-        Monitor.Exit(Console.Out);
+        Monitor.Exit(SystemConsole.ConsoleOut);
         _isBatching = false;
     }
 

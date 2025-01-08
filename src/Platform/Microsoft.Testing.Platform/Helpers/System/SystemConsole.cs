@@ -8,6 +8,8 @@ internal sealed class SystemConsole : IConsole
     private const int WriteBufferSize = 256;
     private static readonly StreamWriter CaptureConsoleOutWriter;
 
+    internal static TextWriter ConsoleOut { get; }
+
     /// <summary>
     /// Gets the height of the buffer area.
     /// </summary>
@@ -25,16 +27,19 @@ internal sealed class SystemConsole : IConsole
 
     private bool _suppressOutput;
 
-    static SystemConsole() =>
+    static SystemConsole()
+    {
+        ConsoleOut = Console.Out;
         // From https://github.com/dotnet/runtime/blob/main/src/libraries/System.Console/src/System/Console.cs#L236
         CaptureConsoleOutWriter = new StreamWriter(
             stream: Console.OpenStandardOutput(),
-            encoding: Console.Out.Encoding,
+            encoding: ConsoleOut.Encoding,
             bufferSize: WriteBufferSize,
             leaveOpen: true)
         {
             AutoFlush = true,
         };
+    }
 
     // the following event does not make sense in the mobile scenarios, user cannot ctrl+c
     // but can just kill the app in the device via a gesture
