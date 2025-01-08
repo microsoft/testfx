@@ -36,7 +36,6 @@ internal static class DiaSessionOperations
         // Create instance only when DiaSession is found in Object Model.
         if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
-            string messageFormatOnException = string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
 #pragma warning disable IL2077 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
             return SafeInvoke(() => Activator.CreateInstance(s_typeDiaSession, source));
 #pragma warning restore IL2077 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
