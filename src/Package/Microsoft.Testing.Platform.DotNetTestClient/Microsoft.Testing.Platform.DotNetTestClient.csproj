@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <TargetFramework>net9.0</TargetFramework>
     <VersionPrefix>$(TestingPlatformVersionPrefix)</VersionPrefix>
   </PropertyGroup>
 
@@ -13,17 +13,10 @@
       https://github.com/dotnet/arcade/blob/main/Documentation/ArcadeSdk.md#project-properties-defined-by-the-sdk
     -->
     <IsShipping>false</IsShipping>
-    <NuspecFile>Microsoft.Testing.Platform.DotNetTestClient.nuspec</NuspecFile>
-    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
-    <PackageId>Microsoft.Testing.Platform.DotNetTestClient</PackageId>
     <PackageTags></PackageTags>
     <PackageDescription>
-      This package contains types that are required by `dotnet test` in dotnet/SDK to communicate with an Microsoft.Testing.Platform test executable.
-
-      Supported platforms:
-      - .NET 10
+      <![CDATA[This package contains types that are required by `dotnet test` in dotnet/SDK to communicate with an Microsoft.Testing.Platform test executable.]]>
     </PackageDescription>
-    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,8 +25,6 @@
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\**\*.cs" LinkBase="IPC" />
-    <Compile Remove="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\DotnetTestDataConsumer.cs" />
-
     <Compile Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\IPC\I*.cs" LinkBase="IPC" />
     <Compile Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\IPC\NamedPipeBase.cs" LinkBase="IPC" />
     <Compile Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\IPC\PipeNameDescription.cs" LinkBase="IPC" />
