@@ -86,6 +86,67 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
             diagnostic);
     }
 
+    private static (SyntaxNode ExpressionOrStatement, SyntaxNode NodeToReplace)? TryGetExpressionOfInterestAndNodeToFromBlockSyntax(BlockSyntax? block)
+    {
+        if (block is null)
+        {
+            return null;
+        }
+
+        for (int i = block.Statements.Count - 1; i >= 0; i--)
+        {
+            StatementSyntax statement = block.Statements[i];
+
+            if (statement is LockStatementSyntax lockStatement)
+            {
+                if (lockStatement.Statement is BlockSyntax lockBlock)
+                {
+                    if (TryGetExpressionOfInterestAndNodeToFromBlockSyntax(lockBlock) is { } resultFromLock)
+                    {
+                        return resultFromLock;
+                    }
+
+                    continue;
+                }
+
+                statement = lockStatement.Statement;
+            }
+
+            if (statement is LocalFunctionStatementSyntax or EmptyStatementSyntax)
+            {
+                continue;
+            }
+            else if (statement is BlockSyntax nestedBlock)
+            {
+                if (TryGetExpressionOfInterestAndNodeToFromBlockSyntax(nestedBlock) is { } expressionFromNestedBlock)
+                {
+                    return expressionFromNestedBlock;
+                }
+
+                // The BlockSyntax doesn't have any meaningful statements/expressions.
+                // Ignore it.
+                continue;
+            }
+            else if (statement is ExpressionStatementSyntax expressionStatement)
+            {
+                return (expressionStatement.Expression, statement);
+            }
+            else if (statement is LocalDeclarationStatementSyntax localDeclarationStatementSyntax &&
+                localDeclarationStatementSyntax.Declaration.Variables.Count == 1 &&
+                localDeclarationStatementSyntax.Declaration.Variables[0].Initializer is { } initializer)
+            {
+                return (initializer.Value, statement);
+            }
+
+            return (statement, statement);
+        }
+
+        return null;
+    }
+
+    private static (SyntaxNode ExpressionOrStatement, SyntaxNode NodeToReplace)? TryGetExpressionOfInterestAndNodeToFromExpressionBody(MethodDeclarationSyntax method)
+        => method.ExpressionBody is null ? null : (method.ExpressionBody.Expression, method.ExpressionBody.Expression);
+
     private static async Task<Document> WrapLastStatementWithAssertThrowsExceptionAsync(
         Document document,
         MethodDeclarationSyntax methodDeclaration,
@@ -97,20 +158,32 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         editor.RemoveNode(attributeSyntax);
 
-        SyntaxNode? oldStatement = (SyntaxNode?)methodDeclaration.Body?.Statements.LastOrDefault() ?? methodDeclaration.ExpressionBody?.Expression;
-        if (oldStatement is null)
+        (SyntaxNode ExpressionOrStatement, SyntaxNode NodeToReplace)? expressionAndNodeToReplace = TryGetExpressionOfInterestAndNodeToFromBlockSyntax(methodDeclaration.Body)
+            ?? TryGetExpressionOfInterestAndNodeToFromExpressionBody(methodDeclaration);
+
+        if (expressionAndNodeToReplace is null)
         {
             return editor.GetChangedDocument();
         }
 
-        SyntaxNode newLambdaExpression = oldStatement switch
-        {
-            ExpressionStatementSyntax oldLambdaExpression => oldLambdaExpression.Expression,
-            _ => oldStatement,
-        };
-
         SyntaxGenerator generator = editor.Generator;
-        newLambdaExpression = generator.VoidReturningLambdaExpression(newLambdaExpression);
+        SyntaxNode expressionToUseInLambda = expressionAndNodeToReplace.Value.ExpressionOrStatement;
+
+        // This is the case when the last statement of the method body is a loop for example (e.g, for, foreach, while, do while).
+        // It can also happen for using statement, or switch statement.
+        if (expressionToUseInLambda is StatementSyntax expressionToUseAsStatement)
+        {
+            if (expressionToUseAsStatement is ThrowStatementSyntax throwStatement)
+            {
+                expressionToUseInLambda = generator.ThrowExpression(throwStatement.Expression);
+            }
+            else
+            {
+                expressionToUseInLambda = SyntaxFactory.Block(expressionToUseAsStatement);
+            }
+        }
+
+        SyntaxNode newLambdaExpression = generator.VoidReturningLambdaExpression(expressionToUseInLambda);
 
         bool containsAsyncCode = newLambdaExpression.DescendantNodesAndSelf().Any(n => n is AwaitExpressionSyntax);
         if (containsAsyncCode)
@@ -142,7 +215,7 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
             newStatement = generator.ExpressionStatement(newStatement);
         }
 
-        editor.ReplaceNode(oldStatement, newStatement);
+        editor.ReplaceNode(expressionAndNodeToReplace.Value.NodeToReplace, newStatement);
         return editor.GetChangedDocument();
     }
 }
