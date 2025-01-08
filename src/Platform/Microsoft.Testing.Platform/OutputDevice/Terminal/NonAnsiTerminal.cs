@@ -76,6 +76,22 @@ internal sealed class NonAnsiTerminal : ITerminal
         bool lockTaken = false;
         // SystemConsole.ConsoleOut is set only once in static ctor.
         // So we are sure we will be doing Monitor.Exit on the same instance.
+        // Note that we need to lock on System.Out for batching to work correctly.
+        // Consider the following scenario:
+        // 1. We call StartUpdate
+        // 2. We call a Write("A")
+        // 3. User calls Console.Write("B") from another thread.
+        // 4. We call a Write("C").
+        // 5. We call StopUpdate.
+        // The expectation is that we see either ACB, or BAC, but not ABC.
+        // Basically, when doing batching, we want to ensure that everything we write is
+        // written continuously, without anything in-between.
+        // One option (and we used to do it), is that we append to a StringBuilder while batching
+        // Then at StopUpdate, we write the whole string at once.
+        // This works to some extent, but we cannot get it to work when SetColor kicks in.
+        // Console methods will internally lock on Console.Out, so we are locking on the same thing.
+        // This locking is the easiest way to get coloring to work correctly while preventing
+        // interleaving with user's calls to Console.Write methods.
         Monitor.Enter(SystemConsole.ConsoleOut, ref lockTaken);
         if (!lockTaken)
         {
