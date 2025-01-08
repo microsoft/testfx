@@ -12,8 +12,6 @@ internal sealed class ExceptionFlattener
             return Array.Empty<FlatException>();
         }
 
-        List<Exception> exceptions = new();
-
         string? message = !RoslynString.IsNullOrWhiteSpace(errorMessage) ? errorMessage : exception?.Message;
         string? type = exception?.GetType().FullName;
         string? stackTrace = exception?.StackTrace;

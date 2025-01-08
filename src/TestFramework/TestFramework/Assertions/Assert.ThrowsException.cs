@@ -38,7 +38,7 @@ public sealed partial class Assert
             }
             else
             {
-                return (TException)_state.ExceptionWhenNotFailing!;
+                return (TException)_state.ExceptionThrown!;
             }
 
             // This will not hit, but need it for compiler.
@@ -105,7 +105,7 @@ public sealed partial class Assert
             }
             else
             {
-                return (TException)_state.ExceptionWhenNotFailing!;
+                return (TException)_state.ExceptionThrown!;
             }
 
             // This will not hit, but need it for compiler.
@@ -173,6 +173,30 @@ public sealed partial class Assert
         where TException : Exception
         => ThrowsException<TException>(action, isStrictType: false, message, parameters: messageArgs);
 
+    /// <summary>
+    /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
+    /// (or derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// exception of type other than <typeparamref name="TException"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <param name="messageBuilder">
+    /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </param>
+    /// <typeparam name="TException">
+    /// The type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    public static TException Throws<TException>(Action action, Func<Exception?, string> messageBuilder)
+        where TException : Exception
+        => ThrowsException<TException>(action, isStrictType: false, messageBuilder);
+
     /// <inheritdoc cref="Throws{TException}(Action, string, object[])" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static TException Throws<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsInterpolatedStringHandler<TException> message)
@@ -206,6 +230,30 @@ public sealed partial class Assert
     public static TException ThrowsExactly<TException>(Action action, string message = "", params object[] messageArgs)
         where TException : Exception
         => ThrowsException<TException>(action, isStrictType: true, message, parameters: messageArgs);
+
+    /// <summary>
+    /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
+    /// (and not of derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// exception of type other than <typeparamref name="TException"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <param name="messageBuilder">
+    /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </param>
+    /// <typeparam name="TException">
+    /// The type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    public static TException ThrowsExactly<TException>(Action action, Func<Exception?, string> messageBuilder)
+        where TException : Exception
+        => ThrowsException<TException>(action, isStrictType: true, messageBuilder);
 
     /// <inheritdoc cref="ThrowsExactly{TException}(Action, string, object[])" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -384,7 +432,27 @@ public sealed partial class Assert
         }
         else
         {
-            return (TException)state.ExceptionWhenNotFailing!;
+            return (TException)state.ExceptionThrown!;
+        }
+
+        // This will not hit, but need it for compiler.
+        return null!;
+    }
+
+    private static TException ThrowsException<TException>(Action action, bool isStrictType, Func<Exception?, string> messageBuilder, [CallerMemberName] string assertMethodName = "")
+        where TException : Exception
+    {
+        Guard.NotNull(action);
+        Guard.NotNull(messageBuilder);
+
+        ThrowsExceptionState state = IsThrowsFailing<TException>(action, isStrictType, assertMethodName);
+        if (state.FailAction is not null)
+        {
+            state.FailAction(messageBuilder(state.ExceptionThrown));
+        }
+        else
+        {
+            return (TException)state.ExceptionThrown!;
         }
 
         // This will not hit, but need it for compiler.
@@ -444,6 +512,54 @@ public sealed partial class Assert
     public static Task<TException> ThrowsExactlyAsync<TException>(Func<Task> action, string message = "", params object[] messageArgs)
         where TException : Exception
         => ThrowsExceptionAsync<TException>(action, isStrictType: true, message, parameters: messageArgs);
+
+    /// <summary>
+    /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
+    /// (or derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// exception of type other than <typeparamref name="TException"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <param name="messageBuilder">
+    /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </param>
+    /// <typeparam name="TException">
+    /// The type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    public static Task<TException> ThrowsAsync<TException>(Func<Task> action, Func<Exception?, string> messageBuilder)
+        where TException : Exception
+        => ThrowsExceptionAsync<TException>(action, isStrictType: false, messageBuilder);
+
+    /// <summary>
+    /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
+    /// (and not of derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// exception of type other than <typeparamref name="TException"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <param name="messageBuilder">
+    /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </param>
+    /// <typeparam name="TException">
+    /// The type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    public static Task<TException> ThrowsExactlyAsync<TException>(Func<Task> action, Func<Exception?, string> messageBuilder)
+        where TException : Exception
+        => ThrowsExceptionAsync<TException>(action, isStrictType: true, messageBuilder);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
@@ -530,7 +646,27 @@ public sealed partial class Assert
         }
         else
         {
-            return (TException)state.ExceptionWhenNotFailing!;
+            return (TException)state.ExceptionThrown!;
+        }
+
+        // This will not hit, but need it for compiler.
+        return null!;
+    }
+
+    private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, Func<Exception?, string> messageBuilder, [CallerMemberName] string assertMethodName = "")
+        where TException : Exception
+    {
+        Guard.NotNull(action);
+        Guard.NotNull(messageBuilder);
+
+        ThrowsExceptionState state = await IsThrowsAsyncFailingAsync<TException>(action, isStrictType, assertMethodName).ConfigureAwait(false);
+        if (state.FailAction is not null)
+        {
+            state.FailAction(messageBuilder(state.ExceptionThrown));
+        }
+        else
+        {
+            return (TException)state.ExceptionThrown!;
         }
 
         // This will not hit, but need it for compiler.
@@ -552,27 +688,29 @@ public sealed partial class Assert
 
             return isExceptionOfType
                 ? ThrowsExceptionState.CreateNotFailingState(ex)
-                : ThrowsExceptionState.CreateFailingState(userMessage =>
-                {
-                    string finalMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        FrameworkMessages.WrongExceptionThrown,
-                        userMessage,
-                        typeof(TException),
-                        ex.GetType());
-                    ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
-                });
+                : ThrowsExceptionState.CreateFailingState(
+                    userMessage =>
+                    {
+                        string finalMessage = string.Format(
+                            CultureInfo.CurrentCulture,
+                            FrameworkMessages.WrongExceptionThrown,
+                            userMessage,
+                            typeof(TException),
+                            ex.GetType());
+                        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+                    }, ex);
         }
 
-        return ThrowsExceptionState.CreateFailingState(failAction: userMessage =>
-        {
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.NoExceptionThrown,
-                userMessage,
-                typeof(TException));
-            ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
-        });
+        return ThrowsExceptionState.CreateFailingState(
+            failAction: userMessage =>
+            {
+                string finalMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.NoExceptionThrown,
+                    userMessage,
+                    typeof(TException));
+                ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+            }, null);
     }
 
     private static ThrowsExceptionState IsThrowsFailing<TException>(Action action, bool isStrictType, string assertMethodName)
@@ -590,46 +728,47 @@ public sealed partial class Assert
 
             return isExceptionOfType
                 ? ThrowsExceptionState.CreateNotFailingState(ex)
-                : ThrowsExceptionState.CreateFailingState(userMessage =>
-                {
-                    string finalMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        FrameworkMessages.WrongExceptionThrown,
-                        userMessage,
-                        typeof(TException),
-                        ex.GetType());
-                    ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
-                });
+                : ThrowsExceptionState.CreateFailingState(
+                    userMessage =>
+                    {
+                        string finalMessage = string.Format(
+                            CultureInfo.CurrentCulture,
+                            FrameworkMessages.WrongExceptionThrown,
+                            userMessage,
+                            typeof(TException),
+                            ex.GetType());
+                        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+                    }, ex);
         }
 
-        return ThrowsExceptionState.CreateFailingState(failAction: userMessage =>
-        {
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.NoExceptionThrown,
-                userMessage,
-                typeof(TException));
-            ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
-        });
+        return ThrowsExceptionState.CreateFailingState(
+            failAction: userMessage =>
+            {
+                string finalMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.NoExceptionThrown,
+                    userMessage,
+                    typeof(TException));
+                ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+            }, null);
     }
 
     private readonly struct ThrowsExceptionState
     {
-        public Exception? ExceptionWhenNotFailing { get; }
+        public Exception? ExceptionThrown { get; }
 
         public Action<string>? FailAction { get; }
 
-        private ThrowsExceptionState(Exception? exceptionWhenNotFailing, Action<string>? failAction)
+        private ThrowsExceptionState(Exception? exceptionThrown, Action<string>? failAction)
         {
-            // If the assert is failing, failAction should be non-null, and exceptionWhenNotFailing should be null.
+            // If the assert is failing, failAction should be non-null, and exceptionWhenNotFailing may or may not be null.
             // If the assert is not failing, exceptionWhenNotFailing should be non-null, and failAction should be null.
-            Debug.Assert(exceptionWhenNotFailing is null ^ failAction is null, "Exactly one of exceptionWhenNotFailing and failAction should be null.");
-            ExceptionWhenNotFailing = exceptionWhenNotFailing;
+            ExceptionThrown = exceptionThrown;
             FailAction = failAction;
         }
 
-        public static ThrowsExceptionState CreateFailingState(Action<string> failAction)
-            => new(exceptionWhenNotFailing: null, failAction);
+        public static ThrowsExceptionState CreateFailingState(Action<string> failAction, Exception? exceptionThrown)
+            => new(exceptionThrown, failAction);
 
         public static ThrowsExceptionState CreateNotFailingState(Exception exception)
             => new(exception, failAction: null);
