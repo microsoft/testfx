@@ -1531,7 +1531,7 @@ public class TestMethodInfoTests : TestContainer
 
     #region helper methods
 
-    private void RunWithTestablePlatformService(TestablePlatformServiceProvider testablePlatformServiceProvider, Action action)
+    private static void RunWithTestablePlatformService(TestablePlatformServiceProvider testablePlatformServiceProvider, Action action)
     {
         try
         {

@@ -138,7 +138,7 @@ public class FixturesTests : CLITestBase
         ValidatePassedTests([AssemblyInitialize, AssemblyCleanup, ClassCleanup]);
     }
 
-    private string GetRunSettings(bool fixturesEnabled, bool assemblyInitialize, bool assemblyCleanup, bool classInitialize, bool classCleanup, bool test)
+    private static string GetRunSettings(bool fixturesEnabled, bool assemblyInitialize, bool assemblyCleanup, bool classInitialize, bool classCleanup, bool test)
         => $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <RunSettings>
     <RunConfiguration>

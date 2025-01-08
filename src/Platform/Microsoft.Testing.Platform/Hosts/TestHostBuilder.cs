@@ -629,7 +629,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
     }
 
-    private async Task<ITestFramework> BuildTestFrameworkAsync(TestFrameworkBuilderData testFrameworkBuilderData)
+    private static async Task<ITestFramework> BuildTestFrameworkAsync(TestFrameworkBuilderData testFrameworkBuilderData)
     {
         // Add the message bus proxy
         ServiceProvider serviceProvider = testFrameworkBuilderData.ServiceProvider;
