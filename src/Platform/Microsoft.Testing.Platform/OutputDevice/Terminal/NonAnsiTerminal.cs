@@ -14,7 +14,6 @@ internal sealed class NonAnsiTerminal : ITerminal
 {
     private readonly IConsole _console;
     private readonly ConsoleColor _defaultForegroundColor;
-    private readonly StringBuilder _stringBuilder = new();
     private bool _isBatching;
 
     public NonAnsiTerminal(IConsole console)
@@ -28,52 +27,16 @@ internal sealed class NonAnsiTerminal : ITerminal
     public int Height => _console.IsOutputRedirected ? int.MaxValue : _console.BufferHeight;
 
     public void Append(char value)
-    {
-        if (_isBatching)
-        {
-            _stringBuilder.Append(value);
-        }
-        else
-        {
-            _console.Write(value);
-        }
-    }
+        => _console.Write(value);
 
     public void Append(string value)
-    {
-        if (_isBatching)
-        {
-            _stringBuilder.Append(value);
-        }
-        else
-        {
-            _console.Write(value);
-        }
-    }
+        => _console.Write(value);
 
     public void AppendLine()
-    {
-        if (_isBatching)
-        {
-            _stringBuilder.AppendLine();
-        }
-        else
-        {
-            _console.WriteLine();
-        }
-    }
+        => _console.WriteLine();
 
     public void AppendLine(string value)
-    {
-        if (_isBatching)
-        {
-            _stringBuilder.AppendLine(value);
-        }
-        else
-        {
-            _console.WriteLine(value);
-        }
-    }
+        => _console.WriteLine(value);
 
     public void AppendLink(string path, int? lineNumber)
     {
@@ -85,26 +48,10 @@ internal sealed class NonAnsiTerminal : ITerminal
     }
 
     public void SetColor(TerminalColor color)
-    {
-        if (_isBatching)
-        {
-            _console.Write(_stringBuilder.ToString());
-            _stringBuilder.Clear();
-        }
-
-        _console.SetForegroundColor(ToConsoleColor(color));
-    }
+        => _console.SetForegroundColor(ToConsoleColor(color));
 
     public void ResetColor()
-    {
-        if (_isBatching)
-        {
-            _console.Write(_stringBuilder.ToString());
-            _stringBuilder.Clear();
-        }
-
-        _console.SetForegroundColor(_defaultForegroundColor);
-    }
+        => _console.SetForegroundColor(_defaultForegroundColor);
 
     public void ShowCursor()
     {
@@ -123,13 +70,20 @@ internal sealed class NonAnsiTerminal : ITerminal
             throw new InvalidOperationException(PlatformResources.ConsoleIsAlreadyInBatchingMode);
         }
 
-        _stringBuilder.Clear();
+        bool lockTaken = false;
+        Monitor.Enter(Console.Out, ref lockTaken);
+        if (!lockTaken)
+        {
+            // Can this happen? :/
+            throw new InvalidOperationException();
+        }
+
         _isBatching = true;
     }
 
     public void StopUpdate()
     {
-        _console.Write(_stringBuilder.ToString());
+        Monitor.Exit(Console.Out);
         _isBatching = false;
     }
 
