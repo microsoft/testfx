@@ -7,7 +7,7 @@
   <Choose>
     <When Condition=" '$(DotNetBuildSourceOnly)' == 'true' ">
       <!-- When building for source build we only want to build the DotnetTestClient, this is the only component shared to dotnet/sdk. -->
-      <ItemGroup>  
+      <ItemGroup>
         <ProjectToBuild Include="$(RepoRoot)src/Package/Microsoft.Testing.Platform.DotNetTestClient/Microsoft.Testing.Platform.DotNetTestClient.csproj" />
       </ItemGroup>
     </When>
