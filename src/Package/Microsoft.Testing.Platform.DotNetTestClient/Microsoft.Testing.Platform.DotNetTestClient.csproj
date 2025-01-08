@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net9.0</TargetFrameworks>
+    <VersionPrefix>$(TestingPlatformVersionPrefix)</VersionPrefix>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -26,6 +27,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="dotnet" Key="$(MicrosoftAspNetCorePublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\**\*.cs" LinkBase="IPC" />
     <Compile Remove="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\DotnetTestDataConsumer.cs" />
 
@@ -36,7 +41,18 @@
 
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" LinkBase="Helpers" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynDebug.cs" LinkBase="Helpers" />
-
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" LinkBase="Helpers" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\IConsole.cs" LinkBase="Helpers" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\IStopwatch.cs" LinkBase="Helpers" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\SystemStopwatch.cs" LinkBase="Helpers" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\SystemConsole.cs" LinkBase="Helpers" />
+    
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\SystemConsoleColor.cs" LinkBase="Terminal" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\IColor.cs" LinkBase="Terminal" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\Terminal\*" LinkBase="Terminal" />
+    <Compile Remove="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\Terminal\TerminalTestReporterCommandLineOptionsProvider.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" LinkBase="Terminal" />
+    
     <EmbeddedResource Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.resx" GenerateSource="true" LinkBase="Resources" Namespace="Microsoft.Testing.Platform.Resources" />
   </ItemGroup>
 
