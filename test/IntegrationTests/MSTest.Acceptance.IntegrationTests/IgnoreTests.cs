@@ -66,55 +66,35 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContains("""
-            TestInitialize: TestMethod1 (0)
-            TestCleanup: TestMethod1 (0)
-            """);
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod1 (0)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod1 (0)");
 
-        testHostResult.AssertOutputContains("""
-            TestInitialize: TestMethod1 (2)
-            TestCleanup: TestMethod1 (2)
-            """);
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod1 (2)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod1 (2)");
 
-        testHostResult.AssertOutputContains("""
-            TestInitialize: TestMethod2 (0)
-            TestCleanup: TestMethod2 (0)
-            """);
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod2 (0)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod2 (0)");
 
-        testHostResult.AssertOutputContains("""
-            TestInitialize: TestMethod2 (1)
-            TestCleanup: TestMethod2 (1)
-            """);
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod2 (1)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod2 (1)");
 
-        testHostResult.AssertOutputContains("""
-            TestInitialize: TestMethod2 (2)
-            TestCleanup: TestMethod2 (2)
-            """);
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod2 (2)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod2 (2)");
 
-        testHostResult.AssertOutputContains("""
-            TestInitialize: TestMethod3 (0)
-            TestCleanup: TestMethod3 (0)
-            """);
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod3 (0)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod3 (0)");
 
-        testHostResult.AssertOutputContains("""
-            TestInitialize: TestMethod3 (2)
-            TestCleanup: TestMethod3 (2)
-            """);
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod3 (2)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod3 (2)");
 
-        testHostResult.AssertOutputContains("""
-            TestInitialize: TestMethod4 (0)
-            TestCleanup: TestMethod4 (0)
-            """);
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod4 (0)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod4 (0)");
 
-        testHostResult.AssertOutputContains("""
-            TestInitialize: TestMethod4 (1)
-            TestCleanup: TestMethod4 (1)
-            """);
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod4 (1)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod4 (1)");
 
-        testHostResult.AssertOutputContains("""
-            TestInitialize: TestMethod4 (2)
-            TestCleanup: TestMethod4 (2)
-            """);
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod4 (2)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod4 (2)");
 
         testHostResult.AssertOutputContains("skipped TestMethod1");
         testHostResult.AssertOutputContains("skipped TestMethod2");
