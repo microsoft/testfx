@@ -23,29 +23,34 @@ public class TempDirectory : IDisposable
         _cleanup = cleanup;
     }
 
-    ~TempDirectory() => Clean();
-
     public string Path { get; }
 
     public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
     {
         if (_isDisposed)
         {
             return;
         }
 
-        if (disposing && _cleanup)
+        _isDisposed = true;
+
+        if (!_cleanup)
         {
-            Clean();
+            return;
         }
 
-        _isDisposed = true;
+        if (!Directory.Exists(_baseDirectory))
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.Delete(_baseDirectory, recursive: true);
+        }
+        catch
+        {
+        }
     }
 
     public DirectoryInfo CreateDirectory(string dir) => Directory.CreateDirectory(System.IO.Path.Combine(Path, dir));
@@ -225,22 +230,6 @@ public class TempDirectory : IDisposable
     // place where we are allowed to use it. All other methods should use our GetTempPath (this method).
     private static string GetTempPath() => Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
             ?? System.IO.Path.GetTempPath();
-
-    public void Clean()
-    {
-        if (!Directory.Exists(_baseDirectory))
-        {
-            return;
-        }
-
-        try
-        {
-            Directory.Delete(_baseDirectory, recursive: true);
-        }
-        catch
-        {
-        }
-    }
 
     public void Add(string fileContents)
     {
