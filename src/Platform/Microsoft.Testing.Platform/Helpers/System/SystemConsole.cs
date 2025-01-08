@@ -29,6 +29,8 @@ internal sealed class SystemConsole : IConsole
 
     static SystemConsole()
     {
+        // This is the console that the ITerminal will be writing to.
+        // So, this is what NonAnsiTerminal need to "lock" on regardless of whether it changed later.
         ConsoleOut = Console.Out;
         // From https://github.com/dotnet/runtime/blob/main/src/libraries/System.Console/src/System/Console.cs#L236
         CaptureConsoleOutWriter = new StreamWriter(
