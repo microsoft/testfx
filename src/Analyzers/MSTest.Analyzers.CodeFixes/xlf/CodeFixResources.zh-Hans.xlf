@@ -12,6 +12,11 @@
         <target state="translated">将断言中的条件访问移动到分隔 “Assert.IsNotNull” 检查</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesFix">
+        <source>Use '{0}'</source>
+        <target state="new">Use '{0}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">将方法可访问性更改为“private”</target>
