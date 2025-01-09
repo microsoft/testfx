@@ -122,9 +122,9 @@ public class DotnetMuxer : IDisposable
         }
 
         IDictionary<string, string?> mergedEnvironmentVariables = new Dictionary<string, string?>(environmentVariables1);
-        foreach (KeyValuePair<string, string?> kvp in environmentVariables2)
+        foreach ((string key, string? value) in environmentVariables2)
         {
-            mergedEnvironmentVariables[kvp.Key] = kvp.Value;
+            mergedEnvironmentVariables[key] = value;
         }
 
         return mergedEnvironmentVariables;
