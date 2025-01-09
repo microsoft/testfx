@@ -450,16 +450,391 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 public async Task TestMethod()
                 {
                     Console.WriteLine("Hello, world!");
-                    await Assert.ThrowsExactlyAsync<Exception>(async () =>
-                            // In ideal world, it's best if the codefix can separate await M() to a
-                            // variable, then only wrap M(someVariable) in Assert.ThrowsException
-                            // Let's also have this comment serve as a test for trivia ;)
-                            M(await M()));
+                    // In ideal world, it's best if the codefix can separate await M() to a
+                    // variable, then only wrap M(someVariable) in Assert.ThrowsException
+                    // Let's also have this comment serve as a test for trivia ;)
+                    await Assert.ThrowsExactlyAsync<Exception>(async () => M(await M()));
                 }
 
                 private static Task<int> M() => Task.FromResult(0);
             
                 private static void M(int _) => throw new Exception();
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task When_BlockEndsWithLocalFunctions_Should_ConsiderPreviousStatements()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [ExpectedException(typeof(System.Exception))]
+                [TestMethod]
+                public void [|TestMethod|]()
+                {
+                    M1();
+                    M2();
+
+                    void M1() { }
+                    void M2() { }
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    M1();
+                    Assert.ThrowsExactly<Exception>(() => M2());
+
+                    void M1() { }
+                    void M2() { }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task When_BlockEndsWithLocalVariableDeclaration_Should_NotCrash()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [ExpectedException(typeof(System.Exception))]
+                [TestMethod]
+                public void [|TestMethod|]()
+                {
+                    var x = Console.ReadLine();
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.ThrowsExactly<Exception>(() => Console.ReadLine());
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task When_BlockEndsWithAssignment_Should_NotCrash()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [ExpectedException(typeof(System.Exception))]
+                [TestMethod]
+                public void [|TestMethod|]()
+                {
+                    object x;
+                    x = Console.ReadLine();
+                }
+
+                [ExpectedException(typeof(System.Exception))]
+                [TestMethod]
+                public void [|TestMethod2|]()
+                {
+                    _ = Console.ReadLine();
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    object x;
+                    Assert.ThrowsExactly<Exception>(() => x = Console.ReadLine());
+                }
+
+                [TestMethod]
+                public void TestMethod2()
+                {
+                    Assert.ThrowsExactly<Exception>(() => _ = Console.ReadLine());
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task When_BlockEndsWithNestedBlocks_Should_NotCrash()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [ExpectedException(typeof(System.Exception))]
+                [TestMethod]
+                public void [|TestMethod|]()
+                {
+                    object x;
+
+                    {
+                        {
+                        }
+                        {
+                            x = Console.ReadLine();
+                        }
+                        {
+                        }
+                    }
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    object x;
+            
+                    {
+                        {
+                        }
+                        {
+                            Assert.ThrowsExactly<Exception>(() => x = Console.ReadLine());
+                        }
+                        {
+                        }
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task When_BlockEndsWithEmptyStatement_Should_BeIgnored()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [ExpectedException(typeof(System.Exception))]
+                [TestMethod]
+                public void [|TestMethod|]()
+                {
+                    Console.WriteLine();;
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.ThrowsExactly<Exception>(() => Console.WriteLine()); ;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task When_BlockEndsWithForEach_Should_NotCrash()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [ExpectedException(typeof(System.Exception))]
+                [TestMethod]
+                public void [|TestMethod|]()
+                {
+                    foreach (var x in new[] { 1, 2, 3 })
+                    {
+                        Console.WriteLine(x);
+                    }
+                }
+            }
+            """;
+
+        // TODO: Formatting is so broken here.
+        // See https://github.com/microsoft/testfx/issues/4570
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.ThrowsExactly<Exception>(() =>
+                    {
+                        foreach (var x in new[] { 1, 2, 3 })
+                    {
+                        Console.WriteLine(x);
+                    }
+                    });
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task When_BlockEndsWithThrowStatement_Should_NotBeWrappedInBlock()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [ExpectedException(typeof(System.Exception))]
+                [TestMethod]
+                public void [|TestMethod|]()
+                {
+                    throw new Exception();
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.ThrowsExactly<Exception>(() => throw new Exception());
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task When_BlockEndsWithNestedLockStatements_Should_NotCrash()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [ExpectedException(typeof(System.Exception))]
+                [TestMethod]
+                public void [|TestMethod|]()
+                {
+                    object x = new();
+                    lock (x)
+                    {
+                        lock (x)
+                        {
+                        }
+                        lock (x)
+                        {
+                            Console.WriteLine();
+                        }
+                        lock (x)
+                        {
+                        }
+                    }
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    object x = new();
+                    lock (x)
+                    {
+                        lock (x)
+                        {
+                        }
+                        lock (x)
+                        {
+                            Assert.ThrowsExactly<Exception>(() => Console.WriteLine());
+                        }
+                        lock (x)
+                        {
+                        }
+                    }
+                }
             }
             """;
 
