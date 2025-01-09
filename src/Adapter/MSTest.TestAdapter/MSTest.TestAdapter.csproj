@@ -33,7 +33,7 @@
       - .NET 6.0
       - .NET 6.0 Windows.18362+
       - UWP 10.0.16299
-	  - UWP 10.0.17763 with .NET 9
+	    - UWP 10.0.17763 with .NET 9
     </PackageDescription>
     <!-- Nothing in lib but that's expected -->
     <NoWarn>$(NoWarn);NU5127;NU5128</NoWarn>
@@ -100,6 +100,9 @@
     <None Update="build\common\MSTest.TestAdapter.props" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="build\common\MSTest.TestAdapter.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="build\netfx-netcore-netstandard\MSTest.TestAdapter.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -107,9 +110,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="build\uwp\MSTest.TestAdapter.targets" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' ">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="build\common\MSTest.TestAdapter.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="PACKAGE.md">
