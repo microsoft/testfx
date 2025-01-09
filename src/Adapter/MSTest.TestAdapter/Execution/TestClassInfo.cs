@@ -483,7 +483,11 @@ public class TestClassInfo
             return null;
         }
 
-        TimeoutInfo? timeout = ClassInitializeMethodTimeoutMilliseconds.GetValueOrDefault(methodInfo);
+        TimeoutInfo? timeout = null;
+        if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
+        {
+            timeout = localTimeout;
+        }
 
         return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(null, testContext),
