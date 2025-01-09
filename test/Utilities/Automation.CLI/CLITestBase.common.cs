@@ -35,7 +35,7 @@ public partial class CLITestBase : TestContainer
     protected static string GetTestPlatformVersion()
     {
         XmlDocument cpmXml = ReadCPMFile();
-        XmlNode testSdkVersion = cpmXml.DocumentElement.SelectSingleNode($"PropertyGroup/MicrosoftNETTestSdkVersion");
+        XmlNode testSdkVersion = cpmXml.DocumentElement.SelectSingleNode("PropertyGroup/MicrosoftNETTestSdkVersion");
 
         return testSdkVersion.InnerText;
     }

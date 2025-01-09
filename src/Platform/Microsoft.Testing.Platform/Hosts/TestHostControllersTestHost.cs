@@ -223,7 +223,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             string testHostProcessStartupTime = _clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID}", testHostProcessStartupTime);
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID} '{testHostProcessStartupTime}'");
-            await _logger.LogDebugAsync($"Starting test host process");
+            await _logger.LogDebugAsync("Starting test host process");
             using IProcess testHostProcess = process.Start(processStartInfo);
 
             int? testHostProcessId = null;
@@ -250,7 +250,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             using (CancellationTokenSource timeout = new(TimeSpan.FromSeconds(timeoutSeconds)))
             using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, abortRun))
             {
-                await _logger.LogDebugAsync($"Wait connection from the test host process");
+                await _logger.LogDebugAsync("Wait connection from the test host process");
                 await testHostControllerIpc.WaitConnectionAsync(linkedToken.Token);
             }
 
@@ -260,7 +260,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 _waitForPid.Wait(timeout.Token);
             }
 
-            await _logger.LogDebugAsync($"Fire OnTestHostProcessStartedAsync");
+            await _logger.LogDebugAsync("Fire OnTestHostProcessStartedAsync");
 
             if (_testHostPID is null)
             {
@@ -279,7 +279,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 }
             }
 
-            await _logger.LogDebugAsync($"Wait for test host process exit");
+            await _logger.LogDebugAsync("Wait for test host process exit");
             await testHostProcess.WaitForExitAsync();
 
             if (_testHostsInformation.LifetimeHandlers.Length > 0)
