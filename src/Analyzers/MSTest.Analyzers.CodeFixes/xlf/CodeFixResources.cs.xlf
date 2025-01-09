@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessFix">
         <source>Move conditional access in assertion to separate 'Assert.IsNotNull' check</source>
-        <target state="new">Move conditional access in assertion to separate 'Assert.IsNotNull' check</target>
+        <target state="translated">Přesunout podmíněný přístup v kontrolním výrazu, aby se oddělila kontrola Assert.IsNotNull</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">

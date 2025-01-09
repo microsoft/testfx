@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessFix">
         <source>Move conditional access in assertion to separate 'Assert.IsNotNull' check</source>
-        <target state="new">Move conditional access in assertion to separate 'Assert.IsNotNull' check</target>
+        <target state="translated">Onaylamadaki koşullu erişimi 'Assert.IsNotNull' denetimine ayırmaya taşı</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
