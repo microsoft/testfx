@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
     <VersionPrefix>$(TestingPlatformVersionPrefix)</VersionPrefix>
   </PropertyGroup>
 
@@ -37,13 +37,13 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\IStopwatch.cs" LinkBase="Helpers" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\SystemStopwatch.cs" LinkBase="Helpers" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\SystemConsole.cs" LinkBase="Helpers" />
-    
+
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\SystemConsoleColor.cs" LinkBase="Terminal" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\IColor.cs" LinkBase="Terminal" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\Terminal\*" LinkBase="Terminal" />
     <Compile Remove="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\Terminal\TerminalTestReporterCommandLineOptionsProvider.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" LinkBase="Terminal" />
-    
+
     <EmbeddedResource Include="$(RepoRoot)\src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.resx" GenerateSource="true" LinkBase="Resources" Namespace="Microsoft.Testing.Platform.Resources" />
   </ItemGroup>
 
