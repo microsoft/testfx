@@ -82,7 +82,7 @@ internal sealed class DotnetMuxerLocator
         if ((envVar == null || !Directory.Exists(envVar)) &&
             targetArchitecture == PlatformArchitecture.X86 && isWinOs)
         {
-            envKey = $"DOTNET_ROOT(x86)";
+            envKey = "DOTNET_ROOT(x86)";
             envVar = Environment.GetEnvironmentVariable(envKey);
         }
 
@@ -124,7 +124,7 @@ internal sealed class DotnetMuxerLocator
             }
         }
 
-        _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer was not found using DOTNET_ROOT* env variables.");
+        _resolutionLog("DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer was not found using DOTNET_ROOT* env variables.");
 
         // Try to search for global registration
         muxerPath = isWinOs ? GetMuxerFromGlobalRegistrationWin(targetArchitecture) : GetMuxerFromGlobalRegistrationOnUnix(targetArchitecture);
@@ -151,7 +151,7 @@ internal sealed class DotnetMuxerLocator
             return true;
         }
 
-        _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer not found using global registrations");
+        _resolutionLog("DotnetHostHelper.TryGetDotnetPathByArchitecture: Muxer not found using global registrations");
 
         // Try searching in default installation location if it exists
         if (isWinOs)
@@ -219,14 +219,14 @@ internal sealed class DotnetMuxerLocator
         using var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
         if (hklm == null)
         {
-            _resolutionLog($@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing SOFTWARE\dotnet\Setup\InstalledVersions subkey");
+            _resolutionLog(@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing SOFTWARE\dotnet\Setup\InstalledVersions subkey");
             return null;
         }
 
         using RegistryKey? dotnetInstalledVersion = hklm.OpenSubKey(@"SOFTWARE\dotnet\Setup\InstalledVersions");
         if (dotnetInstalledVersion == null)
         {
-            _resolutionLog($@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing RegistryHive.LocalMachine for RegistryView.Registry32");
+            _resolutionLog(@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing RegistryHive.LocalMachine for RegistryView.Registry32");
             return null;
         }
 
@@ -234,7 +234,7 @@ internal sealed class DotnetMuxerLocator
         string? installLocation = nativeArch?.GetValue("InstallLocation")?.ToString();
         if (installLocation == null)
         {
-            _resolutionLog($@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing registry InstallLocation");
+            _resolutionLog(@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing registry InstallLocation");
             return null;
         }
 
@@ -307,7 +307,7 @@ internal sealed class DotnetMuxerLocator
         // Check if the offset is invalid
         if (peHeader > fs.Length - 5)
         {
-            resolutionLog($"[GetMuxerArchitectureByPEHeaderOnWin]Invalid offset");
+            resolutionLog("[GetMuxerArchitectureByPEHeaderOnWin]Invalid offset");
             validImage = false;
         }
 
@@ -321,7 +321,7 @@ internal sealed class DotnetMuxerLocator
             if (reader.ReadUInt32() != 0x00004550)
             {
                 validImage = false;
-                resolutionLog($"[GetMuxerArchitectureByPEHeaderOnWin]Missing PE signature");
+                resolutionLog("[GetMuxerArchitectureByPEHeaderOnWin]Missing PE signature");
             }
 
             if (validImage)
