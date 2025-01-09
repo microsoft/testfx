@@ -31,14 +31,14 @@ public static class ProcessFactory
                 processStartInfo.EnvironmentVariables.Clear();
             }
 
-            foreach (KeyValuePair<string, string?> kvp in config.EnvironmentVariables)
+            foreach ((string key, string? value) in config.EnvironmentVariables)
             {
-                if (kvp.Value is null)
+                if (value is null)
                 {
                     continue;
                 }
 
-                processStartInfo.EnvironmentVariables[kvp.Key] = kvp.Value;
+                processStartInfo.EnvironmentVariables[key] = value;
             }
         }
 
