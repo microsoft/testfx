@@ -173,7 +173,7 @@ internal sealed class TestMethodRunner
         {
             if (_test.TestDataSourceIgnoreMessage is not null)
             {
-                return [new(UnitTestOutcome.Ignored, _test.TestDataSourceIgnoreMessage)];
+                return [new() { Outcome = UTF.UnitTestOutcome.Ignored, IgnoreReason = _test.TestDataSourceIgnoreMessage }];
             }
 
             object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
