@@ -483,11 +483,7 @@ public class TestClassInfo
             return null;
         }
 
-        TimeoutInfo? timeout = null;
-        if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
-        {
-            timeout = localTimeout;
-        }
+        TimeoutInfo? timeout = ClassInitializeMethodTimeoutMilliseconds.GetValueOrDefault(methodInfo);
 
         return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(null, testContext),
@@ -790,11 +786,7 @@ public class TestClassInfo
 
     private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, int remainingCleanupCount, TestContext testContext)
     {
-        TimeoutInfo? timeout = null;
-        if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
-        {
-            timeout = localTimeout;
-        }
+        TimeoutInfo? timeout = ClassCleanupMethodTimeoutMilliseconds.GetValueOrDefault(methodInfo);
 
         return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () =>

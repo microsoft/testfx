@@ -95,7 +95,7 @@ internal sealed class TestingPlatformEntryPoint
 
         public void CopyMetadataTo(ITaskItem destinationItem) => throw new NotImplementedException();
 
-        public string? GetMetadata(string metadataName) => _keyValuePairs.TryGetValue(metadataName, out string? value) ? value : null;
+        public string? GetMetadata(string metadataName) => _keyValuePairs.GetValueOrDefault(metadataName);
 
         public void RemoveMetadata(string metadataName) => throw new NotImplementedException();
 

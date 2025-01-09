@@ -84,7 +84,7 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
         Dictionary<string, PropertyInfo> type = ReflectionDataProvider.TypePropertiesByName[classType];
 
         // We as asking for TestContext here, it may not be there.
-        PropertyInfo? property = type.TryGetValue(propertyName, out PropertyInfo? propertyInfo) ? propertyInfo : null;
+        PropertyInfo? property = type.GetValueOrDefault(propertyName);
         return !includeNonPublic && (property?.GetMethod?.IsPublic == true || property?.SetMethod?.IsPublic == true)
             ? null
             : property;

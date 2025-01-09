@@ -165,7 +165,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             {
                 foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataTypeConsumer.Value)
                 {
-                    if (!consumerToDrain.TryGetValue(asyncMultiProducerMultiConsumerDataProcessor, out long _))
+                    if (!consumerToDrain.ContainsKey(asyncMultiProducerMultiConsumerDataProcessor))
                     {
                         consumerToDrain.Add(asyncMultiProducerMultiConsumerDataProcessor, 0);
                     }

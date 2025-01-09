@@ -46,9 +46,7 @@ public sealed class SourceGeneratedReflectionDataProvider
 
     internal void GetNavigationData(string className, string methodName, out int minLineNumber, out string? fileName)
     {
-        bool found = TypeMethodLocations.TryGetValue(className, out TypeLocation? typeLocation);
-
-        if (!found || typeLocation == null)
+        if (!TypeMethodLocations.TryGetValue(className, out TypeLocation? typeLocation))
         {
             minLineNumber = 0;
             fileName = null;
