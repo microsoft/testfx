@@ -25,7 +25,6 @@
 
   <!-- The TFMs to build and test against. -->
   <PropertyGroup>
-    <NetFrameworkMinimum>net462</NetFrameworkMinimum>
     <UwpMinimum>uap10.0.16299</UwpMinimum>
     <WinUiMinimum>net6.0-windows10.0.18362.0</WinUiMinimum>
 
