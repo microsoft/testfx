@@ -246,7 +246,7 @@ public class ReflectionUtilityTests : TestContainer
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
-    private Assembly ReflectionOnlyOnResolve(object sender, ResolveEventArgs args)
+    private static Assembly ReflectionOnlyOnResolve(object sender, ResolveEventArgs args)
     {
         string assemblyNameToLoad = AppDomain.CurrentDomain.ApplyPolicy(args.Name);
 

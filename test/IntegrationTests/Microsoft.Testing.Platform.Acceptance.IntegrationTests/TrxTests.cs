@@ -188,7 +188,7 @@ Out of process file artifacts produced:
         Assert.IsTrue(await CheckTrxContentsMatchAsync(match.Value, trxContentsPattern), $"Output of the test host is:\n{testHostResult}");
     }
 
-    private async Task<bool> CheckTrxContentsMatchAsync(string path, string pattern)
+    private static async Task<bool> CheckTrxContentsMatchAsync(string path, string pattern)
     {
         using StreamReader reader = new(path);
         return Regex.IsMatch(await reader.ReadToEndAsync(), pattern);

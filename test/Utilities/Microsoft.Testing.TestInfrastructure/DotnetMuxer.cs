@@ -107,7 +107,7 @@ public class DotnetMuxer : IDisposable
             cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
             timeoutInSeconds: timeoutInSeconds);
 
-    private IDictionary<string, string?> MergeEnvironmentVariables(
+    private static IDictionary<string, string?> MergeEnvironmentVariables(
         IDictionary<string, string?> environmentVariables1,
         IDictionary<string, string?> environmentVariables2)
     {

@@ -117,7 +117,7 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
             context.RegisterSymbolAction(AnalyzeSymbol, SymbolKind.Method);
         }
 
-        private void AnalyzeSymbol(SymbolAnalysisContext context)
+        private static void AnalyzeSymbol(SymbolAnalysisContext context)
         {
             var method = (IMethodSymbol)context.Symbol;
             if (method.Name.EndsWith("Async", StringComparison.Ordinal))
