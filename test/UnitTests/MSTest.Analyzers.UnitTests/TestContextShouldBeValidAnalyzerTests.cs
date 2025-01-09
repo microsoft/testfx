@@ -393,7 +393,6 @@ public sealed class TestContextShouldBeValidAnalyzerTests
                 {
                     TestContext = testContext;
                 }
-            
                 public TestContext TestContext { get; }
             }
             """;
@@ -412,12 +411,10 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             public class MyTestClass
             {
                 private readonly TestContext _testContext;
-            
                 public MyTestClass(TestContext testContext)
                 {
                     _testContext = testContext;
                 }
-            
                 public TestContext TestContext => _testContext;
             }
             """;

@@ -79,15 +79,12 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
                 private void PrivateMethod()
                 {
                 }
-            
                 protected void ProtectedMethod()
                 {
                 }
-            
                 internal protected void InternalProtectedMethod()
                 {
                 }
-            
                 internal void InternalMethod()
                 {
                 }
