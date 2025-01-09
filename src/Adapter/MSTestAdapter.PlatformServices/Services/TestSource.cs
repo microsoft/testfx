@@ -79,11 +79,12 @@ public class TestSource : ITestSource
     /// <param name="assemblyName"> The assembly name. </param>
     /// <param name="source"> The source. </param>
     /// <returns> True if the assembly is referenced. </returns>
-    public bool IsAssemblyReferenced(AssemblyName assemblyName, string source)
+    public bool IsAssemblyReferenced(AssemblyName? assemblyName, string? source)
     {
 #if NETFRAMEWORK
         // This loads the dll in a different app domain. We can optimize this to load in the current domain since this code could be run in a new app domain anyway.
-        bool? utfReference = AssemblyHelper.DoesReferencesAssembly(source, assemblyName);
+        // suppress null on DoesReferencesAssembly since it does actually allow nulls
+        bool? utfReference = AssemblyHelper.DoesReferencesAssembly(source!, assemblyName!);
 
         // If no reference to UTF don't run discovery. Take conservative approach. If not able to find proceed with discovery.
         return !utfReference.HasValue || utfReference.Value;

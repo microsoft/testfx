@@ -1,1 +1,2 @@
 #nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestSource.IsAssemblyReferenced(System.Reflection.AssemblyName? assemblyName, string? source) -> bool
