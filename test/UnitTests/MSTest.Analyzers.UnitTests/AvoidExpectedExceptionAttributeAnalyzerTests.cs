@@ -450,11 +450,10 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 public async Task TestMethod()
                 {
                     Console.WriteLine("Hello, world!");
-                    await Assert.ThrowsExactlyAsync<Exception>(async () =>
-                            // In ideal world, it's best if the codefix can separate await M() to a
-                            // variable, then only wrap M(someVariable) in Assert.ThrowsException
-                            // Let's also have this comment serve as a test for trivia ;)
-                            M(await M()));
+                    // In ideal world, it's best if the codefix can separate await M() to a
+                    // variable, then only wrap M(someVariable) in Assert.ThrowsException
+                    // Let's also have this comment serve as a test for trivia ;)
+                    await Assert.ThrowsExactlyAsync<Exception>(async () => M(await M()));
                 }
 
                 private static Task<int> M() => Task.FromResult(0);
@@ -488,7 +487,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 }
             }
             """;
-        // TODO: Trivia be preserved in the fixed code.
+
         string fixedCode = """
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -501,6 +500,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 {
                     M1();
                     Assert.ThrowsExactly<Exception>(() => M2());
+
                     void M1() { }
                     void M2() { }
                 }
@@ -685,8 +685,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.ThrowsExactly<Exception>(() => Console.WriteLine());
-                    ;
+                    Assert.ThrowsExactly<Exception>(() => Console.WriteLine()); ;
                 }
             }
             """;
@@ -733,7 +732,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                     {
                         Console.WriteLine(x);
                     }
-            });
+                    });
                 }
             }
             """;

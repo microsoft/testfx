@@ -171,12 +171,12 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
 
         expressionToUseInLambda = expressionToUseInLambda switch
         {
-            ThrowStatementSyntax throwStatement => generator.ThrowExpression(throwStatement.Expression),
+            ThrowStatementSyntax { Expression: not null } throwStatement => generator.ThrowExpression(throwStatement.Expression),
             // This is the case when the last statement of the method body is a loop for example (e.g, for, foreach, while, do while).
             // It can also happen for using statement, or switch statement.
             // In that case, we need to wrap in a block syntax (i.e, curly braces)
             StatementSyntax expressionToUseAsStatement => SyntaxFactory.Block(expressionToUseAsStatement),
-            _ => expressionToUseInLambda,
+            _ => expressionToUseInLambda.WithoutTrivia(),
         };
 
         SyntaxNode newLambdaExpression = generator.VoidReturningLambdaExpression(expressionToUseInLambda);
@@ -211,7 +211,7 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
             newStatement = generator.ExpressionStatement(newStatement);
         }
 
-        editor.ReplaceNode(expressionAndNodeToReplace.Value.NodeToReplace, newStatement);
+        editor.ReplaceNode(expressionAndNodeToReplace.Value.NodeToReplace, newStatement.WithTriviaFrom(expressionAndNodeToReplace.Value.NodeToReplace));
         return editor.GetChangedDocument();
     }
 }
