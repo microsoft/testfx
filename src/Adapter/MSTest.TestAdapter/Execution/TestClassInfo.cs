@@ -790,7 +790,11 @@ public class TestClassInfo
 
     private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, int remainingCleanupCount, TestContext testContext)
     {
-        TimeoutInfo? timeout = ClassCleanupMethodTimeoutMilliseconds.GetValueOrDefault(methodInfo);
+        TimeoutInfo? timeout = null;
+        if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
+        {
+            timeout = localTimeout;
+        }
 
         return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () =>
