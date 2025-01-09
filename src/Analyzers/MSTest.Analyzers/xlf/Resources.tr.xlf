@@ -117,14 +117,29 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">Onay deyimi bağımsız değişkenleri doğru sıralama düzeninde geçirilmelidir</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
+        <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
+        <target state="translated">Değer türlerini karşılaştırılırken 'Assert.AreSame'/'Assert.AreNotSame' yerine 'Assert.AreEqual'/'Assert.AreNotSame' kullanın. 'Assert.AreSame'/'Assert.AreNotSame' değerine bir değer türü geçirilemedi (yeni bir nesne oluşturuluyor). 'Assert.AreSame'/'Assert.AreNotSame' başvuruya göre karşılaştırmayı yapar, kutulama gerçekleşirken 'Assert.AreSame' başarısız olur ve 'Assert.AreNotSame' her zaman başarılı olur.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
+        <source>Use '{0}' instead of '{1}' when comparing value types</source>
+        <target state="translated">Değer '{0}' karşılaştırılırken '{1}' yerine farklı bir ad kullanın</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
+        <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
+        <target state="translated">Değer türleriyle 'Assert.AreSame' veya 'Assert.AreNotSame' kullanma</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
-        <target state="translated">Yalnızca beklenen çağrının beklenen özel durumu oluşturmasını sağladığı için '[ExpectedException]' yerine 'Assert.ThrowsException' veya 'Assert.ThrowsExceptionAsync' tercih edin. Onaylama API'leri de daha fazla esneklik sağlar ve özel durumun ek özelliklerini onaylamanıza izin verir.</target>
+        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
+        <target state="translated">Yalnızca beklenen çağrının beklenen özel durumu oluşturmasını sağladığı için '[ExpectedException]' yerine 'Assert.ThrowsExactly' veya 'Assert.ThrowsExceptionAsync' tercih edin. Onaylama API'leri de daha fazla esneklik sağlar ve özel durumun ek özelliklerini onaylamanıza izin verir.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</source>
-        <target state="translated">'[ExpectedException]' yerine 'Assert.ThrowsException/ThrowsExceptionAsync' tercih edin</target>
+        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
+        <target state="translated">'[ExpectedException]' yerine 'Assert.ThrowsExactly/ThrowsExactlyAsync' tercih edin</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
@@ -724,6 +739,16 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">'[DeploymentItem]' yalnızca test sınıfında veya test yönteminde belirtilebilir</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsMessageFormat">
+        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
+        <target state="translated">'Assert.ThrowsException' yerine 'Assert.ThrowsExactly' kullanın</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsTitle">
+        <source>Use newer methods to assert exceptions</source>
+        <target state="translated">Özel durumları onaylamak için daha yeni yöntemler kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

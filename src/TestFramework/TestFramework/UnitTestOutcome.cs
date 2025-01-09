@@ -59,4 +59,9 @@ public enum UnitTestOutcome : int
     /// The specific test cannot be found.
     /// </summary>
     NotFound,
+
+    /// <summary>
+    /// Test is marked as ignored.
+    /// </summary>
+    Ignored,
 }

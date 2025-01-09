@@ -89,6 +89,21 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAnAbstractClassHasDeploymentItem_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [DeploymentItem("")]
+            public abstract class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenAClassHasDeploymentItem_Diagnostic()
     {
         string code = """

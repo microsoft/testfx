@@ -407,12 +407,10 @@ public class TestExecutionManager
             ExecuteTestsWithTestRunner(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner);
         }
 
-#if !WINDOWS_UWP
-        if (MSTestGracefulStopTestExecutionCapability.Instance.IsStopRequested)
+        if (PlatformServiceProvider.Instance.IsGracefulStopRequested)
         {
             testRunner.ForceCleanup(sourceLevelParameters!, new RemotingMessageLogger(frameworkHandle));
         }
-#endif
 
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
     }
@@ -436,12 +434,10 @@ public class TestExecutionManager
         foreach (TestCase currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
-#if !WINDOWS_UWP
-            if (MSTestGracefulStopTestExecutionCapability.Instance.IsStopRequested)
+            if (PlatformServiceProvider.Instance.IsGracefulStopRequested)
             {
                 break;
             }
-#endif
 
             // If it is a fixture test, add it to the list of fixture tests and do not execute it.
             // It is executed by test itself.
@@ -517,15 +513,15 @@ public class TestExecutionManager
         var testContextProperties = new Dictionary<string, object?>(capacity: 8);
 
         // Add tcm properties.
-        foreach (KeyValuePair<TestProperty, object?> propertyPair in tcmProperties)
+        foreach ((TestProperty key, object? value) in tcmProperties)
         {
-            testContextProperties[propertyPair.Key.Id] = propertyPair.Value;
+            testContextProperties[key.Id] = value;
         }
 
         // Add source level parameters.
-        foreach (KeyValuePair<string, object> propertyPair in sourceLevelParameters)
+        foreach ((string key, object value) in sourceLevelParameters)
         {
-            testContextProperties[propertyPair.Key] = propertyPair.Value;
+            testContextProperties[key] = value;
         }
 
         return testContextProperties;

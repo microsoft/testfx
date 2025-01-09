@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-using Microsoft.Testing.Platform.Configurations;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #endif
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;

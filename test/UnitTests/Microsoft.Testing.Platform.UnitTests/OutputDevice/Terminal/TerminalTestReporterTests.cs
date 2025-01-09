@@ -32,13 +32,13 @@ public sealed class TerminalTestReporterTests
         StringAssert.Contains(terminal.Output, "    at Microsoft.Testing.Platform.UnitTests.TerminalTestReporterTests.AppendStackFrameFormatsStackTraceLineCorrectly()");
 #endif
         // Line number without the respective file
-        Assert.IsFalse(terminal.Output.ToString().Contains(" :0"));
+        Assert.IsFalse(terminal.Output.Contains(" :0"));
     }
 
     // Code with line when we have symbols
     [DataRow(
         "   at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:line 16",
-        $"    at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:16")]
+        "    at TestingPlatformEntryPoint.Main(String[]) in /_/TUnit.TestProject/obj/Release/net8.0/osx-x64/TestPlatformEntryPoint.cs:16")]
     // code without line when we don't have symbols
     [DataRow(
         "   at TestingPlatformEntryPoint.<Main>(String[])",

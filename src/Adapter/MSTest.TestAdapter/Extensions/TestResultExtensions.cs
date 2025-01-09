@@ -40,6 +40,12 @@ public static class TestResultExtensions
                             ? testException.StackTraceInformation
                             : testFailureException.TryGetStackTraceInformation()))
                 : new UnitTestResult { Outcome = outcome };
+
+            if (testResult.IgnoreReason is not null)
+            {
+                unitTestResult.ErrorMessage = testResult.IgnoreReason;
+            }
+
             unitTestResult.StandardOut = testResult.LogOutput;
             unitTestResult.StandardError = testResult.LogError;
             unitTestResult.DebugTrace = testResult.DebugTrace;

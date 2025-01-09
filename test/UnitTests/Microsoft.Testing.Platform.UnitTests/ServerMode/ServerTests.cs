@@ -55,7 +55,7 @@ public sealed class ServerTests
     {
         using var server = TcpServer.Create();
 
-        string[] args = ["--no-banner", $"--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
+        string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
         TestApplicationHooks testApplicationHooks = new();
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.TestHost.AddTestApplicationLifecycleCallbacks(_ => testApplicationHooks);
@@ -134,7 +134,7 @@ public sealed class ServerTests
         TaskCompletionSource<bool> discoveryStartedTaskCompletionSource = new();
         TaskCompletionSource<bool> discoveryCanceledTaskCompletionSource = new();
 
-        string[] args = ["--no-banner", $"--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
+        string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter
         {
@@ -245,7 +245,7 @@ public sealed class ServerTests
     private static async Task WriteMessageAsync(StreamWriter writer, string message)
     {
         await writer.WriteLineAsync($"Content-Length: {message.Length}");
-        await writer.WriteLineAsync($"Content-Type: application/testingplatform");
+        await writer.WriteLineAsync("Content-Type: application/testingplatform");
         await writer.WriteLineAsync();
         await writer.WriteAsync(message);
         await writer.FlushAsync();

@@ -214,6 +214,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extension
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extensions.Retry", "src\Platform\Microsoft.Testing.Extensions.Retry\Microsoft.Testing.Extensions.Retry.csproj", "{FB4ED3AA-A12E-4192-861F-4B025876AA0F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Platform.DotNetTestClient", "src\Package\Microsoft.Testing.Platform.DotNetTestClient\Microsoft.Testing.Platform.DotNetTestClient.csproj", "{4E4F965E-2EEF-471B-A5DA-A53BFA967A95}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -500,6 +502,10 @@ Global
 		{FB4ED3AA-A12E-4192-861F-4B025876AA0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB4ED3AA-A12E-4192-861F-4B025876AA0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB4ED3AA-A12E-4192-861F-4B025876AA0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E4F965E-2EEF-471B-A5DA-A53BFA967A95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E4F965E-2EEF-471B-A5DA-A53BFA967A95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E4F965E-2EEF-471B-A5DA-A53BFA967A95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E4F965E-2EEF-471B-A5DA-A53BFA967A95}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -587,6 +593,7 @@ Global
 		{4A93E1A2-B61E-31B2-33F2-478156A9B5E7} = {E7F15C9C-3928-47AD-8462-64FD29FFCA54}
 		{53EBA540-F6CF-0715-1F62-241A53F537EC} = {6AEE1440-FDF0-4729-8196-B24D0E333550}
 		{FB4ED3AA-A12E-4192-861F-4B025876AA0F} = {6AEE1440-FDF0-4729-8196-B24D0E333550}
+		{4E4F965E-2EEF-471B-A5DA-A53BFA967A95} = {E374A3A6-C364-4890-B315-D60F5C682B6E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}

@@ -126,7 +126,7 @@ Microsoft Testing Platform:
   Version: .+
   Dynamic Code Supported: True
   Runtime information: .+
-  {(tfm != TargetFrameworks.NetFramework[0] ? "###SKIP###" : $"Runtime location: .+")}
+  {(tfm != TargetFrameworks.NetFramework[0] ? "###SKIP###" : "Runtime location: .+")}
   Test module: .+{TestAssetFixture.NoExtensionAssetName}.*
 Built-in command line providers:
   PlatformCommandLineProvider
@@ -392,7 +392,7 @@ Microsoft Testing Platform:
   Version: *
   Dynamic Code Supported: True
   Runtime information: *
-  {(tfm != TargetFrameworks.NetFramework[0] ? "###SKIP###" : $"Runtime location: *")}
+  {(tfm != TargetFrameworks.NetFramework[0] ? "###SKIP###" : "Runtime location: *")}
   Test module: *{TestAssetFixture.AllExtensionsAssetName}*
 Built-in command line providers:
   PlatformCommandLineProvider

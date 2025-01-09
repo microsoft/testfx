@@ -65,7 +65,7 @@ internal sealed class TestMethodRunner
     internal UnitTestResult[] Execute(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(_testMethodInfo.Parent.ClassAttribute);
-        bool isSTATestMethod = _testMethodInfo.TestMethodOptions.Executor is not null && AttributeComparer.IsDerived<STATestMethodAttribute>(_testMethodInfo.TestMethodOptions.Executor);
+        bool isSTATestMethod = AttributeComparer.IsDerived<STATestMethodAttribute>(_testMethodInfo.TestMethodOptions.Executor);
         bool isSTARequested = isSTATestClass || isSTATestMethod;
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTARequested && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
@@ -163,26 +163,18 @@ internal sealed class TestMethodRunner
         List<TestResult> results = [];
         if (_testMethodInfo.TestMethodOptions.Executor == null)
         {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
-                "Not able to get executor for method {0}.{1}",
-                _testMethodInfo.TestClassName,
-                _testMethodInfo.TestMethodName);
-
-            TestResult emptyResult = new()
-            {
-                Outcome = UTF.UnitTestOutcome.Unknown,
-                TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult),
-            };
-            _testContext.SetOutcome(emptyResult.Outcome);
-
-            results.Add(emptyResult);
-            return results.ToUnitTestResults();
+            throw ApplicationStateGuard.Unreachable();
         }
 
         bool isDataDriven = false;
         var parentStopwatch = Stopwatch.StartNew();
         if (_test.DataType == DynamicDataType.ITestDataSource)
         {
+            if (_test.TestDataSourceIgnoreMessage is not null)
+            {
+                return [new(UnitTestOutcome.Ignored, _test.TestDataSourceIgnoreMessage)];
+            }
+
             object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
             TestResult[] testResults = ExecuteTestWithDataSource(null, data);
             results.AddRange(testResults);
@@ -276,6 +268,16 @@ internal sealed class TestMethodRunner
 
         foreach (UTF.ITestDataSource testDataSource in testDataSources)
         {
+            if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { } ignoreMessage })
+            {
+                results.Add(new()
+                {
+                    Outcome = UTF.UnitTestOutcome.Ignored,
+                    IgnoreReason = ignoreMessage,
+                });
+                continue;
+            }
+
             IEnumerable<object?[]>? dataSource;
 
             // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
@@ -424,7 +426,7 @@ internal sealed class TestMethodRunner
     {
         try
         {
-            return _testMethodInfo.TestMethodOptions.Executor!.Execute(testMethodInfo);
+            return _testMethodInfo.TestMethodOptions.Executor.Execute(testMethodInfo);
         }
         catch (Exception ex)
         {

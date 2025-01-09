@@ -33,7 +33,7 @@ public class ClassCleanupManagerTests : TestContainer
 
         var classCleanupManager = new ClassCleanupManager(testsToRun, ClassCleanupBehavior.EndOfClass, ClassCleanupBehavior.EndOfClass, reflectHelper);
 
-        TestClassInfo testClassInfo = new(typeof(ClassCleanupManagerTests), null, true, null, null, null)
+        TestClassInfo testClassInfo = new(typeof(ClassCleanupManagerTests), null, true, null, null)
         {
             // This needs to be set, to allow running class cleanup.
             ClassCleanupMethod = classCleanupMethodInfo,

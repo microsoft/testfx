@@ -117,14 +117,29 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">應該以正確的順序傳遞判斷提示引數</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
+        <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
+        <target state="translated">比較值類型時，請使用 'Assert.AreEqual'/'Assert.AreNotEqual' 取代 'Assert.AreSame'/'Assert.AreNotSame'。將值類型傳遞至 『Assert.AreSame』/'Assert.AreNotSame' 將會在建立新物件) (方塊化。因為 'Assert.AreSame'/'Assert.AreNotSame' 依參照進行比較，當進行拳擊時，'Assert.AreSame' 將會失敗，而且 'Assert.AreNotSame' 一律會通過。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
+        <source>Use '{0}' instead of '{1}' when comparing value types</source>
+        <target state="translated">比較值類型時，使用 '{0}' 而非 '{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
+        <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
+        <target state="translated">不要在值類型中使用 'Assert.AreSame' 或 'Assert.AreNotSame'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
-        <target state="translated">偏好 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' 而非 '[ExpectedException]'，因為它可確保只有預期的呼叫會擲出預期的例外狀況。判斷提示 API 也提供更多彈性，並允許您斷言例外狀況的額外屬性。</target>
+        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
+        <target state="translated">偏好 'Assert.ThrowsExactly' 或 'Assert.ThrowsExactlyAsync' 而不是 '[ExpectedException]'，因為它可確保只有預期的呼叫會擲出預期的例外狀況。判斷提示 API 也提供更多彈性，並允許您判斷提示例外狀況的額外屬性。</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</source>
-        <target state="translated">偏好 'Assert.ThrowsException/ThrowsExceptionAsync' 而非 '[ExpectedException]'</target>
+        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
+        <target state="translated">偏好 'Assert.ThrowsExactly/ThrowsExactlyAsync' 而不是 '[ExpectedException]'</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
@@ -722,6 +737,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">'[DeploymentItem]' 只能在測試類或測試方法上指定</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsMessageFormat">
+        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
+        <target state="translated">使用 'Assert.ThrowsExactly' 而非 'Assert.ThrowsException'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsTitle">
+        <source>Use newer methods to assert exceptions</source>
+        <target state="translated">使用較新的方法判斷例外狀況</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

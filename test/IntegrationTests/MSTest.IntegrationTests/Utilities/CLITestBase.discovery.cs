@@ -19,7 +19,7 @@ namespace Microsoft.MSTestV2.CLIAutomation;
 
 public partial class CLITestBase : TestContainer
 {
-    internal ImmutableArray<TestCase> DiscoverTests(string assemblyPath, string testCaseFilter = null)
+    internal static ImmutableArray<TestCase> DiscoverTests(string assemblyPath, string testCaseFilter = null)
     {
         var unitTestDiscoverer = new UnitTestDiscoverer();
         var logger = new InternalLogger();
@@ -33,7 +33,7 @@ public partial class CLITestBase : TestContainer
         return sink.DiscoveredTests;
     }
 
-    internal ImmutableArray<TestResult> RunTests(IEnumerable<TestCase> testCases)
+    internal static ImmutableArray<TestResult> RunTests(IEnumerable<TestCase> testCases)
     {
         var testExecutionManager = new TestExecutionManager();
         var frameworkHandle = new InternalFrameworkHandle();

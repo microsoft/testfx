@@ -367,7 +367,7 @@ public class UnitTestDiscovererTests : TestContainer
         SetTestCaseNavigationData(testCase1, testNavigationData.FileName, testNavigationData.MinLineNumber);
     }
 
-    private void SetTestCaseNavigationData(TestCase testCase, string fileName, int lineNumber)
+    private static void SetTestCaseNavigationData(TestCase testCase, string fileName, int lineNumber)
     {
         testCase.LineNumber = lineNumber;
         testCase.CodeFilePath = fileName;
