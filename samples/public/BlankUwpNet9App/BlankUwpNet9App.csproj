@@ -13,7 +13,7 @@
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <EnableMsixTooling>true</EnableMsixTooling>
 	<UnitTestPlatformVersion Condition="'$(UnitTestPlatformVersion)' == ''">$(VisualStudioVersion)</UnitTestPlatformVersion>
-      
+
     <!-- Set this property to override the version of the MSIX package to use -->
     <MicrosoftWindowsSDKBuildToolsMSIXPackageVersion>1.0.20241009.2</MicrosoftWindowsSDKBuildToolsMSIXPackageVersion>
   </PropertyGroup>
@@ -21,15 +21,15 @@
   <ItemGroup>
 	<ProjectCapability Include="TestContainer" />
     <PackageReference Include="Microsoft.Windows.SDK.CPP" Version="10.0.26100.2454" />
-	  
+
 	<!-- Do not use MSTest metapackage as we don't want to use Microsoft.NET.Test.Sdk -->
-	<PackageReference Include="MSTest.TestFramework" Version="3.7.0-dev" />
-	<PackageReference Include="MSTest.TestAdapter" Version="3.7.0-dev" />
-	<PackageReference Include="MSTest.Analyzers" Version="3.7.0-dev" />
+	<PackageReference Include="MSTest.TestFramework" Version="3.8.0-dev" />
+	<PackageReference Include="MSTest.TestAdapter" Version="3.8.0-dev" />
+	<PackageReference Include="MSTest.Analyzers" Version="3.8.0-dev" />
 	<!-- Instead we want to rely on Microsoft.TestPlatform.TestHost to support msix -->
 	<PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.12.0" />
-	
-	  
+
+
 	<!--<PackageReference Include="Microsoft.TestPlatform.ObjectModel" IncludeAssets="None" Version="17.12.0" />-->
 	  <!--<SDKReference Include="TestPlatform.Universal, Version=$(UnitTestPlatformVersion)" />-->
   </ItemGroup>
