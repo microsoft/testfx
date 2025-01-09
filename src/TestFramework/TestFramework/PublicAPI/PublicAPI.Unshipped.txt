@@ -190,6 +190,9 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpola
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AssertThrowsExactlyInterpolatedStringHandler(int literalLength, int formattedCount, System.Action! action, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.IgnoreMessage.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType
+Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType.Constant = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType
+Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType.Exponential = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.DynamicDataAttribute(string! dynamicDataSourceName, System.Type! dynamicDataDeclaringType) -> void
@@ -202,6 +205,18 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.AutoDetect = 
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.IgnoreMessage.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.BackoffType.get -> Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType
+Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.BackoffType.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.MaxRetryAttempts.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.MillisecondsDelayBetweenRetries.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.MillisecondsDelayBetweenRetries.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.RetryAttribute(int maxRetryAttempts) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext
+Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.ExecuteTaskGetter.get -> System.Func<System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!>!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult
+Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.AddResult(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! testResults) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.RetryResult() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.IgnoreMessage.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.IgnoreMessage.get -> string?
@@ -247,3 +262,4 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TExcept
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Action! action, System.Func<System.Exception?, string!>! messageBuilder) -> TException!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, string! message = "", params object![]! messageArgs) -> System.Threading.Tasks.Task<TException!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, System.Func<System.Exception?, string!>! messageBuilder) -> System.Threading.Tasks.Task<TException!>!
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext! retryContext) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult!>!

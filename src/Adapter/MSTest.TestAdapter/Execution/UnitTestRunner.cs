@@ -6,6 +6,7 @@ using System.Security;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -122,13 +123,19 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         static UnitTestOutcome GetOutcome(Exception? exception) => exception == null ? UnitTestOutcome.Passed : UnitTestOutcome.Failed;
     }
 
+    // Task cannot cross app domains.
+    // For now, TestExecutionManager will call this sync method which is hacky.
+    // If we removed AppDomains in v4, we should use the async method and remove this one.
+    internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
+        => RunSingleTestAsync(testMethod, testContextProperties, messageLogger).GetAwaiter().GetResult();
+
     /// <summary>
     /// Runs a single test.
     /// </summary>
     /// <param name="testMethod"> The test Method. </param>
     /// <param name="testContextProperties"> The test context properties. </param>
     /// <returns> The <see cref="UnitTestResult"/>. </returns>
-    internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
+    internal async Task<UnitTestResult[]> RunSingleTestAsync(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
     {
         Guard.NotNull(testMethod);
 
@@ -179,8 +186,23 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                     {
                         // Run the test method
                         testContextForTestExecution.SetOutcome(testContextForClassInit.Context.CurrentTestOutcome);
+                        RetryAttribute? retryAttribute = testMethodInfo.RetryAttribute;
                         var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContextForTestExecution);
-                        result = testMethodRunner.Execute(classInitializeResult.StandardOut!, classInitializeResult.StandardError!, classInitializeResult.DebugTrace!, classInitializeResult.TestContextMessages!).ToUnitTestResults();
+                        List<TestResult> firstRunResult = testMethodRunner.Execute(classInitializeResult.StandardOut!, classInitializeResult.StandardError!, classInitializeResult.DebugTrace!, classInitializeResult.TestContextMessages!);
+                        result = firstRunResult.ToUnitTestResults();
+                        if (retryAttribute is not null && !RetryAttribute.IsAcceptableResultForRetry(firstRunResult))
+                        {
+                            RetryResult retryResult = await retryAttribute.ExecuteAsync(
+                                new RetryContext(
+                                    () => Task.FromResult(
+                                        testMethodRunner.Execute(
+                                            classInitializeResult.StandardOut!,
+                                            classInitializeResult.StandardError!,
+                                            classInitializeResult.DebugTrace!,
+                                            classInitializeResult.TestContextMessages!).ToArray())));
+
+                            result = retryResult.TryGetLast()?.ToUnitTestResults() ?? throw ApplicationStateGuard.Unreachable();
+                        }
                     }
                 }
             }
