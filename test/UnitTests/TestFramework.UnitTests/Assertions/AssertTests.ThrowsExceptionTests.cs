@@ -235,4 +235,180 @@ public partial class AssertTests
 
     public async Task ThrowsExactlyAsync_WhenExceptionExpectedType_ShouldNotThrow()
         => await Assert.ThrowsExactlyAsync<ArgumentNullException>(() => throw new ArgumentNullException());
+
+    public void Throws_WithMessageBuilder_Passes()
+    {
+        bool wasBuilderCalled = false;
+        Assert.Throws<ArgumentNullException>(() => throw new ArgumentNullException(), messageBuilder: _ =>
+        {
+            wasBuilderCalled = true;
+            return "message constructed via builder.";
+        });
+
+        Verify(!wasBuilderCalled);
+    }
+
+    public void Throws_WithMessageBuilder_FailsBecauseNoException()
+    {
+        bool wasBuilderCalled = false;
+        Exception exceptionPassedToBuilder = null;
+        AssertFailedException assertFailedEx = VerifyThrows<AssertFailedException>(() => Assert.Throws<ArgumentNullException>(() => { }, messageBuilder: ex =>
+        {
+            wasBuilderCalled = true;
+            exceptionPassedToBuilder = ex;
+            return "message constructed via builder.";
+        }));
+
+        Verify(wasBuilderCalled);
+        Verify(exceptionPassedToBuilder is null);
+        Verify(assertFailedEx.Message == "Assert.Throws failed. Expected exception type:<System.ArgumentNullException> but no exception was thrown. message constructed via builder.");
+    }
+
+    public void Throws_WithMessageBuilder_FailsBecauseTypeMismatch()
+    {
+        bool wasBuilderCalled = false;
+        Exception exceptionPassedToBuilder = null;
+        AssertFailedException assertFailedEx = VerifyThrows<AssertFailedException>(() => Assert.Throws<ArgumentNullException>(() => throw new ArgumentOutOfRangeException("MyParamNameHere"), messageBuilder: ex =>
+        {
+            wasBuilderCalled = true;
+            exceptionPassedToBuilder = ex;
+            return "message constructed via builder.";
+        }));
+
+        Verify(wasBuilderCalled);
+        Verify(exceptionPassedToBuilder is ArgumentOutOfRangeException { ParamName: "MyParamNameHere" });
+        Verify(assertFailedEx.Message == "Assert.Throws failed. Expected exception type:<System.ArgumentNullException>. Actual exception type:<System.ArgumentOutOfRangeException>. message constructed via builder.");
+    }
+
+    public void ThrowsExactly_WithMessageBuilder_Passes()
+    {
+        bool wasBuilderCalled = false;
+        Assert.ThrowsExactly<ArgumentNullException>(() => throw new ArgumentNullException(), messageBuilder: _ =>
+        {
+            wasBuilderCalled = true;
+            return "message constructed via builder.";
+        });
+
+        Verify(!wasBuilderCalled);
+    }
+
+    public void ThrowsExactly_WithMessageBuilder_FailsBecauseNoException()
+    {
+        bool wasBuilderCalled = false;
+        Exception exceptionPassedToBuilder = null;
+        AssertFailedException assertFailedEx = VerifyThrows<AssertFailedException>(() => Assert.ThrowsExactly<ArgumentNullException>(() => { }, messageBuilder: ex =>
+        {
+            wasBuilderCalled = true;
+            exceptionPassedToBuilder = ex;
+            return "message constructed via builder.";
+        }));
+
+        Verify(wasBuilderCalled);
+        Verify(exceptionPassedToBuilder is null);
+        Verify(assertFailedEx.Message == "Assert.ThrowsExactly failed. Expected exception type:<System.ArgumentNullException> but no exception was thrown. message constructed via builder.");
+    }
+
+    public void ThrowsExactly_WithMessageBuilder_FailsBecauseTypeMismatch()
+    {
+        bool wasBuilderCalled = false;
+        Exception exceptionPassedToBuilder = null;
+        AssertFailedException assertFailedEx = VerifyThrows<AssertFailedException>(() => Assert.ThrowsExactly<ArgumentNullException>(() => throw new ArgumentOutOfRangeException("MyParamNameHere"), messageBuilder: ex =>
+        {
+            wasBuilderCalled = true;
+            exceptionPassedToBuilder = ex;
+            return "message constructed via builder.";
+        }));
+
+        Verify(wasBuilderCalled);
+        Verify(exceptionPassedToBuilder is ArgumentOutOfRangeException { ParamName: "MyParamNameHere" });
+        Verify(assertFailedEx.Message == "Assert.ThrowsExactly failed. Expected exception type:<System.ArgumentNullException>. Actual exception type:<System.ArgumentOutOfRangeException>. message constructed via builder.");
+    }
+
+    public async Task ThrowsAsync_WithMessageBuilder_Passes()
+    {
+        bool wasBuilderCalled = false;
+        await Assert.ThrowsAsync<ArgumentNullException>(() => Task.FromException(new ArgumentNullException()), messageBuilder: _ =>
+        {
+            wasBuilderCalled = true;
+            return "message constructed via builder.";
+        });
+
+        Verify(!wasBuilderCalled);
+    }
+
+    public async Task ThrowsAsync_WithMessageBuilder_FailsBecauseNoException()
+    {
+        bool wasBuilderCalled = false;
+        Exception exceptionPassedToBuilder = null;
+        AssertFailedException assertFailedEx = await VerifyThrowsAsync<AssertFailedException>(async () => await Assert.ThrowsAsync<ArgumentNullException>(() => Task.CompletedTask, messageBuilder: ex =>
+        {
+            wasBuilderCalled = true;
+            exceptionPassedToBuilder = ex;
+            return "message constructed via builder.";
+        }));
+
+        Verify(wasBuilderCalled);
+        Verify(exceptionPassedToBuilder is null);
+        Verify(assertFailedEx.Message == "Assert.ThrowsAsync failed. Expected exception type:<System.ArgumentNullException> but no exception was thrown. message constructed via builder.");
+    }
+
+    public async Task ThrowsAsync_WithMessageBuilder_FailsBecauseTypeMismatch()
+    {
+        bool wasBuilderCalled = false;
+        Exception exceptionPassedToBuilder = null;
+        AssertFailedException assertFailedEx = await VerifyThrowsAsync<AssertFailedException>(async () => await Assert.ThrowsAsync<ArgumentNullException>(() => Task.FromException(new ArgumentOutOfRangeException("MyParamNameHere")), messageBuilder: ex =>
+        {
+            wasBuilderCalled = true;
+            exceptionPassedToBuilder = ex;
+            return "message constructed via builder.";
+        }));
+
+        Verify(wasBuilderCalled);
+        Verify(exceptionPassedToBuilder is ArgumentOutOfRangeException { ParamName: "MyParamNameHere" });
+        Verify(assertFailedEx.Message == "Assert.ThrowsAsync failed. Expected exception type:<System.ArgumentNullException>. Actual exception type:<System.ArgumentOutOfRangeException>. message constructed via builder.");
+    }
+
+    public async Task ThrowsExactlyAsync_WithMessageBuilder_Passes()
+    {
+        bool wasBuilderCalled = false;
+        await Assert.ThrowsExactlyAsync<ArgumentNullException>(() => Task.FromException(new ArgumentNullException()), messageBuilder: _ =>
+        {
+            wasBuilderCalled = true;
+            return "message constructed via builder.";
+        });
+
+        Verify(!wasBuilderCalled);
+    }
+
+    public async Task ThrowsExactlyAsync_WithMessageBuilder_FailsBecauseNoException()
+    {
+        bool wasBuilderCalled = false;
+        Exception exceptionPassedToBuilder = null;
+        AssertFailedException assertFailedEx = await VerifyThrowsAsync<AssertFailedException>(async () => await Assert.ThrowsExactlyAsync<ArgumentNullException>(() => Task.CompletedTask, messageBuilder: ex =>
+        {
+            wasBuilderCalled = true;
+            exceptionPassedToBuilder = ex;
+            return "message constructed via builder.";
+        }));
+
+        Verify(wasBuilderCalled);
+        Verify(exceptionPassedToBuilder is null);
+        Verify(assertFailedEx.Message == "Assert.ThrowsExactlyAsync failed. Expected exception type:<System.ArgumentNullException> but no exception was thrown. message constructed via builder.");
+    }
+
+    public async Task ThrowsExactlyAsync_WithMessageBuilder_FailsBecauseTypeMismatch()
+    {
+        bool wasBuilderCalled = false;
+        Exception exceptionPassedToBuilder = null;
+        AssertFailedException assertFailedEx = await VerifyThrowsAsync<AssertFailedException>(async () => await Assert.ThrowsExactlyAsync<ArgumentNullException>(() => Task.FromException(new ArgumentOutOfRangeException("MyParamNameHere")), messageBuilder: ex =>
+        {
+            wasBuilderCalled = true;
+            exceptionPassedToBuilder = ex;
+            return "message constructed via builder.";
+        }));
+
+        Verify(wasBuilderCalled);
+        Verify(exceptionPassedToBuilder is ArgumentOutOfRangeException { ParamName: "MyParamNameHere" });
+        Verify(assertFailedEx.Message == "Assert.ThrowsExactlyAsync failed. Expected exception type:<System.ArgumentNullException>. Actual exception type:<System.ArgumentOutOfRangeException>. message constructed via builder.");
+    }
 }

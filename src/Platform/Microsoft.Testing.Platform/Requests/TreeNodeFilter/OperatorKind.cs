@@ -42,6 +42,11 @@ internal enum OperatorKind
     FilterEquals,
 
     /// <summary>
+    /// Filter not equals operator.
+    /// </summary>
+    FilterNotEquals,
+
+    /// <summary>
     /// Operator used for combining multiple filters with a logical OR.
     /// </summary>
     Or,

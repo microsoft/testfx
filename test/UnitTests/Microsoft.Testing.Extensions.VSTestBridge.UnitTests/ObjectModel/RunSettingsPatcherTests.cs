@@ -52,7 +52,7 @@ public class RunSettingsPatcherTests
     public void Patch_WithRunSettingsContainingResultsDirectory_EntryIsNotOverridden()
     {
         string runSettings =
-$"""
+"""
     <RunSettings>
         <RunConfiguration>
             <Canary>true</Canary>

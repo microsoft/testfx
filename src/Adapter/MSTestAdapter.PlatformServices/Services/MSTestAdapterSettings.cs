@@ -3,7 +3,7 @@
 
 #if !WINDOWS_UWP
 
-using Microsoft.Testing.Platform.Configurations;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -258,7 +258,7 @@ public class MSTestAdapterSettings
             }
             else
             {
-                warningMessage = $"The Directory: {path}, has following problem: {"This is not an absolute path. A base directory should be provided for this to be used as a relative path."}";
+                warningMessage = $"The Directory: {path}, has following problem: This is not an absolute path. A base directory should be provided for this to be used as a relative path.";
 
                 if (EqtTrace.IsWarningEnabled)
                 {

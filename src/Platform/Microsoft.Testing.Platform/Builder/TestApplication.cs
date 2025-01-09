@@ -127,7 +127,7 @@ public sealed class TestApplication : ITestApplication
         }
         else
         {
-            await logger.LogInformationAsync($"Version attribute not found");
+            await logger.LogInformationAsync("Version attribute not found");
         }
 
         await logger.LogInformationAsync("Logging mode: " + (syncWrite ? "synchronous" : "asynchronous"));

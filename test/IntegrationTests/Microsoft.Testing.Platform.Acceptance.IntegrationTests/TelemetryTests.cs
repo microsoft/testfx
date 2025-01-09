@@ -110,7 +110,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
     }
 
-    private async Task<string> AssertDiagnosticReportAsync(TestHostResult testHostResult, string diagPathPattern, string diagContentsPattern, string level = "Trace", string flushType = "async")
+    private static async Task<string> AssertDiagnosticReportAsync(TestHostResult testHostResult, string diagPathPattern, string diagContentsPattern, string level = "Trace", string flushType = "async")
     {
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
@@ -126,7 +126,7 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         return match.Value;
     }
 
-    private async Task<(bool IsMatch, string Content)> CheckDiagnosticContentsMatchAsync(string path, string pattern)
+    private static async Task<(bool IsMatch, string Content)> CheckDiagnosticContentsMatchAsync(string path, string pattern)
     {
         using var reader = new StreamReader(path);
         string content = await reader.ReadToEndAsync();

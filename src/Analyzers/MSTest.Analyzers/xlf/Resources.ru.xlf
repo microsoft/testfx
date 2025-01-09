@@ -19,22 +19,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should either not take any parameter, or take a single parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Чтобы метод, помеченный "[AssemblyCleanup]", был допустимым, он должен соответствовать следующим правилам:
+– не может быть объявлен для универсального класса ("generic");
+– должен быть общедоступным ("public");
+– должен быть статическим ("static");
+– не должен быть асинхронным и не возвращающим значения ("async void")
+– не должен быть специальным (метод завершения, оператор…).
+– не должен быть общим ("generic")
+;
+– не должен принимать никаких параметров или должен принимать один параметр типа TestContext
+;
+– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask";
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Тип, объявляющий такие методы, также должен соответствовать следующим правилам:
+– должен быть классом;
+– класс должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]");
+– не должен быть статическим ("static");
+– должен быть помечен как "[TestClass]" (или производный атрибут);
+– не должен быть универсальным ("generic").</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -118,14 +120,29 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Аргументы проверочных утверждений должны передаваться в правильном порядке</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
+        <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
+        <target state="translated">При сравнении типов значений используйте "Assert.AreEqual"/"Assert.AreNotEqual" вместо "Assert.AreSame"/"Assert.AreNotSame". Передача типа значения в "Assert.AreSame"/"Assert.AreNotSame" будет добавлена в рамку (создание нового объекта). Поскольку "Assert.AreSame"/"Assert.AreNotSame" выполняет сравнение по ссылке, при боксе "Assert.AreSame" будет выполняться с ошибкой, а "Assert.AreNotSame" всегда будет проходить.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
+        <source>Use '{0}' instead of '{1}' when comparing value types</source>
+        <target state="translated">Использовать '{0}' вместо '{1}' при сравнении типов значений</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
+        <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
+        <target state="translated">Не используйте Assert.AreSame или Assert.AreNotSame с типами значений</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
-        <target state="translated">Предпочитайте "Assert.ThrowsException" или "Assert.ThrowsExceptionAsync" вместо "[ExpectedException]", так как это гарантирует, что только ожидаемый вызов приводит к ожидаемому исключению. API-интерфейсы утверждения также обеспечивают дополнительную гибкость и позволяют утверждать дополнительные свойства исключения.</target>
+        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
+        <target state="translated">Предпочтите "Assert.ThrowsExactly' или 'Assert.ThrowsExactlyAsync" вместо "[ExpectedException]", так как это гарантирует, что только ожидаемый вызов вызовет ожидаемое исключение. API-интерфейсы утверждения также обеспечивают дополнительную гибкость и позволяют утверждать дополнительные свойства исключения.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</source>
-        <target state="translated">Предпочитать "Assert.ThrowsException/ThrowsExceptionAsync" вместо "[ExpectedException]"</target>
+        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
+        <target state="translated">Предпочтите "Assert.ThrowsExactly/ThrowsExactlyAsync" вместо "[ExpectedException]"</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
@@ -152,24 +169,26 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should either not take any parameter, or take a single parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">Чтобы метод, помеченный "[ClassCleanup]", был допустимым, он должен соответствовать следующим правилам:
+– не может быть объявлен для универсального класса, если не установлен режим InheritanceBehavior;
+– должен быть общедоступным ("public");
+– должен быть статическим ("static");
+– не должен быть асинхронным и не возвращающим значения ("async void")
+– не должен быть специальным (метод завершения, оператор…).
+– не должен быть общим ("generic")
+;
+– не должен принимать никаких параметров или должен принимать один параметр типа TestContext
+;
+– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask";
+– если класс абстрактный, должен быть указан параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
+– если класс запечатанный, не следует указывать параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Тип, объявляющий такие методы, также должен соответствовать следующим правилам:
+– должен быть классом;
+– класс должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]");
+– не должен быть объявлен как статический ("static");
+– если класс запечатанный, его следует пометить как "[TestClass]" (или производный атрибут);
+– не должен быть универсальным ("generic").</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -381,7 +400,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
         <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
-        <target state="new">'[DynamicData]' member '{0}.{1}' is found more than once</target>
+        <target state="translated">Элемент "[DynamicData]" "{0}.{1}" обнаружен несколько раз</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
@@ -730,6 +749,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">Указать "[DeploymentItem]" можно только для тестового класса или метода.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsMessageFormat">
+        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
+        <target state="translated">Используйте Assert.ThrowsExactly вместо Assert.ThrowsException</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsTitle">
+        <source>Use newer methods to assert exceptions</source>
+        <target state="translated">Использовать более новые методы для утверждения исключений</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

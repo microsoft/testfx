@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -24,28 +24,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 #endif
 public class TestClassInfo
 {
+    /// <summary>
+    /// Test context property name.
+    /// </summary>
+    private const string TestContextPropertyName = "TestContext";
+
     private readonly Lock _testClassExecuteSyncObject = new();
+
+    private UnitTestResult? _classInitializeResult;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestClassInfo"/> class.
     /// </summary>
     /// <param name="type">Underlying test class type.</param>
     /// <param name="constructor">Constructor for the test class.</param>
-    /// <param name="testContextProperty">Reference to the <see cref="TestContext"/> property in test class.</param>
     /// <param name="classAttribute">Test class attribute.</param>
     /// <param name="parent">Parent assembly info.</param>
     internal TestClassInfo(
         Type type,
         ConstructorInfo constructor,
         bool isParameterlessConstructor,
-        PropertyInfo? testContextProperty,
         TestClassAttribute classAttribute,
         TestAssemblyInfo parent)
     {
         ClassType = type;
         Constructor = constructor;
         IsParameterlessConstructor = isParameterlessConstructor;
-        TestContextProperty = testContextProperty;
+        TestContextProperty = ResolveTestContext(type);
         Parent = parent;
         ClassAttribute = classAttribute;
     }
@@ -341,22 +346,62 @@ public class TestClassInfo
         throw testFailedException;
     }
 
+    private UnitTestResult? TryGetClonedCachedClassInitializeResult()
+    {
+        // Historically, we were not caching class initialize result, and were always going through the logic in GetResultOrRunClassInitialize.
+        // When caching is introduced, we found out that using the cached instance can change the behavior in some cases. For example,
+        // if you have Console.WriteLine in class initialize, those will be present on the UnitTestResult.
+        // Before caching was introduced, these logs will be only in the first class initialize result (attached to the first test run in class)
+        // By re-using the cached instance, it's now part of all tests.
+        // To preserve the original behavior, we clone the cached instance so we keep only the information we are sure should be reused.
+        if (_classInitializeResult is null)
+        {
+            return null;
+        }
+
+        if (_classInitializeResult.ErrorStackTrace is not null && _classInitializeResult.ErrorMessage is not null)
+        {
+            return new(
+                new TestFailedException(
+                    _classInitializeResult.Outcome,
+                    _classInitializeResult.ErrorMessage,
+                    new StackTraceInformation(_classInitializeResult.ErrorStackTrace, _classInitializeResult.ErrorFilePath, _classInitializeResult.ErrorLineNumber, _classInitializeResult.ErrorColumnNumber)));
+        }
+
+        // We are expecting this to be hit for the case of "Passed".
+        // It's unlikely to be hit otherwise (GetResultOrRunClassInitialize appears to only create either Passed results or a result from exception), but
+        // we can still create UnitTestResult from outcome and error message (which is expected to be null for Passed).
+        return new(_classInitializeResult.Outcome, _classInitializeResult.ErrorMessage);
+    }
+
     internal UnitTestResult GetResultOrRunClassInitialize(ITestContext testContext, string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
+        UnitTestResult? clonedInitializeResult = TryGetClonedCachedClassInitializeResult();
+
+        // Optimization: If we already ran before and know the result, return it.
+        if (clonedInitializeResult is not null)
+        {
+            DebugEx.Assert(IsClassInitializeExecuted, "Class initialize result should be available if and only if class initialize was executed");
+            return clonedInitializeResult;
+        }
+
+        DebugEx.Assert(!IsClassInitializeExecuted, "If class initialize was executed, we should have been in the previous if were we have a result available.");
+
+        // For optimization purposes, return right away if there is nothing to execute.
+        // For STA, this avoids starting a thread when we know it will do nothing.
+        // But we still return early even not STA.
+        if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
+        {
+            IsClassInitializeExecuted = true;
+            return _classInitializeResult = new(ObjectModelUnitTestOutcome.Passed, null);
+        }
+
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTATestClass
             && isWindowsOS
             && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
-            // For optimization purposes, we duplicate some of the logic of RunClassInitialize here so we don't need to start
-            // a thread for nothing.
-            if ((ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
-                || IsClassInitializeExecuted)
-            {
-                return DoRun();
-            }
-
             UnitTestResult result = new(ObjectModelUnitTestOutcome.Error, "MSTest STATestClass ClassInitialize didn't complete");
             Thread entryPointThread = new(() => result = DoRun())
             {
@@ -426,6 +471,7 @@ public class TestClassInfo
                 result.TestContextMessages = initializationTestContextMessages;
             }
 
+            _classInitializeResult = result;
             return result;
         }
     }
@@ -568,7 +614,8 @@ public class TestClassInfo
             {
                 if (classCleanupMethod is not null)
                 {
-                    if (!ReflectHelper.Instance.IsNonDerivedAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
+                    if (ClassAttribute.IgnoreMessage is null &&
+                        !ReflectHelper.Instance.IsNonDerivedAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
                     {
                         ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count, testContext);
                     }
@@ -579,7 +626,8 @@ public class TestClassInfo
                     for (int i = 0; i < BaseClassCleanupMethods.Count; i++)
                     {
                         classCleanupMethod = BaseClassCleanupMethods[i];
-                        if (!ReflectHelper.Instance.IsNonDerivedAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
+                        if (ClassAttribute.IgnoreMessage is null &&
+                            !ReflectHelper.Instance.IsNonDerivedAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
                         {
                             ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count - 1 - i, testContext);
                             if (ClassCleanupException is not null)
@@ -766,5 +814,37 @@ public class TestClassInfo
             new ClassExecutionContextScope(ClassType, remainingCleanupCount),
             Resource.ClassCleanupWasCancelled,
             Resource.ClassCleanupTimedOut);
+    }
+
+    /// <summary>
+    /// Resolves the test context property.
+    /// </summary>
+    /// <param name="classType"> The class Type. </param>
+    /// <returns> The <see cref="PropertyInfo"/> for TestContext property. Null if not defined. </returns>
+    private static PropertyInfo? ResolveTestContext(Type classType)
+    {
+        try
+        {
+            PropertyInfo? testContextProperty = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(classType, TestContextPropertyName, includeNonPublic: false);
+            if (testContextProperty == null)
+            {
+                // that's okay may be the property was not defined
+                return null;
+            }
+
+            // check if testContextProperty is of correct type
+            if (!string.Equals(testContextProperty.PropertyType.FullName, typeof(TestContext).FullName, StringComparison.Ordinal))
+            {
+                string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestContextTypeMismatchLoadError, classType.FullName);
+                throw new TypeInspectionException(errorMessage);
+            }
+
+            return testContextProperty;
+        }
+        catch (AmbiguousMatchException ex)
+        {
+            string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestContextLoadError, classType.FullName, ex.Message);
+            throw new TypeInspectionException(errorMessage);
+        }
     }
 }

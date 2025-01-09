@@ -103,7 +103,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
         return new Files([sample]);
     }
 
-    private async Task<string> PerfviewExecutable()
+    private static async Task<string> PerfviewExecutable()
     {
         string localPath = Path.Combine(Path.GetTempPath(), "PerfView", "PerfView.exe");
         Directory.CreateDirectory(Path.GetDirectoryName(localPath)!);

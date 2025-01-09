@@ -8,6 +8,8 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal sealed class MSTestBannerCapability : IBannerMessageOwnerCapability
 {
     private readonly IPlatformInformation _platformInformation;

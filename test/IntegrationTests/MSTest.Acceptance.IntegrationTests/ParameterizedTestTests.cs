@@ -43,7 +43,7 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
     public async Task SendingEmptyDataToDataSourceTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
         => await RunTestsAsync(currentTfm, DataSourceAssetName, null);
 
-    private async Task RunTestsAsync(string currentTfm, string assetName, bool? isEmptyDataInconclusive)
+    private static async Task RunTestsAsync(string currentTfm, string assetName, bool? isEmptyDataInconclusive)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.GetAssetPath(assetName), assetName, currentTfm);
 

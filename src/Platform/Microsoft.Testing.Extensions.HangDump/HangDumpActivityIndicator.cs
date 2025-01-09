@@ -127,7 +127,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
             // Wait the connection from the testhost controller
             await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
-            await _logger.LogTraceAsync($"Test host controller connected");
+            await _logger.LogTraceAsync("Test host controller connected");
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
         {
@@ -224,7 +224,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             _signalActivity.Reset();
         }
 
-        _logger.LogDebug($"Exit 'SignalActivityIndicatorAsync'");
+        _logger.LogDebug("Exit 'SignalActivityIndicatorAsync'");
 
         return Task.CompletedTask;
     }
@@ -242,10 +242,10 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         await _namedPipeClient.RequestReplyAsync<SessionEndSerializerRequest, VoidResponse>(new SessionEndSerializerRequest(), cancellationToken)
                 .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
 
-        await _logger.LogDebugAsync($"Signal for test session end'");
+        await _logger.LogDebugAsync("Signal for test session end'");
         await ExitSignalActivityIndicatorTaskAsync();
 
-        await _logger.LogTraceAsync($"Signaled by process for it's exit");
+        await _logger.LogTraceAsync("Signaled by process for it's exit");
         _sessionEndCalled = true;
     }
 

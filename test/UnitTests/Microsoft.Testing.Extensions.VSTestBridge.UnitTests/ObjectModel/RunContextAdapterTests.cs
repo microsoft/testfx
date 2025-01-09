@@ -19,7 +19,7 @@ public class RunContextAdapterTests
     public void TestRunDirectory_IsNotNull_If_ResultsDirectory_Is_Provided()
     {
         string runSettings =
-$"""
+"""
         <RunSettings>
             <RunConfiguration>
                 <ResultsDirectory>/PlatformResultDirectoryFromFile</ResultsDirectory>
@@ -38,7 +38,7 @@ $"""
     public void TestRunDirectory_IsNull_If_ResultsDirectory_IsNot_Provided()
     {
         string runSettings =
-$"""
+"""
         <RunSettings>
             <RunConfiguration>
             </RunConfiguration>

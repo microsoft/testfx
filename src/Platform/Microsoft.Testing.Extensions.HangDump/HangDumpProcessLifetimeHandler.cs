@@ -144,7 +144,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
         else if (request is SessionEndSerializerRequest)
         {
-            await _logger.LogDebugAsync($"Session end received by the test host");
+            await _logger.LogDebugAsync("Session end received by the test host");
             _exitActivityIndicatorTask = true;
 #if NET
             if (_namedPipeClient is not null)
@@ -220,7 +220,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     private async Task ActivityTimerAsync()
     {
-        _logger.LogDebug($"Wait for mutex name from the test host");
+        _logger.LogDebug("Wait for mutex name from the test host");
 
         if (!_mutexNameReceived.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
@@ -244,7 +244,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             {
                 if (_traceEnabled)
                 {
-                    _logger.LogTrace($"Wait for activity signal");
+                    _logger.LogTrace("Wait for activity signal");
                 }
 
                 if (!_activityIndicatorMutex.WaitOne(_activityTimerValue))
@@ -271,7 +271,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
             if (_traceEnabled)
             {
-                _logger.LogTrace($"Exit 'ActivityTimerAsync'");
+                _logger.LogTrace("Exit 'ActivityTimerAsync'");
             }
         }
         catch (AbandonedMutexException)
@@ -290,7 +290,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             try
             {
-                _logger.LogDebug($"Timeout is not fired release activity mutex handle to allow test host to close");
+                _logger.LogDebug("Timeout is not fired release activity mutex handle to allow test host to close");
                 _activityIndicatorMutex.ReleaseMutex();
             }
             catch (AbandonedMutexException)
@@ -306,7 +306,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
 
         _activityIndicatorMutex.Dispose();
-        _logger.LogDebug($"Activity indicator disposed");
+        _logger.LogDebug("Activity indicator disposed");
 
         if (timeoutFired)
         {

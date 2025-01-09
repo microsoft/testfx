@@ -61,7 +61,7 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
         => ReflectionDataProvider.TypeProperties[type];
 
     public PropertyInfo? GetDeclaredProperty(Type type, string propertyName)
-        => GetRuntimeProperty(type, propertyName);
+        => GetRuntimeProperty(type, propertyName, includeNonPublic: true);
 
     public Type[] GetDefinedTypes(Assembly assembly)
         => ReflectionDataProvider.Types;
@@ -69,14 +69,25 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
     public MethodInfo[] GetRuntimeMethods(Type type)
         => ReflectionDataProvider.TypeMethods[type];
 
-    public MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters) => throw new NotImplementedException();
+    public MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters, bool includeNonPublic)
+    {
+        IEnumerable<MethodInfo> runtimeMethods = GetRuntimeMethods(declaringType)
+            .Where(
+                m => m.Name == methodName &&
+                m.GetParameters().Select(pi => pi.ParameterType).SequenceEqual(parameters) &&
+                (includeNonPublic || m.IsPublic));
+        return runtimeMethods.SingleOrDefault();
+    }
 
-    public PropertyInfo? GetRuntimeProperty(Type classType, string propertyName)
+    public PropertyInfo? GetRuntimeProperty(Type classType, string propertyName, bool includeNonPublic)
     {
         Dictionary<string, PropertyInfo> type = ReflectionDataProvider.TypePropertiesByName[classType];
 
         // We as asking for TestContext here, it may not be there.
-        return type.TryGetValue(propertyName, out PropertyInfo? propertyInfo) ? propertyInfo : null;
+        PropertyInfo? property = type.TryGetValue(propertyName, out PropertyInfo? propertyInfo) ? propertyInfo : null;
+        return !includeNonPublic && (property?.GetMethod?.IsPublic == true || property?.SetMethod?.IsPublic == true)
+            ? null
+            : property;
     }
 
     public Type? GetType(string typeName)

@@ -11,6 +11,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 public static class TestApplicationBuilderExtensions
 {
     public static void AddMSTest(this ITestApplicationBuilder testApplicationBuilder, Func<IEnumerable<Assembly>> getTestAssemblies)

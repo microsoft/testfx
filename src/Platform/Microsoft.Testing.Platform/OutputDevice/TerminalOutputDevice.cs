@@ -394,19 +394,13 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
-    public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+    public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
-        if (_isServerMode)
+        if (_isServerMode || cancellationToken.IsCancellationRequested)
         {
-            return;
-        }
-
-        await Task.CompletedTask;
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
+            return Task.CompletedTask;
         }
 
         switch (value)
@@ -587,6 +581,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 _testRequestExecutionTimeInfo = testRequestExecutionTimeInfo;
                 break;
         }
+
+        return Task.CompletedTask;
     }
 
     public void Dispose()

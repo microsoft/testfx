@@ -36,8 +36,6 @@ internal static class DisposeHelper
         {
             dcDisposable.Dispose();
         }
-
-        await Task.CompletedTask;
 #endif
     }
 }

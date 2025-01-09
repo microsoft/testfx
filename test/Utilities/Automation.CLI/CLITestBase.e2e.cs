@@ -79,7 +79,7 @@ public partial class CLITestBase : TestContainer
     /// Gets the path to <c>vstest.console.exe</c>.
     /// </summary>
     /// <returns>Full path to <c>vstest.console.exe</c>.</returns>
-    public string GetConsoleRunnerPath()
+    public static string GetConsoleRunnerPath()
     {
         string testPlatformNuGetPackageFolder = Path.Combine(
             GetNugetPackageFolder(),
