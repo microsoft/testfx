@@ -38,7 +38,8 @@ public sealed class TestContextShouldBeValidAnalyzerTests
                 {{accessibility}} TestContext {|#0:{{fieldName}}|};
             }
             """;
-        string fixedCode = $$"""
+        string fixedCode =
+            """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -110,7 +111,8 @@ public sealed class TestContextShouldBeValidAnalyzerTests
                 {{accessibility}} TestContext {|#0:{{propertyName}}|} { get; set; }
             }
             """;
-        string fixedCode = $$"""
+        string fixedCode =
+            """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -287,7 +289,8 @@ public sealed class TestContextShouldBeValidAnalyzerTests
     [TestMethod]
     public async Task WhenTestContextPropertyIsStatic_Diagnostic()
     {
-        string code = $$"""
+        string code =
+            """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -296,7 +299,8 @@ public sealed class TestContextShouldBeValidAnalyzerTests
                 public static TestContext {|#0:TestContext|} { get; set; }
             }
             """;
-        string fixedCode = $$"""
+        string fixedCode =
+            """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -316,7 +320,8 @@ public sealed class TestContextShouldBeValidAnalyzerTests
     [TestMethod]
     public async Task WhenTestContextPropertyIsReadonly_Diagnostic()
     {
-        string code = $$"""
+        string code =
+            """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -325,7 +330,8 @@ public sealed class TestContextShouldBeValidAnalyzerTests
                 public TestContext {|#0:TestContext|} { get; }
             }
             """;
-        string fixedCode = $$"""
+        string fixedCode =
+            """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -345,7 +351,8 @@ public sealed class TestContextShouldBeValidAnalyzerTests
     [TestMethod]
     public async Task WhenTestContextPropertyIsNotCasedCorrectly_Diagnostic()
     {
-        string code = $$"""
+        string code =
+            """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -354,7 +361,8 @@ public sealed class TestContextShouldBeValidAnalyzerTests
                 public TestContext {|#0:testContext|} { get; set; }
             }
             """;
-        string fixedCode = $$"""
+        string fixedCode =
+            """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -374,7 +382,8 @@ public sealed class TestContextShouldBeValidAnalyzerTests
     [TestMethod]
     public async Task WhenTestContextPropertyIsReadonly_AssignedInConstructor_NoDiagnostic()
     {
-        string code = $$"""
+        string code =
+            """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -384,7 +393,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests
                 {
                     TestContext = testContext;
                 }
-
+            
                 public TestContext TestContext { get; }
             }
             """;
@@ -395,19 +404,20 @@ public sealed class TestContextShouldBeValidAnalyzerTests
     [TestMethod]
     public async Task WhenTestContextPropertyIsReadonly_AssignedInConstructorViaField_NoDiagnostic()
     {
-        string code = $$"""
+        string code =
+            """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
             public class MyTestClass
             {
                 private readonly TestContext _testContext;
-
+            
                 public MyTestClass(TestContext testContext)
                 {
                     _testContext = testContext;
                 }
-
+            
                 public TestContext TestContext => _testContext;
             }
             """;

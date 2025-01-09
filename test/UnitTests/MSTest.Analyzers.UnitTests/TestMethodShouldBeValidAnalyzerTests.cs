@@ -49,7 +49,8 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
             }
             """;
 
-        string fixedCode = $$"""
+        string fixedCode =
+            """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -68,7 +69,8 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
     [TestMethod]
     public async Task WhenMethodIsNotPublicAndNotTestMethod_NoDiagnostic()
     {
-        string code = $$"""
+        string code =
+            """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -77,15 +79,15 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
                 private void PrivateMethod()
                 {
                 }
-
+            
                 protected void ProtectedMethod()
                 {
                 }
-
+            
                 internal protected void InternalProtectedMethod()
                 {
                 }
-
+            
                 internal void InternalMethod()
                 {
                 }

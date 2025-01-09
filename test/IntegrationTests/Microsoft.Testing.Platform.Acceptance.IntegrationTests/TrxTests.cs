@@ -150,7 +150,7 @@ Out of process file artifacts produced:
     public async Task Trx_WhenReportTrxIsNotSpecifiedAndReportTrxPathIsSpecified_ErrorIsDisplayed(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx-filename report.trx");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--report-trx-filename report.trx");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Error: '--report-trx-filename' requires '--report-trx' to be enabled");
@@ -161,7 +161,7 @@ Out of process file artifacts produced:
     public async Task Trx_WhenReportTrxIsSpecifiedAndListTestsIsSpecified_ErrorIsDisplayed(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --list-tests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--report-trx --list-tests");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Error: '--report-trx' cannot be enabled when using '--list-tests'");

@@ -71,7 +71,8 @@ public sealed class TestClassShouldBeValidAnalyzerTests
             }
             """;
 
-        string fixedCode = $$"""
+        string fixedCode =
+            """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             public class OuterClass
