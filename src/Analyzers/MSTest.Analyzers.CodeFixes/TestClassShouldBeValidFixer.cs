@@ -41,7 +41,7 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
             return;
         }
 
-        ClassDeclarationSyntax declaration = syntaxToken.Parent.AncestorsAndSelf().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+        ClassDeclarationSyntax declaration = syntaxToken.Parent.AncestorsAndSelf().OfType<ClassDeclarationSyntax>().First();
 
         // Register a code action that will invoke the fix.
         context.RegisterCodeFix(
