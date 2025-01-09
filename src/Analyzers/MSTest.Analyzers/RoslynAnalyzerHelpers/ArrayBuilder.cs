@@ -322,9 +322,9 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
         var dictionary = new Dictionary<K, ImmutableArray<T>>(accumulator.Count, comparer);
 
         // freeze
-        foreach (KeyValuePair<K, ArrayBuilder<T>> pair in accumulator)
+        foreach ((K? key, ArrayBuilder<T>? value) in accumulator)
         {
-            dictionary.Add(pair.Key, pair.Value.ToImmutableAndFree());
+            dictionary.Add(key, value.ToImmutableAndFree());
         }
 
         return dictionary;
