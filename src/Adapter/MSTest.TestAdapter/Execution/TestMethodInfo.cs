@@ -740,7 +740,11 @@ public class TestMethodInfo : ITestMethod
 
     private TestFailedException? InvokeInitializeMethod(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
     {
-        TimeoutInfo? timeout = Parent.TestInitializeMethodTimeoutMilliseconds.GetValueOrDefault(methodInfo);
+        TimeoutInfo? timeout = null;
+        if (Parent.TestInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
+        {
+            timeout = localTimeout;
+        }
 
         return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
@@ -757,7 +761,11 @@ public class TestMethodInfo : ITestMethod
 
     private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, object classInstance, int remainingCleanupCount, CancellationTokenSource? timeoutTokenSource)
     {
-        TimeoutInfo? timeout = Parent.TestCleanupMethodTimeoutMilliseconds.GetValueOrDefault(methodInfo);
+        TimeoutInfo? timeout = null;
+        if (Parent.TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
+        {
+            timeout = localTimeout;
+        }
 
         return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
