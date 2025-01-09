@@ -57,7 +57,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 #if NET7_0_OR_GREATER
     // Specifying no timeout, the regex is linear. And the timeout does not measure the regex only, but measures also any
     // thread suspends, so the regex gets blamed incorrectly.
-    [GeneratedRegex(@$"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture)]
+    [GeneratedRegex(@"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture)]
     private static partial Regex GetFrameRegex();
 #else
     private static Regex? s_regex;

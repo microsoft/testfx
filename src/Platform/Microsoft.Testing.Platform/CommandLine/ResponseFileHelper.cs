@@ -153,7 +153,7 @@ internal static class ResponseFileHelper
 
         void Advance() => pos++;
 
-        string CurrentToken() => commandLine.Substring(startTokenIndex, IndexOfEndOfToken()).ToString().Replace("\"", string.Empty);
+        string CurrentToken() => commandLine.Substring(startTokenIndex, IndexOfEndOfToken()).Replace("\"", string.Empty);
 
         int IndexOfEndOfToken() => pos - startTokenIndex;
 

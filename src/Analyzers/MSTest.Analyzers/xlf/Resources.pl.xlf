@@ -119,27 +119,27 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
         <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
-        <target state="new">Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</target>
+        <target state="translated">Użyj metody Assert.AreEqual'/'Assert.AreNotEqual' zamiast assert.AreSame'/'Assert.AreNotSame' podczas porównywania typów wartości. Przekazanie typu wartości do elementu "Assert.AreSame"/"Assert.AreNotSame" zostanie opakowane (tworzenie nowego obiektu). Ponieważ funkcja "Assert.AreSame"/"Assert.AreNotSame" wykonuje porównanie przez referencję, operacja "Assert.AreSame" zakończy się niepowodzeniem, gdy nastąpi konwersja boxing, a element "Assert.AreNotSame" zawsze przejdzie.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
         <source>Use '{0}' instead of '{1}' when comparing value types</source>
-        <target state="new">Use '{0}' instead of '{1}' when comparing value types</target>
+        <target state="translated">Użyj '{0}' zamiast '{1}' podczas porównywania typów wartości</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
         <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
-        <target state="new">Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</target>
+        <target state="translated">Nie używaj elementu "Assert.AreSame" ani "Assert.AreNotSame" z typami wartości</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
-        <target state="new">Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</target>
+        <target state="translated">Preferuj opcję „Assert.ThrowsExactly” lub „Assert.ThrowsExactlyAsync” zamiast „[ExpectedException]”, ponieważ gwarantuje ona, że tylko oczekiwane wywołanie rzuci oczekiwany wyjątek. Interfejsy API potwierdzenia zapewniają również większą elastyczność i pozwalają na potwierdzenie dodatkowych właściwości wyjątku.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
         <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
-        <target state="new">Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</target>
+        <target state="translated">Preferuj opcję „Assert.ThrowsExactly/ThrowsExactlyAsync” zamiast „[ExpectedException]”</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
@@ -741,12 +741,12 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="UseNewerAssertThrowsMessageFormat">
         <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
-        <target state="new">Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</target>
+        <target state="translated">Użyj metody "Assert.ThrowsExactly" zamiast elementu "Assert.ThrowsException"</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrowsTitle">
         <source>Use newer methods to assert exceptions</source>
-        <target state="new">Use newer methods to assert exceptions</target>
+        <target state="translated">Użyj nowszych metod, aby potwierdzić wyjątki</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

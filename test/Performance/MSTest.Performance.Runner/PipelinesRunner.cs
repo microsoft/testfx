@@ -41,9 +41,9 @@ internal class PipelinesRunner
                 { "PipelineName", pipeline.PipelineName },
             };
 
-            foreach (KeyValuePair<string, object> item in parametersBag)
+            foreach ((string key, object value) in parametersBag)
             {
-                pipelinePropertyBag.Add(item.Key, item.Value);
+                pipelinePropertyBag.Add(key, value);
             }
 
             pipeline.UpdatePropertyBag?.Invoke(pipelinePropertyBag);

@@ -119,27 +119,27 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
         <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
-        <target state="new">Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</target>
+        <target state="translated">값 형식을 비교할 때 'Assert.AreSame'/'Assert.AreNotSame' 대신 'Assert.AreEqual'/'Assert.AreNotEqual'을 사용합니다. 값 형식을 'Assert.AreSame'/'Assert.AreNotSame'에 전달하면 boxed(새 개체 만들기)됩니다. 'Assert.AreSame'/'Assert.AreNotSame'은 참조로 비교하므로 boxing이 발생할 때 'Assert.AreSame'이 실패하고 'Assert.AreNotSame'이 항상 전달됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
         <source>Use '{0}' instead of '{1}' when comparing value types</source>
-        <target state="new">Use '{0}' instead of '{1}' when comparing value types</target>
+        <target state="translated">값 형식을 비교할 때 '{1}' 대신 '{0}' 사용</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
         <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
-        <target state="new">Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</target>
+        <target state="translated">값 형식에 'Assert.AreSame' 또는 'Assert.AreNotSame'을 사용하지 마세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
-        <target state="new">Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</target>
+        <target state="translated">예상되는 호출만 예상되는 예외를 던지도록 하기 위해 '[ExpectedException]보다 'Assert.ThrowsExactly' 또는 'Assert.ThrowsExactlyAsync'를 사용하는 것이 좋습니다. 또한 어설션 API는 더 많은 유연성을 제공하고 예외의 추가 속성을 어설션할 수 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
         <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
-        <target state="new">Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</target>
+        <target state="translated">'[ExpectedException]'보다 'Assert.ThrowsExactly/ThrowsExactlyAsync' 선호</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
@@ -741,12 +741,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseNewerAssertThrowsMessageFormat">
         <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
-        <target state="new">Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</target>
+        <target state="translated">'Assert.ThrowsException' 대신 'Assert.ThrowsExactly' 사용</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrowsTitle">
         <source>Use newer methods to assert exceptions</source>
-        <target state="new">Use newer methods to assert exceptions</target>
+        <target state="translated">최신 메서드를 사용하여 예외 어설션</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

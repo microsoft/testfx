@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessFix">
         <source>Move conditional access in assertion to separate 'Assert.IsNotNull' check</source>
-        <target state="new">Move conditional access in assertion to separate 'Assert.IsNotNull' check</target>
+        <target state="translated">Mover o acesso condicional na asserção para separar o 'Assert.IsNotNull' marcar</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="UseNewerAssertThrows">
         <source>Use '{0}'</source>
-        <target state="new">Use '{0}'</target>
+        <target state="translated">Usar "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">
