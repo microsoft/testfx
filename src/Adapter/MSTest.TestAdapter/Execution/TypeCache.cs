@@ -195,11 +195,7 @@ internal sealed class TypeCache : MarshalByRefObject
                 continue;
             }
 
-#if NETCOREAPP || WINDOWS_UWP
             if (hierarchyPart.StartsWith('\'') && hierarchyPart.EndsWith('\''))
-#else
-            if (hierarchyPart.StartsWith("'", StringComparison.Ordinal) && hierarchyPart.EndsWith("'", StringComparison.Ordinal))
-#endif
             {
                 unescapedTypeNameBuilder.Append(hierarchyPart, 1, hierarchyPart.Length - 2);
             }
