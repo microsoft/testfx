@@ -129,7 +129,7 @@ internal sealed class ObjectPool<T>
     internal ObjectPool(Factory factory, int size)
     {
 #pragma warning disable SA1405 // Debug.Assert should provide message text
-        Debug.Assert(size >= 1);
+        RoslynDebug.Assert(size >= 1);
 #pragma warning restore SA1405 // Debug.Assert should provide message text
         _factory = factory;
         _items = new Element[size - 1];
