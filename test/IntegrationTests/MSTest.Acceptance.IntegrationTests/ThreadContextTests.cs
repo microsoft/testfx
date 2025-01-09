@@ -33,7 +33,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     public async Task ThreadingContext_WhenChangedInTestInitialize_IsPassedToTestMethod(string tfm)
         => await SetCultureInFixtureMethodAndRunTests(tfm, "MSTEST_TEST_SET_CULTURE_TEST_INIT");
 
-    private async Task SetCultureInFixtureMethodAndRunTests(string tfm, string envVarKey)
+    private static async Task SetCultureInFixtureMethodAndRunTests(string tfm, string envVarKey)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.InitToTestProjectPath, TestAssetFixture.InitToTestProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new() { [envVarKey] = "true" });

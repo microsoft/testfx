@@ -195,14 +195,14 @@ internal sealed partial class AppInsightsProvider :
                 {
                     StringBuilder builder = new();
                     builder.AppendLine(CultureInfo.InvariantCulture, $"Send telemetry event: {eventName}");
-                    foreach (KeyValuePair<string, string> keyValue in properties)
+                    foreach ((string key, string value) in properties)
                     {
-                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {keyValue.Key}: {keyValue.Value}");
+                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {key}: {value}");
                     }
 
-                    foreach (KeyValuePair<string, double> keyValue in metrics)
+                    foreach ((string key, double value) in metrics)
                     {
-                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {keyValue.Key}: {keyValue.Value.ToString("f", CultureInfo.InvariantCulture)}");
+                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {key}: {value.ToString("f", CultureInfo.InvariantCulture)}");
                     }
 
                     await _logger.LogTraceAsync(builder.ToString());
@@ -269,13 +269,17 @@ internal sealed partial class AppInsightsProvider :
 #endif
 #endif
 
-    public async Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap)
+    public
+#if NETCOREAPP
+        async
+#endif
+        Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap)
     {
 #if NETCOREAPP
         await _payloads.Writer.WriteAsync((eventName, paramsMap));
 #else
         _payloads.Add((eventName, paramsMap));
-        await Task.CompletedTask;
+        return Task.CompletedTask;
 #endif
     }
 

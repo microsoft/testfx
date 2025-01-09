@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class ConfigurationExtensionsTests
 {
-    private string GetActualValueFromConfiguration(IConfiguration configuration, string key) => key switch
+    private static string GetActualValueFromConfiguration(IConfiguration configuration, string key) => key switch
     {
         PlatformConfigurationConstants.PlatformResultDirectory => configuration.GetTestResultDirectory(),
         PlatformConfigurationConstants.PlatformCurrentWorkingDirectory => configuration.GetCurrentWorkingDirectory(),

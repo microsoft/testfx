@@ -151,9 +151,9 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
                 StringBuilder builder = new();
                 builder.Append(CultureInfo.InvariantCulture, $"Publisher/Consumer loop detected during the drain after {stopwatch.Elapsed}.\n{builder}");
 
-                foreach (KeyValuePair<AsyncConsumerDataProcessor, long> keyValuePair in consumerToDrain)
+                foreach ((AsyncConsumerDataProcessor key, long value) in consumerToDrain)
                 {
-                    builder.AppendLine(CultureInfo.InvariantCulture, $"Consumer '{keyValuePair.Key.DataConsumer}' payload received {keyValuePair.Value}.");
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"Consumer '{key.DataConsumer}' payload received {value}.");
                 }
 
                 throw new InvalidOperationException(builder.ToString());
@@ -161,9 +161,9 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
             totalNumberOfDrainAttempt--;
             anotherRound = false;
-            foreach (KeyValuePair<Type, List<AsyncConsumerDataProcessor>> dataTypeConsumer in _dataTypeConsumers)
+            foreach (List<AsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
             {
-                foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataTypeConsumer.Value)
+                foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
                 {
                     if (!consumerToDrain.TryGetValue(asyncMultiProducerMultiConsumerDataProcessor, out long _))
                     {
@@ -190,9 +190,9 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
         _disabled = true;
 
-        foreach (KeyValuePair<Type, List<AsyncConsumerDataProcessor>> dataTypeConsumer in _dataTypeConsumers)
+        foreach (List<AsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
         {
-            foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataTypeConsumer.Value)
+            foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
             {
                 await asyncMultiProducerMultiConsumerDataProcessor.CompleteAddingAsync();
             }
@@ -201,9 +201,9 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
     public override void Dispose()
     {
-        foreach (KeyValuePair<Type, List<AsyncConsumerDataProcessor>> dataTypeConsumer in _dataTypeConsumers)
+        foreach (List<AsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
         {
-            foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataTypeConsumer.Value)
+            foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
             {
                 asyncMultiProducerMultiConsumerDataProcessor.Dispose();
             }

@@ -103,7 +103,7 @@ public sealed class FormatterUtilitiesTests
         }
     }
 
-    private void AssertRequestArgs<TRequestArgs>(Type type, TRequestArgs actualRequest, TRequestArgs expectedRequest)
+    private static void AssertRequestArgs<TRequestArgs>(Type type, TRequestArgs actualRequest, TRequestArgs expectedRequest)
         where TRequestArgs : RequestArgsBase
     {
         Assert.AreEqual(expectedRequest.RunId, actualRequest.RunId);
