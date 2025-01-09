@@ -21,7 +21,7 @@ public class DebuggerUtility
         {
             if (pid == null)
             {
-                Trace($"FAIL: Pid is null.", enabled: enableLog);
+                Trace("FAIL: Pid is null.", enabled: enableLog);
                 return false;
             }
 
@@ -37,7 +37,7 @@ public class DebuggerUtility
                 return true;
             }
 
-            Trace($"Parent VS not found, finding the first VS that started.", enabled: enableLog);
+            Trace("Parent VS not found, finding the first VS that started.", enabled: enableLog);
             Process? firstVsProcess = GetFirstVsProcess();
 
             if (firstVsProcess != null)
@@ -122,21 +122,21 @@ public class DebuggerUtility
             Marshal.ThrowExceptionForHR(r);
             if (bindCtx == null)
             {
-                Trace($"BindCtx is null. Cannot attach VS.", enabled: enableLog);
+                Trace("BindCtx is null. Cannot attach VS.", enabled: enableLog);
                 return false;
             }
 
             bindCtx.GetRunningObjectTable(out runningObjectTable);
             if (runningObjectTable == null)
             {
-                Trace($"RunningObjectTable is null. Cannot attach VS.", enabled: enableLog);
+                Trace("RunningObjectTable is null. Cannot attach VS.", enabled: enableLog);
                 return false;
             }
 
             runningObjectTable.EnumRunning(out enumMoniker);
             if (enumMoniker == null)
             {
-                Trace($"EnumMoniker is null. Cannot attach VS.", enabled: enableLog);
+                Trace("EnumMoniker is null. Cannot attach VS.", enabled: enableLog);
                 return false;
             }
 

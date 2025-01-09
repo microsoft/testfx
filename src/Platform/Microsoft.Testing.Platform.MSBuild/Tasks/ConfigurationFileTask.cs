@@ -45,7 +45,7 @@ public sealed class ConfigurationFileTask : Build.Utilities.Task
         Log.LogMessage(MessageImportance.Normal, $"Microsoft Testing Platform configuration file: '{TestingPlatformConfigurationFileSource.ItemSpec}'");
         if (!_fileSystem.Exist(TestingPlatformConfigurationFileSource.ItemSpec))
         {
-            Log.LogMessage(MessageImportance.Normal, $"Microsoft Testing Platform configuration file not found");
+            Log.LogMessage(MessageImportance.Normal, "Microsoft Testing Platform configuration file not found");
             return true;
         }
 
@@ -62,7 +62,7 @@ public sealed class ConfigurationFileTask : Build.Utilities.Task
         Log.LogMessage(MessageImportance.Normal, $"Configuration file found: '{TestingPlatformConfigurationFileSource.ItemSpec}'");
         _fileSystem.CopyFile(TestingPlatformConfigurationFileSource.ItemSpec, finalFileName);
         FinalTestingPlatformConfigurationFile = new TaskItem(finalFileName);
-        Log.LogMessage(MessageImportance.Normal, $"Microsoft Testing Platform configuration file written");
+        Log.LogMessage(MessageImportance.Normal, "Microsoft Testing Platform configuration file written");
 
         return true;
     }

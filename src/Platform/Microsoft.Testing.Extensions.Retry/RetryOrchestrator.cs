@@ -198,7 +198,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, _serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken))
             using (var linkedToken2 = CancellationTokenSource.CreateLinkedTokenSource(linkedToken.Token, processExitedCancellationToken.Token))
             {
-                await logger.LogDebugAsync($"Wait connection from the test host process");
+                await logger.LogDebugAsync("Wait connection from the test host process");
                 try
                 {
 #if NETCOREAPP

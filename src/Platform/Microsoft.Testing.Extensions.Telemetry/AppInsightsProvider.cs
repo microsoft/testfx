@@ -131,7 +131,7 @@ internal sealed partial class AppInsightsProvider :
         {
             _client = null;
 
-            await _logger.LogErrorAsync($"Failed to initialize telemetry client", e);
+            await _logger.LogErrorAsync("Failed to initialize telemetry client", e);
             return;
         }
 
@@ -219,7 +219,7 @@ internal sealed partial class AppInsightsProvider :
                     // We could do better back-pressure.
                     if (_logger.IsEnabled(LogLevel.Error) && (!lastLoggedError.HasValue || (lastLoggedError.Value - _clock.UtcNow).TotalSeconds > 3))
                     {
-                        await _logger.LogErrorAsync($"Error during telemetry report.", ex);
+                        await _logger.LogErrorAsync("Error during telemetry report.", ex);
                         lastLoggedError = _clock.UtcNow;
                     }
                 }
