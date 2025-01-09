@@ -1,14 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// Base class for attributes that specify to expect an exception from a unit test.
 /// </summary>
+/// <remarks>
+/// We recommend using one of the Assert.ThrowsException or Assert.ThrowsExceptionAsync overload instead of using this attribute.
+/// </remarks>
 [AttributeUsage(AttributeTargets.Method)]
 public abstract class ExpectedExceptionBaseAttribute : Attribute
 {

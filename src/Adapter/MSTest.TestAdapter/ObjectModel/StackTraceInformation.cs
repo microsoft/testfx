@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 [Serializable]
-internal class StackTraceInformation
+internal sealed class StackTraceInformation
 {
     public StackTraceInformation(string stackTrace)
         : this(stackTrace, null, 0, 0)

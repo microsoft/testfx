@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -17,6 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// <summary>
 /// Enumerates through the type looking for Valid Test Methods to execute.
 /// </summary>
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class TypeEnumerator
 {
     private readonly Type _type;
@@ -24,7 +21,6 @@ internal class TypeEnumerator
     private readonly TypeValidator _typeValidator;
     private readonly TestMethodValidator _testMethodValidator;
     private readonly TestIdGenerationStrategy _testIdGenerationStrategy;
-    private readonly TestDataSourceDiscoveryOption _discoveryOption;
     private readonly ReflectHelper _reflectHelper;
 
     /// <summary>
@@ -36,7 +32,7 @@ internal class TypeEnumerator
     /// <param name="typeValidator"> The validator for test classes. </param>
     /// <param name="testMethodValidator"> The validator for test methods. </param>
     /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
-    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, TestDataSourceDiscoveryOption discoveryOption, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, TestIdGenerationStrategy testIdGenerationStrategy)
     {
         _type = type;
         _assemblyFilePath = assemblyFilePath;
@@ -44,7 +40,6 @@ internal class TypeEnumerator
         _typeValidator = typeValidator;
         _testMethodValidator = testMethodValidator;
         _testIdGenerationStrategy = testIdGenerationStrategy;
-        _discoveryOption = discoveryOption;
     }
 
     /// <summary>
@@ -52,10 +47,8 @@ internal class TypeEnumerator
     /// </summary>
     /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> list of test cases.</returns>
-    internal virtual ICollection<UnitTestElement>? Enumerate(out ICollection<string> warnings)
+    internal virtual List<UnitTestElement>? Enumerate(List<string> warnings)
     {
-        warnings = new Collection<string>();
-
         if (!_typeValidator.IsValidTestClass(_type, warnings))
         {
             return null;
@@ -70,11 +63,11 @@ internal class TypeEnumerator
     /// </summary>
     /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> List of Valid Tests. </returns>
-    internal Collection<UnitTestElement> GetTests(ICollection<string> warnings)
+    internal List<UnitTestElement> GetTests(List<string> warnings)
     {
         bool foundDuplicateTests = false;
         var foundTests = new HashSet<string>();
-        var tests = new Collection<UnitTestElement>();
+        var tests = new List<UnitTestElement>();
 
         // Test class is already valid. Verify methods.
         // PERF: GetRuntimeMethods is used here to get all methods, including non-public, and static methods.
@@ -117,12 +110,11 @@ internal class TypeEnumerator
             currentType = currentType.BaseType;
         }
 
-        return new Collection<UnitTestElement>(
-            tests.GroupBy(
-                t => t.TestMethod.Name,
-                (_, elements) =>
-                    elements.OrderBy(t => inheritanceDepths[t.TestMethod.DeclaringClassFullName ?? t.TestMethod.FullClassName]).First())
-                .ToList());
+        return tests.GroupBy(
+            t => t.TestMethod.Name,
+            (_, elements) =>
+                elements.OrderBy(t => inheritanceDepths[t.TestMethod.DeclaringClassFullName ?? t.TestMethod.FullClassName]).First())
+            .ToList();
     }
 
     /// <summary>
@@ -156,22 +148,6 @@ internal class TypeEnumerator
                     method.DeclaringType.Assembly);
         }
 
-        // PERF: When discovery option is set to DuringDiscovery, we will expand data on tests to one test case
-        // per data item. This will happen in AssemblyEnumerator. But AssemblyEnumerator does not have direct access to
-        // the method info or method attributes, so it would create a TestMethodInfo to see if the test is data driven.
-        // Creating TestMethodInfo is expensive and should be done only for a test that we know is data driven.
-        //
-        // So to optimize this we check if we have some data source attribute. Because here we have access to all attributes
-        // and we store that info in DataType. AssemblyEnumerator will pick this up and will get the real test data in the expensive way
-        // or it will skip over getting the data cheaply, when DataType = DynamicDataType.None.
-        //
-        // This needs to be done only when DuringDiscovery is set, because otherwise we would populate the DataType, but we would not populate
-        // and execution would not try to re-populate the data, because DataType is already set to data driven, so it would just throw error about empty data.
-        if (_discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
-        {
-            testMethod.DataType = GetDynamicDataType(method);
-        }
-
         var testElement = new UnitTestElement(testMethod)
         {
             // Get compiler generated type name for async test method (either void returning or task returning).
@@ -179,7 +155,6 @@ internal class TypeEnumerator
             TestCategory = _reflectHelper.GetTestCategories(method, _type),
             DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
             Priority = _reflectHelper.GetPriority(method),
-            Ignored = _reflectHelper.IsNonDerivedAttributeDefined<IgnoreAttribute>(method, inherit: false),
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
         };
 
@@ -199,49 +174,45 @@ internal class TypeEnumerator
 
         testElement.Traits = traits.ToArray();
 
-        if (_reflectHelper.GetFirstDerivedAttributeOrDefault<CssIterationAttribute>(method, inherit: true) is CssIterationAttribute cssIteration)
+        Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method, inherit: true);
+        TestMethodAttribute? testMethodAttribute = null;
+
+        // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstDerivedAttributeOrDefault
+        // So, to make sure the first attribute always wins, we loop from end to start.
+        for (int i = attributes.Length - 1; i >= 0; i--)
         {
-            testElement.CssIteration = cssIteration.CssIteration;
+            if (attributes[i] is TestMethodAttribute tma)
+            {
+                testMethodAttribute = tma;
+            }
+            else if (attributes[i] is CssIterationAttribute cssIteration)
+            {
+                testElement.CssIteration = cssIteration.CssIteration;
+            }
+            else if (attributes[i] is CssProjectStructureAttribute cssProjectStructure)
+            {
+                testElement.CssProjectStructure = cssProjectStructure.CssProjectStructure;
+            }
+            else if (attributes[i] is DescriptionAttribute descriptionAttribute)
+            {
+                testElement.Description = descriptionAttribute.Description;
+            }
         }
 
-        if (_reflectHelper.GetFirstDerivedAttributeOrDefault<CssProjectStructureAttribute>(method, inherit: true) is CssProjectStructureAttribute cssProjectStructure)
-        {
-            testElement.CssProjectStructure = cssProjectStructure.CssProjectStructure;
-        }
-
-        if (_reflectHelper.GetFirstDerivedAttributeOrDefault<DescriptionAttribute>(method, inherit: true) is DescriptionAttribute descriptionAttribute)
-        {
-            testElement.Description = descriptionAttribute.Description;
-        }
-
-        WorkItemAttribute[] workItemAttributes = _reflectHelper.GetDerivedAttributes<WorkItemAttribute>(method, inherit: true).ToArray();
-        if (workItemAttributes.Length != 0)
+        IEnumerable<WorkItemAttribute> workItemAttributes = attributes.OfType<WorkItemAttribute>();
+        if (workItemAttributes.Any())
         {
             testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture)).ToArray();
         }
 
+        // In production, we always have a TestMethod attribute because GetTestFromMethod is called under IsValidTestMethod
+        // In unit tests, we may not have the test to have TestMethodAttribute.
+        // TODO: Adjust all unit tests to properly have the attribute and uncomment the assert.
+        // DebugEx.Assert(testMethodAttribute is not null, "Expected to find a 'TestMethod' attribute.");
+
         // get DisplayName from TestMethodAttribute (or any inherited attribute)
-        TestMethodAttribute? testMethodAttribute = _reflectHelper.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(method, inherit: true);
         testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
 
         return testElement;
-    }
-
-    private DynamicDataType GetDynamicDataType(MethodInfo method)
-    {
-        foreach (Attribute attribute in _reflectHelper.GetDerivedAttributes<Attribute>(method, inherit: true))
-        {
-            if (AttributeComparer.IsDerived<ITestDataSource>(attribute))
-            {
-                return DynamicDataType.ITestDataSource;
-            }
-
-            if (AttributeComparer.IsDerived<DataSourceAttribute>(attribute))
-            {
-                return DynamicDataType.DataSourceAttribute;
-            }
-        }
-
-        return DynamicDataType.None;
     }
 }

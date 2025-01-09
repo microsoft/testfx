@@ -1,22 +1,25 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-
 #if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration;
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 /// <summary>
 /// The main service provider class that exposes all the platform services available.
 /// </summary>
-internal class PlatformServiceProvider : IPlatformServiceProvider
+internal sealed class PlatformServiceProvider : IPlatformServiceProvider
 {
+    private static readonly Action<object?> CancelDelegate = static state => ((TestContextImplementation)state!).Context.CancellationTokenSource.Cancel();
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
     /// </summary>
@@ -24,11 +27,11 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
 #if !WINDOWS_UWP
         // Set the provider that is used by DynamicDataAttribute when generating data, to allow substituting functionality
         // in TestFramework without having to put all the stuff in that library.
-        TestTools.UnitTesting.DynamicDataProvider.Instance = SourceGeneratorToggle.UseSourceGenerator
+        UTF.DynamicDataProvider.Instance = SourceGeneratorToggle.UseSourceGenerator
             ? new SourceGeneratedDynamicDataOperations()
             : new DynamicDataOperations();
 #else
-        TestTools.UnitTesting.DynamicDataProvider.Instance = new DynamicDataOperations();
+        UTF.DynamicDataProvider.Instance = new DynamicDataOperations();
 #endif
 
     /// <summary>
@@ -138,6 +141,8 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     public TestRunCancellationToken? TestRunCancellationToken { get; set; }
 
+    public bool IsGracefulStopRequested { get; set; }
+
     /// <summary>
     /// Gets or sets the instance for the platform service.
     /// </summary>
@@ -220,10 +225,11 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties)
+    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome)
     {
-        var testContextImplementation = new TestContextImplementation(testMethod, writer, properties);
-        TestRunCancellationToken?.Register(testContextImplementation.Context.CancellationTokenSource.Cancel);
+        var testContextImplementation = new TestContextImplementation(testMethod, writer, properties, messageLogger);
+        TestRunCancellationToken?.Register(CancelDelegate, testContextImplementation);
+        testContextImplementation.SetOutcome(outcome);
         return testContextImplementation;
     }
 }

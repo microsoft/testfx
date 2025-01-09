@@ -3,9 +3,29 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#pragma warning disable CS1574 // XML comment has cref attribute that could not be resolved - The warning is for ValueTask.
 /// <summary>
-/// The test method attribute.
+/// This attribute is used to mark test methods.
 /// </summary>
+/// <remarks>
+/// <list type="bullet">
+/// <item>
+/// When using other attributes like <see cref="DataRowAttribute" /> or <see cref="DynamicDataAttribute" />, it
+/// the use of <see cref="TestMethodAttribute" /> is still required.
+/// </item>
+/// <item>
+/// Test methods must be:
+/// <list type="bullet">
+/// <item>public, or if <see cref="DiscoverInternalsAttribute"/> is used then it can be internal.</item>
+/// <item>not static</item>
+/// <item>not generic</item>
+/// <item>not abstract</item>
+/// <item>return type is either <see langword="void"/>, <see cref="Task"/>, or <see cref="ValueTask"/>. If <see langword="void"/>, then it shouldn't be <see langword="async"/>.</item>
+/// </list>
+/// </item>
+/// </list>
+/// </remarks>
+#pragma warning restore CS1574 // XML comment has cref attribute that could not be resolved// XML comment has cref attribute that could not be resolved
 [AttributeUsage(AttributeTargets.Method)]
 public class TestMethodAttribute : Attribute
 {
@@ -29,6 +49,11 @@ public class TestMethodAttribute : Attribute
     /// Gets display name for the test.
     /// </summary>
     public string? DisplayName { get; }
+
+    /// <summary>
+    /// Gets or sets a reason to ignore the test method. Setting the property to non-null value will ignore the test method.
+    /// </summary>
+    public string? IgnoreMessage { get; set; }
 
     /// <summary>
     /// Executes a test method.

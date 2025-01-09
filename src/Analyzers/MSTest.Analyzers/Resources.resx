@@ -125,7 +125,7 @@
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
@@ -181,10 +181,10 @@ The type declaring these methods should also respect the following rules:
     <value>Assertion arguments should be passed in the correct order</value>
   </data>
   <data name="AvoidExpectedExceptionAttributeDescription" xml:space="preserve">
-    <value>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</value>
+    <value>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</value>
   </data>
   <data name="AvoidExpectedExceptionAttributeMessageFormat" xml:space="preserve">
-    <value>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</value>
+    <value>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</value>
   </data>
   <data name="AvoidExpectedExceptionAttributeTitle" xml:space="preserve">
     <value>Avoid '[ExpectedException]'</value>
@@ -197,7 +197,7 @@ The type declaring these methods should also respect the following rules:
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
@@ -399,7 +399,7 @@ The type declaring these methods should also respect the following rules:
     <value>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
-- it should not be generic
+- it should may be generic as long as type parameters can be inferred and argument types are compatible
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
@@ -490,10 +490,10 @@ The type declaring these methods should also respect the following rules:
     <value>'[DynamicData]' member '{0}.{1}' cannot be found</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_TooManyMembers" xml:space="preserve">
-    <value>'[DynamicDta]' member '{0}.{1}' is found more than once</value>
+    <value>'[DynamicData]' member '{0}.{1}' is found more than once</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty" xml:space="preserve">
-    <value>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</value>
+    <value>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_MemberMethod" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' should be a method</value>
@@ -502,7 +502,7 @@ The type declaring these methods should also respect the following rules:
     <value>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod" xml:space="preserve">
-    <value>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</value>
+    <value>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</value>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature" xml:space="preserve">
     <value>'[DynamicData]' display name method '{0}.{1}' signature is invalid</value>
@@ -533,5 +533,29 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="UseProperAssertMethodsMessageFormat" xml:space="preserve">
     <value>Use 'Assert.{0}' instead of 'Assert.{1}'</value>
+  </data>
+  <data name="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved" xml:space="preserve">
+    <value>The type of the generic parameter '{0}' could not be inferred.</value>
+  </data>
+  <data name="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes" xml:space="preserve">
+    <value>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</value>
+  </data>
+  <data name="UseNewerAssertThrowsTitle" xml:space="preserve">
+    <value>Use newer methods to assert exceptions</value>
+  </data>
+  <data name="UseNewerAssertThrowsMessageFormat" xml:space="preserve">
+    <value>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</value>
+  </data>
+  <data name="AvoidAssertAreSameWithValueTypesTitle" xml:space="preserve">
+    <value>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</value>
+  </data>
+  <data name="AvoidAssertAreSameWithValueTypesMessageFormat" xml:space="preserve">
+    <value>Use '{0}' instead of '{1}' when comparing value types</value>
+  </data>
+  <data name="AvoidAssertAreSameWithValueTypesDescription" xml:space="preserve">
+    <value>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</value>
   </data>
 </root>

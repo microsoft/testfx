@@ -1,21 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Runtime.InteropServices;
-
-using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
-public class UnhandledExceptionPolicyTests : AcceptanceTestBase
+[TestClass]
+public class UnhandledExceptionPolicyTests : AcceptanceTestBase<UnhandledExceptionPolicyTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public UnhandledExceptionPolicyTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
     public enum Mode
     {
         Enabled,
@@ -25,22 +15,23 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
         Default,
     }
 
-    internal static IEnumerable<TestArgumentsEntry<(Mode Mode, string Arguments)>> ModeProvider()
+    internal static IEnumerable<(Mode Mode, string Arguments)> ModeProvider()
     {
-        foreach (TestArgumentsEntry<string> tfm in TargetFrameworks.All)
+        foreach (string tfm in TargetFrameworks.All)
         {
-            yield return new TestArgumentsEntry<(Mode, string)>((Mode.Enabled, tfm.Arguments), $"Enabled - {tfm.Arguments}");
-            yield return new TestArgumentsEntry<(Mode, string)>((Mode.Disabled, tfm.Arguments), $"Disabled - {tfm.Arguments}");
-            yield return new TestArgumentsEntry<(Mode, string)>((Mode.DisabledByEnvironmentVariable, tfm.Arguments), $"DisabledByEnvironmentVariable - {tfm.Arguments}");
-            yield return new TestArgumentsEntry<(Mode, string)>((Mode.EnabledByEnvironmentVariable, tfm.Arguments), $"EnabledByEnvironmentVariable - {tfm.Arguments}");
-            yield return new TestArgumentsEntry<(Mode, string)>((Mode.Default, tfm.Arguments), $"Default - ({tfm.Arguments})");
+            yield return new(Mode.Enabled, tfm);
+            yield return new(Mode.Disabled, tfm);
+            yield return new(Mode.DisabledByEnvironmentVariable, tfm);
+            yield return new(Mode.EnabledByEnvironmentVariable, tfm);
+            yield return new(Mode.Default, tfm);
         }
     }
 
-    [ArgumentsProvider(nameof(ModeProvider))]
+    [DynamicData(nameof(ModeProvider), DynamicDataSourceType.Method)]
+    [TestMethod]
     public async Task UnhandledExceptionPolicy_ConfigFile_UnobservedTaskException_ShouldCrashProcessIfEnabled(Mode mode, string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "UnhandledExceptionPolicyTests", tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "UnhandledExceptionPolicyTests", tfm);
         using TempDirectory clone = new();
         await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, "UnhandledExceptionPolicyTests");
@@ -93,10 +84,11 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
         }
     }
 
-    [ArgumentsProvider(nameof(ModeProvider))]
+    [DynamicData(nameof(ModeProvider), DynamicDataSourceType.Method)]
+    [TestMethod]
     public async Task UnhandledExceptionPolicy_EnvironmentVariable_UnhandledException_ShouldCrashProcessIfEnabled(Mode mode, string tfm)
     {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "UnhandledExceptionPolicyTests", tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "UnhandledExceptionPolicyTests", tfm);
         using TempDirectory clone = new();
         await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, "UnhandledExceptionPolicyTests");
@@ -151,8 +143,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
         }
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string AssetName = "UnhandledExceptionPolicyTests";
 
@@ -208,21 +199,21 @@ public class Startup
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestAdapter());
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestFramework());
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
 }
 
-public class DummyTestAdapter : ITestFramework, IDataProducer
+public class DummyTestFramework : ITestFramework, IDataProducer
 {
-    public string Uid => nameof(DummyTestAdapter);
+    public string Uid => nameof(DummyTestFramework);
 
     public string Version => "2.0.0";
 
-    public string DisplayName => nameof(DummyTestAdapter);
+    public string DisplayName => nameof(DummyTestFramework);
 
-    public string Description => nameof(DummyTestAdapter);
+    public string Description => nameof(DummyTestFramework);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

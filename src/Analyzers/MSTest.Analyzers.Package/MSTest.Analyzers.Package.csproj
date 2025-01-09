@@ -36,6 +36,12 @@
     <ItemGroup>
       <TfmSpecificPackageFile Include="$(OutputPath)\MSTest.Analyzers.dll" PackagePath="analyzers/dotnet/cs" />
       <TfmSpecificPackageFile Include="$(OutputPath)\MSTest.Analyzers.CodeFixes.dll" PackagePath="analyzers/dotnet/cs" />
+      <TfmSpecificPackageFile Include="$(OutputPath)\**\MSTest.Analyzers.resources.dll" PackagePath="analyzers/dotnet/cs/" />
+      <TfmSpecificPackageFile Include="$(OutputPath)\**\MSTest.Analyzers.CodeFixes.resources.dll" PackagePath="analyzers/dotnet/cs/" />
+
+      <!-- NOTE: Currently, code fixes are C# only. -->
+      <TfmSpecificPackageFile Include="$(OutputPath)\MSTest.Analyzers.dll" PackagePath="analyzers/dotnet/vb" />
+      <TfmSpecificPackageFile Include="$(OutputPath)\**\MSTest.Analyzers.resources.dll" PackagePath="analyzers/dotnet/vb/" />
     </ItemGroup>
   </Target>
 

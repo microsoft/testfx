@@ -1,19 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
-using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
 namespace MSTest.Acceptance.IntegrationTests.Messages.V100;
 
-public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTestBase
+public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : AcceptanceTestBase<TFixture>
+    where TFixture : TestAssetFixtureBase, new()
 {
     private static readonly string Root = RootFinder.Find();
     private static readonly Dictionary<string, string?> DefaultEnvironmentVariables = new()
@@ -23,11 +20,6 @@ public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTest
         { "DOTNET_SKIP_FIRST_TIME_EXPERIENCE", "1" },
         { "DOTNET_MULTILEVEL_LOOKUP", "0" },
     };
-
-    protected ServerModeTestsBase(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
 
     protected async Task<TestingPlatformClient> StartAsServerAndConnectToTheClientAsync(TestHost testHost)
     {

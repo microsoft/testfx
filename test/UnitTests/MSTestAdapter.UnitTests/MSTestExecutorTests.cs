@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -43,7 +41,7 @@ public class MSTestExecutorTests : TestContainer
     {
         var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v2"), Assembly.GetExecutingAssembly().Location);
         TestCase[] tests = [testCase];
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
               <MSTest>
@@ -54,7 +52,7 @@ public class MSTestExecutorTests : TestContainer
             </RunSettings>
             """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _mstestExecutor.RunTests(tests, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         // Test should not start if TestSettings is given.
@@ -65,7 +63,7 @@ public class MSTestExecutorTests : TestContainer
     {
         var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v2"), Assembly.GetExecutingAssembly().Location);
         TestCase[] tests = [testCase];
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
               <MSTest>
@@ -76,7 +74,7 @@ public class MSTestExecutorTests : TestContainer
             </RunSettings>
             """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         // Act.
         _mstestExecutor.RunTests(tests, _mockRunContext.Object, _mockFrameworkHandle.Object);
@@ -89,7 +87,7 @@ public class MSTestExecutorTests : TestContainer
     public void RunTestsWithSourcesShouldNotExecuteTestsIfTestSettingsIsGiven()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
               <MSTest>
@@ -100,7 +98,7 @@ public class MSTestExecutorTests : TestContainer
             </RunSettings>
             """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         // Test should not start if TestSettings is given.
@@ -110,7 +108,7 @@ public class MSTestExecutorTests : TestContainer
     public void RunTestsWithSourcesShouldReportErrorAndBailOutOnSettingsException()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
               <MSTest>
@@ -121,7 +119,7 @@ public class MSTestExecutorTests : TestContainer
             </RunSettings>
             """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         // Act.
         _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
@@ -134,13 +132,13 @@ public class MSTestExecutorTests : TestContainer
     public void RunTestsWithSourcesShouldSetDefaultCollectSourceInformationAsTrue()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
             </RunSettings>
             """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         Verify(MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
@@ -149,7 +147,7 @@ public class MSTestExecutorTests : TestContainer
     public void RunTestsWithSourcesShouldSetCollectSourceInformationAsFalseIfSpecifiedInRunSettings()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
-        string runSettingxml =
+        string runSettingsXml =
             """
             <RunSettings>
               <RunConfiguration>
@@ -158,7 +156,7 @@ public class MSTestExecutorTests : TestContainer
             </RunSettings>
             """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         Verify(!MSTestSettings.RunConfigurationSettings.CollectSourceInformation);

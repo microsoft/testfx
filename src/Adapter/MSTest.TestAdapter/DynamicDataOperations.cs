@@ -3,14 +3,6 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#if NET471_OR_GREATER || (NET && !WINDOWS_UWP)
-using System.Collections;
-using System.Runtime.CompilerServices;
-#endif
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 internal class DynamicDataOperations : IDynamicDataOperations
@@ -25,36 +17,35 @@ internal class DynamicDataOperations : IDynamicDataOperations
 
         switch (_dynamicDataSourceType)
         {
-            case DynamicDataSourceType.Property:
-                PropertyInfo property = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(_dynamicDataDeclaringType, _dynamicDataSourceName)
-                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {_dynamicDataSourceName}");
-                if (property.GetGetMethod(true) is not { IsStatic: true })
+            case DynamicDataSourceType.AutoDetect:
+#pragma warning disable IDE0045 // Convert to conditional expression - it becomes less readable.
+                if (GetPropertyConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataPropertyInfo)
                 {
-                    throw new NotSupportedException(
-                        string.Format(
-                            CultureInfo.InvariantCulture,
-                            FrameworkMessages.DynamicDataInvalidPropertyLayout,
-                            property.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{property.Name}" : property.Name));
+                    obj = GetDataFromProperty(dynamicDataPropertyInfo);
                 }
+                else if (GetMethodConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataMethodInfo)
+                {
+                    obj = GetDataFromMethod(dynamicDataMethodInfo);
+                }
+                else
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.DynamicDataSourceShouldExistAndBeValid, _dynamicDataSourceName, _dynamicDataDeclaringType.FullName));
+                }
+#pragma warning restore IDE0045 // Convert to conditional expression
 
-                obj = property.GetValue(null, null);
+                break;
+            case DynamicDataSourceType.Property:
+                PropertyInfo property = GetPropertyConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName)
+                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {_dynamicDataSourceName}");
+
+                obj = GetDataFromProperty(property);
                 break;
 
             case DynamicDataSourceType.Method:
-                MethodInfo method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(_dynamicDataDeclaringType, _dynamicDataSourceName)
+                MethodInfo method = GetMethodConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {_dynamicDataSourceName}");
-                if (!method.IsStatic
-                    || method.ContainsGenericParameters
-                    || method.GetParameters().Length > 0)
-                {
-                    throw new NotSupportedException(
-                        string.Format(
-                            CultureInfo.InvariantCulture,
-                            FrameworkMessages.DynamicDataInvalidPropertyLayout,
-                            method.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{method.Name}" : method.Name));
-                }
 
-                obj = method.Invoke(null, null);
+                obj = GetDataFromMethod(method);
                 break;
         }
 
@@ -80,6 +71,38 @@ internal class DynamicDataOperations : IDynamicDataOperations
 
         // Data is valid, return it.
         return data;
+    }
+
+    private static object? GetDataFromMethod(MethodInfo method)
+    {
+        if (!method.IsStatic
+            || method.ContainsGenericParameters
+            || method.GetParameters().Length > 0)
+        {
+            throw new NotSupportedException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    FrameworkMessages.DynamicDataInvalidPropertyLayout,
+                    method.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{method.Name}" : method.Name));
+        }
+
+        // Note: the method is static and takes no parameters.
+        return method.Invoke(null, null);
+    }
+
+    private static object? GetDataFromProperty(PropertyInfo property)
+    {
+        if (property.GetGetMethod(true) is not { IsStatic: true })
+        {
+            throw new NotSupportedException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    FrameworkMessages.DynamicDataInvalidPropertyLayout,
+                    property.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{property.Name}" : property.Name));
+        }
+
+        // Note: the property getter is static.
+        return property.GetValue(null, null);
     }
 
     /// <inheritdoc />
@@ -130,25 +153,21 @@ internal class DynamicDataOperations : IDynamicDataOperations
         }
 
 #if NET471_OR_GREATER || (NET && !WINDOWS_UWP)
-        if (dataSource is IEnumerable enumerable)
+        if (dataSource is IEnumerable enumerable and not string)
         {
             List<object[]> objects = new();
             foreach (object? entry in enumerable)
             {
-                if (entry is not ITuple tuple
-                    || (objects.Count > 0 && objects[^1].Length != tuple.Length))
+                if (entry is null)
                 {
                     data = null;
                     return false;
                 }
 
-                object[] array = new object[tuple.Length];
-                for (int i = 0; i < tuple.Length; i++)
+                if (!TryHandleTupleDataSource(entry, objects))
                 {
-                    array[i] = tuple[i]!;
+                    objects.Add(new[] { entry });
                 }
-
-                objects.Add(array);
             }
 
             data = objects;
@@ -158,5 +177,116 @@ internal class DynamicDataOperations : IDynamicDataOperations
 
         data = null;
         return false;
+    }
+
+    private static bool TryHandleTupleDataSource(object data, List<object[]> objects)
+    {
+#if NET471_OR_GREATER || NETCOREAPP
+        if (data is ITuple tuple
+            && (objects.Count == 0 || objects[^1].Length == tuple.Length))
+        {
+            object[] array = new object[tuple.Length];
+            for (int i = 0; i < tuple.Length; i++)
+            {
+                array[i] = tuple[i]!;
+            }
+
+            objects.Add(array);
+            return true;
+        }
+#else
+        Type type = data.GetType();
+        if (IsTupleOrValueTuple(data.GetType(), out int tupleSize)
+            && (objects.Count == 0 || objects[objects.Count - 1].Length == tupleSize))
+        {
+            object[] array = new object[tupleSize];
+            for (int i = 0; i < tupleSize; i++)
+            {
+                array[i] = type.GetField($"Item{i + 1}")?.GetValue(data)!;
+            }
+
+            objects.Add(array);
+            return true;
+        }
+#endif
+
+        return false;
+    }
+
+#if !NET471_OR_GREATER && !NETCOREAPP
+    private static bool IsTupleOrValueTuple(Type type, out int tupleSize)
+    {
+        tupleSize = 0;
+        if (!type.IsGenericType)
+        {
+            return false;
+        }
+
+        Type genericTypeDefinition = type.GetGenericTypeDefinition();
+
+        if (genericTypeDefinition == typeof(Tuple<>) ||
+            genericTypeDefinition == typeof(Tuple<,>) ||
+            genericTypeDefinition == typeof(Tuple<,,>) ||
+            genericTypeDefinition == typeof(Tuple<,,,>) ||
+            genericTypeDefinition == typeof(Tuple<,,,,>) ||
+            genericTypeDefinition == typeof(Tuple<,,,,,>) ||
+            genericTypeDefinition == typeof(Tuple<,,,,,,>) ||
+            genericTypeDefinition == typeof(Tuple<,,,,,,,>))
+        {
+            tupleSize = type.GetGenericArguments().Length;
+            return true;
+        }
+
+        if (genericTypeDefinition == typeof(ValueTuple<>) ||
+            genericTypeDefinition == typeof(ValueTuple<,>) ||
+            genericTypeDefinition == typeof(ValueTuple<,,>) ||
+            genericTypeDefinition == typeof(ValueTuple<,,,>) ||
+            genericTypeDefinition == typeof(ValueTuple<,,,,>) ||
+            genericTypeDefinition == typeof(ValueTuple<,,,,,>) ||
+            genericTypeDefinition == typeof(ValueTuple<,,,,,,>) ||
+            genericTypeDefinition == typeof(ValueTuple<,,,,,,,>))
+        {
+            tupleSize = type.GetGenericArguments().Length;
+            return true;
+        }
+
+        return false;
+    }
+#endif
+
+    private static PropertyInfo? GetPropertyConsideringInheritance(Type type, string propertyName)
+    {
+        // NOTE: Don't use GetRuntimeProperty. It considers inheritance only for instance properties.
+        Type? currentType = type;
+        while (currentType is not null)
+        {
+            PropertyInfo? property = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(currentType, propertyName);
+            if (property is not null)
+            {
+                return property;
+            }
+
+            currentType = currentType.BaseType;
+        }
+
+        return null;
+    }
+
+    private static MethodInfo? GetMethodConsideringInheritance(Type type, string methodName)
+    {
+        // NOTE: Don't use GetRuntimeMethod. It considers inheritance only for instance methods.
+        Type? currentType = type;
+        while (currentType is not null)
+        {
+            MethodInfo? method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(currentType, methodName);
+            if (method is not null)
+            {
+                return method;
+            }
+
+            currentType = currentType.BaseType;
+        }
+
+        return null;
     }
 }

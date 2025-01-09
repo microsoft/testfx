@@ -1,15 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
-using System.Diagnostics;
-
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 public sealed partial class PropertyBag
 {
     [DebuggerTypeProxy(typeof(PropertyDebugView))]
-    internal /* for testing */ class Property(IProperty current, Property? next = null) : IEnumerable<IProperty>
+    internal /* for testing */ sealed class Property(IProperty current, Property? next = null) : IEnumerable<IProperty>
     {
         public int Count
         {

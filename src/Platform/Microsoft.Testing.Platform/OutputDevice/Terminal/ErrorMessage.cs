@@ -6,4 +6,4 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// <summary>
 /// An error message that was sent to output during the build.
 /// </summary>
-internal record ErrorMessage(string Text) : IProgressMessage;
+internal sealed record ErrorMessage(string Text) : IProgressMessage;

@@ -1,17 +1,23 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// Specifies connection string, table name and row access method for data driven testing.
 /// </summary>
-/// <example>
+/// <remarks>
+/// <list type="bullet">
+/// <item>This works only on .NET Framework and is not supported on .NET Core or later.</item>
+/// <item>
+/// The following shows example usages for this attribute:
+/// <code>
 /// [DataSource("Provider=SQLOLEDB.1;Data Source=source;Integrated Security=SSPI;Initial Catalog=EqtCoverage;Persist Security Info=False", "MyTable")]
 /// [DataSource("dataSourceNameFromConfigFile")].
-/// </example>
+/// </code>
+/// </item>
+/// </list>
+/// </remarks>
 [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments", Justification = "Compat")]
 [AttributeUsage(AttributeTargets.Method)]
 public sealed class DataSourceAttribute : Attribute
@@ -97,7 +103,7 @@ public sealed class DataSourceAttribute : Attribute
     /// </summary>
     ///
     /// <returns>
-    /// One of the <see cref="Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod"/> values. If the <see cref="DataSourceAttribute"/> is not initialized, this will return the default value <see cref="Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod.Random"/>.
+    /// One of the <see cref="UnitTesting.DataAccessMethod"/> values. If the <see cref="DataSourceAttribute"/> is not initialized, this will return the default value <see cref="DataAccessMethod.Random"/>.
     /// </returns>
     public DataAccessMethod DataAccessMethod { get; }
 

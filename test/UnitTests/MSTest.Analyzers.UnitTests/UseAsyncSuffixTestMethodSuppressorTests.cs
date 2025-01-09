@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -13,9 +12,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.UnitTests;
 
-[TestGroup]
-public sealed class UseAsyncSuffixTestMethodSuppressorTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class UseAsyncSuffixTestMethodSuppressorTests
 {
+    [TestMethod]
     public async Task AsyncTestMethodWithoutSuffix_DiagnosticIsSuppressed()
     {
         string code =
@@ -45,6 +45,7 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests(ITestExecutionContex
         }.RunAsync();
     }
 
+    [TestMethod]
     public async Task AsyncDataTestMethodWithoutSuffix_DiagnosticIsSuppressed()
     {
         string code =
@@ -73,6 +74,7 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests(ITestExecutionContex
         }.RunAsync();
     }
 
+    [TestMethod]
     public async Task AsyncTestMethodWithSuffix_NoDiagnostic()
     {
         string code =

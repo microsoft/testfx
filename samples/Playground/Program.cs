@@ -1,19 +1,17 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Messages;
+#if NETCOREAPP
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
-using Microsoft.Testing.Platform.Services;
+using MSTest.Acceptance.IntegrationTests.Messages.V100;
+#endif
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using MSTest.Acceptance.IntegrationTests.Messages.V100;
 
 namespace Playground;
 
@@ -26,8 +24,11 @@ public class Program
 
         if (Environment.GetEnvironmentVariable("TESTSERVERMODE") != "1")
         {
+#if NETCOREAPP
             // To attach to the children
             Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
+#endif
+
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 
             // Test MSTest
@@ -37,7 +38,7 @@ public class Program
             // testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new DummyAdapter());
 
             // Custom test host controller extension
-            testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
+            // testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
 
             // Enable Trx
             // testApplicationBuilder.AddTrxReportProvider();
@@ -49,8 +50,11 @@ public class Program
         }
         else
         {
+#if NETFRAMEWORK
+            throw new NotSupportedException("Server mode is not supported on .NET Framework");
+#else
             Environment.SetEnvironmentVariable("TESTSERVERMODE", "0");
-            using TestingPlatformClient client = await TestingPlatformClientFactory.StartAsServerAndConnectAsync(Environment.ProcessPath!, enableDiagnostic: true);
+            using TestingPlatformClient client = await TestingPlatformClientFactory.StartAsServerAndConnectToTheClientAsync(Environment.ProcessPath!);
 
             await client.InitializeAsync();
             List<TestNodeUpdate> testNodeUpdates = new();
@@ -61,12 +65,13 @@ public class Program
             });
             await discoveryResponse.WaitCompletionAsync();
 
-            ResponseListener runRequest = await client.RunTestsAsync(Guid.NewGuid(), testNodeUpdates.Select(x => x.Node).ToArray(), node => Task.CompletedTask);
+            ResponseListener runRequest = await client.RunTestsAsync(Guid.NewGuid(), testNodeUpdates.Select(x => x.Node).ToArray(), _ => Task.CompletedTask);
             await runRequest.WaitCompletionAsync();
 
             await client.ExitAsync();
 
             return 0;
+#endif
         }
     }
 }

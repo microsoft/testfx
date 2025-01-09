@@ -10,7 +10,7 @@
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
@@ -21,19 +21,19 @@ The type declaring these methods should also respect the following rules:
 -the class should not be generic.</source>
         <target state="translated">標示為 '[AssemblyCleanup]' 的方法應該遵循下列配置才能有效:
 -其不能在泛型類別上宣告
-- 其應為 'public'
-- 其應為 'static'
-- 其不應為 'async void'
-- 其不應為特殊方法 (完成項、運算子...)。
-- 其不應為泛型
-- 其不應接受任何參數
-- 傳回類型應為 'void'、'Task' 或 'ValueTask'
+-其應為 'public'
+-其應為 'static'
+-其不應為 'async void'
+-其不應為特殊方法 (完成項、運算子...)。
+-其不應為泛型
+-其不應接受任何參數，或接受類型為 'TestContext' 的單一參數
+-傳回類型應為 'void'、'Task' 或 'ValueTask'
 
 宣告這些方法的類型還應遵循以下規則:
 -類型應為類別
 -類別應為 'public' 或 'internal' (如果測試專案使用 '[DiscoverInternals]' 屬性)
 -類別不應為 'static'
--類別應標示為 '[TestClass]' (或衍生屬性)。
+-類別應標示為 '[TestClass]' (或衍生屬性)
 -類別不應為泛型。</target>
         <note />
       </trans-unit>
@@ -117,14 +117,29 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">應該以正確的順序傳遞判斷提示引數</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
+        <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
+        <target state="translated">比較值類型時，請使用 'Assert.AreEqual'/'Assert.AreNotEqual' 取代 'Assert.AreSame'/'Assert.AreNotSame'。將值類型傳遞至 『Assert.AreSame』/'Assert.AreNotSame' 將會在建立新物件) (方塊化。因為 'Assert.AreSame'/'Assert.AreNotSame' 依參照進行比較，當進行拳擊時，'Assert.AreSame' 將會失敗，而且 'Assert.AreNotSame' 一律會通過。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
+        <source>Use '{0}' instead of '{1}' when comparing value types</source>
+        <target state="translated">比較值類型時，使用 '{0}' 而非 '{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
+        <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
+        <target state="translated">不要在值類型中使用 'Assert.AreSame' 或 'Assert.AreNotSame'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
-        <target state="translated">偏好 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' 而非 '[ExpectedException]'，因為它可確保只有預期的呼叫會擲出預期的例外狀況。判斷提示 API 也提供更多彈性，並允許您斷言例外狀況的額外屬性。</target>
+        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
+        <target state="translated">偏好 'Assert.ThrowsExactly' 或 'Assert.ThrowsExactlyAsync' 而不是 '[ExpectedException]'，因為它可確保只有預期的呼叫會擲出預期的例外狀況。判斷提示 API 也提供更多彈性，並允許您判斷提示例外狀況的額外屬性。</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</source>
-        <target state="translated">偏好 'Assert.ThrowsException/ThrowsExceptionAsync' 而非 '[ExpectedException]'</target>
+        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
+        <target state="translated">偏好 'Assert.ThrowsExactly/ThrowsExactlyAsync' 而不是 '[ExpectedException]'</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
@@ -140,7 +155,7 @@ The type declaring these methods should also respect the following rules:
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
@@ -153,21 +168,21 @@ The type declaring these methods should also respect the following rules:
 -the class should not be generic.</source>
         <target state="translated">標示 '[ClassCleanup]' 的方法應該遵循下列配置，才會有效:
 -未設定 'InheritanceBehavior' 模式的情況下不能在泛型類別上宣告它
-- 其應為 'public'
-- 其應為 'static'
-- 其不應為 'async void'
-- 其不應為特殊方法 (完成項、運算子...)。
-- 其不應為泛型
-- 其不應接受任何參數
-- 傳回類型應為 'void'、'Task' 或 'ValueTask'
-- 如果類別為 'abstract'，應指定 'InheritanceBehavior.BeforeEachDerivedClass' 屬性參數。
-- 如果類別為 'sealed'，則不應指定 'InheritanceBehavior.BeforeEachDerivedClass' 屬性參數。
+-其應為 'public'
+-其應為 'static'
+-其不應為 'async void'
+-其不應為特殊方法 (完成項、運算子...)。
+-其不應為泛型
+-其不應接受任何參數，或接受類型為 'TestContext' 的單一參數
+-傳回類型應為 'void'、'Task' 或 'ValueTask'
+-如果類別為 'abstract'，應指定 'InheritanceBehavior.BeforeEachDerivedClass' 屬性參數
+-如果類別為 'sealed'，則不應指定 'InheritanceBehavior.BeforeEachDerivedClass' 屬性參數
 
 宣告這些方法的類型還應遵循以下規則:
 -類型應為類別
 -類別應為 'public' 或 'internal' (如果測試專案使用 '[DiscoverInternals]' 屬性)
 -類別不應為 'static'
--如果類別是 'sealed'，則應標示為 '[TestClass]' (或衍生屬性)。
+-如果類別是 'sealed'，則應標示為 '[TestClass]' (或衍生屬性)
 -類別不應為泛型。</target>
         <note />
       </trans-unit>
@@ -249,6 +264,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
         <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
         <target state="translated">DataRow 引數類型應符合方法參數類型。索引發生不符: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
+        <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
+        <target state="translated">發現兩個衝突的泛型參數類型 '{0}'。衝突的類型 '{1}' 且 '{2}'。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved">
+        <source>The type of the generic parameter '{0}' could not be inferred.</source>
+        <target state="translated">無法推斷泛型參數 '{0}' 的類型。</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
@@ -353,18 +378,23 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
-        <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
-        <target state="translated">'[DynamicData]' 成員 '{0}.{1}' 是方法，因此您應該設定 'DynamicDataSourceType.Method'</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="translated">'[DynamicData]' 成員 '{0}.{1}' 是方法，因此您應該使用 'DynamicDataSourceType.AutoDetect' 或 'DynamicDataSourceType.Method' (未明確指定時，自動偵測是預設值，建議)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
+        <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
+        <target state="translated">'[DynamicData]' 成員 『{0}.{1}』 不是屬性也不是方法。只支援屬性和方法。</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
-        <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
-        <target state="translated">'[DynamicData]' 成員 '{0}.{1}' 是屬性，因此您應該設定 'DynamicDataSourceType.Property'</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="translated">'[DynamicData]' 成員 '{0}.{1}' 是屬性，因此您應該使用 'DynamicDataSourceType.AutoDetect' 或 'DynamicDataSourceType.Property' (未明確指定自動偵測是預設值，建議)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
-        <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
-        <target state="translated">多次發現 '[DynamicDta]' 成員 '{0}.{1}'</target>
+        <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
+        <target state="translated"> '[DynamicData]' 成員 '{0}。{1}' 多次發現</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
@@ -629,7 +659,7 @@ The type declaring these methods should also respect the following rules:
         <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
-- it should not be generic
+- it should may be generic as long as type parameters can be inferred and argument types are compatible
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
@@ -637,7 +667,7 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">測試方法 (標示為 '[TestMethod]' 屬性的方法) 應該遵循下列配置，讓 MSTest 視為有效:
 - 它應該是 'public' (如果設定 '[assembly: DiscoverInternals]' 屬性，則為 'internal')
 - 它應該是 'static'
-- 它不能是泛型
+- 只要可以推斷類型參數且引數類型相容，則其應為一般
 - 它不能是 'abstract'
 - 傳回型別應為 'void'、'Task' 或 'ValueTask'
 - 它不能是 'async void'
@@ -707,6 +737,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">'[DeploymentItem]' 只能在測試類或測試方法上指定</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsMessageFormat">
+        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
+        <target state="translated">使用 'Assert.ThrowsExactly' 而非 'Assert.ThrowsException'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsTitle">
+        <source>Use newer methods to assert exceptions</source>
+        <target state="translated">使用較新的方法判斷例外狀況</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

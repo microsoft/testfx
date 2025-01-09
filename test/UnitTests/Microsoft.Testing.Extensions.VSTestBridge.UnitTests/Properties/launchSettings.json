@@ -2,7 +2,7 @@
   "profiles": {
     "Microsoft.Testing.Extensions.VSTestBridge.UnitTests": {
       "commandName": "Project",
-      "commandLineArgs": "--treenode-filter /*/*/*/**",
+      "commandLineArgs": "",
       "environmentVariables": {
       }
     }

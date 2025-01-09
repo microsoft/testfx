@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -126,7 +123,7 @@ public class TestExecutionManagerTests : TestContainer
 
     public void RunTestsForIgnoredTestShouldSendResultsMarkingIgnoredTestsAsSkipped()
     {
-        TestCase testCase = GetTestCase(typeof(DummyTestClass), "IgnoredTest", ignore: true);
+        TestCase testCase = GetTestCase(typeof(DummyTestClass), "IgnoredTest");
         TestCase[] tests = [testCase];
 
         _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
@@ -817,14 +814,11 @@ public class TestExecutionManagerTests : TestContainer
 
     #region private methods
 
-    private static TestCase GetTestCase(Type typeOfClass, string testName, bool ignore = false)
+    private static TestCase GetTestCase(Type typeOfClass, string testName)
     {
         MethodInfo methodInfo = typeOfClass.GetMethod(testName);
         var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName, Assembly.GetExecutingAssembly().Location, isAsync: false);
-        UnitTestElement element = new(testMethod)
-        {
-            Ignored = ignore,
-        };
+        UnitTestElement element = new(testMethod);
         return element.ToTestCase();
     }
 

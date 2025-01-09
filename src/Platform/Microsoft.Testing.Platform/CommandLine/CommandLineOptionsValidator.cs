@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Text;
-
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
@@ -225,12 +222,24 @@ internal static class CommandLineOptionsValidator
     }
 
     private static async Task<ValidationResult> ValidateConfigurationAsync(
-        IEnumerable<ICommandLineOptionsProvider> extensionsProviders,
-        IEnumerable<ICommandLineOptionsProvider> systemProviders,
+        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection extensionsProviders,
+        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection systemProviders,
         ICommandLineOptions commandLineOptions)
     {
-        StringBuilder? stringBuilder = null;
-        foreach (ICommandLineOptionsProvider commandLineOptionsProvider in systemProviders.Union(extensionsProviders))
+        StringBuilder? stringBuilder = await ValidateConfigurationAsync(systemProviders, commandLineOptions, null);
+        stringBuilder = await ValidateConfigurationAsync(extensionsProviders, commandLineOptions, stringBuilder);
+
+        return stringBuilder?.Length > 0
+            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
+            : ValidationResult.Valid();
+    }
+
+    private static async Task<StringBuilder?> ValidateConfigurationAsync(
+        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection providers,
+        ICommandLineOptions commandLineOptions,
+        StringBuilder? stringBuilder)
+    {
+        foreach (ICommandLineOptionsProvider commandLineOptionsProvider in providers)
         {
             ValidationResult result = await commandLineOptionsProvider.ValidateCommandLineOptionsAsync(commandLineOptions);
             if (!result.IsValid)
@@ -241,9 +250,7 @@ internal static class CommandLineOptionsValidator
             }
         }
 
-        return stringBuilder?.Length > 0
-            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
-            : ValidationResult.Valid();
+        return stringBuilder;
     }
 
     private static string ToTrimmedString(this StringBuilder stringBuilder)

@@ -1,7 +1,6 @@
-﻿#nullable enable
-Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDisplayName.get -> string?
-Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDisplayName.set -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestData.get -> object?[]?
-Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestData.set -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestException.get -> System.Exception?
-Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestException.set -> void
+#nullable enable
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DisplayMessage(Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel messageLevel, string! message) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Error = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Informational = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
+Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Warning = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel

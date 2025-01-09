@@ -3,16 +3,12 @@
 
 #if !WINDOWS_UWP
 
-#if NETFRAMEWORK
-using System.Collections;
-#endif
-using System.Reflection;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 /// <summary>
 /// Utility for reflection API's.
 /// </summary>
+[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class ReflectionUtility
 {
     /// <summary>

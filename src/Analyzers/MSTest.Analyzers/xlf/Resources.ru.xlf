@@ -10,7 +10,7 @@
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 
 The type declaring these methods should also respect the following rules:
@@ -23,12 +23,13 @@ The type declaring these methods should also respect the following rules:
 – не может быть объявлен для универсального класса ("generic");
 – должен быть общедоступным ("public");
 – должен быть статическим ("static");
-– не быть асинхронным и не возвращающим значения ("async void")
-– не быть специальным (метод завершения, оператор…).
-– не быть общим ("generic")
+– не должен быть асинхронным и не возвращающим значения ("async void")
+– не должен быть специальным (метод завершения, оператор…).
+– не должен быть общим ("generic")
 ;
-– не принимать никаких параметров;
-– тип возвращаемого значения должен быть "void", "Task" или "ValueTask";
+– не должен принимать никаких параметров или должен принимать один параметр типа TestContext
+;
+– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask";
 
 Тип, объявляющий такие методы, также должен соответствовать следующим правилам:
 – должен быть классом;
@@ -119,14 +120,29 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Аргументы проверочных утверждений должны передаваться в правильном порядке</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
+        <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
+        <target state="translated">При сравнении типов значений используйте "Assert.AreEqual"/"Assert.AreNotEqual" вместо "Assert.AreSame"/"Assert.AreNotSame". Передача типа значения в "Assert.AreSame"/"Assert.AreNotSame" будет добавлена в рамку (создание нового объекта). Поскольку "Assert.AreSame"/"Assert.AreNotSame" выполняет сравнение по ссылке, при боксе "Assert.AreSame" будет выполняться с ошибкой, а "Assert.AreNotSame" всегда будет проходить.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
+        <source>Use '{0}' instead of '{1}' when comparing value types</source>
+        <target state="translated">Использовать '{0}' вместо '{1}' при сравнении типов значений</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
+        <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
+        <target state="translated">Не используйте Assert.AreSame или Assert.AreNotSame с типами значений</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
-        <target state="translated">Предпочитайте "Assert.ThrowsException" или "Assert.ThrowsExceptionAsync" вместо "[ExpectedException]", так как это гарантирует, что только ожидаемый вызов приводит к ожидаемому исключению. API-интерфейсы утверждения также обеспечивают дополнительную гибкость и позволяют утверждать дополнительные свойства исключения.</target>
+        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
+        <target state="translated">Предпочтите "Assert.ThrowsExactly' или 'Assert.ThrowsExactlyAsync" вместо "[ExpectedException]", так как это гарантирует, что только ожидаемый вызов вызовет ожидаемое исключение. API-интерфейсы утверждения также обеспечивают дополнительную гибкость и позволяют утверждать дополнительные свойства исключения.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</source>
-        <target state="translated">Предпочитать "Assert.ThrowsException/ThrowsExceptionAsync" вместо "[ExpectedException]"</target>
+        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
+        <target state="translated">Предпочтите "Assert.ThrowsExactly/ThrowsExactlyAsync" вместо "[ExpectedException]"</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
@@ -142,7 +158,7 @@ The type declaring these methods should also respect the following rules:
 -it should not be 'async void'
 -it should not be a special method (finalizer, operator...).
 -it should not be generic
--it should not take any parameter
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
 -return type should be 'void', 'Task' or 'ValueTask'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
 -'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
@@ -157,12 +173,13 @@ The type declaring these methods should also respect the following rules:
 – не может быть объявлен для универсального класса, если не установлен режим InheritanceBehavior;
 – должен быть общедоступным ("public");
 – должен быть статическим ("static");
-– не быть асинхронным и не возвращающим значения ("async void")
-– не быть специальным (метод завершения, оператор…).
-– не быть общим ("generic")
+– не должен быть асинхронным и не возвращающим значения ("async void")
+– не должен быть специальным (метод завершения, оператор…).
+– не должен быть общим ("generic")
 ;
-– не принимать никаких параметров;
-– тип возвращаемого значения должен быть "void", "Task" или "ValueTask";
+– не должен принимать никаких параметров или должен принимать один параметр типа TestContext
+;
+– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask";
 – если класс абстрактный, должен быть указан параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
 – если класс запечатанный, не следует указывать параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
 
@@ -253,6 +270,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
         <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
         <target state="translated">Тип аргумента DataRow должен соответствовать типу параметра метода. Обнаружены несовпадения в следующих индексах: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
+        <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
+        <target state="translated">Обнаружены два конфликтующих типа для универсального параметра '{0}'. Конфликтуют типы '{1}' и '{2}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved">
+        <source>The type of the generic parameter '{0}' could not be inferred.</source>
+        <target state="translated">Не удалось определить тип универсального '{0}' параметра.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
@@ -357,18 +384,23 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
-        <source>'[DynamicData]' member '{0}.{1}' is a method so you should set 'DynamicDataSourceType.Method'</source>
-        <target state="translated">Элемент "[DynamicData]" "{0}.{1}" является методом, поэтому следует задать "DynamicDataSourceType.Method"</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="translated">'[DynamicData]' "{0}.{1}" является методом, поэтому следует использовать "DynamicDataSourceType.AutoDetect" или "DynamicDataSourceType.Method" (автообнаружение используется по умолчанию, если не указано явно, и рекомендуется)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
+        <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
+        <target state="translated">'[DynamicData]' "{0}.{1}" не является свойством или методом. Поддерживаются только свойства и методы.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
-        <source>'[DynamicData]' member '{0}.{1}' is a property so you should set 'DynamicDataSourceType.Property'</source>
-        <target state="translated">Элемент "[DynamicData]" "{0}.{1}" является свойством, поэтому следует задать "DynamicDataSourceType.Property"</target>
+        <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="translated">'[DynamicData]' "{0}.{1}" является свойством, поэтому следует использовать "DynamicDataSourceType.AutoDetect" или "DynamicDataSourceType.Property" (автообнаружение используется по умолчанию, если не указано явно и рекомендуется)</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
-        <source>'[DynamicDta]' member '{0}.{1}' is found more than once</source>
-        <target state="translated">Элемент "[DynamicDta]" "{0}.{1}" обнаружен несколько раз</target>
+        <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
+        <target state="translated">Элемент "[DynamicData]" "{0}.{1}" обнаружен несколько раз</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
@@ -639,7 +671,7 @@ The type declaring these methods should also respect the following rules:
         <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
-- it should not be generic
+- it should may be generic as long as type parameters can be inferred and argument types are compatible
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
@@ -647,9 +679,9 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Методы теста (методы, помеченные атрибутом "[TestMethod]") должны соблюдать следующую структуру, чтобы считаться допустимыми в MSTest:
 – должно быть присвоено значение "public" (или "internal", если задан атрибут "[assembly: DiscoverInternals]")
 – не следует присваивать значение "static"
-– не следует присваивать универсальное значение
+– могут быть универсальными, если можно вывести параметры типа, а типы аргументов являются совместимыми
 – не следует присваивать значение "abstract"
-- возвращаемый тип должен быть "void", "Task" или "ValueTask"
+– возвращаемый тип должен быть "void", "Task" или "ValueTask"
 – не следует присваивать значение "async void"
 – это должен быть специальный метод (метод завершения, оператор...).</target>
         <note />
@@ -717,6 +749,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">Указать "[DeploymentItem]" можно только для тестового класса или метода.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsMessageFormat">
+        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
+        <target state="translated">Используйте Assert.ThrowsExactly вместо Assert.ThrowsException</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseNewerAssertThrowsTitle">
+        <source>Use newer methods to assert exceptions</source>
+        <target state="translated">Использовать более новые методы для утверждения исключений</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

@@ -2,9 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // NOTE: This file is copied as-is from VSTest source code.
-using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
-
 using Microsoft.Testing.Platform;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
@@ -12,7 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
 [ExcludeFromCodeCoverage] // Helper copied from VSTest source code
-internal class FilterExpressionWrapper
+internal sealed class FilterExpressionWrapper
 {
     /// <summary>
     /// FilterExpression corresponding to filter criteria.

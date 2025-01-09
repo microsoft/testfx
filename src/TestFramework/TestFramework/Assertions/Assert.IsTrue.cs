@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
+using System.ComponentModel;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -12,6 +12,120 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed partial class Assert
 {
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertIsTrueInterpolatedStringHandler
+    {
+        private readonly StringBuilder? _builder;
+
+        public AssertIsTrueInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend)
+        {
+            shouldAppend = IsTrueFailing(condition);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal void ComputeAssertion()
+        {
+            if (_builder is not null)
+            {
+                ThrowAssertIsTrueFailed(_builder.ToString());
+            }
+        }
+
+        public void AppendLiteral(string value) => _builder!.Append(value);
+
+        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
+
+#if NETCOREAPP3_1_OR_GREATER
+        public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
+
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+#endif
+
+        // NOTE: All the overloads involving format and/or alignment are not super efficient.
+        // This code path is only for when an assert is failing, so that's not the common scenario
+        // and should be okay if not very optimized.
+        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
+        // the BCL's StringBuilder.AppendInterpolatedStringHandler
+        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
+
+        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
+
+        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
+
+        public void AppendFormatted(string? value) => _builder!.Append(value);
+
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
+
+        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+    }
+
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public readonly struct AssertIsFalseInterpolatedStringHandler
+    {
+        private readonly StringBuilder? _builder;
+
+        public AssertIsFalseInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend)
+        {
+            shouldAppend = IsFalseFailing(condition);
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        internal void ComputeAssertion()
+        {
+            if (_builder is not null)
+            {
+                ThrowAssertIsFalseFailed(_builder.ToString());
+            }
+        }
+
+        public void AppendLiteral(string value) => _builder!.Append(value);
+
+        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
+
+#if NETCOREAPP3_1_OR_GREATER
+        public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
+
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+#endif
+
+        // NOTE: All the overloads involving format and/or alignment are not super efficient.
+        // This code path is only for when an assert is failing, so that's not the common scenario
+        // and should be okay if not very optimized.
+        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
+        // the BCL's StringBuilder.AppendInterpolatedStringHandler
+        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
+
+        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
+
+        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
+
+        public void AppendFormatted(string? value) => _builder!.Append(value);
+
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
+
+        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+    }
+
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
     /// if the condition is false.
@@ -55,6 +169,12 @@ public sealed partial class Assert
     public static void IsTrue([DoesNotReturnIf(false)] bool condition, string? message)
         => IsTrue(condition, message, null);
 
+    /// <inheritdoc cref="IsTrue(bool, string?)"/>
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static void IsTrue([DoesNotReturnIf(false)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
+#pragma warning restore IDE0060 // Remove unused parameter
+        => message.ComputeAssertion();
+
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
     /// if the condition is false.
@@ -71,6 +191,12 @@ public sealed partial class Assert
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message)
         => IsTrue(condition, message, null);
+
+    /// <inheritdoc cref="IsTrue(bool?, string?)"/>
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
+#pragma warning restore IDE0060 // Remove unused parameter
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -92,9 +218,9 @@ public sealed partial class Assert
     public static void IsTrue([DoesNotReturnIf(false)] bool condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (!condition)
+        if (IsTrueFailing(condition))
         {
-            ThrowAssertFailed("Assert.IsTrue", BuildUserMessage(message, parameters));
+            ThrowAssertIsTrueFailed(BuildUserMessage(message, parameters));
         }
     }
 
@@ -118,11 +244,20 @@ public sealed partial class Assert
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (condition is false or null)
+        if (IsTrueFailing(condition))
         {
-            ThrowAssertFailed("Assert.IsTrue", BuildUserMessage(message, parameters));
+            ThrowAssertIsTrueFailed(BuildUserMessage(message, parameters));
         }
     }
+
+    private static bool IsTrueFailing(bool? condition)
+        => condition is false or null;
+
+    private static bool IsTrueFailing(bool condition)
+        => !condition;
+
+    private static void ThrowAssertIsTrueFailed(string message)
+        => ThrowAssertFailed("Assert.IsTrue", message);
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -167,6 +302,12 @@ public sealed partial class Assert
     public static void IsFalse([DoesNotReturnIf(true)] bool condition, string? message)
         => IsFalse(condition, message, null);
 
+    /// <inheritdoc cref="IsFalse(bool, string?)" />
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static void IsFalse([DoesNotReturnIf(true)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
+#pragma warning restore IDE0060 // Remove unused parameter
+        => message.ComputeAssertion();
+
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
     /// if the condition is true.
@@ -183,6 +324,12 @@ public sealed partial class Assert
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message)
         => IsFalse(condition, message, null);
+
+    /// <inheritdoc cref="IsFalse(bool, string?)" />
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
+#pragma warning restore IDE0060 // Remove unused parameter
+        => message.ComputeAssertion();
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -204,9 +351,9 @@ public sealed partial class Assert
     public static void IsFalse([DoesNotReturnIf(true)] bool condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (condition)
+        if (IsFalseFailing(condition))
         {
-            ThrowAssertFailed("Assert.IsFalse", BuildUserMessage(message, parameters));
+            ThrowAssertIsFalseFailed(BuildUserMessage(message, parameters));
         }
     }
 
@@ -230,9 +377,19 @@ public sealed partial class Assert
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
         params object?[]? parameters)
     {
-        if (condition is true or null)
+        if (IsFalseFailing(condition))
         {
-            ThrowAssertFailed("Assert.IsFalse", BuildUserMessage(message, parameters));
+            ThrowAssertIsFalseFailed(BuildUserMessage(message, parameters));
         }
     }
+
+    private static bool IsFalseFailing(bool? condition)
+        => condition is true or null;
+
+    private static bool IsFalseFailing(bool condition)
+        => condition;
+
+    [DoesNotReturn]
+    private static void ThrowAssertIsFalseFailed(string userMessage)
+        => ThrowAssertFailed("Assert.IsFalse", userMessage);
 }

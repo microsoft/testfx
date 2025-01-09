@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
-using System.Diagnostics.CodeAnalysis;
-
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 
@@ -83,7 +80,11 @@ public static class DotnetCli
                     }
                 }
 
-                environmentVariables.Add(key!, entry.Value!.ToString()!);
+                // We use TryAdd to let tests "overwrite" existing environment variables.
+                // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
+                // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
+                // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
+                environmentVariables.TryAdd(key!, entry.Value!.ToString()!);
             }
 
             if (disableTelemetry)

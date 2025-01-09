@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.Test;
 
-[TestGroup]
-public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class DataRowShouldBeValidAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgument_NoDiagnostic()
     {
         string code = """
@@ -29,6 +30,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndWithDataTestMethodAttribute_NoDiagnostic()
     {
         string code = """
@@ -48,6 +50,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndWithDerivedTestMethodAttribute_NoDiagnostic()
     {
         string code = """
@@ -71,6 +74,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithThreeArguments_NoDiagnostic()
     {
         string code = """
@@ -90,6 +94,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithThreeArgumentsAndMethodHasParamsArgument_NoDiagnostic()
     {
         string code = """
@@ -109,6 +114,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithThreeArgumentsAndMethodHasArrayArgument_NoDiagnostic()
     {
         string code = """
@@ -128,6 +134,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowPassesOneItemAndParameterExpectsArray_Diagnostic()
     {
         string code = """
@@ -151,6 +158,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments((0, 0)));
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasThreeArgumentsAndMethodHasAnIntegerAndAnArrayArgument_Diagnostic()
     {
         string code = """
@@ -174,6 +182,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments(3, 2));
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndMethodHasAPrimitiveTypeAndAParamsArgument_NoDiagnostic()
     {
         string code = """
@@ -193,6 +202,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithThreeArgumentsAndMethodHasAPrimitiveTypeAndAParamsArgument_NoDiagnostic()
     {
         string code = """
@@ -212,6 +222,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndMethodHasAPrimitiveTypeAndAParamsStringArgument_NoDiagnostic()
     {
         string code = """
@@ -231,6 +242,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndMethodHasAPrimitiveTypeAndADefaultArgument_NoDiagnostic()
     {
         string code = """
@@ -252,6 +264,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndIntegersAreAssignableToDoubles_NoDiagnostic()
     {
         string code = """
@@ -271,6 +284,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndCharsAreAssignableToIntegers_NoDiagnostic()
     {
         string code = """
@@ -290,6 +304,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndNullsAreAssignableToIntegers_NoDiagnostic()
     {
         string code = """
@@ -309,6 +324,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasOneNullArgumentAndMethodHasNoArguments_Diagnostic()
     {
         string code = """
@@ -332,6 +348,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments(1, 0));
     }
 
+    [TestMethod]
     public async Task WhenDataRowIsNotSetOnATestMethod_Diagnostic()
     {
         string code = """
@@ -351,6 +368,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.DataRowOnTestMethodRule).WithLocation(0));
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasNoArgsButMethodHasOneArgument_Diagnostic()
     {
         string code = """
@@ -375,6 +393,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments(0, 1));
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasArgumentMismatchWithTestMethod_Diagnostic()
     {
         string code = """
@@ -399,6 +418,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments(3, 4));
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasArgumentMismatchWithTestMethod2_Diagnostic()
     {
         string code = """
@@ -423,6 +443,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments(3, 2));
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasArgumentMismatchWithTestMethod3_Diagnostic()
     {
         string code = """
@@ -447,6 +468,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments(3, 2));
     }
 
+    [TestMethod]
     public async Task WhenDataRowHasTypeMismatchWithTestMethod_Diagnostic()
     {
         string code = """
@@ -471,6 +493,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithArguments((2, 2)));
     }
 
+    [TestMethod]
     public async Task DefaultArguments()
     {
         string code = """
@@ -508,6 +531,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
             VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(2).WithArguments(1, 5));
     }
 
+    [TestMethod]
     public async Task Testfx_2606_NullArgumentForArray()
     {
         string code = """
@@ -540,6 +564,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
     public async Task Issue2856_ArraysInDataRow_NoDiagnostic()
     {
         string code = """
@@ -559,5 +584,72 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsGeneric()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                [DataRow(0)] // This is an unfortunate false negative that will blow up at runtime.
+                public void AMethodWithBadConstraints<T>(T p) where T : IDisposable
+                    => Assert.Fail($"Test method 'AMethodWithBadConstraints' did run with T type being '{typeof(T)}'.");
+
+                [TestMethod]
+                [DataRow((byte)1)]
+                [DataRow((int)2)]
+                [DataRow("Hello world")]
+                [{|#0:DataRow(null)|}]
+                public void ParameterizedMethodSimple<T>(T parameter)
+                    => Assert.Fail($"Test method 'ParameterizedMethodSimple' did run with parameter '{parameter?.ToString() ?? "<null>"}' and type '{typeof(T)}'.");
+
+                [TestMethod]
+                [{|#1:DataRow((byte)1, "Hello world", (int)2, 3)|}]
+                [DataRow(null, "Hello world", "Hello again", 3)]
+                [{|#2:DataRow("Hello hello", "Hello world", null, null)|}]
+                [{|#3:{|#4:DataRow(null, null, null, null)|}|}]
+                public void ParameterizedMethodTwoGenericParametersAndFourMethodParameters<T1, T2>(T2 p1, string p2, T2 p3, T1 p4)
+                    => Assert.Fail($"Test method 'ParameterizedMethodTwoGenericParametersAndFourMethodParameters' did run with parameters '{p1?.ToString() ?? "<null>"}', '{p2 ?? "<null>"}', '{p3?.ToString() ?? "<null>"}', '{p4?.ToString() ?? "<null>"}' and generic types '{typeof(T1)}', '{typeof(T2)}'.");
+
+                [TestMethod]
+                [{|#5:DataRow((byte)1)|}]
+                [{|#6:DataRow((byte)1, 2)|}]
+                [{|#7:DataRow("Hello world")|}]
+                [{|#8:DataRow(null)|}]
+                [{|#9:DataRow(null, "Hello world")|}]
+                public void ParameterizedMethodSimpleParams<T>(params T[] parameter)
+                    => Assert.Fail($"Test method 'ParameterizedMethodSimple' did run with parameter '{string.Join(",", parameter)}' and type '{typeof(T)}'.");
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            // /0/Test0.cs(17,6): warning MSTEST0014: The type of the generic parameter 'T' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(0).WithArguments("T"),
+            // /0/Test0.cs(22,6): warning MSTEST0014: Found two conflicting types for generic parameter 'T2'. The conflicting types are 'Byte' and 'Int32'.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentConflictingTypesRule).WithLocation(1).WithArguments("T2", "Byte", "Int32"),
+            // /0/Test0.cs(24,6): warning MSTEST0014: The type of the generic parameter 'T1' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(2).WithArguments("T1"),
+            // /0/Test0.cs(25,6): warning MSTEST0014: The type of the generic parameter 'T1' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(3).WithArguments("T1"),
+            // /0/Test0.cs(25,6): warning MSTEST0014: The type of the generic parameter 'T2' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(4).WithArguments("T2"),
+            // /0/Test0.cs(30,6): warning MSTEST0014: The type of the generic parameter 'T' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(5).WithArguments("T"),
+            // /0/Test0.cs(31,6): warning MSTEST0014: The type of the generic parameter 'T' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(6).WithArguments("T"),
+            // /0/Test0.cs(32,6): warning MSTEST0014: The type of the generic parameter 'T' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(7).WithArguments("T"),
+            // /0/Test0.cs(33,6): warning MSTEST0014: The type of the generic parameter 'T' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(8).WithArguments("T"),
+            // /0/Test0.cs(34,6): warning MSTEST0014: The type of the generic parameter 'T' could not be inferred.
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(9).WithArguments("T"));
     }
 }

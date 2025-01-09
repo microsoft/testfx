@@ -3,43 +3,130 @@
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class IgnoreTests : AcceptanceTestBase
+[TestClass]
+public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public IgnoreTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
+    [TestMethod]
     public async Task ClassCleanup_Inheritance_WhenClassIsSkipped()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter ClassName!~TestClassWithAssemblyInitialize");
 
         // Assert
-        testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 12, skipped: 9);
 
         testHostResult.AssertOutputContains("SubClass.Method");
     }
 
+    [TestMethod]
     public async Task WhenAllTestsAreIgnored_AssemblyInitializeAndCleanupAreSkipped()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithAssemblyInitialize");
 
         // Assert
-        testHostResult.AssertExitCodeIs(8);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
         testHostResult.AssertOutputDoesNotContain("AssemblyInitialize");
         testHostResult.AssertOutputDoesNotContain("AssemblyCleanup");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    [TestMethod]
+    public async Task WhenTestClassIsIgnoredViaIgnoreMessageProperty()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithIgnoreMessage");
+
+        // Assert
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodIsIgnoredViaIgnoreMessageProperty()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithMethodUsingIgnoreMessage");
+
+        // Assert
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
+    }
+
+    [TestMethod]
+    public async Task WhenSpecificDataSourceIsIgnoredViaIgnoreMessageProperty()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithDataSourcesUsingIgnoreMessage");
+
+        // Assert
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod1 (0)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod1 (0)");
+
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod1 (2)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod1 (2)");
+
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod2 (0)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod2 (0)");
+
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod2 (1)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod2 (1)");
+
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod2 (2)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod2 (2)");
+
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod3 (0)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod3 (0)");
+
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod3 (2)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod3 (2)");
+
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod4 (0)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod4 (0)");
+
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod4 (1)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod4 (1)");
+
+        testHostResult.AssertOutputContains("TestInitialize: TestMethod4 (2)");
+        testHostResult.AssertOutputContains("TestCleanup: TestMethod4 (2)");
+
+        testHostResult.AssertOutputContains("skipped TestMethod1");
+        testHostResult.AssertOutputContains("skipped TestMethod2");
+        testHostResult.AssertOutputContains("skipped TestMethod3 (1)");
+        testHostResult.AssertOutputContains("skipped TestMethod4 (3)");
+        testHostResult.AssertOutputContains("skipped TestMethod4 (4)");
+        testHostResult.AssertOutputContains("skipped TestMethod4 (5)");
+
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod1 (1)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod1 (1)");
+
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod2 (3)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod2 (3)");
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod2 (4)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod2 (4)");
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod2 (5)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod2 (5)");
+
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod3 (1)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod3 (1)");
+
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod4 (3)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod4 (3)");
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod4 (4)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod4 (4)");
+        testHostResult.AssertOutputDoesNotContain("TestInitialize: TestMethod4 (5)");
+        testHostResult.AssertOutputDoesNotContain("TestCleanup: TestMethod4 (5)");
+
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 10, skipped: 6);
+    }
+
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestIgnore";
 
@@ -85,6 +172,7 @@ public sealed class IgnoreTests : AcceptanceTestBase
 
 #file UnitTest1.cs
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -148,6 +236,100 @@ public class TestClassWithAssemblyInitialize
     [TestMethod, Ignore]
     public void TestMethod1()
     {
+    }
+}
+
+[TestClass(IgnoreMessage = "This test class is ignored")]
+public class TestClassWithIgnoreMessage
+{
+    [TestMethod]
+    public void TestMethod1()
+    {
+    }
+}
+
+[TestClass]
+public class TestClassWithMethodUsingIgnoreMessage
+{
+    [TestMethod(IgnoreMessage = "This test method is ignored")]
+    public void TestMethod1()
+    {
+    }
+
+    [TestMethod]
+    public void TestMethod2()
+    {
+    }
+}
+
+[TestClass]
+public class TestClassWithDataSourcesUsingIgnoreMessage
+{
+    private readonly TestContext _testContext;
+
+    public TestClassWithDataSourcesUsingIgnoreMessage(TestContext testContext)
+        => _testContext = testContext;
+
+    [TestMethod] // 1 skipped, 2 pass
+    [DataRow(0, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DataRow(1, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold, IgnoreMessage = "This data row is ignored")]
+    [DataRow(2, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    public void TestMethod1(int i)
+    {
+    }
+
+    [TestMethod] // 1 skipped (folded), 3 pass
+    [DynamicData("Data1", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData("Data2", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold, IgnoreMessage = "This source is ignored")]
+    public void TestMethod2(int i)
+    {
+    }
+
+    [TestMethod] // 1 skipped, 2 pass
+    [DataRow(0, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DataRow(1, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold, IgnoreMessage = "This data row is ignored")]
+    [DataRow(2, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    public void TestMethod3(int i)
+    {
+    }
+
+    [TestMethod] // 3 skipped (unfolded), 3 pass
+    [DynamicData("Data1", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DynamicData("Data2", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold, IgnoreMessage = "This source is ignored")]
+    public void TestMethod4(int i)
+    {
+    }
+
+    [TestInitialize]
+    public void TestInit()
+    {
+        Console.WriteLine($"TestInitialize: {_testContext.TestDisplayName}");
+    }
+
+    [TestCleanup]
+    public void TestClean()
+    {
+        Console.WriteLine($"TestCleanup: {_testContext.TestDisplayName}");
+    }
+
+    public static IEnumerable<object[]> Data1
+    {
+        get
+        {
+            yield return new object[] { 0 };
+            yield return new object[] { 1 };
+            yield return new object[] { 2 };
+        }
+    }
+
+    public static IEnumerable<object[]> Data2
+    {
+        get
+        {
+            yield return new object[] { 3 };
+            yield return new object[] { 4 };
+            yield return new object[] { 5 };
+        }
     }
 }
 """;

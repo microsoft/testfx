@@ -1,11 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// The supported discovery modes for <see cref="ITestDataSource"/> tests.
 /// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
 public enum TestDataSourceDiscoveryOption
 {
     /// <summary>

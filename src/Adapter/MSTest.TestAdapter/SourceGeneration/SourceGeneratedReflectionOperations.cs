@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
@@ -50,35 +48,46 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
         return attributes.ToArray();
     }
 
-    public IEnumerable<ConstructorInfo> GetDeclaredConstructors(Type classType)
+    public ConstructorInfo[] GetDeclaredConstructors(Type classType)
         => ReflectionDataProvider.TypeConstructors[classType];
 
     public MethodInfo? GetDeclaredMethod(Type dynamicDataDeclaringType, string dynamicDataSourceName)
         => GetDeclaredMethods(dynamicDataDeclaringType).FirstOrDefault(m => m.Name == dynamicDataSourceName);
 
-    public IEnumerable<MethodInfo> GetDeclaredMethods(Type classType)
+    public MethodInfo[] GetDeclaredMethods(Type classType)
         => ReflectionDataProvider.TypeMethods[classType];
 
-    public IEnumerable<PropertyInfo> GetDeclaredProperties(Type type)
+    public PropertyInfo[] GetDeclaredProperties(Type type)
         => ReflectionDataProvider.TypeProperties[type];
 
     public PropertyInfo? GetDeclaredProperty(Type type, string propertyName)
-        => GetRuntimeProperty(type, propertyName);
+        => GetRuntimeProperty(type, propertyName, includeNonPublic: true);
 
     public Type[] GetDefinedTypes(Assembly assembly)
         => ReflectionDataProvider.Types;
 
-    public IEnumerable<MethodInfo> GetRuntimeMethods(Type type)
+    public MethodInfo[] GetRuntimeMethods(Type type)
         => ReflectionDataProvider.TypeMethods[type];
 
-    public MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters) => throw new NotImplementedException();
+    public MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters, bool includeNonPublic)
+    {
+        IEnumerable<MethodInfo> runtimeMethods = GetRuntimeMethods(declaringType)
+            .Where(
+                m => m.Name == methodName &&
+                m.GetParameters().Select(pi => pi.ParameterType).SequenceEqual(parameters) &&
+                (includeNonPublic || m.IsPublic));
+        return runtimeMethods.SingleOrDefault();
+    }
 
-    public PropertyInfo? GetRuntimeProperty(Type classType, string propertyName)
+    public PropertyInfo? GetRuntimeProperty(Type classType, string propertyName, bool includeNonPublic)
     {
         Dictionary<string, PropertyInfo> type = ReflectionDataProvider.TypePropertiesByName[classType];
 
         // We as asking for TestContext here, it may not be there.
-        return type.TryGetValue(propertyName, out PropertyInfo? propertyInfo) ? propertyInfo : null;
+        PropertyInfo? property = type.TryGetValue(propertyName, out PropertyInfo? propertyInfo) ? propertyInfo : null;
+        return !includeNonPublic && (property?.GetMethod?.IsPublic == true || property?.SetMethod?.IsPublic == true)
+            ? null
+            : property;
     }
 
     public Type? GetType(string typeName)

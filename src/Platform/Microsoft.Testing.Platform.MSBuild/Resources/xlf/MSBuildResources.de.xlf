@@ -27,6 +27,21 @@
         <target state="translated">Fehler bei der Berechnung des vollständigen Pfadtools Runner „{0}“</target>
         <note />
       </trans-unit>
+      <trans-unit id="IncompatibleArchitecture">
+        <source>Could not find '{0}' host for the '{1}' architecture.
+
+You can resolve the problem by installing the '{1}' .NET.
+
+The specified framework can be found at:
+  - https://aka.ms/dotnet-download</source>
+        <target state="translated">Der Host „{0}“ für die Architektur „{1}“ wurde nicht gefunden.
+
+Sie können das Problem beheben, indem Sie das .NET „{1}“ installieren.
+
+Das angegebene Framework finden Sie unter:
+  - https://aka.ms/dotnet-download</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidTargetPath">
         <source>Invalid TargetPath, {0}</source>
         <target state="translated">Ungültiger TargetPath, {0}</target>

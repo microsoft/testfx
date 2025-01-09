@@ -6,17 +6,13 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestGroup]
-public sealed class CancellationTests : AcceptanceTestBase
+[TestClass]
+public sealed class CancellationTests : AcceptanceTestBase<CancellationTests.TestAssetFixture>
 {
-    private readonly TestAssetFixture _testAssetFixture;
-
-    public CancellationTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
-        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
-
+    [TestMethod]
     public async Task WhenCancelingTestContextTokenInAssemblyInit_MessageIsAsExpected()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
         {
             ["ASSEMBLYINIT_CANCEL"] = "1",
@@ -28,9 +24,25 @@ public sealed class CancellationTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Failed!");
     }
 
+    [TestMethod]
+    public async Task WhenCancelingTestContextParameterTokenInAssemblyCleanup_MessageIsAsExpected()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
+        {
+            ["ASSEMBLYCLEANUP_CONTEXT_PARAMETER_CANCEL"] = "1",
+        });
+
+        // Assert
+        testHostResult.AssertExitCodeIs(2);
+        testHostResult.AssertOutputContains("Assembly cleanup method 'UnitTest1.AssemblyCleanup' was canceled");
+        testHostResult.AssertOutputContains("Failed!");
+    }
+
+    [TestMethod]
     public async Task WhenCancelingTestContextTokenInClassInit_MessageIsAsExpected()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
         {
             ["CLASSINIT_CANCEL"] = "1",
@@ -42,9 +54,10 @@ public sealed class CancellationTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Failed!");
     }
 
+    [TestMethod]
     public async Task WhenCancelingTestContextTokenInTestInit_MessageIsAsExpected()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
         {
             ["TESTINIT_CANCEL"] = "1",
@@ -56,9 +69,10 @@ public sealed class CancellationTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Failed!");
     }
 
+    [TestMethod]
     public async Task WhenCancelingTestContextTokenInTestCleanup_MessageIsAsExpected()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
         {
             ["TESTCLEANUP_CANCEL"] = "1",
@@ -70,9 +84,25 @@ public sealed class CancellationTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Failed!");
     }
 
+    [TestMethod]
+    public async Task WhenCancelingTestContextParameterTokenInClassCleanup_MessageIsAsExpected()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
+        {
+            ["CLASSCLEANUP_CONTEXT_PARAMETER_CANCEL"] = "1",
+        });
+
+        // Assert
+        testHostResult.AssertExitCodeIs(2);
+        testHostResult.AssertOutputContains("Class cleanup method 'UnitTest2.ClassCleanup' was canceled");
+        testHostResult.AssertOutputContains("Failed!");
+    }
+
+    [TestMethod]
     public async Task WhenCancelingTestContextTokenInTestMethod_MessageIsAsExpected()
     {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
         {
             ["TESTMETHOD_CANCEL"] = "1",
@@ -80,12 +110,11 @@ public sealed class CancellationTests : AcceptanceTestBase
 
         // Assert
         testHostResult.AssertExitCodeIs(2);
-        testHostResult.AssertOutputContains("Test 'TestMethod' execution has been aborted.");
+        testHostResult.AssertOutputContains("Test 'TestMethod' was canceled");
         testHostResult.AssertOutputContains("Failed!");
     }
 
-    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestCancellation";
 
@@ -134,6 +163,16 @@ public class UnitTest1
         }
     }
 
+    [AssemblyCleanup]
+    public static void AssemblyCleanup(TestContext testContext)
+    {
+        if (Environment.GetEnvironmentVariable("ASSEMBLYCLEANUP_CONTEXT_PARAMETER_CANCEL") == "1")
+        {
+            testContext.CancellationTokenSource.Cancel();
+            testContext.CancellationTokenSource.Token.ThrowIfCancellationRequested();
+        }
+    }
+
     [ClassInitialize]
     public static void ClassInitialize(TestContext testContext)
     {
@@ -174,6 +213,25 @@ public class UnitTest1
             TestContext.CancellationTokenSource.Cancel();
             TestContext.CancellationTokenSource.Token.ThrowIfCancellationRequested();
         }
+    }
+}
+
+[TestClass]
+public class UnitTest2
+{
+    [ClassCleanup]
+    public static void ClassCleanup(TestContext testContext)
+    {
+        if (Environment.GetEnvironmentVariable("CLASSCLEANUP_CONTEXT_PARAMETER_CANCEL") == "1")
+        {
+            testContext.CancellationTokenSource.Cancel();
+            testContext.CancellationTokenSource.Token.ThrowIfCancellationRequested();
+        }
+    }
+
+    [TestMethod]
+    public void TestMethod()
+    {
     }
 }
 """;

@@ -1,9 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using System.Diagnostics;
 
 using DiscoveryAndExecutionTests.Utilities;
 
@@ -27,8 +25,8 @@ public partial class CLITestBase : TestContainer
         var logger = new InternalLogger();
         var sink = new InternalSink();
 
-        string runSettingXml = GetRunSettingXml(string.Empty);
-        var context = new InternalDiscoveryContext(runSettingXml, testCaseFilter);
+        string runSettingsXml = GetRunSettingsXml(string.Empty);
+        var context = new InternalDiscoveryContext(runSettingsXml, testCaseFilter);
 
         unitTestDiscoverer.DiscoverTestsInSource(assemblyPath, logger, sink, context);
 

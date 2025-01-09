@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.TestPlatform.AdapterUtilities;
 
@@ -16,6 +15,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// <summary>
 /// TestMethod contains information about a unit test method that needs to be executed.
 /// </summary>
+#if RELEASE
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
+#endif
 [Serializable]
 public sealed class TestMethod : ITestMethod
 {
@@ -136,6 +142,8 @@ public sealed class TestMethod : ITestMethod
     /// Gets or sets the serialized data.
     /// </summary>
     internal string?[]? SerializedData { get; set; }
+
+    internal string? TestDataSourceIgnoreMessage { get; set; }
 
     /// <summary>
     /// Gets or sets the test group set during discovery.

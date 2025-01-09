@@ -3,9 +3,6 @@
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
-using System.Globalization;
-using System.Xml.Linq;
-
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Platform;
@@ -24,6 +21,18 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 /// </summary>
 internal sealed class RunSettingsAdapter : IRunSettings
 {
+    private static readonly string[] UnsupportedRunConfigurationSettings = [
+        "DotnetHostPath",
+        "MaxCpuCount",
+        "TargetFrameworkVersion",
+        "TargetPlatform",
+        "TestAdaptersPaths",
+        "TestCaseFilter",
+        "TestSessionTimeout",
+        "TreatNoTestsAsError",
+        "TreatTestAdapterErrorsAsWarnings",
+    ];
+
     public RunSettingsAdapter(
         ICommandLineOptions commandLineOptions,
         IFileSystem fileSystem,
@@ -92,49 +101,12 @@ internal sealed class RunSettingsAdapter : IRunSettings
             return;
         }
 
-        if (runConfigurationElement.Element("MaxCpuCount") is not null)
+        foreach (string unsupportedRunConfigurationSetting in UnsupportedRunConfigurationSettings)
         {
-            messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, "MaxCpuCount"));
-        }
-
-        if (runConfigurationElement.Element("TargetFrameworkVersion") is not null)
-        {
-            messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, "TargetFrameworkVersion"));
-        }
-
-        if (runConfigurationElement.Element("TargetPlatform") is not null)
-        {
-            messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, "TargetPlatform"));
-        }
-
-        if (runConfigurationElement.Element("TreatTestAdapterErrorsAsWarnings") is not null)
-        {
-            messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, "TreatTestAdapterErrorsAsWarnings"));
-        }
-
-        if (runConfigurationElement.Element("TestAdaptersPaths") is not null)
-        {
-            messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, "TestAdaptersPaths"));
-        }
-
-        if (runConfigurationElement.Element("TestCaseFilter") is not null)
-        {
-            messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, "TestCaseFilter"));
-        }
-
-        if (runConfigurationElement.Element("TestSessionTimeout") is not null)
-        {
-            messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, "TestSessionTimeout"));
-        }
-
-        if (runConfigurationElement.Element("DotnetHostPath") is not null)
-        {
-            messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, "DotnetHostPath"));
-        }
-
-        if (runConfigurationElement.Element("TreatNoTestsAsError") is not null)
-        {
-            messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, "TreatNoTestsAsError"));
+            if (runConfigurationElement.Element(unsupportedRunConfigurationSetting) is not null)
+            {
+                messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, unsupportedRunConfigurationSetting));
+            }
         }
     }
 }

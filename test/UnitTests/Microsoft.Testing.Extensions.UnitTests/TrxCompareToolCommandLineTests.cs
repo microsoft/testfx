@@ -1,19 +1,18 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
-[TestGroup]
-public class TrxCompareToolCommandLineTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class TrxCompareToolCommandLineTests
 {
-    [Arguments(TrxCompareToolCommandLine.BaselineTrxOptionName)]
-    [Arguments(TrxCompareToolCommandLine.TrxToCompareOptionName)]
+    [TestMethod]
+    [DataRow(TrxCompareToolCommandLine.BaselineTrxOptionName)]
+    [DataRow(TrxCompareToolCommandLine.TrxToCompareOptionName)]
     public async Task IsValid_When_Correct_TrxFile_IsProvided_For_Options(string optionName)
     {
         var provider = new TrxCompareToolCommandLine(new TestExtension());
@@ -27,10 +26,11 @@ public class TrxCompareToolCommandLineTests(ITestExecutionContext testExecutionC
         File.Delete(filename);
     }
 
-    [Arguments(TrxCompareToolCommandLine.BaselineTrxOptionName, false)]
-    [Arguments(TrxCompareToolCommandLine.BaselineTrxOptionName, true)]
-    [Arguments(TrxCompareToolCommandLine.TrxToCompareOptionName, false)]
-    [Arguments(TrxCompareToolCommandLine.TrxToCompareOptionName, true)]
+    [TestMethod]
+    [DataRow(TrxCompareToolCommandLine.BaselineTrxOptionName, false)]
+    [DataRow(TrxCompareToolCommandLine.BaselineTrxOptionName, true)]
+    [DataRow(TrxCompareToolCommandLine.TrxToCompareOptionName, false)]
+    [DataRow(TrxCompareToolCommandLine.TrxToCompareOptionName, true)]
     public async Task IsInvalid_When_Incorrect_TrxFile_IsProvided_For_Options(string optionName, bool isTrxFile)
     {
         var provider = new TrxCompareToolCommandLine(new TestExtension());
@@ -42,6 +42,7 @@ public class TrxCompareToolCommandLineTests(ITestExecutionContext testExecutionC
         Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, TestReports.Resources.ExtensionResources.TrxComparerToolOptionExpectsSingleArgument, optionName), validateOptionsResult.ErrorMessage);
     }
 
+    [TestMethod]
     public async Task IsValid_If_Both_TrxOptions_Are_Provided()
     {
         var provider = new TrxCompareToolCommandLine(new TestExtension());
@@ -56,8 +57,9 @@ public class TrxCompareToolCommandLineTests(ITestExecutionContext testExecutionC
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
 
-    [Arguments(true, false)]
-    [Arguments(false, true)]
+    [TestMethod]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
     public async Task IsInvalid_If_Any_TrxOptions_Is_Missing(bool isBaseLineSet, bool isToCompareSet)
     {
         var provider = new TrxCompareToolCommandLine(new TestExtension());

@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-
 namespace TestFramework.ForTestingMSTest;
 
 /// <summary>
@@ -83,6 +80,26 @@ public abstract class TestContainer : IDisposable
         return null;
     }
 
+    public static async Task<Exception> VerifyThrowsAsync(
+        Func<Task> taskGetter,
+        [CallerArgumentExpression(nameof(taskGetter))] string? expression = default,
+        [CallerMemberName] string? caller = default,
+        [CallerFilePath] string? filePath = default,
+        [CallerLineNumber] int lineNumber = default)
+    {
+        try
+        {
+            await taskGetter();
+        }
+        catch (Exception ex)
+        {
+            return ex;
+        }
+
+        Throw(expression, caller, filePath, lineNumber);
+        return null;
+    }
+
     public static T VerifyThrows<T>(
         Action action,
         [CallerArgumentExpression(nameof(action))]
@@ -95,6 +112,28 @@ public abstract class TestContainer : IDisposable
         try
         {
             action();
+        }
+        catch (T ex)
+        {
+            return ex;
+        }
+
+        Throw(expression, caller, filePath, lineNumber);
+        return null;
+    }
+
+    public static async Task<T> VerifyThrowsAsync<T>(
+        Func<Task> taskGetter,
+        [CallerArgumentExpression(nameof(taskGetter))]
+        string? expression = default,
+        [CallerMemberName] string? caller = default,
+        [CallerFilePath] string? filePath = default,
+        [CallerLineNumber] int lineNumber = default)
+        where T : Exception
+    {
+        try
+        {
+            await taskGetter();
         }
         catch (T ex)
         {

@@ -1,18 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Runtime.InteropServices;
-using System.Xml.Linq;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-/// <summary>
-/// All the properties of this class should be non static.
-/// At the moment are static because we need to share them between perclass/id fixtures and
-/// it's not supported at the moment.
-/// </summary>
-public abstract class AcceptanceTestBase : TestBase
+public abstract class AcceptanceTestBase<TFixture>
+    where TFixture : ITestAssetFixture, new()
 {
     private const string NuGetPackageExtensionName = ".nupkg";
 
@@ -57,26 +49,22 @@ public class UnitTest1
         var cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
 
-        var versionsPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
-#if MSTEST_DOWNLOADED
-        MSTestVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestVersion");
-        MicrosoftTestingPlatformVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestVersion");
-        MicrosoftTestingEnterpriseExtensionsVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.");
-        MSTestEngineVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.Engine");
-#else
+        var versionsPropsFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
-        MicrosoftTestingEnterpriseExtensionsVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MicrosoftTestingInternalFrameworkVersion");
-        MSTestEngineVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestEngineVersion");
-#endif
+        MSTestEngineVersion = ExtractVersionFromXmlFile(versionsPropsFileDoc, "MSTestEngineVersion");
     }
 
-    protected AcceptanceTestBase(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
+    protected static TFixture AssetFixture { get; private set; } = default!;
 
-    internal static string RID { get; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
+    internal static string RID { get; }
+        = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "win-x64"
+            : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                ? "linux-x64"
+                : RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                    ? "osx-x64"
+                    : throw new NotSupportedException("Current OS is not supported");
 
     public static string MSTestVersion { get; private set; }
 
@@ -86,61 +74,70 @@ public class UnitTest1
 
     public static string MicrosoftTestingPlatformVersion { get; private set; }
 
-    public static string MicrosoftTestingEnterpriseExtensionsVersion { get; private set; }
-
-    internal static IEnumerable<TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration, Verb Verb)>> GetBuildMatrixTfmBuildVerbConfiguration()
+    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Fine in this context")]
+    public static async Task ClassInitialize(TestContext testContext)
     {
-        foreach (TestArgumentsEntry<string> tfm in TargetFrameworks.All)
+        AssetFixture = new();
+        await AssetFixture.InitializeAsync();
+    }
+
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Fine in this context")]
+    public static void ClassCleanup()
+        => AssetFixture.Dispose();
+
+    internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration, Verb Verb)> GetBuildMatrixTfmBuildVerbConfiguration()
+    {
+        foreach (string tfm in TargetFrameworks.All)
         {
             foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
             {
                 foreach (Verb verb in Enum.GetValues<Verb>())
                 {
-                    yield return new TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration, Verb Verb)>((tfm.Arguments, compilationMode, verb), $"{tfm.Arguments},{compilationMode},{verb}");
+                    yield return new(tfm, compilationMode, verb);
                 }
             }
         }
     }
 
-    internal static IEnumerable<TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)>> GetBuildMatrixTfmBuildConfiguration()
+    internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration)> GetBuildMatrixTfmBuildConfiguration()
     {
-        foreach (TestArgumentsEntry<string> tfm in TargetFrameworks.All)
+        foreach (string tfm in TargetFrameworks.All)
         {
             foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
             {
-                yield return new TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)>((tfm.Arguments, compilationMode), $"{tfm.Arguments},{compilationMode}");
+                yield return new(tfm, compilationMode);
             }
         }
     }
 
-    internal static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>> GetBuildMatrixMultiTfmFoldedBuildConfiguration()
+    internal static IEnumerable<(string MultiTfm, BuildConfiguration BuildConfiguration)> GetBuildMatrixMultiTfmFoldedBuildConfiguration()
     {
         foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
         {
-            yield return new TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>((TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode), $"multitfm,{compilationMode}");
+            yield return new(TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode);
         }
     }
 
-    internal static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>> GetBuildMatrixMultiTfmBuildConfiguration()
+    internal static IEnumerable<(string MultiTfm, BuildConfiguration BuildConfiguration)> GetBuildMatrixMultiTfmBuildConfiguration()
     {
         foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
         {
-            yield return new TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>((TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode), $"{TargetFrameworks.All.ToMSBuildTargetFrameworks()},{compilationMode}");
+            yield return new(TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode);
         }
     }
 
-    internal static IEnumerable<TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)>> GetBuildMatrixSingleAndMultiTfmBuildConfiguration()
+    internal static IEnumerable<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)> GetBuildMatrixSingleAndMultiTfmBuildConfiguration()
     {
-        foreach (TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)> entry in GetBuildMatrixTfmBuildConfiguration())
+        foreach ((string Tfm, BuildConfiguration BuildConfiguration) entry in GetBuildMatrixTfmBuildConfiguration())
         {
-            yield return new TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)>(
-                (entry.Arguments.Tfm, entry.Arguments.BuildConfiguration, false), $"{entry.Arguments.Tfm},{entry.Arguments.BuildConfiguration}");
+            yield return new(entry.Tfm, entry.BuildConfiguration, false);
         }
 
-        foreach (TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)> entry in GetBuildMatrixMultiTfmBuildConfiguration())
+        foreach ((string MultiTfm, BuildConfiguration BuildConfiguration) entry in GetBuildMatrixMultiTfmBuildConfiguration())
         {
-            yield return new TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)>(
-                (entry.Arguments.MultiTfm, entry.Arguments.BuildConfiguration, true), $"multitfm,{entry.Arguments.BuildConfiguration}");
+            yield return new(entry.MultiTfm, entry.BuildConfiguration, true);
         }
     }
 
@@ -156,13 +153,13 @@ public class UnitTest1
             // So we need to find a package that contains a number after the prefix.
             // Ideally, we would want to do a full validation to check this is a nuget version number, but that's too much work for now.
             matches = matches
-                    // (full path, file name without prefix)
-                    .Select(path => (path, fileName: Path.GetFileName(path)[packagePrefixName.Length..]))
-                    // check if first character of file name without prefix is number
-                    .Where(tuple => int.TryParse(tuple.fileName[0].ToString(), CultureInfo.InvariantCulture, out _))
-                    // take the full path
-                    .Select(tuple => tuple.path)
-                    .ToArray();
+                // (full path, file name without prefix)
+                .Select(path => (path, fileName: Path.GetFileName(path)[packagePrefixName.Length..]))
+                // check if first character of file name without prefix is number
+                .Where(tuple => int.TryParse(tuple.fileName[0].ToString(), CultureInfo.InvariantCulture, out _))
+                // take the full path
+                .Select(tuple => tuple.path)
+                .ToArray();
         }
 
         if (matches.Length != 1)
@@ -174,7 +171,7 @@ public class UnitTest1
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
     }
 
-    private static string ExtractVersionFromVersionPropsFile(XDocument versionPropsXmlDocument, string entryName)
+    private static string ExtractVersionFromXmlFile(XDocument versionPropsXmlDocument, string entryName)
     {
         XElement[] matches = versionPropsXmlDocument.Descendants(entryName).ToArray();
         return matches.Length != 1

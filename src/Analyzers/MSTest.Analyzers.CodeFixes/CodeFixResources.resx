@@ -165,4 +165,13 @@
   <data name="UseAssertThrowsExceptionOnLastStatementFix" xml:space="preserve">
     <value>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</value>
   </data>
+  <data name="UseProperAssertMethodsFix" xml:space="preserve">
+    <value>Use '{0}'</value>
+  </data>
+  <data name="UseNewerAssertThrows" xml:space="preserve">
+    <value>Use '{0}'</value>
+  </data>
+  <data name="AssertionArgsShouldAvoidConditionalAccessFix" xml:space="preserve">
+    <value>Move conditional access in assertion to separate 'Assert.IsNotNull' check</value>
+  </data>
 </root>

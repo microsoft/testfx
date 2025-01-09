@@ -10,8 +10,6 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 #endif
 
-using System.Text;
-
 namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 internal abstract class BaseSerializer

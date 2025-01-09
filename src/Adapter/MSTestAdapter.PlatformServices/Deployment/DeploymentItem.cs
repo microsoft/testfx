@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-using System.Globalization;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -39,7 +38,7 @@ internal enum DeploymentItemOriginType
 /// The deployment item for a test class or a test method.
 /// </summary>
 [Serializable]
-internal class DeploymentItem
+internal sealed class DeploymentItem
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DeploymentItem"/> class.

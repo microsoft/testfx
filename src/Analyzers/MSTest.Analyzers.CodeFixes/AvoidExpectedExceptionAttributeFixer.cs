@@ -42,10 +42,7 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
             return;
         }
 
-        if (diagnostic.Properties.ContainsKey(DiagnosticDescriptorHelper.CannotFixPropertyKey))
-        {
-            return;
-        }
+        bool allowDerivedTypes = diagnostic.Properties.ContainsKey(AvoidExpectedExceptionAttributeAnalyzer.AllowDerivedTypesKey);
 
         // Find the method declaration identified by the diagnostic.
         MethodDeclarationSyntax methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().First();
@@ -84,7 +81,7 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.UseAssertThrowsExceptionOnLastStatementFix,
-                createChangedDocument: c => WrapLastStatementWithAssertThrowsExceptionAsync(context.Document, methodDeclaration, attributeSyntax, exceptionTypeSymbol, c),
+                createChangedDocument: c => WrapLastStatementWithAssertThrowsExceptionAsync(context.Document, methodDeclaration, attributeSyntax, exceptionTypeSymbol, allowDerivedTypes, c),
                 equivalenceKey: nameof(AvoidExpectedExceptionAttributeFixer)),
             diagnostic);
     }
@@ -94,6 +91,7 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
         MethodDeclarationSyntax methodDeclaration,
         SyntaxNode attributeSyntax,
         ITypeSymbol exceptionTypeSymbol,
+        bool allowDerivedTypes,
         CancellationToken cancellationToken)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
@@ -123,7 +121,14 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
         SyntaxNode newStatement = generator.InvocationExpression(
                 generator.MemberAccessExpression(
                     generator.IdentifierName("Assert"),
-                    generator.GenericName(containsAsyncCode ? "ThrowsExceptionAsync" : "ThrowsException", [exceptionTypeSymbol])),
+                    generator.GenericName(
+                        (containsAsyncCode, allowDerivedTypes) switch
+                        {
+                            (false, false) => "ThrowsExactly",
+                            (false, true) => "Throws",
+                            (true, false) => "ThrowsExactlyAsync",
+                            (true, true) => "ThrowsAsync",
+                        }, [exceptionTypeSymbol])),
                 newLambdaExpression);
 
         if (containsAsyncCode)

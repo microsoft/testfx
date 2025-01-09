@@ -7,6 +7,11 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
+#if NET6_0_OR_GREATER
+[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
+#else
+[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#endif
 public static class TestResultExtensions
 {
     /// <summary>
@@ -31,8 +36,16 @@ public static class TestResultExtensions
                     new TestFailedException(
                         outcome,
                         testFailureException.TryGetMessage(),
-                        testFailureException is TestFailedException testException ? testException.StackTraceInformation : testFailureException.TryGetStackTraceInformation()))
+                        testFailureException is TestFailedException testException
+                            ? testException.StackTraceInformation
+                            : testFailureException.TryGetStackTraceInformation()))
                 : new UnitTestResult { Outcome = outcome };
+
+            if (testResult.IgnoreReason is not null)
+            {
+                unitTestResult.ErrorMessage = testResult.IgnoreReason;
+            }
+
             unitTestResult.StandardOut = testResult.LogOutput;
             unitTestResult.StandardError = testResult.LogError;
             unitTestResult.DebugTrace = testResult.DebugTrace;

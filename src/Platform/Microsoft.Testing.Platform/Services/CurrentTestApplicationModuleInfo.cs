@@ -1,13 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETCOREAPP
-using System.Diagnostics.CodeAnalysis;
-#endif
-
-using System.Reflection;
-using System.Runtime.InteropServices;
-
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Services;
@@ -22,7 +15,7 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
     {
         get
         {
-            string? processPath = GetProcessPath(_environment, _process, false);
+            string? processPath = GetProcessPath(_environment, _process);
             return processPath is not null
                 && Path.GetFileNameWithoutExtension(processPath) == "dotnet";
         }

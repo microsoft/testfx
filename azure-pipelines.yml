@@ -48,6 +48,7 @@ stages:
       enablePublishBuildAssets: true
       enablePublishUsingPipelines: true
       enableTelemetry: true
+      enableSourceBuild: true
       jobs:
       - job: Windows
         timeoutInMinutes: 90
@@ -103,22 +104,22 @@ stages:
             name: Test
             displayName: Test
 
-          # Upload code coverage data
-          - script: $(Build.SourcesDirectory)/.dotnet/dotnet msbuild -restore
-              eng/CodeCoverage.proj
-              /p:Configuration=$(_BuildConfig)
-              /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\CodeCoverage.binlog
-            displayName: Upload coverage to codecov.io
-            condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
-
           # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
           # through the console or trx
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-              ArtifactName: TestResults
+              ArtifactName: TestResults_Windows_$(_BuildConfig)
             condition: failed()
+
+          # Upload code coverage to codecov.io
+          - script: $(Build.SourcesDirectory)/.dotnet/dotnet msbuild -restore
+              eng/CodeCoverage.proj
+              /p:Configuration=$(_BuildConfig)
+              /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\CodeCoverage.binlog
+            displayName: Upload coverage to codecov.io
+            condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
 
       - job: Linux
         timeoutInMinutes: 90
@@ -148,3 +149,51 @@ stages:
               ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
             name: Test
             displayName: Tests
+
+          # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
+          # through the console or trx
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Test Results folders'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+              ArtifactName: TestResults_Linux_$(_BuildConfig)
+            condition: failed()
+
+      - job: MacOS
+        timeoutInMinutes: 90
+        pool:
+          name: Azure Pipelines
+          vmImage: macos-latest
+          os: macOS
+        strategy:
+          matrix:
+            Release:
+              _BuildConfig: Release
+            Debug:
+              _BuildConfig: Debug
+        steps:
+        - script: eng/common/cibuild.sh
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            /p:Test=false
+            /p:NonWindowsBuild=true
+            /p:FastAcceptanceTest=true
+          displayName: Build
+
+        - ${{ if eq(parameters.SkipTests, False) }}:
+          # --ci is allowing to import some environment variables and some required configurations
+          # --nobl avoids overwriting build binlog with binlog from tests
+          - script: |
+              chmod +x ./test.sh
+              ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl
+            name: Test
+            displayName: Tests
+
+          # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
+          # through the console or trx
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Test Results folders'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+              ArtifactName: TestResults_MacOs_$(_BuildConfig)
+            condition: failed()

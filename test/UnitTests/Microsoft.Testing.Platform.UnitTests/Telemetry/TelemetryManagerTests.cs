@@ -13,23 +13,19 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class TelemetryManagerTests : TestBase
+[TestClass]
+public sealed class TelemetryManagerTests
 {
-    public TelemetryManagerTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
     // When set to 1 or true it should suppress the message.
-    [Arguments(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "1")]
-    [Arguments(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "true")]
-    [Arguments(EnvironmentVariableConstants.DOTNET_NOLOGO, "1")]
-    [Arguments(EnvironmentVariableConstants.DOTNET_NOLOGO, "true")]
+    [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "1")]
+    [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "true")]
+    [DataRow(EnvironmentVariableConstants.DOTNET_NOLOGO, "1")]
+    [DataRow(EnvironmentVariableConstants.DOTNET_NOLOGO, "true")]
 
     // When set to 0 it should write the message.
-    [Arguments(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "0")]
-    [Arguments(EnvironmentVariableConstants.DOTNET_NOLOGO, "0")]
+    [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, "0")]
+    [DataRow(EnvironmentVariableConstants.DOTNET_NOLOGO, "0")]
+    [TestMethod]
     public async Task TelemetryManager_UsingNoLogoShouldSuppressTelemetryMessage(string variable, string value)
     {
         // Arrange
@@ -75,14 +71,15 @@ public sealed class TelemetryManagerTests : TestBase
     }
 
     // When set to 1 or true it should suppress the message.
-    [Arguments(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1")]
-    [Arguments(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "true")]
-    [Arguments(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "1")]
-    [Arguments(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "true")]
+    [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1")]
+    [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "true")]
+    [DataRow(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "1")]
+    [DataRow(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "true")]
 
     // When set to 0 it should write the message.
-    [Arguments(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "0")]
-    [Arguments(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "0")]
+    [DataRow(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "0")]
+    [DataRow(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "0")]
+    [TestMethod]
     public async Task TelemetryManager_UsingTelemetryOptOutShouldDisableTelemetry(string variable, string value)
     {
         // Arrange
@@ -131,6 +128,7 @@ public sealed class TelemetryManagerTests : TestBase
         }
     }
 
+    [TestMethod]
     public async Task TelemetryManager_SentinelIsWrittenPerUserAndAvoidsShowingNoticeOnSubsequentRuns()
     {
         // Arrange
@@ -193,6 +191,7 @@ public sealed class TelemetryManagerTests : TestBase
         fileSystemMock.Verify(f => f.NewFileStream(path, It.IsAny<FileMode>(), It.IsAny<FileAccess>()), Times.Never);
     }
 
+    [TestMethod]
     public async Task TelemetryManager_SentinelIsWrittenOnlyWhenUserWouldSeeTheMessage()
     {
         // Arrange
@@ -262,6 +261,7 @@ public sealed class TelemetryManagerTests : TestBase
         fileSystemMock.Verify(f => f.NewFileStream(path, It.IsAny<FileMode>(), It.IsAny<FileAccess>()), Times.Once);
     }
 
+    [TestMethod]
     public async Task TelemetryManager_UsingNoBannerCommandLine_ShouldSuppressTelemetryMessage()
     {
         TestApplicationOptions options = new();

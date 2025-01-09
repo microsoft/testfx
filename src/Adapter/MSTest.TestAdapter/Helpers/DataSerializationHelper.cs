@@ -1,9 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
 using System.Runtime.Serialization.Json;
-using System.Text;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
@@ -14,7 +12,7 @@ internal static class DataSerializationHelper
     {
         UseSimpleDictionaryFormat = true,
         EmitTypeInformation = System.Runtime.Serialization.EmitTypeInformation.Always,
-        DateTimeFormat = new System.Runtime.Serialization.DateTimeFormat("O", System.Globalization.CultureInfo.InvariantCulture),
+        DateTimeFormat = new System.Runtime.Serialization.DateTimeFormat("O", CultureInfo.InvariantCulture),
     };
 
     /// <summary>

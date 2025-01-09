@@ -1,11 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Text;
-using System.Text.RegularExpressions;
-
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
@@ -43,6 +38,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     /// FILTER_EXPR =
     ///   '(' FILTER_EXPR ')'
     ///   | TOKEN '=' TOKEN
+    ///   | TOKEN '!=' TOKEN
     ///   | FILTER_EXPR OP FILTER_EXPR
     ///   | TOKEN
     /// OP = '&amp;' | '|'
@@ -215,6 +211,13 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                     isPropAllowed = false;
                     break;
 
+                case "!=":
+                    operatorStack.Push(OperatorKind.FilterNotEquals);
+
+                    isOperatorAllowed = false;
+                    isPropAllowed = false;
+                    break;
+
                 default:
                     expressionStack.Push(new ValueExpression(token));
 
@@ -316,7 +319,6 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 {
                     OperatorKind.And => FilterOperator.And,
                     OperatorKind.Or => FilterOperator.Or,
-                    OperatorKind.FilterEquals => FilterOperator.Equals,
                     _ => throw ApplicationStateGuard.Unreachable(),
                 };
 
@@ -324,6 +326,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 break;
 
             case OperatorKind.FilterEquals:
+            case OperatorKind.FilterNotEquals:
                 FilterExpression valueExpr = expr.Pop();
                 FilterExpression propExpr = expr.Pop();
 
@@ -333,7 +336,13 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                     throw new InvalidOperationException();
                 }
 
-                expr.Push(new PropertyExpression(propValueExpr, valueValueExpr));
+                FilterExpression filterExpression = new PropertyExpression(propValueExpr, valueValueExpr);
+                if (op == OperatorKind.FilterNotEquals)
+                {
+                    filterExpression = new OperatorExpression(FilterOperator.Not, [filterExpression]);
+                }
+
+                expr.Push(filterExpression);
                 break;
 
             default:
@@ -412,6 +421,25 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
                     break;
 
+                case '!':
+                    if (i + 1 < filter.Length && filter[i + 1] == '=')
+                    {
+                        if (lastStringTokenBuilder.Length > 0)
+                        {
+                            yield return lastStringTokenBuilder.ToString();
+                            lastStringTokenBuilder.Clear();
+                        }
+
+                        yield return "!=";
+                        i++;
+                    }
+                    else
+                    {
+                        goto default;
+                    }
+
+                    break;
+
                 default:
                     lastStringTokenBuilder.Append(Regex.Escape(filter[i].ToString()));
                     break;
@@ -446,7 +474,13 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             if (currentFragmentIndex >= _filters.Count)
             {
                 // Note: The regex for ** is .*.*, so we match against such a value expression.
-                return currentFragmentIndex > 0 && _filters.Last() is ValueExpression { Value: ".*.*" };
+                FilterExpression lastFilter = _filters.Last();
+                if (lastFilter is ValueAndPropertyExpression valueAndPropertyExpression)
+                {
+                    lastFilter = valueAndPropertyExpression.Value;
+                }
+
+                return currentFragmentIndex > 0 && lastFilter is ValueExpression { Value: ".*.*" };
             }
 
             if (!MatchFilterPattern(

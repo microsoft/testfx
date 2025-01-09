@@ -6,7 +6,5 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// The test class attribute.
 /// </summary>
-[AttributeUsage(AttributeTargets.Class)]
-public class STATestClassAttribute : TestClassAttribute
-{
-}
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public class STATestClassAttribute : TestClassAttribute;

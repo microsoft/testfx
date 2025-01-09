@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Reflection;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -13,7 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// <summary>
 /// Enumerates through an assembly to get a set of test methods.
 /// </summary>
-internal class AssemblyEnumeratorWrapper
+internal sealed class AssemblyEnumeratorWrapper
 {
     /// <summary>
     /// Assembly name for UTF.
@@ -27,7 +24,7 @@ internal class AssemblyEnumeratorWrapper
     /// <param name="runSettings"> The run Settings. </param>
     /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> A collection of test elements. </returns>
-    internal ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, out ICollection<string> warnings)
+    internal ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, out List<string> warnings)
     {
         warnings = new List<string>();
 
@@ -52,7 +49,7 @@ internal class AssemblyEnumeratorWrapper
             }
 
             // Load the assembly in isolation if required.
-            return GetTestsInIsolation(fullFilePath, runSettings, out warnings);
+            return GetTestsInIsolation(fullFilePath, runSettings, warnings);
         }
         catch (FileNotFoundException ex)
         {
@@ -98,7 +95,7 @@ internal class AssemblyEnumeratorWrapper
         }
     }
 
-    private static ICollection<UnitTestElement> GetTestsInIsolation(string fullFilePath, IRunSettings? runSettings, out ICollection<string> warnings)
+    private static ICollection<UnitTestElement> GetTestsInIsolation(string fullFilePath, IRunSettings? runSettings, List<string> warnings)
     {
         using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings, frameworkHandle: null);
 
@@ -107,15 +104,16 @@ internal class AssemblyEnumeratorWrapper
 
         // This might not be supported if an older version of Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         // assembly is already loaded into the App Domain.
+        string? xml = null;
         try
         {
-            assemblyEnumerator.RunSettingsXml = runSettings?.SettingsXml;
+            xml = runSettings?.SettingsXml;
         }
         catch
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFound);
         }
 
-        return assemblyEnumerator.EnumerateAssembly(fullFilePath, out warnings);
+        return assemblyEnumerator.EnumerateAssembly(fullFilePath, xml, warnings);
     }
 }

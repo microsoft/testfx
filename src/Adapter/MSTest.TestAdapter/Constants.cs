@@ -10,6 +10,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// </summary>
 internal static class Constants
 {
+    internal const string PublicTypeObsoleteMessage = "We will remove or hide this type starting with v4. If you are using this type, reach out to our team on https://github.com/microsoft/testfx.";
+
     /// <summary>
     /// The 3rd level entry (class) name in the hierarchy array.
     /// </summary>
@@ -121,6 +123,8 @@ internal static class Constants
     internal static readonly TestProperty TestDynamicDataProperty = TestProperty.Register("MSTest.DynamicData", "DynamicData", typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty TestIdGenerationStrategyProperty = TestProperty.Register("MSTest.TestIdGenerationStrategy", "TestIdGenerationStrategy", typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
+
+    internal static readonly TestProperty TestDataSourceIgnoreMessageProperty = TestProperty.Register("MSTest.TestDataSourceIgnoreMessageProperty", "TestDataSourceIgnoreMessageProperty", typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
     #endregion
 
     #region Private Constants

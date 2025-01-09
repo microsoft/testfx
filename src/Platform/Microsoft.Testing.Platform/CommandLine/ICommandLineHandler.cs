@@ -10,5 +10,5 @@ internal interface ICommandLineHandler
 {
     bool IsHelpInvoked();
 
-    Task PrintHelpAsync(IPlatformOutputDevice platformOutputDevice, IReadOnlyList<ITool>? availableTools = null);
+    Task PrintHelpAsync(IOutputDevice outputDevice, IReadOnlyList<ITool>? availableTools = null);
 }

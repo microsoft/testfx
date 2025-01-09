@@ -2,15 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-using System.Runtime.InteropServices;
-using System.Text;
-
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal sealed class MSTestBannerCapability : IBannerMessageOwnerCapability
 {
     private readonly IPlatformInformation _platformInformation;
@@ -31,7 +30,7 @@ internal sealed class MSTestBannerCapability : IBannerMessageOwnerCapability
         }
 
 #if NETCOREAPP
-        if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeCompiled)
+        if (RuntimeFeature.IsDynamicCodeCompiled)
 #endif
         {
             bannerMessage.Append(" [");

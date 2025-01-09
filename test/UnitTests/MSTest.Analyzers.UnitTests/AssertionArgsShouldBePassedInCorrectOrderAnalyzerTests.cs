@@ -7,9 +7,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
 
 namespace MSTest.Analyzers.UnitTests;
 
-[TestGroup]
-public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+[TestClass]
+public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
 {
+    [TestMethod]
     public async Task WhenUsingLiterals()
     {
         string code = """
@@ -161,6 +162,29 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenBothAreLiterals_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    Assert.AreEqual(0, 0);
+                    Assert.AreEqual(0, 1);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task LiteralUsingNamedArgument()
     {
         string code = """
@@ -292,6 +316,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
             fixedCode);
     }
 
+    [TestMethod]
     public async Task ConstantValue()
     {
         string code = """
@@ -437,6 +462,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
             fixedCode);
     }
 
+    [TestMethod]
     public async Task ActualAsLocalVariableOrNot()
     {
         string code = """
@@ -501,6 +527,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
             code);
     }
 
+    [TestMethod]
     public async Task ActualOrExpectedPrefix()
     {
         string code = """
@@ -702,6 +729,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
             fixedCode);
     }
 
+    [TestMethod]
     public async Task MethodCalls()
     {
         string code = """

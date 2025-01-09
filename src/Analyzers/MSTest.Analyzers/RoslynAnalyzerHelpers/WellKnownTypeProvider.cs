@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the MIT license.  See License.txt in the project root for license information.
 
-using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 
 using Analyzer.Utilities.Extensions;
 using Analyzer.Utilities.PooledObjects;
@@ -171,14 +168,15 @@ public class WellKnownTypeProvider
     }
 
     /// <summary>
-    /// Determines if <paramref name="typeSymbol"/> is a <see cref="System.Threading.Tasks.Task{TResult}"/> with its type
+    /// Determines if <paramref name="typeSymbol"/> is a <see cref="Task{TResult}"/> with its type
     /// argument satisfying <paramref name="typeArgumentPredicate"/>.
     /// </summary>
-    /// <param name="typeSymbol">Type potentially representing a <see cref="System.Threading.Tasks.Task{TResult}"/>.</param>
+    /// <param name="typeSymbol">Type potentially representing a <see cref="Task{TResult}"/>.</param>
     /// <param name="typeArgumentPredicate">Predicate to check the <paramref name="typeSymbol"/>'s type argument.</param>
-    /// <returns>True if <paramref name="typeSymbol"/> is a <see cref="System.Threading.Tasks.Task{TResult}"/> with its
+    /// <returns>True if <paramref name="typeSymbol"/> is a <see cref="Task{TResult}"/> with its
     /// type argument satisfying <paramref name="typeArgumentPredicate"/>, false otherwise.</returns>
-    internal bool IsTaskOfType([NotNullWhen(returnValue: true)] ITypeSymbol? typeSymbol, Func<ITypeSymbol, bool> typeArgumentPredicate) => typeSymbol != null
+    internal bool IsTaskOfType([NotNullWhen(returnValue: true)] ITypeSymbol? typeSymbol, Func<ITypeSymbol, bool> typeArgumentPredicate)
+        => typeSymbol != null
             && typeSymbol.OriginalDefinition != null
             && SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition,
                 GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask1))

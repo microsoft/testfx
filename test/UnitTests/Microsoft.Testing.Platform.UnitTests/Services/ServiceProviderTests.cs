@@ -11,16 +11,12 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-[TestGroup]
-public sealed class ServiceProviderTests : TestBase
+[TestClass]
+public sealed class ServiceProviderTests
 {
     private readonly ServiceProvider _serviceProvider = new();
 
-    public ServiceProviderTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
+    [TestMethod]
     public void GetService_InternalExtension_ShouldNotReturn()
     {
         _serviceProvider.AddService(new TestHostProcessLifetimeHandler());
@@ -39,6 +35,7 @@ public sealed class ServiceProviderTests : TestBase
         Assert.IsNull(_serviceProvider.GetService<ITestApplicationLifecycleCallbacks>());
     }
 
+    [TestMethod]
     public void GetServiceInternal_InternalExtension_ShouldReturn()
     {
         _serviceProvider.AddService(new TestHostProcessLifetimeHandler());
@@ -57,6 +54,7 @@ public sealed class ServiceProviderTests : TestBase
         Assert.IsNotNull(_serviceProvider.GetServiceInternal<ITestApplicationLifecycleCallbacks>());
     }
 
+    [TestMethod]
     public void Clone_WithoutFilter_Succeeded()
     {
         _serviceProvider.AddService(new TestHostProcessLifetimeHandler());
@@ -74,6 +72,7 @@ public sealed class ServiceProviderTests : TestBase
         }
     }
 
+    [TestMethod]
     public void Clone_WithFilter_Succeeded()
     {
         _serviceProvider.AddService(new TestHostProcessLifetimeHandler());
@@ -88,29 +87,37 @@ public sealed class ServiceProviderTests : TestBase
         Assert.AreEqual(_serviceProvider.Services.ToArray()[0].GetType(), typeof(TestHostProcessLifetimeHandler));
     }
 
-    public void AddService_TestFramework_ShouldFail() => _ = Assert.Throws<ArgumentException>(() => _serviceProvider.AddService(new TestFramework()));
+    [TestMethod]
+    public void AddService_TestFramework_ShouldFail()
+        => Assert.ThrowsException<ArgumentException>(() => _serviceProvider.AddService(new TestFramework()));
 
-    public void TryAddService_TestFramework_ShouldFail() => _ = Assert.Throws<ArgumentException>(() => _serviceProvider.TryAddService(new TestFramework()));
+    [TestMethod]
+    public void TryAddService_TestFramework_ShouldFail()
+        => Assert.ThrowsException<ArgumentException>(() => _serviceProvider.TryAddService(new TestFramework()));
 
+    [TestMethod]
     public void AddService_TestFramework_ShouldNotFail()
     {
         _serviceProvider.AllowTestAdapterFrameworkRegistration = true;
         _serviceProvider.AddService(new TestFramework());
     }
 
+    [TestMethod]
     public void TryAddService_TestFramework_ShouldNotFail()
     {
         _serviceProvider.AllowTestAdapterFrameworkRegistration = true;
         _serviceProvider.TryAddService(new TestFramework());
     }
 
+    [TestMethod]
     public void AddService_SameInstance_ShouldFail()
     {
         TestHostProcessLifetimeHandler instance = new();
         _serviceProvider.AddService(instance);
-        _ = Assert.Throws<InvalidOperationException>(() => _serviceProvider.AddService(instance));
+        _ = Assert.ThrowsException<InvalidOperationException>(() => _serviceProvider.AddService(instance));
     }
 
+    [TestMethod]
     public void AddService_SameInstance_ShouldNotFail()
     {
         TestHostProcessLifetimeHandler instance = new();
@@ -118,13 +125,15 @@ public sealed class ServiceProviderTests : TestBase
         _serviceProvider.AddService(instance, throwIfSameInstanceExit: false);
     }
 
+    [TestMethod]
     public void AddServices_SameInstance_ShouldFail()
     {
         TestHostProcessLifetimeHandler instance = new();
         _serviceProvider.AddServices([instance]);
-        _ = Assert.Throws<InvalidOperationException>(() => _serviceProvider.AddServices([instance]));
+        _ = Assert.ThrowsException<InvalidOperationException>(() => _serviceProvider.AddServices([instance]));
     }
 
+    [TestMethod]
     public void AddServices_SameInstance_ShouldNotFail()
     {
         TestHostProcessLifetimeHandler instance = new();
@@ -132,6 +141,7 @@ public sealed class ServiceProviderTests : TestBase
         _serviceProvider.AddServices([instance], throwIfSameInstanceExit: false);
     }
 
+    [TestMethod]
     public void TryAddService_SameInstance_ShouldReturnFalse()
     {
         TestHostProcessLifetimeHandler instance = new();
@@ -139,6 +149,7 @@ public sealed class ServiceProviderTests : TestBase
         Assert.IsFalse(_serviceProvider.TryAddService(instance));
     }
 
+    [TestMethod]
     public void GetServicesInternal_ExtensionMethod_InternalExtension_ShouldReturn()
     {
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
@@ -147,6 +158,7 @@ public sealed class ServiceProviderTests : TestBase
         Assert.AreEqual(2, _serviceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>().Count());
     }
 
+    [TestMethod]
     public void GetServicesInternal_InternalExtension_ShouldNotReturn()
     {
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
@@ -155,6 +167,7 @@ public sealed class ServiceProviderTests : TestBase
         Assert.AreEqual(0, _serviceProvider.GetServicesInternal(typeof(ITestApplicationLifecycleCallbacks), stopAtFirst: false, skipInternalOnlyExtensions: true).Count());
     }
 
+    [TestMethod]
     public void GetServicesInternal_InternalExtension_ShouldReturn()
     {
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
@@ -163,6 +176,7 @@ public sealed class ServiceProviderTests : TestBase
         Assert.AreEqual(2, _serviceProvider.GetServicesInternal(typeof(ITestApplicationLifecycleCallbacks), stopAtFirst: false, skipInternalOnlyExtensions: false).Count());
     }
 
+    [TestMethod]
     public void GetServicesInternal_InternalExtension_FirstOnly_ShouldReturnOne()
     {
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
@@ -171,6 +185,7 @@ public sealed class ServiceProviderTests : TestBase
         Assert.AreEqual(1, _serviceProvider.GetServicesInternal(typeof(ITestApplicationLifecycleCallbacks), stopAtFirst: true, skipInternalOnlyExtensions: false).Count());
     }
 
+    [TestMethod]
     public void GetServiceInternal_InternalExtension_ShouldReturnOne()
     {
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
@@ -179,7 +194,8 @@ public sealed class ServiceProviderTests : TestBase
         Assert.IsNotNull(_serviceProvider.GetServiceInternal(typeof(ITestApplicationLifecycleCallbacks), skipInternalOnlyExtensions: false));
     }
 
-    public void GetServiceInternal_InternalExtension_SkipInternalOnlyExtensios_ShouldReturnNull()
+    [TestMethod]
+    public void GetServiceInternal_InternalExtension_SkipInternalOnlyExtensions_ShouldReturnNull()
     {
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());

@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ko" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="FailedToCreateRetryDirectoryBecauseOfCollision">
+        <source>Failed to create retries directory due to collisions in '{0}' despite re-trying.</source>
+        <target state="translated">다시 시도에도 불구하고 '{0}'의 충돌로 인해 재시도 디렉터리를 만들지 못했습니다.</target>
+        <note>'{0}' is the directory where collisions happen</note>
+      </trans-unit>
+      <trans-unit id="FailureThresholdPolicy">
+        <source>Failure threshold policy is enabled, failed tests will not be restarted.</source>
+        <target state="translated">실패 임계값 정책을 사용하도록 설정했습니다. 실패한 테스트는 다시 시작되지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailureThresholdPolicyMaxCount">
+        <source>Maximum failed tests threshold is {0} and {1} tests failed</source>
+        <target state="translated">실패한 최대 테스트 임계값이 {0}이고 {1} 테스트가 실패했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailureThresholdPolicyMaxPercentage">
+        <source>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</source>
+        <target state="translated">실패한 임계값 백분율은 {0}%이며 {1}% 테스트에 실패했습니다({2}/{3}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MoveFiles">
+        <source>
+=====================
+Moving last attempt asset files to the default result directory
+=====================
+</source>
+        <target state="translated">
+=====================
+마지막 시도 자산 파일을 기본 결과 디렉터리로 이동
+=====================
+</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MovingFileToLocation">
+        <source>Moving file '{0}' to '{1}'</source>
+        <target state="translated">파일 {0}을(를) {1}(으)로 이동</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
+        <source>Failed to start process '{0}'</source>
+        <target state="translated">프로세스 '{0}'을(를) 시작하지 못했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsExtensionDescription">
+        <source>Retry failed tests feature allows to restart test execution upon failure.</source>
+        <target state="translated">실패한 테스트 다시 시도 기능을 사용하면 실패 시 테스트 실행을 다시 시작할 수 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsExtensionDisplayName">
+        <source>Retry failed tests</source>
+        <target state="translated">실패한 테스트 다시 시도</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
+        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">실패한 테스트 다시 시도는 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 유형의 작성기에서만 작동합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
+        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
+        <target state="translated">실패한 테스트의 비율이 지정된 값보다 큰 경우 다시 시도 메커니즘을 사용하지 않도록 설정</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
+        <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
+        <target state="translated">실패한 테스트 수가 지정된 값보다 큰 경우 다시 시도 메커니즘을 사용하지 않도록 설정</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
+        <source>Retry failed tests feature is not supported in hot reload mode</source>
+        <target state="translated">실패한 테스트 다시 시도 기능은 핫 다시 로드 모드에서 지원되지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsNotSupportedInServerModeErrorMessage">
+        <source>Retry failed tests feature is not supported in server mode</source>
+        <target state="translated">실패한 테스트 다시 시도 기능은 서버 모드에서 지원되지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsOptionDescription">
+        <source>Enable retry failed tests</source>
+        <target state="translated">실패한 테스트 다시 시도 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
+        <source>Option '{0}' requires option '{1}' to be specified</source>
+        <target state="translated">'{0}' 옵션을(를) 사용하려면 '{1}' 옵션을 지정해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a single integer argument</source>
+        <target state="translated">'{0}' 옵션에는 단일 정수 인수가 필요합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
+        <source>Options '{0}' and '{1}' cannot be used together</source>
+        <target state="translated">'{0}' 및 '{1}' 옵션은 함께 사용할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
+        <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
+        <target state="translated">다시 시도 서비스가 연결되기 전에 테스트 호스트 프로세스가 종료되었습니다. 종료 코드: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteCompletedSuccessfully">
+        <source>
+=====================
+Tests suite completed successfully in {0} attempts
+=====================</source>
+        <target state="translated">
+=====================
+테스트 도구 모음이 {0} 시도에서 완료되었습니다.
+=====================</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteFailed">
+        <source>
+=====================
+Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
+=====================
+</source>
+        <target state="translated">
+=====================
+테스트 도구 모음이 실패했습니다. 실패한 총 테스트: {0}, 종료 코드: {1}, 시도: {2}/{3}
+=====================
+</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteFailedInAllAttempts">
+        <source>
+=====================
+Tests suite failed in all {0} attempts
+=====================</source>
+        <target state="translated">
+=====================
+테스트 도구 모음이 모든 {0} 시도에 실패했습니다
+=====================</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestSuiteFailedWithWrongExitCode">
+        <source>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</source>
+        <target state="translated">테스트 도구 모음이 2와 다른 종료 코드를 사용하여 실패했습니다(테스트 실패). 예기치 않은 조건과 관련된 오류입니다. 종료 코드 '{0}'</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

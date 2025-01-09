@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Text;
-using System.Xml.Linq;
-
 using Microsoft.Testing.TestInfrastructure;
 
 namespace MSTest.Performance.Runner.Steps;
@@ -106,7 +102,7 @@ internal class Scenario1 : IStep<NoInputOutput, SingleProject>
             addPublicFeeds: true);
 
         context.AddDisposable(generator);
-        return new SingleProject(["net8.0"], generator, nameof(Scenario1));
+        return new SingleProject(["net9.0"], generator, nameof(Scenario1));
     }
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)

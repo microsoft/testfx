@@ -86,6 +86,12 @@
     <None Update="build\winui+uwp\MSTest.TestFramework.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="build\winui\MSTest.TestFramework.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

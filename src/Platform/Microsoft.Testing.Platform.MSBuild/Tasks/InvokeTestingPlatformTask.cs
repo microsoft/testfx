@@ -3,11 +3,6 @@
 
 #pragma warning disable CS8618 // Properties below are set by MSBuild.
 
-using System.Diagnostics;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using System.Text;
-
 using Microsoft.Build.Framework;
 using Microsoft.Testing.Extensions.MSBuild;
 using Microsoft.Testing.Extensions.MSBuild.Serializers;
@@ -141,7 +136,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 else
                 {
                     Log.LogMessage(MessageImportance.Low, resolutionLog.ToString());
-                    Log.LogError(Resources.MSBuildResources.FullPathToolCalculationFailed, dotnetRunnerName);
+                    Log.LogError(string.Format(CultureInfo.InvariantCulture, Resources.MSBuildResources.IncompatibleArchitecture, dotnetRunnerName, TestArchitecture.ItemSpec));
                     return null;
                 }
             }
@@ -420,7 +415,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         throw new NotImplementedException($"Request '{request.GetType()}' not supported.");
     }
 
-    private class MSBuildLogger : Logging.ILogger
+    private sealed class MSBuildLogger : Logging.ILogger
     {
         public bool IsEnabled(LogLevel logLevel) => false;
 
