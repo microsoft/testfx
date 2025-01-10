@@ -156,7 +156,7 @@ jobs:
             await exec.exec(`git config user.name "github-actions"`);
             await exec.exec(`git config user.email "github-actions@github.com"`);
 
-            const git_am_command = "git am --3way --empty=keep --ignore-whitespace --keep-non-patch changes.patch";
+            let git_am_command = "git am --3way --empty=keep --ignore-whitespace --keep-non-patch changes.patch";
             let git_am_output = `$ ${git_am_command}\n\n`;
             let git_am_failed = false;
             try {
@@ -184,7 +184,7 @@ jobs:
                 return;
               }
 
-              const git_am_failed_body = `@${context.payload.comment.user.login} backporting to ${target_branch} failed, the patch most likely resulted in conflicts:\n\n\`\`\`shell\n${git_am_output}\n\`\`\`\n\nPlease backport manually!\n**NOTE:** A PR will be created, but needs to be revised manually!**`;
+              const git_am_failed_body = `@${context.payload.comment.user.login} backporting to ${target_branch} failed, the patch most likely resulted in conflicts:\n\n\`\`\`shell\n${git_am_output}\n\`\`\`\n\n**NOTE:** A PR will be created, but needs to be revised manually!**`;
               await github.rest.issues.createComment({
                 owner: repo_owner,
                 repo: repo_name,
@@ -195,12 +195,11 @@ jobs:
               await exec.exec(`git add .`);
               await exec.exec(`git restore --staged changes.patch`);
 
-              const git_am_continue_command = "git am --continue";
-
-              let git_am_output = `$ ${git_am_continue_command}\n\n`;
-              let git_am_failed = false;
+              git_am_command = "git am --continue";
+              git_am_output = `$ ${git_am_command}\n\n`;
+              git_am_failed = false;
               try {
-                await exec.exec(git_am_continue_command, [], {
+                await exec.exec(git_am_command, [], {
                   listeners: {
                     stdout: function stdout(data) { git_am_output += data; },
                     stderr: function stderr(data) { git_am_output += data; }
