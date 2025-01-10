@@ -115,6 +115,8 @@ jobs:
       env:
         BACKPORT_PR_TITLE_TEMPLATE: ${{ inputs.pr_title_template }}
         BACKPORT_PR_DESCRIPTION_TEMPLATE: ${{ inputs.pr_description_template }}
+        GITHUB_TOKEN: ${{ secrets.BACKPORT_MACHINE_USER_PAT }}
+        GH_TOKEN: ${{ secrets.BACKPORT_MACHINE_USER_PAT }}
       with:
         script: |
           const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
@@ -145,14 +147,6 @@ jobs:
             await exec.exec(`git checkout ${target_branch}`);
             await exec.exec(`git clean -xdff`);
 
-            // configure git
-            await exec.exec(`git config user.name "github-actions"`);
-            await exec.exec(`git config user.email "github-actions@github.com"`);
-
-            // create temporary backport branch
-            const temp_branch = `backport/pr-${pr_number}-to-${target_branch}`;
-            await exec.exec(`git checkout -b ${temp_branch}`);
-
             // skip opening PR if the branch already exists on the origin remote since that means it was opened
             // by an earlier backport and force pushing to the branch updates the existing PR
             let should_open_pull_request = true;
@@ -163,6 +157,15 @@ jobs:
 
             // download and apply patch
             await exec.exec(`curl -sSL "${context.payload.issue.pull_request.patch_url}" --output changes.patch`);
+
+
+            // create temporary backport branch
+            // const temp_branch = `backport/pr-${pr_number}-to-${target_branch}`;
+            // await exec.exec(`git checkout -b ${temp_branch}`);
+
+            // configure git
+            // await exec.exec(`git config user.name "github-actions"`);
+            // await exec.exec(`git config user.email "github-actions@github.com"`);
 
             // const git_am_command = "git am --3way --empty=keep --ignore-whitespace --keep-non-patch changes.patch";
             // let git_am_output = `$ ${git_am_command}\n\n`;
