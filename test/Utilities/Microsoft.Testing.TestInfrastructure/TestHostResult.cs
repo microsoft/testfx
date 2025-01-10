@@ -21,6 +21,7 @@ public sealed class TestHostResult(string command, int exitCode, string standard
 
     public ReadOnlyCollection<string> StandardErrorLines { get; } = standardErrorLines;
 
+<<<<<<< HEAD
     public override string ToString()
     {
         StringBuilder stringBuilder = new();
@@ -34,4 +35,18 @@ public sealed class TestHostResult(string command, int exitCode, string standard
 
         return stringBuilder.ToString();
     }
+=======
+    public override string ToString() =>
+        $"""
+         Command: {CommandCauseConflict}
+         ====================
+         ExitCode: {ExitCode}
+         ====================
+         StandardOutput:
+         {StandardOutput}
+         ====================
+         StandardError:
+         {StandardError}
+         """;
+>>>>>>> Change that will conflict in rel/3.7 to test backport
 }
