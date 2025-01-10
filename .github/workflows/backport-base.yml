@@ -142,6 +142,7 @@ jobs:
               .replace(/%source_pr_number%/g, context.payload.issue.number)
               .replace(/%cc_users%/g, cc_users);
 
+            return backport_pr_description;
 
     - name: Unlock comments if PR is locked
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
