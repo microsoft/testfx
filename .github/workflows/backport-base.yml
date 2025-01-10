@@ -28,7 +28,7 @@ jobs:
       actions: write
     steps:
     - name: Cleanup workflow runs
-      uses: actions/github-script@v7
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
       with:
         script: |
           const repo_owner = context.payload.repository.owner.login;
@@ -70,7 +70,7 @@ jobs:
       pull-requests: write
     steps:
     - name: Extract backport target branch
-      uses: actions/github-script@v7
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
       id: target-branch-extractor
       with:
         result-encoding: string
@@ -85,7 +85,7 @@ jobs:
           return target_branch[1];
 
     - name: Extract PR id
-      uses: actions/github-script@v7
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
       id: pr-id-extractor
       with:
         result-encoding: string
@@ -93,15 +93,58 @@ jobs:
           return context.issue.number;
 
     - name: Calculate backport branch name
-      uses: actions/github-script@v7
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
       id: backport-branch-name-extractor
       with:
         result-encoding: string
         script: |
           return `backport/${{ steps.pr-id-extractor.outputs.result }}/to/${{ steps.target-branch-extractor.outputs.result }}`;
 
+    - name: Calculate backport PR title
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+      id: backport-pr-title-extractor
+      env:
+        BACKPORT_PR_TITLE_TEMPLATE: ${{ inputs.pr_title_template }}
+      with:
+        result-encoding: string
+        script: |
+            // replace the special placeholder tokens with values
+            const { BACKPORT_PR_TITLE_TEMPLATE } = process.env
+            const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
+
+            const backport_pr_title = BACKPORT_PR_TITLE_TEMPLATE
+              .replace(/%target_branch%/g, target_branch)
+              .replace(/%source_pr_title%/g, context.payload.issue.title)
+              .replace(/%source_pr_number%/g, context.payload.issue.number)
+
+            return backport_pr_title;
+
+    - name: Calculate backport PR description
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+      id: backport-pr-description-extractor
+      env:
+        BACKPORT_PR_DESCRIPTION_TEMPLATE: ${{ inputs.pr_description_template }}
+      with:
+        result-encoding: string
+        script: |
+            // get users to cc (append PR author if different from user who issued the backport command)
+            const comment_user = context.payload.comment.user.login;
+            let cc_users = `@${comment_user}`;
+            if (comment_user != context.payload.issue.user.login) cc_users += ` @${context.payload.issue.user.login}`;
+
+            // replace the special placeholder tokens with values
+            const { BACKPORT_PR_DESCRIPTION_TEMPLATE } = process.env
+            const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
+
+            const backport_pr_description = BACKPORT_PR_DESCRIPTION_TEMPLATE
+              .replace(/%target_branch%/g, target_branch)
+              .replace(/%source_pr_title%/g, context.payload.issue.title)
+              .replace(/%source_pr_number%/g, context.payload.issue.number)
+              .replace(/%cc_users%/g, cc_users);
+
+
     - name: Unlock comments if PR is locked
-      uses: actions/github-script@v7
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
       if: ${{ github.event.issue.locked == true }}
       with:
         script: |
@@ -112,7 +155,7 @@ jobs:
             repo: context.repo.repo,
           });
     - name: Post backport started comment to pull request
-      uses: actions/github-script@v7
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
       with:
         script: |
           const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
@@ -124,14 +167,11 @@ jobs:
             body: backport_start_body
           });
     - name: Checkout repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       with:
         fetch-depth: 0
     - name: Run backport
-      uses: actions/github-script@v7
-      env:
-        BACKPORT_PR_TITLE_TEMPLATE: ${{ inputs.pr_title_template }}
-        BACKPORT_PR_DESCRIPTION_TEMPLATE: ${{ inputs.pr_description_template }}
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
       with:
         script: |
           const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
@@ -164,10 +204,6 @@ jobs:
 
             // download and apply patch
             await exec.exec(`curl -sSL "${context.payload.issue.pull_request.patch_url}" --output changes.patch`);
-
-            // create temporary backport branch
-            // const temp_branch = `backport/pr-${pr_number}-to-${target_branch}`;
-            // await exec.exec(`git checkout -b ${temp_branch}`);
 
             // configure git
             await exec.exec(`git config user.name "github-actions"`);
@@ -229,39 +265,6 @@ jobs:
             }
 
             await exec.exec(`rm changes.patch`);
-
-            // prepare the GitHub PR details
-
-            // get users to cc (append PR author if different from user who issued the backport command)
-            // let cc_users = `@${comment_user}`;
-            // if (comment_user != context.payload.issue.user.login) cc_users += ` @${context.payload.issue.user.login}`;
-
-            // replace the special placeholder tokens with values
-            // const { BACKPORT_PR_TITLE_TEMPLATE, BACKPORT_PR_DESCRIPTION_TEMPLATE } = process.env
-
-            // const backport_pr_title = BACKPORT_PR_TITLE_TEMPLATE
-            //   .replace(/%target_branch%/g, target_branch)
-            //   .replace(/%source_pr_title%/g, context.payload.issue.title)
-            //   .replace(/%source_pr_number%/g, context.payload.issue.number)
-            //   .replace(/%cc_users%/g, cc_users);
-
-            // const backport_pr_description = BACKPORT_PR_DESCRIPTION_TEMPLATE
-            //   .replace(/%target_branch%/g, target_branch)
-            //   .replace(/%source_pr_title%/g, context.payload.issue.title)
-            //   .replace(/%source_pr_number%/g, context.payload.issue.number)
-            //   .replace(/%cc_users%/g, cc_users);
-
-            // open the GitHub PR
-            // await github.rest.pulls.create({
-            //   owner: repo_owner,
-            //   repo: repo_name,
-            //   title: backport_pr_title,
-            //   body: backport_pr_description,
-            //   head: temp_branch,
-            //   base: target_branch
-            // });
-
-            // console.log("Successfully opened the GitHub PR.");
           } catch (error) {
 
             core.setFailed(error);
@@ -281,9 +284,11 @@ jobs:
         token: ${{ secrets.BACKPORT_MACHINE_USER_PAT }}
         push-to-fork: youssef-backport-bot/testfx
         branch: ${{ steps.backport-branch-name-extractor.outputs.result }}
+        title: ${{ steps.backport-pr-title-extractor.outputs.result }}
+        body: ${{ steps.backport-pr-description-extractor.outputs.result }}
 
     - name: Re-lock PR comments
-      uses: actions/github-script@v7
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
       if: ${{ github.event.issue.locked == true && (success() || failure()) }}
       with:
         script: |
