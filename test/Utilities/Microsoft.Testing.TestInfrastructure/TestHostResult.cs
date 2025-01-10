@@ -21,7 +21,7 @@ public sealed class TestHostResult(string command, int exitCode, string standard
 
     public override string ToString() =>
         $"""
-         Command: {Command}
+         Command: {CommandCauseConflict}
          ====================
          ExitCode: {ExitCode}
          ====================
