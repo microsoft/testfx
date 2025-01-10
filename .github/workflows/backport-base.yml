@@ -83,6 +83,23 @@ jobs:
           if (target_branch == null) throw "Error: No backport branch found in the trigger phrase.";
 
           return target_branch[1];
+
+    - name: Extract PR id
+      uses: actions/github-script@v7
+      id: pr-id-extractor
+      with:
+        result-encoding: string
+        script: |
+          return context.issue.number;
+
+    - name: Calculate backport branch name
+      uses: actions/github-script@v7
+      id: backport-branch-name-extractor
+      with:
+        result-encoding: string
+        script: |
+          return `backport/${{ steps.pr-id-extractor.outputs.result }}/to/${{ steps.target-branch-extractor.outputs.result }}`;
+
     - name: Unlock comments if PR is locked
       uses: actions/github-script@v7
       if: ${{ github.event.issue.locked == true }}
@@ -263,6 +280,7 @@ jobs:
       with:
         token: ${{ secrets.BACKPORT_MACHINE_USER_PAT }}
         push-to-fork: youssef-backport-bot/testfx
+        branch: ${{ steps.backport-branch-name-extractor.outputs.result }}
 
     - name: Re-lock PR comments
       uses: actions/github-script@v7
