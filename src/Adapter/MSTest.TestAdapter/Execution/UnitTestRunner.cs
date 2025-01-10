@@ -127,8 +127,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// </summary>
     /// <param name="testMethod"> The test Method. </param>
     /// <param name="testContextProperties"> The test context properties. </param>
-    /// <returns> The <see cref="UnitTestResult"/>. </returns>
-    internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
+    /// <returns> The <see cref="TestResult"/>. </returns>
+    internal TestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
     {
         Guard.NotNull(testMethod);
 
@@ -144,8 +144,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 testContextForTestExecution,
                 MSTestSettings.CurrentSettings.CaptureDebugTraces);
 
-            UnitTestResult[] result;
-            if (!IsTestMethodRunnable(testMethod, testMethodInfo, out UnitTestResult[]? notRunnableResult))
+            TestResult[] result;
+            if (!IsTestMethodRunnable(testMethod, testMethodInfo, out TestResult[]? notRunnableResult))
             {
                 result = notRunnableResult;
             }
@@ -159,9 +159,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
                 ITestContext testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
 
-                UnitTestResult assemblyInitializeResult = RunAssemblyInitializeIfNeeded(testMethodInfo, testContextForAssemblyInit);
+                TestResult assemblyInitializeResult = RunAssemblyInitializeIfNeeded(testMethodInfo, testContextForAssemblyInit);
 
-                if (assemblyInitializeResult.Outcome != UnitTestOutcome.Passed)
+                if (assemblyInitializeResult.Outcome != UTF.UnitTestOutcome.Passed)
                 {
                     result = [assemblyInitializeResult];
                 }
@@ -169,9 +169,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 {
                     ITestContext testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
 
-                    UnitTestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContextForClassInit, assemblyInitializeResult.StandardOut!, assemblyInitializeResult.StandardError!, assemblyInitializeResult.DebugTrace!, assemblyInitializeResult.TestContextMessages!);
+                    TestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContextForClassInit, assemblyInitializeResult.LogOutput!, assemblyInitializeResult.LogError!, assemblyInitializeResult.DebugTrace!, assemblyInitializeResult.TestContextMessages!);
                     DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
-                    if (classInitializeResult.Outcome != UnitTestOutcome.Passed)
+                    if (classInitializeResult.Outcome != UTF.UnitTestOutcome.Passed)
                     {
                         result = [classInitializeResult];
                     }
@@ -180,7 +180,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                         // Run the test method
                         testContextForTestExecution.SetOutcome(testContextForClassInit.Context.CurrentTestOutcome);
                         var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContextForTestExecution);
-                        result = testMethodRunner.Execute(classInitializeResult.StandardOut!, classInitializeResult.StandardError!, classInitializeResult.DebugTrace!, classInitializeResult.TestContextMessages!).ToUnitTestResults();
+                        result = testMethodRunner.Execute(classInitializeResult.LogOutput!, classInitializeResult.LogError!, classInitializeResult.DebugTrace!, classInitializeResult.TestContextMessages!);
                     }
                 }
             }
@@ -198,17 +198,24 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         catch (TypeInspectionException ex)
         {
             // Catch any exception thrown while inspecting the test method and return failure.
-            return [new(UnitTestOutcome.Failed, ex.Message)];
+            return
+            [
+                new TestResult()
+                {
+                    Outcome = UTF.UnitTestOutcome.Failed,
+                    IgnoreReason = ex.Message,
+                }
+            ];
         }
     }
 
-    private static UnitTestResult RunAssemblyInitializeIfNeeded(TestMethodInfo testMethodInfo, ITestContext testContext)
+    private static TestResult RunAssemblyInitializeIfNeeded(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
         string? initializationLogs = string.Empty;
         string? initializationErrorLogs = string.Empty;
         string? initializationTrace = string.Empty;
         string? initializationTestContextMessages = string.Empty;
-        UnitTestResult result = new(UnitTestOutcome.Passed, null);
+        var result = new TestResult() { Outcome = UTF.UnitTestOutcome.Passed };
 
         try
         {
@@ -227,16 +234,17 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         }
         catch (TestFailedException ex)
         {
-            result = new(ex);
+            result = new TestResult() { TestFailureException = ex };
         }
         catch (Exception ex)
         {
-            result = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()));
+            var testFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation());
+            result = new TestResult() { TestFailureException = testFailureException };
         }
         finally
         {
-            result.StandardOut = initializationLogs;
-            result.StandardError = initializationErrorLogs;
+            result.LogOutput = initializationLogs;
+            result.LogError = initializationErrorLogs;
             result.DebugTrace = initializationTrace;
             result.TestContextMessages = initializationTestContextMessages;
         }
@@ -244,7 +252,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         return result;
     }
 
-    private static void RunAssemblyCleanupIfNeeded(ITestContext testContext, ClassCleanupManager classCleanupManager, TypeCache typeCache, UnitTestResult[] results)
+    private static void RunAssemblyCleanupIfNeeded(ITestContext testContext, ClassCleanupManager classCleanupManager, TypeCache typeCache, TestResult[] results)
     {
         if (!classCleanupManager.ShouldRunEndOfAssemblyCleanup)
         {
@@ -287,11 +295,10 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             if (results.Length > 0)
             {
 #pragma warning disable IDE0056 // Use index operator
-                UnitTestResult lastResult = results[results.Length - 1];
+                TestResult lastResult = results[results.Length - 1];
 #pragma warning restore IDE0056 // Use index operator
-                lastResult.Outcome = UnitTestOutcome.Error;
-                lastResult.ErrorMessage = ex.Message;
-                lastResult.ErrorStackTrace = ex.StackTrace;
+                lastResult.Outcome = UTF.UnitTestOutcome.Error;
+                lastResult.TestFailureException = ex;
             }
         }
         finally
@@ -299,10 +306,10 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             if (results.Length > 0)
             {
 #pragma warning disable IDE0056 // Use index operator
-                UnitTestResult lastResult = results[results.Length - 1];
+                TestResult lastResult = results[results.Length - 1];
 #pragma warning restore IDE0056 // Use index operator
-                lastResult.StandardOut += initializationLogs;
-                lastResult.StandardError += initializationErrorLogs;
+                lastResult.LogOutput += initializationLogs;
+                lastResult.LogError += initializationErrorLogs;
                 lastResult.DebugTrace += initializationTrace;
                 lastResult.TestContextMessages += initializationTestContextMessages;
             }
@@ -319,7 +326,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     private bool IsTestMethodRunnable(
         TestMethod testMethod,
         TestMethodInfo? testMethodInfo,
-        [NotNullWhen(false)] out UnitTestResult[]? notRunnableResult)
+        [NotNullWhen(false)] out TestResult[]? notRunnableResult)
     {
         // If the specified TestMethod could not be found, return a NotFound result.
         if (testMethodInfo == null)
@@ -327,9 +334,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             {
                 notRunnableResult =
                 [
-                    new(
-                        UnitTestOutcome.NotFound,
-                        string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name)),
+                    new TestResult()
+                    {
+                        Outcome = UTF.UnitTestOutcome.NotFound,
+                        IgnoreReason = string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name),
+                    },
                 ];
                 return false;
             }
@@ -341,7 +350,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             {
                 notRunnableResult =
                 [
-                    new(UnitTestOutcome.NotRunnable, testMethodInfo.NotRunnableReason),
+                    new TestResult()
+                    {
+                        Outcome = UTF.UnitTestOutcome.NotRunnable,
+                        IgnoreReason = testMethodInfo.NotRunnableReason,
+                    },
                 ];
                 return false;
             }
@@ -351,7 +364,14 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         string? ignoreMessage = testMethodInfo.Parent.ClassAttribute.IgnoreMessage ?? testMethodInfo.TestMethodOptions.Executor?.IgnoreMessage;
         if (ignoreMessage is not null)
         {
-            notRunnableResult = [new UnitTestResult(UnitTestOutcome.Ignored, ignoreMessage)];
+            notRunnableResult =
+                [
+                    new TestResult()
+                    {
+                        Outcome = UTF.UnitTestOutcome.Ignored,
+                        IgnoreReason = ignoreMessage,
+                    }
+                ];
             return false;
         }
 
@@ -369,7 +389,14 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         if (ignoreAttributeOnClass is not null || ignoreAttributeOnMethod is not null)
         {
-            notRunnableResult = [new UnitTestResult(UnitTestOutcome.Ignored, ignoreMessage)];
+            notRunnableResult =
+                [
+                    new TestResult()
+                    {
+                        Outcome = UTF.UnitTestOutcome.Ignored,
+                        IgnoreReason = ignoreMessage,
+                    }
+                ];
             return false;
         }
 
