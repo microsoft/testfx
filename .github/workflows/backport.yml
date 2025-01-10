@@ -21,3 +21,4 @@ jobs:
         Backport of #%source_pr_number% to %target_branch%
 
         /cc %cc_users%
+    secrets: inherit
