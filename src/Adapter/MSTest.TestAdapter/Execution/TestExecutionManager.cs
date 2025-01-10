@@ -267,10 +267,10 @@ public class TestExecutionManager
 
     internal virtual UnitTestDiscoverer GetUnitTestDiscoverer() => new();
 
-    internal void SendTestResults(TestCase test, IEnumerable<UnitTestResult> unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime,
+    internal void SendTestResults(TestCase test, TestTools.UnitTesting.TestResult[] unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime,
         ITestExecutionRecorder testExecutionRecorder)
     {
-        foreach (UnitTestResult unitTestResult in unitTestResults)
+        foreach (TestTools.UnitTesting.TestResult unitTestResult in unitTestResults)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
 
@@ -543,7 +543,7 @@ public class TestExecutionManager
             IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
             Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
 
-            UnitTestResult[] unitTestResult;
+            TestTools.UnitTesting.TestResult[] unitTestResult;
             if (usesAppDomains)
             {
 #pragma warning disable VSTHRD103 // Call async methods when in an async method - We cannot do right now because we are crossing app domains.
@@ -573,7 +573,11 @@ public class TestExecutionManager
             // If there were only fixture tests, send an inconclusive result.
             if (!hasAnyRunnableTests)
             {
-                var result = new UnitTestResult(ObjectModel.UnitTestOutcome.Inconclusive, null);
+                var result = new TestTools.UnitTesting.TestResult()
+                {
+                    Outcome = TestTools.UnitTesting.UnitTestOutcome.Inconclusive,
+                };
+
                 SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
                 continue;
             }
@@ -584,7 +588,10 @@ public class TestExecutionManager
 
             if (fixtureTestResult.IsExecuted)
             {
-                var result = new UnitTestResult(fixtureTestResult.Outcome, null);
+                var result = new TestTools.UnitTesting.TestResult()
+                {
+                    Outcome = fixtureTestResult.Outcome.ToAdapterOutcome(),
+                };
                 SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
             }
         }
