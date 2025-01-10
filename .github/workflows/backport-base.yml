@@ -171,22 +171,48 @@ jobs:
               git_am_failed = true;
             }
 
-            if (git_am_failed) {
-              const git_am_failed_body = `@${context.payload.comment.user.login} backporting to ${target_branch} failed, the patch most likely resulted in conflicts:\n\n\`\`\`shell\n${git_am_output}\n\`\`\`\n\nPlease backport manually!`;
+            let failed_count = 0;
+            while (git_am_failed) {
+              failed_count++;
+              if (failed_count >= 5) {
+                await github.rest.issues.createComment({
+                  owner: repo_owner,
+                  repo: repo_name,
+                  issue_number: pr_number,
+                  body: "Potential infinite loop guard hit. Stopping"
+                });
+                return;
+              }
+
+              const git_am_failed_body = `@${context.payload.comment.user.login} backporting to ${target_branch} failed, the patch most likely resulted in conflicts:\n\n\`\`\`shell\n${git_am_output}\n\`\`\`\n\nPlease backport manually!\n**NOTE:** A PR will be created, but needs to be revised manually!**`;
               await github.rest.issues.createComment({
                 owner: repo_owner,
                 repo: repo_name,
                 issue_number: pr_number,
                 body: git_am_failed_body
               });
-              core.setFailed("Error: git am failed, most likely due to a merge conflict.");
-              return;
+
+              await exec.exec(`git add .`);
+              await exec.exec(`git restore --staged changes.patch`);
+
+              const git_am_continue_command = "git am --continue";
+
+              let git_am_output = `$ ${git_am_continue_command}\n\n`;
+              let git_am_failed = false;
+              try {
+                await exec.exec(git_am_continue_command, [], {
+                  listeners: {
+                    stdout: function stdout(data) { git_am_output += data; },
+                    stderr: function stderr(data) { git_am_output += data; }
+                  }
+                });
+              } catch (error) {
+                git_am_output += error;
+                git_am_failed = true;
+              }
             }
-            else {
-              await exec.exec(`rm changes.patch`);
-              // push the temp branch to the repository
-              // await exec.exec(`git push --force --set-upstream origin HEAD:${temp_branch}`);
-            }
+
+            await exec.exec(`rm changes.patch`);
 
             // prepare the GitHub PR details
 
