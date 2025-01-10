@@ -1,6 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 [Serializable]
@@ -135,4 +141,75 @@ public class UnitTestResult
     /// Gets the result files attached by the test.
     /// </summary>
     public IList<string>? ResultFiles { get; internal set; }
+
+    /// <summary>
+    /// Convert parameter unitTestResult to testResult.
+    /// </summary>
+    /// <param name="testCase"> The test Case. </param>
+    /// <param name="startTime"> The start Time. </param>
+    /// <param name="endTime"> The end Time. </param>
+    /// <param name="computerName">The computer name.</param>
+    /// <param name="currentSettings">Current MSTest settings.</param>
+    /// <returns> The <see cref="TestResult"/>. </returns>
+    internal TestResult ToTestResult(TestCase testCase, DateTimeOffset startTime, DateTimeOffset endTime, string computerName, MSTestSettings currentSettings)
+    {
+        DebugEx.Assert(testCase != null, "testCase");
+
+        var testResult = new TestResult(testCase)
+        {
+            DisplayName = DisplayName,
+            Duration = Duration,
+            ErrorMessage = ErrorMessage,
+            ErrorStackTrace = ErrorStackTrace,
+            Outcome = UnitTestOutcomeHelper.ToTestOutcome(Outcome, currentSettings),
+            StartTime = startTime,
+            EndTime = endTime,
+            ComputerName = computerName,
+        };
+
+        testResult.SetPropertyValue(Constants.ExecutionIdProperty, ExecutionId);
+        testResult.SetPropertyValue(Constants.ParentExecIdProperty, ParentExecId);
+        testResult.SetPropertyValue(Constants.InnerResultsCountProperty, InnerResultsCount);
+
+        if (!StringEx.IsNullOrEmpty(StandardOut))
+        {
+            TestResultMessage message = new(TestResultMessage.StandardOutCategory, StandardOut);
+            testResult.Messages.Add(message);
+        }
+
+        if (!StringEx.IsNullOrEmpty(StandardError))
+        {
+            TestResultMessage message = new(TestResultMessage.StandardErrorCategory, StandardError);
+            testResult.Messages.Add(message);
+        }
+
+        if (!StringEx.IsNullOrEmpty(DebugTrace))
+        {
+            string debugTraceMessagesInStdOut = string.Format(CultureInfo.CurrentCulture, "{2}{2}{0}{2}{1}", Resource.DebugTraceBanner, DebugTrace, Environment.NewLine);
+            TestResultMessage debugTraceMessage = new(TestResultMessage.StandardOutCategory, debugTraceMessagesInStdOut);
+            testResult.Messages.Add(debugTraceMessage);
+        }
+
+        if (!StringEx.IsNullOrEmpty(TestContextMessages))
+        {
+            string testContextMessagesInStdOut = string.Format(CultureInfo.InvariantCulture, "{2}{2}{0}{2}{1}", Resource.TestContextMessageBanner, TestContextMessages, Environment.NewLine);
+            TestResultMessage testContextMessage = new(TestResultMessage.StandardOutCategory, testContextMessagesInStdOut);
+            testResult.Messages.Add(testContextMessage);
+        }
+
+        if (ResultFiles is { Count: > 0 })
+        {
+            AttachmentSet attachmentSet = new(Constants.ExecutorUri, Resource.AttachmentSetDisplayName);
+            foreach (string resultFile in ResultFiles)
+            {
+                string pathToResultFile = PlatformServiceProvider.Instance.FileOperations.GetFullFilePath(resultFile);
+                UriDataAttachment attachment = new(new Uri(pathToResultFile), resultFile);
+                attachmentSet.Attachments.Add(attachment);
+            }
+
+            testResult.Attachments.Add(attachmentSet);
+        }
+
+        return testResult;
+    }
 }
