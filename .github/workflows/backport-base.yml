@@ -115,8 +115,6 @@ jobs:
       env:
         BACKPORT_PR_TITLE_TEMPLATE: ${{ inputs.pr_title_template }}
         BACKPORT_PR_DESCRIPTION_TEMPLATE: ${{ inputs.pr_description_template }}
-        GITHUB_TOKEN: ${{ secrets.BACKPORT_MACHINE_USER_PAT }}
-        GH_TOKEN: ${{ secrets.BACKPORT_MACHINE_USER_PAT }}
       with:
         script: |
           const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
@@ -157,7 +155,6 @@ jobs:
 
             // download and apply patch
             await exec.exec(`curl -sSL "${context.payload.issue.pull_request.patch_url}" --output changes.patch`);
-
 
             // create temporary backport branch
             // const temp_branch = `backport/pr-${pr_number}-to-${target_branch}`;
