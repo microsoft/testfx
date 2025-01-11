@@ -5,23 +5,24 @@
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap mp">
+  IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="3a1115e9-2ece-44ab-944f-5b6240a08ea6"
-    Publisher="CN=sergiopedri"
+    Name="274ceed2-dea1-4e6f-b6ed-863226eaa9e7"
+    Publisher="CN=adstep"
     Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="3a1115e9-2ece-44ab-944f-5b6240a08ea6" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="274ceed2-dea1-4e6f-b6ed-863226eaa9e7" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>BlankUwpNet9App</DisplayName>
-    <PublisherDisplayName>sergiopedri</PublisherDisplayName>
+    <DisplayName>BlankWinUINet9App</DisplayName>
+    <PublisherDisplayName>adstep</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
   </Dependencies>
 
   <Resources>
@@ -31,22 +32,20 @@
   <Applications>
     <Application Id="App"
       Executable="$targetnametoken$.exe"
-      EntryPoint="BlankUwpNet9App.App">
+      EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="BlankUwpNet9App"
+        DisplayName="BlankWinUINet9App"
+        Description="BlankWinUINet9App"
+        BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png"
-        Description="BlankUwpNet9App"
-        BackgroundColor="transparent">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
     </Application>
   </Applications>
 
   <Capabilities>
-    <Capability Name="internetClient" />
-    <Capability Name="privateNetworkClientServer"/>
-    <rescap:Capability Name="broadFileSystemAccess" />
+    <rescap:Capability Name="runFullTrust" />
   </Capabilities>
 </Package>
