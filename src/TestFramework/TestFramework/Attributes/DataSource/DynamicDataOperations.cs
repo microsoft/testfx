@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+<<<<<<< HEAD:src/Adapter/MSTest.TestAdapter/DynamicDataOperations.cs
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -10,12 +11,15 @@ using System.Runtime.CompilerServices;
 #endif
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+=======
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+>>>>>>> Fix DynamicData.GetData regression preventing it to work without adapter:src/TestFramework/TestFramework/Attributes/DataSource/DynamicDataOperations.cs
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-
-internal class DynamicDataOperations : IDynamicDataOperations
+internal static class DynamicDataOperations
 {
-    public IEnumerable<object[]> GetData(Type? _dynamicDataDeclaringType, DynamicDataSourceType _dynamicDataSourceType, string _dynamicDataSourceName, MethodInfo methodInfo)
+    private const BindingFlags DeclaredOnlyLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
+    public static IEnumerable<object[]> GetData(Type? _dynamicDataDeclaringType, DynamicDataSourceType _dynamicDataSourceType, string _dynamicDataSourceName, MethodInfo methodInfo)
     {
         // Check if the declaring type of test data is passed in. If not, default to test method's class type.
         _dynamicDataDeclaringType ??= methodInfo.DeclaringType;
@@ -25,6 +29,26 @@ internal class DynamicDataOperations : IDynamicDataOperations
 
         switch (_dynamicDataSourceType)
         {
+<<<<<<< HEAD:src/Adapter/MSTest.TestAdapter/DynamicDataOperations.cs
+=======
+            case DynamicDataSourceType.AutoDetect:
+#pragma warning disable IDE0045 // Convert to conditional expression - it becomes less readable.
+                if (GetPropertyConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataPropertyInfo)
+                {
+                    obj = GetDataFromProperty(dynamicDataPropertyInfo);
+                }
+                else if (GetMethodConsideringInheritance(_dynamicDataDeclaringType, _dynamicDataSourceName) is { } dynamicDataMethodInfo)
+                {
+                    obj = GetDataFromMethod(dynamicDataMethodInfo);
+                }
+                else
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, _dynamicDataSourceName, _dynamicDataDeclaringType.FullName));
+                }
+#pragma warning restore IDE0045 // Convert to conditional expression
+
+                break;
+>>>>>>> Fix DynamicData.GetData regression preventing it to work without adapter:src/TestFramework/TestFramework/Attributes/DataSource/DynamicDataOperations.cs
             case DynamicDataSourceType.Property:
                 PropertyInfo property = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(_dynamicDataDeclaringType, _dynamicDataSourceName)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {_dynamicDataSourceName}");
@@ -82,15 +106,51 @@ internal class DynamicDataOperations : IDynamicDataOperations
         return data;
     }
 
+<<<<<<< HEAD:src/Adapter/MSTest.TestAdapter/DynamicDataOperations.cs
     /// <inheritdoc />
     public string? GetDisplayName(string? DynamicDataDisplayName, Type? DynamicDataDisplayNameDeclaringType, MethodInfo methodInfo, object?[]? data)
+=======
+    private static object? GetDataFromMethod(MethodInfo method)
+    {
+        if (!method.IsStatic
+            || method.ContainsGenericParameters
+            || method.GetParameters().Length > 0)
+        {
+            throw new NotSupportedException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    FrameworkMessages.DynamicDataInvalidPropertyLayout,
+                    method.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{method.Name}" : method.Name));
+        }
+
+        // Note: the method is static and takes no parameters.
+        return method.Invoke(null, null);
+    }
+
+    private static object? GetDataFromProperty(PropertyInfo property)
+    {
+        if (property.GetGetMethod(true) is not { IsStatic: true })
+        {
+            throw new NotSupportedException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    FrameworkMessages.DynamicDataInvalidPropertyLayout,
+                    property.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{property.Name}" : property.Name));
+        }
+
+        // Note: the property getter is static.
+        return property.GetValue(null, null);
+    }
+
+    public static string? GetDisplayName(string? DynamicDataDisplayName, Type? DynamicDataDisplayNameDeclaringType, MethodInfo methodInfo, object?[]? data)
+>>>>>>> Fix DynamicData.GetData regression preventing it to work without adapter:src/TestFramework/TestFramework/Attributes/DataSource/DynamicDataOperations.cs
     {
         if (DynamicDataDisplayName != null)
         {
             Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
             DebugEx.Assert(dynamicDisplayNameDeclaringType is not null, "Declaring type of test data cannot be null.");
 
-            MethodInfo method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(dynamicDisplayNameDeclaringType, DynamicDataDisplayName)
+            MethodInfo method = dynamicDisplayNameDeclaringType.GetMethod(DynamicDataDisplayName, DeclaredOnlyLookup)
                 ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {DynamicDataDisplayName}");
             ParameterInfo[] parameters = method.GetParameters();
             return parameters.Length != 2 ||
@@ -200,6 +260,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
             return true;
         }
 
+#if !NET462 // TODO: Add dependency on System.ValueTuple for net462?
         if (genericTypeDefinition == typeof(ValueTuple<>) ||
             genericTypeDefinition == typeof(ValueTuple<,>) ||
             genericTypeDefinition == typeof(ValueTuple<,,>) ||
@@ -212,8 +273,48 @@ internal class DynamicDataOperations : IDynamicDataOperations
             tupleSize = type.GetGenericArguments().Length;
             return true;
         }
+#endif
 
         return false;
     }
 #endif
+<<<<<<< HEAD:src/Adapter/MSTest.TestAdapter/DynamicDataOperations.cs
+=======
+
+    private static PropertyInfo? GetPropertyConsideringInheritance(Type type, string propertyName)
+    {
+        // NOTE: Don't use GetRuntimeProperty. It considers inheritance only for instance properties.
+        Type? currentType = type;
+        while (currentType is not null)
+        {
+            PropertyInfo? property = currentType.GetProperty(propertyName, DeclaredOnlyLookup);
+            if (property is not null)
+            {
+                return property;
+            }
+
+            currentType = currentType.BaseType;
+        }
+
+        return null;
+    }
+
+    private static MethodInfo? GetMethodConsideringInheritance(Type type, string methodName)
+    {
+        // NOTE: Don't use GetRuntimeMethod. It considers inheritance only for instance methods.
+        Type? currentType = type;
+        while (currentType is not null)
+        {
+            MethodInfo? method = currentType.GetMethod(methodName, DeclaredOnlyLookup);
+            if (method is not null)
+            {
+                return method;
+            }
+
+            currentType = currentType.BaseType;
+        }
+
+        return null;
+    }
+>>>>>>> Fix DynamicData.GetData regression preventing it to work without adapter:src/TestFramework/TestFramework/Attributes/DataSource/DynamicDataOperations.cs
 }

@@ -243,6 +243,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+<<<<<<< HEAD
         ///   Looks up a localized string similar to &apos;[DynamicData]&apos; referenced member &apos;{0}.{1}&apos; should return &apos;IEnumerable&lt;object[]&gt;&apos;, &apos;IEnumerable&lt;Tuple&gt;` or &apos;IEnumerable&lt;ValueTuple&gt;&apos;.
         /// </summary>
         internal static string DynamicDataShouldBeValidMessageFormat_MemberType {
@@ -252,6 +253,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+=======
+>>>>>>> Fix DynamicData.GetData regression preventing it to work without adapter
         ///   Looks up a localized string similar to {0}: {1}.
         /// </summary>
         internal static string EnumeratorLoadTypeErrorFormat {

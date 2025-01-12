@@ -61,11 +61,14 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">'.runsettings' 및 '.testconfig.json' 파일이 모두 검색되었습니다. 이러한 테스트 구성 파일 중 하나만 선택하세요.</target>
         <note />
       </trans-unit>
+<<<<<<< HEAD
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
         <target state="translated">'[DynamicData]'이(가) '{0} 멤버를 참조했습니다.{1}'은(는) 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;' 또는 'IEnumerable&lt;ValueTuple&gt;'을 반환해야 합니다.</target>
         <note />
       </trans-unit>
+=======
+>>>>>>> Fix DynamicData.GetData regression preventing it to work without adapter
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">'{0}' 테스트가 실행 시간 제한을 초과했습니다.</target>

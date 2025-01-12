@@ -62,11 +62,14 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">'.runsettings' ファイルと '.testconfig.json' ファイルの両方が検出されました。これらのテスト構成ファイルのいずれか 1 つだけを選択してください。</target>
         <note />
       </trans-unit>
+<<<<<<< HEAD
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
         <target state="translated">'[DynamicData]' の参照されるメンバー '{0}.{1}' は、'IEnumerable&lt;object[]&gt;'、'IEnumerable&lt;Tuple&gt;`、'IEnumerable&lt;ValueTuple&gt;' のいずれかを返す必要があります</target>
         <note />
       </trans-unit>
+=======
+>>>>>>> Fix DynamicData.GetData regression preventing it to work without adapter
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">テスト '{0}' は実行タイムアウトを超えました。</target>
