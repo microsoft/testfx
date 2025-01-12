@@ -1,13 +1,13 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-
-internal class DynamicDataOperations : IDynamicDataOperations
+internal static class DynamicDataOperations
 {
-    public IEnumerable<object[]> GetData(Type? _dynamicDataDeclaringType, DynamicDataSourceType _dynamicDataSourceType, string _dynamicDataSourceName, MethodInfo methodInfo)
+    private const BindingFlags DeclaredOnlyLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
+    public static IEnumerable<object[]> GetData(Type? _dynamicDataDeclaringType, DynamicDataSourceType _dynamicDataSourceType, string _dynamicDataSourceName, MethodInfo methodInfo)
     {
         // Check if the declaring type of test data is passed in. If not, default to test method's class type.
         _dynamicDataDeclaringType ??= methodInfo.DeclaringType;
@@ -29,7 +29,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
                 }
                 else
                 {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.DynamicDataSourceShouldExistAndBeValid, _dynamicDataSourceName, _dynamicDataDeclaringType.FullName));
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, _dynamicDataSourceName, _dynamicDataDeclaringType.FullName));
                 }
 #pragma warning restore IDE0045 // Convert to conditional expression
 
@@ -105,15 +105,14 @@ internal class DynamicDataOperations : IDynamicDataOperations
         return property.GetValue(null, null);
     }
 
-    /// <inheritdoc />
-    public string? GetDisplayName(string? DynamicDataDisplayName, Type? DynamicDataDisplayNameDeclaringType, MethodInfo methodInfo, object?[]? data)
+    public static string? GetDisplayName(string? DynamicDataDisplayName, Type? DynamicDataDisplayNameDeclaringType, MethodInfo methodInfo, object?[]? data)
     {
         if (DynamicDataDisplayName != null)
         {
             Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
             DebugEx.Assert(dynamicDisplayNameDeclaringType is not null, "Declaring type of test data cannot be null.");
 
-            MethodInfo method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(dynamicDisplayNameDeclaringType, DynamicDataDisplayName)
+            MethodInfo method = dynamicDisplayNameDeclaringType.GetMethod(DynamicDataDisplayName, DeclaredOnlyLookup)
                 ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {DynamicDataDisplayName}");
             ParameterInfo[] parameters = method.GetParameters();
             return parameters.Length != 2 ||
@@ -235,6 +234,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
             return true;
         }
 
+#if !NET462 // TODO: Add dependency on System.ValueTuple for net462?
         if (genericTypeDefinition == typeof(ValueTuple<>) ||
             genericTypeDefinition == typeof(ValueTuple<,>) ||
             genericTypeDefinition == typeof(ValueTuple<,,>) ||
@@ -247,6 +247,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
             tupleSize = type.GetGenericArguments().Length;
             return true;
         }
+#endif
 
         return false;
     }
@@ -258,7 +259,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
         Type? currentType = type;
         while (currentType is not null)
         {
-            PropertyInfo? property = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(currentType, propertyName);
+            PropertyInfo? property = currentType.GetProperty(propertyName, DeclaredOnlyLookup);
             if (property is not null)
             {
                 return property;
@@ -276,7 +277,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
         Type? currentType = type;
         while (currentType is not null)
         {
-            MethodInfo? method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(currentType, methodName);
+            MethodInfo? method = currentType.GetMethod(methodName, DeclaredOnlyLookup);
             if (method is not null)
             {
                 return method;

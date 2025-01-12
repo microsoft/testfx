@@ -61,11 +61,6 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">Обнаружены файлы ".runsettings" и ".testconfig.json". Выберите только один из этих файлов тестовой конфигурации.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
-        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
-        <target state="translated">Динамический источник '{0}' в типе '{1}' должен существовать и быть свойством или методом.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' timed out after {1}ms</source>
         <target state="translated">Время ожидания '{0}' истекло через {1}мс</target>

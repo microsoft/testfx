@@ -61,11 +61,6 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <target state="translated">Les fichiers « .runsettings » et « .testconfig.json » ont été détectés. Veuillez sélectionner un seul de ces fichiers de configuration de test.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
-        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
-        <target state="translated">La source de données dynamique '{0}' dans le type '{1}' doit exister et être une propriété ou une méthode.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' timed out after {1}ms</source>
         <target state="translated">Délai de '{0}' de test dépassé après {1}ms</target>
