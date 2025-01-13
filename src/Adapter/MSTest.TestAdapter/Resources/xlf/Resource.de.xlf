@@ -61,14 +61,6 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <target state="translated">Es wurden sowohl die Dateien „.runsettings“ als auch „.testconfig.json“ erkannt. Wählen Sie nur eine dieser Testkonfigurationsdateien aus.</target>
         <note />
       </trans-unit>
-<<<<<<< HEAD
-      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
-        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="translated">"[DynamicData]"-Element "{0}.{1}" muss "IEnumerable"&lt;"object[]&gt;", "IEnumerable&lt;Tuple&gt;" oder "IEnumerable&lt;ValueTuple&gt;" zurückgeben.</target>
-        <note />
-      </trans-unit>
-=======
->>>>>>> Fix DynamicData.GetData regression preventing it to work without adapter
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">Der Test "{0}" hat das Ausführungstimeout überschritten.</target>

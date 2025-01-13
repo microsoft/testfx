@@ -320,16 +320,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
                 return ResourceManager.GetString("DynamicDataInvalidPropertyLayout", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The dynamic data source &apos;{0}&apos; in type &apos;{1}&apos; should exist and be a property or a method..
-        /// </summary>
-        internal static string DynamicDataSourceShouldExistAndBeValid {
-            get {
-                return ResourceManager.GetString("DynamicDataSourceShouldExistAndBeValid", resourceCulture);
-            }
-        }
-        
+                
         /// <summary>
         ///   Looks up a localized string similar to Value returned by property or method {0} shouldn&apos;t be null..
         /// </summary>

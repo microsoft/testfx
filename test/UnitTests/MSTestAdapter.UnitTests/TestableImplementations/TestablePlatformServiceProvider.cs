@@ -26,12 +26,6 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
         MockTraceListener = new Mock<ITraceListener>();
         MockTraceListenerManager = new Mock<ITraceListenerManager>();
         MockThreadOperations = new Mock<IThreadOperations>();
-<<<<<<< HEAD
-        TestTools.UnitTesting.DynamicDataProvider.Instance = SourceGeneratorToggle.UseSourceGenerator
-            ? new SourceGeneratedDynamicDataOperations()
-            : new DynamicDataOperations();
-=======
->>>>>>> Fix DynamicData.GetData regression preventing it to work without adapter
     }
 
     #region Mock Implementations

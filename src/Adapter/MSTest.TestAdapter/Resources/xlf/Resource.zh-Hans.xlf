@@ -61,14 +61,6 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">检测到 ".runsettings" 和 ".testconfig.json" 文件。请仅选择其中一个测试配置文件。</target>
         <note />
       </trans-unit>
-<<<<<<< HEAD
-      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
-        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="translated">“[DynamicData]”引用的成员“{0}.{1}”应返回“IEnumerable&lt;object[]&gt;”、“IEnumerable&lt;Tuple&gt;”或“IEnumerable&lt;ValueTuple&gt;”</target>
-        <note />
-      </trans-unit>
-=======
->>>>>>> Fix DynamicData.GetData regression preventing it to work without adapter
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">测试“{0}”的执行超时。</target>

@@ -29,21 +29,12 @@ public class DynamicDataAttributeTests : TestContainer
         DynamicDataAttribute.TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
     }
 
-<<<<<<< HEAD
     public void GetDataShouldThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist() =>
         VerifyThrows<ArgumentNullException>(() =>
         {
             _dynamicDataAttribute = new DynamicDataAttribute("ABC");
             _dynamicDataAttribute.GetData(_testMethodInfo);
         });
-=======
-    public void GetDataShouldThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist()
-    {
-        _dynamicDataAttribute = new DynamicDataAttribute("ABC");
-        InvalidOperationException ex = VerifyThrows<InvalidOperationException>(() => _dynamicDataAttribute.GetData(_testMethodInfo));
-        Verify(ex.Message == string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, "ABC", _testMethodInfo.DeclaringType.FullName));
-    }
->>>>>>> Fix DynamicData.GetData regression preventing it to work without adapter
 
     public void GetDataShouldReadDataFromProperty()
     {
