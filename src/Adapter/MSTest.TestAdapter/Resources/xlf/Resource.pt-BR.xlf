@@ -61,11 +61,6 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
         <target state="translated">Ambos os arquivos '.runsettings' e '.testconfig.json' foram detectados. Selecione apenas um desses arquivos de configuração de teste.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
-        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="translated">O membro referenciado "{0}.{1}" de "[DynamicData]" deve retornar "IEnumerable&lt;object[]&gt;", "IEnumerable&lt;Tuple&gt;" ou "IEnumerable&lt;ValueTuple&gt;"</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">Teste '{0}' ultrapassou o período de tempo limite de execução.</target>

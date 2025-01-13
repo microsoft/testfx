@@ -61,11 +61,6 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <target state="translated">Les fichiers « .runsettings » et « .testconfig.json » ont été détectés. Veuillez sélectionner un seul de ces fichiers de configuration de test.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
-        <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="translated">Le membre référencé « [DynamicData] '{0}.{1}' doit renvoyer « IEnumerable&lt;object[]&gt; », « IEnumerable&lt;Tuple&gt; » ou « IEnumerable&lt;ValueTuple&gt; »</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">Le test '{0}' a dépassé le délai d'attente de l'exécution.</target>

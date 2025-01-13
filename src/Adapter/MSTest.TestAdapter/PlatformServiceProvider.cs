@@ -22,16 +22,9 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
     /// </summary>
-    private PlatformServiceProvider() =>
-#if !WINDOWS_UWP
-        // Set the provider that is used by DynamicDataAttribute when generating data, to allow substituting functionality
-        // in TestFramework without having to put all the stuff in that library.
-        TestTools.UnitTesting.DynamicDataProvider.Instance = SourceGeneratorToggle.UseSourceGenerator
-            ? new SourceGeneratedDynamicDataOperations()
-            : new DynamicDataOperations();
-#else
-        TestTools.UnitTesting.DynamicDataProvider.Instance = new DynamicDataOperations();
-#endif
+    private PlatformServiceProvider()
+    {
+    }
 
     /// <summary>
     /// Gets an instance to the platform service validator for test sources.

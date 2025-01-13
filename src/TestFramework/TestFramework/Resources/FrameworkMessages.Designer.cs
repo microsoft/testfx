@@ -320,7 +320,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
                 return ResourceManager.GetString("DynamicDataInvalidPropertyLayout", resourceCulture);
             }
         }
-        
+                
         /// <summary>
         ///   Looks up a localized string similar to Value returned by property or method {0} shouldn&apos;t be null..
         /// </summary>

@@ -9,13 +9,13 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 #endif
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-
-internal class DynamicDataOperations : IDynamicDataOperations
+internal static class DynamicDataOperations
 {
-    public IEnumerable<object[]> GetData(Type? _dynamicDataDeclaringType, DynamicDataSourceType _dynamicDataSourceType, string _dynamicDataSourceName, MethodInfo methodInfo)
+    private const BindingFlags DeclaredOnlyLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
+    public static IEnumerable<object[]> GetData(Type? _dynamicDataDeclaringType, DynamicDataSourceType _dynamicDataSourceType, string _dynamicDataSourceName, MethodInfo methodInfo)
     {
         // Check if the declaring type of test data is passed in. If not, default to test method's class type.
         _dynamicDataDeclaringType ??= methodInfo.DeclaringType;
@@ -26,7 +26,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
         switch (_dynamicDataSourceType)
         {
             case DynamicDataSourceType.Property:
-                PropertyInfo property = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperty(_dynamicDataDeclaringType, _dynamicDataSourceName)
+                PropertyInfo property = _dynamicDataDeclaringType.GetProperty(_dynamicDataSourceName, DeclaredOnlyLookup)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {_dynamicDataSourceName}");
                 if (property.GetGetMethod(true) is not { IsStatic: true })
                 {
@@ -41,7 +41,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
                 break;
 
             case DynamicDataSourceType.Method:
-                MethodInfo method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(_dynamicDataDeclaringType, _dynamicDataSourceName)
+                MethodInfo method = _dynamicDataDeclaringType.GetMethod(_dynamicDataSourceName, DeclaredOnlyLookup)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {_dynamicDataSourceName}");
                 if (!method.IsStatic
                     || method.ContainsGenericParameters
@@ -82,15 +82,14 @@ internal class DynamicDataOperations : IDynamicDataOperations
         return data;
     }
 
-    /// <inheritdoc />
-    public string? GetDisplayName(string? DynamicDataDisplayName, Type? DynamicDataDisplayNameDeclaringType, MethodInfo methodInfo, object?[]? data)
+    public static string? GetDisplayName(string? DynamicDataDisplayName, Type? DynamicDataDisplayNameDeclaringType, MethodInfo methodInfo, object?[]? data)
     {
         if (DynamicDataDisplayName != null)
         {
             Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
             DebugEx.Assert(dynamicDisplayNameDeclaringType is not null, "Declaring type of test data cannot be null.");
 
-            MethodInfo method = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethod(dynamicDisplayNameDeclaringType, DynamicDataDisplayName)
+            MethodInfo method = dynamicDisplayNameDeclaringType.GetMethod(DynamicDataDisplayName, DeclaredOnlyLookup)
                 ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {DynamicDataDisplayName}");
             ParameterInfo[] parameters = method.GetParameters();
             return parameters.Length != 2 ||
@@ -200,6 +199,15 @@ internal class DynamicDataOperations : IDynamicDataOperations
             return true;
         }
 
+#if NET462
+        // TODO: https://github.com/microsoft/testfx/issues/4624
+        if (genericTypeDefinition.FullName.StartsWith("System.ValueTuple`", StringComparison.Ordinal))
+        {
+            tupleSize = type.GetGenericArguments().Length;
+            return true;
+        }
+#else
+        // TODO: https://github.com/microsoft/testfx/issues/4624
         if (genericTypeDefinition == typeof(ValueTuple<>) ||
             genericTypeDefinition == typeof(ValueTuple<,>) ||
             genericTypeDefinition == typeof(ValueTuple<,,>) ||
@@ -212,6 +220,7 @@ internal class DynamicDataOperations : IDynamicDataOperations
             tupleSize = type.GetGenericArguments().Length;
             return true;
         }
+#endif
 
         return false;
     }
