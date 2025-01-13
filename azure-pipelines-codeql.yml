@@ -48,10 +48,6 @@ jobs:
 
   steps:
 
-  - task: UseDotNet@2
-    inputs:
-      useGlobalJson: true
-
   - task: PowerShell@2
     displayName: 'Install Windows SDK'
     inputs:
