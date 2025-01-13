@@ -61,11 +61,6 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">检测到 ".runsettings" 和 ".testconfig.json" 文件。请仅选择其中一个测试配置文件。</target>
         <note />
       </trans-unit>
-      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
-        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
-        <target state="translated">类型 '{1}' 中的动态数据源 '{0}' 应存在，并且应为属性或方法。</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' timed out after {1}ms</source>
         <target state="translated">测试 '{0}' 在 {1}毫秒后超时</target>

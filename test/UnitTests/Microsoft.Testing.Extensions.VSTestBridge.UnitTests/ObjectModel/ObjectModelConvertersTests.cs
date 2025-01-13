@@ -266,4 +266,44 @@ public sealed class ObjectModelConvertersTests
         Assert.AreEqual("key", errorTestNodeStateProperties[0].Pairs[0].Key);
         Assert.AreEqual("value", errorTestNodeStateProperties[0].Pairs[0].Value);
     }
+
+    [TestMethod]
+    public void ToTestNode_WhenTestResultHasMultipleStandardOutputMessages_TestNodePropertiesHasASingleOne()
+    {
+        TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
+        {
+            DisplayName = "TestName",
+            Messages =
+            {
+                new TestResultMessage(TestResultMessage.StandardOutCategory, "message1"),
+                new TestResultMessage(TestResultMessage.StandardOutCategory, "message2"),
+            },
+        };
+
+        var testNode = testResult.ToTestNode(false, VSTestClient);
+
+        StandardOutputProperty[] standardOutputProperties = testNode.Properties.OfType<StandardOutputProperty>().ToArray();
+        Assert.IsTrue(standardOutputProperties.Length == 1);
+        Assert.AreEqual($"message1{Environment.NewLine}message2", standardOutputProperties[0].StandardOutput);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenTestResultHasMultipleStandardErrorMessages_TestNodePropertiesHasASingleOne()
+    {
+        TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
+        {
+            DisplayName = "TestName",
+            Messages =
+            {
+                new TestResultMessage(TestResultMessage.StandardErrorCategory, "message1"),
+                new TestResultMessage(TestResultMessage.StandardErrorCategory, "message2"),
+            },
+        };
+
+        var testNode = testResult.ToTestNode(false, VSTestClient);
+
+        StandardErrorProperty[] standardErrorProperties = testNode.Properties.OfType<StandardErrorProperty>().ToArray();
+        Assert.IsTrue(standardErrorProperties.Length == 1);
+        Assert.AreEqual($"message1{Environment.NewLine}message2", standardErrorProperties[0].StandardError);
+    }
 }
