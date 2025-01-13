@@ -14,8 +14,11 @@ internal static class DebugEx
         if (!b)
         {
             // In CI scenarios, we don't want Debug.Assert to show a dialog that
-            // ends up causing the job to timeout. Instead, we want to throw an Exception
-            throw new Exception($"Debug.Assert failed: {message}");
+            // ends up causing the job to timeout. We use FailFast instead.
+            // FailFast is better than throwing an exception to avoid anyone
+            // catching an exception and masking an assert failure.
+            var ex = new Exception($"Debug.Assert failed: {message}");
+            Environment.FailFast(ex.Message, ex);
         }
     }
 #else
