@@ -260,7 +260,15 @@ internal static class DynamicDataOperations
             return true;
         }
 
-#if !NET462 // TODO: Add dependency on System.ValueTuple for net462?
+#if NET462
+        // TODO: https://github.com/microsoft/testfx/issues/4624
+        if (genericTypeDefinition.FullName.StartsWith("System.ValueTuple`", StringComparison.Ordinal))
+        {
+            tupleSize = type.GetGenericArguments().Length;
+            return true;
+        }
+#else
+        // TODO: https://github.com/microsoft/testfx/issues/4624
         if (genericTypeDefinition == typeof(ValueTuple<>) ||
             genericTypeDefinition == typeof(ValueTuple<,>) ||
             genericTypeDefinition == typeof(ValueTuple<,,>) ||
