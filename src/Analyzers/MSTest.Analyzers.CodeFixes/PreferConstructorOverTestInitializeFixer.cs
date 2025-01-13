@@ -43,7 +43,7 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
         }
 
         // Find the method declaration identified by the diagnostic.
-        MethodDeclarationSyntax methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
+        MethodDeclarationSyntax? methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
         if (methodDeclaration == null)
         {
             return;
@@ -64,7 +64,7 @@ public sealed class PreferConstructorOverTestInitializeFixer : CodeFixProvider
         // Find the class containing the method
         if (testInitializeMethod.Parent is ClassDeclarationSyntax containingClass)
         {
-            ConstructorDeclarationSyntax existingConstructor = containingClass.Members
+            ConstructorDeclarationSyntax? existingConstructor = containingClass.Members
                  .OfType<ConstructorDeclarationSyntax>()
                  .FirstOrDefault();
 

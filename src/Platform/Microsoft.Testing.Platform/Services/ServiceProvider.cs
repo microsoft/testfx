@@ -81,8 +81,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
 
         foreach (object serviceInstance in _services)
         {
-#if !NETCOREAPP
-            if (serviceType.IsAssignableFrom(serviceInstance.GetType()))
+            if (serviceType.IsInstanceOfType(serviceInstance))
             {
                 yield return serviceInstance;
                 if (stopAtFirst)
@@ -90,16 +89,6 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
                     yield break;
                 }
             }
-#else
-            if (serviceInstance.GetType().IsAssignableTo(serviceType))
-            {
-                yield return serviceInstance;
-                if (stopAtFirst)
-                {
-                    yield break;
-                }
-            }
-#endif
         }
     }
 

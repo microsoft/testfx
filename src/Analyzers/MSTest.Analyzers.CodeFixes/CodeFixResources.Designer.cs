@@ -88,6 +88,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use &apos;{0}&apos;.
+        /// </summary>
+        internal static string AvoidAssertAreSameWithValueTypesFix {
+            get {
+                return ResourceManager.GetString("AvoidAssertAreSameWithValueTypesFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change method accessibility to &apos;private&apos;.
         /// </summary>
         internal static string ChangeMethodAccessibilityToPrivateFix {
