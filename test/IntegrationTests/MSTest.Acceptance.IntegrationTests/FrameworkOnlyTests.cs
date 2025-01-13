@@ -7,18 +7,21 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestClass]
-public class FrameworkOnlyTests : AcceptanceTestBase<FrameworkOnlyTests.TestAssetFixture>
+[TestGroup]
+public class FrameworkOnlyTests : AcceptanceTestBase
 {
     private const string AssetName = nameof(FrameworkOnlyTests);
+    private readonly TestAssetFixture _testAssetFixture;
 
-    [TestMethod]
+    public FrameworkOnlyTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
+    : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+
     public async Task DynamicDataAttributeGetDataShouldWorkWithoutAdapter()
     {
         // This is an important scenario to not regress.
         // Users shouldn't need to reference adapter, nor do anything
         // special, to be able to call DynamicData.GetData.
-        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertOutputContains("""
             1,2
@@ -28,7 +31,8 @@ public class FrameworkOnlyTests : AcceptanceTestBase<FrameworkOnlyTests.TestAsse
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
+    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
 #file FrameworkOnlyTests.csproj
