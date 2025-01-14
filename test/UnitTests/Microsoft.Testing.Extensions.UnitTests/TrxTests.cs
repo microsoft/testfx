@@ -39,7 +39,7 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
@@ -58,7 +58,7 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream, notExecutedTestsCount: 1);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
@@ -77,7 +77,7 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream, timeoutTestsCount: 1);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
@@ -98,7 +98,7 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         Assert.IsTrue(fileName.Equals("argumentTrxReportFileName", StringComparison.OrdinalIgnoreCase));
@@ -117,7 +117,7 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         Assert.IsTrue(fileName.Equals("_NUL", StringComparison.OrdinalIgnoreCase));
@@ -134,7 +134,7 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(isTestHostCrashed: true, keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync(isTestHostCrashed: true);
 
         // Assert
         AssertExpectedTrxFileName(fileName);
@@ -151,7 +151,7 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
@@ -170,7 +170,7 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
@@ -203,7 +203,7 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
@@ -231,7 +231,7 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
@@ -262,7 +262,7 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
@@ -289,7 +289,7 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
@@ -317,7 +317,7 @@ public class TrxTests
             propertyBag, memoryStream, true);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
@@ -337,7 +337,7 @@ public class TrxTests
             new(new PassedTestNodeStateProperty()), memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
@@ -366,7 +366,7 @@ public class TrxTests
             new(new PassedTestNodeStateProperty()), memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
@@ -413,7 +413,7 @@ public class TrxTests
             isCopyingFileAllowed: false);
 
         // Act
-        _ = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        _ = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         Assert.AreEqual(4, retryCount);
