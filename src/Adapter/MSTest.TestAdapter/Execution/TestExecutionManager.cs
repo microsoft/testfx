@@ -86,7 +86,8 @@ public class TestExecutionManager
         }
         else
         {
-            return taskGetter();
+            // NOTE: If you replace this with `return taskGetter()`, you will break parallel tests.
+            return Task.Run(taskGetter);
         }
     }
 
