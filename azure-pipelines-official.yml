@@ -92,7 +92,6 @@ extends:
           enablePublishBuildAssets: true
           enablePublishUsingPipelines: true
           enableTelemetry: true
-          enableSourceBuild: true
           jobs:
           - job: Windows
             timeoutInMinutes: 90
