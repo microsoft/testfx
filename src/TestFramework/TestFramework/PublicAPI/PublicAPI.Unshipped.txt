@@ -204,6 +204,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.Ign
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceIgnoreCapability.IgnoreMessage.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.IgnoreMessage.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy.UnfoldUsingDataContractJsonSerializer = 3 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy.UnfoldUsingDataIndex = 4 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceUnfoldingStrategy
 Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.IgnoreMessage.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Ignored = 10 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome

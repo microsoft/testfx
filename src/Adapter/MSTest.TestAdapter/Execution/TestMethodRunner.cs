@@ -169,22 +169,11 @@ internal sealed class TestMethodRunner
 
         bool isDataDriven = false;
         var parentStopwatch = Stopwatch.StartNew();
-        if (_test.DataType == DynamicDataType.ITestDataSource)
+        if (TryExecuteITestDataSource(results))
         {
-            if (_test.TestDataSourceIgnoreMessage is not null)
-            {
-                return [new() { Outcome = UTF.UnitTestOutcome.Ignored, IgnoreReason = _test.TestDataSourceIgnoreMessage }];
-            }
-
-            object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
-            TestResult[] testResults = ExecuteTestWithDataSource(null, data);
-            results.AddRange(testResults);
         }
-        else if (TryExecuteDataSourceBasedTests(results))
-        {
-            isDataDriven = true;
-        }
-        else if (TryExecuteFoldedDataDrivenTests(results))
+        else if (TryExecuteDataSourceBasedTests(results)
+            || TryExecuteFoldedDataDrivenTests(results))
         {
             isDataDriven = true;
         }
@@ -525,5 +514,43 @@ internal sealed class TestMethodRunner
         }
 
         return updatedResults;
+    }
+
+    private bool TryExecuteITestDataSource(List<TestResult> results)
+    {
+        if (_test.DataType != DynamicDataType.ITestDataSource)
+        {
+            return false;
+        }
+
+        UTF.ITestDataSource? dataSource;
+        object?[]? data;
+        if (_test.SerializedData?.Length == 3)
+        {
+            if (!Enum.TryParse(_test.SerializedData[0], out TestDataSourceUnfoldingStrategy _)
+                || !int.TryParse(_test.SerializedData[1], out int dataSourceIndex)
+                || !int.TryParse(_test.SerializedData[2], out int dataIndex))
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
+            dataSource = _testMethodInfo.GetAttributes<Attribute>(false)?.OfType<UTF.ITestDataSource>().Skip(dataSourceIndex).FirstOrDefault();
+            if (dataSource is null)
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
+            data = dataSource.GetData(_testMethodInfo.MethodInfo).Skip(dataIndex).FirstOrDefault();
+        }
+        else
+        {
+            dataSource = null;
+            data = DataSerializationHelper.Deserialize(_test.SerializedData);
+        }
+
+        TestResult[] testResults = ExecuteTestWithDataSource(dataSource, data);
+        results.AddRange(testResults);
+
+        return true;
     }
 }
