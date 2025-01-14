@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// This attribute is used to set a retry count on a test method in case of failure.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
-public class RetryAttribute : Attribute
+public sealed class RetryAttribute : RetryBaseAttribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="RetryAttribute"/> class with the given number of max retries.
@@ -61,7 +61,7 @@ public class RetryAttribute : Attribute
     /// The other results are currently not used, but may be used in the future for tooling to show the
     /// state of the failed attempts.
     /// </returns>
-    protected internal virtual async Task<RetryResult> ExecuteAsync(RetryContext retryContext)
+    protected internal override async Task<RetryResult> ExecuteAsync(RetryContext retryContext)
     {
         var result = new RetryResult();
         int currentDelay = MillisecondsDelayBetweenRetries;
@@ -83,33 +83,5 @@ public class RetryAttribute : Attribute
         }
 
         return result;
-    }
-
-    internal static bool IsAcceptableResultForRetry(TestResult[] results)
-    {
-        foreach (TestResult result in results)
-        {
-            UnitTestOutcome outcome = result.Outcome;
-            if (outcome is UnitTestOutcome.Failed or UnitTestOutcome.Timeout)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    internal static bool IsAcceptableResultForRetry(List<TestResult> results)
-    {
-        foreach (TestResult result in results)
-        {
-            UnitTestOutcome outcome = result.Outcome;
-            if (outcome is UnitTestOutcome.Failed or UnitTestOutcome.Timeout)
-            {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

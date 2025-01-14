@@ -186,11 +186,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                     {
                         // Run the test method
                         testContextForTestExecution.SetOutcome(testContextForClassInit.Context.CurrentTestOutcome);
-                        RetryAttribute? retryAttribute = testMethodInfo.RetryAttribute;
+                        RetryBaseAttribute? retryAttribute = testMethodInfo.RetryAttribute;
                         var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContextForTestExecution);
                         List<TestResult> firstRunResult = testMethodRunner.Execute(classInitializeResult.StandardOut!, classInitializeResult.StandardError!, classInitializeResult.DebugTrace!, classInitializeResult.TestContextMessages!);
                         result = firstRunResult.ToUnitTestResults();
-                        if (retryAttribute is not null && !RetryAttribute.IsAcceptableResultForRetry(firstRunResult))
+                        if (retryAttribute is not null && !RetryBaseAttribute.IsAcceptableResultForRetry(firstRunResult))
                         {
                             RetryResult retryResult = await retryAttribute.ExecuteAsync(
                                 new RetryContext(

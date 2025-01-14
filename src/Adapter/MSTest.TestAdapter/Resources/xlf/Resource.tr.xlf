@@ -171,6 +171,11 @@ ancak, '{5}' türüyle {4} argüman aldı.</target>
         <target state="translated">{0} sınıfının örneği oluşturulamıyor. Hata: {1}.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="UTA_MultipleAttributesOnTestMethod">
+        <source>The test method {0}.{1} has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</source>
+        <target state="new">The test method {0}.{1} has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_NoValidConstructor">
         <source>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
         <target state="translated">'{0}' test sınıfı için geçerli bir oluşturucu bulunamıyor. Geçerli oluşturucular 'public' ve parametresiz veya 'TestContext' türünde tek bir parametre içeriyor.</target>
@@ -360,11 +365,6 @@ Hata: {1}</target>
 {2}</source>
         <target state="translated">{0}.{1} test yöntemi üzerinde tanımlanan ExpectedException özniteliği, oluşturma sırasında bir özel durum oluşturdu.
 {2}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_MultipleExpectedExceptionsOnTestMethod">
-        <source>The test method {0}.{1} has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.</source>
-        <target state="translated">{0}.{1} test yöntemi, üzerinde tanımlanan ExpectedExceptionBaseAttribute öğesinden türetilmiş birden fazla öznitelik içeriyor. Bu türde yalnızca bir tane özniteliğe izin verilir.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="LegacyScenariosNotSupportedWarning">

@@ -93,7 +93,7 @@ public class TestMethodInfo : ITestMethod
 
     internal ExpectedExceptionBaseAttribute? ExpectedException { get; set; /*set for testing only*/ }
 
-    internal RetryAttribute? RetryAttribute { get; }
+    internal RetryBaseAttribute? RetryAttribute { get; }
 
     public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.Instance.GetDerivedAttributes<Attribute>(TestMethod, inherit).ToArray();
 
@@ -252,12 +252,7 @@ public class TestMethodInfo : ITestMethod
         // See https://github.com/microsoft/testfx/issues/4331
         if (expectedExceptions.Count() > 1)
         {
-            string errorMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_MultipleExpectedExceptionsOnTestMethod,
-                Parent.ClassType.FullName,
-                TestMethod.Name);
-            throw new TypeInspectionException(errorMessage);
+            ThrowMultipleAttributesException(nameof(ExpectedExceptionBaseAttribute));
         }
 
         return expectedExceptions.FirstOrDefault();
@@ -270,8 +265,30 @@ public class TestMethodInfo : ITestMethod
     /// The number of retries, which is always greater than or equal to 1.
     /// If RetryAttribute is not present, returns 1.
     /// </returns>
-    private RetryAttribute? GetRetryAttribute()
-        => ReflectHelper.Instance.GetFirstDerivedAttributeOrDefault<RetryAttribute>(TestMethod, inherit: true);
+    private RetryBaseAttribute? GetRetryAttribute()
+    {
+        IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetDerivedAttributes<RetryBaseAttribute>(TestMethod, inherit: true);
+        if (attributes.Count() > 1)
+        {
+            ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
+        }
+
+        return attributes.FirstOrDefault();
+    }
+
+    [DoesNotReturn]
+    private void ThrowMultipleAttributesException(string attributeName)
+    {
+        // Note: even if the given attribute has AllowMultiple = false, we can
+        // still reach here if a derived attribute authored by the user re-defines AttributeUsage
+        string errorMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_MultipleAttributesOnTestMethod,
+            Parent.ClassType.FullName,
+            TestMethod.Name,
+            attributeName);
+        throw new TypeInspectionException(errorMessage);
+    }
 
     /// <summary>
     /// Execute test without timeout.
