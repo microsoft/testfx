@@ -721,7 +721,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}.
+        ///   Looks up a localized string similar to An unhandled exception was thrown by the &apos;Execute&apos; method. Please report this error to the author of the attribute &apos;{0}&apos;.
+        ///{1}.
         /// </summary>
         internal static string UTA_ExecuteThrewException {
             get {
