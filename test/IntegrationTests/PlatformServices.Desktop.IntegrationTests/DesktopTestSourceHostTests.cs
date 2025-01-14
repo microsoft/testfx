@@ -79,7 +79,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         // Creating instance of SampleProjectForAssemblyResolution should not throw.
         // It is present in  <Directory path = ".\ComponentTests" />  specified in runsettings
-        AppDomainUtilities.CreateInstance(_testSourceHost.AppDomain, type, null);
+        AppDomainUtilities.CreateInstance(_testSourceHost.AppDomain!, type, null);
     }
 
     public void DisposeShouldUnloadChildAppDomain()

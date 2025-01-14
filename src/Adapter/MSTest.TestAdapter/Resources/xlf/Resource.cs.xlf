@@ -61,11 +61,6 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
         <target state="translated">Byly zjištěny soubory .runsettings i .testconfig.json. Vyberte prosím jenom jeden z těchto souborů konfigurace testu.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
-        <source>The dynamic data source '{0}' in type '{1}' should exist and be a property or a method.</source>
-        <target state="translated">Dynamický zdroj dat '{0}' v typu '{1}' by měl existovat a být vlastností nebo metodou.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' timed out after {1}ms</source>
         <target state="translated">Časový limit '{0}' testu vypršel po {1}ms.</target>
