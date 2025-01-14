@@ -1,53 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
-  <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24604.4">
-      <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>45d845e04c05fbe5da9838c454bbc3af1df6be81</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.24604.4">
-      <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>45d845e04c05fbe5da9838c454bbc3af1df6be81</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="10.0.0-beta.24604.4">
-      <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>45d845e04c05fbe5da9838c454bbc3af1df6be81</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.13.1">
-      <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>d561687cca6e0617eb0a6de2e059f8f4ff691ec6</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.Retry" Version="1.5.2-preview.25064.1">
-      <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>a085122532c9d15c43cb86277bcd8fa764b17b39</Sha>
-    </Dependency>
-    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24473.2">
-      <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>2346f405dcb5150b567970995dc978feb26b2db0</Sha>
-    </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.diagnostics" Version="9.0.0-preview.24566.1">
-      <Uri>https://github.com/dotnet/diagnostics</Uri>
-      <Sha>8c505ca6921b5f7e9b8acc234cc8f15035537ee4</Sha>
-      <SourceBuild RepoName="diagnostics" ManagedOnly="true" />
-    </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="9.0.0-alpha.1.24175.1">
-      <Uri>https://github.com/dotnet/source-build-externals</Uri>
-      <Sha>4df883d781a4290873b3b968afc0ff0df7132507</Sha>
-      <SourceBuild RepoName="source-build-externals" ManagedOnly="true" />
-    </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="10.0.561001">
-      <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
-      <Sha>94798e07efab2663f2d1a71862780bc365d2e3ab</Sha>
-      <SourceBuild RepoName="source-build-reference-packages" ManagedOnly="true" />
-    </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="10.0.0-beta.24604.4">
-      <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>45d845e04c05fbe5da9838c454bbc3af1df6be81</Sha>
-      <SourceBuild RepoName="arcade" ManagedOnly="true" />
-    </Dependency>
-  </ToolsetDependencies>
+	<ToolsetDependencies>
+		<Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24606.6">
+			<Uri>https://github.com/dotnet/arcade</Uri>
+			<Sha>61b8f746424762d2e3173ebfaab19346224d591c</Sha>
+		</Dependency>
+		<Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.24606.6">
+			<Uri>https://github.com/dotnet/arcade</Uri>
+			<Sha>61b8f746424762d2e3173ebfaab19346224d591c</Sha>
+		</Dependency>
+		<Dependency Name="Microsoft.DotNet.XliffTasks" Version="10.0.0-beta.24606.6">
+			<Uri>https://github.com/dotnet/arcade</Uri>
+			<Sha>61b8f746424762d2e3173ebfaab19346224d591c</Sha>
+		</Dependency>
+		<Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.14.0-preview.25064.2">
+			<Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
+			<Sha>92f01185e4ce86c496245cbf1b5a79bc41c87115</Sha>
+		</Dependency>
+		<Dependency Name="MSTest.Engine" Version="1.0.0-alpha.25064.2">
+			<Uri>https://github.com/microsoft/testanywhere</Uri>
+			<Sha>bf7a630248d788fa7d23be68103a28be5a8ddbd1</Sha>
+		</Dependency>
+	</ToolsetDependencies>
 </Dependencies>
