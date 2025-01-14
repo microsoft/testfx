@@ -132,4 +132,51 @@ public class DynamicDataTests : CLITestBase
             "TestMethodSourceOnCurrentType (2,b)");
         VerifyE2E.FailedTestCount(testResults, 0);
     }
+
+    public void ExecuteTestsFailingWhenUsingSerialization()
+    {
+        // Arrange
+        string assemblyPath = GetAssetFullPath(TestAssetName);
+
+        // Act
+        ImmutableArray<TestCase> testCases = DiscoverTests(assemblyPath, testCaseFilter: "ClassName~IndexBasedDataTests");
+        ImmutableArray<TestResult> testResults = RunTests(testCases);
+
+        // Assert
+        VerifyE2E.TestsPassed(
+            testResults,
+            "Add_ShouldAddTheExpectedValues (System.Collections.ObjectModel.Collection`1[System.String],System.String[],System.Collections.ObjectModel.Collection`1[System.String])",
+            "Add_ShouldAddTheExpectedValues (System.Collections.ObjectModel.Collection`1[System.String],System.String[],System.Collections.ObjectModel.Collection`1[System.String])",
+            "Add_ShouldAddTheExpectedValues (System.Collections.ObjectModel.Collection`1[System.String],System.String[],System.Collections.ObjectModel.Collection`1[System.String])",
+            "Add_ShouldAddTheExpectedValues (System.Collections.ObjectModel.Collection`1[System.String],System.String[],System.Collections.ObjectModel.Collection`1[System.String])",
+            "TestReadonlyCollectionData (,DataRowTestProject.IndexBasedDataTests+MyData)",
+            "TestUnlimitedNatural (0,*,False)",
+            "TestUnlimitedNatural (0,0,True)",
+            "ValidateExMessage (DataRowTestProject.IndexBasedDataTests+InvalidUpdateException: Test exception message)",
+            "Vector2D_op_Multiplication_Vector2D_Vector2D___valid_Vector2D___double_scalar_product (Vector2D: -0.150 / 2.030,Vector2D: 4.230 / 6.812,13.1935961)",
+            "Vector2D_op_Multiplication_Vector2D_Vector2D___valid_Vector2D___double_scalar_product (Vector2D: -1.000 / -2.000,Vector2D: -3.400 / 2.750,-2.1)",
+            "Vector2D_op_Multiplication_Vector2D_Vector2D___valid_Vector2D___double_scalar_product (Vector2D: -22.723 / -78.298,Vector2D: -17.433 / -8.196,1037.82079593)",
+            "Vector2D_op_Multiplication_Vector2D_Vector2D___valid_Vector2D___double_scalar_product (Vector2D: 0.000 / 0.000,Vector2D: 0.000 / 0.000,0)",
+            "Vector2D_op_Multiplication_Vector2D_Vector2D___valid_Vector2D___double_scalar_product (Vector2D: 0.000 / 0.000,Vector2D: 2.000 / 3.000,0)",
+            "Vector2D_op_Multiplication_Vector2D_Vector2D___valid_Vector2D___double_scalar_product (Vector2D: 1.000 / 2.000,Vector2D: 0.000 / 0.000,0)",
+            "Vector2D_op_Multiplication_Vector2D_Vector2D___valid_Vector2D___double_scalar_product (Vector2D: 1.000 / 3.000,Vector2D: 1.000 / 2.000,7)",
+            "Vector2D_op_Multiplication_Vector2D_Vector2D___valid_Vector2D___double_scalar_product (Vector2D: 3.355 / -2.211,Vector2D: 12.430 / -2.754,47.791744)",
+            "Vector2D_op_Multiplication_Vector2D_double___valid_args___scaled_vector (Vector2D: -17.433 / -8.196,-0.45,Vector2D: 7.845 / 3.688)",
+            "Vector2D_op_Multiplication_Vector2D_double___valid_args___scaled_vector (Vector2D: -3.400 / 2.750,22.415,Vector2D: -76.211 / 61.641)",
+            "Vector2D_op_Multiplication_Vector2D_double___valid_args___scaled_vector (Vector2D: 0.000 / 0.000,-3.5,Vector2D: 0.000 / 0.000)",
+            "Vector2D_op_Multiplication_Vector2D_double___valid_args___scaled_vector (Vector2D: 0.000 / 0.000,0,Vector2D: 0.000 / 0.000)",
+            "Vector2D_op_Multiplication_Vector2D_double___valid_args___scaled_vector (Vector2D: 1.000 / 2.000,-0.73,Vector2D: -0.730 / -1.460)",
+            "Vector2D_op_Multiplication_Vector2D_double___valid_args___scaled_vector (Vector2D: 12.430 / -2.754,1023.56,Vector2D: 12722.851 / -2818.884)",
+            "Vector2D_op_Multiplication_Vector2D_double___valid_args___scaled_vector (Vector2D: 2.000 / 3.000,2.1,Vector2D: 4.200 / 6.300)",
+            "Vector2D_op_Multiplication_Vector2D_double___valid_args___scaled_vector (Vector2D: 4.230 / 6.812,-13.25,Vector2D: -56.048 / -90.257)",
+            "Vector2D_op_Multiplication_double_Vector2D___valid_args___scaled_vector (-0.45,Vector2D: -17.433 / -8.196,Vector2D: 7.845 / 3.688)",
+            "Vector2D_op_Multiplication_double_Vector2D___valid_args___scaled_vector (-0.73,Vector2D: 1.000 / 2.000,Vector2D: -0.730 / -1.460)",
+            "Vector2D_op_Multiplication_double_Vector2D___valid_args___scaled_vector (-13.25,Vector2D: 4.230 / 6.812,Vector2D: -56.048 / -90.257)",
+            "Vector2D_op_Multiplication_double_Vector2D___valid_args___scaled_vector (-3.5,Vector2D: 0.000 / 0.000,Vector2D: 0.000 / 0.000)",
+            "Vector2D_op_Multiplication_double_Vector2D___valid_args___scaled_vector (0,Vector2D: 0.000 / 0.000,Vector2D: 0.000 / 0.000)",
+            "Vector2D_op_Multiplication_double_Vector2D___valid_args___scaled_vector (1023.56,Vector2D: 12.430 / -2.754,Vector2D: 12722.851 / -2818.884)",
+            "Vector2D_op_Multiplication_double_Vector2D___valid_args___scaled_vector (2.1,Vector2D: 2.000 / 3.000,Vector2D: 4.200 / 6.300)",
+            "Vector2D_op_Multiplication_double_Vector2D___valid_args___scaled_vector (22.415,Vector2D: -3.400 / 2.750,Vector2D: -76.211 / 61.641)");
+        VerifyE2E.FailedTestCount(testResults, 0);
+    }
 }
