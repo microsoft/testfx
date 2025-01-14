@@ -268,12 +268,20 @@ public class TestMethodInfo : ITestMethod
     private RetryBaseAttribute? GetRetryAttribute()
     {
         IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetDerivedAttributes<RetryBaseAttribute>(TestMethod, inherit: true);
-        if (attributes.Count() > 1)
+        using IEnumerator<RetryBaseAttribute> enumerator = attributes.GetEnumerator();
+        if (!enumerator.MoveNext())
+        {
+            return null;
+        }
+
+        RetryBaseAttribute attribute = enumerator.Current;
+
+        if (enumerator.MoveNext())
         {
             ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
         }
 
-        return attributes.FirstOrDefault();
+        return attribute;
     }
 
     [DoesNotReturn]

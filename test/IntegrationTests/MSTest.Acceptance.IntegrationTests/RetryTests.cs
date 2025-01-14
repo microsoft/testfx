@@ -18,15 +18,15 @@ public sealed class RetryTests : AcceptanceTestBase<RetryTests.TestAssetFixture>
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("""
-            TestMethod1 executed '1' times.
-            TestMethod2 executed '2' times.
-            TestMethod3 executed '3' times.
-            TestMethod4 executed '4' times.
-            TestMethod5 executed '4' times.
+            TestMethod1 executed 1 time.
+            TestMethod2 executed 2 times.
+            TestMethod3 executed 3 times.
+            TestMethod4 executed 4 times.
+            TestMethod5 executed 4 times.
             """);
 
         testHostResult.AssertOutputContains("failed TestMethod5");
-        testHostResult.AssertOutputContains("Assert.Fail failed. Failing TestMethod4. Attempt: 4");
+        testHostResult.AssertOutputContains("Assert.Fail failed. Failing TestMethod4. Attempts: 4");
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 4, skipped: 0);
     }
 
@@ -121,17 +121,17 @@ public class UnitTest1
     {
         _count5++;
         // This will fail TestMethod5 four times. The end result is failure of this test.
-        Assert.Fail($"Failing TestMethod4. Attempt: {_count5}");
+        Assert.Fail($"Failing TestMethod4. Attempts: {_count5}");
     }
 
     [ClassCleanup]
     public static void ClassCleanup()
     {
-        Console.WriteLine($"TestMethod1 executed '{_count1}' times.");
-        Console.WriteLine($"TestMethod2 executed '{_count2}' times.");
-        Console.WriteLine($"TestMethod3 executed '{_count3}' times.");
-        Console.WriteLine($"TestMethod4 executed '{_count4}' times.");
-        Console.WriteLine($"TestMethod5 executed '{_count5}' times.");
+        Console.WriteLine($"TestMethod1 executed {_count1} time.");
+        Console.WriteLine($"TestMethod2 executed {_count2} times.");
+        Console.WriteLine($"TestMethod3 executed {_count3} times.");
+        Console.WriteLine($"TestMethod4 executed {_count4} times.");
+        Console.WriteLine($"TestMethod5 executed {_count5} times.");
     }
 }
 
