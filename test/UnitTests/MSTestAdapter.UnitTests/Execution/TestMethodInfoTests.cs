@@ -1258,7 +1258,7 @@ public class TestMethodInfoTests : TestContainer
             new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
 
         TypeInspectionException ex = UTF.Assert.ThrowsException<TypeInspectionException>(() => new TestMethodInfo(testMethodInfo, classInfo, _testMethodOptions));
-        UTF.Assert.AreEqual("The test method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests+DummyTestClassForExpectedException.DummyTestMethod1 has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.", ex.Message);
+        UTF.Assert.AreEqual("The test method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests+DummyTestClassForExpectedException.DummyTestMethod1 has multiple attributes derived from 'ExpectedExceptionBaseAttribute' defined on it. Only one such attribute is allowed.", ex.Message);
     }
 
     public void ResolveExpectedExceptionShouldThrowWhenAttributeIsDefinedTwice_SameConcreteType()
@@ -1272,7 +1272,7 @@ public class TestMethodInfoTests : TestContainer
             new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
 
         TypeInspectionException ex = UTF.Assert.ThrowsException<TypeInspectionException>(() => new TestMethodInfo(testMethodInfo, classInfo, _testMethodOptions));
-        UTF.Assert.AreEqual("The test method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests+DummyTestClassForExpectedException.DummyTestMethod1 has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.", ex.Message);
+        UTF.Assert.AreEqual("The test method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests+DummyTestClassForExpectedException.DummyTestMethod1 has multiple attributes derived from 'ExpectedExceptionBaseAttribute' defined on it. Only one such attribute is allowed.", ex.Message);
     }
 
     public void ResolveExpectedExceptionHelperShouldReturnExpectedExceptionAttributeIfPresent()

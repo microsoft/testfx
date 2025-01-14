@@ -1338,7 +1338,7 @@ public class TypeCacheTests : TestContainer
         catch (Exception ex)
         {
             string message = "The test method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TypeCacheTests+DummyTestClassWithTestMethods.TestMethodWithMultipleExpectedException "
-                + "has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.";
+                + "has multiple attributes derived from 'ExpectedExceptionBaseAttribute' defined on it. Only one such attribute is allowed.";
             Verify(ex.Message == message);
         }
     }
