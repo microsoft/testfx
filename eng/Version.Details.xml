@@ -21,29 +21,5 @@
       <Uri>https://github.com/microsoft/testanywhere</Uri>
       <Sha>28cec7968849d310294a8ad1f1ecc4f9355fa32e</Sha>
     </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.diagnostics" Version="9.0.0-preview.24566.1">
-      <Uri>https://github.com/dotnet/diagnostics</Uri>
-      <Sha>8c505ca6921b5f7e9b8acc234cc8f15035537ee4</Sha>
-      <SourceBuild RepoName="diagnostics" ManagedOnly="true" />
-    </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="9.0.0-alpha.1.24175.1">
-      <Uri>https://github.com/dotnet/source-build-externals</Uri>
-      <Sha>4df883d781a4290873b3b968afc0ff0df7132507</Sha>
-      <SourceBuild RepoName="source-build-externals" ManagedOnly="true" />
-    </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="10.0.563001">
-      <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
-      <Sha>80f1e84b2077a7208943db050067d86c94ace837</Sha>
-      <SourceBuild RepoName="source-build-reference-packages" ManagedOnly="true" />
-    </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="10.0.0-beta.24606.6">
-      <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>61b8f746424762d2e3173ebfaab19346224d591c</Sha>
-      <SourceBuild RepoName="arcade" ManagedOnly="true" />
-    </Dependency>
   </ToolsetDependencies>
 </Dependencies>
