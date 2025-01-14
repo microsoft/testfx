@@ -558,4 +558,13 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidAssertAreSameWithValueTypesDescription" xml:space="preserve">
     <value>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</value>
   </data>
+  <data name="AvoidUsingAssertsInAsyncVoidContextTitle" xml:space="preserve">
+    <value>Avoid doing assertions inside 'async void' contexts</value>
+  </data>
+  <data name="AvoidUsingAssertsInAsyncVoidContextMessageFormat" xml:space="preserve">
+    <value>Avoid doing assertions inside 'async void' methods or lambdas because they may not fail the test</value>
+  </data>
+  <data name="AvoidUsingAssertsInAsyncVoidContextDescription" xml:space="preserve">
+    <value>Avoid doing assertions in 'async void' methods or lambdas. Exceptions that are thrown in this context will be unobserved exceptions.</value>
+  </data>
 </root>

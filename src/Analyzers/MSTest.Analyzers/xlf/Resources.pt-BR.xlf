@@ -147,6 +147,21 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="translated">Evitar '[ExpectedException]'</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
+        <source>Avoid doing assertions in 'async void' methods or lambdas. Exceptions that are thrown in this context will be unobserved exceptions.</source>
+        <target state="new">Avoid doing assertions in 'async void' methods or lambdas. Exceptions that are thrown in this context will be unobserved exceptions.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
+        <source>Avoid doing assertions inside 'async void' methods or lambdas because they may not fail the test</source>
+        <target state="new">Avoid doing assertions inside 'async void' methods or lambdas because they may not fail the test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextTitle">
+        <source>Avoid doing assertions inside 'async void' contexts</source>
+        <target state="new">Avoid doing assertions inside 'async void' contexts</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
         <source>Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
 -it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
