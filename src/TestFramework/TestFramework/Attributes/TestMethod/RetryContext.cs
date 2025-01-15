@@ -3,7 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-public sealed class RetryContext
+public readonly struct RetryContext
 {
     internal RetryContext(Func<Task<TestResult[]>> executeTaskGetter)
         => ExecuteTaskGetter = executeTaskGetter;

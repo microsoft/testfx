@@ -23,21 +23,7 @@ public abstract class RetryBaseAttribute : Attribute
     /// </returns>
     protected internal abstract Task<RetryResult> ExecuteAsync(RetryContext retryContext);
 
-    internal static bool IsAcceptableResultForRetry(TestResult[] results)
-    {
-        foreach (TestResult result in results)
-        {
-            UnitTestOutcome outcome = result.Outcome;
-            if (outcome is UnitTestOutcome.Failed or UnitTestOutcome.Timeout)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    internal static bool IsAcceptableResultForRetry(List<TestResult> results)
+    internal static bool IsAcceptableResultForRetry(IEnumerable<TestResult> results)
     {
         foreach (TestResult result in results)
         {

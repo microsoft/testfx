@@ -268,7 +268,7 @@ Error: {1}</value>
 {2}</value>
   </data>
   <data name="UTA_MultipleAttributesOnTestMethod" xml:space="preserve">
-    <value>The test method {0}.{1} has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</value>
+    <value>The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</value>
   </data>
   <data name="LegacyScenariosNotSupportedWarning" xml:space="preserve">
     <value>Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter.</value>
