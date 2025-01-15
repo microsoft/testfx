@@ -777,11 +777,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The test method {0}.{1} has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed..
+        ///   Looks up a localized string similar to The test method {0}.{1} has multiple attributes derived from &apos;{2}&apos; defined on it. Only one such attribute is allowed..
         /// </summary>
-        internal static string UTA_MultipleExpectedExceptionsOnTestMethod {
+        internal static string UTA_MultipleAttributesOnTestMethod {
             get {
-                return ResourceManager.GetString("UTA_MultipleExpectedExceptionsOnTestMethod", resourceCulture);
+                return ResourceManager.GetString("UTA_MultipleAttributesOnTestMethod", resourceCulture);
             }
         }
         

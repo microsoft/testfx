@@ -33,12 +33,12 @@ public partial class CLITestBase : TestContainer
         return sink.DiscoveredTests;
     }
 
-    internal static ImmutableArray<TestResult> RunTests(IEnumerable<TestCase> testCases)
+    internal static async Task<ImmutableArray<TestResult>> RunTestsAsync(IEnumerable<TestCase> testCases)
     {
         var testExecutionManager = new TestExecutionManager();
         var frameworkHandle = new InternalFrameworkHandle();
 
-        testExecutionManager.ExecuteTests(testCases, null, frameworkHandle, false);
+        await testExecutionManager.ExecuteTestsAsync(testCases, null, frameworkHandle, false);
         return frameworkHandle.GetFlattenedTestResults();
     }
 

@@ -46,6 +46,7 @@ public class TestMethodInfo : ITestMethod
         Parent = parent;
         TestMethodOptions = testMethodOptions;
         ExpectedException = ResolveExpectedException();
+        RetryAttribute = GetRetryAttribute();
     }
 
     /// <summary>
@@ -91,6 +92,8 @@ public class TestMethodInfo : ITestMethod
     internal TestMethodOptions TestMethodOptions { get; }
 
     internal ExpectedExceptionBaseAttribute? ExpectedException { get; set; /*set for testing only*/ }
+
+    internal RetryBaseAttribute? RetryAttribute { get; }
 
     public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.Instance.GetDerivedAttributes<Attribute>(TestMethod, inherit).ToArray();
 
@@ -249,15 +252,50 @@ public class TestMethodInfo : ITestMethod
         // See https://github.com/microsoft/testfx/issues/4331
         if (expectedExceptions.Count() > 1)
         {
-            string errorMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_MultipleExpectedExceptionsOnTestMethod,
-                Parent.ClassType.FullName,
-                TestMethod.Name);
-            throw new TypeInspectionException(errorMessage);
+            ThrowMultipleAttributesException(nameof(ExpectedExceptionBaseAttribute));
         }
 
         return expectedExceptions.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Gets the number of retries this test method should make in case of failure.
+    /// </summary>
+    /// <returns>
+    /// The number of retries, which is always greater than or equal to 1.
+    /// If RetryAttribute is not present, returns 1.
+    /// </returns>
+    private RetryBaseAttribute? GetRetryAttribute()
+    {
+        IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetDerivedAttributes<RetryBaseAttribute>(TestMethod, inherit: true);
+        using IEnumerator<RetryBaseAttribute> enumerator = attributes.GetEnumerator();
+        if (!enumerator.MoveNext())
+        {
+            return null;
+        }
+
+        RetryBaseAttribute attribute = enumerator.Current;
+
+        if (enumerator.MoveNext())
+        {
+            ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
+        }
+
+        return attribute;
+    }
+
+    [DoesNotReturn]
+    private void ThrowMultipleAttributesException(string attributeName)
+    {
+        // Note: even if the given attribute has AllowMultiple = false, we can
+        // still reach here if a derived attribute authored by the user re-defines AttributeUsage
+        string errorMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_MultipleAttributesOnTestMethod,
+            Parent.ClassType.FullName,
+            TestMethod.Name,
+            attributeName);
+        throw new TypeInspectionException(errorMessage);
     }
 
     /// <summary>

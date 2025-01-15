@@ -61,15 +61,11 @@ public class TestExecutionManagerTests : TestContainer
 
         _testExecutionManager = new TestExecutionManager(
             new EnvironmentWrapper(),
-            action => Task.Factory.StartNew(
-                () =>
-                {
-                    _enqueuedParallelTestsCount++;
-                    action();
-                },
-                CancellationToken.None,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default));
+            task =>
+            {
+                _enqueuedParallelTestsCount++;
+                return task();
+            });
     }
 
     protected override void Dispose(bool disposing)
@@ -1137,7 +1133,11 @@ internal class TestableTestExecutionManager : TestExecutionManager
 {
     internal Action<IEnumerable<TestCase>, IRunContext, IFrameworkHandle, bool> ExecuteTestsWrapper { get; set; }
 
-    internal override void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone) => ExecuteTestsWrapper?.Invoke(tests, runContext, frameworkHandle, isDeploymentDone);
+    internal override Task ExecuteTestsAsync(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
+    {
+        ExecuteTestsWrapper?.Invoke(tests, runContext, frameworkHandle, isDeploymentDone);
+        return Task.CompletedTask;
+    }
 
     internal override UnitTestDiscoverer GetUnitTestDiscoverer() => new TestableUnitTestDiscoverer();
 }
