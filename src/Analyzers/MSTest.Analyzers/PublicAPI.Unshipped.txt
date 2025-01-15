@@ -1,5 +1,9 @@
 #nullable enable
 MSTest.Analyzers.AvoidAssertAreSameWithValueTypesAnalyzer
 MSTest.Analyzers.AvoidAssertAreSameWithValueTypesAnalyzer.AvoidAssertAreSameWithValueTypesAnalyzer() -> void
+MSTest.Analyzers.AvoidUsingAssertsInAsyncVoidContextAnalyzer
+MSTest.Analyzers.AvoidUsingAssertsInAsyncVoidContextAnalyzer.AvoidUsingAssertsInAsyncVoidContextAnalyzer() -> void
 override MSTest.Analyzers.AvoidAssertAreSameWithValueTypesAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.AvoidAssertAreSameWithValueTypesAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.AvoidUsingAssertsInAsyncVoidContextAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.AvoidUsingAssertsInAsyncVoidContextAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
