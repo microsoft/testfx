@@ -489,8 +489,11 @@ public class TrxTests
 
         private void SetTrxContent()
         {
-            _ = Stream.Seek(0, SeekOrigin.Begin);
-            TrxContent = XDocument.Load(Stream);
+            if (TrxContent is null)
+            {
+                _ = Stream.Seek(0, SeekOrigin.Begin);
+                TrxContent = XDocument.Load(Stream);
+            }
         }
 
         void IDisposable.Dispose()
