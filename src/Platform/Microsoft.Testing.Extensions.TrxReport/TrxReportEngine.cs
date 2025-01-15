@@ -6,6 +6,7 @@ using System.Buffers;
 #endif
 using System.Security.Cryptography;
 
+using Microsoft.Testing.Extensions.TestReports.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
@@ -205,8 +206,7 @@ internal sealed partial class TrxReportEngine
             using IFileStream stream = _fileSystem.NewFileStream(finalFileName, isFileNameExplicitlyProvided ? FileMode.Create : FileMode.CreateNew);
             await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken);
             return isFileNameExplicitlyProvided && _fileSystem.Exists(finalFileName)
-                // TODO: Localize
-                ? (finalFileName, $"Warning: Trx file '{finalFileName}' already exists and is overwritten.")
+                ? (finalFileName, string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxFileExistsAndWillBeOverwritten, finalFileName))
                 : (finalFileName, null);
         });
 
