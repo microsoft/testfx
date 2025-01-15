@@ -229,8 +229,8 @@ internal sealed partial class TrxReportEngine
                 }
             }
 
-            // We try for 1 second to create a file with a unique name.
-            if (_clock.UtcNow - firstTryTime > TimeSpan.FromSeconds(1))
+            // We try for 5 seconds to create a file with a unique name.
+            if (_clock.UtcNow - firstTryTime > TimeSpan.FromSeconds(5))
             {
                 throwIOException = true;
             }
