@@ -1,20 +1,27 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.InteropServices;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-[TestClass]
-public sealed class TupleDynamicDataTests : AcceptanceTestBase<TupleDynamicDataTests.TestAssetFixture>
+[TestGroup]
+public sealed class TupleDynamicDataTests : AcceptanceTestBase
 {
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    private const string AssetName = "TupleDynamicDataTests";
+    private readonly TestAssetFixture _testAssetFixture;
+
+    public TupleDynamicDataTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
+        : base(testExecutionContext) => _testAssetFixture = testAssetFixture;
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task CanUseLongTuplesAndValueTuplesForAllFrameworks(string tfm)
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
 
         // Assert
@@ -32,21 +39,10 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase<TupleDynamicDataT
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
+    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public const string ProjectName = "TupleDynamicDataTests";
-
-        public string ProjectPath => GetAssetPath(ProjectName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (ProjectName, ProjectName,
-                SourceCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
-
-        private const string SourceCode = """
+        private const string Sources = """
 #file TupleDynamicDataTests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -135,5 +131,15 @@ public class UnitTest1
   </MSTest>
 </RunSettings>
 """;
+
+        public string TargetAssetPath => GetAssetPath(AssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (AssetName, AssetName,
+                Sources
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+        }
     }
 }
