@@ -78,8 +78,12 @@
     <PackageVersion Include="StreamJsonRpc" Version="2.20.20" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+<<<<<<< HEAD
     <PackageVersion Include="System.Management" Version="9.0.0" />
     <PackageVersion Include="System.Memory" Version="4.6.0" />
+=======
+    <PackageVersion Include="System.Management" Version="9.0.1" />
+>>>>>>> Drop package ref to System.Memory
   </ItemGroup>
   <!--
     Declare below packages that we will be referenced through MSTest.Sdk but don't have direct reference.

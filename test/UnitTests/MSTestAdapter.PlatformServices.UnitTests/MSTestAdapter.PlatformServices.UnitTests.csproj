@@ -39,9 +39,8 @@
   <ItemGroup>
     <PackageReference Include="Moq" />
     <PackageReference Include="StrongNamer" />
-    <PackageReference Include="System.Memory" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Content Include="DataTestSourceFile.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
