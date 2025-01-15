@@ -251,7 +251,8 @@ Błąd: {1}</target>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</source>
-        <target state="needs-review-translation">Zgłoszono wyjątek podczas wykonywania testu. W przypadku korzystania z rozszerzenia atrybutu TestMethodAttribute należy skontaktować się z dostawcą. Komunikat o błędzie: {0}, ślad stosu: {1}</target>
+        <target state="new">An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_NoTestResult">

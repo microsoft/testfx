@@ -251,7 +251,8 @@ Error: {1}</target>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</source>
-        <target state="needs-review-translation">Se inició una excepción al ejecutar la prueba. Si usa la extensión de TestMethodAttribute, póngase en contacto con el proveedor. Mensaje de error: {0}, seguimiento: {1}</target>
+        <target state="new">An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_NoTestResult">

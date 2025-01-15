@@ -251,7 +251,8 @@ Error: {1}</source>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</source>
-        <target state="needs-review-translation">При выполнении теста возникло исключение. Если используется расширение атрибута TestMethodAttribute, обратитесь к поставщику. Сообщение об ошибке: {0}. Трассировка стека: {1}</target>
+        <target state="new">An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_NoTestResult">
