@@ -149,8 +149,7 @@ internal static class DynamicDataOperations
 
                 objects.Add(array);
 #else
-                Type type = entry.GetType();
-                if (!IsTupleOrValueTuple(entry.GetType(), out int tupleSize)
+                if (!IsTupleOrValueTuple(entry, out int tupleSize)
                     || (objects.Count > 0 && objects[objects.Count - 1].Length != tupleSize))
                 {
                     data = null;
@@ -158,63 +157,44 @@ internal static class DynamicDataOperations
                 }
 
                 object[] array = new object[tupleSize];
-                for (int i = 0; i < tupleSize; i++)
-                {
-                    array[i] = type.GetField($"Item{i + 1}")?.GetValue(entry)!;
-                }
+                ProcessTuple(entry, array, 0);
 
-<<<<<<< HEAD
                 objects.Add(array);
+
+                static void ProcessTuple(object data, object[] array, int startingIndex)
+                {
+                    Type type = data.GetType();
+                    int tupleSize = type.GenericTypeArguments.Length;
+                    for (int i = 0; i < tupleSize; i++)
+                    {
+                        if (i != 7)
+                        {
+                            // Note: ItemN are properties on Tuple, but are fields on ValueTuple
+                            array[startingIndex + i] = type.GetField($"Item{i + 1}")?.GetValue(data)
+                                ?? type.GetProperty($"Item{i + 1}").GetValue(data);
+                            continue;
+                        }
+
+                        object rest = type.GetProperty("Rest")?.GetValue(data) ??
+                            type.GetField("Rest").GetValue(data)!;
+                        if (IsTupleOrValueTuple(rest, out _))
+                        {
+                            ProcessTuple(rest, array, startingIndex + 7);
+                        }
+                        else
+                        {
+                            array[startingIndex + i] = rest;
+                        }
+
+                        return;
+                    }
+                }
 #endif
             }
-=======
-            objects.Add(array);
-            return true;
-        }
-#else
-        if (IsTupleOrValueTuple(data, out int tupleSize)
-            && (objects.Count == 0 || objects[objects.Count - 1].Length == tupleSize))
-        {
-            object[] array = new object[tupleSize];
-            ProcessTuple(data, array, 0);
->>>>>>> Fix Tuple/ValueTuple handling of TRest
 
             data = objects;
             return true;
         }
-<<<<<<< HEAD
-=======
-
-        static void ProcessTuple(object data, object[] array, int startingIndex)
-        {
-            Type type = data.GetType();
-            int tupleSize = type.GenericTypeArguments.Length;
-            for (int i = 0; i < tupleSize; i++)
-            {
-                if (i != 7)
-                {
-                    // Note: ItemN are properties on Tuple, but are fields on ValueTuple
-                    array[startingIndex + i] = type.GetField($"Item{i + 1}")?.GetValue(data)
-                        ?? type.GetProperty($"Item{i + 1}").GetValue(data);
-                    continue;
-                }
-
-                object rest = type.GetProperty("Rest")?.GetValue(data) ??
-                    type.GetField("Rest").GetValue(data)!;
-                if (IsTupleOrValueTuple(rest, out _))
-                {
-                    ProcessTuple(rest, array, startingIndex + 7);
-                }
-                else
-                {
-                    array[startingIndex + i] = rest;
-                }
-
-                return;
-            }
-        }
-#endif
->>>>>>> Fix Tuple/ValueTuple handling of TRest
 
         data = null;
         return false;
