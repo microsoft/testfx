@@ -142,7 +142,7 @@ internal sealed partial class TrxReportEngine
         _isCopyingFileAllowed = isCopyingFileAllowed;
     }
 
-    public async Task<string> GenerateReportAsync(string testHostCrashInfo = "", bool isTestHostCrashed = false, bool keepReportFileStreamOpen = false)
+    public async Task<string> GenerateReportAsync(string testHostCrashInfo = "", bool isTestHostCrashed = false)
         => await RetryWhenIOExceptionAsync(async () =>
         {
             string testAppModule = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
@@ -189,23 +189,12 @@ internal sealed partial class TrxReportEngine
 
             string outputDirectory = _configuration.GetTestResultDirectory(); // add var for this
             string finalFileName = Path.Combine(outputDirectory, trxFileName);
-            Stream stream = _fileSystem.NewFileStream(finalFileName, FileMode.CreateNew).Stream;
-            try
-            {
-                await document.SaveAsync(stream, SaveOptions.None, _cancellationToken);
-                return finalFileName;
-            }
-            finally
-            {
-                if (!keepReportFileStreamOpen)
-                {
-#if NET
-                    await stream.DisposeAsync();
-#else
-                    stream.Dispose();
-#endif
-                }
-            }
+
+            // Note that we need to dispose the IFileStream, not the inner stream.
+            // IFileStream implementations will be responsible to dispose their inner stream.
+            using IFileStream stream = _fileSystem.NewFileStream(finalFileName, FileMode.CreateNew);
+            await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken);
+            return finalFileName;
         });
 
     private async Task<string> RetryWhenIOExceptionAsync(Func<Task<string>> func)

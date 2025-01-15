@@ -39,11 +39,12 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
         Assert.IsFalse(trxContent.Contains(@"className="));
@@ -58,11 +59,12 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream, notExecutedTestsCount: 1);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
         Assert.IsTrue(trxContent.Contains(@"notExecuted=""1"""));
@@ -77,11 +79,12 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream, timeoutTestsCount: 1);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
         Assert.IsTrue(trxContent.Contains(@"timeout=""1"""));
@@ -98,11 +101,12 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         Assert.IsTrue(fileName.Equals("argumentTrxReportFileName", StringComparison.OrdinalIgnoreCase));
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
     }
 
@@ -117,11 +121,12 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         Assert.IsTrue(fileName.Equals("_NUL", StringComparison.OrdinalIgnoreCase));
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
     }
 
@@ -134,11 +139,12 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(isTestHostCrashed: true, keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync(isTestHostCrashed: true);
 
         // Assert
         AssertExpectedTrxFileName(fileName);
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Failed");
     }
 
@@ -151,11 +157,12 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
     }
 
@@ -170,11 +177,12 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Failed");
 
         XElement? testRun = xml.Root;
@@ -203,11 +211,12 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Failed");
         string trxContent = xml.ToString();
         string trxContentsPattern = @"
@@ -231,11 +240,12 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Failed");
         string trxContent = xml.ToString();
         string trxContentsPattern = @"
@@ -262,11 +272,12 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
         string trxContentsPattern = @"
@@ -289,11 +300,12 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Failed");
         string trxContent = xml.ToString();
         string trxContentsPattern = @"
@@ -317,11 +329,12 @@ public class TrxTests
             propertyBag, memoryStream, true);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
         Assert.IsTrue(trxContent.Contains(@"className=""TrxFullyQualifiedTypeName"), trxContent);
@@ -337,11 +350,12 @@ public class TrxTests
             new(new PassedTestNodeStateProperty()), memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
         string trxContentsPattern = @"
@@ -366,11 +380,12 @@ public class TrxTests
             new(new PassedTestNodeStateProperty()), memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        string fileName = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         AssertExpectedTrxFileName(fileName);
-        XDocument xml = GetTrxContent(memoryStream);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
         string trxContentsPattern = @"
@@ -413,17 +428,10 @@ public class TrxTests
             isCopyingFileAllowed: false);
 
         // Act
-        _ = await trxReportEngine.GenerateReportAsync(keepReportFileStreamOpen: true);
+        _ = await trxReportEngine.GenerateReportAsync();
 
         // Assert
         Assert.AreEqual(4, retryCount);
-    }
-
-    private static XDocument GetTrxContent(MemoryFileStream memoryStream)
-    {
-        Assert.IsNotNull(memoryStream);
-        _ = memoryStream.Stream.Seek(0, SeekOrigin.Begin);
-        return XDocument.Load(memoryStream.Stream);
     }
 
     private static void AssertTrxOutcome(XDocument xml, string expectedOutcome)
@@ -473,16 +481,33 @@ public class TrxTests
 
         public MemoryStream Stream { get; }
 
+        public XDocument? TrxContent { get; private set; }
+
         Stream IFileStream.Stream => Stream;
 
         string IFileStream.Name => string.Empty;
 
+        private void SetTrxContent()
+        {
+            if (TrxContent is null)
+            {
+                _ = Stream.Seek(0, SeekOrigin.Begin);
+                TrxContent = XDocument.Load(Stream);
+            }
+        }
+
         void IDisposable.Dispose()
-            => Stream.Dispose();
+        {
+            SetTrxContent();
+            Stream.Dispose();
+        }
 
 #if NETCOREAPP
         ValueTask IAsyncDisposable.DisposeAsync()
-            => Stream.DisposeAsync();
+        {
+            SetTrxContent();
+            return Stream.DisposeAsync();
+        }
 #endif
     }
 }
