@@ -142,7 +142,7 @@ internal sealed partial class TrxReportEngine
         _isCopyingFileAllowed = isCopyingFileAllowed;
     }
 
-    public async Task<string> GenerateReportAsync(string testHostCrashInfo = "", bool isTestHostCrashed = false)
+    public async Task<(string FileName, string? Warning)> GenerateReportAsync(string testHostCrashInfo = "", bool isTestHostCrashed = false)
         => await RetryWhenIOExceptionAsync(async () =>
         {
             string testAppModule = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
@@ -158,9 +158,19 @@ internal sealed partial class TrxReportEngine
 
             // If the user added the trxFileName the runDeploymentRoot would stay the same, We think it's a bug but I found that same behavior on vstest
             string runDeploymentRoot = AddTestSettings(testRun, testRunName);
-            string trxFileName = _commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName)
-                ? ReplaceInvalidFileNameChars(fileName[0])
-                : $"{runDeploymentRoot}.trx";
+            bool isFileNameExplicitlyProvided;
+            string trxFileName;
+            if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
+            {
+                trxFileName = ReplaceInvalidFileNameChars(fileName[0]);
+                isFileNameExplicitlyProvided = true;
+            }
+            else
+            {
+                trxFileName = $"{runDeploymentRoot}.trx";
+                isFileNameExplicitlyProvided = false;
+            }
+
             AddResults(testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out string resultSummaryOutcome);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
@@ -192,12 +202,15 @@ internal sealed partial class TrxReportEngine
 
             // Note that we need to dispose the IFileStream, not the inner stream.
             // IFileStream implementations will be responsible to dispose their inner stream.
-            using IFileStream stream = _fileSystem.NewFileStream(finalFileName, FileMode.CreateNew);
+            using IFileStream stream = _fileSystem.NewFileStream(finalFileName, isFileNameExplicitlyProvided ? FileMode.Create : FileMode.CreateNew);
             await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken);
-            return finalFileName;
+            return isFileNameExplicitlyProvided && _fileSystem.Exists(finalFileName)
+                // TODO: Localize
+                ? (finalFileName, $"Warning: Trx file '{finalFileName}' already exists and is overwritten.")
+                : (finalFileName, null);
         });
 
-    private async Task<string> RetryWhenIOExceptionAsync(Func<Task<string>> func)
+    private async Task<(string FileName, string? Warning)> RetryWhenIOExceptionAsync(Func<Task<(string FileName, string? Warning)>> func)
     {
         DateTimeOffset firstTryTime = _clock.UtcNow;
         bool throwIOException = false;
@@ -216,8 +229,8 @@ internal sealed partial class TrxReportEngine
                 }
             }
 
-            // We try for 30 seconds to create a file with a unique name.
-            if (_clock.UtcNow - firstTryTime > TimeSpan.FromSeconds(30))
+            // We try for 1 second to create a file with a unique name.
+            if (_clock.UtcNow - firstTryTime > TimeSpan.FromSeconds(1))
             {
                 throwIOException = true;
             }
