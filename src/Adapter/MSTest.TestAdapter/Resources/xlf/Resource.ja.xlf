@@ -252,7 +252,8 @@ Error: {1}</source>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</source>
-        <target state="needs-review-translation">テストの実行中に例外がスローされました。TestMethodAttribute の拡張クラスを使用している場合は、ベンダーに連絡してください。エラー メッセージ: {0}、スタック トレース: {1}</target>
+        <target state="new">An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_NoTestResult">
