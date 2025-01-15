@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
+
 using Microsoft.Testing.Platform.Extensions.Messages;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
@@ -17,6 +20,26 @@ public sealed record StandardOutputTrxMessage(string? Message) : TrxMessage(Mess
 
 public sealed record DebugOrTraceTrxMessage(string? Message) : TrxMessage(Message);
 
-public sealed record TrxMessagesProperty(TrxMessage[] Messages) : IProperty;
+public sealed record TrxMessagesProperty(TrxMessage[] Messages) : IProperty
+{
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
+    private bool PrintMembers(StringBuilder builder)
+    {
+        builder.Append("Messages = [");
+        builder.Append(string.Join(", ", Messages.Select(x => x.ToString())));
+        builder.Append(']');
+        return true;
+    }
+}
 
-public sealed record TrxCategoriesProperty(string[] Categories) : IProperty;
+public sealed record TrxCategoriesProperty(string[] Categories) : IProperty
+{
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "https://github.com/dotnet/roslyn/issues/52421")]
+    private bool PrintMembers(StringBuilder builder)
+    {
+        builder.Append("Categories = [");
+        builder.Append(string.Join(", ", Categories));
+        builder.Append(']');
+        return true;
+    }
+}
