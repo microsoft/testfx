@@ -133,22 +133,40 @@ public sealed class TestNodePropertiesTests
 
     public void TimingProperty_ToStringIsCorrect()
     {
-        DateTimeOffset startTime = new(2021, 9, 1, 0, 0, 0, default);
-        DateTimeOffset endTime = new(2021, 9, 1, 1, 2, 3, default);
-        TimeSpan duration = endTime - startTime;
-        Assert.AreEqual(
-                "TimingProperty { GlobalTiming = TimingInfo { StartTime = 01/09/2021 00:00:00 +00:00, EndTime = 01/09/2021 01:02:03 +00:00, Duration = 01:02:03 }, StepTimings = [] }",
-                new TimingProperty(new(startTime, endTime, duration)).ToString());
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+            DateTimeOffset startTime = new(2021, 9, 1, 0, 0, 0, default);
+            DateTimeOffset endTime = new(2021, 9, 1, 1, 2, 3, default);
+            TimeSpan duration = endTime - startTime;
+            Assert.AreEqual(
+                    "TimingProperty { GlobalTiming = TimingInfo { StartTime = 09/01/2021 00:00:00 +00:00, EndTime = 09/01/2021 01:02:03 +00:00, Duration = 01:02:03 }, StepTimings = [] }",
+                    new TimingProperty(new(startTime, endTime, duration)).ToString());
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
     }
 
     public void TimingProperty_WithStepTimings_ToStringIsCorrect()
     {
-        DateTimeOffset startTime = new(2021, 9, 1, 0, 0, 0, default);
-        DateTimeOffset endTime = new(2021, 9, 1, 1, 2, 3, default);
-        TimeSpan duration = endTime - startTime;
-        Assert.AreEqual(
-                "TimingProperty { GlobalTiming = TimingInfo { StartTime = 01/09/2021 00:00:00 +00:00, EndTime = 01/09/2021 01:02:03 +00:00, Duration = 01:02:03 }, StepTimings = [StepTimingInfo { Id = run, Description = some description, Timing = TimingInfo { StartTime = 01/09/2021 00:00:00 +00:00, EndTime = 01/09/2021 01:02:03 +00:00, Duration = 01:02:03 } }] }",
-                new TimingProperty(new(startTime, endTime, duration), [new("run", "some description", new(startTime, endTime, duration))]).ToString());
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+            DateTimeOffset startTime = new(2021, 9, 1, 0, 0, 0, default);
+            DateTimeOffset endTime = new(2021, 9, 1, 1, 2, 3, default);
+            TimeSpan duration = endTime - startTime;
+            Assert.AreEqual(
+                    "TimingProperty { GlobalTiming = TimingInfo { StartTime = 09/01/2021 00:00:00 +00:00, EndTime = 09/01/2021 01:02:03 +00:00, Duration = 01:02:03 }, StepTimings = [StepTimingInfo { Id = run, Description = some description, Timing = TimingInfo { StartTime = 09/01/2021 00:00:00 +00:00, EndTime = 09/01/2021 01:02:03 +00:00, Duration = 01:02:03 } }] }",
+                    new TimingProperty(new(startTime, endTime, duration), [new("run", "some description", new(startTime, endTime, duration))]).ToString());
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
     }
 
     public void TestFileLocationProperty_ToStringIsCorrect()
