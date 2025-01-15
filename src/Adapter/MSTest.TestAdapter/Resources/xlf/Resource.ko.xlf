@@ -251,7 +251,8 @@ Error: {1}</source>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</source>
-        <target state="needs-review-translation">테스트를 실행하는 동안 예외가 발생했습니다. TestMethodAttribute 확장을 사용하는 경우 공급업체에 문의하세요. 오류 메시지: {0}. 스택 추적: {1}</target>
+        <target state="new">An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_NoTestResult">

@@ -251,7 +251,8 @@ Chyba: {1}</target>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</source>
-        <target state="needs-review-translation">Při provádění testu se vyvolala výjimka. Pokud používáte rozšíření TestMethodAttribute, obraťte se prosím na dodavatele. Chybová zpráva: {0}, trasování zásobníku: {1}</target>
+        <target state="new">An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_NoTestResult">
