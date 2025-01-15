@@ -435,10 +435,13 @@ internal sealed class TestMethodRunner
             [
                 new TestResult()
                 {
-                    // TODO: We need to change the exception type to more specific one.
-#pragma warning disable CA2201 // Do not raise reserved exception types
-                    TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message, ex.StackTrace), ex),
-#pragma warning restore CA2201 // Do not raise reserved exception types
+                    TestFailureException = new InvalidOperationException(
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            Resource.UTA_ExecuteThrewException,
+                            _testMethodInfo.TestMethodOptions.Executor.GetType().FullName,
+                            ex.ToString()),
+                        ex),
                 },
             ];
         }
