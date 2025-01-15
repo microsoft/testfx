@@ -39,9 +39,10 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -59,9 +60,10 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream, notExecutedTestsCount: 1);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -79,9 +81,10 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream, timeoutTestsCount: 1);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -101,9 +104,10 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         Assert.IsTrue(fileName.Equals("argumentTrxReportFileName", StringComparison.OrdinalIgnoreCase));
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -121,9 +125,10 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         Assert.IsTrue(fileName.Equals("_NUL", StringComparison.OrdinalIgnoreCase));
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -139,9 +144,10 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync(isTestHostCrashed: true);
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync(isTestHostCrashed: true);
 
         // Assert
+        Assert.IsNull(warning);
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -157,9 +163,10 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -177,9 +184,10 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -211,9 +219,10 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -240,9 +249,10 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -272,9 +282,10 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -300,9 +311,10 @@ public class TrxTests
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(0, 1, propertyBag, memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -329,9 +341,10 @@ public class TrxTests
             propertyBag, memoryStream, true);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -350,9 +363,10 @@ public class TrxTests
             new(new PassedTestNodeStateProperty()), memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
@@ -380,9 +394,10 @@ public class TrxTests
             new(new PassedTestNodeStateProperty()), memoryStream);
 
         // Act
-        string fileName = await trxReportEngine.GenerateReportAsync();
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
 
         // Assert
+        Assert.IsNull(warning);
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
