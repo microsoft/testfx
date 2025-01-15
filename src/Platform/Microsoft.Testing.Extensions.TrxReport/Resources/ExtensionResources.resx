@@ -139,7 +139,7 @@
     <value>The TRX file to compare with the baseline</value>
   </data>
   <data name="TrxFileExistsAndWillBeOverwritten" xml:space="preserve">
-    <value>Warning: Trx file '{0}' already exists and is overwritten.</value>
+    <value>Warning: Trx file '{0}' already exists and will be overwritten.</value>
   </data>
   <data name="TrxReportArtifactDescription" xml:space="preserve">
     <value>Test session</value>
