@@ -85,7 +85,11 @@ public class TestMethodRunnerTests : TestContainer
 
         UnitTestResult[] results = testMethodRunner.Execute(string.Empty, string.Empty, string.Empty, string.Empty).ToUnitTestResults();
         Verify(results[0].Outcome == AdapterTestOutcome.Failed);
-        Verify(results[0].ErrorMessage.Contains("Exception thrown while executing test"));
+        Verify(results[0].ErrorMessage.Contains(
+            """            
+            An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute 'Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute'.
+            System.Exception: DummyException
+            """));
     }
 
     public void ExecuteForPassingTestShouldReturnUnitTestResultWithPassedOutcome()
