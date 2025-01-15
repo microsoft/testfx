@@ -151,18 +151,18 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
-        <source>Avoid doing assertions in 'async void' methods or lambdas. Exceptions that are thrown in this context will be unobserved exceptions.</source>
-        <target state="new">Avoid doing assertions in 'async void' methods or lambdas. Exceptions that are thrown in this context will be unobserved exceptions.</target>
+        <source>Avoid doing assertions in 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unobserved exceptions. When using VSTest, they will be silently swallowed. When using Microsoft.Testing.Platform, they may crash the process.</source>
+        <target state="new">Avoid doing assertions in 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unobserved exceptions. When using VSTest, they will be silently swallowed. When using Microsoft.Testing.Platform, they may crash the process.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
-        <source>Avoid doing assertions inside 'async void' methods or lambdas because they may not fail the test</source>
-        <target state="new">Avoid doing assertions inside 'async void' methods or lambdas because they may not fail the test</target>
+        <source>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</source>
+        <target state="new">Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextTitle">
-        <source>Avoid doing assertions inside 'async void' contexts</source>
-        <target state="new">Avoid doing assertions inside 'async void' contexts</target>
+        <source>Do not assert inside 'async void' contexts</source>
+        <target state="new">Do not assert inside 'async void' contexts</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
