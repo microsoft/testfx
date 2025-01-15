@@ -1,5 +1,5 @@
 #nullable enable
-abstract Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext! retryContext) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult!>!
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext retryContext) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult!>!
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendFormatted(string? value) -> void
@@ -217,6 +217,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.RetryBaseAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.ExecuteTaskGetter.get -> System.Func<System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!>!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.RetryContext() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.AddResult(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! testResults) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.RetryResult() -> void
