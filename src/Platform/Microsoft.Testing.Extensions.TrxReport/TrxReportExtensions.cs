@@ -64,6 +64,7 @@ public static class TrxReportExtensions
                     serviceProvider.GetConfiguration(),
                     serviceProvider.GetSystemClock(),
                     serviceProvider.GetTask(),
+                    serviceProvider.GetOutputDevice(),
                     pipeNameDescription);
             });
         ((TestHostControllersManager)builder.TestHostControllers).AddDataConsumer(compositeLifeTimeHandler);

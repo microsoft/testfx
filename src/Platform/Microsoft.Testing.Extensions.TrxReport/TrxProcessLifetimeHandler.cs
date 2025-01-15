@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
@@ -16,6 +17,7 @@ using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
@@ -25,6 +27,7 @@ internal sealed class TrxProcessLifetimeHandler :
     ITestHostProcessLifetimeHandler,
     IDataConsumer,
     IDataProducer,
+    IOutputDeviceDataProducer,
 #if NETCOREAPP
     IAsyncDisposable
 #else
@@ -38,6 +41,7 @@ internal sealed class TrxProcessLifetimeHandler :
     private readonly IConfiguration _configuration;
     private readonly IClock _clock;
     private readonly ITask _task;
+    private readonly IOutputDevice _outputDevice;
     private readonly ILogger<TrxProcessLifetimeHandler> _logger;
     private readonly PipeNameDescription _pipeNameDescription;
     private readonly Dictionary<IDataProducer, List<FileArtifact>> _fileArtifacts = new();
@@ -57,6 +61,7 @@ internal sealed class TrxProcessLifetimeHandler :
         IConfiguration configuration,
         IClock clock,
         ITask task,
+        IOutputDevice outputDevice,
         PipeNameDescription pipeNameDescription)
     {
         _commandLineOptions = commandLineOptions;
@@ -66,6 +71,7 @@ internal sealed class TrxProcessLifetimeHandler :
         _configuration = configuration;
         _clock = clock;
         _task = task;
+        _outputDevice = outputDevice;
         _pipeNameDescription = pipeNameDescription;
         _logger = loggerFactory.CreateLogger<TrxProcessLifetimeHandler>();
         _startTime = _clock.UtcNow;
@@ -165,12 +171,18 @@ internal sealed class TrxProcessLifetimeHandler :
                 testHostProcessInformation.ExitCode,
                 cancellation);
 
+            (string fileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync(
+                isTestHostCrashed: true,
+                testHostCrashInfo: $"Test host process pid: {testHostProcessInformation.PID} crashed.");
+            if (warning is not null)
+            {
+                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning));
+            }
+
             await _messageBus.PublishAsync(
                 this,
                 new FileArtifact(
-                    new FileInfo(await trxReportGeneratorEngine.GenerateReportAsync(
-                        isTestHostCrashed: true,
-                        testHostCrashInfo: $"Test host process pid: {testHostProcessInformation.PID} crashed.")),
+                    new FileInfo(fileName),
                     ExtensionResources.TrxReportArtifactDisplayName,
                     ExtensionResources.TrxReportArtifactDescription));
             return;
