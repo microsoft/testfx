@@ -149,8 +149,7 @@ internal static class DynamicDataOperations
 
                 objects.Add(array);
 #else
-                Type type = entry.GetType();
-                if (!IsTupleOrValueTuple(entry.GetType(), out int tupleSize)
+                if (!IsTupleOrValueTuple(entry, out int tupleSize)
                     || (objects.Count > 0 && objects[objects.Count - 1].Length != tupleSize))
                 {
                     data = null;
@@ -158,12 +157,38 @@ internal static class DynamicDataOperations
                 }
 
                 object[] array = new object[tupleSize];
-                for (int i = 0; i < tupleSize; i++)
-                {
-                    array[i] = type.GetField($"Item{i + 1}")?.GetValue(entry)!;
-                }
+                ProcessTuple(entry, array, 0);
 
                 objects.Add(array);
+
+                static void ProcessTuple(object data, object[] array, int startingIndex)
+                {
+                    Type type = data.GetType();
+                    int tupleSize = type.GenericTypeArguments.Length;
+                    for (int i = 0; i < tupleSize; i++)
+                    {
+                        if (i != 7)
+                        {
+                            // Note: ItemN are properties on Tuple, but are fields on ValueTuple
+                            array[startingIndex + i] = type.GetField($"Item{i + 1}")?.GetValue(data)
+                                ?? type.GetProperty($"Item{i + 1}").GetValue(data);
+                            continue;
+                        }
+
+                        object rest = type.GetProperty("Rest")?.GetValue(data) ??
+                            type.GetField("Rest").GetValue(data)!;
+                        if (IsTupleOrValueTuple(rest, out _))
+                        {
+                            ProcessTuple(rest, array, startingIndex + 7);
+                        }
+                        else
+                        {
+                            array[startingIndex + i] = rest;
+                        }
+
+                        return;
+                    }
+                }
 #endif
             }
 
@@ -176,9 +201,16 @@ internal static class DynamicDataOperations
     }
 
 #if !NET471_OR_GREATER && !NETCOREAPP
-    private static bool IsTupleOrValueTuple(Type type, out int tupleSize)
+    private static bool IsTupleOrValueTuple(object? data, out int tupleSize)
     {
         tupleSize = 0;
+
+        if (data is null)
+        {
+            return false;
+        }
+
+        Type type = data.GetType();
         if (!type.IsGenericType)
         {
             return false;
@@ -192,33 +224,68 @@ internal static class DynamicDataOperations
             genericTypeDefinition == typeof(Tuple<,,,>) ||
             genericTypeDefinition == typeof(Tuple<,,,,>) ||
             genericTypeDefinition == typeof(Tuple<,,,,,>) ||
-            genericTypeDefinition == typeof(Tuple<,,,,,,>) ||
-            genericTypeDefinition == typeof(Tuple<,,,,,,,>))
+            genericTypeDefinition == typeof(Tuple<,,,,,,>))
         {
             tupleSize = type.GetGenericArguments().Length;
             return true;
         }
 
+        if (genericTypeDefinition == typeof(Tuple<,,,,,,,>))
+        {
+            object? last = type.GetProperty("Rest").GetValue(data);
+            if (IsTupleOrValueTuple(last, out int restSize))
+            {
+                tupleSize = 7 + restSize;
+                return true;
+            }
+            else
+            {
+                tupleSize = 8;
+                return true;
+            }
+        }
+
 #if NET462
-        // TODO: https://github.com/microsoft/testfx/issues/4624
         if (genericTypeDefinition.FullName.StartsWith("System.ValueTuple`", StringComparison.Ordinal))
         {
             tupleSize = type.GetGenericArguments().Length;
+            if (tupleSize == 8)
+            {
+                object? last = type.GetField("Rest").GetValue(data);
+                if (IsTupleOrValueTuple(last, out int restSize))
+                {
+                    tupleSize = 7 + restSize;
+                }
+            }
+
             return true;
         }
 #else
-        // TODO: https://github.com/microsoft/testfx/issues/4624
         if (genericTypeDefinition == typeof(ValueTuple<>) ||
             genericTypeDefinition == typeof(ValueTuple<,>) ||
             genericTypeDefinition == typeof(ValueTuple<,,>) ||
             genericTypeDefinition == typeof(ValueTuple<,,,>) ||
             genericTypeDefinition == typeof(ValueTuple<,,,,>) ||
             genericTypeDefinition == typeof(ValueTuple<,,,,,>) ||
-            genericTypeDefinition == typeof(ValueTuple<,,,,,,>) ||
-            genericTypeDefinition == typeof(ValueTuple<,,,,,,,>))
+            genericTypeDefinition == typeof(ValueTuple<,,,,,,>))
         {
             tupleSize = type.GetGenericArguments().Length;
             return true;
+        }
+
+        if (genericTypeDefinition == typeof(ValueTuple<,,,,,,,>))
+        {
+            object? last = type.GetField("Rest").GetValue(data);
+            if (IsTupleOrValueTuple(last, out int restSize))
+            {
+                tupleSize = 7 + restSize;
+                return true;
+            }
+            else
+            {
+                tupleSize = 8;
+                return true;
+            }
         }
 #endif
 
