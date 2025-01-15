@@ -56,7 +56,7 @@
   <ItemGroup Label="Test dependencies">
     <PackageVersion Include="Codecov" Version="1.12.3" />
     <PackageVersion Include="FluentAssertions" Version="6.12.0" />
-    <PackageVersion Include="FSharp.Core" Version="8.0.200" />
+    <PackageVersion Include="FSharp.Core" Version="9.0.101" />
     <!-- CVE-2024-48924 / Transitive deps of StreamJsonRpc -->
     <PackageVersion Include="MessagePack" Version="2.5.187" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
