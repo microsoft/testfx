@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.SourceGeneration;
-#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
@@ -56,14 +53,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     [field: MaybeNull]
     public IFileOperations FileOperations
     {
-        get => field ??=
-#if !WINDOWS_UWP
-            SourceGeneratorToggle.UseSourceGenerator
-                ? new SourceGeneratedFileOperations()
-                : new FileOperations();
-#else
-            new FileOperations();
-#endif
+        get => field ??= new FileOperations();
         private set;
     }
 
@@ -118,14 +108,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     [field: MaybeNull]
     public IReflectionOperations2 ReflectionOperations
     {
-        get => field ??=
-#if !WINDOWS_UWP
-             SourceGeneratorToggle.UseSourceGenerator
-                 ? new SourceGeneratedReflectionOperations()
-                 : new ReflectionOperations2();
-#else
-            new ReflectionOperations2();
-#endif
+        get => field ??= new ReflectionOperations2();
         private set;
     }
 
