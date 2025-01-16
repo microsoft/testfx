@@ -108,6 +108,9 @@ public class TestExecutionManager
     /// <param name="runContext">Context to use when executing the tests.</param>
     /// <param name="frameworkHandle">Handle to the framework to record results and to do framework operations.</param>
     /// <param name="runCancellationToken">Test run cancellation token.</param>
+#if DEBUG
+    [Obsolete("Use RunTestsAsync instead.")]
+#endif
     public void RunTests(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
     {
         DebugEx.Assert(tests != null, "tests");
@@ -124,8 +127,6 @@ public class TestExecutionManager
         CacheSessionParameters(runContext, frameworkHandle);
 
         // Execute the tests
-        // This is a public API, so we can't change it to be async.
-        // Consider not using this API internally, and introduce an async version, and mark this as obsolete.
         ExecuteTestsAsync(tests, runContext, frameworkHandle, isDeploymentDone).GetAwaiter().GetResult();
 
         if (!_hasAnyTestFailed)
@@ -134,6 +135,40 @@ public class TestExecutionManager
         }
     }
 
+    /// <summary>
+    /// Runs the tests.
+    /// </summary>
+    /// <param name="tests">Tests to be run.</param>
+    /// <param name="runContext">Context to use when executing the tests.</param>
+    /// <param name="frameworkHandle">Handle to the framework to record results and to do framework operations.</param>
+    /// <param name="runCancellationToken">Test run cancellation token.</param>
+    internal async Task RunTestsAsync(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
+    {
+        DebugEx.Assert(tests != null, "tests");
+        DebugEx.Assert(runContext != null, "runContext");
+        DebugEx.Assert(frameworkHandle != null, "frameworkHandle");
+        DebugEx.Assert(runCancellationToken != null, "runCancellationToken");
+
+        _testRunCancellationToken = runCancellationToken;
+        PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
+
+        bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
+
+        // Placing this after deployment since we need information post deployment that we pass in as properties.
+        CacheSessionParameters(runContext, frameworkHandle);
+
+        // Execute the tests
+        await ExecuteTestsAsync(tests, runContext, frameworkHandle, isDeploymentDone);
+
+        if (!_hasAnyTestFailed)
+        {
+            PlatformServiceProvider.Instance.TestDeployment.Cleanup();
+        }
+    }
+
+#if DEBUG
+    [Obsolete("Use RunTestsAsync instead.")]
+#endif
     public void RunTests(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
     {
         _testRunCancellationToken = cancellationToken;
@@ -164,9 +199,45 @@ public class TestExecutionManager
         CacheSessionParameters(runContext, frameworkHandle);
 
         // Run tests.
-        // This is a public API, so we can't change it to be async.
-        // Consider not using this API internally, and introduce an async version, and mark this as obsolete.
         ExecuteTestsAsync(tests, runContext, frameworkHandle, isDeploymentDone).GetAwaiter().GetResult();
+
+        if (!_hasAnyTestFailed)
+        {
+            PlatformServiceProvider.Instance.TestDeployment.Cleanup();
+        }
+    }
+
+    internal async Task RunTestsAsync(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
+    {
+        _testRunCancellationToken = cancellationToken;
+        PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
+
+        var discoverySink = new TestCaseDiscoverySink();
+
+        var tests = new List<TestCase>();
+
+        // deploy everything first.
+        foreach (string source in sources)
+        {
+            _testRunCancellationToken?.ThrowIfCancellationRequested();
+
+            var logger = (IMessageLogger)frameworkHandle;
+
+            // discover the tests
+            GetUnitTestDiscoverer().DiscoverTestsInSource(source, logger, discoverySink, runContext);
+            tests.AddRange(discoverySink.Tests);
+
+            // Clear discoverSinksTests so that it just stores test for one source at one point of time
+            discoverySink.Tests.Clear();
+        }
+
+        bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
+
+        // Placing this after deployment since we need information post deployment that we pass in as properties.
+        CacheSessionParameters(runContext, frameworkHandle);
+
+        // Run tests.
+        await ExecuteTestsAsync(tests, runContext, frameworkHandle, isDeploymentDone);
 
         if (!_hasAnyTestFailed)
         {
