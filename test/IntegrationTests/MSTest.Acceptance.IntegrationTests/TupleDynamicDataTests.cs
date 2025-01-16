@@ -38,7 +38,7 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase
             Hello, , World
             Hello2, , World2
             """);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 12, skipped: 0);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
