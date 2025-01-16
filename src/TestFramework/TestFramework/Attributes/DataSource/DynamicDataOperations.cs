@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
@@ -149,7 +149,6 @@ internal static class DynamicDataOperations
 
                 objects.Add(array);
 #else
-<<<<<<< HEAD
                 if (!IsTupleOrValueTuple(entry, out int tupleSize)
                     || (objects.Count > 0 && objects[objects.Count - 1].Length != tupleSize))
                 {
@@ -162,45 +161,14 @@ internal static class DynamicDataOperations
 
                 objects.Add(array);
 
+                static object GetFieldOrProperty(Type type, object data, string fieldOrPropertyName)
+                    // ValueTuple is a value type, and uses fields for Items.
+                    // Tuple is a reference type, and uses properties for Items.
+                    => type.IsValueType
+                        ? type.GetField(fieldOrPropertyName).GetValue(data)
+                        : type.GetProperty(fieldOrPropertyName).GetValue(data);
+
                 static void ProcessTuple(object data, object[] array, int startingIndex)
-=======
-        if (IsTupleOrValueTuple(data, out int tupleSize)
-            && (objects.Count == 0 || objects[objects.Count - 1].Length == tupleSize))
-        {
-            object[] array = new object[tupleSize];
-            ProcessTuple(data, array, 0);
-
-            objects.Add(array);
-            return true;
-        }
-
-        static object GetFieldOrProperty(Type type, object data, string fieldOrPropertyName)
-            // ValueTuple is a value type, and uses fields for Items.
-            // Tuple is a reference type, and uses properties for Items.
-            => type.IsValueType
-                ? type.GetField(fieldOrPropertyName).GetValue(data)
-                : type.GetProperty(fieldOrPropertyName).GetValue(data);
-
-        static void ProcessTuple(object data, object[] array, int startingIndex)
-        {
-            Type type = data.GetType();
-            int tupleSize = type.GenericTypeArguments.Length;
-            for (int i = 0; i < tupleSize; i++)
-            {
-                if (i != 7)
-                {
-                    // Note: ItemN are properties on Tuple, but are fields on ValueTuple
-                    array[startingIndex + i] = GetFieldOrProperty(type, data, $"Item{i + 1}");
-                    continue;
-                }
-
-                object rest = GetFieldOrProperty(type, data, "Rest");
-                if (IsTupleOrValueTuple(rest, out _))
-                {
-                    ProcessTuple(rest, array, startingIndex + 7);
-                }
-                else
->>>>>>> Fix tuple regression before it's shipped :)
                 {
                     Type type = data.GetType();
                     int tupleSize = type.GenericTypeArguments.Length;
@@ -209,13 +177,11 @@ internal static class DynamicDataOperations
                         if (i != 7)
                         {
                             // Note: ItemN are properties on Tuple, but are fields on ValueTuple
-                            array[startingIndex + i] = type.GetField($"Item{i + 1}")?.GetValue(data)
-                                ?? type.GetProperty($"Item{i + 1}").GetValue(data);
+                            array[startingIndex + i] = GetFieldOrProperty(type, data, $"Item{i + 1}");
                             continue;
                         }
 
-                        object rest = type.GetProperty("Rest")?.GetValue(data) ??
-                            type.GetField("Rest").GetValue(data)!;
+                        object rest = GetFieldOrProperty(type, data, "Rest");
                         if (IsTupleOrValueTuple(rest, out _))
                         {
                             ProcessTuple(rest, array, startingIndex + 7);
