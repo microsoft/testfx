@@ -61,12 +61,6 @@ public class MSTestExecutor : ITestExecutor
     public void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
         => RunTestsAsync(sources, runContext, frameworkHandle, null).GetAwaiter().GetResult();
 
-    internal async Task RunTestsAsync(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
-        => await RunTestsAsync(tests, runContext, frameworkHandle, null);
-
-    internal async Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
-        => await RunTestsAsync(sources, runContext, frameworkHandle, null);
-
     internal async Task RunTestsAsync(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from testcases.");
