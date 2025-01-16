@@ -582,8 +582,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetFirstDerivedAttributeOrDefault<ClassInitializeAttribute>(methodInfo, inherit: true)?
-                        .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
+                if (classInitializeAttribute.InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[0] = methodInfo;
                 }
@@ -604,8 +603,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(methodInfo, inherit: true)?
-                        .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
+                if (classCleanupAttribute.InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[1] = methodInfo;
                 }

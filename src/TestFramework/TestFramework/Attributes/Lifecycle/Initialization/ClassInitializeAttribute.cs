@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// The class initialize attribute.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class ClassInitializeAttribute : Attribute
+public class ClassInitializeAttribute : Attribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ClassInitializeAttribute"/> class.
@@ -28,4 +28,12 @@ public sealed class ClassInitializeAttribute : Attribute
     /// Gets the Inheritance Behavior.
     /// </summary>
     public InheritanceBehavior InheritanceBehavior { get; }
+
+    /// <summary>
+    /// Executes the class initialize method. Custom <see cref="ClassInitializeAttribute"/> implementations may
+    /// override this method to plug in custom logic for executing class initialize.
+    /// </summary>
+    /// <param name="classInitializeContext">A struct to hold information for executing the class initialize.</param>
+    public virtual async Task ExecuteAsync(ClassInitializeExecutionContext classInitializeContext)
+        => await classInitializeContext.ClassInitializeExecutorGetter();
 }

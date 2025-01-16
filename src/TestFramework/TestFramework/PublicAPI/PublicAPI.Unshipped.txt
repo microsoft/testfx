@@ -195,6 +195,9 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpola
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AppendLiteral(string! value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AssertThrowsExactlyInterpolatedStringHandler() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AssertThrowsExactlyInterpolatedStringHandler(int literalLength, int formattedCount, System.Action! action, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeExecutionContext
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeExecutionContext.ClassInitializeExecutionContext() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeExecutionContext.ClassInitializeExecutorGetter.get -> System.Func<System.Threading.Tasks.Task!>!
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.IgnoreMessage.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType
@@ -274,3 +277,4 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TE
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, System.Func<System.Exception?, string!>! messageBuilder) -> System.Threading.Tasks.Task<TException!>!
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyCleanupAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyCleanupExecutionContext assemblyCleanupContext) -> System.Threading.Tasks.Task!
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyInitializeAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyInitializeExecutionContext assemblyInitializeContext) -> System.Threading.Tasks.Task!
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeExecutionContext classInitializeContext) -> System.Threading.Tasks.Task!
