@@ -418,8 +418,8 @@ public class TestExecutionManagerTests : TestContainer
     public void SendTestResultsShouldFillInDataRowIndexIfTestIsDataDriven()
     {
         var testCase = new TestCase("DummyTest", new Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
-        UnitTestResult unitTestResult1 = new() { DatarowIndex = 0, DisplayName = "DummyTest" };
-        UnitTestResult unitTestResult2 = new() { DatarowIndex = 1, DisplayName = "DummyTest" };
+        TestTools.UnitTesting.TestResult unitTestResult1 = new() { DatarowIndex = 0, DisplayName = "DummyTest" };
+        TestTools.UnitTesting.TestResult unitTestResult2 = new() { DatarowIndex = 1, DisplayName = "DummyTest" };
         _testExecutionManager.SendTestResults(testCase, [unitTestResult1, unitTestResult2], default, default, _frameworkHandle);
         Verify(_frameworkHandle.TestDisplayNameList[0] == "DummyTest (Data Row 0)");
         Verify(_frameworkHandle.TestDisplayNameList[1] == "DummyTest (Data Row 1)");
