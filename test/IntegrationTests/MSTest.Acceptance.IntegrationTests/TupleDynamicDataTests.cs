@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -33,7 +33,7 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase<TupleDynamicDataT
             Hello, , World
             Hello2, , World2
             """);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 12, skipped: 0);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
