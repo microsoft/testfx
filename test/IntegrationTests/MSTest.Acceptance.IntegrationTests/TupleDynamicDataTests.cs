@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -28,6 +28,8 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase<TupleDynamicDataT
             11, 12, 13, 14, 15, 16, 17, 18, 19, 20
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10
             11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+            Hello, , World
+            Hello2, , World2
             Hello, , World
             Hello2, , World2
             """);
