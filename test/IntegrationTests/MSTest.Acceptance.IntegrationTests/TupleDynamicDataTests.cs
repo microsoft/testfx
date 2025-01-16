@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -33,8 +33,12 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase
             11, 12, 13, 14, 15, 16, 17, 18, 19, 20
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10
             11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+            Hello, , World
+            Hello2, , World2
+            Hello, , World
+            Hello2, , World2
             """);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 12, skipped: 0);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -91,9 +95,17 @@ public class UnitTest1
     [DynamicData(nameof(DataTuple10))]
     [DynamicData(nameof(DataValueTuple10))]
     [TestMethod]
-    public void TestMethod1(int p1, int p2, int p3, int p4, int p5, int p6, int p7, int p8, int p9, int p10)
+    public void TestMethod2(int p1, int p2, int p3, int p4, int p5, int p6, int p7, int p8, int p9, int p10)
     {
         s_builder.AppendLine($"{p1}, {p2}, {p3}, {p4}, {p5}, {p6}, {p7}, {p8}, {p9}, {p10}");
+    }
+
+    [DynamicData(nameof(DataTupleString3))]
+    [DynamicData(nameof(DataValueTupleString3))]
+    [TestMethod]
+    public void TestMethod3(string p1, string p2, string p3)
+    {
+        s_builder.AppendLine($"{p1}, {p2}, {p3}");
     }
 
     public static IEnumerable<Tuple<int, int, int, int, int, int, int, Tuple<int>>> DataTuple8 =>
@@ -118,6 +130,18 @@ public class UnitTest1
     [
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
         (11, 12, 13, 14, 15, 16, 17, 18, 19, 20),
+    ];
+
+    public static IEnumerable<Tuple<string, string, string>> DataTupleString3 =>
+    [
+        ("Hello", (string)null, "World").ToTuple(),
+        ("Hello2", (string)null, "World2").ToTuple(),
+    ];
+
+    public static IEnumerable<ValueTuple<string, string, string>> DataValueTupleString3 =>
+    [
+        ("Hello", null, "World"),
+        ("Hello2", null, "World2"),
     ];
 }
 

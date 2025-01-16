@@ -161,6 +161,13 @@ internal static class DynamicDataOperations
 
                 objects.Add(array);
 
+                static object GetFieldOrProperty(Type type, object data, string fieldOrPropertyName)
+                    // ValueTuple is a value type, and uses fields for Items.
+                    // Tuple is a reference type, and uses properties for Items.
+                    => type.IsValueType
+                        ? type.GetField(fieldOrPropertyName).GetValue(data)
+                        : type.GetProperty(fieldOrPropertyName).GetValue(data);
+
                 static void ProcessTuple(object data, object[] array, int startingIndex)
                 {
                     Type type = data.GetType();
@@ -170,13 +177,11 @@ internal static class DynamicDataOperations
                         if (i != 7)
                         {
                             // Note: ItemN are properties on Tuple, but are fields on ValueTuple
-                            array[startingIndex + i] = type.GetField($"Item{i + 1}")?.GetValue(data)
-                                ?? type.GetProperty($"Item{i + 1}").GetValue(data);
+                            array[startingIndex + i] = GetFieldOrProperty(type, data, $"Item{i + 1}");
                             continue;
                         }
 
-                        object rest = type.GetProperty("Rest")?.GetValue(data) ??
-                            type.GetField("Rest").GetValue(data)!;
+                        object rest = GetFieldOrProperty(type, data, "Rest");
                         if (IsTupleOrValueTuple(rest, out _))
                         {
                             ProcessTuple(rest, array, startingIndex + 7);
