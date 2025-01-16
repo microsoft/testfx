@@ -132,8 +132,8 @@ public class UnitTest1
 
     public static IEnumerable<Tuple<string, string, string>> DataTupleString3 =>
     [
-        ("Hello", null, "World").ToTuple(),
-        ("Hello2", null, "World2").ToTuple(),
+        ("Hello", (string)null, "World").ToTuple(),
+        ("Hello2", (string)null, "World2").ToTuple(),
     ];
 
     public static IEnumerable<ValueTuple<string, string, string>> DataValueTupleString3 =>
