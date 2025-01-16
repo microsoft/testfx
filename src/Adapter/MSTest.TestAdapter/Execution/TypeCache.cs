@@ -416,14 +416,16 @@ internal sealed class TypeCache : MarshalByRefObject
             // Enumerate through all methods and identify the Assembly Init and cleanup methods.
             foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(t))
             {
-                if (IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
+                if (GetAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo) is { } assemblyInitializeAttribute)
                 {
                     assemblyInfo.AssemblyInitializeMethod = methodInfo;
+                    assemblyInfo.AssemblyInitializeAttribute = assemblyInitializeAttribute;
                     assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyInitialize);
                 }
-                else if (IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
+                else if (GetAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo) is { } assemblyCleanupAttribute)
                 {
                     assemblyInfo.AssemblyCleanupMethod = methodInfo;
+                    assemblyInfo.AssemblyCleanupAttribute = assemblyCleanupAttribute;
                     assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
                 }
             }
@@ -440,7 +442,7 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <typeparam name="TInitializeAttribute">The initialization attribute type. </typeparam>
     /// <param name="methodInfo"> The method info. </param>
     /// <returns> True if its an initialization method. </returns>
-    private bool IsAssemblyOrClassInitializeMethod<TInitializeAttribute>(MethodInfo methodInfo)
+    private TInitializeAttribute? GetAssemblyOrClassInitializeMethod<TInitializeAttribute>(MethodInfo methodInfo)
         where TInitializeAttribute : Attribute
     {
         // TODO: this would be inconsistent with the codebase, but potential perf gain, issue: https://github.com/microsoft/testfx/issues/2999
@@ -448,9 +450,20 @@ internal sealed class TypeCache : MarshalByRefObject
         // {
         //    return false;
         // }
-        if (!_reflectionHelper.IsNonDerivedAttributeDefined<TInitializeAttribute>(methodInfo, false))
+        IEnumerable<TInitializeAttribute> attributes = _reflectionHelper.GetDerivedAttributes<TInitializeAttribute>(methodInfo, inherit: false);
+        using IEnumerator<TInitializeAttribute> enumerator = attributes.GetEnumerator();
+        if (!enumerator.MoveNext())
         {
-            return false;
+            // No attribute found.
+            return null;
+        }
+
+        TInitializeAttribute attribute = enumerator.Current;
+        if (enumerator.MoveNext())
+        {
+            // More than one attribute found.
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_MultipleAttributesOnTestMethod, methodInfo.DeclaringType!.FullName, methodInfo.Name);
+            throw new TypeInspectionException(message);
         }
 
         if (!methodInfo.HasCorrectClassOrAssemblyInitializeSignature())
@@ -459,7 +472,7 @@ internal sealed class TypeCache : MarshalByRefObject
             throw new TypeInspectionException(message);
         }
 
-        return true;
+        return attribute;
     }
 
     /// <summary>
@@ -468,7 +481,7 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <typeparam name="TCleanupAttribute">The cleanup attribute type.</typeparam>
     /// <param name="methodInfo"> The method info. </param>
     /// <returns> True if its a cleanup method. </returns>
-    private bool IsAssemblyOrClassCleanupMethod<TCleanupAttribute>(MethodInfo methodInfo)
+    private TCleanupAttribute? GetAssemblyOrClassCleanupMethod<TCleanupAttribute>(MethodInfo methodInfo)
         where TCleanupAttribute : Attribute
     {
         // TODO: this would be inconsistent with the codebase, but potential perf gain, issue: https://github.com/microsoft/testfx/issues/2999
@@ -476,9 +489,20 @@ internal sealed class TypeCache : MarshalByRefObject
         // {
         //    return false;
         // }
-        if (!_reflectionHelper.IsNonDerivedAttributeDefined<TCleanupAttribute>(methodInfo, false))
+        IEnumerable<TCleanupAttribute> attributes = _reflectionHelper.GetDerivedAttributes<TCleanupAttribute>(methodInfo, inherit: false);
+        using IEnumerator<TCleanupAttribute> enumerator = attributes.GetEnumerator();
+        if (!enumerator.MoveNext())
         {
-            return false;
+            // No attribute found.
+            return null;
+        }
+
+        TCleanupAttribute attribute = enumerator.Current;
+        if (enumerator.MoveNext())
+        {
+            // More than one attribute found.
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_MultipleAttributesOnTestMethod, methodInfo.DeclaringType!.FullName, methodInfo.Name);
+            throw new TypeInspectionException(message);
         }
 
         if (!methodInfo.HasCorrectClassOrAssemblyCleanupSignature())
@@ -487,7 +511,7 @@ internal sealed class TypeCache : MarshalByRefObject
             throw new TypeInspectionException(message);
         }
 
-        return true;
+        return attribute;
     }
 
     #endregion
@@ -546,10 +570,10 @@ internal sealed class TypeCache : MarshalByRefObject
         bool isBase,
         ref MethodInfo?[] initAndCleanupMethods)
     {
-        bool isInitializeMethod = IsAssemblyOrClassInitializeMethod<ClassInitializeAttribute>(methodInfo);
-        bool isCleanupMethod = IsAssemblyOrClassCleanupMethod<ClassCleanupAttribute>(methodInfo);
+        ClassInitializeAttribute? classInitializeAttribute = GetAssemblyOrClassInitializeMethod<ClassInitializeAttribute>(methodInfo);
+        ClassCleanupAttribute? classCleanupAttribute = GetAssemblyOrClassCleanupMethod<ClassCleanupAttribute>(methodInfo);
 
-        if (isInitializeMethod)
+        if (classInitializeAttribute is not null)
         {
             if (TryGetTimeoutInfo(methodInfo, FixtureKind.ClassInitialize) is { } timeoutInfo)
             {
@@ -571,7 +595,7 @@ internal sealed class TypeCache : MarshalByRefObject
             }
         }
 
-        if (isCleanupMethod)
+        if (classCleanupAttribute is not null)
         {
             if (TryGetTimeoutInfo(methodInfo, FixtureKind.ClassCleanup) is { } timeoutInfo)
             {

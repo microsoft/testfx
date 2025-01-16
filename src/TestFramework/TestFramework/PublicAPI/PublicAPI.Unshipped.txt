@@ -1,5 +1,11 @@
 #nullable enable
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext retryContext) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyCleanupExecutionContext
+Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyCleanupExecutionContext.AssemblyCleanupExecutionContext() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyCleanupExecutionContext.AssemblyCleanupExecutorGetter.get -> System.Func<System.Threading.Tasks.Task!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyInitializeExecutionContext
+Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyInitializeExecutionContext.AssemblyInitializeExecutionContext() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyInitializeExecutionContext.AssemblyInitializeExecutorGetter.get -> System.Func<System.Threading.Tasks.Task!>!
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendFormatted(string? value) -> void
@@ -266,3 +272,5 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TExcept
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Action! action, System.Func<System.Exception?, string!>! messageBuilder) -> TException!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, string! message = "", params object![]! messageArgs) -> System.Threading.Tasks.Task<TException!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, System.Func<System.Exception?, string!>! messageBuilder) -> System.Threading.Tasks.Task<TException!>!
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyCleanupAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyCleanupExecutionContext assemblyCleanupContext) -> System.Threading.Tasks.Task!
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyInitializeAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyInitializeExecutionContext assemblyInitializeContext) -> System.Threading.Tasks.Task!

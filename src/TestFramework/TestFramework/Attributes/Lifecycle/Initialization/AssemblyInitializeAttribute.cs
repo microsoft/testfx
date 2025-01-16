@@ -7,4 +7,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// The assembly initialize attribute.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class AssemblyInitializeAttribute : Attribute;
+public class AssemblyInitializeAttribute : Attribute
+{
+    /// <summary>
+    /// Executes the assembly initialize method. Custom <see cref="AssemblyInitializeAttribute"/> implementations may
+    /// override this method to plug in custom logic for executing assembly initialize.
+    /// </summary>
+    /// <param name="assemblyInitializeContext">A struct to hold information for executing the assembly initialize.</param>
+    public virtual async Task ExecuteAsync(AssemblyInitializeExecutionContext assemblyInitializeContext)
+        => await assemblyInitializeContext.AssemblyInitializeExecutorGetter();
+}
