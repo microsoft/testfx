@@ -1,6 +1,6 @@
 name: Learn feedback control.
 description: |
-  ⛔ This template is hooked into the feedback control on Microsoft.Testing.Platform API documentation on learn.microsoft.com. It automatically fills in several fields for you. Don't use for other purposes. ⛔
+  ⛔ This template is hooked into the feedback control on the API documentation on learn.microsoft.com. It automatically fills in several fields for you. Don't use for other purposes. ⛔
 body:
   - type: markdown
     attributes:
