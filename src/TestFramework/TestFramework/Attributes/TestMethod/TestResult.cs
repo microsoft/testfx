@@ -6,6 +6,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// TestResult object to be returned to adapter.
 /// </summary>
+[Serializable]
 public class TestResult
 {
     /// <summary>
