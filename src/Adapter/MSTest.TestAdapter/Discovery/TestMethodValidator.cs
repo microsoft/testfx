@@ -44,7 +44,7 @@ internal class TestMethodValidator
         // but the difference is quite small, and we don't expect a huge amount of non-test methods in the assembly.
         //
         // Also skip all methods coming from object, because they cannot be tests.
-        if (testMethodInfo.DeclaringType == typeof(object) || !_reflectHelper.IsDerivedAttributeDefined<TestMethodAttribute>(testMethodInfo, inherit: false))
+        if (testMethodInfo.DeclaringType == typeof(object) || !_reflectHelper.IsAttributeDefined<TestMethodAttribute>(testMethodInfo, inherit: false))
         {
             return false;
         }
