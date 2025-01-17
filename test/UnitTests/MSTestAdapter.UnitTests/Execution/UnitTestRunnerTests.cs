@@ -100,7 +100,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results is not null);
         Verify(results.Length == 1);
         Verify(results[0].Outcome == UTF.UnitTestOutcome.NotFound);
-        Verify(results[0].TestFailureException.Message == "Test method M was not found.");
+        Verify(results[0].IgnoreReason == "Test method M was not found.");
     }
 
     public async Task RunSingleTestShouldReturnTestResultIndicatingNotRunnableTestIfTestMethodCannotBeRun()
@@ -123,7 +123,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results is not null);
         Verify(results.Length == 1);
         Verify(results[0].Outcome == UTF.UnitTestOutcome.NotRunnable);
-        Verify(expectedMessage == results[0].TestFailureException.Message);
+        Verify(expectedMessage == results[0].IgnoreReason);
     }
 
     public async Task ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassAndHasMessage()
@@ -140,7 +140,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results is not null);
         Verify(results.Length == 1);
         Verify(results[0].Outcome == UTF.UnitTestOutcome.Ignored);
-        Verify(results[0].TestFailureException.Message == "IgnoreTestClassMessage");
+        Verify(results[0].IgnoreReason == "IgnoreTestClassMessage");
     }
 
     public async Task ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassButHasNoMessage()
@@ -157,7 +157,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results is not null);
         Verify(results.Length == 1);
         Verify(results[0].Outcome == UTF.UnitTestOutcome.Ignored);
-        Verify(results[0].TestFailureException.Message == string.Empty);
+        Verify(results[0].IgnoreReason == string.Empty);
     }
 
     public async Task ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodAndHasMessage()
@@ -174,7 +174,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results is not null);
         Verify(results.Length == 1);
         Verify(results[0].Outcome == UTF.UnitTestOutcome.Ignored);
-        Verify(results[0].TestFailureException.Message == "IgnoreTestMessage");
+        Verify(results[0].IgnoreReason == "IgnoreTestMessage");
     }
 
     public async Task ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodButHasNoMessage()
@@ -191,7 +191,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results is not null);
         Verify(results.Length == 1);
         Verify(results[0].Outcome == UTF.UnitTestOutcome.Ignored);
-        Verify(results[0].TestFailureException.Message == string.Empty);
+        Verify(results[0].IgnoreReason == string.Empty);
     }
 
     public async Task ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethod()
@@ -208,7 +208,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results is not null);
         Verify(results.Length == 1);
         Verify(results[0].Outcome == UTF.UnitTestOutcome.Ignored);
-        Verify(results[0].TestFailureException.Message == "IgnoreTestClassMessage");
+        Verify(results[0].IgnoreReason == "IgnoreTestClassMessage");
     }
 
     public async Task ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethodButClassHasNoMessage()
@@ -225,7 +225,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results is not null);
         Verify(results.Length == 1);
         Verify(results[0].Outcome == UTF.UnitTestOutcome.Ignored);
-        Verify(results[0].TestFailureException.Message == "IgnoreTestMessage");
+        Verify(results[0].IgnoreReason == "IgnoreTestMessage");
     }
 
     public async Task RunSingleTestShouldReturnTestResultIndicatingFailureIfThereIsAnyTypeInspectionExceptionWhenInspectingTestMethod()
@@ -247,7 +247,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results is not null);
         Verify(results.Length == 1);
         Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(expectedMessage == results[0].TestFailureException.Message);
+        Verify(expectedMessage == results[0].IgnoreReason);
     }
 
     public async Task RunSingleTestShouldReturnTestResultsForAPassingTestMethod()
@@ -264,7 +264,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results is not null);
         Verify(results.Length == 1);
         Verify(results[0].Outcome == UTF.UnitTestOutcome.Passed);
-        Verify(results[0].TestFailureException.Message is null);
+        Verify(results[0].IgnoreReason is null);
     }
 
     public async Task RunSingleTestShouldSetTestsAsInProgressInTestContext()
