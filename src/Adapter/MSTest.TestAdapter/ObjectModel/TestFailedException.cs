@@ -44,4 +44,7 @@ internal sealed class TestFailedException : Exception
     /// Gets outcome of the test case.
     /// </summary>
     public UnitTestOutcome Outcome { get; private set; }
+
+    public override string? StackTrace
+        => StackTraceInformation is null ? base.StackTrace : StackTraceInformation.ErrorStackTrace;
 }
