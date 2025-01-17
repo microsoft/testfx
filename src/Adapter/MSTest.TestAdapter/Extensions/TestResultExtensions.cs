@@ -39,8 +39,8 @@ public static class TestResultExtensions
         {
             DisplayName = frameworkTestResult.DisplayName,
             Duration = frameworkTestResult.Duration,
-            ErrorMessage = frameworkTestResult.TestFailureException?.Message ?? frameworkTestResult.IgnoreReason,
-            ErrorStackTrace = frameworkTestResult.TestFailureException?.StackTrace,
+            ErrorMessage = frameworkTestResult.ExceptionMessage ?? frameworkTestResult.IgnoreReason,
+            ErrorStackTrace = frameworkTestResult.ExceptionMessage,
             // TODO: Do this conversion at once. No need to go through two conversions.
             Outcome = UnitTestOutcomeHelper.ToTestOutcome(frameworkTestResult.Outcome.ToUnitTestOutcome(), currentSettings),
             StartTime = startTime,
