@@ -27,10 +27,40 @@ public class TestResult
 
     internal string? IgnoreReason { get; set; }
 
+    // NOTE: As TestResult can cross appdomain boundary, the exception should generally be serializable.
+    // But that's not always the case and we can't see good guarantees.
+    // Alternatively, we set ExceptionMessage and ExceptionStackTrace, and serialize those instead of the exception.
+    // That means, after crossing app domain, you shouldn't access TestFailureException.
+
     /// <summary>
     /// Gets or sets the exception thrown when test is failed.
     /// </summary>
-    public Exception? TestFailureException { get; set; }
+    [field: NonSerialized]
+    public Exception? TestFailureException
+    {
+        get
+        {
+            if ((ExceptionMessage is not null || ExceptionStackTrace is not null) && field is null)
+            {
+                // That means this property is accessed after crossing appdomain boundary.
+                // So, we fail.
+                throw new InvalidOperationException();
+            }
+
+            return field;
+        }
+
+        set
+        {
+            field = value;
+            ExceptionMessage = value?.Message;
+            ExceptionStackTrace = value?.StackTrace;
+        }
+    }
+
+    internal string? ExceptionMessage { get; set; }
+
+    internal string? ExceptionStackTrace { get; set; }
 
     /// <summary>
     /// Gets or sets the output of the message logged by test code.
