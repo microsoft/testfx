@@ -25,6 +25,7 @@ public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.
                 at .+?
             failed NonParameterizedTestMethod \(\d+ms\)
               The generic test method 'NonParameterizedTestMethod' doesn't have arguments, so the generic parameter cannot be inferred\.
+                at .+?
             failed ParameterizedMethodSimple \(1\) \(\d+ms\)
               Assert\.Fail failed\. Test method 'ParameterizedMethodSimple' did run with parameter '1' and type 'System\.Byte'\.
                 at .+?
