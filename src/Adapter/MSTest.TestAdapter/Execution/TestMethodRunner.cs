@@ -64,8 +64,8 @@ internal sealed class TestMethodRunner
     /// <returns>The test results.</returns>
     internal List<TestResult> Execute(string initializationLogs, string initializationErrorLogs, string initializationTrace, string initializationTestContextMessages)
     {
-        bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(_testMethodInfo.Parent.ClassAttribute);
-        bool isSTATestMethod = AttributeComparer.IsDerived<STATestMethodAttribute>(_testMethodInfo.TestMethodOptions.Executor);
+        bool isSTATestClass = _testMethodInfo.Parent.ClassAttribute is STATestClassAttribute;
+        bool isSTATestMethod = _testMethodInfo.TestMethodOptions.Executor is STATestMethodAttribute;
         bool isSTARequested = isSTATestClass || isSTATestMethod;
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTARequested && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)

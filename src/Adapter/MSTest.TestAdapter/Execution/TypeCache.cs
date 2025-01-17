@@ -397,7 +397,7 @@ internal sealed class TypeCache : MarshalByRefObject
             try
             {
                 // Only examine classes which are TestClass or derives from TestClass attribute
-                if (!_reflectionHelper.IsDerivedAttributeDefined<TestClassAttribute>(t, inherit: false))
+                if (!_reflectionHelper.IsAttributeDefined<TestClassAttribute>(t, inherit: false))
                 {
                     continue;
                 }
@@ -448,7 +448,7 @@ internal sealed class TypeCache : MarshalByRefObject
         // {
         //    return false;
         // }
-        if (!_reflectionHelper.IsNonDerivedAttributeDefined<TInitializeAttribute>(methodInfo, false))
+        if (!_reflectionHelper.IsAttributeDefined<TInitializeAttribute>(methodInfo, false))
         {
             return false;
         }
@@ -476,7 +476,7 @@ internal sealed class TypeCache : MarshalByRefObject
         // {
         //    return false;
         // }
-        if (!_reflectionHelper.IsNonDerivedAttributeDefined<TCleanupAttribute>(methodInfo, false))
+        if (!_reflectionHelper.IsAttributeDefined<TCleanupAttribute>(methodInfo, false))
         {
             return false;
         }
@@ -607,8 +607,8 @@ internal sealed class TypeCache : MarshalByRefObject
         bool isBase,
         Dictionary<string, string?> instanceMethods)
     {
-        bool hasTestInitialize = _reflectionHelper.IsNonDerivedAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
-        bool hasTestCleanup = _reflectionHelper.IsNonDerivedAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);
+        bool hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
+        bool hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);
 
         if (!hasTestCleanup && !hasTestInitialize)
         {
@@ -833,12 +833,12 @@ internal sealed class TypeCache : MarshalByRefObject
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo is Null");
         DebugEx.Assert(testMethodInfo.TestMethod != null, "testMethodInfo.TestMethod is Null");
 
-        IEnumerable<TestPropertyAttribute> attributes = _reflectionHelper.GetDerivedAttributes<TestPropertyAttribute>(testMethodInfo.TestMethod, inherit: true);
+        IEnumerable<TestPropertyAttribute> attributes = _reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.TestMethod, inherit: true);
         DebugEx.Assert(attributes != null, "attributes is null");
 
         if (testMethodInfo.TestMethod.DeclaringType is { } testClass)
         {
-            attributes = attributes.Concat(_reflectionHelper.GetDerivedAttributes<TestPropertyAttribute>(testClass, inherit: true));
+            attributes = attributes.Concat(_reflectionHelper.GetAttributes<TestPropertyAttribute>(testClass, inherit: true));
         }
 
         foreach (TestPropertyAttribute attribute in attributes)
