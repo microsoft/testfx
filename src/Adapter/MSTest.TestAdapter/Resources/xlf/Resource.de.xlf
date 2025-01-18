@@ -256,7 +256,7 @@ Fehler: {1}</target>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</source>
-        <target state="new">An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+        <target state="translated">Von der Methode "Execute" wurde eine nicht behandelte Ausnahme ausgelöst. Melden Sie diesen Fehler dem Autor des Attributs '{0}'.
 {1}</target>
         <note />
       </trans-unit>

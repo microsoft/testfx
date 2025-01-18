@@ -173,7 +173,7 @@ ancak, '{5}' türüyle {4} argüman aldı.</target>
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestMethod">
         <source>The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</source>
-        <target state="new">The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</target>
+        <target state="translated">“{0}.{1}” test yöntemi, üzerinde tanımlanan “{2}” öğesinden türetilmiş birden fazla öznitelik içeriyor. Bu türde yalnızca bir tane özniteliğe izin verilir.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_NoValidConstructor">
@@ -256,7 +256,7 @@ Hata: {1}</target>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</source>
-        <target state="new">An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+        <target state="translated">'Execute' metodu tarafından işlenmeyen bir özel durum oluşturuldu. Lütfen bu hatayı özniteliğin yazarına '{0}'.
 {1}</target>
         <note />
       </trans-unit>
