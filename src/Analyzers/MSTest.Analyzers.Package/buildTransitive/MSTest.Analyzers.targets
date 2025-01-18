@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup>
+    <GlobalAnalyzerConfigFiles Include="$(MSBuildThisFileDirectory)..\globalconfigs\mstest-$(MSTestAnalysisMode.ToLowerInvariant()).globalconfig" Condition="'$(MSTestAnalysisMode)' != ''" />
+  </ItemGroup>
+</Project>

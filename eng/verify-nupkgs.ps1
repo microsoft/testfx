@@ -23,7 +23,7 @@ function Confirm-NugetPackages {
         "MSTest.TestFramework"                        = 148
         "MSTest.TestAdapter"                          = 75
         "MSTest"                                      = 6
-        "MSTest.Analyzers"                            = 50
+        "MSTest.Analyzers"                            = 54
     }
 
     $packageDirectory = Resolve-Path "$PSScriptRoot/../artifacts/packages/$configuration"
