@@ -39,7 +39,7 @@
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
-        <target state="new">Warning: Trx file '{0}' already exists and will be overwritten.</target>
+        <target state="translated">Ostrzeżenie: plik Trx '{0}' już istnieje i zostanie zastąpiony.</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
