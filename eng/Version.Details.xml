@@ -17,9 +17,9 @@
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
       <Sha>d561687cca6e0617eb0a6de2e059f8f4ff691ec6</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.Retry" Version="1.5.2-preview.25066.1">
+    <Dependency Name="Microsoft.Testing.Extensions.Retry" Version="1.5.2-preview.25066.3">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>ece269bff6c3d1b729b663559248e0809a585c03</Sha>
+      <Sha>0f35f18d911d3f40e42f4ad82d0faf26593f216c</Sha>
     </Dependency>
     <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24473.2">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
