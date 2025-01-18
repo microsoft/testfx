@@ -173,7 +173,7 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestMethod">
         <source>The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</source>
-        <target state="new">The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</target>
+        <target state="translated">O método de teste '{0}.{1}' tem várias características derivadas de '{2}' definidas nele. Apenas uma dessas características tem permissão.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_NoValidConstructor">
@@ -256,7 +256,7 @@ Erro: {1}</target>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</source>
-        <target state="new">An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+        <target state="translated">Uma exceção sem tratamento foi lançada pelo método 'Execute'. Relate este erro ao autor do atributo '{0}'.
 {1}</target>
         <note />
       </trans-unit>

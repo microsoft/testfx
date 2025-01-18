@@ -256,7 +256,7 @@ Error: {1}</source>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</source>
-        <target state="new">An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
+        <target state="translated">'Execute' 메서드에서 처리되지 않은 예외가 throw되었습니다. 특성 '{0}' 만든 이에게 이 오류를 보고하십시오.
 {1}</target>
         <note />
       </trans-unit>
