@@ -48,7 +48,7 @@ internal static class AnalyzerSeverityDecider
 
         if (rule.DefaultSeverity >= DiagnosticSeverity.Warning)
         {
-            throw new InvalidOperationException("Rules with severity >= Warning are expected to be enabled by default.");
+            throw new InvalidOperationException($"Rule '{rule.Id}' with severity >= Warning is expected to be enabled by default.");
         }
 
         // If a rule is enabled by default, Recommended keeps it as Info.
