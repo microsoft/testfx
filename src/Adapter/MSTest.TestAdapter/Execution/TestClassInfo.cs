@@ -399,7 +399,7 @@ public class TestClassInfo
 
             DebugEx.Assert(!IsClassInitializeExecuted, "If class initialize was executed, we should have been in the previous if were we have a result available.");
 
-            bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
+            bool isSTATestClass = ClassAttribute is STATestClassAttribute;
             bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             if (isSTATestClass
                 && isWindowsOS
@@ -630,7 +630,7 @@ public class TestClassInfo
                 if (classCleanupMethod is not null)
                 {
                     if (ClassAttribute.IgnoreMessage is null &&
-                        !ReflectHelper.Instance.IsNonDerivedAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
+                        !ReflectHelper.Instance.IsAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
                     {
                         ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count, testContext);
                     }
@@ -642,7 +642,7 @@ public class TestClassInfo
                     {
                         classCleanupMethod = BaseClassCleanupMethods[i];
                         if (ClassAttribute.IgnoreMessage is null &&
-                            !ReflectHelper.Instance.IsNonDerivedAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
+                            !ReflectHelper.Instance.IsAttributeDefined<IgnoreAttribute>(classCleanupMethod.DeclaringType!, false))
                         {
                             ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count - 1 - i, testContext);
                             if (ClassCleanupException is not null)
@@ -710,7 +710,7 @@ public class TestClassInfo
             return;
         }
 
-        bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
+        bool isSTATestClass = ClassAttribute is STATestClassAttribute;
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTATestClass
             && isWindowsOS

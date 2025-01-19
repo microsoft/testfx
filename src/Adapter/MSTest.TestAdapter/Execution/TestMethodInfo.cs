@@ -95,11 +95,11 @@ public class TestMethodInfo : ITestMethod
 
     internal RetryBaseAttribute? RetryAttribute { get; }
 
-    public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.Instance.GetDerivedAttributes<Attribute>(TestMethod, inherit).ToArray();
+    public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.Instance.GetAttributes<Attribute>(TestMethod, inherit).ToArray();
 
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
-        => ReflectHelper.Instance.GetDerivedAttributes<TAttributeType>(TestMethod, inherit).ToArray();
+        => ReflectHelper.Instance.GetAttributes<TAttributeType>(TestMethod, inherit).ToArray();
 
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.
@@ -231,7 +231,7 @@ public class TestMethodInfo : ITestMethod
 
         try
         {
-            expectedExceptions = ReflectHelper.Instance.GetDerivedAttributes<ExpectedExceptionBaseAttribute>(TestMethod, inherit: true);
+            expectedExceptions = ReflectHelper.Instance.GetAttributes<ExpectedExceptionBaseAttribute>(TestMethod, inherit: true);
         }
         catch (Exception ex)
         {
@@ -267,7 +267,7 @@ public class TestMethodInfo : ITestMethod
     /// </returns>
     private RetryBaseAttribute? GetRetryAttribute()
     {
-        IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetDerivedAttributes<RetryBaseAttribute>(TestMethod, inherit: true);
+        IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<RetryBaseAttribute>(TestMethod, inherit: true);
         using IEnumerator<RetryBaseAttribute> enumerator = attributes.GetEnumerator();
         if (!enumerator.MoveNext())
         {

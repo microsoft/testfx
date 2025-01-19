@@ -201,7 +201,7 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
             Returns(attributes);
 
-        Verify(rh.IsDerivedAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object, true));
+        Verify(rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object, true));
     }
 
     public void HasAttributeDerivedFromShouldReturnFalseIfSpecifiedAttributeIsNotDefinedOnAMember()
@@ -231,10 +231,10 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(memberInfo, true)).
             Returns(attributes);
 
-        Verify(rh.IsDerivedAttributeDefined<TestMethodAttribute>(memberInfo, true));
+        Verify(rh.IsAttributeDefined<TestMethodAttribute>(memberInfo, true));
 
         // Validate that reflection APIs are not called again.
-        Verify(rh.IsDerivedAttributeDefined<TestMethodAttribute>(memberInfo, true));
+        Verify(rh.IsAttributeDefined<TestMethodAttribute>(memberInfo, true));
         _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(memberInfo, true), Times.Once);
 
         // Also validate that reflection APIs for an individual type is not called since the cache gives us what we need already.
@@ -275,8 +275,8 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(It.IsAny<Type>(), /* inherit */ false)).
             Returns([new TestClassAttribute()]);
 
-        TestClassAttribute[] inheritedAttributes = rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: true).ToArray();
-        TestClassAttribute[] nonInheritedAttributes = rh.GetDerivedAttributes<TestClassAttribute>(typeof(object), inherit: false).ToArray();
+        TestClassAttribute[] inheritedAttributes = rh.GetAttributes<TestClassAttribute>(typeof(object), inherit: true).ToArray();
+        TestClassAttribute[] nonInheritedAttributes = rh.GetAttributes<TestClassAttribute>(typeof(object), inherit: false).ToArray();
 
         Verify(inheritedAttributes.Length == 2);
         Verify(nonInheritedAttributes.Length == 1);
