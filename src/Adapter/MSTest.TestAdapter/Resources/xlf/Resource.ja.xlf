@@ -174,7 +174,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestMethod">
         <source>The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</source>
-        <target state="new">The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</target>
+        <target state="translated">テスト メソッド '{0}.{1}' には、 '{2}' から派生した属性が複数定義されています。このような属性は 1 つしか許可されません。</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_NoValidConstructor">

@@ -173,7 +173,7 @@ ma ha ricevuto {4} argomenti, con tipi "{5}".</target>
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestMethod">
         <source>The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</source>
-        <target state="new">The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</target>
+        <target state="translated">Il metodo di test '{0}.{1}' contiene più attributi derivati da '{2}' definito in esso. È consentito solo uno di tali attributi.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_NoValidConstructor">
