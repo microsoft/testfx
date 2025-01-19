@@ -24,7 +24,7 @@ public class TestMethodValidatorTests : TestContainer
     public TestMethodValidatorTests()
     {
         _mockReflectHelper = new Mock<ReflectHelper>();
-        _testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object);
+        _testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, discoverInternals: false);
         _warnings = [];
 
         _mockMethodInfo = new Mock<MethodInfo>();
