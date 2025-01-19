@@ -108,7 +108,7 @@ public static class TestResultExtensions
         int i = 0;
         foreach (UTF.TestResult testResult in testResults)
         {
-            var outcome = testResult.Outcome.ToUnitTestOutcome();
+            UTF.UnitTestOutcome outcome = testResult.Outcome;
 
             UnitTestResult unitTestResult = testResult.TestFailureException is { } testFailureException
                 ? new UnitTestResult(
@@ -118,7 +118,7 @@ public static class TestResultExtensions
                         testFailureException is TestFailedException testException
                             ? testException.StackTraceInformation
                             : testFailureException.TryGetStackTraceInformation()))
-                : new UnitTestResult { Outcome = outcome };
+                : new UnitTestResult { Outcome = outcome.ToUnitTestOutcome() };
 
             if (testResult.IgnoreReason is not null)
             {
