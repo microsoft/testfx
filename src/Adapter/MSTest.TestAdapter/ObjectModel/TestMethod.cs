@@ -34,19 +34,21 @@ public sealed class TestMethod : ITestMethod
     private string? _declaringClassFullName;
     private string? _declaringAssemblyName;
 
+#pragma warning disable IDE0060 // Remove unused parameter - Public API :/
     public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
-        : this(null, null, null, name, fullClassName, assemblyName, isAsync, null, TestIdGenerationStrategy.FullyQualified)
+#pragma warning restore IDE0060 // Remove unused parameter
+        : this(null, null, null, name, fullClassName, assemblyName, null, TestIdGenerationStrategy.FullyQualified)
     {
     }
 
-    internal TestMethod(string name, string fullClassName, string assemblyName, bool isAsync, string? displayName,
+    internal TestMethod(string name, string fullClassName, string assemblyName, string? displayName,
         TestIdGenerationStrategy testIdGenerationStrategy)
-        : this(null, null, null, name, fullClassName, assemblyName, isAsync, displayName, testIdGenerationStrategy)
+        : this(null, null, null, name, fullClassName, assemblyName, displayName, testIdGenerationStrategy)
     {
     }
 
     internal TestMethod(string? managedTypeName, string? managedMethodName, string?[]? hierarchyValues, string name,
-        string fullClassName, string assemblyName, bool isAsync, string? displayName,
+        string fullClassName, string assemblyName, string? displayName,
         TestIdGenerationStrategy testIdGenerationStrategy)
     {
         Guard.NotNullOrWhiteSpace(assemblyName);
@@ -55,7 +57,6 @@ public sealed class TestMethod : ITestMethod
         DisplayName = displayName ?? name;
         FullClassName = fullClassName;
         AssemblyName = assemblyName;
-        IsAsync = isAsync;
 
         if (hierarchyValues is null)
         {
@@ -115,7 +116,7 @@ public sealed class TestMethod : ITestMethod
     public string AssemblyName { get; private set; }
 
     /// <inheritdoc />
-    public bool IsAsync { get; private set; }
+    public bool IsAsync => false; // TODO: Remove this property. We can't remove now as it's public and breaking change.
 
     /// <inheritdoc />
     public string? ManagedTypeName { get; }

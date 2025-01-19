@@ -20,20 +20,17 @@ public class TestCaseExtensionsTests : TestContainer
         };
         string[] testCategories = ["DummyCategory"];
 
-        testCase.SetPropertyValue(Constants.AsyncTestProperty, true);
         testCase.SetPropertyValue(Constants.PriorityProperty, 2);
         testCase.SetPropertyValue(Constants.TestCategoryProperty, testCategories);
         testCase.SetPropertyValue(Constants.TestClassNameProperty, "DummyClassName");
 
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
-        Verify(resultUnitTestElement.IsAsync);
         Verify(resultUnitTestElement.Priority == 2);
         Verify(testCategories == resultUnitTestElement.TestCategory);
         Verify(resultUnitTestElement.DisplayName == "DummyDisplayName");
         Verify(resultUnitTestElement.TestMethod.Name == "DummyMethod");
         Verify(resultUnitTestElement.TestMethod.FullClassName == "DummyClassName");
-        Verify(resultUnitTestElement.TestMethod.IsAsync);
         Verify(resultUnitTestElement.TestMethod.DeclaringClassFullName is null);
     }
 
@@ -45,7 +42,6 @@ public class TestCaseExtensionsTests : TestContainer
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
         // These are set for testCase by default by ObjectModel.
-        Verify(!resultUnitTestElement.IsAsync);
         Verify(resultUnitTestElement.Priority == 0);
         Verify(resultUnitTestElement.TestCategory is null);
     }
