@@ -12,18 +12,11 @@ internal static class RunSettingsUtilities
     /// <summary>
     /// Gets the settings to be used while creating XmlReader for runsettings.
     /// </summary>
-    internal static XmlReaderSettings ReaderSettings
+    internal static XmlReaderSettings ReaderSettings { get; } = new XmlReaderSettings
     {
-        get
-        {
-            var settings = new XmlReaderSettings
-            {
-                IgnoreComments = true,
-                IgnoreWhitespace = true,
-            };
-            return settings;
-        }
-    }
+        IgnoreComments = true,
+        IgnoreWhitespace = true,
+    };
 
     /// <summary>
     /// Gets the set of user defined test run parameters from settings xml as key value pairs.
