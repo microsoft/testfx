@@ -744,6 +744,16 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">[{0}] lze nastavit pouze u metod označených pomocí metody [TestMethod].</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseConditionalTestBaseWithTestClassMessageFormat">
+        <source>The attribute '{0}' which derives from 'ConditionalTestBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
+        <target state="new">The attribute '{0}' which derives from 'ConditionalTestBaseAttribute' should be used only on classes marked with `TestClassAttribute`</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseConditionalTestBaseWithTestClassTitle">
+        <source>Use 'ConditionalTestBaseAttribute' on test classes</source>
+        <target state="new">Use 'ConditionalTestBaseAttribute' on test classes</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">[DeploymentItem] se dá zadat jenom pro testovací třídu nebo testovací metodu.</target>
