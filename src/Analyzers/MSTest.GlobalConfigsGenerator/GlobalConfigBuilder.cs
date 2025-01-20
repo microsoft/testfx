@@ -44,6 +44,7 @@ internal sealed class GlobalConfigBuilder
 
         _builder.AppendLine(CultureInfo.InvariantCulture, $"# {rule.Id}: {rule.Title}");
         _builder.AppendLine(CultureInfo.InvariantCulture, $"dotnet_diagnostic.{rule.Id}.severity = {severityString}");
+        _builder.AppendLine();
 
         return severity;
     }

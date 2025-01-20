@@ -80,6 +80,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class UnitTest1
 {
     [DataRow(0)]
+    [TestMethod]
     public void TestMethod1()
     {
     }

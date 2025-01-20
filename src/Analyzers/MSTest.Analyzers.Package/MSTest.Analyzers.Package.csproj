@@ -52,7 +52,7 @@
       <TfmSpecificPackageFile Include="$(OutputPath)\**\MSTest.Analyzers.resources.dll" PackagePath="analyzers/dotnet/vb/" />
 
       <TfmSpecificPackageFile Include="$(OutputPath)\globalconfigs\*.globalconfig" PackagePath="globalconfigs" />
-      <TfmSpecificPackageFile Include="$(OutputPath)\buildTransitive\*" PackagePath="buildTransitive" />
+      <TfmSpecificPackageFile Include="buildTransitive\*" PackagePath="buildTransitive" />
     </ItemGroup>
   </Target>
 
