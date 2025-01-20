@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// This attribute isn't inherited. Applying it to a base class will not cause derived classes to be ignored.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false)]
-public sealed class IgnoreAttribute : Attribute
+public sealed class IgnoreAttribute : ConditionalTestBaseAttribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="IgnoreAttribute"/> class with an empty message.
@@ -26,10 +26,14 @@ public sealed class IgnoreAttribute : Attribute
     /// <param name="message">
     /// Message specifies reason for ignoring.
     /// </param>
-    public IgnoreAttribute(string? message) => IgnoreMessage = message;
+    public IgnoreAttribute(string? message) => ConditionalIgnoreMessage = message;
 
     /// <summary>
     /// Gets the ignore message indicating the reason for ignoring the test method or test class.
     /// </summary>
-    public string? IgnoreMessage { get; }
+    public string? IgnoreMessage => ConditionalIgnoreMessage;
+
+    public override bool ShouldIgnore => true;
+
+    public override string? ConditionalIgnoreMessage { get; }
 }

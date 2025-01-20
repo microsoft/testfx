@@ -37,28 +37,6 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
     }
 
     [TestMethod]
-    public async Task WhenTestClassIsIgnoredViaIgnoreMessageProperty()
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithIgnoreMessage");
-
-        // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
-    }
-
-    [TestMethod]
-    public async Task WhenTestMethodIsIgnoredViaIgnoreMessageProperty()
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithMethodUsingIgnoreMessage");
-
-        // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
-    }
-
-    [TestMethod]
     public async Task WhenSpecificDataSourceIsIgnoredViaIgnoreMessageProperty()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
@@ -235,29 +213,6 @@ public class TestClassWithAssemblyInitialize
 
     [TestMethod, Ignore]
     public void TestMethod1()
-    {
-    }
-}
-
-[TestClass(IgnoreMessage = "This test class is ignored")]
-public class TestClassWithIgnoreMessage
-{
-    [TestMethod]
-    public void TestMethod1()
-    {
-    }
-}
-
-[TestClass]
-public class TestClassWithMethodUsingIgnoreMessage
-{
-    [TestMethod(IgnoreMessage = "This test method is ignored")]
-    public void TestMethod1()
-    {
-    }
-
-    [TestMethod]
-    public void TestMethod2()
     {
     }
 }

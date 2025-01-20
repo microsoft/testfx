@@ -45,4 +45,5 @@ internal static class DiagnosticIds
     public const string AvoidAssertAreSameWithValueTypesRuleId = "MSTEST0038";
     public const string UseNewerAssertThrowsRuleId = "MSTEST0039";
     public const string AvoidUsingAssertsInAsyncVoidContextRuleId = "MSTEST0040";
+    public const string UseConditionalTestBaseWithTestClassRuleId = "MSTEST0041";
 }
