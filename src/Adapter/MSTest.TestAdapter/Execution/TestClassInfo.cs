@@ -604,12 +604,12 @@ public class TestClassInfo
     /// This is a replacement for RunClassCleanup but as we are on a bug fix version, we do not want to change
     /// the public API, hence this method.
     /// </remarks>
-    internal void ExecuteClassCleanup(TestContext testContext)
+    internal TestFailedException? ExecuteClassCleanup(TestContext testContext)
     {
         if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
             || IsClassCleanupExecuted)
         {
-            return;
+            return null;
         }
 
         MethodInfo? classCleanupMethod = ClassCleanupMethod;
@@ -622,7 +622,7 @@ public class TestClassInfo
                 // IsClassInitializeExecuted to true in RunClassInitialize
                 || !IsClassInitializeExecuted)
             {
-                return;
+                return null;
             }
 
             try
@@ -666,13 +666,13 @@ public class TestClassInfo
         // If ClassCleanup was successful, then don't do anything
         if (ClassCleanupException == null)
         {
-            return;
+            return null;
         }
 
         // If the exception is already a `TestFailedException` we throw it as-is
-        if (ClassCleanupException is TestFailedException)
+        if (ClassCleanupException is TestFailedException classCleanupEx)
         {
-            throw ClassCleanupException;
+            return classCleanupEx;
         }
 
         Exception realException = ClassCleanupException.GetRealException();
@@ -697,7 +697,7 @@ public class TestClassInfo
             realException);
         ClassCleanupException = testFailedException;
 
-        throw testFailedException;
+        return testFailedException;
     }
 
     internal void RunClassCleanup(ITestContext testContext, ClassCleanupManager classCleanupManager, TestMethodInfo testMethodInfo, TestMethod testMethod, TestResult[] results)
@@ -710,21 +710,19 @@ public class TestClassInfo
             return;
         }
 
+        if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
+                || IsClassCleanupExecuted)
+        {
+            // DoRun will already do nothing for this condition. So, we gain a bit of performance.
+            return;
+        }
+
         bool isSTATestClass = AttributeComparer.IsDerived<STATestClassAttribute>(ClassAttribute);
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (isSTATestClass
             && isWindowsOS
             && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
-            // For optimization purposes, we duplicate some of the logic of ExecuteClassCleanup here so we don't need to start
-            // a thread for nothing.
-            if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
-                || IsClassCleanupExecuted)
-            {
-                DoRun();
-                return;
-            }
-
             Thread entryPointThread = new(DoRun)
             {
                 Name = "MSTest STATestClass ClassCleanup",
@@ -765,7 +763,15 @@ public class TestClassInfo
                 using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
                 try
                 {
-                    ExecuteClassCleanup(testContext.Context);
+                    TestFailedException? ex = ExecuteClassCleanup(testContext.Context);
+                    if (ex is not null && results.Length > 0)
+                    {
+#pragma warning disable IDE0056 // Use index operator
+                        TestResult lastResult = results[results.Length - 1];
+#pragma warning restore IDE0056 // Use index operator
+                        lastResult.Outcome = TestTools.UnitTesting.UnitTestOutcome.Error;
+                        lastResult.TestFailureException = ex;
+                    }
                 }
                 finally
                 {
@@ -773,17 +779,6 @@ public class TestClassInfo
                     initializationErrorLogs = logListener.GetAndClearStandardError();
                     initializationTrace = logListener.GetAndClearDebugTrace();
                     initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
-                }
-            }
-            catch (Exception ex)
-            {
-                if (results.Length > 0)
-                {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                    lastResult.Outcome = TestTools.UnitTesting.UnitTestOutcome.Error;
-                    lastResult.TestFailureException = ex;
                 }
             }
             finally
