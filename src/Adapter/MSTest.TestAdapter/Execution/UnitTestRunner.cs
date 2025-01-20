@@ -294,13 +294,31 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
                 foreach (TestClassInfo classInfo in classInfoCache)
                 {
-                    classInfo.ExecuteClassCleanup(testContext.Context);
+                    TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context);
+                    if (ex is not null && results.Length > 0)
+                    {
+#pragma warning disable IDE0056 // Use index operator
+                        TestResult lastResult = results[results.Length - 1];
+#pragma warning restore IDE0056 // Use index operator
+                        lastResult.Outcome = UTF.UnitTestOutcome.Error;
+                        lastResult.TestFailureException = ex;
+                        return;
+                    }
                 }
 
                 IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
                 foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
                 {
-                    assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
+                    TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
+                    if (ex is not null && results.Length > 0)
+                    {
+#pragma warning disable IDE0056 // Use index operator
+                        TestResult lastResult = results[results.Length - 1];
+#pragma warning restore IDE0056 // Use index operator
+                        lastResult.Outcome = UTF.UnitTestOutcome.Error;
+                        lastResult.TestFailureException = ex;
+                        return;
+                    }
                 }
             }
             finally
@@ -309,17 +327,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 initializationErrorLogs = logListener.GetAndClearStandardError();
                 initializationTrace = logListener.GetAndClearDebugTrace();
                 initializationTestContextMessages = testContext.GetAndClearDiagnosticMessages();
-            }
-        }
-        catch (Exception ex)
-        {
-            if (results.Length > 0)
-            {
-#pragma warning disable IDE0056 // Use index operator
-                TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                lastResult.Outcome = UTF.UnitTestOutcome.Error;
-                lastResult.TestFailureException = ex;
             }
         }
         finally
