@@ -9,7 +9,6 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -301,7 +300,7 @@ public class TestClassInfoTests : TestContainer
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
 
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(
             exception.Message
             == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.InitBaseClassMethod threw exception. System.ArgumentException: Some exception message.");
@@ -319,7 +318,7 @@ public class TestClassInfoTests : TestContainer
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
 
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(
             exception.Message
             == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure.");
@@ -336,7 +335,7 @@ public class TestClassInfoTests : TestContainer
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
 
-        Verify(exception.Outcome == UnitTestOutcome.Inconclusive);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(
             exception.Message
             == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive.");
@@ -353,7 +352,7 @@ public class TestClassInfoTests : TestContainer
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
 
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(
             exception.Message
             == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.ArgumentException: Argument exception.");
@@ -366,10 +365,10 @@ public class TestClassInfoTests : TestContainer
     {
         DummyTestClass.ClassInitializeMethodBody = tc => { };
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
-        _testClassInfo.ClassInitializationException = new TestFailedException(UnitTestOutcome.Failed, "Cached Test failure");
+        _testClassInfo.ClassInitializationException = new TestFailedException(UTF.UnitTestOutcome.Failed, "Cached Test failure");
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.Message == "Cached Test failure");
     }
 
@@ -392,7 +391,7 @@ public class TestClassInfoTests : TestContainer
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testClassInfo.RunClassInitialize(_testContext));
 
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(
             exception.Message
             == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.InvalidOperationException: I fail..");

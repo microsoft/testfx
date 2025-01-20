@@ -259,7 +259,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         }
         catch (Exception ex)
         {
-            var testFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation());
+            var testFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation());
             result = new TestResult() { TestFailureException = testFailureException };
         }
         finally

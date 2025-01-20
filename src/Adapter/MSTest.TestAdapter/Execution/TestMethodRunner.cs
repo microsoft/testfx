@@ -10,7 +10,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
-using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -129,7 +128,7 @@ internal sealed class TestMethodRunner
 #pragma warning disable IDE0056 // Use index operator
                 result[result.Length - 1] = new TestResult()
                 {
-                    TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                    TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
                     LogOutput = result[result.Length - 1].LogOutput,
                     LogError = result[result.Length - 1].LogError,
                     DebugTrace = result[result.Length - 1].DebugTrace,
@@ -239,7 +238,7 @@ internal sealed class TestMethodRunner
             TestResult emptyResult = new()
             {
                 Outcome = aggregateOutcome,
-                TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult),
+                TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, Resource.UTA_NoTestResult),
             };
 
             results.Add(emptyResult);

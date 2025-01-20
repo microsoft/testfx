@@ -8,7 +8,6 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -145,7 +144,7 @@ public class TestAssemblyInfoTests : TestContainer
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(
             exception.Message
             == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure. Aborting test execution.");
@@ -161,7 +160,7 @@ public class TestAssemblyInfoTests : TestContainer
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
-        Verify(exception.Outcome == UnitTestOutcome.Inconclusive);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(
             exception.Message
             == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive. Aborting test execution.");
@@ -178,7 +177,7 @@ public class TestAssemblyInfoTests : TestContainer
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
 
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(
             exception.Message
             == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.ArgumentException: Some actualErrorMessage message. Aborting test execution.");
@@ -200,7 +199,7 @@ public class TestAssemblyInfoTests : TestContainer
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
 
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(
             exception.Message
             == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.InvalidOperationException: I fail.. Aborting test execution.");
@@ -215,10 +214,10 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyInitializeMethodBody = _ => { };
         _testAssemblyInfo.IsAssemblyInitializeExecuted = true;
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
-        _testAssemblyInfo.AssemblyInitializationException = new TestFailedException(UnitTestOutcome.Failed, "Cached Test failure");
+        _testAssemblyInfo.AssemblyInitializationException = new TestFailedException(UTF.UnitTestOutcome.Failed, "Cached Test failure");
 
         TestFailedException exception = VerifyThrows<TestFailedException>(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.Message == "Cached Test failure");
     }
 
