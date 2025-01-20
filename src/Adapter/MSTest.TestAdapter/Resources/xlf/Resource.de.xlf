@@ -173,7 +173,7 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestMethod">
         <source>The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</source>
-        <target state="new">The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</target>
+        <target state="translated">Für die Testmethode „{0}.{1}“ sind mehrere Attribute definiert, die von „{2}“ abgeleitet sind. Nur ein einziges solches Attribut ist zulässig.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_NoValidConstructor">

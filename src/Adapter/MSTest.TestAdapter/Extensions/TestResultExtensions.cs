@@ -41,8 +41,7 @@ public static class TestResultExtensions
             Duration = frameworkTestResult.Duration,
             ErrorMessage = frameworkTestResult.ExceptionMessage ?? frameworkTestResult.IgnoreReason,
             ErrorStackTrace = frameworkTestResult.ExceptionStackTrace,
-            // TODO: Do this conversion at once. No need to go through two conversions.
-            Outcome = UnitTestOutcomeHelper.ToTestOutcome(frameworkTestResult.Outcome.ToUnitTestOutcome(), currentSettings),
+            Outcome = UnitTestOutcomeHelper.ToTestOutcome(frameworkTestResult.Outcome, currentSettings),
             StartTime = startTime,
             EndTime = endTime,
             ComputerName = computerName,
@@ -109,7 +108,7 @@ public static class TestResultExtensions
         int i = 0;
         foreach (UTF.TestResult testResult in testResults)
         {
-            var outcome = testResult.Outcome.ToUnitTestOutcome();
+            UTF.UnitTestOutcome outcome = testResult.Outcome;
 
             UnitTestResult unitTestResult = testResult.TestFailureException is { } testFailureException
                 ? new UnitTestResult(
@@ -119,7 +118,7 @@ public static class TestResultExtensions
                         testFailureException is TestFailedException testException
                             ? testException.StackTraceInformation
                             : testFailureException.TryGetStackTraceInformation()))
-                : new UnitTestResult { Outcome = outcome };
+                : new UnitTestResult { Outcome = outcome.ToUnitTestOutcome() };
 
             if (testResult.IgnoreReason is not null)
             {

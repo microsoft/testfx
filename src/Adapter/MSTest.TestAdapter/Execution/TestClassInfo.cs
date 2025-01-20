@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+using UTFUnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
@@ -324,7 +324,7 @@ public class TestClassInfo
         // Fail the current test if it was a failure.
         Exception realException = ClassInitializationException.GetRealException();
 
-        ObjectModelUnitTestOutcome outcome = realException is AssertInconclusiveException ? ObjectModelUnitTestOutcome.Inconclusive : ObjectModelUnitTestOutcome.Failed;
+        UTFUnitTestOutcome outcome = realException is AssertInconclusiveException ? UTFUnitTestOutcome.Inconclusive : UTFUnitTestOutcome.Failed;
 
         // Do not use StackTraceHelper.GetFormattedExceptionMessage(realException) as it prefixes the message with the exception type name.
         string exceptionMessage = realException.TryGetMessage();
@@ -429,7 +429,7 @@ public class TestClassInfo
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
                     return new TestResult()
                     {
-                        TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                        TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
                     };
                 }
             }
@@ -475,7 +475,7 @@ public class TestClassInfo
             }
             catch (Exception ex)
             {
-                result = new TestResult() { TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()) };
+                result = new TestResult() { TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()) };
             }
             finally
             {
@@ -589,7 +589,7 @@ public class TestClassInfo
 
         if (classCleanupLifecycle == ClassCleanupBehavior.EndOfClass)
         {
-            var testFailedException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
+            var testFailedException = new TestFailedException(UTFUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
             ClassCleanupException = testFailedException;
             throw testFailedException;
         }
@@ -685,7 +685,7 @@ public class TestClassInfo
         StackTraceInformation? exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
 
         var testFailedException = new TestFailedException(
-            ObjectModelUnitTestOutcome.Failed,
+            UTFUnitTestOutcome.Failed,
             string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_ClassCleanupMethodWasUnsuccesful,

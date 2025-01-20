@@ -508,7 +508,7 @@ public class TestMethodInfoTests : TestContainer
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
         Verify(errorMessage == exception.Message);
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.InnerException.GetType() == typeof(ArgumentException));
         Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
 
@@ -532,7 +532,7 @@ public class TestMethodInfoTests : TestContainer
 
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.InnerException.GetType() == typeof(Exception));
         Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
 
@@ -569,7 +569,7 @@ public class TestMethodInfoTests : TestContainer
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
         Verify(errorMessage == exception.Message);
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.InnerException.GetType() == typeof(UTF.AssertFailedException));
 
         Verify(
@@ -600,7 +600,7 @@ public class TestMethodInfoTests : TestContainer
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
         Verify(errorMessage == exception.Message);
-        Verify(exception.Outcome == UnitTestOutcome.Inconclusive);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(exception.InnerException.GetType() == typeof(UTF.AssertInconclusiveException));
 
         Verify(
@@ -627,7 +627,7 @@ public class TestMethodInfoTests : TestContainer
 
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.InnerException.GetType() == typeof(Exception));
         Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
 
@@ -743,7 +743,7 @@ public class TestMethodInfoTests : TestContainer
 
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(expectedErrorMessage == exception.Message);
         Verify(exception.InnerException.GetType() == typeof(ArgumentException));
         Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
@@ -771,7 +771,7 @@ public class TestMethodInfoTests : TestContainer
 
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
-        Verify(exception.Outcome == UnitTestOutcome.Inconclusive);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(expectedErrorMessage == exception.Message);
         Verify(exception.InnerException.GetType() == typeof(UTF.AssertInconclusiveException));
 
@@ -798,7 +798,7 @@ public class TestMethodInfoTests : TestContainer
 
         var exception = result.TestFailureException as TestFailedException;
         Verify(exception is not null);
-        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(expectedErrorMessage == exception.Message);
         Verify(exception.InnerException.GetType() == typeof(UTF.AssertFailedException));
 

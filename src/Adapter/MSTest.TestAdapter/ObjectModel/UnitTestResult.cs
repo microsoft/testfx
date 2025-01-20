@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 [Serializable]
@@ -26,7 +28,7 @@ public class UnitTestResult
     internal UnitTestResult(TestFailedException testFailedException)
         : this()
     {
-        Outcome = testFailedException.Outcome;
+        Outcome = testFailedException.Outcome.ToUnitTestOutcome();
         ErrorMessage = testFailedException.Message;
 
         if (testFailedException.StackTraceInformation != null)
