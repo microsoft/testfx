@@ -109,7 +109,9 @@ public class UnitTest2
         string[] modes = ["None", string.Empty, "Default", "Recommended", "All"];
         foreach (string mode in modes)
         {
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {targetAssetPath} -p:MSTestAnalysisMode={mode}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false);
+            // --no-incremental is due to https://github.com/dotnet/sdk/issues/46133.
+            // Not sure if it's worth trying to find a workaround for it.
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {targetAssetPath} -p:MSTestAnalysisMode={mode} --no-incremental", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false);
             if (enabledIn.Contains(mode) || (mode.Length == 0 && enabledIn.Contains("Default")))
             {
                 result.AssertOutputContains(message);
