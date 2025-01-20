@@ -302,6 +302,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 #pragma warning restore IDE0056 // Use index operator
                         lastResult.Outcome = UTF.UnitTestOutcome.Error;
                         lastResult.TestFailureException = ex;
+                        return;
                     }
                 }
 
@@ -316,6 +317,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 #pragma warning restore IDE0056 // Use index operator
                         lastResult.Outcome = UTF.UnitTestOutcome.Error;
                         lastResult.TestFailureException = ex;
+                        return;
                     }
                 }
             }
