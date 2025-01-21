@@ -3,15 +3,23 @@
 
 using Microsoft.CodeAnalysis;
 
+using MSTest.Analyzers.Helpers;
+
 // NOTE for our current matrix.
 // We decide whether to include a rule in a specific mode or not based on two factors.
 // 1. IsEnabledByDefault (true/false)
-// 2. DefaultSeverity (Info, Warn) - note: we currently don't use severity Hidden or Error.
-// So, we have 4 possible combinations.
-// 1. IsEnabledByDefault = true, DefaultSeverity = Warn (we include that in All, Recommended, and Default)
-// 2. IsEnabledByDefault = true, DefaultSeverity = Info (we include that in All and Recommended)
-// 3. IsEnabledByDefault = false, DefaultSeverity = Warn (we don't combine Warn with not enabled by default)
-// 4. IsEnabledByDefault = false, DefaultSeverity = Info (we include that in All only)
+// 2. DefaultSeverity (Info, Warn, Error) - note: we currently don't use severity Hidden or Error (but we intend to use Error in future)
+// So, we have 6 possible combinations.
+// 1. IsEnabledByDefault = true, DefaultSeverity = Error (we include that in All, Recommended, and Default)
+// 2. IsEnabledByDefault = true, DefaultSeverity = Warn (we include that in All, Recommended, and Default)
+// 3. IsEnabledByDefault = true, DefaultSeverity = Info (we include that in All and Recommended)
+// 4. IsEnabledByDefault = false, DefaultSeverity = Error (we don't combine Error with not enabled by default)
+// 5. IsEnabledByDefault = false, DefaultSeverity = Warn (we don't combine Warn with not enabled by default)
+// 6. IsEnabledByDefault = false, DefaultSeverity = Info (we include that in All only)
+//
+// In addition to that, there are two custom tags that influence the logic.
+// 1. EscalateToErrorInRecommended (makes a specific rule as "error" when using Recommended or All mode)
+// 2. DisableInAllMode (Always disable the rule - it's completely opt-in)
 internal static class AnalyzerSeverityDecider
 {
     public static DiagnosticSeverity? GetSeverity(DiagnosticDescriptor rule, MSTestAnalysisMode mode)
@@ -25,21 +33,56 @@ internal static class AnalyzerSeverityDecider
             _ => throw new ArgumentException($"Unexpected MSTestAnalysisMode '{mode}'.", nameof(mode)),
         };
 
+        if (rule.CustomTags.Contains(WellKnownCustomTags.DisableInAllMode))
+        {
+            if (rule.IsEnabledByDefault || rule.DefaultSeverity > DiagnosticSeverity.Info)
+            {
+                throw new InvalidOperationException("Rules with DisableInAllMode custom tag are expected to be disabled by default and have severity Info.");
+            }
+            else if (severity != null)
+            {
+                throw new InvalidOperationException("Rules with DisableInAllMode custom tag are expected to be disabled.");
+            }
+        }
+
         return severity;
     }
 
-    private static DiagnosticSeverity? DecideForModeAll(DiagnosticDescriptor rule) =>
-        // TODO: We should consider at least not enabling "conflicting" rules.
-        // Or alternatively, have a configuration with reasonable default for such rules.
-        // Example of conflicting rules is an analyzer that suggests Dispose instead of
-        // cleanup, and another analyzer that suggests the opposite.
+    private static DiagnosticSeverity? DecideForModeAll(DiagnosticDescriptor rule)
+    {
+        if (rule.CustomTags.Contains(WellKnownCustomTags.EscalateToErrorInRecommended))
+        {
+            if (rule.DefaultSeverity != DiagnosticSeverity.Warning)
+            {
+                // It feels odd to escalate a rule to Error in Recommended mode if it's not a warning by default.
+                throw new InvalidOperationException("Is it intended that default severity is not warning when escalating to error in recommended mode?");
+            }
 
-        // NOTE: If, for any odd case, we decided to introduce an analyzer with default severity as Error,
+            return DiagnosticSeverity.Error;
+        }
+        else if (rule.CustomTags.Contains(WellKnownCustomTags.DisableInAllMode))
+        {
+            return null;
+        }
+
+        // NOTE: If we decided to introduce an analyzer with default severity as Error,
         // then analysis mode all shouldn't change that.
-        (DiagnosticSeverity)Math.Max((int)DiagnosticSeverity.Warning, (int)rule.DefaultSeverity);
+        return (DiagnosticSeverity)Math.Max((int)DiagnosticSeverity.Warning, (int)rule.DefaultSeverity);
+    }
 
     private static DiagnosticSeverity? DecideForModeRecommended(DiagnosticDescriptor rule)
     {
+        if (rule.CustomTags.Contains(WellKnownCustomTags.EscalateToErrorInRecommended))
+        {
+            if (rule.DefaultSeverity != DiagnosticSeverity.Warning)
+            {
+                // It feels odd to escalate a rule to Error in Recommended mode if it's not a warning by default.
+                throw new InvalidOperationException("Is it intended that default severity is not warning when escalating to error in recommended mode?");
+            }
+
+            return DiagnosticSeverity.Error;
+        }
+
         if (rule.IsEnabledByDefault && rule.DefaultSeverity >= DiagnosticSeverity.Info)
         {
             // Recommended mode will elevate info to warning only if the rule is enabled by default.
