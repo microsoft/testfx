@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.7.2" />[3.7.2] - 2024-01-21
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.7.1...v3.7.2)
+
+### Fixed
+
+* Drop package ref to System.Memory by @Evangelink in [#4652](https://github.com/microsoft/testfx/pull/4652)
+* Fix Tuple/ValueTuple handling of TRest by @Youssef1313 in [#4653](https://github.com/microsoft/testfx/pull/4653)
+
+### Artifacts
+
+* MSTest: [3.7.2](https://www.nuget.org/packages/MSTest/3.7.2)
+* MSTest.TestFramework: [3.7.2](https://www.nuget.org/packages/MSTest.TestFramework/3.7.2)
+* MSTest.TestAdapter: [3.7.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.7.2)
+* MSTest.Analyzers: [3.7.2](https://www.nuget.org/packages/MSTest.Analyzers/3.7.2)
+* MSTest.Sdk: [3.7.2](https://www.nuget.org/packages/MSTest.Sdk/3.7.2)
+* Microsoft.Testing.Extensions.CrashDump: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.5.2)
+* Microsoft.Testing.Extensions.HangDump: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.5.2)
+* Microsoft.Testing.Extensions.HotReload: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.5.2)
+* Microsoft.Testing.Extensions.Retry: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.5.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.5.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.5.2)
+
 ## <a name="3.7.1" />[3.7.1] - 2024-01-13
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.7.0...v3.7.1)
