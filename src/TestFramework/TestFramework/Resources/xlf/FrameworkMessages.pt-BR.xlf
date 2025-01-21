@@ -126,6 +126,11 @@ Real: {2}</target>
         <target state="translated">{0} falhou. {1}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="HasCountFailMsg">
+        <source>Expected count of {1}. Actual: {2}. {0}</source>
+        <target state="new">Expected count of {1}. Actual: {2}. {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} Tipo esperado:&lt;{1}&gt;. Tipo real:&lt;{2}&gt;.</target>

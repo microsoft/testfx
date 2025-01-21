@@ -126,6 +126,11 @@ Actual: {2}</source>
         <target state="translated">{0} 失敗。 {1}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="HasCountFailMsg">
+        <source>Expected count of {1}. Actual: {2}. {0}</source>
+        <target state="new">Expected count of {1}. Actual: {2}. {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} 預期的類型: &lt;{1}&gt;，實際的類型: &lt;{2}&gt;。</target>
