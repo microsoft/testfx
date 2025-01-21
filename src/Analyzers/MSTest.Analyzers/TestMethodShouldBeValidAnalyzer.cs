@@ -29,7 +29,8 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
         Description,
         Category.Usage,
         DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
+        isEnabledByDefault: true,
+        escalateToErrorInRecommended: true);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(ValidTestMethodSignatureRule);
