@@ -83,14 +83,14 @@ public sealed partial class Assert
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
-    public static void HasCount<T>(int expectedCount, IEnumerable<T> collection)
-        => HasCount(expectedCount, collection, string.Empty, null);
+    public static void HasCount<T>(int expected, IEnumerable<T> collection)
+        => HasCount(expected, collection, string.Empty, null);
 
-    public static void HasCount<T>(int expectedCount, IEnumerable<T> collection, string? message)
-        => HasCount(expectedCount, collection, message, null);
+    public static void HasCount<T>(int expected, IEnumerable<T> collection, string? message)
+        => HasCount(expected, collection, message, null);
 
 #pragma warning disable IDE0060 // Remove unused parameter
-    public static void HasCount<T>(int expectedCount, IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(expectedCount), nameof(collection))] ref AssertHasCountInterpolatedStringHandler<T> message)
+    public static void HasCount<T>(int expected, IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertHasCountInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion();
 
