@@ -69,6 +69,17 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOf
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AppendLiteral(string! value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<TItem>
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<TItem>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<TItem>.AppendFormatted(string? value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<TItem>.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<TItem>.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<TItem>.AppendFormatted<T>(T value, int alignment) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<TItem>.AppendFormatted<T>(T value, int alignment, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<TItem>.AppendFormatted<T>(T value, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<TItem>.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<TItem>.AssertHasCountInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<TItem>.AssertHasCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, System.Collections.Generic.IEnumerable<TItem>! collection, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.AppendFormatted(string? value) -> void
@@ -245,6 +256,10 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? not
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame<T>(T? notExpected, T? actual, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<T> message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Collections.Generic.IEnumerable<T>! collection) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Collections.Generic.IEnumerable<T>! collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<T> message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Collections.Generic.IEnumerable<T>! collection, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool condition, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool? condition, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType(object? value, System.Type? expectedType, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler message) -> void

@@ -31,3 +31,5 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpo
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException>.AppendFormatted(System.ReadOnlySpan<char> value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AppendFormatted(System.ReadOnlySpan<char> value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AppendFormatted(System.ReadOnlySpan<char> value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<TItem>.AppendFormatted(System.ReadOnlySpan<char> value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertHasCountInterpolatedStringHandler<TItem>.AppendFormatted(System.ReadOnlySpan<char> value, int alignment = 0, string? format = null) -> void

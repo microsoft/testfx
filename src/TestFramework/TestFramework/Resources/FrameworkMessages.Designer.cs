@@ -378,6 +378,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expected count of {1}. Actual: {2}. {0}.
+        /// </summary>
+        internal static string HasCountFailMsg {
+            get {
+                return ResourceManager.GetString("HasCountFailMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The property {0} has type {1}; expected type {2}..
         /// </summary>
         internal static string InvalidPropertyType {
