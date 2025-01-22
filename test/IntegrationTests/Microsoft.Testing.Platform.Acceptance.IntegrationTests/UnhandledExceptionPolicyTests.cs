@@ -27,7 +27,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase<UnhandledExcepti
         }
     }
 
-    [DynamicData(nameof(ModeProvider), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(ModeProvider))]
     [TestMethod]
     public async Task UnhandledExceptionPolicy_ConfigFile_UnobservedTaskException_ShouldCrashProcessIfEnabled(Mode mode, string tfm)
     {
@@ -84,7 +84,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase<UnhandledExcepti
         }
     }
 
-    [DynamicData(nameof(ModeProvider), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(ModeProvider))]
     [TestMethod]
     public async Task UnhandledExceptionPolicy_EnvironmentVariable_UnhandledException_ShouldCrashProcessIfEnabled(Mode mode, string tfm)
     {

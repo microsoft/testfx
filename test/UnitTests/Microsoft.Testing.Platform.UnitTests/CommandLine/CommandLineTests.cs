@@ -22,7 +22,7 @@ public sealed class CommandLineTests
     }
 
     [TestMethod]
-    [DynamicData(nameof(ParserTestsData), DynamicDataSourceType.Method, DynamicDataDisplayName = nameof(ParserTestDataFormat))]
+    [DynamicData(nameof(ParserTestsData), DynamicDataDisplayName = nameof(ParserTestDataFormat))]
     public void ParserTests(int testNum, string[] args, (string RspFileName, string RspFileContent)[]? rspFiles, CommandLineParseResultWrapper parseResultWrapper)
     {
         try
