@@ -13,13 +13,24 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public abstract class ConditionalTestBaseAttribute : Attribute
 {
     /// <summary>
-    /// Gets the ignore message (in case <see cref="ShouldIgnore"/> returns <see langword="true"/>) indicating
+    /// Gets the ignore message (in case <see cref="ShouldRun"/> returns <see langword="false"/>) indicating
     /// the reason for ignoring the test method or test class.
     /// </summary>
     public abstract string? ConditionalIgnoreMessage { get; }
 
     /// <summary>
+    /// Gets the group name for this attribute. This is relevant when multiple
+    /// attributes that inherit <see cref="ConditionalTestBaseAttribute"/> are present.
+    /// The ShouldRun values of attributes in the same group are "OR"ed together.
+    /// While the value from different groups is "AND"ed together.
+    /// </summary>
+    /// <remarks>
+    /// Usually, you can use <see langword="nameof"/> to return the group name.
+    /// </remarks>
+    public abstract string GroupName { get; }
+
+    /// <summary>
     /// Gets a value indicating whether the test method or test class should be ignored.
     /// </summary>
-    public abstract bool ShouldIgnore { get; }
+    public abstract bool ShouldRun { get; }
 }
