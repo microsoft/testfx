@@ -226,12 +226,9 @@ Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.RetryContext() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.AddResult(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! testResults) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.RetryResult() -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.IgnoreMessage.get -> string?
-Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.IgnoreMessage.set -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.IgnoreMessage.get -> string?
-Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.IgnoreMessage.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Ignored = 10 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.ConditionalIgnoreMessage.get -> string?
+override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.GroupName.get -> string!
 override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.ShouldRun.get -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(decimal expected, decimal actual, decimal delta, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(double expected, double actual, double delta, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler message) -> void
