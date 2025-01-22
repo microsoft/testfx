@@ -7,4 +7,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// The assembly cleanup attribute.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class AssemblyCleanupAttribute : Attribute;
+public class AssemblyCleanupAttribute : Attribute
+{
+    /// <summary>
+    /// Executes the assembly cleanup method. Custom <see cref="AssemblyCleanupAttribute"/> implementations may
+    /// override this method to plug in custom logic for executing assembly cleanup.
+    /// </summary>
+    /// <param name="assemblyCleanupContext">A struct to hold information for executing the assembly cleanup.</param>
+    public virtual async Task ExecuteAsync(AssemblyCleanupExecutionContext assemblyCleanupContext)
+        => await assemblyCleanupContext.AssemblyCleanupExecutorGetter();
+}

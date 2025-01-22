@@ -51,6 +51,8 @@ public class TestAssemblyInfo
         }
     }
 
+    internal AssemblyInitializeAttribute? AssemblyInitializeAttribute { get; set; }
+
     /// <summary>
     /// Gets or sets the AssemblyInitializeMethod timeout.
     /// </summary>
@@ -79,6 +81,8 @@ public class TestAssemblyInfo
             field = value;
         }
     }
+
+    internal AssemblyCleanupAttribute? AssemblyCleanupAttribute { get; set; }
 
     /// <summary>
     /// Gets a value indicating whether <c>AssemblyInitialize</c> has been executed.
@@ -143,7 +147,7 @@ public class TestAssemblyInfo
                     try
                     {
                         AssemblyInitializationException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
-                            () => AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext),
+                            () => AssemblyInitializeAttribute!.ExecuteAsync(new AssemblyInitializeExecutionContext(() => AssemblyInitializeMethod.InvokeAsync(null, testContext))).GetAwaiter().GetResult(),
                             testContext.CancellationTokenSource,
                             AssemblyInitializeMethodTimeoutMilliseconds,
                             AssemblyInitializeMethod,
@@ -216,7 +220,7 @@ public class TestAssemblyInfo
             try
             {
                 AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
-                     () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
+                     () => AssemblyCleanupAttribute!.ExecuteAsync(new AssemblyCleanupExecutionContext(() => AssemblyCleanupMethod.InvokeAsync(null))).GetAwaiter().GetResult(),
                      new CancellationTokenSource(),
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
@@ -276,11 +280,11 @@ public class TestAssemblyInfo
                      {
                          if (AssemblyCleanupMethod.GetParameters().Length == 0)
                          {
-                             AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
+                             AssemblyCleanupAttribute!.ExecuteAsync(new AssemblyCleanupExecutionContext(() => AssemblyCleanupMethod.InvokeAsync(null))).GetAwaiter().GetResult();
                          }
                          else
                          {
-                             AssemblyCleanupMethod.InvokeAsSynchronousTask(null, testContext);
+                             AssemblyCleanupAttribute!.ExecuteAsync(new AssemblyCleanupExecutionContext(() => AssemblyCleanupMethod.InvokeAsync(null, testContext))).GetAwaiter().GetResult();
                          }
                      },
                      testContext.CancellationTokenSource,
