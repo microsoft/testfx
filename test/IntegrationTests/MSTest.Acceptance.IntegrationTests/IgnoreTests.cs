@@ -18,7 +18,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 12, skipped: 9);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 11, skipped: 7);
 
         testHostResult.AssertOutputContains("SubClass.Method");
     }
