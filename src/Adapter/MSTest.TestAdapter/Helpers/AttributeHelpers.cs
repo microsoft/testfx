@@ -9,14 +9,15 @@ internal static class AttributeHelpers
 {
     public static bool IsIgnored(ICustomAttributeProvider type, out string? ignoreMessage)
     {
-        IEnumerable<ConditionalTestBaseAttribute> attributes = ReflectHelper.Instance.GetDerivedAttributes<ConditionalTestBaseAttribute>(type, inherit: false);
-        IEnumerable<IGrouping<string, ConditionalTestBaseAttribute>> groups = attributes.GroupBy(attr => attr.GroupName);
-        foreach (IGrouping<string, ConditionalTestBaseAttribute>? group in groups)
+        IEnumerable<ConditionBaseAttribute> attributes = ReflectHelper.Instance.GetDerivedAttributes<ConditionBaseAttribute>(type, inherit: false);
+        IEnumerable<IGrouping<string, ConditionBaseAttribute>> groups = attributes.GroupBy(attr => attr.GroupName);
+        foreach (IGrouping<string, ConditionBaseAttribute>? group in groups)
         {
             bool atLeastOneInGroupIsSatisfied = false;
             string? firstNonSatisfiedMatch = null;
-            foreach (ConditionalTestBaseAttribute attribute in group)
+            foreach (ConditionBaseAttribute attribute in group)
             {
+                bool shouldRun = attribute.Mode == Mode.Include ? attribute.ShouldRun : !attribute.ShouldRun;
                 if (attribute.ShouldRun)
                 {
                     atLeastOneInGroupIsSatisfied = true;

@@ -567,10 +567,10 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidUsingAssertsInAsyncVoidContextDescription" xml:space="preserve">
     <value>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</value>
   </data>
-  <data name="UseConditionalTestBaseWithTestClassTitle" xml:space="preserve">
-    <value>Use 'ConditionalTestBaseAttribute' on test classes</value>
+  <data name="UseConditionBaseWithTestClassTitle" xml:space="preserve">
+    <value>Use 'ConditionBaseAttribute' on test classes</value>
   </data>
-  <data name="UseConditionalTestBaseWithTestClassMessageFormat" xml:space="preserve">
-    <value>The attribute '{0}' which derives from 'ConditionalTestBaseAttribute' should be used only on classes marked with `TestClassAttribute`</value>
+  <data name="UseConditionBaseWithTestClassMessageFormat" xml:space="preserve">
+    <value>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</value>
   </data>
 </root>

@@ -744,14 +744,14 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">[{0}] 只能在標示為 [TestMethod] 的方法上設定</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseConditionalTestBaseWithTestClassMessageFormat">
-        <source>The attribute '{0}' which derives from 'ConditionalTestBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
-        <target state="new">The attribute '{0}' which derives from 'ConditionalTestBaseAttribute' should be used only on classes marked with `TestClassAttribute`</target>
+      <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
+        <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
+        <target state="new">The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseConditionalTestBaseWithTestClassTitle">
-        <source>Use 'ConditionalTestBaseAttribute' on test classes</source>
-        <target state="new">Use 'ConditionalTestBaseAttribute' on test classes</target>
+      <trans-unit id="UseConditionBaseWithTestClassTitle">
+        <source>Use 'ConditionBaseAttribute' on test classes</source>
+        <target state="new">Use 'ConditionBaseAttribute' on test classes</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">

@@ -3,6 +3,12 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+public enum Mode
+{
+    Include,
+    Exclude,
+}
+
 /// <summary>
 /// This attribute is used to conditionally control whether a test class or a test method will run or be ignored, based on a condition and using an optional message.
 /// </summary>
@@ -10,8 +16,17 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// This attribute isn't inherited. Applying it to a base class will not affect derived classes.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false)]
-public abstract class ConditionalTestBaseAttribute : Attribute
+public abstract class ConditionBaseAttribute : Attribute
 {
+    protected ConditionBaseAttribute(Mode mode)
+        => Mode = mode;
+
+    protected ConditionBaseAttribute()
+    {
+    }
+
+    internal Mode Mode { get; }
+
     /// <summary>
     /// Gets the ignore message (in case <see cref="ShouldRun"/> returns <see langword="false"/>) indicating
     /// the reason for ignoring the test method or test class.
@@ -20,7 +35,7 @@ public abstract class ConditionalTestBaseAttribute : Attribute
 
     /// <summary>
     /// Gets the group name for this attribute. This is relevant when multiple
-    /// attributes that inherit <see cref="ConditionalTestBaseAttribute"/> are present.
+    /// attributes that inherit <see cref="ConditionBaseAttribute"/> are present.
     /// The ShouldRun values of attributes in the same group are "OR"ed together.
     /// While the value from different groups is "AND"ed together.
     /// In other words, a test will be ignored if any group has all its <see cref="ShouldRun"/> values as false.

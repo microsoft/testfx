@@ -1079,20 +1079,20 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The attribute &apos;{0}&apos; which derives from &apos;ConditionalTestBaseAttribute&apos; should be used only on classes marked with `TestClassAttribute`.
+        ///   Looks up a localized string similar to The attribute &apos;{0}&apos; which derives from &apos;ConditionBaseAttribute&apos; should be used only on classes marked with `TestClassAttribute`.
         /// </summary>
-        internal static string UseConditionalTestBaseWithTestClassMessageFormat {
+        internal static string UseConditionBaseWithTestClassMessageFormat {
             get {
-                return ResourceManager.GetString("UseConditionalTestBaseWithTestClassMessageFormat", resourceCulture);
+                return ResourceManager.GetString("UseConditionBaseWithTestClassMessageFormat", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use &apos;ConditionalTestBaseAttribute&apos; on test classes.
+        ///   Looks up a localized string similar to Use &apos;ConditionBaseAttribute&apos; on test classes.
         /// </summary>
-        internal static string UseConditionalTestBaseWithTestClassTitle {
+        internal static string UseConditionBaseWithTestClassTitle {
             get {
-                return ResourceManager.GetString("UseConditionalTestBaseWithTestClassTitle", resourceCulture);
+                return ResourceManager.GetString("UseConditionBaseWithTestClassTitle", resourceCulture);
             }
         }
         

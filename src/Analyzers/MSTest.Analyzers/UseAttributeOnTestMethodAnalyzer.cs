@@ -114,13 +114,13 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
-    private const string ConditionalTestBaseAttributeShortName = "ConditionalTestBaseAttribute";
-    internal static readonly DiagnosticDescriptor ConditionalTestBaseRule = DiagnosticDescriptorHelper.Create(
+    private const string ConditionBaseAttributeShortName = "ConditionBaseAttribute";
+    internal static readonly DiagnosticDescriptor ConditionBaseRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseAttributeOnTestMethodRuleId,
         title: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), ConditionalTestBaseAttributeShortName),
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), ConditionBaseAttributeShortName),
         messageFormat: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), ConditionalTestBaseAttributeShortName),
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), ConditionBaseAttributeShortName),
         description: null,
         Category.Usage,
         DiagnosticSeverity.Info,
@@ -137,7 +137,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionBaseAttribute, ExpectedExceptionRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssIterationAttribute, CssIterationRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute, CssProjectStructureRule),
-        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingConditionalTestBaseAttribute, ConditionalTestBaseRule),
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute, ConditionBaseRule),
     ];
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
