@@ -65,6 +65,12 @@ public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.
             failed ParameterizedMethodSimpleParams \(null,"Hello world"\) \(\d+ms\)
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
                 at .+?
+            failed ParameterizedMethodWithNestedGeneric \(System\.Collections\.Generic\.List`1\[System.String],System\.Collections\.Generic\.List`1\[System.String]\) \(\d+ms\)
+              Assert\.Fail failed\. Test method 'ParameterizedMethodWithNestedGeneric' did run with first list \[Hello, World] and second list \[Unit, Testing]
+                at .+?
+            failed ParameterizedMethodWithNestedGeneric \(System\.Collections\.Generic\.List`1\[System.Int32],System\.Collections\.Generic\.List`1\[System.Int32]\) \(\d+ms\)
+              Assert\.Fail failed\. Test method 'ParameterizedMethodWithNestedGeneric' did run with first list \[0, 1] and second list \[2, 3]
+                at .+?
             """, RegexOptions.Singleline);
     }
 
@@ -136,6 +142,24 @@ public class TestClass
     [DataRow(null, "Hello world")]
     public void ParameterizedMethodSimpleParams<T>(params T[] parameter)
         => Assert.Fail($"Test method 'ParameterizedMethodSimple' did run with parameter '{string.Join(",", parameter)}' and type '{typeof(T)}'.");
+
+    [TestMethod]
+    [DynamicData(nameof(Data))]
+    public void ParameterizedMethodWithNestedGeneric<T>(List<T> a, List<T> b)
+    {
+        Assert.AreEqual(2, a.Count);
+        Assert.AreEqual(2, b.Count);
+        Assert.Fail($"Test method 'ParameterizedMethodWithNestedGeneric' did run with first list [{a[0]}, {a[1]}] and second list [{b[0]}, {b[1]}]");
+    }
+
+    public static IEnumerable<object[]> Data
+    {
+        get
+        {
+            yield return new object[] { new List<string>() { "Hello", "World" }, new List<string>() { "Unit", "Testing" } };
+            yield return new object[] { new List<int>() { 0, 1 }, new List<int>() { 2, 3 } };
+        }
+    }
 }
 """;
     }
