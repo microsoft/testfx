@@ -127,8 +127,8 @@ Actual: {2}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
-        <source>Expected count of {1}. Actual: {2}. {0}</source>
-        <target state="new">Expected count of {1}. Actual: {2}. {0}</target>
+        <source>Expected collection of size {1}. Actual: {2}. {0}</source>
+        <target state="new">Expected collection of size {1}. Actual: {2}. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -140,6 +140,11 @@ Actual: {2}</source>
         <source>String '{0}' does not match pattern '{1}'. {2}.</source>
         <target state="translated">文字列 '{0}' はパターン '{1}' と一致しません。{2}。</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotEmptyFailMsg">
+        <source>Expected collection to contain any item but it is empty. {0}</source>
+        <target state="new">Expected collection to contain any item but it is empty. {0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
