@@ -136,9 +136,7 @@ public class UnitTest4
 
     private static async Task AssertAnalysisModeAsync(string mode, string[] contains, string[] doesNotContain, string targetAssetPath)
     {
-        // --no-incremental is due to https://github.com/dotnet/sdk/issues/46133.
-        // Not sure if it's worth trying to find a workaround for it.
-        async Task<DotnetMuxerResult> BuildTaskAsync() => await DotnetCli.RunAsync($"build {targetAssetPath} --no-incremental", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false, retryCount: 0);
+        async Task<DotnetMuxerResult> BuildTaskAsync() => await DotnetCli.RunAsync($"build {targetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false, retryCount: 0);
 
         string output;
         if (mode is "Recommended" or "All")
