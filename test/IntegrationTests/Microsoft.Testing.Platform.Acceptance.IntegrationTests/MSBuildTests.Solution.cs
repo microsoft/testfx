@@ -23,7 +23,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
         }
     }
 
-    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrix))]
     [TestMethod]
     public async Task MSBuildTests_UseMSBuildTestInfrastructure_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration _, bool isMultiTfm, string command)
     {
