@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -280,13 +280,11 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
-
             if (constructorArgument.Type is null)
             {
                 // That's an error scenario. The compiler will be complaining about something already.
                 continue;
             }
-
 
             Type? argumentType = constructorArgument.Kind == TypedConstantKind.Array
                 ? GetSystemType(((IArrayTypeSymbol)constructorArgument.Type).ElementType)
