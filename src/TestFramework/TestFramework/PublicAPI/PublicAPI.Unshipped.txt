@@ -1,4 +1,7 @@
 #nullable enable
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionalTestBaseAttribute.ConditionalIgnoreMessage.get -> string?
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionalTestBaseAttribute.GroupName.get -> string!
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionalTestBaseAttribute.ShouldRun.get -> bool
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext retryContext) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult!>!
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
@@ -189,6 +192,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpola
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AppendLiteral(string! value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AssertThrowsExactlyInterpolatedStringHandler() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AssertThrowsExactlyInterpolatedStringHandler(int literalLength, int formattedCount, System.Action! action, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionalTestBaseAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionalTestBaseAttribute.ConditionalTestBaseAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.IgnoreMessage.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType
@@ -226,6 +231,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.IgnoreMessage.se
 Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.IgnoreMessage.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Ignored = 10 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
+override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.ConditionalIgnoreMessage.get -> string?
+override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.ShouldRun.get -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(decimal expected, decimal actual, decimal delta, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(double expected, double actual, double delta, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(float expected, float actual, float delta, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler message) -> void

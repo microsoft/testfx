@@ -4,10 +4,10 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// This attribute is used to ignore a test class or a test method, based on a condition and using an optional message.
+/// This attribute is used to conditionally control whether a test class or a test method will run or be ignored, based on a condition and using an optional message.
 /// </summary>
 /// <remarks>
-/// This attribute isn't inherited. Applying it to a base class will not cause derived classes to be ignored.
+/// This attribute isn't inherited. Applying it to a base class will not affect derived classes.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false)]
 public abstract class ConditionalTestBaseAttribute : Attribute
@@ -23,6 +23,7 @@ public abstract class ConditionalTestBaseAttribute : Attribute
     /// attributes that inherit <see cref="ConditionalTestBaseAttribute"/> are present.
     /// The ShouldRun values of attributes in the same group are "OR"ed together.
     /// While the value from different groups is "AND"ed together.
+    /// In other words, a test will be ignored if any group has all its <see cref="ShouldRun"/> values as false.
     /// </summary>
     /// <remarks>
     /// Usually, you can use <see langword="nameof"/> to return the group name.

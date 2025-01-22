@@ -33,7 +33,9 @@ public sealed class IgnoreAttribute : ConditionalTestBaseAttribute
     /// </summary>
     public string? IgnoreMessage => ConditionalIgnoreMessage;
 
-    public override bool ShouldIgnore => true;
+    public override bool ShouldRun => false;
 
     public override string? ConditionalIgnoreMessage { get; }
+
+    public override string GroupName => nameof(IgnoreAttribute);
 }
