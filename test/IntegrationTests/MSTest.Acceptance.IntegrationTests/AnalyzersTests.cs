@@ -54,7 +54,12 @@ public class UnitTest1
     }
 
     [TestMethod]
-    public async Task VerifyMSTestAnalysisModeForDifferentAnalyzers()
+    [DataRow("None", new string[0], new[] { "MSTEST0003", "MSTEST0004", "MSTEST0014", "MSTEST0017", "MSTEST0021" })]
+    [DataRow("", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0017", "MSTEST0021" })]
+    [DataRow("Default", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0017", "MSTEST0021" })]
+    [DataRow("Recommended", new[] { "error MSTEST0003", "warning MSTEST0014", "warning MSTEST0017" }, new[] { "MSTEST0004", "MSTEST0021" })]
+    [DataRow("All", new[] { "error MSTEST0003", "warning MSTEST0004", "warning MSTEST0014", "warning MSTEST0017" }, new[] { "MSTEST0021" })]
+    public async Task VerifyMSTestAnalysisModeForDifferentAnalyzers(string analysisMode, string[] contains, string[] doesNotContain)
     {
         string code = """
 #file VerifyMSTestAnalysisModeForDifferentAnalyzers.csproj
@@ -69,6 +74,7 @@ public class UnitTest1
     <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <RunAnalyzers>true</RunAnalyzers>
+    <MSTestAnalysisMode>$MSTestAnalysisMode$</MSTestAnalysisMode>
   </PropertyGroup>
 
 </Project>
@@ -116,7 +122,8 @@ public class UnitTest4
     }
 }
 """.PatchTargetFrameworks(TargetFrameworks.NetCurrent)
-    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+    .PatchCodeWithReplace("$MSTestAnalysisMode$", analysisMode);
 
         // MSTEST0003 is TestMethodShouldBeValidAnalyzer, which is escalated to error in Recommended and All.
         // MSTEST0004 is PublicTypeShouldBeTestClassAnalyzer. Info and not enabled by default.
@@ -124,18 +131,14 @@ public class UnitTest4
         // MSTEST0017 is AssertionArgsShouldBePassedInCorrectOrder. Info and enabled by default.
         // MSTEST0021 is PreferDisposeOverTestCleanupAnalyzer, which is disabled even in All mode.
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(nameof(VerifyMSTestAnalysisModeForDifferentAnalyzers), code);
-        await AssertAnalysisModeAsync("None", contains: [], doesNotContain: ["MSTEST0003", "MSTEST0004", "MSTEST0014", "MSTEST0017", "MSTEST0021"], testAsset.TargetAssetPath);
-        await AssertAnalysisModeAsync(string.Empty, contains: ["warning MSTEST0003", "warning MSTEST0014"], doesNotContain: ["MSTEST0004", "MSTEST0017", "MSTEST0021"], testAsset.TargetAssetPath);
-        await AssertAnalysisModeAsync("Default", contains: ["warning MSTEST0003", "warning MSTEST0014"], doesNotContain: ["MSTEST0004", "MSTEST0017", "MSTEST0021"], testAsset.TargetAssetPath);
-        await AssertAnalysisModeAsync("Recommended", contains: ["error MSTEST0003", "warning MSTEST0014", "warning MSTEST0017"], doesNotContain: ["MSTEST0004", "MSTEST0021"], testAsset.TargetAssetPath);
-        await AssertAnalysisModeAsync("All", contains: ["error MSTEST0003", "warning MSTEST0004", "warning MSTEST0014", "warning MSTEST0017"], doesNotContain: ["MSTEST0021"], testAsset.TargetAssetPath);
+        await AssertAnalysisModeAsync(analysisMode, contains, doesNotContain, testAsset.TargetAssetPath);
     }
 
     private static async Task AssertAnalysisModeAsync(string mode, string[] contains, string[] doesNotContain, string targetAssetPath)
     {
         // --no-incremental is due to https://github.com/dotnet/sdk/issues/46133.
         // Not sure if it's worth trying to find a workaround for it.
-        async Task<DotnetMuxerResult> BuildTaskAsync() => await DotnetCli.RunAsync($"build {targetAssetPath} -p:MSTestAnalysisMode={mode} --no-incremental", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false, retryCount: 0);
+        async Task<DotnetMuxerResult> BuildTaskAsync() => await DotnetCli.RunAsync($"build {targetAssetPath} --no-incremental", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false, retryCount: 0);
 
         string output;
         if (mode is "Recommended" or "All")
@@ -150,12 +153,12 @@ public class UnitTest4
 
         foreach (string containsElement in contains)
         {
-            StringAssert.Contains(output, containsElement, $"Expected to find '{containsElement}' for mode {mode}");
+            StringAssert.Contains(output, containsElement, $"Expected to find '{containsElement}' for analysisMode {mode}");
         }
 
         foreach (string doesNotContainElement in doesNotContain)
         {
-            Assert.IsFalse(output.Contains(doesNotContainElement), $"Expected to not find '{doesNotContainElement}' for mode {mode}");
+            Assert.IsFalse(output.Contains(doesNotContainElement), $"Expected to not find '{doesNotContainElement}' for analysisMode {mode}");
         }
     }
 }
