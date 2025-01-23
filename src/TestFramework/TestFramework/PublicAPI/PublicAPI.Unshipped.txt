@@ -219,6 +219,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.Linux = 1 -> Micro
 Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.MacOSX = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
 Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.Windows = 4 -> Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
 Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute.OSConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems operatingSystems) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute.OSConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems operatingSystems) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.BackoffType.get -> Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType
