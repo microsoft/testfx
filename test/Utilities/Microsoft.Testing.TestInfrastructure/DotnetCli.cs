@@ -125,6 +125,9 @@ public static class DotnetCli
         }
     }
 
+    private static bool IsDotNetTestWithExeOrDll(string args)
+        => args.StartsWith("test ", StringComparison.Ordinal) && (args.Contains(".dll") || args.Contains(".exe"));
+
     private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero, string binlogBaseFileName)
     {
         if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
@@ -132,7 +135,7 @@ public static class DotnetCli
             throw new InvalidOperationException("Command should not start with 'dotnet'");
         }
 
-        if (!args.Contains("-bl:"))
+        if (!args.Contains("-bl:") && !IsDotNetTestWithExeOrDll(args))
         {
             // We do this here rather than in the caller so that different retries produce different binlog file names.
             string binlogFullPath = Path.Combine(TempDirectory.GetTestSuiteDirectory(), $"{binlogBaseFileName}-{DateTime.Now.Ticks}.binlog");
