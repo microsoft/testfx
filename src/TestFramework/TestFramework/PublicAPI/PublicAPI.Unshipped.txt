@@ -1,16 +1,16 @@
 #nullable enable
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext retryContext) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult!>!
-Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAnyInterpolatedStringHandler<TItem>
-Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAnyInterpolatedStringHandler<TItem>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAnyInterpolatedStringHandler<TItem>.AppendFormatted(string? value) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAnyInterpolatedStringHandler<TItem>.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAnyInterpolatedStringHandler<TItem>.AppendFormatted<T>(T value) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAnyInterpolatedStringHandler<TItem>.AppendFormatted<T>(T value, int alignment) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAnyInterpolatedStringHandler<TItem>.AppendFormatted<T>(T value, int alignment, string? format) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAnyInterpolatedStringHandler<TItem>.AppendFormatted<T>(T value, string? format) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAnyInterpolatedStringHandler<TItem>.AppendLiteral(string! value) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAnyInterpolatedStringHandler<TItem>.AssertAnyInterpolatedStringHandler() -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAnyInterpolatedStringHandler<TItem>.AssertAnyInterpolatedStringHandler(int literalLength, int formattedCount, System.Collections.Generic.IEnumerable<TItem>! collection, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.AppendFormatted(string? value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.AppendFormatted<T>(T value, int alignment) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.AppendFormatted<T>(T value, int alignment, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.AppendFormatted<T>(T value, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.AssertIsNotEmptyInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.AssertIsNotEmptyInterpolatedStringHandler(int literalLength, int formattedCount, System.Collections.Generic.IEnumerable<TItem>! collection, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.AppendFormatted(string? value) -> void
@@ -297,7 +297,7 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType(obje
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value, out T instance, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty<T>(System.Collections.Generic.IEnumerable<T>! collection) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty<T>(System.Collections.Generic.IEnumerable<T>! collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAnyInterpolatedStringHandler<T> message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty<T>(System.Collections.Generic.IEnumerable<T>! collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty<T>(System.Collections.Generic.IEnumerable<T>! collection, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty<T>(System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType(object? value, System.Type? wrongType, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler message) -> void

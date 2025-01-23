@@ -110,8 +110,7 @@ public sealed partial class Assert
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
             }
-
-            if (_actualCount >= 1)
+            else
             {
                 _item = collection.First();
             }
@@ -173,11 +172,11 @@ public sealed partial class Assert
 
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly struct AssertAnyInterpolatedStringHandler<TItem>
+    public readonly struct AssertIsNotEmptyInterpolatedStringHandler<TItem>
     {
         private readonly StringBuilder? _builder;
 
-        public AssertAnyInterpolatedStringHandler(int literalLength, int formattedCount, IEnumerable<TItem> collection, out bool shouldAppend)
+        public AssertIsNotEmptyInterpolatedStringHandler(int literalLength, int formattedCount, IEnumerable<TItem> collection, out bool shouldAppend)
         {
             shouldAppend = !collection.Any();
             if (shouldAppend)
@@ -245,7 +244,7 @@ public sealed partial class Assert
         => IsNotEmpty(collection, message, null);
 
 #pragma warning disable IDE0060 // Remove unused parameter
-    public static void IsNotEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertAnyInterpolatedStringHandler<T> message)
+    public static void IsNotEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertIsNotEmptyInterpolatedStringHandler<T> message)
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion();
 
