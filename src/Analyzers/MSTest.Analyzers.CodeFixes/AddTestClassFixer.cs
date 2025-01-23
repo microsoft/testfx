@@ -18,12 +18,14 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
-[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(PublicTypeShouldBeTestClassFixer))]
+[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AddTestClassFixer))]
 [Shared]
-public sealed class PublicTypeShouldBeTestClassFixer : CodeFixProvider
+public sealed class AddTestClassFixer : CodeFixProvider
 {
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.PublicTypeShouldBeTestClassRuleId);
+        = ImmutableArray.Create(
+            DiagnosticIds.PublicTypeShouldBeTestClassRuleId,
+            DiagnosticIds.TypeContainingTestMethodShouldBeATestClassRuleId);
 
     public override FixAllProvider GetFixAllProvider()
         // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
@@ -49,7 +51,7 @@ public sealed class PublicTypeShouldBeTestClassFixer : CodeFixProvider
             CodeAction.Create(
                 title: CodeFixResources.PublicTypeShouldBeTestClassFix,
                 createChangedDocument: c => AddTestClassAttributeAsync(context.Document, declaration, c),
-                equivalenceKey: nameof(PublicTypeShouldBeTestClassFixer)),
+                equivalenceKey: nameof(AddTestClassFixer)),
             diagnostic);
     }
 
