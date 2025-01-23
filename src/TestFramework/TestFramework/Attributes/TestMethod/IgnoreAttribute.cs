@@ -26,16 +26,16 @@ public sealed class IgnoreAttribute : ConditionBaseAttribute
     /// <param name="message">
     /// Message specifies reason for ignoring.
     /// </param>
-    public IgnoreAttribute(string? message) => ConditionalIgnoreMessage = message;
+    public IgnoreAttribute(string? message)
+        : base(ConditionMode.Include)
+        => IgnoreMessage = message;
 
     /// <summary>
     /// Gets the ignore message indicating the reason for ignoring the test method or test class.
     /// </summary>
-    public string? IgnoreMessage => ConditionalIgnoreMessage;
+    public override string? IgnoreMessage { get; }
 
     public override bool ShouldRun => false;
 
-    public override string? ConditionalIgnoreMessage { get; }
-
-    public override string GroupName => nameof(IgnoreAttribute);
+    public override string GroupName => "Ignore";
 }

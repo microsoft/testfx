@@ -5,9 +5,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
-internal static class AttributeHelpers
+internal static class AttributeExtensions
 {
-    public static bool IsIgnored(ICustomAttributeProvider type, out string? ignoreMessage)
+    public static bool IsIgnored(this ICustomAttributeProvider type, out string? ignoreMessage)
     {
         IEnumerable<ConditionBaseAttribute> attributes = ReflectHelper.Instance.GetDerivedAttributes<ConditionBaseAttribute>(type, inherit: false);
         IEnumerable<IGrouping<string, ConditionBaseAttribute>> groups = attributes.GroupBy(attr => attr.GroupName);
@@ -17,14 +17,14 @@ internal static class AttributeHelpers
             string? firstNonSatisfiedMatch = null;
             foreach (ConditionBaseAttribute attribute in group)
             {
-                bool shouldRun = attribute.Mode == Mode.Include ? attribute.ShouldRun : !attribute.ShouldRun;
-                if (attribute.ShouldRun)
+                bool shouldRun = attribute.Mode == ConditionMode.Include ? attribute.ShouldRun : !attribute.ShouldRun;
+                if (shouldRun)
                 {
                     atLeastOneInGroupIsSatisfied = true;
                     break;
                 }
 
-                firstNonSatisfiedMatch ??= attribute.ConditionalIgnoreMessage;
+                firstNonSatisfiedMatch ??= attribute.IgnoreMessage;
             }
 
             if (!atLeastOneInGroupIsSatisfied)

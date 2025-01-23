@@ -381,8 +381,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             }
         }
 
-        bool shouldIgnoreClass = AttributeHelpers.IsIgnored(testMethodInfo.Parent.ClassType, out string? ignoreMessageOnClass);
-        bool shouldIgnoreMethod = AttributeHelpers.IsIgnored(testMethodInfo.TestMethod, out string? ignoreMessageOnMethod);
+        bool shouldIgnoreClass = testMethodInfo.Parent.ClassType.IsIgnored(out string? ignoreMessageOnClass);
+        bool shouldIgnoreMethod = testMethodInfo.TestMethod.IsIgnored(out string? ignoreMessageOnMethod);
 
         string? ignoreMessage = ignoreMessageOnClass;
         if (StringEx.IsNullOrEmpty(ignoreMessage) && shouldIgnoreMethod)

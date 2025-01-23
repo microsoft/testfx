@@ -1,5 +1,5 @@
 #nullable enable
-abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.ConditionalIgnoreMessage.get -> string?
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.GroupName.get -> string!
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.ShouldRun.get -> bool
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext retryContext) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult!>!
@@ -193,8 +193,10 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpola
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AssertThrowsExactlyInterpolatedStringHandler() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.AssertThrowsExactlyInterpolatedStringHandler(int literalLength, int formattedCount, System.Action! action, out bool shouldAppend) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute
-Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.ConditionBaseAttribute() -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.ConditionBaseAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.Mode mode) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.ConditionBaseAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode.Exclude = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode.Include = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.IgnoreMessage.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType
@@ -218,7 +220,6 @@ Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.MacOSX = 2 -> Micr
 Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.Windows = 4 -> Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems
 Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute.OSConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems operatingSystems) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute.OSConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems operatingSystems, Microsoft.VisualStudio.TestTools.UnitTesting.Mode mode) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.BackoffType.get -> Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.BackoffType.set -> void
@@ -235,10 +236,10 @@ Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.AddResult(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! testResults) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.RetryResult() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Ignored = 10 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
-override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.ConditionalIgnoreMessage.get -> string?
+override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.IgnoreMessage.get -> string?
 override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.GroupName.get -> string!
 override Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.ShouldRun.get -> bool
-override Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute.ConditionalIgnoreMessage.get -> string?
+override Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute.IgnoreMessage.get -> string?
 override Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute.GroupName.get -> string!
 override Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute.ShouldRun.get -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(decimal expected, decimal actual, decimal delta, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler message) -> void
@@ -281,3 +282,4 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TExcept
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactly<TException>(System.Action! action, System.Func<System.Exception?, string!>! messageBuilder) -> TException!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, string! message = "", params object![]! messageArgs) -> System.Threading.Tasks.Task<TException!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExactlyAsync<TException>(System.Func<System.Threading.Tasks.Task!>! action, System.Func<System.Exception?, string!>! messageBuilder) -> System.Threading.Tasks.Task<TException!>!
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute.IgnoreMessage.get -> string?

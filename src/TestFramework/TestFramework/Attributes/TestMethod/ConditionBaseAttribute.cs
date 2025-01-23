@@ -3,12 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-public enum Mode
-{
-    Include,
-    Exclude,
-}
-
 /// <summary>
 /// This attribute is used to conditionally control whether a test class or a test method will run or be ignored, based on a condition and using an optional message.
 /// </summary>
@@ -18,20 +12,16 @@ public enum Mode
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false)]
 public abstract class ConditionBaseAttribute : Attribute
 {
-    protected ConditionBaseAttribute(Mode mode)
+    protected ConditionBaseAttribute(ConditionMode mode)
         => Mode = mode;
 
-    protected ConditionBaseAttribute()
-    {
-    }
-
-    internal Mode Mode { get; }
+    internal ConditionMode Mode { get; }
 
     /// <summary>
     /// Gets the ignore message (in case <see cref="ShouldRun"/> returns <see langword="false"/>) indicating
     /// the reason for ignoring the test method or test class.
     /// </summary>
-    public abstract string? ConditionalIgnoreMessage { get; }
+    public abstract string? IgnoreMessage { get; }
 
     /// <summary>
     /// Gets the group name for this attribute. This is relevant when multiple

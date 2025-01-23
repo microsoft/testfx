@@ -629,7 +629,7 @@ public class TestClassInfo
             {
                 if (classCleanupMethod is not null)
                 {
-                    if (!AttributeHelpers.IsIgnored(classCleanupMethod.DeclaringType!, out _))
+                    if (!classCleanupMethod.DeclaringType!.IsIgnored(out _))
                     {
                         ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count, testContext);
                     }
@@ -640,7 +640,7 @@ public class TestClassInfo
                     for (int i = 0; i < BaseClassCleanupMethods.Count; i++)
                     {
                         classCleanupMethod = BaseClassCleanupMethods[i];
-                        if (!AttributeHelpers.IsIgnored(classCleanupMethod.DeclaringType!, out _))
+                        if (!classCleanupMethod.DeclaringType!.IsIgnored(out _))
                         {
                             ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, remainingCleanupCount: BaseClassCleanupMethods.Count - 1 - i, testContext);
                             if (ClassCleanupException is not null)

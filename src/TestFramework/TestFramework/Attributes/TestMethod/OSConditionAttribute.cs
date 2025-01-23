@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <remarks>
 /// This attribute isn't inherited. Applying it to a base class will not cause derived classes to be ignored.
 /// </remarks>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
 public sealed class OSConditionAttribute : ConditionBaseAttribute
 {
     private readonly OperatingSystems _operatingSystems;
@@ -18,15 +18,15 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     /// Initializes a new instance of the <see cref="OSConditionAttribute"/> class.
     /// </summary>
     /// <param name="operatingSystems">The operating systems that this test supports.</param>
-    public OSConditionAttribute(OperatingSystems operatingSystems, Mode mode)
+    public OSConditionAttribute(ConditionMode mode, OperatingSystems operatingSystems)
         : base(mode)
     {
         _operatingSystems = operatingSystems;
-        ConditionalIgnoreMessage = $"Test is only supported on {operatingSystems}";
+        IgnoreMessage = $"Test is only supported on {operatingSystems}";
     }
 
     public OSConditionAttribute(OperatingSystems operatingSystems)
-        : this(operatingSystems, Mode.Include)
+        : this(ConditionMode.Include, operatingSystems)
     {
     }
 
@@ -56,7 +56,7 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     }
 #endif
 
-    public override string? ConditionalIgnoreMessage { get; }
+    public override string? IgnoreMessage { get; }
 
-    public override string GroupName => nameof(OSConditionAttribute);
+    public override string GroupName => "OSCondition";
 }
