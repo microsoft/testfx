@@ -14,7 +14,8 @@ public enum OperatingSystems
     /// </summary>
     Linux = 1,
 
-    // TODO: This is copied from aspnetcore repo. Should we name it MacOS instead?
+    // TODO: This is copied from aspnetcore repo. Should we name it MacOS instead? Or OSX?
+
     /// <summary>
     /// Representing the MacOS operating system.
     /// </summary>

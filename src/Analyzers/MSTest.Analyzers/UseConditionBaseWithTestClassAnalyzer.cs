@@ -40,18 +40,18 @@ public sealed class UseConditionBaseWithTestClassAnalyzer : DiagnosticAnalyzer
         context.RegisterCompilationStartAction(context =>
         {
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol) &&
-                context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute, out INamedTypeSymbol? ConditionBaseAttributeSymbol))
+                context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute, out INamedTypeSymbol? conditionBaseAttributeSymbol))
             {
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testClassAttributeSymbol, ConditionBaseAttributeSymbol),
+                    context => AnalyzeSymbol(context, testClassAttributeSymbol, conditionBaseAttributeSymbol),
                     SymbolKind.NamedType);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol ConditionBaseAttributeSymbol)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol conditionBaseAttributeSymbol)
     {
-        INamedTypeSymbol? ConditionBaseAttribute = null;
+        INamedTypeSymbol? conditionBaseAttribute = null;
         bool isTestClass = false;
         foreach (AttributeData attribute in context.Symbol.GetAttributes())
         {
@@ -59,15 +59,15 @@ public sealed class UseConditionBaseWithTestClassAnalyzer : DiagnosticAnalyzer
             {
                 isTestClass = true;
             }
-            else if (attribute.AttributeClass.Inherits(ConditionBaseAttributeSymbol))
+            else if (attribute.AttributeClass.Inherits(conditionBaseAttributeSymbol))
             {
-                ConditionBaseAttribute = attribute.AttributeClass;
+                conditionBaseAttribute = attribute.AttributeClass;
             }
         }
 
-        if (ConditionBaseAttribute is not null && !isTestClass)
+        if (conditionBaseAttribute is not null && !isTestClass)
         {
-            context.ReportDiagnostic(context.Symbol.CreateDiagnostic(UseConditionBaseWithTestClassRule, ConditionBaseAttribute.Name));
+            context.ReportDiagnostic(context.Symbol.CreateDiagnostic(UseConditionBaseWithTestClassRule, conditionBaseAttribute.Name));
         }
     }
 }
